@@ -7,10 +7,10 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { v4 as uuidv4 } from 'uuid';
 
-import {cleanPhoneNumber, isValidPhone, loadItemFromSessionStorage, today} from "../../Utils/utils";
+import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
 import { connect } from "react-redux";
 import {modalify} from "../../Utils/modal";
-import { ajout, liste, modification, suppression } from "../../apis/Configurations/LanguesApi";
+import { ajout } from "../../apis/Configurations/InstitutionApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
@@ -25,6 +25,22 @@ import { addressChanged, denominationChanged, emailChanged, idChanged, instituti
 const Institution = (props) => {
 
     useEffect(() => {
+
+        try {
+            let appInstitution =  loadItemFromLocalStorage("app-institution") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+           
+            if (appInstitution !== undefined || appInstitution !== "") {
+                props.denominationChanged(appInstitution.denomination)
+                props.referenceChanged(appInstitution.numAgrement)
+                props.addressChanged(appInstitution.adresse)
+                props.logoChanged(appInstitution.logo)
+                props.emailChanged(appInstitution.email)
+                props.phoneChanged(appInstitution.tel)
+
+            } else {
+            }
+        } catch (e) {
+        }
        
        
         //UI Fixes
@@ -106,40 +122,21 @@ const Institution = (props) => {
     }
     const handleSubmit = (e) => {
         e.preventDefault()
+        if (handleValidation) {
+            let item = {}
+            item["denomination"] = props.denomination;
+            item["numAgrement"] = props.reference;
+            item["adresse"] = props.address;
+            item["email"] = props.email;
+            item["tel"] = cleanPhoneNumber(props.phone);
+            item["logo"] = props.logo;
+            
+            props.etatChanged(true)
+            ajout(item, props).then(() => {
+                // handleCancel(e)
+            })
 
-        let setting = {}
-        setting["name"] = 'App Institution';
-        setting["slug"] = 'app-institution';
-        let val = {}
-        val["denomination"] = props.denomination;
-        val["reference"] = props.reference;
-        val["address"] = props.address;
-        val["email"] = props.email;
-        val["phone"] = cleanPhoneNumber(props.phone);
-        val["logo"] = props.logo;
-        // setting["value"] = JSON.stringify(val);
-        // let data = {}
-        // data['setting'] = setting
-        // data["logo"] = props.logo;
-
-        // if (handleValidation()) {
-        //     updateSettingApi('app-institution', data, props /*addToast*/)
-        //     //create licence
-        //     let instit = loadItemFromSessionStorage("app-institution") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-institution")): undefined
-           
-        //     if (instit === undefined || instit === "") {
-        //         //console.log("institu2")
-        //         let infoForLicense = {};
-        //         infoForLicense["denomination"] = props.denomination;
-        //         infoForLicense["email"] = props.email;
-        //         infoForLicense["contact"] = cleanPhoneNumber(props.phone);
-        //         createLicense(infoForLicense, props)
-
-        //     }
- 
-        // } else {
-        // }
-
+        }
         props.institutionErrors(errors)
     }
 
@@ -152,7 +149,7 @@ const Institution = (props) => {
         <>
             <div className="card-panel">
 
-                <form id="accountForm" onSubmit={handleSubmit}>
+                <form id="accountForm" >
                     <div className="row mb-2">
                         <div className="col s12"><h6 className="card-title">Configurer les informations de l'institution</h6>
                             <p>Il s'agit de configurer les informations(Dénomination, Email, etc..)  de votre institution</p>

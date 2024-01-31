@@ -1,9 +1,14 @@
+import { loadItemFromLocalStorage } from "./utils";
+
+let appInstitution =  loadItemFromLocalStorage("app-institution") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+           
 export const MAX_SUBJECT_DURATION = 30
-export const INSTITUTION_NAME = "SICMa & Associés"
-export const INSTITUTION_ADDRESS = "KPOTA - Abomey-Calavi"
-export const INSTITUTION_TEL = ": (+229) 63 90 40 00"
-export const INSTITUTION_AGREMENT = "123456789"
-export const INSTITUTION_EMAIL = "info@sicmagroup.com"
+export const INSTITUTION_LOGO = appInstitution.logo
+export const INSTITUTION_NAME = appInstitution.denomination
+export const INSTITUTION_ADDRESS = appInstitution.adresse
+export const INSTITUTION_TEL =  appInstitution.tel
+export const INSTITUTION_AGREMENT = appInstitution.numAgrement
+export const INSTITUTION_EMAIL = appInstitution.email
 export const LOGO_SUPPORTED_SIZE = "167x62, 272x204, 256x256"
 export const HOST = hostEval()
 export const APP_OWNER = "SICMA ET ASSOCIES"

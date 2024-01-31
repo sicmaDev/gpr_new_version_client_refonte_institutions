@@ -81,8 +81,7 @@ import { formatDate, guessExtension, loadItemFromLocalStorage, loadItemFromSessi
 import { Avatar, DialogContent, DialogContentText } from "@mui/material";
 import { downloadFillesApi, getFillesApi, listeTousStatuts, listeTousStatutsOffline } from "../../apis/Suggestions/SuggestionsApi";
 import GavelIcon from "@mui/icons-material/Gavel";
-import logo from '../../assets/images/assilassime.png';
-import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_NAME, INSTITUTION_TEL } from "../../Utils/globals";
+import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from "../../Utils/globals";
 
 
 const styles = {
@@ -577,7 +576,7 @@ const ListeSuggestions = (props) => {
   const printRecu = (e)=>{
     e.preventDefault()
 
-    let image = '<img src="'+logo+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+    let image = '<img src="'+INSTITUTION_LOGO+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
     let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
     entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">'+image+'</div>';
     entete += '<div className="col l8 s7 m7"><b>'+INSTITUTION_NAME+'</b><br /><i><span>Numéro Agrément: </span>'+INSTITUTION_AGREMENT+'</i><br /><i><span>Addrese: </span>'+INSTITUTION_ADDRESS+'</i><br /><i><span>Tel: </span>'+INSTITUTION_TEL+'</i><br /><i><span>Email: </span>'+INSTITUTION_EMAIL+'</i></div></div>';

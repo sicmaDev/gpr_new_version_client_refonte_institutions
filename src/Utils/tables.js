@@ -1,8 +1,7 @@
 import React from "react";
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from "./utils";
 import { v4 as uuidv4 } from "uuid";
-import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_NAME, INSTITUTION_TEL } from "./globals";
-import logo from '../assets/images/assilassime.png';
+import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from "./globals";
 let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))): undefined;
 
 export const getExportHtml = (columns, records) => {
@@ -342,7 +341,7 @@ export const handlePrint2 = (config, columns, records, hook) => {
     });
   }
 
-  let image = '<img src="'+logo+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+  let image = '<img src="'+INSTITUTION_LOGO+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
   let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
   entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">'+image+'</div>';
   entete += '<div className="col l8 s7 m7"><b>'+INSTITUTION_NAME+'</b><br /><i><span>Numéro Agrément: </span>'+INSTITUTION_AGREMENT+'</i><br /><i><span>Addrese: </span>'+INSTITUTION_ADDRESS+'</i><br /><i><span>Tel: </span>'+INSTITUTION_TEL+'</i><br /><i><span>Email: </span>'+INSTITUTION_EMAIL+'</i></div></div>';
@@ -534,7 +533,7 @@ export const handlePrintAvance = (dom) => {
 
 export const handlePrint3 = (config, columns, records) => {
 
-  let image = '<img src="'+logo+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+  let image = '<img src="'+INSTITUTION_LOGO+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
   let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
   entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">'+image+'</div>';
   entete += '<div className="col l8 s7 m7"><b>'+INSTITUTION_NAME+'</b><br /><i><span>Numéro Agrément: </span>'+INSTITUTION_AGREMENT+'</i><br /><i><span>Addrese: </span>'+INSTITUTION_ADDRESS+'</i><br /><i><span>Tel: </span>'+INSTITUTION_TEL+'</i><br /><i><span>Email: </span>'+INSTITUTION_EMAIL+'</i></div></div>';

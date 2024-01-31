@@ -1,9 +1,8 @@
 import React from 'react'
 import { connect } from "react-redux";
-// import logo from '../../assets/images/assilassime.png';
-import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_NAME, INSTITUTION_TEL } from '../../Utils/globals';
+import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from '../../Utils/globals';
 import { handlePrintAvance } from '../../Utils/tables';
-import { cleanDate, loadItemFromSessionStorage, today } from '../../Utils/utils';
+import { cleanDate, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from '../../Utils/utils';
 import { table2XLSX } from '../../Utils/tabletoexcel';
 import { useState } from 'react';
 import { useEffect } from 'react';
@@ -16,7 +15,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { globalChanged, openChanged } from '../../redux/actions/Rapports/BceaoActions';
 import moment from 'moment';
-import logo from "../../assets/images/logo_sicma.png";
+
 
 const Bceao = (props) => {
 
@@ -34,7 +33,7 @@ const Bceao = (props) => {
         setshowSearch(false)
         cleanForm(e)
     };
-  
+    
     let userAuth =loadItemFromSessionStorage("app-user") !== undefined? JSON.parse(loadItemFromSessionStorage("app-user")): undefined;
     let users =loadItemFromSessionStorage("app-users") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-users")): undefined;
     //Effacer tout
@@ -708,7 +707,7 @@ const Bceao = (props) => {
                         <div className="col l2 s3 m3">
                             <img
                             src={
-                                logo
+                              INSTITUTION_LOGO
                             }
                             alt="logo"
                             style={{

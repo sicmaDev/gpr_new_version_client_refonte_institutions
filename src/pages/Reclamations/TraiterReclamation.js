@@ -149,6 +149,8 @@ import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { notify } from "../../Utils/alert";
 import MoveUpIcon from '@mui/icons-material/MoveUp';
+import ForumIcon from '@mui/icons-material/Forum';
+import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 
 const styles = {
   control: (base) => ({
@@ -846,11 +848,11 @@ const TraiterReclamation = (props) => {
     info["claimId"] = props.id;
     info["creatorId"] = user.id;
     // console.log("session", info);
-    console.log("before props",props);
+    // console.log("before props",props);
     props.etat4Changed(true);
     startSession(info, props).then(() => {
       connect();
-      console.log("then props",props);
+      // console.log("then props",props);
       // handleCancel(e);
     });
   };
@@ -995,6 +997,28 @@ const TraiterReclamation = (props) => {
       className: "code",
       align: "left",
       sortable: true,
+      cell: (claim, index) => {
+       
+        let codi;
+        if (claim.session !==null && claim.session !=="") {
+          codi = (
+          <>
+            <div className="df">
+              <span className="mr-1">{claim.code}</span>
+              <div className="card-content red-text ml-4"><ForumIcon/></div>
+            </div>
+            
+          </>
+            
+          );
+        }else{
+          codi = (
+            <span className="">{claim.code}</span>
+          );
+        }
+
+        return codi;
+      },
     },
     {
       key: "clientFirstAndLastName",
@@ -1285,7 +1309,7 @@ const TraiterReclamation = (props) => {
   };
   
   let tchat;
-  if ( (addR === "MEMBRE_CGR" || addR === "PR_CGR" || showJoinBtn)) {
+  if ( (showJoinBtn)) {
     tchat = (
       <>
         {userData.connected ? (
@@ -1957,214 +1981,6 @@ const TraiterReclamation = (props) => {
     tchat = "";
   }
 
-  /*Hisotrique*/
-
-  // let details;
-  // if (props.solution.length !== 0) {
-  //   console.log("abcd");
-  //   if (props.status === "TO_APPROUVED" || props.status === "DESAPPROUVED") {
-  //     console.log("abcde", props.status);
-  //     let index = 0;
-  //     let solutions = Array.from(props.solution);
-  //     let couleurs = [
-  //       "#333300",
-  //       "#00cc00",
-  //       "#99003d",
-  //       "#3333ff",
-  //       "#666666",
-  //       "#253858",
-  //       "#00875A",
-  //       "#36B37E",
-  //       "#FFC400",
-  //       "#FF8B00",
-  //       "#FF5630",
-  //       "#5243AA",
-  //       "#0052CC",
-  //       "#00B8D9",
-  //     ];
-  //     console.log("abcdef", props.status);
-  //     if (solutions.length !== 0) {
-  //       details = (
-  //         <>
-  //           <div className="col s12">
-  //             {/* let solutions =  */}
-  //             {Array.from(solutions).map((solution) => {
-  //               let fond = couleurs[getRandomInt(couleurs.length)];
-
-  //               let mesure = "";
-  //               if (
-  //                 solution.status === "APPROVED" &&
-  //                 solution.satisfactionMeasureDto !== null
-  //               ) {
-  //                 let degre =
-  //                   solution.satisfactionMeasureDto.status === "SATISFIED"
-  //                     ? "Satisfait"
-  //                     : solution.satisfactionMeasureDto.status === "UNSATISFIED"
-  //                     ? "Non satisfait"
-  //                     : solution.satisfactionMeasureDto.status === "PARTIAL"
-  //                     ? "Partiellement satisfait"
-  //                     : "";
-  //                 mesure = (
-  //                   <>
-  //                     <Typography component="div">
-  //                       <div>
-  //                         <span
-  //                           className="chip2"
-  //                           style={{ backgroundColor: fond }}
-  //                         >
-  //                           <span className="hero">
-  //                             Bénéficiaire {degre} : mesurée par{" "}
-  //                             {
-  //                               solution.satisfactionMeasureDto.measurer
-  //                                 .firstAndLastName
-  //                             }{" "}
-  //                             le{" "}
-  //                             {formatDate(
-  //                               solution.satisfactionMeasureDto.measureDateTime
-  //                             )}
-  //                           </span>
-  //                         </span>
-  //                       </div>
-  //                     </Typography>
-  //                   </>
-  //                 );
-  //               } else if (
-  //                 solution.status === "APPROVED" &&
-  //                 solution.satisfactionMeasureDto === null
-  //               ) {
-  //                 mesure = (
-  //                   <>
-  //                     <span className="chip2" style={{ backgroundColor: fond }}>
-  //                       <span className="hero">
-  //                         En attente de mesure de satisfaction
-  //                       </span>
-  //                     </span>
-  //                   </>
-  //                 );
-  //               }
-
-  //               let approbation = "";
-  //               if (
-  //                 solution.status === "UNAPPROVED" &&
-  //                 solution.motifDesaprobation !== null
-  //               ) {
-  //                 approbation = (
-  //                   <>
-  //                     <Typography component="div">
-  //                       <div className="row">
-  //                         <div className="col l12 s12 pb-2" id="content">
-  //                           <div className="df pb-2">
-  //                             <RecordVoiceOverIcon sx={{ mr: 2 }} /> Motif de
-  //                             désapprobation
-  //                           </div>
-  //                           <div>
-  //                             {solution.motifDesaprobation !== null
-  //                               ? solution.motifDesaprobation
-  //                               : ""}
-  //                           </div>
-  //                         </div>
-  //                       </div>
-  //                       <div>
-  //                         <span
-  //                           className="chip2"
-  //                           style={{ backgroundColor: fond }}
-  //                         >
-  //                           <span className="hero">
-  //                             Désapprouvée par{" "}
-  //                             {solution.unApprouver !== null
-  //                               ? solution.unApprouver.firstAndLastName
-  //                               : ""}{" "}
-  //                             le {formatDate(solution.unApprouvedAt)}
-  //                           </span>
-  //                         </span>
-  //                       </div>
-  //                     </Typography>
-  //                   </>
-  //                 );
-  //               } else if (
-  //                 solution.status === "UNAPPROVED" &&
-  //                 solution.motifDesaprobation === null
-  //               ) {
-  //                 approbation = (
-  //                   <>
-  //                     <span className="chip2" style={{ backgroundColor: fond }}>
-  //                       <span className="hero">En attente d'approbation</span>
-  //                     </span>
-  //                   </>
-  //                 );
-  //               }
-
-  //               let enregistrement = (
-  //                 <>
-  //                   <Timeline>
-  //                     <TimelineItem>
-  //                       <TimelineOppositeContent
-  //                         sx={{ m: "auto 0", flex: "0" }}
-  //                         variant="body2"
-  //                         color="text.secondary"
-  //                       ></TimelineOppositeContent>
-  //                       <TimelineSeparator>
-  //                         <TimelineConnector />
-  //                         <TimelineDot style={{ fontSize: "25px" }}>
-  //                           <Avatar
-  //                             sx={{
-  //                               width: 32,
-  //                               height: 32,
-  //                               backgroundColor: fond,
-  //                             }}
-  //                           >
-  //                             {(index = index + 1)}
-  //                           </Avatar>
-  //                         </TimelineDot>
-  //                         <TimelineConnector />
-  //                       </TimelineSeparator>
-  //                       <TimelineContent sx={{ py: "12px", px: 2 }}>
-  //                         <Typography variant="h6" component="span">
-  //                           {solution.author.firstAndLastName} -{" "}
-  //                           <span style={{ fontSize: "12px" }}>
-  //                             {formatDate(solution.createdAt)}
-  //                           </span>
-  //                         </Typography>
-
-  //                         <Typography className="pb-2" component="div">
-  //                           <div className="row">
-  //                             <div className="col l12 s12 pb-2" id="content">
-  //                               <div className="df pb-2">
-  //                                 <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-  //                                 Solution
-  //                               </div>
-  //                               <div>{solution.content}</div>
-  //                             </div>
-
-  //                             <div className="col l12 s12 pb-2" id="content">
-  //                               <div className="df pb-2">
-  //                                 <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-  //                                 Commentaire
-  //                               </div>
-  //                               <div>{solution.commentaire}</div>
-  //                             </div>
-  //                           </div>
-  //                         </Typography>
-  //                         {approbation}
-  //                         {mesure}
-  //                       </TimelineContent>
-  //                     </TimelineItem>
-  //                   </Timeline>
-  //                 </>
-  //               );
-
-  //               return <>{enregistrement}</>;
-  //             })}
-  //           </div>
-  //         </>
-  //       );
-  //     } else {
-  //       details = "Aucune donnée";
-  //     }
-  //   }
-  // } else if (props.solution.length === 0) {
-  //   details = "Cette réclamation est en attente de traitement";
-  // }
 
   let details;
 
@@ -3575,12 +3391,11 @@ const TraiterReclamation = (props) => {
   }
 
   let transmettre = "";
-
+  let btnS = "";
   
   if (
     props.objetLevel === "MINEUR" &&
-    user.firstAndLastName === props.created_by &&
-    addR === "MOLDUE"
+    user.firstAndLastName === props.created_by 
   ) {
     transmettre = (
       <>
@@ -3597,9 +3412,12 @@ const TraiterReclamation = (props) => {
         </LoadingButton>
       </>
     );
-  } else if (addR === "MEMBRE_CGR" || addR === "PR_CGR" || showJoinBtn) {
+  } else {
+    transmettre = "";
+  }
+  if (user.firstAndLastName === props.created_by || showJoinBtn) {
     if (props.session === "" && props.session.status !== "OPEN") {
-      transmettre = (
+      btnS = (
         <>
           <LoadingButton
             onClick={(e) => registerUser(e)}
@@ -3615,7 +3433,7 @@ const TraiterReclamation = (props) => {
         </>
       );
     } else if (props.session !== "" && props.session.status === "OPEN" ) {
-      transmettre = (
+      btnS = (
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -3631,7 +3449,7 @@ const TraiterReclamation = (props) => {
         </>
       );
     } else if (props.session !== "" && props.session.status === "CLOSED") {
-      transmettre = (
+      btnS = (
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -3647,10 +3465,8 @@ const TraiterReclamation = (props) => {
         </>
       );
     } else {
-      transmettre = "";
+      btnS = "";
     }
-  } else {
-    transmettre = "";
   }
 
    // Sélectionnez tous les éléments avec la classe spécifiée
@@ -3848,14 +3664,20 @@ const TraiterReclamation = (props) => {
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-7">
                             <div className="row" id="ententeFiche">
-                              <div className="col s12">
+                              <div className="row df" style={{ justifyContent: "space-between" }}>
+                                
                                 <h5
-                                  className="card-title df "
-                                  style={{ justifyContent: "space-between" }}
+                                  className="col l12 s12 card-title  "
                                 >
                                   Détails du traitement
-                                  {transmettre}
+                                  
                                 </h5>
+                                {transmettre}
+                                  {btnS}
+                                {/* <div className="">
+                                  
+                                </div> */}
+                                
                               </div>
                             </div>
                             <div className="col s12 input-field">
