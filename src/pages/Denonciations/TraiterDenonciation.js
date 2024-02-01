@@ -107,6 +107,8 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import ChatIcon from "@mui/icons-material/Chat";
 import CardList from "../../layouts/CardList";
 import MoveUpIcon from '@mui/icons-material/MoveUp';
+import ForumIcon from '@mui/icons-material/Forum';
+import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 
 const styles = {
   control: (base) => ({
@@ -240,15 +242,8 @@ const TraiterDenonciation = (props) => {
   }, [userData]);
 
   useEffect(() => {
-   
-    // let coco = [];
-    // coco = users.filter((e) => {
-    //   return (
-    //     (e.additionalRole !== "MEMBRE_CGR") && (e.additionalRole !== "PR_CGR")
-    //   );
-    // })
+
     setUsersCGR(users)
-    // console.log("coco",usersCGR)
 
   }, []);
 
@@ -439,7 +434,7 @@ const TraiterDenonciation = (props) => {
           const newList = coco;
           return princ;
         });
-        // setUsersCGR(princ)
+       
         maDivRef.current.style.display = "none"
       }
       // console.log("cg",usersCGR)
@@ -905,6 +900,28 @@ const TraiterDenonciation = (props) => {
       className: "code",
       align: "left",
       sortable: true,
+      cell: (claim, index) => {
+       
+        let codi;
+        if (claim.session !==null && claim.session !=="") {
+          codi = (
+          <>
+            <div className="df">
+              <span className="mr-1">{claim.code}</span>
+              <div className="card-content red-text ml-4"><ForumIcon/></div>
+            </div>
+            
+          </>
+            
+          );
+        }else{
+          codi = (
+            <span className="">{claim.code}</span>
+          );
+        }
+
+        return codi;
+      },
     },
     {
       key: "statusStr",
@@ -1141,7 +1158,7 @@ const TraiterDenonciation = (props) => {
 
   /*tchat */
   let tchat;
-  if ( (addR === "MEMBRE_CGR" || addR === "PR_CGR" || showJoinBtn)) {
+  if ( (showJoinBtn)) {
     tchat = (
       <>
         {userData.connected ? (
@@ -2959,7 +2976,7 @@ const TraiterDenonciation = (props) => {
           <span>Transmettre</span>
       </LoadingButton>
     </>
-  } else if (addR === "MEMBRE_CGR" || addR === "PR_CGR" || showJoinBtn) {
+  } else if (showJoinBtn) {
     if (props.session === "" && props.session.status !== "OPEN") {
       transmettre = (
         <>

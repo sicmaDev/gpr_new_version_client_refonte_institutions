@@ -31,6 +31,7 @@ export const LoginApi = (credentials, props) => {
                 saveItemToSessionStorage(1, 'app-mode')
                 
                 response.data.response.content.user ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.user), 'app-user'): saveItemToSessionStorage([], 'app-user');
+                // response.data.response.content.settings.institution ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.institution), 'app-institution') : saveItemToSessionStorage([], 'app-institution');
                 response.data.response.content.settings.languages ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.languages), 'app-langues') : saveItemToSessionStorage([], 'app-langues');
                 response.data.response.content.settings.externalRecourses ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.externalRecourses), 'app-recours') : saveItemToSessionStorage([], 'app-recours');
                 response.data.response.content.settings.servicePoints ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.servicePoints), 'app-ps') : saveItemToSessionStorage([], 'app-ps');
@@ -49,6 +50,7 @@ export const LoginApi = (credentials, props) => {
                 saveItemToLocalStorage(1, 'app-mode')
 
                 response.data.response.content.user ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.user), 'app-user'): saveItemToLocalStorage([], 'app-user');
+                // response.data.response.content.settings.institution ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.institution), 'app-institution') : saveItemToSessionStorage([], 'app-institution');
                 response.data.response.content.settings.languages ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.languages), 'app-langues') : saveItemToLocalStorage([], 'app-langues');
                 response.data.response.content.settings.externalRecourses ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.externalRecourses), 'app-recours') : saveItemToLocalStorage([], 'app-recours');
                 response.data.response.content.settings.servicePoints ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.servicePoints), 'app-ps') : saveItemToLocalStorage([], 'app-ps');

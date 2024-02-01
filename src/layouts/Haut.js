@@ -20,8 +20,6 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import Tooltip from '@mui/material/Tooltip';
 import Logout from '@mui/icons-material/Logout';
 import {NavLink } from "react-router-dom";
-// import logo from '../assets/images/assilassime.png';
-// import logo from '../assets/images/logo_gpr_as.jpg';
 import {authenticate,pageChanged} from "../redux/actions/LayoutActions";
 import { connect } from 'react-redux';
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from '../Utils/utils';
@@ -179,7 +177,7 @@ export const Haut = (props) => {
                       ...(!open && { display: 'none' }),
                     }}
                   >
-                    <ChevronLeftIcon />
+                    <ChevronLeftIcon style={{ color:"white" }} />
                   </IconButton>
                   <Typography
                       component="h1"
@@ -300,7 +298,7 @@ export const Haut = (props) => {
         <ThemeProvider theme={defaultTheme}   >
           
           <CssBaseline />
-          <AppBar position="absolute" open={open} >
+          <AppBar position="absolute" open={open} style={{ minHeight:"70px" }} >
               <Toolbar
                   sx={{
                   pr: '24px', // keep right padding when drawer closed
@@ -325,7 +323,7 @@ export const Haut = (props) => {
                       ...(!open && { display: 'none' }),
                     }}
                   >
-                    <ChevronLeftIcon />
+                    <ChevronLeftIcon style={{ color:"white" }} />
                   </IconButton>
                   <Typography
                       component="h1"

@@ -732,7 +732,7 @@ const EnregistrerSuggestion = (props) => {
   const sendSms = async (e) => {
     e.preventDefault()
     let token = "SZhs_fSrSqDn8eITgs77ym17ttv1G8ig";
-    let sender = "GPR ASSILASSIME"
+    let sender = "GPR"
     let receiver = cleanPhoneNumber(props.phone);
     let dlr_url  = "";
     let message  =  encodeURI(smsToSend);
@@ -917,7 +917,7 @@ const EnregistrerSuggestion = (props) => {
                                                             <PhoneInput
                                                                 international
                                                                 countryCallingCodeEditable={false}
-                                                                defaultCountry="TG"
+                                                                defaultCountry="BJ"
                                                                 value={props.phone}
                                                                 onChange={(e) =>
                                                                 props.phoneChanged(e)

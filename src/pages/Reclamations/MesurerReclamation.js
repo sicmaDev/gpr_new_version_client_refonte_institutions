@@ -600,7 +600,7 @@ const handleClose = () => {
                   name="commenta"
                   placeholder=""
                   className="materialize-textarea textarea-size"
-                  value={props.motif}
+                  value={props.commenta}
                   onChange={(e) => props.commentaChanged(e.target.value)}
                 ></textarea>
                 <label htmlFor="content" className={"active"}>

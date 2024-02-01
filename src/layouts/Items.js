@@ -123,7 +123,7 @@ const logOut = (e) => {
             </ListItemButton>
         </NavLink> : "";
 
-    let RTraitement = (hbt.includes("H2","H3","H4","H6") || addR === "PILOTE" || addR === "MEMBRE_CGR" || addR === "PR_CGR" || addR === "DE") && mode === 1 ?
+    let RTraitement = (hbt.includes("H2","H3","H4","H6") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
         <NavLink to="/reclamations/traitement/all" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
@@ -143,7 +143,7 @@ const logOut = (e) => {
             </ListItemButton>
         </NavLink> : "";
 
-    let RAssurance = (hbt.includes("H5") || addR === "PILOTE" || addR === "MEMBRE_CGR" || addR === "PR_CGR" || addR === "DE") && mode === 1 ? 
+    let RAssurance = (hbt.includes("H5") || addR === "PILOTE" || addR === "DE") && mode === 1 ? 
         <NavLink to="/reclamations/assurance" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
@@ -163,7 +163,7 @@ const logOut = (e) => {
             </ListItemButton>
         </NavLink>
 
-    let RClassees = (hbt.includes("H5") || addR === "PILOTE" || addR === "MEMBRE_CGR" || addR === "PR_CGR" || addR === "DE") && mode === 1 ? 
+    let RClassees = (hbt.includes("H5") || addR === "PILOTE" || addR === "DE") && mode === 1 ? 
         <NavLink to="/reclamations/classees" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
@@ -194,7 +194,7 @@ const logOut = (e) => {
             </ListItemButton>
         </NavLink> : "";
     
-    let DTraitement = (hbt.includes("H2","H3","H4","H6") || addR === "PILOTE" || addR === "MEMBRE_CGR" || addR === "PR_CGR" || addR === "DE") && mode === 1 ?
+    let DTraitement = (hbt.includes("H2","H3","H4","H6") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
         <NavLink to="/denonciations/traitement/all" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
@@ -267,7 +267,7 @@ const logOut = (e) => {
         </NavLink> : "";
 
 
-    let STraitement = (addR === "PR_CGR" || addR === "PILOTE" || addR === "DE") && mode === 1 ? 
+    let STraitement = (addR === "PILOTE" || addR === "DE") && mode === 1 ? 
         <NavLink to="/suggestions/traitement" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero"> 
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
@@ -319,7 +319,7 @@ const logOut = (e) => {
             </Collapse>
         </> : "";
 
-    let Alertes = (hbt.includes("H13") || addR === "PILOTE" || addR === "MEMBRE_CGR" || addR === "PR_CGR" || addR === "DE") && mode === 1 ?
+    let Alertes = (hbt.includes("H13") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
         <>
             <ListItemButton onClick={handleClick5}>
                 <ListItemIcon>

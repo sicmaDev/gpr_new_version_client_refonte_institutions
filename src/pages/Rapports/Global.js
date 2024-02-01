@@ -8,6 +8,7 @@ import { Link, NavLink } from "react-router-dom";
 import {
   cleanDate,
   hexToRgb,
+  loadItemFromLocalStorage,
   loadItemFromSessionStorage,
   normalizeStats,
   resizeImage,
@@ -19,6 +20,7 @@ import {
   INSTITUTION_ADDRESS,
   INSTITUTION_AGREMENT,
   INSTITUTION_EMAIL,
+  INSTITUTION_LOGO,
   INSTITUTION_NAME,
   INSTITUTION_TEL,
 } from "../../Utils/globals";
@@ -26,7 +28,6 @@ import axios from "axios";
 import { table2XLSX } from "../../Utils/tabletoexcel";
 import { useRef } from "react";
 import { handlePrintAvance } from "../../Utils/tables";
-// import logo from "../../assets/images/assilassime.png";
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
 import { Bar, Doughnut, Line, Pie, Radar } from "react-chartjs-2";
 import "chartjs-plugin-datalabels";
@@ -81,7 +82,7 @@ import ChartDataLabels from "chartjs-plugin-datalabels";
 // import ChartDataLabels from "chartjs-plugin-labels";
 import html2canvas from "html2canvas";
 import { MyGaugeChart } from "../../Utils/MyGaugeChart";
-import logo from "../../assets/images/logo_sicma.png";
+
 
 
 Chart.register(ChartDataLabels);
@@ -219,7 +220,7 @@ const Global = (props) => {
     });
   }
   const userAuth = JSON.parse(loadItemFromSessionStorage("app-user"));
-
+       
   const globalPieChartRef = useRef(null);
   const globalLineChartRef = useRef(null);
   const globalByCanalPieChartRef = useRef(null);
@@ -4757,7 +4758,7 @@ const Global = (props) => {
                 <div className="row" id="enteteRapport">
                   <div className="col l2 s12 m6">
                     <img
-                      src={logo}
+                      src={INSTITUTION_LOGO}
                       alt="logo"
                       style={{
                         width: "100%",

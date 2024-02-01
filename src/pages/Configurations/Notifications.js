@@ -140,8 +140,6 @@ const Notifications = (props) => {
     if (props.role !== undefined) {
         roleOptions = [
             {"label": "Directeur Exécutif", "value": "DE" },
-            {"label": "Président du Comité de Gestion des Réclamations", "value": "PR_CGR" },
-            {"label": "Membre du Comité de Gestion des Réclamations", "value": "MEMBRE_CGR" },
             {"label": "Pilote", "value": "PILOTE" },
             {"label": "Coordonnateur", "value": "COORDONNATEUR" },
             {"label": "Responsable d'Agence", "value": "RA" },
@@ -151,13 +149,6 @@ const Notifications = (props) => {
     } else {
         roleOptions = ""
     }
-
-    // let roleValue
-    // if(props.role==="PR_CGR") roleValue={"label": "Président du Comité de Gestion des Réclamations", "value": props.role }
-    // if(props.role==="PILOTE") roleValue={"label": "Pilote", "value": props.role }
-    // if(props.rolee==="RA") roleValue={"label": "Responsable d'agence", "value": props.role }
-    // if(props.role==="MEMBRE_CGR") roleValue={"label": "Membre du Comité de Gestion des Réclamations", "value": props.role }
-    // if(props.role==="AUTRES") roleValue={"label": "Autres", "value": "" }
 
     
 

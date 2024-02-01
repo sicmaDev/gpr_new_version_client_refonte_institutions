@@ -121,11 +121,12 @@ import {
 import { Avatar, DialogContent, DialogContentText } from "@mui/material";
 import GavelIcon from "@mui/icons-material/Gavel";
 import StopIcon from "@mui/icons-material/Stop";
-import logo from "../../assets/images/assilassime.png";
+
 import {
   INSTITUTION_ADDRESS,
   INSTITUTION_AGREMENT,
   INSTITUTION_EMAIL,
+  INSTITUTION_LOGO,
   INSTITUTION_NAME,
   INSTITUTION_TEL,
 } from "../../Utils/globals";
@@ -910,7 +911,7 @@ const ListeReclamations = (props) => {
 
   let details;
 
-  if (hbt.includes("H14") || addR === "PILOTE" || addR === "MEMBRE_CGR" || addR === "PR_CGR" || addR === "DE") {
+  if (hbt.includes("H14") || addR === "PILOTE" || addR === "DE") {
     if (props.solution.length !== 0) {
       let type;
       let index = 0;
@@ -1435,7 +1436,7 @@ const ListeReclamations = (props) => {
     e.preventDefault();
     let image =
       '<img src="' +
-      logo +
+      INSTITUTION_LOGO +
       '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
     let entete =
       '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
@@ -2318,7 +2319,7 @@ const ListeReclamations = (props) => {
                                 Détails du traitement
 
                                 {
-                                  (props.session !=="")  && (addR === "PR_CGR" || addR === "MEMBRE_CGR" || addR === "DE") ? 
+                                  (props.session !=="")  && (addR === "PILOTE" || addR === "DE") ? 
                                     
                                     <LoadingButton
                                     onClick={(e) => {

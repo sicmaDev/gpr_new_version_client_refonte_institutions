@@ -100,8 +100,7 @@ import { Avatar, DialogContent, DialogContentText } from "@mui/material";
 import GavelIcon from '@mui/icons-material/Gavel';
 import StopIcon from '@mui/icons-material/Stop';
 import { downloadFillesApi, getFillesApi, listeTousStatuts, listeTousStatutsOffline } from "../../apis/Denonciations/DenonciationsApi";
-import logo from '../../assets/images/assilassime.png';
-import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_NAME, INSTITUTION_TEL } from "../../Utils/globals";
+import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from "../../Utils/globals";
 import MoveUpIcon from '@mui/icons-material/MoveUp';
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
@@ -595,7 +594,7 @@ const ListeDenonciations = (props) => {
  
 
   let details;
-  if (hbt.includes("H14") || addR === "PILOTE" || addR === "MEMBRE_CGR" || addR === "PR_CGR" || addR === "DE") {
+  if (hbt.includes("H14") || addR === "PILOTE" || addR === "DE") {
     if ((props.solution).length!==0 ) {
       let type;
       let index=0;
@@ -1009,7 +1008,7 @@ const ListeDenonciations = (props) => {
 //   }
  
   const printRecu = (e)=>{
-    let image = '<img src="'+logo+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+    let image = '<img src="'+INSTITUTION_LOGO+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
     let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
     entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">'+image+'</div>';
     entete += '<div className="col l8 s7 m7"><b>'+INSTITUTION_NAME+'</b><br /><i><span>Numéro Agrément: </span>'+INSTITUTION_AGREMENT+'</i><br /><i><span>Addrese: </span>'+INSTITUTION_ADDRESS+'</i><br /><i><span>Tel: </span>'+INSTITUTION_TEL+'</i><br /><i><span>Email: </span>'+INSTITUTION_EMAIL+'</i></div></div>';
@@ -1609,7 +1608,7 @@ const ListeDenonciations = (props) => {
                                 Détails du traitement
 
                                 {
-                                  (props.session !=="")  && (addR === "PR_CGR" || addR === "MEMBRE_CGR" || addR === "DE") ? 
+                                  (props.session !=="")  && (addR === "PILOTE" || addR === "DE") ? 
                                     
                                     <LoadingButton
                                     onClick={(e) => {

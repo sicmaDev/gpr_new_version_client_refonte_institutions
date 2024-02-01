@@ -111,9 +111,6 @@ const Utilisateurs = (props) => {
                 if(user.additionalRole !==undefined){
                     if(user.additionalRole==="DE") additionalRole = "Directeur Exécutif";
                     if(user.additionalRole==="PILOTE") additionalRole ="Pilote";
-                    if(user.additionalRole==="PR_CGR") additionalRole ="Président du CGR";
-                    if(user.additionalRole==="MEMBRE_CGR") additionalRole ="Membre du CGR";
-                    if(user.additionalRole==="MEMBRE_CA") additionalRole ="Mmebre du CA";
                 }
                 return additionalRole
             }
@@ -148,9 +145,6 @@ const Utilisateurs = (props) => {
                 if(user.additionalRole !==undefined){
                     if(user.additionalRole==="DE") additionalRole = "Directeur Exécutif";
                     if(user.additionalRole==="PILOTE") additionalRole ="Pilote";
-                    if(user.additionalRole==="PR_CGR") additionalRole ="Président du CGR";
-                    if(user.additionalRole==="MEMBRE_CGR") additionalRole ="Membre du CGR";
-                    if(user.additionalRole==="MEMBRE_CA") additionalRole ="Membre du CA";
                 }
                 return (<><span>{user.posteDto.libelle}</span><br /><span className="truncate">{user.servicePointDto.libelle}</span> <br /><span>{additionalRole}</span></>)
             }
@@ -215,10 +209,7 @@ const Utilisateurs = (props) => {
     if (props.additionalRole !== undefined) {
         roleOptions = [
             {"label": "Directeur Exécutif", "value": "DE" },
-            {"label": "Président du Comité de Gestion des Réclamations", "value": "PR_CGR" },
-            {"label": "Membre du Comité de Gestion des Réclamations", "value": "MEMBRE_CGR" },
             {"label": "Pilote", "value": "PILOTE" },
-            {"label": "Membre du Conseil d'Administration", "value": "MEMBRE_CA" },
             {"label": "Aucun", "value": "MOLDUE" },
         ]
 
@@ -432,10 +423,7 @@ const Utilisateurs = (props) => {
    
    
     let roleValue
-    if(props.additionalRole==="PR_CGR") roleValue={"label": "Président du Comité de Gestion des Réclamations", "value": props.additionalRole }
     if(props.additionalRole==="PILOTE") roleValue={"label": "Pilote", "value": props.additionalRole }
-    if(props.additionalRole==="MEMBRE_CA") roleValue={"label": "Membre du Conseil d'Administration", "value": props.additionalRole }
-    if(props.additionalRole==="MEMBRE_CGR") roleValue={"label": "Membre du Comité de Gestion des Réclamations", "value": props.additionalRole }
     if(props.additionalRole==="MOLDUE") roleValue={"label": "Aucun", "value": "" }
 
     // if(props.role==="") roleValue={"label": "", "value": props.role }

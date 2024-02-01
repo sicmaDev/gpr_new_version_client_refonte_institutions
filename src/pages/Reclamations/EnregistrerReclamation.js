@@ -1441,7 +1441,7 @@ const EnregistrerReclamation = (props) => {
                               <PhoneInput
                                 international
                                 countryCallingCodeEditable={false}
-                                defaultCountry="TG"
+                                defaultCountry="BJ"
                                 value={props.phone}
                                 onChange={(e) =>
                                   props.phoneChanged(e)
