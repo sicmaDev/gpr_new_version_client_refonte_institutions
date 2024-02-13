@@ -1,17 +1,14 @@
 import React, {useEffect, useState} from "react";
-import {cleanPhoneNumber, isValidPhone, loadItemFromSessionStorage, today} from "../../Utils/utils";
+import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
 import { connect } from "react-redux";
 import HelpIcon from '@mui/icons-material/Help';
 import {modalify} from "../../Utils/modal";
-import { ajout, liste, modification, suppression } from "../../apis/Configurations/LanguesApi";
+import { ajout } from "../../apis/Configurations/BotApi";
 import {
     apiKeyChanged, apiSecretChanged, gprbotErrors, etatChanged
 } from "../../redux/actions/Configurations/BotActions";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CancelIcon from '@mui/icons-material/Cancel';
-import { LOGO_SUPPORTED_SIZE } from "../../Utils/globals";
 import { isLicenseControl } from "../../Utils/license";
 import { notify } from "../../Utils/alert";
 import axios from "axios";
@@ -20,7 +17,17 @@ import axios from "axios";
 const Bot = (props) => {
 
     useEffect(() => {
-       
+        try {
+            let appBot =  loadItemFromLocalStorage("app-bot") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-bot")) : undefined;
+           
+            if (appBot !== undefined || appBot !== "") {
+                props.apiKeyChanged(appBot.apiKey)
+                props.apiSecretChanged(appBot.apiSecret);
+              
+            } else {
+            }
+        } catch (e) {
+        }
        
         //UI Fixes
        
@@ -74,57 +81,47 @@ const Bot = (props) => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-
-        let setting = {}
-        setting["name"] = 'App Bot';
-        setting["slug"] = 'app-bot';
-        let val = {}
-        val["apiKey"] = props.apiKey;
-        val["apiSecret"] = props.apiSecret;
-        
-        setting["value"] = JSON.stringify(val);
-        let data = {}
-        data['setting'] = setting
-        let apiData = {}
-        apiData["apikey"] = props.apiKey;
-        apiData["apisecret"] = props.apiSecret;
-        if (handleValidation()) {
-            //send request to verify
-            const API_URL = "https://gpradmin.sicmagroup.com/api/verifiedKey"
-            const config = {
-                method: 'post',
-                url: API_URL,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': loadItemFromSessionStorage('tok')
-                },
-                data: apiData
-            };
-            axios(config)
-                .then(function (response) {
-                   // console.log(response);
-                    let resultat = response.data;
-                    //console.log(resultat);
-                    // if(resultat.status == "error"){
-                    //     notify(resultat.data, "error");
-                    //   //  console.log(resultat);
-                    // } else {
-                    //     updateSettingApi('app-bot', data, props /*addToast*/)
-                    //    // console.log(response);
-                    // }
+       
+        let item = {}
+        item["apiKey"] = props.apiKey;
+        item["apiSecret"] = props.apiSecret;
+        props.etatChanged(true)
+        ajout(item, props).then(() => {
+            // handleCancel(e)
+        })
+        // if (handleValidation()) {
+        //     //send request to verify
+        //     const API_URL = "https://gpradmin.sicmagroup.com/api/verifiedKey"
+        //     const config = {
+        //         method: 'post',
+        //         url: API_URL,
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //             'Authorization': loadItemFromSessionStorage('tok')
+        //         },
+        //         data: item
+        //     };
+        //     axios(config)
+        //         .then(function (response) {
+        //            // console.log(response);
+        //             let resultat = response.data;
+            
+        //             ajout(item, props).then(() => {
+        //                 // handleCancel(e)
+        //             })
                     
-                })
-                ;
+        //         })
+        //         ;
            
-        } 
-        else {
+        // } 
+        // else {
            
-            notify("Echec de l'enregistrement", "error");
-            //console.log("in false");
-        }
+        //     notify("Echec de l'enregistrement", "error");
+        //     //console.log("in false");
+        // }
 
         props.gprbotErrors(errors)
-       // console.log(errors.contenu);
+       
     }
 
     return (

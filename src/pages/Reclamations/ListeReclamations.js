@@ -121,6 +121,7 @@ import {
 import { Avatar, DialogContent, DialogContentText } from "@mui/material";
 import GavelIcon from "@mui/icons-material/Gavel";
 import StopIcon from "@mui/icons-material/Stop";
+import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 
 import {
   INSTITUTION_ADDRESS,
@@ -236,7 +237,7 @@ const ListeReclamations = (props) => {
     },
     {
       key: "clientFirstAndLastName",
-      text: "Bénéficiaire",
+      text: "Client",
       className: "client",
       align: "left",
       sortable: true,
@@ -1003,7 +1004,7 @@ const ListeReclamations = (props) => {
                             style={{ backgroundColor: fond }}
                           >
                             <span className="hero">
-                              Bénéficiaire {degre} : mesurée par{" "}
+                              Client {degre} : mesurée par{" "}
                               {
                                 solution.satisfactionMeasureDto.measurer
                                   .firstAndLastName
@@ -1133,6 +1134,23 @@ const ListeReclamations = (props) => {
                                 </div>
                                 <div>{solution.commentaire}</div>
                               </div>
+                              {
+                                solution.satisfactionMeasureDto ? 
+                                  solution.satisfactionMeasureDto.commentaire !== null ? 
+
+                                  <div
+                                    className="col l12 s12 pb-2"
+                                    id="content"
+                                  >
+                                    <div className="df pb-2">
+                                      <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
+                                      Commentaire du client
+                                    </div>
+                                    <div>{solution.satisfactionMeasureDto.commentaire}</div>
+                                  </div> : ""
+
+                                : ""
+                              }
                             </div>
                           </Typography>
                           {approbation}

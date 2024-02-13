@@ -158,7 +158,7 @@ const handleClose = () => {
     },
     {
       key: "clientFirstAndLastName",
-      text: "Bénéficiaire",
+      text: "Client",
       className: "client",
       align: "left",
       sortable: true,
@@ -362,8 +362,11 @@ const handleClose = () => {
     }
 
     if (
-      props.appraisal === "PARTIAL" ||
-      props.appraisal === "UNSATISFIED"
+      (props.appraisal === "PARTIAL" ||
+      props.appraisal === "UNSATISFIED") && 
+      props.commenta === "" ||
+      props.commenta === undefined ||
+      props.commenta === null
     ) {
       isValid = false;
       errors["commenta"] = "Champ incorrect";
@@ -378,13 +381,14 @@ const handleClose = () => {
       claim["claimId"] = props.id;
       claim["solutionId"] = props.solutionId;
       claim["satisfactionStatus"] = props.appraisal;
+      claim["commentaire"] = props.commenta;
       claim["measurerId"] = user.id;
       // console.log("claimmesure", claim);
       props.etatChanged(true)
-      // mesurerClaimSolutionApi(claim, props).then(() => {
-      //   handleCancel(e);
-      //   handleClose();
-      // });
+      mesurerClaimSolutionApi(claim, props).then(() => {
+        handleCancel(e);
+        handleClose();
+      });
     } else {
     }
     props.claimAppraiseErrors(errors);
