@@ -1,6 +1,6 @@
 import axios from "axios";
 import { notify } from "../../Utils/alert";
-import { loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
+import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { HOST } from "../../Utils/globals";
 
 // ADD
@@ -28,12 +28,17 @@ export const ajout = async (data, props) => {
             props.etatChanged(false)
 
             //la license
-            // let infosLicense = {};
-            // infosLicense["denomination"] =data.denonmination ;
-            // infosLicense["email"] = data.email ;
-            // infosLicense["phone"] = data.phone ;
+            let infosLicense = {};
+            infosLicense["denomination"] =data.denomination ;
+            infosLicense["email"] = data.email ;
+            infosLicense["contact"] = data.tel ;
 
-            // createLicense(infosLicense,props);
+            let appInstitution =  loadItemFromLocalStorage("app-institution") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+            if (appInstitution === undefined || appInstitution === "") {
+                createLicense(infosLicense,props);
+            }
+
+           
            
             // liste(props)
             notify("Bravo - Institution Configurée", "success");
@@ -47,6 +52,7 @@ export const ajout = async (data, props) => {
 }
 
 export const createLicense = async (data, props) => {
+    // console.log("infos",data)
 
     const config = {
         method: 'post',
@@ -54,14 +60,27 @@ export const createLicense = async (data, props) => {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+            // 'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
         data: data
     };
 
     await axios(config)
         .then(function (response) {
-            console.log("responsegpradmin",response.data);
+            console.log("responsegpradmin",response.data.data);
+            let reponse = response.data.data;
+
+            let finResultat = {
+                "createdAt" : resultat.createdAt,
+                "serial" : resultat.serial,
+                "company" : resultat.clients[0].company,
+                "activationRequest" : resultat.clients[0].activationRequest,
+                "id" : resultat.id,
+                "fullname" : resultat.clients[0].fullname,
+                "email" : resultat.clients[0].email,
+                "updatedAt" : resultat.updatedAt
+
+            }
             // saveItemToSessionStorage(JSON.stringify(response.data.content), "app-institution")
             // saveItemToLocalStorage(JSON.stringify(response.data.content), "app-institution")
 
