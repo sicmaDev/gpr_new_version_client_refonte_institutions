@@ -647,7 +647,7 @@ const ListeDenonciations = (props) => {
                       <div>
                         <span className="chip2" style={{ backgroundColor:fond }}>
                           <span className="hero">
-                            Bénéficiaire {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                            Client {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
                           </span>
                         </span>
                       </div>

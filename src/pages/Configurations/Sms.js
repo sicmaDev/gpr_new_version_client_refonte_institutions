@@ -1,22 +1,14 @@
 import React, {useEffect, useState} from "react";
-import ReactDatatable from '@ashvin27/react-datatable';
 import HelpIcon from '@mui/icons-material/Help';
-import LastPageIcon from '@mui/icons-material/LastPage';
-import FirstPageIcon from '@mui/icons-material/FirstPage';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { v4 as uuidv4 } from 'uuid';
 
-import {cleanPhoneNumber, isValidPhone, loadItemFromSessionStorage, today} from "../../Utils/utils";
+import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
 import { connect } from "react-redux";
 import {modalify} from "../../Utils/modal";
-import { ajout, liste, modification, suppression } from "../../apis/Configurations/LanguesApi";
+import { ajout } from "../../apis/Configurations/SmsApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CancelIcon from '@mui/icons-material/Cancel';
-import { LOGO_SUPPORTED_SIZE } from "../../Utils/globals";
 import { isLicenseControl } from "../../Utils/license";
 import {
     urlChange,smsErrors, libelleIdChanged, libelleMessageChanged, valuePwdChanged, libellePwdChanged, libelleReceiverChanged, libelleSenderChanged, valueIdChanged, valueSenderChanged, etatChanged
@@ -27,6 +19,24 @@ import {
 const Sms = (props) => {
 
     useEffect(() => {
+        try {
+            let appSms =  loadItemFromLocalStorage("app-sms") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-sms")) : undefined;
+           
+            if (appSms !== undefined || appSms !== "") {
+                props.urlChange(appSms.url)
+                props.libelleIdChanged(appSms.libelle_id);
+                props.valueIdChanged(appSms.value_id);
+                props.libellePwdChanged(appSms.libelle_pwd);
+                props.valuePwdChanged(appSms.value_pwd);
+                props.libelleSenderChanged(appSms.libelle_sender);
+                props.valueSenderChanged(appSms.value_sender);
+                props.libelleReceiverChanged(appSms.libelle_receiver);
+                props.libelleMessageChanged(appSms.libelle_message);
+        
+            } else {
+            }
+        } catch (e) {
+        }
        
        
         //UI Fixes
@@ -122,32 +132,24 @@ const Sms = (props) => {
     const handleSubmit = (e) => {
         e.preventDefault()
 
-        let setting = {}
-        setting["name"] = 'App Sms';
-        setting["slug"] = 'app-sms';
-        let val = {}
-        val["url"] = props.url;
-        val["libelle_id"] = props.libelleId;
-        val["value_id"] = props.valueId;
-        val["libelle_pwd"] = props.libellePwd;
-        val["value_pwd"] = props.valuePwd;
-        val["libelle_sender"] = props.libelleSender;
-        val["value_sender"] = props.valueSender;
-        val["libelle_receiver"] = props.libelleReceiver;
-        val["libelle_message"] = props.libelleMessage;
-
-       
-        setting["value"] = JSON.stringify(val);
-        let data = {}
-        data['setting'] = setting
-
-        // if (handleValidation()) {
-        //     updateSettingApi('app-sms', data, props /*addToast*/)
-        // } 
-        // else {
+        if (handleValidation) {
+            let item = {}
+            item["url"] = props.url;
+            item["libId"] = props.libelleId;
+            item["valId"] = props.valueId;
+            item["libMdp"] = props.libellePwd;
+            item["valMdp"] = props.valuePwd;
+            item["libEmetteur"] = props.libelleSender;
+            item["valEmetteur"] = props.valueSender;
+            item["libDestinataire"] = props.libelleReceiver;
+            item["libMessage"] = props.libelleMessage;
            
-        //     notify("Echec de l'enregistrement", "error");
-        // }
+            props.etatChanged(true)
+            ajout(item, props).then(() => {
+                // handleCancel(e)
+            })
+
+        }
 
         props.smsErrors(errors)
         //console.log(errors.contenu);

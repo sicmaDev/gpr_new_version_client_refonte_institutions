@@ -44,7 +44,7 @@ const ReclamationsAlertes = (props) => {
         },
         {
           key: "claimClient",
-          text: "Bénéficiaire",
+          text: "Client",
           className: "client",
           align: "left",
           sortable: true,

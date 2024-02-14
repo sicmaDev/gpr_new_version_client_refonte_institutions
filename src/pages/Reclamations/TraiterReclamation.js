@@ -208,7 +208,8 @@ const TraiterReclamation = (props) => {
   //vérification if user is in guest
   let showJoinBtn = false;
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
-  if(potentialGuest != null && potentialGuest.length > 0 ){
+  let potentialMember = props.session?.members?.filter((e) => e.id === user.id);
+  if((potentialGuest != null && potentialGuest.length > 0) || (potentialMember != null && potentialMember.length > 0 ) ){
     showJoinBtn = true;
   }
 
@@ -556,7 +557,7 @@ const TraiterReclamation = (props) => {
   }
 
   const connect = () => {
-    let Sock = new SockJS("http://192.168.100.6:8080/ws");
+    let Sock = new SockJS("http://localhost:8080/ws");
     stompClient = over(Sock);
     stompClient.connect({}, onConnected, onError);
   };
@@ -1022,7 +1023,7 @@ const TraiterReclamation = (props) => {
     },
     {
       key: "clientFirstAndLastName",
-      text: "Bénéficiaire",
+      text: "Client",
       className: "client",
       align: "left",
       sortable: true,
@@ -1191,6 +1192,7 @@ const TraiterReclamation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
+    console.log("session",data);
     handleClickOpen();
     clearComponentState();
     // console.log("donnees",data)
@@ -1306,6 +1308,7 @@ const TraiterReclamation = (props) => {
 
     getFillesApi(data.id, props);
     getClaimAudioApi(data.id, props);
+    console.log("create",props.created_by);
   };
   
   let tchat;
@@ -1313,10 +1316,10 @@ const TraiterReclamation = (props) => {
     tchat = (
       <>
         {userData.connected ? (
-          <div className="containera clearfix mt-5">
+          <div className="row containera clearfix mt-5">
           
             <div class="people-list" id="people-list">
-            { !showJoinBtn ? 
+            { props.session.createdBy.id === user.id ? 
               <div class="search">
                 <input type="text" placeholder="search" onChange={invitation} />
               </div> : null}
@@ -1452,7 +1455,7 @@ const TraiterReclamation = (props) => {
                       </div>
                     </div>
                     <div style={{ marginLeft: "auto" }}>
-                      { !showJoinBtn ? 
+                      { props.session.createdBy.id === user.id ? 
                         <>
                           <IconButton onClick={handleShowVoteField}>
                             <HowToVoteIcon />
@@ -2019,7 +2022,7 @@ const TraiterReclamation = (props) => {
                     <div>
                       <span className="chip2" style={{ backgroundColor:fond }}>
                         <span className="hero">
-                          Bénéficiaire {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                          Client {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
                         </span>
                       </span>
                     </div>
@@ -2123,6 +2126,24 @@ const TraiterReclamation = (props) => {
                             </div>
                             <div>{solution?.commentaire}</div>
                           </div>
+
+                          {
+                            solution.satisfactionMeasureDto ? 
+                              solution.satisfactionMeasureDto.commentaire !== null ? 
+
+                              <div
+                                className="col l12 s12 pb-2"
+                                id="content"
+                              >
+                                <div className="df pb-2">
+                                  <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
+                                  Commentaire du client
+                                </div>
+                                <div>{solution.satisfactionMeasureDto.commentaire}</div>
+                              </div> : ""
+
+                            : ""
+                          }
                         </div>
                        
                       </Typography>
@@ -2410,7 +2431,7 @@ const TraiterReclamation = (props) => {
           compteur: solution.compteur,
         };
       });
-      console.log("solutionsLISTE", solutionsListe);
+      // console.log("solutionsLISTE", solutionsListe);
 
       if (hbt.includes("H6") || addR === "PILOTE") {
         affectForm = (
@@ -2494,8 +2515,8 @@ const TraiterReclamation = (props) => {
       }else{
         affectForm=""
       }
-
-      if (hbt.includes("H2","H3","H4") ) {
+     
+      if (hbt.includes("H2","H3","H4") && props.created_by === user.firstAndLastName)  {
         treatForm = (
           <>
             
@@ -2517,7 +2538,7 @@ const TraiterReclamation = (props) => {
                 
              
                 <form id="claimHandleForm">
-                  <div className="row">
+                  <div className="row mb-2">
                     <div className="col s12">
                       <details open>
                         <summary className="text-details">
@@ -2572,25 +2593,26 @@ const TraiterReclamation = (props) => {
                        
                       </details>
                     </div>
+                    <div className="col s12 display-flex justify-content-end mt-3 ">
+                      <LoadingButton
+                        onClick={handleSolve}
+                        className="waves-effect waves-effect-b waves-light btn-small"
+                        loading={props.etat2}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{
+                          backgroundColor: "#1e2188",
+                          textTransform: "initial",
+                        }}
+                      >
+                        <span>Résoudre</span>
+                      </LoadingButton>
+                    </div>
                   </div>
                 </form>
                 
-                <div className="col s12 display-flex justify-content-end mt-3">
-                  <LoadingButton
-                    onClick={handleSolve}
-                    className="waves-effect waves-effect-b waves-light btn-small"
-                    loading={props.etat2}
-                    loadingPosition="end"
-                    endIcon={<SaveIcon />}
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#1e2188",
-                      textTransform: "initial",
-                    }}
-                  >
-                    <span>Résoudre</span>
-                  </LoadingButton>
-                </div>
+               
               </>
             ) : (
               <div className="row">
@@ -3564,6 +3586,7 @@ const TraiterReclamation = (props) => {
                                   </div>
 
                                   <div className="row">
+                                    
                                     <div
                                       className="col l6 s12 df pb-2"
                                       id="code"
@@ -3664,19 +3687,28 @@ const TraiterReclamation = (props) => {
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-7">
                             <div className="row" id="ententeFiche">
-                              <div className="row df" style={{ justifyContent: "space-between" }}>
+                              <div className="row">
                                 
                                 <h5
-                                  className="card-title  "
+                                  className="col l6 m6 s12 card-title"
                                 >
                                   Détails du traitement
-                                  
                                 </h5>
-                                {transmettre}
-                                {btnS}
-                                {/* <div className="">
-                                  
-                                </div> */}
+
+                                {
+                                  transmettre === "" || btnS === "" ?
+                                  <div className="col l6 m6 s12 df justify-content-end">
+                                    {transmettre}
+                                    {btnS}
+                                  </div>
+                                  :
+                                  <div className="col l6 m6 s12 df justify-content-between">
+                                    {transmettre}
+                                    {btnS}
+                                  </div>
+                                }
+                               
+                                
                                 
                               </div>
                             </div>

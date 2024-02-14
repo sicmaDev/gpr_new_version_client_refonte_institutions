@@ -20,7 +20,7 @@ import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import { notify } from "../../Utils/alert";
 import axios from "axios";
-import { addressChanged, codeChanged, collectChanged, collectLibelleChanged, contentChanged, createdAtChanged, createdByChanged, crewChanged, dossierimfChanged, etat2Changed, etatChanged, firstnameChanged, genderChanged, handledAtChanged, handledByChanged, idChanged, itemsChanged, languageChanged, languageLibelleChanged, lastnameChanged, loading, phoneChanged, productChanged, productLibelleChanged, recordedAtChanged, recordedAtDPChanged, resolvedAtChanged, resolvedByChanged, selectedFilesChanged, selectedFilesReset, selectedItemChanged, selectedItemFilesChanged, showSelectPrintItemChanged, solutionChanged, statusChanged, suggestionRecordErrors, unitChanged, unitLibelleChanged } from "../../redux/actions/Suggestions/EnregistrementSuggestionActions";
+import { addressChanged, codeChanged, collectChanged, collectLibelleChanged, contentChanged, createdAtChanged, createdByChanged, dossierimfChanged, etat2Changed, etatChanged, firstnameChanged, genderChanged, handledAtChanged, handledByChanged, idChanged, itemsChanged, languageChanged, languageLibelleChanged, lastnameChanged, loading, phoneChanged, productChanged, productLibelleChanged, recordedAtChanged, recordedAtDPChanged, resolvedAtChanged, resolvedByChanged, selectedFilesChanged, selectedFilesReset, selectedItemChanged, selectedItemFilesChanged, showSelectPrintItemChanged, solutionChanged, statusChanged, suggestionRecordErrors, unitChanged, unitLibelleChanged } from "../../redux/actions/Suggestions/EnregistrementSuggestionActions";
 import { addSuggestionApi, addSuggestionApiOffline, addTempSuggestionApi, addTempSuggestionApiOffline, downloadFillesApi, getFillesApi, listeByStatut, listeByStatutOffline } from "../../apis/Suggestions/SuggestionsApi";
 import PhoneInput from "react-phone-number-input";
 // import DateInput from "../ui/DateInput";
@@ -223,7 +223,6 @@ const EnregistrerSuggestion = (props) => {
         props.collectChanged("")
         props.collectLibelleChanged("")
         props.codeChanged("")
-        props.crewChanged("");
         props.recordedAtChanged("")
         props.recordedAtDPChanged("")
         props.productChanged("")
@@ -307,7 +306,6 @@ const EnregistrerSuggestion = (props) => {
             claim["productId"] = props.product;
             claim["languageId"] = props.language;
             claim["folderCode"] = props.dossierimf;
-            claim["crew"] = props.crew;
             claim["receiptDateTime"] = props.recorded_at;
             claim["collectorId"] = user.id;
             claim["content"] = props.content;
@@ -352,7 +350,6 @@ const EnregistrerSuggestion = (props) => {
         claim["productId"] = props.product;
         claim["languageId"] = props.language;
         claim["folderCode"] = props.dossierimf;
-        claim["crew"] = props.crew;
         claim["receiptDateTime"] = props.recorded_at;
         claim["collectorId"] = user.id;
         claim["content"] = props.content;
@@ -496,7 +493,7 @@ const EnregistrerSuggestion = (props) => {
         },
         {
             key: "clientFirstAndLastName",
-            text: "Bénéficiaire",
+            text: "Client",
             className: "client",
             align: "left",
             sortable: true,
@@ -555,7 +552,6 @@ const EnregistrerSuggestion = (props) => {
             props.addressChanged(data.address ? data.address : "");
             props.phoneChanged(data.tel ? cleanPhoneNumber2(data.tel) : "");
             props.genderChanged(data.gender ? data.gender : "");
-            props.crewChanged(data.crew ? data.crew : "");
             props.languageChanged(data.langue ? data.langue.id : "");
             props.languageLibelleChanged(data.langue ? data.langue.libelle : "");
             props.dossierimfChanged(data.folderCode ? data.folderCode : "");
@@ -578,7 +574,6 @@ const EnregistrerSuggestion = (props) => {
                 props.addressChanged(data.address ? data.address : "");
                 props.phoneChanged(data.tel ? cleanPhoneNumber2(data.tel) : "");
                 props.genderChanged(data.gender ? data.gender : "");
-                props.crewChanged(data.crew ? data.crew : "");
                 props.languageChanged(data.langue ? data.langue.id : "");
                 props.languageLibelleChanged(data.langue ? data.langue.libelle : "");
                 props.dossierimfChanged(data.folderCode ? data.folderCode : "");
@@ -599,7 +594,6 @@ const EnregistrerSuggestion = (props) => {
                 props.addressChanged(data.address ? data.address : "");
                 props.phoneChanged(data.tel ? cleanPhoneNumber2(data.tel) : "");
                 props.genderChanged(data.gender ? data.gender : "");
-                props.crewChanged(data.crew ? data.crew : "");
                 props.dossierimfChanged(data.folderCode ? data.folderCode : "");
                 props.codeChanged(data.code ? data.code : "");
                 props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
@@ -989,21 +983,7 @@ const EnregistrerSuggestion = (props) => {
                                                                      className="error">{(props.errors !== undefined) ? props.errors.dossierimf : ""}</div>
                                                             </small>
                                                         </div>
-                                                        <div className="col l6 m12 s12 input-field">
-                                                            <input id="crew" name="crew" type="text"
-                                                                   className="validate"
-                                                                   placeholder=""
-                                                                   value={props.crew}
-                                                                   data-error=".errorTxt2"
-                                                                   onChange={(e) => props.crewChanged(e.target.value)}/>
-                                                            <label htmlFor="crew"
-                                                                   className={"active"}>Nom du Groupe<span><span
-                                                                className="red-text darken-2 "></span></span></label>
-                                                            <small className="errorTxt4">
-                                                                <div id="cpassword-error"
-                                                                     className="error">{(props.errors !== undefined) ? props.errors.crew : ""}</div>
-                                                            </small>
-                                                        </div>
+                                                        
                                                     </div>
                                                 </div>
                                                 <br/>
@@ -1170,7 +1150,6 @@ const mapStateToProps = (state) => {
       status: state.suggestion_record.status,
       solution: state.suggestion_record.solution,
       comment: state.suggestion_record.comment,
-      crew: state.suggestion_record.crew,
       created_by: state.suggestion_record.created_by,
       created_at: state.suggestion_record.created_at,
       handled_at: state.suggestion_record.handled_at,
@@ -1294,9 +1273,7 @@ const mapStateToProps = (state) => {
       showSelectPrintItemChanged: (show) => {
         dispatch(showSelectPrintItemChanged(show));
       },
-      crewChanged: (crew) => {
-        dispatch(crewChanged(crew));
-      },
+     
       etatChanged: (etat) => {
         dispatch(etatChanged(etat));
       },

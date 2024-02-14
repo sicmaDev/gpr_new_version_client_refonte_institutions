@@ -24,14 +24,17 @@ export const LoginApi = (credentials, props) => {
             if (response.data.response.status) {
                 notify("Bravo - Vous êtes authentifié", "success");
                 props.authenticate()
-                //  console.log("loginresponse",response.data)
+                 console.log("loginresponse",response.data.response.content.settings)
                 //enregistrement dans la session storage
                 saveItemToSessionStorage(response.data.response.content.token, 'token')
                 saveItemToSessionStorage(1, 'logged')
                 saveItemToSessionStorage(1, 'app-mode')
                 
                 response.data.response.content.user ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.user), 'app-user'): saveItemToSessionStorage([], 'app-user');
-                // response.data.response.content.settings.institution ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.institution), 'app-institution') : saveItemToSessionStorage([], 'app-institution');
+                response.data.response.content.settings.institution ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.institution), 'app-institution') : saveItemToSessionStorage([], 'app-institution');
+                response.data.response.content.settings.mail ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.mail), 'app-mail') : saveItemToSessionStorage([], 'app-mail');
+                response.data.response.content.settings.sms ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.sms), 'app-sms') : saveItemToSessionStorage([], 'app-sms');
+                response.data.response.content.settings.bot ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.bot), 'app-bot') : saveItemToSessionStorage([], 'app-bot');
                 response.data.response.content.settings.languages ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.languages), 'app-langues') : saveItemToSessionStorage([], 'app-langues');
                 response.data.response.content.settings.externalRecourses ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.externalRecourses), 'app-recours') : saveItemToSessionStorage([], 'app-recours');
                 response.data.response.content.settings.servicePoints ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.servicePoints), 'app-ps') : saveItemToSessionStorage([], 'app-ps');
@@ -50,7 +53,10 @@ export const LoginApi = (credentials, props) => {
                 saveItemToLocalStorage(1, 'app-mode')
 
                 response.data.response.content.user ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.user), 'app-user'): saveItemToLocalStorage([], 'app-user');
-                // response.data.response.content.settings.institution ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.institution), 'app-institution') : saveItemToSessionStorage([], 'app-institution');
+                response.data.response.content.settings.institution ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.institution), 'app-institution') : saveItemToLocalStorage([], 'app-institution');
+                response.data.response.content.settings.mail ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.mail), 'app-mail') : saveItemToLocalStorage([], 'app-mail');
+                response.data.response.content.settings.sms ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.sms), 'app-sms') : saveItemToLocalStorage([], 'app-sms');
+                response.data.response.content.settings.bot ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.bot), 'app-bot') : saveItemToLocalStorage([], 'app-bot');
                 response.data.response.content.settings.languages ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.languages), 'app-langues') : saveItemToLocalStorage([], 'app-langues');
                 response.data.response.content.settings.externalRecourses ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.externalRecourses), 'app-recours') : saveItemToLocalStorage([], 'app-recours');
                 response.data.response.content.settings.servicePoints ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.servicePoints), 'app-ps') : saveItemToLocalStorage([], 'app-ps');
@@ -127,6 +133,10 @@ export const LoginApiOffline = (credentials, props) => {
             props.authenticate()
             notify("Bravo - Vous êtes authentifié", "success");
             (loadItemFromLocalStorage("app-user")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-user"), 'app-user'): saveItemToSessionStorage([], 'app-user');
+            (loadItemFromLocalStorage("app-institution")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-institution"), 'app-institution'): saveItemToSessionStorage([], 'app-institution');
+            (loadItemFromLocalStorage("app-mail")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-mail"), 'app-mail'): saveItemToSessionStorage([], 'app-mail');
+            (loadItemFromLocalStorage("app-sms")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-sms"), 'app-sms'): saveItemToSessionStorage([], 'app-sms');
+            (loadItemFromLocalStorage("app-bot")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-bot"), 'app-bot'): saveItemToSessionStorage([], 'app-bot');
             (loadItemFromLocalStorage("app-langues")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-langues"), 'app-langues') : saveItemToSessionStorage([], 'app-langues');
             (loadItemFromLocalStorage("app-recours")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-recours"), 'app-recours') : saveItemToSessionStorage([], 'app-recours');
             (loadItemFromLocalStorage("app-ps")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-ps"), 'app-ps') : saveItemToSessionStorage([], 'app-ps');

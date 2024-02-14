@@ -207,9 +207,11 @@ const TraiterDenonciation = (props) => {
   //vérification if user is in guest
   let showJoinBtn = false;
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
-  if(potentialGuest != null && potentialGuest.length > 0 ){
+  let potentialMember = props.session?.members?.filter((e) => e.id === user.id);
+  if((potentialGuest != null && potentialGuest.length > 0) || (potentialMember != null && potentialMember.length > 0 ) ){
     showJoinBtn = true;
   }
+
 
   const [privateChats, setPrivateChats] = useState(new Map());
   const [publicChats, setPublicChats] = useState([]);
@@ -476,7 +478,7 @@ const TraiterDenonciation = (props) => {
   }
 
   const connect = () => {
-    let Sock = new SockJS("http://192.168.100.6:8080/ws");
+    let Sock = new SockJS("http://localhost:8080/ws");
     stompClient = over(Sock);
     stompClient.connect({}, onConnected, onError);
   };
@@ -1162,10 +1164,10 @@ const TraiterDenonciation = (props) => {
     tchat = (
       <>
         {userData.connected ? (
-          <div className="containera clearfix mt-5">
+          <div className="row containera clearfix mt-5">
           
             <div class="people-list" id="people-list">
-            { !showJoinBtn ? 
+            { props.session.createdBy.id === user.id ? 
               <div class="search">
                 <input type="text" placeholder="search" onChange={invitation} />
               </div> : null}
@@ -1300,7 +1302,7 @@ const TraiterDenonciation = (props) => {
                       </div>
                     </div>
                     <div style={{ marginLeft: "auto" }}>
-                      { !showJoinBtn ? 
+                      { props.session.createdBy.id === user.id ? 
                         <>
                           <IconButton onClick={handleShowVoteField}>
                             <HowToVoteIcon />
@@ -1853,7 +1855,7 @@ const TraiterDenonciation = (props) => {
                       <div>
                         <span className="chip2" style={{ backgroundColor:fond }}>
                           <span className="hero">
-                            Bénéficiaire {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                            Client {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
                           </span>
                         </span>
                       </div>
@@ -2281,7 +2283,7 @@ const TraiterDenonciation = (props) => {
         affectForm=""
       }
 
-      if (hbt.includes("H2","H3","H4") ) {
+      if (hbt.includes("H2","H3","H4") && props.created_by === user.firstAndLastName ) {
         treatForm = (
           <>
             
@@ -2303,7 +2305,7 @@ const TraiterDenonciation = (props) => {
                 :""}
 
                 <form id="claimHandleForm">
-                  <div className="row">
+                  <div className="row mb-2">
                     <div className="col s12">
                       <details open>
                         <summary className="text-details">
@@ -2358,25 +2360,26 @@ const TraiterDenonciation = (props) => {
                         
                       </details>
                     </div>
+                    <div className="col s12 display-flex justify-content-end">
+                      <LoadingButton
+                        onClick={handleSolve}
+                        className="waves-effect waves-effect-b waves-light btn-small"
+                        loading={props.etat2}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{
+                          backgroundColor: "#1e2188",
+                          textTransform: "initial",
+                        }}
+                      >
+                        <span>Résoudre</span>
+                      </LoadingButton>
+                    </div>
                   </div>
                 </form>
 
-                <div className="col s12 display-flex justify-content-end">
-                  <LoadingButton
-                    onClick={handleSolve}
-                    className="waves-effect waves-effect-b waves-light btn-small"
-                    loading={props.etat2}
-                    loadingPosition="end"
-                    endIcon={<SaveIcon />}
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#1e2188",
-                      textTransform: "initial",
-                    }}
-                  >
-                    <span>Résoudre</span>
-                  </LoadingButton>
-                </div>
+              
               </>
             ) : (
               <div className="row">
@@ -2958,7 +2961,7 @@ const TraiterDenonciation = (props) => {
   });
 
   
-  let transmettre="";
+  let transmettre = "";
   let btnS = "";
   
   if (
@@ -2983,6 +2986,60 @@ const TraiterDenonciation = (props) => {
   } else {
     transmettre = "";
   }
+  if (user.firstAndLastName === props.created_by || showJoinBtn) {
+    if (props.session === "" && props.session.status !== "OPEN") {
+      btnS = (
+        <>
+          <LoadingButton
+            onClick={(e) => registerUser(e)}
+            className="waves-effect waves-effect-b waves-light btn-small"
+            loading={props.etat4}
+            loadingPosition="end"
+            endIcon={<ChatIcon />}
+            variant="contained"
+            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+          >
+            <span>Ouvrir une session</span>
+          </LoadingButton>
+        </>
+      );
+    } else if (props.session !== "" && props.session.status === "OPEN" ) {
+      btnS = (
+        <>
+          <LoadingButton
+            onClick={(e) => connect()}
+            className="waves-effect waves-effect-b waves-light btn-small"
+            loading={props.etat4}
+            loadingPosition="end"
+            endIcon={<ChatIcon />}
+            variant="contained"
+            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+          >
+            <span>Rejoindre la session</span>
+          </LoadingButton>
+        </>
+      );
+    } else if (props.session !== "" && props.session.status === "CLOSED") {
+      btnS = (
+        <>
+          <LoadingButton
+            onClick={(e) => connect()}
+            className="waves-effect waves-effect-b waves-light btn-small"
+            loading={props.etat4}
+            loadingPosition="end"
+            endIcon={<ChatIcon />}
+            variant="contained"
+            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+          >
+            <span>Voir la discussion</span>
+          </LoadingButton>
+        </>
+      );
+    } else {
+      btnS = "";
+    }
+  }
+
 
   // Sélectionnez tous les éléments avec la classe spécifiée
   const elements = document.querySelectorAll('.MuiDialog-root');
@@ -3176,18 +3233,28 @@ const TraiterDenonciation = (props) => {
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
                             <div className="row" id="ententeFiche">
-                              <div className="row df" style={{ justifyContent: "space-between" }}>
+                              <div className="row">
                                 <h5
-                                  className="card-title "
-                                  
+                                  className="col l6 m6 s12 card-title"
                                 >
                                   Détails du traitement
                                 </h5>
-                                {transmettre}
-                                {btnS}
-                                {/* <div className="">
-                                  
-                                </div> */}
+
+                                {
+                                  transmettre === "" || btnS === "" ?
+                                  <div className="col l6 m6 s12 df justify-content-end">
+                                    {transmettre}
+                                    {btnS}
+                                  </div>
+                                  :
+                                  <div className="col l6 m6 s12 df justify-content-between">
+                                    {transmettre}
+                                    {btnS}
+                                  </div>
+                                }
+                               
+                                
+                                
                               </div>
                             </div>
                            

@@ -19,7 +19,6 @@ import {
   collectChanged,
   collectLibelleChanged,
   contentChanged,
-  crewChanged,
   dossierimfChanged,
   etat2Changed,
   etatChanged,
@@ -370,7 +369,6 @@ const EnregistrerReclamation = (props) => {
     props.underSubjectChanged("");
     props.collectChanged("");
     props.codeChanged("");
-    props.crewChanged("");
     props.recordedAtChanged("");
     props.recordedAtDPChanged("");
     props.productChanged("");
@@ -519,7 +517,6 @@ const EnregistrerReclamation = (props) => {
       claim["objetId"] = props.underSubject;
       claim["languageId"] = props.language;
       claim["folderCode"] = props.dossierimf;
-      claim["crew"] = props.crew;
       claim["receiptDateTime"] = props.recorded_at;
       claim["collectorId"] = user.id;
       if (
@@ -582,7 +579,6 @@ const EnregistrerReclamation = (props) => {
     claim["objetId"] = props.underSubject;
     claim["languageId"] = props.language;
     claim["folderCode"] = props.dossierimf;
-    claim["crew"] = props.crew;
     claim["receiptDateTime"] = props.recorded_at;
     claim["collectorId"] = user.id;
     claim["content"] = props.content;
@@ -733,7 +729,7 @@ const EnregistrerReclamation = (props) => {
     },
     {
       key: "clientFirstAndLastName",
-      text: "Bénéficiaire",
+      text: "Client",
       className: "client",
       align: "left",
       sortable: true,
@@ -789,7 +785,6 @@ const EnregistrerReclamation = (props) => {
       props.addressChanged(data.address ? data.address : "");
       props.phoneChanged(data.tel ? cleanPhoneNumber2(data.tel) : "");
       props.genderChanged(data.gender ? data.gender : "");
-      props.crewChanged(data.crew ? data.crew : "");
       props.languageChanged(data.language ? data.language.id : "");
       props.languageLibelleChanged(data.language ? data.language.libelle : "");
       props.dossierimfChanged(data.folderCode ? data.folderCode : "");
@@ -825,7 +820,6 @@ const EnregistrerReclamation = (props) => {
         props.addressChanged(data.address ? data.address : "");
         props.phoneChanged(data.tel ? cleanPhoneNumber2(data.tel) : "");
         props.genderChanged(data.gender ? data.gender : "");
-        props.crewChanged(data.crew ? data.crew : "");
         props.languageChanged(data.language ? data.language.id : "");
         props.languageLibelleChanged(
           data.language ? data.language.libelle : ""
@@ -864,7 +858,6 @@ const EnregistrerReclamation = (props) => {
         props.addressChanged(data.address ? data.address : "");
         props.phoneChanged(data.tel ? cleanPhoneNumber2(data.tel) : "");
         props.genderChanged(data.gender ? data.gender : "");
-        props.crewChanged(data.crew ? data.crew : "");
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
         props.codeChanged(data.code ? data.code : "");
         props.recordedAtChanged(
@@ -1575,33 +1568,7 @@ const EnregistrerReclamation = (props) => {
                                 </div>
                               </small>
                             </div>
-                            <div className="col l6 m12 s12 input-field">
-                              <input
-                                id="crew"
-                                name="crew"
-                                type="text"
-                                className="validate"
-                                placeholder=""
-                                value={props.crew}
-                                data-error=".errorTxt2"
-                                onChange={(e) =>
-                                  props.crewChanged(e.target.value)
-                                }
-                              />
-                              <label htmlFor="crew" className={"active"}>
-                                Nom du Groupe
-                                <span>
-                                  <span className="red-text darken-2 "></span>
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.crew
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
+                           
                           </div>
                         </div>
                         <br />
@@ -1943,7 +1910,6 @@ const mapStateToProps = (state) => {
     unit: state.claim_record.unit,
     unitLibelle: state.claim_record.unitLibelle,
     content: state.claim_record.content,
-    crew: state.claim_record.crew,
     errors: state.claim_record.claim_record_errors,
     items: state.claim_record.items,
     selectedFiles: state.claim_record.selectedFiles,
@@ -1989,9 +1955,6 @@ const mapDispatchToProps = (dispatch) => {
     },
     dossierimfChanged: (dossierimf) => {
       dispatch(dossierimfChanged(dossierimf));
-    },
-    crewChanged: (crew) => {
-      dispatch(crewChanged(crew));
     },
     codeChanged: (code) => {
       dispatch(codeChanged(code));

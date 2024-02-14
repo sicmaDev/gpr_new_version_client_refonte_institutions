@@ -1,21 +1,13 @@
 import React, {useEffect, useState} from "react";
-import ReactDatatable from '@ashvin27/react-datatable';
-import HelpIcon from '@mui/icons-material/Help';
-import LastPageIcon from '@mui/icons-material/LastPage';
-import FirstPageIcon from '@mui/icons-material/FirstPage';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { v4 as uuidv4 } from 'uuid';
 
-import {cleanPhoneNumber, isValidPhone, loadItemFromSessionStorage, today} from "../../Utils/utils";
+import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
 import { connect } from "react-redux";
 import {modalify} from "../../Utils/modal";
-import { ajout, liste, modification, suppression } from "../../apis/Configurations/LanguesApi";
+import { ajout } from "../../apis/Configurations/MailApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CancelIcon from '@mui/icons-material/Cancel';
 import { LOGO_SUPPORTED_SIZE } from "../../Utils/globals";
 import { isLicenseControl } from "../../Utils/license";
 import {
@@ -26,6 +18,20 @@ import {
 const Email = (props) => {
 
     useEffect(() => {
+
+        try {
+            let appMail =  loadItemFromLocalStorage("app-mail") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-mail")) : undefined;
+           
+            if (appMail !== undefined || appMail !== "") {
+                props.userChanged(appMail.user)
+                props.hostChanged(appMail.host)
+                props.portChanged(appMail.port)
+                props.passwordChanged(appMail.logo)
+
+            } else {
+            }
+        } catch (e) {
+        }
        
        
         //UI Fixes
@@ -88,24 +94,19 @@ const Email = (props) => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
+        if (handleValidation) {
+            let item = {}
+            item["host"] = props.host;
+            item["port"] = props.port;
+            item["user"] = props.user;
+            item["pwd"] = props.password;
+           
+            props.etatChanged(true)
+            ajout(item, props).then(() => {
+                // handleCancel(e)
+            })
 
-        let setting = {}
-        setting["name"] = 'App Mail';
-        setting["slug"] = 'app-mail';
-        let val = {}
-        val["user"] = props.user;
-        val["host"] = props.host;
-        val["port"] = props.port;
-        val["password"] = props.password;
-        setting["value"] = JSON.stringify(val);
-        let data = {}
-        data['setting'] = setting
-
-        // if (handleValidation()) {
-        //     updateSettingApi('app-mail', data, props /*addToast*/)
-        // } else {
-        // }
-
+        }
 
     }
 

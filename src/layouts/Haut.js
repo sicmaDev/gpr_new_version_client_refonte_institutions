@@ -26,6 +26,8 @@ import { loadItemFromLocalStorage, loadItemFromSessionStorage } from '../Utils/u
 import { useHistory } from "react-router-dom";
 import WifiOffIcon from '@mui/icons-material/WifiOff';
 import logo from '../assets/images/logo_gpr.jpg';
+import Footer from './Footer';
+import { APP_OWNER, APP_OWNER_WEBSITE } from '../Utils/globals';
 
 
 const drawerWidth = 250;
@@ -288,6 +290,17 @@ export const Haut = (props) => {
                 </List>
             </Drawer>
             <Contenu/>
+            <footer
+              className="page-footer footer footer-static footer-light footer-bottom white navbar-border navbar-shadow">
+              <div className="footer-copyright" style={{ ...(open && { marginLeft: "12%" }) }}>
+                  <div className="container"><span>&copy; {(new Date().getFullYear())} <a href={APP_OWNER_WEBSITE} target="_blank">{APP_OWNER}</a> Tous droits réservés.</span>
+                  <span className="right hide-on-small-only hide"> <a href="#"></a></span></div>
+                  <div className="" style={{color:"red",width:"500px",fontSize:"16px",textAlign:"center",fontStyle:"bold",fontWeight:"700"}} >
+                    Votre licence expire dans 15 jours !
+                  </div>
+              </div>
+           
+            </footer>
           </Box>
       
         </ThemeProvider>
@@ -438,9 +451,24 @@ export const Haut = (props) => {
                 </List>
             </Drawer>
             <Contenu/>
+
+            <footer
+              className="page-footer footer footer-static footer-light footer-bottom white navbar-border navbar-shadow">
+              <div className="footer-copyright" style={{ ...(open && { marginLeft: "12%" }) }}>
+                  <div className="container"><span>&copy; {(new Date().getFullYear())} <a href={APP_OWNER_WEBSITE} target="_blank">{APP_OWNER}</a> Tous droits réservés.</span>
+                  <span className="right hide-on-small-only hide"> <a href="#"></a></span></div>
+                  <div className="" style={{color:"red",width:"500px",fontSize:"18px",textAlign:"center",fontStyle:"bold",fontWeight:"700"}} >
+                    Votre licence expire dans 15 jours !
+                  </div>
+              </div>
+           
+            </footer>
+            
+            {/* <Footer/> */}
           </Box>
       
         </ThemeProvider>
+        
       </div>
     </>
 

@@ -157,7 +157,7 @@ const ListeSuggestions = (props) => {
     },
     {
       key: "clientFirstAndLastName",
-      text: "Bénéficiaire",
+      text: "Client",
       className: "client",
       align: "left",
       sortable: true,

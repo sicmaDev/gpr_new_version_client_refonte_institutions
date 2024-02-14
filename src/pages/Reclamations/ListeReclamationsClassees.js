@@ -100,6 +100,7 @@ import ee from "event-emitter";
 import { modalify } from "../../Utils/modal";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
+import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 const styles = {
   control: (base) => ({
     ...base,
@@ -220,7 +221,7 @@ const ListeReclamationsClassees = (props) => {
     },
     {
       key: "clientFirstAndLastName",
-      text: "Bénéficiaire",
+      text: "Client",
       className: "client",
       align: "left",
       sortable: true,
@@ -508,7 +509,7 @@ const ListeReclamationsClassees = (props) => {
       );
     });
     attachmentList = (
-      <div className="col s12 app-file-content grey lighten-4">
+      <div className="col s12 app-file-content grey lighten-4 mt-4">
         <span className="app-file-label">Fichiers joints</span>
         <div className="row app-file-recent-access mb-3">
           {attachmentListChild}
@@ -660,7 +661,7 @@ const ListeReclamationsClassees = (props) => {
                     <div>
                       <span className="chip2" style={{ backgroundColor:fond }}>
                         <span className="hero">
-                          Bénéficiaire {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                          Client {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
                         </span>
                       </span>
                     </div>
@@ -766,6 +767,24 @@ const ListeReclamationsClassees = (props) => {
                             </div>
                             <div>{solution.commentaire}</div>
                           </div>
+
+                          {
+                            solution.satisfactionMeasureDto ? 
+                              solution.satisfactionMeasureDto.commentaire !== null ? 
+
+                              <div
+                                className="col l12 s12 pb-2"
+                                id="content"
+                              >
+                                <div className="df pb-2">
+                                  <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
+                                  Commentaire du client
+                                </div>
+                                <div>{solution.satisfactionMeasureDto.commentaire}</div>
+                              </div> : ""
+
+                            : ""
+                          }
                         </div>
                        
                       </Typography>
