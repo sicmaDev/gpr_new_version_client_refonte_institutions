@@ -3667,13 +3667,13 @@ const TraiterReclamation = (props) => {
                               <div className="row df" style={{ justifyContent: "space-between" }}>
                                 
                                 <h5
-                                  className="col l12 s12 card-title  "
+                                  className="card-title  "
                                 >
                                   Détails du traitement
                                   
                                 </h5>
                                 {transmettre}
-                                  {btnS}
+                                {btnS}
                                 {/* <div className="">
                                   
                                 </div> */}

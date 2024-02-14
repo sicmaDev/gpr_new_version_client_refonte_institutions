@@ -2959,77 +2959,29 @@ const TraiterDenonciation = (props) => {
 
   
   let transmettre="";
-
-  if ((props.objetLevel === "MINEUR" && user.firstAndLastName === props.created_by &&
-  addR === "MOLDUE") ) {
-    transmettre = 
-    <>
-      <LoadingButton
-        onClick={(e) => handleModal(e)}
-        className="waves-effect waves-effect-b waves-light btn-small"
-        loading={props.etat3}
-        loadingPosition="end"
-        endIcon={<SendIcon />}
-        variant="contained"
-        sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
-      >
+  let btnS = "";
+  
+  if (
+    props.objetLevel === "MINEUR" &&
+    user.firstAndLastName === props.created_by 
+  ) {
+    transmettre = (
+      <>
+        <LoadingButton
+          onClick={(e) => handleModal(e)}
+          className="waves-effect waves-effect-b waves-light btn-small"
+          loading={props.etat3}
+          loadingPosition="end"
+          endIcon={<SendIcon />}
+          variant="contained"
+          sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+        >
           <span>Transmettre</span>
-      </LoadingButton>
-    </>
-  } else if (showJoinBtn) {
-    if (props.session === "" && props.session.status !== "OPEN") {
-      transmettre = (
-        <>
-          <LoadingButton
-            onClick={(e) => registerUser(e)}
-            className="waves-effect waves-effect-b waves-light btn-small"
-            loading={props.etat4}
-            loadingPosition="end"
-            endIcon={<ChatIcon />}
-            variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-          >
-            <span>Ouvrir une session</span>
-          </LoadingButton>
-        </>
-      );
-    } else if (props.session !== "" && props.session.status === "OPEN" ) {
-      transmettre = (
-        <>
-          <LoadingButton
-            onClick={(e) => connect()}
-            className="waves-effect waves-effect-b waves-light btn-small"
-            loading={props.etat4}
-            loadingPosition="end"
-            endIcon={<ChatIcon />}
-            variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-          >
-            <span>Rejoindre la session</span>
-          </LoadingButton>
-        </>
-      );
-    } else if (props.session !== "" && props.session.status === "CLOSED") {
-      transmettre = (
-        <>
-          <LoadingButton
-            onClick={(e) => connect()}
-            className="waves-effect waves-effect-b waves-light btn-small"
-            loading={props.etat4}
-            loadingPosition="end"
-            endIcon={<ChatIcon />}
-            variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-          >
-            <span>Voir la discussion</span>
-          </LoadingButton>
-        </>
-      );
-    } else {
-      transmettre = "";
-    } 
+        </LoadingButton>
+      </>
+    );
   } else {
-    transmettre="";
+    transmettre = "";
   }
 
   // Sélectionnez tous les éléments avec la classe spécifiée
@@ -3224,15 +3176,18 @@ const TraiterDenonciation = (props) => {
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
                             <div className="row" id="ententeFiche">
-                              <div className="col s12">
+                              <div className="row df" style={{ justifyContent: "space-between" }}>
                                 <h5
-                                  className="card-title df "
-                                  style={{ justifyContent: "space-between" }}
+                                  className="card-title "
+                                  
                                 >
                                   Détails du traitement
-                                  
-                                  {transmettre}
                                 </h5>
+                                {transmettre}
+                                {btnS}
+                                {/* <div className="">
+                                  
+                                </div> */}
                               </div>
                             </div>
                            

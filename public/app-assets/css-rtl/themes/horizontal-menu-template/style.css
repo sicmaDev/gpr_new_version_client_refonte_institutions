@@ -2852,6 +2852,11 @@ select
     {
         width: 100%;
     }
+    
+    /* .page-footer .container
+    {
+        padding: 0 15px;
+    } */
 }
 
 @media only screen and (max-width: 600px)
@@ -11888,11 +11893,11 @@ tr.group:hover
 
     width: 100%;
 }
-
+/* 
 .page-footer .container
 {
     padding: 0 15px;
-}
+} */
 
 .page-footer .footer-copyright
 {

@@ -10,7 +10,7 @@ export default function Template2() {
         <Suspense fallback="loading">
             <HashRouter>
                <Haut/>
-               <Footer />
+               {/* <Footer /> */}
             </HashRouter>
            
         </Suspense>
