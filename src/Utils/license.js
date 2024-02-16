@@ -1,3 +1,4 @@
+import { licenseInfo } from "../apis/LoginApi";
 import { loadItemFromSessionStorage } from "./utils";
 
 export const isLicenseExpired = () => {
@@ -12,13 +13,18 @@ export const isLicenseExpired = () => {
     return false;
 }
 
-export const isLicenseControl = () => {
-    
-    //TODO:if isAppModeDistributed() ? (isLicenseAvailable() && isLicensePro() ? isLicenseExpired() : true) : false is undefined return true
-    // console.log("isLicenseExpired()");
-    // console.log(isLicenseExpired());
-    // return isLicenseExpired();  
-    return false;
+export const licenseControl = async () => {
+    try {
+        const resultat = await licenseInfo();
+        console.log("actiffff",resultat)
+        
+        return resultat.actif;
+    } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+    }
+    // let resultat = await licenseInfo();
+    // console.log("actiffff",resultat)
+   
 }
 
 export const isLicenseDays = () => {

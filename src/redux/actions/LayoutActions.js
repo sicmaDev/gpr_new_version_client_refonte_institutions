@@ -24,3 +24,11 @@ export const pageChanged = (page) =>{
         info: 'This action is used to user interface'
     }
 };
+export const actifChanged = (actif) =>{
+  
+    return {
+        type: 'ACTIF',
+        payload: actif,
+        info: 'This action is used to user interface'
+    }
+};

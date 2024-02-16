@@ -36,8 +36,10 @@ import Box from '@mui/material/Box';
 const Dashboard = (props) => {
 
     useEffect( () => {
+
         props.etat1Changed(false)
        DashboardApi(props).then((r) => {});
+     
       
     }, []);
 

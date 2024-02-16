@@ -23,6 +23,8 @@ import axios from "axios";
 import { addressChanged, codeChanged, collectChanged, collectLibelleChanged, contentChanged, createdAtChanged, createdByChanged, dossierimfChanged, etat2Changed, etatChanged, firstnameChanged, genderChanged, handledAtChanged, handledByChanged, idChanged, itemsChanged, languageChanged, languageLibelleChanged, lastnameChanged, loading, phoneChanged, productChanged, productLibelleChanged, recordedAtChanged, recordedAtDPChanged, resolvedAtChanged, resolvedByChanged, selectedFilesChanged, selectedFilesReset, selectedItemChanged, selectedItemFilesChanged, showSelectPrintItemChanged, solutionChanged, statusChanged, suggestionRecordErrors, unitChanged, unitLibelleChanged } from "../../redux/actions/Suggestions/EnregistrementSuggestionActions";
 import { addSuggestionApi, addSuggestionApiOffline, addTempSuggestionApi, addTempSuggestionApiOffline, downloadFillesApi, getFillesApi, listeByStatut, listeByStatutOffline } from "../../apis/Suggestions/SuggestionsApi";
 import PhoneInput from "react-phone-number-input";
+import { licenseInfo } from "../../apis/LoginApi";
+
 // import DateInput from "../ui/DateInput";
 //import IntlTelInput from 'react-intl-tel-input';
 //import 'react-intl-tel-input/dist/main.css';
@@ -75,6 +77,28 @@ const EnregistrerSuggestion = (props) => {
         // });
         // initDatePicker(props, 'recorded_at')
     }, []);
+
+    const [actif, setActif] = useState();
+  
+    const licenseControl = async () => {
+      try {
+        let resultat = await licenseInfo();
+        console.log("resultat", resultat);
+        setActif(resultat.actif)
+        
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+      }
+    };
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        await licenseControl();
+      };
+  
+      fetchData();
+    }, []);
+
 
     const handleChange = (e) => {
         props.unitChanged(e.value)
@@ -384,7 +408,9 @@ const EnregistrerSuggestion = (props) => {
     if (!settingComplete.length) {
         if (isEmpty(props.selectedItem)) {
 
-            formButtons = (
+            formButtons =
+
+            (actif !== undefined && actif)  ?
                 <>
                     <LoadingButton
                         className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
@@ -424,9 +450,18 @@ const EnregistrerSuggestion = (props) => {
                     </LoadingButton>
                   
                 </>
-            )
+            :
+            <div className="card-alert card red lighten-5">
+                <div className="card-content red-text">
+                    <ul>
+                        Veuillez activer une licence.
+                    </ul>
+                </div>
+            </div>
+            
         } else {
-            formButtons = (
+            formButtons = 
+            (actif !== undefined && actif)  ?
                 <>
                     <button type="button" onClick={(e) => handleCancel(e)}
                             className="waves-effect waves-effect-b waves-light red-text white lighten-4 btn-small mr-1">
@@ -465,7 +500,15 @@ const EnregistrerSuggestion = (props) => {
                     </LoadingButton>
                   
                 </>
-            )
+            :
+            <div className="card-alert card red lighten-5">
+                <div className="card-content red-text">
+                    <ul>
+                        Veuillez activer une licence.
+                    </ul>
+                </div>
+            </div>
+            
         }
     } else {
         let output = settingComplete.map(message => {

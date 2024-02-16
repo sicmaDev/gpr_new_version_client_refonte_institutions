@@ -9,10 +9,10 @@ import { ajout } from "../../apis/Configurations/MailApi";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import { LOGO_SUPPORTED_SIZE } from "../../Utils/globals";
-import { isLicenseControl } from "../../Utils/license";
 import {
     portChanged, hostChanged, passwordChanged, userChanged, loadingChanged, etatChanged
 } from "../../redux/actions/Configurations/EmailActions";
+import { licenseInfo } from "../../apis/LoginApi";
 
 
 const Email = (props) => {
@@ -63,7 +63,26 @@ const Email = (props) => {
        
     }, []);
 
-    let licenseControl = isLicenseControl()
+    const [actif, setActif] = useState();
+  
+    const licenseControl = async () => {
+      try {
+        let resultat = await licenseInfo();
+        console.log("resultat", resultat);
+        setActif(resultat.actif)
+        
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+      }
+    };
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        await licenseControl();
+      };
+  
+      fetchData();
+    }, []);
 
     let errors = {};
 
@@ -174,7 +193,7 @@ const Email = (props) => {
                         </div>
 
                         <div className="col s12 display-flex justify-content-end mt-3">
-                            {!licenseControl ? (
+                            { (actif !== undefined && actif)  ? (
                                 <LoadingButton
                                     className="btn waves-effect waves-light mr-1 btn-small"
                                     onClick={(e) => handleSubmit(e)}
