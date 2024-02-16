@@ -12,6 +12,7 @@ ChatTwoTone,
 } from "@mui/icons-material";
 import { notify } from '../../Utils/alert';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import { HOST } from '../../Utils/globals';
 
 
 const Chat = ({ guestsP, claimCode, oldMessages, members, users, user, showJoinBtn}) => {
@@ -133,7 +134,7 @@ const Chat = ({ guestsP, claimCode, oldMessages, members, users, user, showJoinB
   }
 
   const connect = () => {
-    let Sock = new SockJS("http://localhost:9195/ws");
+    let Sock = new SockJS(HOST+"/ws");
     stompClient = over(Sock);
     stompClient.connect({}, onConnected, onError);
     // console.log("stomp", stompClient);
