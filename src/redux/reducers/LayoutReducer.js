@@ -1,6 +1,7 @@
 const initialState = {
     isLoading: false,
     isAuthenticated: false,
+    actif: false,
     page:"Titre",
 };
 
@@ -21,6 +22,11 @@ const LayoutReducer = (state = initialState, action) => {
             return {
                 ...state,
                 page: state.page,
+            };
+        case 'ACTIF':
+            return {
+                ...state,
+                actif: state.actif,
             };
         default:
             return state

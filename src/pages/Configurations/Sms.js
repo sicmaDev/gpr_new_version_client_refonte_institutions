@@ -9,10 +9,10 @@ import { ajout } from "../../apis/Configurations/SmsApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
-import { isLicenseControl } from "../../Utils/license";
 import {
     urlChange,smsErrors, libelleIdChanged, libelleMessageChanged, valuePwdChanged, libellePwdChanged, libelleReceiverChanged, libelleSenderChanged, valueIdChanged, valueSenderChanged, etatChanged
 } from "../../redux/actions/Configurations/SmsActions";
+import { licenseInfo } from "../../apis/LoginApi";
 
 
 
@@ -68,7 +68,26 @@ const Sms = (props) => {
        
     }, []);
 
-    let licenseControl = isLicenseControl()
+    const [actif, setActif] = useState();
+  
+    const licenseControl = async () => {
+      try {
+        let resultat = await licenseInfo();
+        console.log("resultat", resultat);
+        setActif(resultat.actif)
+        
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+      }
+    };
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        await licenseControl();
+      };
+  
+      fetchData();
+    }, []);
 
     let errors = {};
 
@@ -317,7 +336,7 @@ const Sms = (props) => {
                        
 
                         <div className="col s12 display-flex justify-content-end mt-3">
-                            {!licenseControl ? (
+                            { (actif !== undefined && actif)  ? (
                                 <LoadingButton
                                     className="btn waves-effect waves-light mr-1 btn-small"
                                     onClick={(e) => handleSubmit(e)}

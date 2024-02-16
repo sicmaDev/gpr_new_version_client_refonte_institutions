@@ -26,11 +26,18 @@ export const reportBceaoApi = async (props,params) => {
     };
     await axios(config)
         .then(function (response) {
-            console.log("responseBCEAO",response.data)
-            props.globalChanged(response.data);
-          
-            KTApp.unblockPage();
-            notify("Bravo - Rapport généré","success");
+            
+            if (response.data.status) {
+               
+                props.globalChanged(response.data);
+            
+                KTApp.unblockPage();
+                notify("Bravo - Rapport généré","success");
+            } else {
+                notify("Votre licence n'est pas active.", "error");
+            }
+           
+            // console.log("responseBCEAO",response.data)
         })
         .catch(function (error) {
             // console.log("erreurbceao",error)

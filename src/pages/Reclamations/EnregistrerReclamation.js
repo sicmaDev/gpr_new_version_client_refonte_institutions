@@ -100,6 +100,9 @@ import useRecorder from "../../hooks/useRecorder";
 //import 'react-intl-tel-input/dist/main.css';
 import { v4 as uuid } from "uuid";
 import PhoneInput from "react-phone-number-input";
+import { licenseInfo } from "../../apis/LoginApi";
+
+
 
 
 registerLocale("fr", fr);
@@ -174,6 +177,27 @@ const EnregistrerReclamation = (props) => {
     //     utilsScript: "src/assets/js/phoneUtils.js?1638200991544"
     // });
     // initDatePicker(props, 'recorded_at')
+  }, []);
+
+  const [actif, setActif] = useState();
+  
+  const licenseControl = async () => {
+    try {
+      let resultat = await licenseInfo();
+      // console.log("resultat", resultat);
+      setActif(resultat.actif)
+      
+    } catch (error) {
+      console.error("Une erreur s'est produite :", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await licenseControl();
+    };
+
+    fetchData();
   }, []);
 
 
@@ -616,47 +640,57 @@ const EnregistrerReclamation = (props) => {
 
   if (!settingComplete.length) {
     if (isEmpty(props.selectedItem)) {
-      formButtons = (
-        <>
-          <LoadingButton
-            className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-            onClick={handleSave}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform: "initial" }}
-          >
-            <span>Sauvegarder</span>
-          </LoadingButton>
+      formButtons = 
+      (actif !== undefined && actif)  ?
+          <>
+            <LoadingButton
+              className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+              onClick={handleSave}
+              loading={props.etat}
+              loadingPosition="end"
+              endIcon={<SaveIcon />}
+              variant="contained"
+              sx={{ textTransform: "initial" }}
+            >
+              <span>Sauvegarder</span>
+            </LoadingButton>
 
-          <LoadingButton
-            onClick={(e) => {
-              e.preventDefault();
-              if (handleValidation()) {
-                if (mode === 1) {
-                  setShowSmsBox(true);
-                  setOpen(true);
-                } else {
-                  handleSubmit(e)
+            <LoadingButton
+              onClick={(e) => {
+                e.preventDefault();
+                if (handleValidation()) {
+                  if (mode === 1) {
+                    setShowSmsBox(true);
+                    setOpen(true);
+                  } else {
+                    handleSubmit(e)
+                  }
+                  
                 }
-                
-              }
-              props.claimRecordErrors(errors);
-            }}
-            className="waves-effect waves-effect-b waves-light btn-small"
-            loading={props.etat2}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-          >
-            <span>Enregistrer</span>
-          </LoadingButton>
-        </>
-      );
+                props.claimRecordErrors(errors);
+              }}
+              className="waves-effect waves-effect-b waves-light btn-small"
+              loading={props.etat2}
+              loadingPosition="end"
+              endIcon={<SaveIcon />}
+              variant="contained"
+              sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+            >
+              <span>Enregistrer</span>
+            </LoadingButton>
+          </>
+        :
+        <div className="card-alert card red lighten-5">
+          <div className="card-content red-text">
+              <ul>
+                  Veuillez activer une licence.
+              </ul>
+          </div>
+        </div>
+      
     } else {
-      formButtons = (
+      formButtons = 
+      (actif !== undefined && actif)  ?
         <>
           <button
             type="button"
@@ -703,7 +737,15 @@ const EnregistrerReclamation = (props) => {
             <span>Enregistrer</span>
           </LoadingButton>
         </>
-      );
+      :
+      <div className="card-alert card red lighten-5">
+          <div className="card-content red-text">
+              <ul>
+                  Veuillez activer une licence.
+              </ul>
+          </div>
+      </div>
+      
     }
   } else {
     let output = settingComplete.map((message) => {
@@ -796,10 +838,10 @@ const EnregistrerReclamation = (props) => {
       props.collectLibelleChanged(
         data.collectionChannel ? data.collectionChannel.libelle : ""
       );
-      props.subjectChanged(data.objet.categorie ? data.objet.categorie.id : "");
-      props.subjectLibelleChanged(data.objet.categorie ? data.objet.categorie.libelle : "");
-      props.underSubjectChanged(data.objet ? data.objet.id : "");
-      props.underSubjectLibelleChanged(data.objet ? data.objet.libelle : "");
+      props.subjectChanged(data?.objet?.categorie ? data.objet.categorie.id : "");
+      props.subjectLibelleChanged(data?.objet?.categorie ? data.objet.categorie.libelle : "");
+      props.underSubjectChanged(data?.objet ? data.objet.id : "");
+      props.underSubjectLibelleChanged(data?.objet ? data.objet.libelle : "");
       props.productChanged(data.product ? data.product.id : "");
       props.productLibelleChanged(data.product ? data.product.libelle : "");
       props.unitChanged(data.servicePoint ? data.servicePoint.id : "");
@@ -836,9 +878,9 @@ const EnregistrerReclamation = (props) => {
           data.collectionChannel ? data.collectionChannel.libelle : ""
         );
         props.subjectChanged(data.objet ? data.objet.id : "");
-        props.subjectLibelleChanged(data.objet ? data.objet.libelle : "");
-        props.underSubjectChanged(data.objet.categorie ? data.objet.categorie.id : "");
-        props.underSubjectLibelleChanged(data.objet.categorie ? data.objet.categorie.libelle : "");
+        props.subjectLibelleChanged(data?.objet ? data.objet.libelle : "");
+        props.underSubjectChanged(data?.objet?.categorie ? data.objet.categorie.id : "");
+        props.underSubjectLibelleChanged(data?.objet?.categorie ? data.objet.categorie.libelle : "");
         props.productChanged(data.product ? data.product.id : "");
         props.productLibelleChanged(data.product ? data.product.libelle : "");
         props.unitChanged(data.servicePoint ? data.servicePoint.id : "");

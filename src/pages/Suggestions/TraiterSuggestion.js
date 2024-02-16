@@ -75,6 +75,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import { downloadFillesApi, getFillesApi, listeByStatut, listeTousStatuts, treatSuggestionApi } from "../../apis/Suggestions/SuggestionsApi";
 import { LoadingButton } from "@mui/lab";
 import { suggestionListErrors } from "../../redux/actions/Suggestions/TraitementSuggestionActions";
+import { licenseInfo } from "../../apis/LoginApi";
+
 
 const styles = {
   control: (base) => ({
@@ -129,6 +131,28 @@ const TraiterSuggestion = (props) => {
       .addClass("highlight display dataTable dtr-inline");
     window.$("#as-react-datatable tr").addClass("cursor-pointer");
   }, []);
+
+  const [actif, setActif] = useState();
+  
+    const licenseControl = async () => {
+      try {
+        let resultat = await licenseInfo();
+        console.log("resultat", resultat);
+        setActif(resultat.actif)
+        
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+      }
+    };
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        await licenseControl();
+      };
+  
+      fetchData();
+    }, []);
+
   //Handling the List
   let columns = [
     {
@@ -372,36 +396,48 @@ const TraiterSuggestion = (props) => {
                   </small>
                 </div>
                 <div className="col s12 display-flex justify-content-end mt-3">
-                  <>
-                      <LoadingButton
-                        onClick={(e) => {
-                            handleTreatment(e,false)
-                        }}
-                        
-                        className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                        loading={props.etat}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{textTransform:"initial" }}
-                      >
-                          <span>Ne pas prendre en compte</span>
-                      </LoadingButton>
 
-                      <LoadingButton
-                        onClick={(e) => {
-                            handleTreatment(e,true)
-                        }}
-                        className="waves-effect waves-effect-b waves-light btn-small"
-                        loading={props.etat2}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
-                      >
-                          <span>Prendre en compte</span>
-                      </LoadingButton>
-                  </>
+                  {
+                    (actif !== undefined && actif)  ?
+                      <>
+                          <LoadingButton
+                            onClick={(e) => {
+                                handleTreatment(e,false)
+                            }}
+                            
+                            className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                            loading={props.etat}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{textTransform:"initial" }}
+                          >
+                              <span>Ne pas prendre en compte</span>
+                          </LoadingButton>
+
+                          <LoadingButton
+                            onClick={(e) => {
+                                handleTreatment(e,true)
+                            }}
+                            className="waves-effect waves-effect-b waves-light btn-small"
+                            loading={props.etat2}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+                          >
+                              <span>Prendre en compte</span>
+                          </LoadingButton>
+                      </>
+                    :
+                    <div className="card-alert card red lighten-5">
+                      <div className="card-content red-text">
+                          <ul>
+                              Veuillez activer une licence.
+                          </ul>
+                      </div>
+                    </div>
+                  }
                 </div>
               </details>
             </div>

@@ -54,14 +54,20 @@ export const ajout = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
-            
             props.etatChanged(false)
-          
-            notify("Bravo - Utilisateur ajouté", "success");
-           
-            liste(props)
+            if (response.data.response.status) {
+                saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
+                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
+                
+                // console.log("responseadduser",response)
+            
+                notify("Bravo - Utilisateur ajouté", "success");
+            
+                liste(props)
+            } else {
+                notify(response.data.response.content.message, "error");
+            }
+            
 
         })
         .catch(function (error) {

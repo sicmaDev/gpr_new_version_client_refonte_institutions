@@ -54,6 +54,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import { notify } from "../../Utils/alert";
 import axios from "axios";
 import { addDenunciationApi, addDenunciationApiOffline, addTempDenunciationApi, addTempDenunciationApiOffline, downloadFillesApi, getFillesApi, listeByStatut, listeByStatutOffline } from "../../apis/Denonciations/DenonciationsApi";
+import { licenseInfo } from "../../apis/LoginApi";
+// import { licenseControl } from "../../Utils/license";
 // import DateInput from "../ui/DateInput";
 //import IntlTelInput from 'react-intl-tel-input';
 //import 'react-intl-tel-input/dist/main.css';
@@ -80,6 +82,28 @@ const EnregistrerDenonciation = (props) => {
         setOpen(false);
     };
 
+    const [actif, setActif] = useState();
+  
+    const licenseControl = async () => {
+      try {
+        let resultat = await licenseInfo();
+        console.log("resultat", resultat);
+        setActif(resultat.actif)
+        
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+      }
+    };
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        await licenseControl();
+      };
+  
+      fetchData();
+    }, []);
+
+
     useEffect(() => {
         if (mode===1) {
             listeByStatut(props,"TEMP_SAVED").then((r) => {}); 
@@ -101,7 +125,6 @@ const EnregistrerDenonciation = (props) => {
        
     }, []);
 
-   
    
     //Handling the form
     let collects
@@ -371,43 +394,55 @@ const EnregistrerDenonciation = (props) => {
    
     if (!settingComplete.length) {
         if (isEmpty(props.selectedItem)) {
-
-            formButtons = (
-                <>
-                    <LoadingButton
-                        className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                        onClick={handleSave}
-                        loading={props.etat}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{ textTransform:"initial" }}
-                        >
-                        <span>Sauvegarder</span>
-                    </LoadingButton>
-
-                    <LoadingButton
-                        onClick={(e) => {
-                        e.preventDefault();
-                            if (handleValidation()) {
-                                handleSubmit(e)
-                            }
-                            props.claimRecordErrors(errors);
-                        }}
-                        className="waves-effect waves-effect-b waves-light btn-small"
-                        loading={props.etat2}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+           
+            formButtons = 
+            (actif !== undefined && actif) ?
+          
+            <>
+                <LoadingButton
+                    className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                    onClick={handleSave}
+                    loading={props.etat}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{ textTransform:"initial" }}
                     >
-                        <span>Enregistrer</span>
-                    </LoadingButton>
-                  
-                </>
-            )
+                    <span>Sauvegarder</span>
+                </LoadingButton>
+
+                <LoadingButton
+                    onClick={(e) => {
+                    e.preventDefault();
+                        if (handleValidation()) {
+                            handleSubmit(e)
+                        }
+                        props.claimRecordErrors(errors);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small"
+                    loading={props.etat2}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+                >
+                    <span>Enregistrer</span>
+                </LoadingButton>
+            
+            </>
+               
+            :
+            <div className="card-alert card red lighten-5">
+                <div className="card-content red-text">
+                    <ul>
+                        Veuillez activer une licence.
+                    </ul>
+                </div>
+            </div>
         } else {
-            formButtons = (
+           
+            formButtons = 
+            (actif !== undefined && actif) ?
                 <>
                     <button type="button" onClick={(e) => handleCancel(e)}
                             className="waves-effect waves-effect-b waves-light red-text white lighten-4 btn-small mr-1">
@@ -445,7 +480,14 @@ const EnregistrerDenonciation = (props) => {
                     </LoadingButton>
                   
                 </>
-            )
+            :
+            <div className="card-alert card red lighten-5">
+                <div className="card-content red-text">
+                    <ul>
+                        Veuillez activer une licence.
+                    </ul>
+                </div>
+            </div>
         }
     } else {
         let output = settingComplete.map(message => {
@@ -522,10 +564,10 @@ const EnregistrerDenonciation = (props) => {
             props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
             props.collectChanged(data.collectionChannel ? data.collectionChannel.id : "");
             props.collectLibelleChanged(data.collectionChannel ? data.collectionChannel.libelle : "");
-            props.subjectChanged(data.objet.categorie ? data.objet.categorie.id : "");
-            props.subjectLibelleChanged(data.objet.categorie ? data.objet.categorie.libelle : "");
-            props.underSubjectChanged(data.objet ? data.objet.id : "");
-            props.underSubjectLibelleChanged(data.objet ? data.objet.libelle : "");
+            props.subjectChanged(data?.objet?.categorie ? data.objet.categorie.id : "");
+            props.subjectLibelleChanged(data?.objet?.categorie ? data.objet.categorie.libelle : "");
+            props.underSubjectChanged(data?.objet ? data.objet.id : "");
+            props.underSubjectLibelleChanged(data?.objet ? data.objet.libelle : "");
             props.productChanged(data.product ? data.product.id : "");
             props.productLibelleChanged(data.product ? data.product.libelle : "");
             props.unitChanged(data.servicePoint ? data.servicePoint.id : "");
@@ -542,10 +584,10 @@ const EnregistrerDenonciation = (props) => {
                 props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
                 props.collectChanged(data.collectionChannel ? data.collectionChannel.id : "");
                 props.collectLibelleChanged(data.collectionChannel ? data.collectionChannel.libelle : "");
-                props.subjectChanged(data.objet ? data.objet.id : "");
-                props.subjectLibelleChanged(data.objet ? data.objet.libelle : "");
-                props.underSubjectChanged(data.objet.categorie ? data.objet.categorie.id : "");
-                props.underSubjectLibelleChanged(data.objet.categorie ? data.objet.categorie.libelle : "");
+                props.subjectChanged(data?.objet ? data.objet.id : "");
+                props.subjectLibelleChanged(data?.objet ? data.objet.libelle : "");
+                props.underSubjectChanged(data?.objet?.categorie ? data.objet.categorie.id : "");
+                props.underSubjectLibelleChanged(data?.objet?.categorie ? data.objet.categorie.libelle : "");
                 props.productChanged(data.product ? data.product.id : "");
                 props.productLibelleChanged(data.product ? data.product.libelle : "");
                 props.unitChanged(data.servicePoint ? data.servicePoint.id : "");

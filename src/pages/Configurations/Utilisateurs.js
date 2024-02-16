@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
 import HelpIcon from '@mui/icons-material/Help';
@@ -29,6 +29,7 @@ import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { licenseInfo } from "../../apis/LoginApi";
 
 
 
@@ -51,14 +52,36 @@ const Utilisateurs = (props) => {
         props.unitChanged(obj.value)
         props.unitLibelleChanged(obj.label)
     }
-    
-   
+
+    let users = loadItemFromLocalStorage("app-users") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-users")) : undefined;
+    let nba = users !== undefined ? users.length : 0;
     useEffect(() => {
         liste(props).then((r) => {});
       
         window.$('.tooltipped').tooltip();
         //cleanup
         return clearComponentState();
+    }, []);
+
+    const [max, setMax] = useState();
+  
+    const licenseControl = async () => {
+      try {
+        let resultat = await licenseInfo();
+        console.log("resultat", resultat);
+        setMax(resultat.maxPoste)
+        
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+      }
+    };
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        await licenseControl();
+      };
+  
+      fetchData();
     }, []);
 
     let code;
@@ -472,6 +495,7 @@ const Utilisateurs = (props) => {
     </>)
     :
     (
+        (max !== undefined && nba < max) ?
         <LoadingButton
             className="btn waves-effect waves-light mr-1 btn-small"
             onClick={(e) => handleSubmit(e)}
@@ -483,6 +507,14 @@ const Utilisateurs = (props) => {
         >
             <span>Ajouter</span>
         </LoadingButton>
+        :
+        <div className="card-alert card red lighten-5">
+            <div className="card-content red-text">
+                <ul>
+                    Nombre maximum de compte utilisateur atteint. <a href="mailto:support.gpr@sicmagroup.com"> Contactez-nous</a> pour mettre à niveau le nombre de comptes utilisateurs.
+                </ul>
+            </div>
+        </div>
        
     )
 

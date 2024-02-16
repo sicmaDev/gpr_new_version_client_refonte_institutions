@@ -109,6 +109,7 @@ import CardList from "../../layouts/CardList";
 import MoveUpIcon from '@mui/icons-material/MoveUp';
 import ForumIcon from '@mui/icons-material/Forum';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import { licenseInfo } from "../../apis/LoginApi";
 
 const styles = {
   control: (base) => ({
@@ -259,6 +260,27 @@ const TraiterDenonciation = (props) => {
   useEffect(() => {
     // setGuests(props?.session?.guests)
   }, [props?.session?.guests]);
+
+  const [actif, setActif] = useState();
+  
+    const licenseControl = async () => {
+      try {
+        let resultat = await licenseInfo();
+        console.log("resultat", resultat);
+        setActif(resultat.actif)
+        
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+      }
+    };
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        await licenseControl();
+      };
+  
+      fetchData();
+    }, []);
 
 
   const handleClickOpen = () => {
@@ -2248,31 +2270,49 @@ const TraiterDenonciation = (props) => {
                         </div>
                       </small>
                     </div>
-                   
-                    <div className="col s12 display-flex justify-content-end mt-3">
-                     
-                      <LoadingButton
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (handleValidationForAssign()) {
-                            //setShowSelectPrintItem(true);
-                            handleAssign(e);
+
+                    
+                        <div className="col s12 display-flex justify-content-end mt-3">
+                          {
+                              (actif !== undefined && actif)  ?
+                              <LoadingButton
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (handleValidationForAssign()) {
+                                    //setShowSelectPrintItem(true);
+                                    handleAssign(e);
+                                  }
+                                  props.claimHandleErrors(errors);
+                                }}
+                                className="waves-effect waves-effect-b waves-light btn-small"
+                                loading={props.etat}
+                                loadingPosition="end"
+                                endIcon={<SaveIcon />}
+                                variant="contained"
+                                sx={{
+                                  backgroundColor: "#1e2188",
+                                  textTransform: "initial",
+                                }}
+                              >
+                                <span>Affecter</span>
+                              </LoadingButton>
+                             :
+                            <div className="card-alert card red lighten-5">
+                              <div className="card-content red-text">
+                                  <ul>
+                                      Veuillez activer une licence.
+                                  </ul>
+                              </div>
+                            </div>
                           }
-                          props.claimHandleErrors(errors);
-                        }}
-                        className="waves-effect waves-effect-b waves-light btn-small"
-                        loading={props.etat}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{
-                          backgroundColor: "#1e2188",
-                          textTransform: "initial",
-                        }}
-                      >
-                        <span>Affecter</span>
-                      </LoadingButton>
-                    </div>
+                        
+                        </div>
+                       
+
+                        
+                    
+                   
+                   
                   </details>
                 </div>
               </div>
@@ -2361,20 +2401,33 @@ const TraiterDenonciation = (props) => {
                       </details>
                     </div>
                     <div className="col s12 display-flex justify-content-end">
-                      <LoadingButton
-                        onClick={handleSolve}
-                        className="waves-effect waves-effect-b waves-light btn-small"
-                        loading={props.etat2}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{
-                          backgroundColor: "#1e2188",
-                          textTransform: "initial",
-                        }}
-                      >
-                        <span>Résoudre</span>
-                      </LoadingButton>
+                      {
+                          (actif !== undefined && actif)  ?
+                          <LoadingButton
+                            onClick={handleSolve}
+                            className="waves-effect waves-effect-b waves-light btn-small"
+                            loading={props.etat2}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{
+                              backgroundColor: "#1e2188",
+                              textTransform: "initial",
+                            }}
+                          >
+                            <span>Résoudre</span>
+                          </LoadingButton>
+                         :
+                          <div className="card-alert card red lighten-5">
+                              <div className="card-content red-text">
+                                <ul>
+                                  Veuillez activer une licence.
+                                </ul>
+                              </div>
+                          </div>
+
+                      }
+                    
                     </div>
                   </div>
                 </form>
@@ -2488,20 +2541,32 @@ const TraiterDenonciation = (props) => {
                         </small>
                       </div>
                       <div className="col s12 display-flex justify-content-end mt-3">
-                        <LoadingButton
-                          onClick={handleSolve}
-                          className="waves-effect waves-effect-b waves-light btn-small"
-                          loading={props.etat2}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{
-                            backgroundColor: "#1e2188",
-                            textTransform: "initial",
-                          }}
-                        >
-                          <span>Traiter</span>
-                        </LoadingButton>
+                        {
+                           (actif !== undefined && actif)  ?
+                            <LoadingButton
+                              onClick={handleSolve}
+                              className="waves-effect waves-effect-b waves-light btn-small"
+                              loading={props.etat2}
+                              loadingPosition="end"
+                              endIcon={<SaveIcon />}
+                              variant="contained"
+                              sx={{
+                                backgroundColor: "#1e2188",
+                                textTransform: "initial",
+                              }}
+                            >
+                              <span>Traiter</span>
+                            </LoadingButton>
+                          :
+                            <div className="card-alert card red lighten-5">
+                                <div className="card-content red-text">
+                                    <ul>
+                                        Veuillez activer une licence.
+                                    </ul>
+                                </div>
+                            </div>
+                        }
+                       
                       </div>
                     </details>
                   </div>
@@ -2648,7 +2713,9 @@ const TraiterDenonciation = (props) => {
                   </small>
                 </div>
                 <div className="col s12 display-flex justify-content-end mt-3">
-                  <>
+                  {
+                     (actif !== undefined && actif)  ?
+                    <>
                       <LoadingButton
                         onClick={
                           handleDisapprove
@@ -2676,7 +2743,18 @@ const TraiterDenonciation = (props) => {
                       >
                           <span>Approuver</span>
                       </LoadingButton>
-                  </>
+                    </>
+                    :
+                    <div className="card-alert card red lighten-5">
+                      <div className="card-content red-text">
+                          <ul>
+                              Veuillez activer une licence.
+                          </ul>
+                      </div>
+                    </div>
+
+                  }
+                
                 </div>
               </details>
             </div>
@@ -2794,20 +2872,32 @@ const TraiterDenonciation = (props) => {
                       </div>
   
                       <div className="col s12 display-flex justify-content-end mt-3">
-                        <LoadingButton
-                          onClick={handleReSolve}
-                          className="waves-effect waves-effect-b waves-light btn-small"
-                          loading={props.etat2}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{
-                            backgroundColor: "#1e2188",
-                            textTransform: "initial",
-                          }}
-                        >
-                          <span>Retraiter</span>
-                        </LoadingButton>
+                        {
+                           (actif !== undefined && actif)  ?
+                            <LoadingButton
+                              onClick={handleReSolve}
+                              className="waves-effect waves-effect-b waves-light btn-small"
+                              loading={props.etat2}
+                              loadingPosition="end"
+                              endIcon={<SaveIcon />}
+                              variant="contained"
+                              sx={{
+                                backgroundColor: "#1e2188",
+                                textTransform: "initial",
+                              }}
+                            >
+                              <span>Retraiter</span>
+                            </LoadingButton>
+                          :
+                          <div className="card-alert card red lighten-5">
+                            <div className="card-content red-text">
+                               <ul>
+                                   Veuillez activer une licence.
+                               </ul>
+                            </div>
+                          </div>
+                        }
+                       
                       </div>
                     </details>
                   </div>
@@ -2988,7 +3078,8 @@ const TraiterDenonciation = (props) => {
   }
   if (user.firstAndLastName === props.created_by || showJoinBtn) {
     if (props.session === "" && props.session.status !== "OPEN") {
-      btnS = (
+      btnS = 
+       (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => registerUser(e)}
@@ -3002,9 +3093,18 @@ const TraiterDenonciation = (props) => {
             <span>Ouvrir une session</span>
           </LoadingButton>
         </>
-      );
+      :
+        <div className="card-alert card red lighten-5">
+          <div className="card-content red-text">
+              <ul>
+                Veuillez activer une licence.
+              </ul>
+          </div>
+        </div>
+      
     } else if (props.session !== "" && props.session.status === "OPEN" ) {
-      btnS = (
+      btnS = 
+       (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -3018,9 +3118,18 @@ const TraiterDenonciation = (props) => {
             <span>Rejoindre la session</span>
           </LoadingButton>
         </>
-      );
+      :
+      <div className="card-alert card red lighten-5">
+        <div className="card-content red-text">
+            <ul>
+                Veuillez activer une licence.
+            </ul>
+        </div>
+      </div>
+      
     } else if (props.session !== "" && props.session.status === "CLOSED") {
-      btnS = (
+      btnS = 
+       (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -3034,7 +3143,15 @@ const TraiterDenonciation = (props) => {
             <span>Voir la discussion</span>
           </LoadingButton>
         </>
-      );
+      :
+      <div className="card-alert card red lighten-5">
+        <div className="card-content red-text">
+            <ul>
+                Veuillez activer une licence.
+            </ul>
+        </div>
+      </div>
+      
     } else {
       btnS = "";
     }
@@ -3252,15 +3369,13 @@ const TraiterDenonciation = (props) => {
                                     {btnS}
                                   </div>
                                 }
-                               
-                                
-                                
+                              </div>
+                              <div className="col s12 input-field">
+                                Etat: &nbsp;{statusElt}
                               </div>
                             </div>
                            
-                            <div className="col s12 input-field">
-                              Etat: &nbsp;{statusElt}
-                            </div>
+                           
                             
                             {affectForm}
                             {treatForm}

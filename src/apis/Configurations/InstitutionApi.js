@@ -6,6 +6,7 @@ import { HOST } from "../../Utils/globals";
 // ADD
 const ADD_SETTING_API = HOST + "api/v1/config/setting/others/institution/create"
 const CREATE_LICENSE_API = "https://gpradmin.sicmagroup.com/api/addLicenseWeb"
+const CREATE_FILE_API = HOST + "api/v1/config/setting/license/createFile"
 
 export const ajout = async (data, props) => {
 
@@ -22,10 +23,7 @@ export const ajout = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-institution")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-institution")
-            
-            props.etatChanged(false)
+           
 
             //la license
             let infosLicense = {};
@@ -33,10 +31,15 @@ export const ajout = async (data, props) => {
             infosLicense["email"] = data.email ;
             infosLicense["contact"] = data.tel ;
 
-            let appInstitution =  loadItemFromLocalStorage("app-institution") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+            let appInstitution =  loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
             if (appInstitution === undefined || appInstitution === "") {
                 createLicense(infosLicense,props);
             }
+
+            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-institution")
+            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-institution")
+            
+            props.etatChanged(false)
 
            
            
@@ -68,7 +71,7 @@ export const createLicense = async (data, props) => {
     await axios(config)
         .then(function (response) {
             console.log("responsegpradmin",response.data.data);
-            let reponse = response.data.data;
+            let resultat = response.data.data;
 
             let finResultat = {
                 "createdAt" : resultat.createdAt,
@@ -81,6 +84,8 @@ export const createLicense = async (data, props) => {
                 "updatedAt" : resultat.updatedAt
 
             }
+
+            createLicenseFile(JSON.stringify(finResultat));
             // saveItemToSessionStorage(JSON.stringify(response.data.content), "app-institution")
             // saveItemToLocalStorage(JSON.stringify(response.data.content), "app-institution")
 
@@ -97,4 +102,31 @@ export const createLicense = async (data, props) => {
         });
 
 }
+
+export const createLicenseFile = async (data) => {
+    //console.log("createFile1")
+    //console.log("resultat1",data)
+    const config = {
+        method: 'post',
+        url: CREATE_FILE_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': loadItemFromSessionStorage('tok')
+        },
+        data: data
+       
+    };
+
+    await axios(config).then(function(response){
+        //let resultat = response.data.data;
+        // console.log("createFile2","success")
+        console.log("reponsefile",response)
+    }).catch(function (error) {
+        // console.log("createfile3")
+        console.log("fileeroor",error)
+        notify("ErreurFile -  Veuillez réessayer!", "error");
+    });
+}
+
 

@@ -8,6 +8,7 @@ import { now } from "jquery";
 const LOGIN_API = HOST + "api/v1/auth/authenticate"
 const RECEIVE_DATA_API = HOST + "api/v1/sync/allList"
 const SYNCHRON_DATA_API = HOST + "api/v1/sync/claim"
+const READ_LICENSE_INFO = HOST + "api/v1/auth/infoLicense";
 
 export const LoginApi = (credentials, props) => {
     const config = {
@@ -89,6 +90,72 @@ export const LoginApi = (credentials, props) => {
             
         });
 }
+
+
+// export const licenseInfo = async () => {
+//     let contenu;
+
+//     const response = await axios.post(READ_LICENSE_INFO, {
+//         headers: {
+//             'Accept': 'application/json',
+//             'Content-Type': 'application/json',
+//             // 'Authorization': loadItemFromSessionStorage('tok')
+//         }
+//     });
+//     const config = {
+//         method: 'post',
+//         url: READ_LICENSE_INFO,
+//         headers: {
+//             'Accept': 'application/json',
+//             'Content-Type': 'application/json',
+//             // 'Authorization': loadItemFromSessionStorage('tok')
+//         }
+//     };
+//         axios(config)
+//             .then(function (response) {
+
+//                 if (response.data.status === false) {
+//                     // notify(response.data.content.message, "error");
+//                 } else {
+                    
+//                     console.log("licence info demande",response.data);
+//                     return "azerty"
+//                 }
+//                 console.log("licence info demande",response.data);
+//                 contenu = "blalabla";
+//             })
+//             .catch(function (error) {
+//                 console.log("licence info error",error)
+//             });  
+   
+//     return contenu;
+
+// }
+
+export const licenseInfo = async () => {
+    try {
+        const response = await axios.post(READ_LICENSE_INFO, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                // 'Authorization': loadItemFromSessionStorage('tok')
+            }
+        });
+
+        if (response.data.status === false) {
+            // notify(response.data.content.message, "error");
+        } else {
+            // console.log("licence info demande", response.data);
+            return response.data.content;
+        }
+       
+    } catch (error) {
+        // console.log("licence info error", error);
+        // Gérer les erreurs ici si nécessaire
+        throw error;
+    }
+}
+
 
 export const LoginApiOffline = (credentials, props) => {
     let user = loadItemFromLocalStorage("app-user") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-user")) : undefined;

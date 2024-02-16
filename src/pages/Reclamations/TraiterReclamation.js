@@ -151,6 +151,9 @@ import { notify } from "../../Utils/alert";
 import MoveUpIcon from '@mui/icons-material/MoveUp';
 import ForumIcon from '@mui/icons-material/Forum';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import { licenseInfo } from "../../apis/LoginApi";
+
+
 
 const styles = {
   control: (base) => ({
@@ -478,6 +481,27 @@ const TraiterReclamation = (props) => {
     window.$("#as-react-datatable tr").addClass("cursor-pointer");
   }, [props.match.params.code]);
   
+  const [actif, setActif] = useState();
+  
+    const licenseControl = async () => {
+      try {
+        let resultat = await licenseInfo();
+        console.log("resultat", resultat);
+        setActif(resultat.actif)
+        
+      } catch (error) {
+        console.error("Une erreur s'est produite :", error);
+      }
+    };
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        await licenseControl();
+      };
+  
+      fetchData();
+    }, []);
+
 
   const maDivRef = useRef(null);
 
@@ -2483,28 +2507,41 @@ const TraiterReclamation = (props) => {
                       />
                     </div>
                     <div className="col s12 display-flex justify-content-end mt-3">
+
+                      {
+                         (actif !== undefined && actif)  ?
+                          <LoadingButton
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (handleValidationForAssign()) {
+                                //setShowSelectPrintItem(true);
+                                handleAssign(e);
+                              }
+                              props.claimHandleErrors(errors);
+                            }}
+                            className="waves-effect waves-effect-b waves-light btn-small"
+                            loading={props.etat}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{
+                              backgroundColor: "#1e2188",
+                              textTransform: "initial",
+                            }}
+                        >
+                          <span>Affecter</span>
+                          </LoadingButton>
+                        :
+                        <div className="card-alert card red lighten-5">
+                          <div className="card-content red-text">
+                              <ul>
+                                  Veuillez activer une licence.
+                              </ul>
+                          </div>
+                        </div>
+                      }
                      
-                      <LoadingButton
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (handleValidationForAssign()) {
-                            //setShowSelectPrintItem(true);
-                            handleAssign(e);
-                          }
-                          props.claimHandleErrors(errors);
-                        }}
-                        className="waves-effect waves-effect-b waves-light btn-small"
-                        loading={props.etat}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{
-                          backgroundColor: "#1e2188",
-                          textTransform: "initial",
-                        }}
-                      >
-                        <span>Affecter</span>
-                      </LoadingButton>
+                    
                     </div>
                   </details>
                 </div>
@@ -2594,20 +2631,33 @@ const TraiterReclamation = (props) => {
                       </details>
                     </div>
                     <div className="col s12 display-flex justify-content-end mt-3 ">
-                      <LoadingButton
-                        onClick={handleSolve}
-                        className="waves-effect waves-effect-b waves-light btn-small"
-                        loading={props.etat2}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{
-                          backgroundColor: "#1e2188",
-                          textTransform: "initial",
-                        }}
-                      >
-                        <span>Résoudre</span>
-                      </LoadingButton>
+                      {
+                         (actif !== undefined && actif)  ?
+                          <LoadingButton
+                            onClick={handleSolve}
+                            className="waves-effect waves-effect-b waves-light btn-small"
+                            loading={props.etat2}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{
+                              backgroundColor: "#1e2188",
+                              textTransform: "initial",
+                            }}
+                          >
+                            <span>Résoudre</span>
+                          </LoadingButton>
+                        :
+                        <div className="card-alert card red lighten-5">
+                          <div className="card-content red-text">
+                              <ul>
+                                  Veuillez activer une licence.
+                              </ul>
+                          </div>
+                        </div>
+
+                      }
+                      
                     </div>
                   </div>
                 </form>
@@ -2723,20 +2773,34 @@ const TraiterReclamation = (props) => {
                         </small>
                       </div>
                       <div className="col s12 display-flex justify-content-end mt-3">
-                        <LoadingButton
-                          onClick={handleSolve}
-                          className="waves-effect waves-effect-b waves-light btn-small"
-                          loading={props.etat2}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{
-                            backgroundColor: "#1e2188",
-                            textTransform: "initial",
-                          }}
-                        >
-                          <span>Traiter</span>
-                        </LoadingButton>
+                        {
+                           (actif !== undefined && actif)  ?
+                            <LoadingButton
+                              onClick={handleSolve}
+                              className="waves-effect waves-effect-b waves-light btn-small"
+                              loading={props.etat2}
+                              loadingPosition="end"
+                              endIcon={<SaveIcon />}
+                              variant="contained"
+                              sx={{
+                                backgroundColor: "#1e2188",
+                                textTransform: "initial",
+                              }}
+                            >
+                              <span>Traiter</span>
+                            </LoadingButton>
+                          :
+                          <div className="card-alert card red lighten-5">
+                            <div className="card-content red-text">
+                                <ul>
+                                    Veuillez activer une licence.
+                                </ul>
+                            </div>
+                          </div>
+
+
+                        }
+                      
                       </div>
                     </details>
                   </div>
@@ -2876,34 +2940,46 @@ const TraiterReclamation = (props) => {
                   </small>
                 </div>
                 <div className="col s12 display-flex justify-content-end mt-3">
-                  <>
-                    <LoadingButton
-                      onClick={handleDisapprove}
-                      className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                      loading={props.etat}
-                      loadingPosition="end"
-                      endIcon={<SaveIcon />}
-                      variant="contained"
-                      sx={{ textTransform: "initial" }}
-                    >
-                      <span>Désapprouver</span>
-                    </LoadingButton>
+                  {
+                     (actif !== undefined && actif)  ?
+                      <>
+                        <LoadingButton
+                          onClick={handleDisapprove}
+                          className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                          loading={props.etat}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{ textTransform: "initial" }}
+                        >
+                          <span>Désapprouver</span>
+                        </LoadingButton>
 
-                    <LoadingButton
-                      onClick={handleApprove}
-                      className="waves-effect waves-effect-b waves-light btn-small"
-                      loading={props.etat2}
-                      loadingPosition="end"
-                      endIcon={<SaveIcon />}
-                      variant="contained"
-                      sx={{
-                        backgroundColor: "#1e2188",
-                        textTransform: "initial",
-                      }}
-                    >
-                      <span>Approuver</span>
-                    </LoadingButton>
-                  </>
+                        <LoadingButton
+                          onClick={handleApprove}
+                          className="waves-effect waves-effect-b waves-light btn-small"
+                          loading={props.etat2}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "#1e2188",
+                            textTransform: "initial",
+                          }}
+                        >
+                          <span>Approuver</span>
+                        </LoadingButton>
+                      </>
+                    :
+                    <div className="card-alert card red lighten-5">
+                      <div className="card-content red-text">
+                          <ul>
+                              Veuillez activer une licence.
+                          </ul>
+                      </div>
+                    </div>
+                  }
+                 
                 </div>
               </details>
             </div>
@@ -3021,20 +3097,35 @@ const TraiterReclamation = (props) => {
                       </div>
   
                       <div className="col s12 display-flex justify-content-end mt-3">
-                        <LoadingButton
-                          onClick={handleReSolve}
-                          className="waves-effect waves-effect-b waves-light btn-small"
-                          loading={props.etat2}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{
-                            backgroundColor: "#1e2188",
-                            textTransform: "initial",
-                          }}
-                        >
-                          <span>Retraiter</span>
-                        </LoadingButton>
+                        {
+                           (actif !== undefined && actif)  ?
+                            <LoadingButton
+                              onClick={handleReSolve}
+                              className="waves-effect waves-effect-b waves-light btn-small"
+                              loading={props.etat2}
+                              loadingPosition="end"
+                              endIcon={<SaveIcon />}
+                              variant="contained"
+                              sx={{
+                                backgroundColor: "#1e2188",
+                                textTransform: "initial",
+                              }}
+                            >
+                              <span>Retraiter</span>
+                            </LoadingButton>
+                          :
+
+                          <div className="card-alert card red lighten-5">
+                            <div className="card-content red-text">
+                                <ul>
+                                    Veuillez activer une licence.
+                                </ul>
+                            </div>
+                          </div>
+
+
+                        }
+                       
                       </div>
                     </details>
                   </div>
@@ -3439,7 +3530,8 @@ const TraiterReclamation = (props) => {
   }
   if (user.firstAndLastName === props.created_by || showJoinBtn) {
     if (props.session === "" && props.session.status !== "OPEN") {
-      btnS = (
+      btnS = 
+      (actif !== undefined && actif) ?
         <>
           <LoadingButton
             onClick={(e) => registerUser(e)}
@@ -3453,9 +3545,19 @@ const TraiterReclamation = (props) => {
             <span>Ouvrir une session</span>
           </LoadingButton>
         </>
-      );
+        :
+        <div className="card-alert card red lighten-5">
+          <div className="card-content red-text">
+              <ul>
+                  Veuillez activer une licence.
+              </ul>
+          </div>
+        </div>
+
+      
     } else if (props.session !== "" && props.session.status === "OPEN" ) {
-      btnS = (
+      btnS = 
+      (actif !== undefined && actif) ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -3469,9 +3571,16 @@ const TraiterReclamation = (props) => {
             <span>Rejoindre la session</span>
           </LoadingButton>
         </>
-      );
+        :
+        <div className="card-alert card red lighten-5">
+          <div className="card-content red-text">
+              <ul>
+                  Veuillez activer une licence.
+              </ul>
+          </div>
+        </div>
     } else if (props.session !== "" && props.session.status === "CLOSED") {
-      btnS = (
+      btnS =  (actif !== undefined && actif) ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -3485,7 +3594,14 @@ const TraiterReclamation = (props) => {
             <span>Voir la discussion</span>
           </LoadingButton>
         </>
-      );
+        :
+        <div className="card-alert card red lighten-5">
+          <div className="card-content red-text">
+              <ul>
+                  Veuillez activer une licence.
+              </ul>
+          </div>
+        </div>
     } else {
       btnS = "";
     }
@@ -3685,7 +3801,7 @@ const TraiterReclamation = (props) => {
                         {/* second part */}
 
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
-                          <div className="card-panel pb-7">
+                          <div className="card-panel pb-5">
                             <div className="row" id="ententeFiche">
                               <div className="row">
                                 
@@ -3707,20 +3823,18 @@ const TraiterReclamation = (props) => {
                                     {btnS}
                                   </div>
                                 }
-                               
-                                
-                                
+                              </div>
+                              <div className="col s12 input-field">
+                                Etat: &nbsp;{statusElt}
                               </div>
                             </div>
-                            <div className="col s12 input-field">
-                              Etat: &nbsp;{statusElt}
-                            </div>
+
 
                             {props.status === "PARTIAL_SATISFIED" || props.status === "UNSATISFIED" || props.status === "CLASSED" ? historique : null}
 
                             <>
-                            {affectForm}
-                            {treatForm}
+                              {affectForm}
+                              {treatForm}
                               {tchat}
                             </>
                           </div>

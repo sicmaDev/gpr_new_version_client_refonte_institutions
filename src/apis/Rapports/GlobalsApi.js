@@ -28,14 +28,20 @@ export const reportApi = async (props) => {
     await axios(config)
         .then(function (response) {
             // console.log("responsealertREPORT",response.data)
-            props.globalTrendChanged(response.data.global)
-            props.claimReportChanged(response.data.claimReport)
-            props.denunReportChanged(response.data.denunReport)
-            props.sugReportChanged(response.data.suggestionReport)
-            props.statChanged(response.data.statistic)
-          
-            KTApp.unblockPage();
-            notify("Bravo - Rapport généré","success");
+            if (response.data.status) {
+                props.globalTrendChanged(response.data.global)
+                props.claimReportChanged(response.data.claimReport)
+                props.denunReportChanged(response.data.denunReport)
+                props.sugReportChanged(response.data.suggestionReport)
+                props.statChanged(response.data.statistic)
+              
+                KTApp.unblockPage();
+                notify("Bravo - Rapport généré","success");
+            } else {
+                notify("Votre licence n'est pas active.", "error");
+            }
+           
+            // console.log('report ans',response.data)
         })
         .catch(function (error) {
             // console.log("erreurREPORT",error)
@@ -63,15 +69,21 @@ export const reportApiFiltres = async (props,body) => {
     await axios(config)
         .then(function (response) {
             // console.log("responsealertREPORTfiltres",response.data)
-            props.globalTrendChanged(response.data.global)
-            props.claimReportChanged(response.data.claimReport)
-            props.denunReportChanged(response.data.denunReport)
-            props.sugReportChanged(response.data.suggestionReport)
-            props.statChanged(response.data.statistic)
+            if (response.data.status) {
+                props.globalTrendChanged(response.data.global)
+                props.claimReportChanged(response.data.claimReport)
+                props.denunReportChanged(response.data.denunReport)
+                props.sugReportChanged(response.data.suggestionReport)
+                props.statChanged(response.data.statistic)
+               
+              
+                KTApp.unblockPage();
+                notify("Bravo - Rapport généré","success");
+            } else {
+                notify("Votre licence n'est pas active.", "error");
+            }
            
-          
-            KTApp.unblockPage();
-            notify("Bravo - Rapport généré","success");
+           
         })
         .catch(function (error) {
             // console.log("erreurREPORTfiltres",error)

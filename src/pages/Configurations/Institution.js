@@ -17,7 +17,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { LOGO_SUPPORTED_SIZE } from "../../Utils/globals";
-import { isLicenseControl } from "../../Utils/license";
+import { licenseControl } from "../../Utils/license";
 import { addressChanged, denominationChanged, emailChanged, idChanged, institutionErrors, logoChanged, phoneChanged, referenceChanged, etatChanged } from "../../redux/actions/Configurations/InstitutionActions";
 
 
@@ -27,7 +27,7 @@ const Institution = (props) => {
     useEffect(() => {
 
         try {
-            let appInstitution =  loadItemFromLocalStorage("app-institution") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+            let appInstitution =  loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
            
             if (appInstitution !== undefined || appInstitution !== "") {
                 props.denominationChanged(appInstitution.denomination)
@@ -72,7 +72,7 @@ const Institution = (props) => {
        
     }, []);
 
-    let licenseControl = isLicenseControl()
+    let isLicenseControl = licenseControl()
 
     let errors = {};
 
