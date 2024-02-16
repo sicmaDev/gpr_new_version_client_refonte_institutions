@@ -25,12 +25,10 @@ this.addEventListener("install", (event) => {
                 "/app-assets/plugins/jquery.blockUI.js",
                 "/app-assets/js/gauge.min.js",
                 "/static/js/2.chunk.js",
-                "/static/media/assilassime.b45d5a9b.png",
-                "/static/media/login_photo.df81d3fa.svg",
+                "/static/media/login_photo.b6d48ae7.png",
                 "/static/media/pdf.8db9c70b.svg",
                 "/static/media/excel.a476f2dd.svg",
-                // "/static/media/assilassime.b45d5a9b.png",
-                "/static/media/logo_gpr_as.4cffd8bb.jpg",
+                "/static/media/logo_gpr.b951fbe8.jpg",
                 "/app-assets/data/locales/en.json",
     
             ])
@@ -47,7 +45,7 @@ this.addEventListener("fetch", (event) => {
         if (event.request.url === "http://localhost:3000/static/js/main.chunk.js") {
             event.waitUntil(
                 this.registration.showNotification("Internet", {
-                    body: "internet not working",
+                    body: "Pas d'accès à internet",
                 })
             )
         }

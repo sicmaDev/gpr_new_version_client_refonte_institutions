@@ -25,14 +25,21 @@ const Login = (props) =>{
     }
 
     const handleControl = () => {
-        let user = loadItemFromLocalStorage("app-user") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-user")) : undefined;
 
-        if (user=== undefined) {
-            notify("Vous devez vous connectez au moins une fois pour pouvoir accéder à l'option offline","error")
+        let lic = loadItemFromLocalStorage("lic");
+        if (lic) {
+            let user = loadItemFromLocalStorage("app-user") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-user")) : undefined;
+
+            if (user=== undefined) {
+                notify("Vous devez vous connectez au moins une fois pour pouvoir accéder à l'option offline","error")
+            } else {
+                notify("Mode offline activé ","success")
+                setOnline(false)
+            }
         } else {
-            notify("Mode offline activé ","success")
-            setOnline(false)
+            notify("Votre licence est exoirée, vous ne pouvez accédez au mode offline. ","info")
         }
+        
     }
 
     useEffect(() => {
@@ -100,7 +107,7 @@ const Login = (props) =>{
                                 <img className="recent-file"
                                     src={logo}
                                    
-                                    alt="Logo Assilassimé"/>
+                                    alt="Logo GPR"/>
                             </h1>
 
                         </div>

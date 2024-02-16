@@ -27,14 +27,13 @@ export const reportBceaoApi = async (props,params) => {
     await axios(config)
         .then(function (response) {
             
-            if (response.data.status) {
-               
+            if (response.data.status && response.data.status === false) {
+               notify("Votre licence n'est pas active.", "error");
+            } else {
                 props.globalChanged(response.data);
             
                 KTApp.unblockPage();
                 notify("Bravo - Rapport généré","success");
-            } else {
-                notify("Votre licence n'est pas active.", "error");
             }
            
             // console.log("responseBCEAO",response.data)

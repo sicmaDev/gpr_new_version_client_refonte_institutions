@@ -178,6 +178,7 @@ const EnregistrerReclamation = (props) => {
     // });
     // initDatePicker(props, 'recorded_at')
   }, []);
+  
 
   const [actif, setActif] = useState();
   
@@ -185,6 +186,7 @@ const EnregistrerReclamation = (props) => {
     try {
       let resultat = await licenseInfo();
       // console.log("resultat", resultat);
+      
       setActif(resultat.actif)
       
     } catch (error) {

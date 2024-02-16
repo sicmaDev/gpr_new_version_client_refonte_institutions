@@ -28,7 +28,9 @@ export const reportApi = async (props) => {
     await axios(config)
         .then(function (response) {
             // console.log("responsealertREPORT",response.data)
-            if (response.data.status) {
+            if (response.data.status && response.data.status === false) {
+                notify("Votre licence n'est pas active.", "error");
+            } else {
                 props.globalTrendChanged(response.data.global)
                 props.claimReportChanged(response.data.claimReport)
                 props.denunReportChanged(response.data.denunReport)
@@ -37,8 +39,7 @@ export const reportApi = async (props) => {
               
                 KTApp.unblockPage();
                 notify("Bravo - Rapport généré","success");
-            } else {
-                notify("Votre licence n'est pas active.", "error");
+              
             }
            
             // console.log('report ans',response.data)
@@ -69,7 +70,9 @@ export const reportApiFiltres = async (props,body) => {
     await axios(config)
         .then(function (response) {
             // console.log("responsealertREPORTfiltres",response.data)
-            if (response.data.status) {
+            if (response.data.status && response.data.status === false) {
+               notify("Votre licence n'est pas active.", "error");
+            } else {
                 props.globalTrendChanged(response.data.global)
                 props.claimReportChanged(response.data.claimReport)
                 props.denunReportChanged(response.data.denunReport)
@@ -79,8 +82,6 @@ export const reportApiFiltres = async (props,body) => {
               
                 KTApp.unblockPage();
                 notify("Bravo - Rapport généré","success");
-            } else {
-                notify("Votre licence n'est pas active.", "error");
             }
            
            

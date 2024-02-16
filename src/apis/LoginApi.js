@@ -146,7 +146,10 @@ export const licenseInfo = async () => {
             // notify(response.data.content.message, "error");
         } else {
             // console.log("licence info demande", response.data);
+            response.data.content.actif ? saveItemToLocalStorage(response.data.content.actif , 'lic') : saveItemToLocalStorage(false, 'lic');
+
             return response.data.content;
+            
         }
        
     } catch (error) {
