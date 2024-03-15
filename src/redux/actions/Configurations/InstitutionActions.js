@@ -53,6 +53,20 @@ export const phoneChanged = (phone) =>{
         info: 'This action is used to ...'
     }
 };
+export const paysChanged = (pays) =>{
+    return {
+        type: 'INSTITUTION_PAYS_CHANGED',
+        payload: pays,
+        info: 'This action is used to ...'
+    }
+};
+export const paysCodeChanged = (paysCode) =>{
+    return {
+        type: 'INSTITUTION_PAYS_CODE_CHANGED',
+        payload: paysCode,
+        info: 'This action is used to ...'
+    }
+};
 export const logoChanged = (logo) =>{
     return {
         type: 'LOGO_CHANGED',

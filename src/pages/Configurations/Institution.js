@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import ReactDatatable from '@ashvin27/react-datatable';
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -18,11 +18,25 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { LOGO_SUPPORTED_SIZE } from "../../Utils/globals";
 import { licenseControl } from "../../Utils/license";
-import { addressChanged, denominationChanged, emailChanged, idChanged, institutionErrors, logoChanged, phoneChanged, referenceChanged, etatChanged } from "../../redux/actions/Configurations/InstitutionActions";
+import { addressChanged, denominationChanged, emailChanged, idChanged, institutionErrors, logoChanged, phoneChanged, referenceChanged, etatChanged, paysChanged, paysCodeChanged } from "../../redux/actions/Configurations/InstitutionActions";
+import countryList from 'react-select-country-list'
+import Select from "react-select";
 
 
 
 const Institution = (props) => {
+    const [valueP, setValueP] = useState('')
+    const [valueC, setValueC] = useState('')
+    const options = useMemo(() => countryList().getData(), [])
+  
+    const changeHandler = valueP => {
+      setValueP(valueP)
+      props.paysChanged(valueP.label)
+      props.paysCodeChanged(valueP.value)
+      setValueC(valueC)
+      console.log("payssss",valueP.label)
+    }
+  
 
     useEffect(() => {
 
@@ -36,6 +50,8 @@ const Institution = (props) => {
                 props.logoChanged(appInstitution.logo)
                 props.emailChanged(appInstitution.email)
                 props.phoneChanged(appInstitution.tel)
+                props.paysChanged(appInstitution.pays)
+                props.paysCodeChanged(appInstitution.paysCode)
 
             } else {
             }
@@ -130,7 +146,9 @@ const Institution = (props) => {
             item["email"] = props.email;
             item["tel"] = cleanPhoneNumber(props.phone);
             item["logo"] = props.logo;
-            
+            item["pays"] = props.pays;
+            item["paysCode"] = props.paysCode;
+           
             props.etatChanged(true)
             ajout(item, props).then(() => {
                 // handleCancel(e)
@@ -166,7 +184,8 @@ const Institution = (props) => {
                                     <label htmlFor="denomination" className={"active"}>Raison / Dénomination</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.errors.denomination}</div>
-                                    </small></div>
+                                    </small>
+                                </div>
                                 <div className="col s12 input-field">
                                     <input id="reference" placeholder="" name="reference" type="text"
                                            className="validate" value={props.reference}
@@ -175,7 +194,8 @@ const Institution = (props) => {
                                     <label htmlFor="reference" className={"active"}>Numéro d'agrément</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.errors.reference}</div>
-                                    </small></div>
+                                    </small>
+                                </div>
                                 <div className="col s12 input-field">
                                     <textarea id="address" placeholder="" name="address" type="text"
                                               className="validate materialize-textarea" value={props.address}
@@ -186,6 +206,8 @@ const Institution = (props) => {
                                         <div id="cpassword-error" className="error">{props.errors.address}</div>
                                     </small>
                                 </div>
+                               
+                               
                                 <div className="col s12 file-field input-field">
                                     <div className="btn btn-small file-small brand-blue">
                                         <span>Logo</span>
@@ -242,14 +264,35 @@ const Institution = (props) => {
                                     </small>
                                 </div>
                                 <div className="col s12">
+                                    <div className="input-field">
+                                        <Select
+
+                                            id="slevel"
+                                            value={{"value": props.paysCode ,"label": props.pays}}
+                                            // value={valueP}
+                                            className='react-select-container mt-2'
+                                            classNamePrefix="react-select"
+                                            // style={styles}
+                                            placeholder="Sélectionner le pays"
+                                            options={options}
+                                            // onChange={(e) => props.risqueLevelChanged(e.value)}
+                                            onChange={changeHandler}
+                                        />
+                                        <label htmlFor="slevel" className={"active"} style={{top:'-14%'}}>Pays</label>
+                                        <small className="errorTxt4">
+                                            <div id="cpassword-error" className="error">{props.errors.pays}</div>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div className="col s12">
                                     {companyLogo}
                                 </div>
                             </div>
                         </div>
 
                         <div className="col s12 display-flex justify-content-end mt-3">
-                            {!licenseControl?
-                                (
+                            {/* {!licenseControl? */}
+                                {/* ( */}
                                     <LoadingButton
                                     className="btn waves-effect waves-light mr-1 btn-small"
                                     onClick={(e) => handleSubmit(e)}
@@ -261,15 +304,15 @@ const Institution = (props) => {
                                     >
                                         <span>Enregistrer</span>
                                     </LoadingButton>
-                                )
-                            :
+                                {/* ) */}
+                            {/* :
                                 (<div className="card-alert card red lighten-5">
                                     <div className="card-content red-text">
                                         <ul>
                                             Veuillez activer une licence.
                                         </ul>
                                     </div>
-                                </div>)}
+                                </div>)} */}
                         </div>
                     </div>
                 </form>
@@ -286,6 +329,8 @@ const mapStateToProps = (state) => {
         address: state.institution.address,
         email: state.institution.email,
         phone: state.institution.phone,
+        pays: state.institution.pays,
+        paysCode: state.institution.paysCode,
         logo: state.institution.logo,
         etat: state.institution.etat,
         errors: state.institution.institution_errors,
@@ -318,6 +363,12 @@ const mapDispatchToProps = (dispatch) => {
         },
         phoneChanged: (phone) => {
             dispatch(phoneChanged(phone))
+        },
+        paysChanged: (pays) => {
+            dispatch(paysChanged(pays))
+        },
+        paysCodeChanged: (paysCode) => {
+            dispatch(paysCodeChanged(paysCode))
         },
         etatChanged: (etat) => {
             dispatch(etatChanged(etat));

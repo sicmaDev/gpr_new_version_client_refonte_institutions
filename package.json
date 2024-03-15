@@ -45,6 +45,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
     "react-select": "^5.7.4",
+    "react-select-country-list": "^2.2.3",
     "react-toast-notifications": "^2.5.1",
     "recharts": "^2.7.3",
     "redux": "^4.2.0",
@@ -55,7 +56,6 @@
     "tableexport": "^5.2.0",
     "uuid": "^9.0.0"
   },
-  
   "scripts": {
     "start": "react-scripts --openssl-legacy-provider start",
     "build": "react-scripts build",

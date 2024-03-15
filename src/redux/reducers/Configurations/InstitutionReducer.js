@@ -7,6 +7,8 @@ const initialState = {
     address: "",
     email: "",
     phone: "",
+    pays: "",
+    paysCode: "",
     logo: null,
     etat: false,
 };
@@ -52,6 +54,16 @@ const InstitutionReducer = (state = initialState, action) => {
             return {
                 ...state,
                 phone: action.payload,
+            };
+        case 'INSTITUTION_PAYS_CHANGED':
+            return {
+                ...state,
+                pays: action.payload,
+            };
+        case 'INSTITUTION_PAYS_CODE_CHANGED':
+            return {
+                ...state,
+                paysCode: action.payload,
             };
         case 'LOGO_CHANGED':
             return {

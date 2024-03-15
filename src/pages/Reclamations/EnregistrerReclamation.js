@@ -101,6 +101,7 @@ import useRecorder from "../../hooks/useRecorder";
 import { v4 as uuid } from "uuid";
 import PhoneInput from "react-phone-number-input";
 import { licenseInfo } from "../../apis/LoginApi";
+import { INSTITUTION_PAYS_CODE } from "../../Utils/globals";
 
 
 
@@ -1478,7 +1479,7 @@ const EnregistrerReclamation = (props) => {
                               <PhoneInput
                                 international
                                 countryCallingCodeEditable={false}
-                                defaultCountry="BJ"
+                                defaultCountry={INSTITUTION_PAYS_CODE}
                                 value={props.phone}
                                 onChange={(e) =>
                                   props.phoneChanged(e)

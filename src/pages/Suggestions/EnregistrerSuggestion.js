@@ -24,6 +24,7 @@ import { addressChanged, codeChanged, collectChanged, collectLibelleChanged, con
 import { addSuggestionApi, addSuggestionApiOffline, addTempSuggestionApi, addTempSuggestionApiOffline, downloadFillesApi, getFillesApi, listeByStatut, listeByStatutOffline } from "../../apis/Suggestions/SuggestionsApi";
 import PhoneInput from "react-phone-number-input";
 import { licenseInfo } from "../../apis/LoginApi";
+import { INSTITUTION_PAYS_CODE } from "../../Utils/globals";
 
 // import DateInput from "../ui/DateInput";
 //import IntlTelInput from 'react-intl-tel-input';
@@ -918,7 +919,7 @@ const EnregistrerSuggestion = (props) => {
                                             <div className="row">
                                                 <div className="col l12 s12 m12">
                                                     <div className="row">
-                                                        <div className="col l12 m12 s12"><h6 className="card-title">Informations du Réclamant</h6></div>
+                                                        <div className="col l12 m12 s12"><h6 className="card-title">Informations du Client</h6></div>
                                                         <input type="hidden"
                                                                value={JSON.stringify(props.selectedItem)}/>
                                                         <div className="col l12 m12 s12 input-field">
@@ -954,7 +955,7 @@ const EnregistrerSuggestion = (props) => {
                                                             <PhoneInput
                                                                 international
                                                                 countryCallingCodeEditable={false}
-                                                                defaultCountry="BJ"
+                                                                defaultCountry={INSTITUTION_PAYS_CODE}
                                                                 value={props.phone}
                                                                 onChange={(e) =>
                                                                 props.phoneChanged(e)

@@ -9,6 +9,8 @@ export const INSTITUTION_ADDRESS = appInstitution !== undefined ? appInstitution
 export const INSTITUTION_TEL = appInstitution !== undefined ? appInstitution.tel : ""
 export const INSTITUTION_AGREMENT = appInstitution !== undefined ? appInstitution.numAgrement : ""
 export const INSTITUTION_EMAIL = appInstitution !== undefined ? appInstitution.email : ""
+export const INSTITUTION_PAYS = appInstitution !== undefined ? appInstitution.pays : ""
+export const INSTITUTION_PAYS_CODE = appInstitution !== undefined ? appInstitution.paysCode : "BJ"
 export const LOGO_SUPPORTED_SIZE = "167x62, 272x204, 256x256"
 export const HOST = hostEval()
 export const APP_OWNER = "SICMA ET ASSOCIES"

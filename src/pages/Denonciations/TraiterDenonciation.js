@@ -500,7 +500,7 @@ const TraiterDenonciation = (props) => {
   }
 
   const connect = () => {
-    let Sock = new SockJS(HOST+"/ws");
+    let Sock = new SockJS(HOST+"ws");
     stompClient = over(Sock);
     stompClient.connect({}, onConnected, onError);
   };

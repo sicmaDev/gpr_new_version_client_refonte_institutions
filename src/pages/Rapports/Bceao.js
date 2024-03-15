@@ -1,6 +1,6 @@
 import React from 'react'
 import { connect } from "react-redux";
-import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from '../../Utils/globals';
+import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_PAYS, INSTITUTION_TEL } from '../../Utils/globals';
 import { handlePrintAvance } from '../../Utils/tables';
 import { cleanDate, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from '../../Utils/utils';
 import { table2XLSX } from '../../Utils/tabletoexcel';
@@ -104,7 +104,7 @@ const Bceao = (props) => {
                 <tr>
                     <td>Pays </td>
                     <td colSpan={2}>
-                        Togo
+                      {INSTITUTION_PAYS}
                     </td>
                 </tr>
                 <tr>
@@ -762,7 +762,7 @@ const Bceao = (props) => {
                   >
                     <div className="col s12 l12 m12 center">
                       <span style={{ color: "#015182", fontSize: "25px" }}>
-                        Rapport sous le format de la BCEAO
+                        Rapport sous le format de la Commission Bancaire
                       </span>
                     </div>
                   </div>

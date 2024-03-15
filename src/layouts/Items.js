@@ -312,7 +312,7 @@ const logOut = (e) => {
                             <ListItemIcon>
                                 <StarBorder style={{ color:"white" }} />
                             </ListItemIcon>
-                            <ListItemText primary="BCEAO" />
+                            <ListItemText primary="Commission Bancaire" />
                         </ListItemButton>
                     </NavLink>
                 </List>
