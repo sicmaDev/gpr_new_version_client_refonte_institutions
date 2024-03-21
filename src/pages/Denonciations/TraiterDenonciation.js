@@ -47,6 +47,7 @@ import {
   etat4Changed,
   sessionChanged,
   solutionExistantChanged,
+  transmittedChanged,
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -110,6 +111,7 @@ import MoveUpIcon from '@mui/icons-material/MoveUp';
 import ForumIcon from '@mui/icons-material/Forum';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { licenseInfo } from "../../apis/LoginApi";
+import { Redirect } from 'react-router-dom';
 
 const styles = {
   control: (base) => ({
@@ -291,7 +293,12 @@ const TraiterDenonciation = (props) => {
     setOpen(false);
     history.push("/denonciations/traitement/all");
   };
+  const handleFerme = () => {
+    console.log("je suis dans ferme")
+    return <Redirect to="/alertes/denonciations" />
+  };
 
+ 
   const { id } = useParams();
   //console.log("params",props.match)
 
@@ -1175,6 +1182,9 @@ const TraiterDenonciation = (props) => {
     props.assignedByChanged(data.treatmentAffectedBy ? data.treatmentAffectedBy.firstAndLastName : "");
     props.handledByChanged(data.treatmentAffectedTo ? data.treatmentAffectedTo.firstAndLastName : "");
     props.selectedItemChanged(data);
+    props.transmittedChanged(
+      data.transmitted !== null ? "" +data.transmitted + "" : ""
+    );
     //fetch attachments for selected claim
     getFillesApi(data.id, props);
     props.sessionChanged(data.session !== null ? data.session : "");
@@ -2234,96 +2244,102 @@ const TraiterDenonciation = (props) => {
       // console.log("solutionsLISTE", solutionsListe);
 
       if (hbt.includes("H6") || addR === "PILOTE") {
-        affectForm = (
-          <>
-            <form id="claimAssignForm">
-              <div className="row">
-                <div className="col s12">
-                  <details>
-                    <summary className="text-details">
-                      Affectation de la dénonciation
-                    </summary>
-  
-                    <div className="col s12 input-field">
-                      <Select
-                        options={agentsMailOptions}
-                        className="react-select-container mt-4"
-                        classNamePrefix="react-select"
-                        style={styles}
-                        placeholder="Sélectionner l'agent"
-                        onChange={(e) => {
-                          props.handledByChanged(e.value);
-                          setAffectEmail(e.email);
-                        }}
-                      />
-                      <label htmlFor="gender" className={"active"}>
-                        Affectée à
-                        <span>
-                          (<span className="red-text darken-2 ">*</span>)
-                        </span>
-                      </label>
-                      <small className="errorTxt4">
-                        <div id="cpassword-error" className="error">
-                          {props.errors !== undefined
-                            ? props.errors.handled_by
-                            : ""}
-                        </div>
-                      </small>
-                    </div>
+        if (props.objetLevel === "MINEUR" &&
+        user.firstAndLastName === props.created_by &&
+        props.transmitted === "true") {
+          affectForm=""
+        } else {
+          affectForm = (
+            <>
+              <form id="claimAssignForm">
+                <div className="row">
+                  <div className="col s12">
+                    <details>
+                      <summary className="text-details">
+                        Affectation de la dénonciation
+                      </summary>
+    
+                      <div className="col s12 input-field">
+                        <Select
+                          options={agentsMailOptions}
+                          className="react-select-container mt-4"
+                          classNamePrefix="react-select"
+                          style={styles}
+                          placeholder="Sélectionner l'agent"
+                          onChange={(e) => {
+                            props.handledByChanged(e.value);
+                            setAffectEmail(e.email);
+                          }}
+                        />
+                        <label htmlFor="gender" className={"active"}>
+                          Affectée à
+                          <span>
+                            (<span className="red-text darken-2 ">*</span>)
+                          </span>
+                        </label>
+                        <small className="errorTxt4">
+                          <div id="cpassword-error" className="error">
+                            {props.errors !== undefined
+                              ? props.errors.handled_by
+                              : ""}
+                          </div>
+                        </small>
+                      </div>
 
-                    
-                        <div className="col s12 display-flex justify-content-end mt-3">
-                          {
-                              (actif !== undefined && actif)  ?
-                              <LoadingButton
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  if (handleValidationForAssign()) {
-                                    //setShowSelectPrintItem(true);
-                                    handleAssign(e);
-                                  }
-                                  props.claimHandleErrors(errors);
-                                }}
-                                className="waves-effect waves-effect-b waves-light btn-small"
-                                loading={props.etat}
-                                loadingPosition="end"
-                                endIcon={<SaveIcon />}
-                                variant="contained"
-                                sx={{
-                                  backgroundColor: "#1e2188",
-                                  textTransform: "initial",
-                                }}
-                              >
-                                <span>Affecter</span>
-                              </LoadingButton>
-                             :
-                            <div className="card-alert card red lighten-5">
-                              <div className="card-content red-text">
-                                  <ul>
-                                      Veuillez activer une licence.
-                                  </ul>
+                      
+                          <div className="col s12 display-flex justify-content-end mt-3">
+                            {
+                                (actif !== undefined && actif)  ?
+                                <LoadingButton
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    if (handleValidationForAssign()) {
+                                      //setShowSelectPrintItem(true);
+                                      handleAssign(e);
+                                    }
+                                    props.claimHandleErrors(errors);
+                                  }}
+                                  className="waves-effect waves-effect-b waves-light btn-small"
+                                  loading={props.etat}
+                                  loadingPosition="end"
+                                  endIcon={<SaveIcon />}
+                                  variant="contained"
+                                  sx={{
+                                    backgroundColor: "#1e2188",
+                                    textTransform: "initial",
+                                  }}
+                                >
+                                  <span>Affecter</span>
+                                </LoadingButton>
+                              :
+                              <div className="card-alert card red lighten-5">
+                                <div className="card-content red-text">
+                                    <ul>
+                                        Veuillez activer une licence.
+                                    </ul>
+                                </div>
                               </div>
-                            </div>
-                          }
+                            }
+                          
+                          </div>
                         
-                        </div>
-                       
 
-                        
+                          
+                      
                     
-                   
-                   
-                  </details>
+                    
+                    </details>
+                  </div>
                 </div>
-              </div>
-            </form>
-          </>
-        );
+              </form>
+            </>
+          );
+        }
       }else{
         affectForm=""
       }
 
-      if (hbt.includes("H2","H3","H4") && props.created_by === user.firstAndLastName ) {
+      if (hbt.includes("H2","H3","H4") && props.created_by === user.firstAndLastName && props.transmitted === "false" ) {
         treatForm = (
           <>
             
@@ -3056,7 +3072,8 @@ const TraiterDenonciation = (props) => {
   
   if (
     props.objetLevel === "MINEUR" &&
-    user.firstAndLastName === props.created_by 
+    user.firstAndLastName === props.created_by &&
+    props.transmitted ==="false"
   ) {
     transmettre = (
       <>
@@ -3076,7 +3093,7 @@ const TraiterDenonciation = (props) => {
   } else {
     transmettre = "";
   }
-  if (user.firstAndLastName === props.created_by || showJoinBtn) {
+  if ((user.firstAndLastName === props.created_by && props.transmitted === "false") || showJoinBtn) {
     if (props.session === "" && props.session.status !== "OPEN") {
       btnS = 
        (actif !== undefined && actif)  ?
@@ -3202,7 +3219,16 @@ const TraiterDenonciation = (props) => {
                     <Dialog
                       fullScreen
                       open={open}
-                      onClose={handleClose}
+                      // onClose={ handleClose}
+                      onClose={() => {
+                        console.log("paramsdanslui",props?.match?.params?.code)
+                        if (props?.match?.params?.code==="all") {
+                          handleClose();
+                        }else{
+                          handleFerme()
+                        }
+                      
+                      }}
                       TransitionComponent={Transition}
                     >
                       <AppBar
@@ -3212,14 +3238,25 @@ const TraiterDenonciation = (props) => {
                         }}
                       >
                         <Toolbar>
-                          <IconButton
-                            edge="start"
-                            color="inherit"
-                            onClick={handleClose}
-                            aria-label="close"
-                          >
-                            <CloseIcon />
-                          </IconButton>
+                          { props?.match?.params?.code==="all" ? 
+                            <IconButton
+                              edge="start"
+                              color="inherit"
+                              onClick={handleClose}
+                              aria-label="close"
+                            >
+                              <CloseIcon />
+                            </IconButton> 
+                          : 
+                            <IconButton
+                              edge="start"
+                              color="inherit"
+                              // onClick={handleClose}
+                              aria-label="close"
+                            >
+                              <NavLink to="/alertes/denonciations"><div className="card-content"><CloseIcon/></div></NavLink>
+                            </IconButton> 
+                          }
                           <Typography
                             sx={{ ml: 2, flex: 1 }}
                             variant="h6"
@@ -3435,6 +3472,7 @@ const mapStateToProps = (state) => {
     etat2: state.claim_handle.etat2,
     etat3: state.claim_handle.etat3,
     session: state.claim_handle.session,
+    transmitted: state.claim_handle.transmitted,
     solutionExistant: state.claim_handle.solutionExistant,
   };
 };
@@ -3545,6 +3583,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     sessionChanged: (session) => {
       dispatch(sessionChanged(session));
+    },
+    transmittedChanged: (transmitted) => {
+      dispatch(transmittedChanged(transmitted));
     },
     solutionExistantChanged: (solutionExistant) => {
       dispatch(solutionExistantChanged(solutionExistant));

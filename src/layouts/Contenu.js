@@ -118,7 +118,7 @@ export default function Contenu() {
                     {/* reclamations */}
                     <Route path="/reclamations/enregistrement" component={EnregistrerReclamation} />
                     <Route path="/reclamations/traitement/:code" component={TraiterReclamation} />
-                    <Route path="/reclamations/mesure" component={MesurerReclamation} />
+                    <Route path="/reclamations/mesure/:code" component={MesurerReclamation} />
                     <Route path="/reclamations/assurance" component={AssuranceReclamation} />
                     <Route path="/reclamations/liste" component={ListeReclamations} />
                     <Route path="/reclamations/classees" component={ListeReclamationsClassees} />

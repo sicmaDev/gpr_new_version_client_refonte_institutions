@@ -864,7 +864,7 @@ const ListeReclamationsClassees = (props) => {
       </div>
     </>
   );
-
+   
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
 
   return (
@@ -1004,25 +1004,7 @@ const ListeReclamationsClassees = (props) => {
                                           ""
                                         ))
                                     }
-                                    {
-                                      (crew =
-                                        props.crew !== "" ? (
-                                          <>
-                                            <div
-                                              className="col l6 s12 df pb-2"
-                                              id="dossierimf"
-                                            >
-                                              {" "}
-                                              <Diversity3Icon
-                                                sx={{ mr: 2 }}
-                                              />{" "}
-                                              {props.crew}
-                                            </div>
-                                          </>
-                                        ) : (
-                                          ""
-                                        ))
-                                    }
+                                   
                                   </div>
                                 </div>
                               </div>

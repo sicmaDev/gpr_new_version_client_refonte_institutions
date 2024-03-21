@@ -98,8 +98,36 @@ const ReclamationsAlertes = (props) => {
             align: "left",
             sortable: false,
             cell: (claim) => {
-                let url = "/reclamations/traitement/"+claim.claimCode
-                
+                let url="";
+                switch (claim.status) {
+                  case "SAVED":
+                    url = "/reclamations/traitement/"+claim.claimCode
+                    break;
+                  case "AFFECTED":
+                    url = "/reclamations/traitement/"+claim.claimCode
+                    break;
+                  case "DESAPPROUVED":
+                    url = "/reclamations/traitement/"+claim.claimCode
+                    break;
+                  case "TREAT":
+                    url = "/reclamations/mesure/"+claim.claimCode
+                    break;
+                  case "UNSATISFIED":
+                    url = "/reclamations/traitement/"+claim.claimCode
+                    break;
+                  case "PARTIAL_SATISFIED":
+                    url = "/reclamations/traitement/"+claim.claimCode
+                    break;
+                  case "CLASSED":
+                    url = "/reclamations/traitement/"+claim.claimCode
+                    break;
+        
+                  default:
+                    url = "/reclamations/traitement/"+claim.claimCode
+                    break;
+                }
+               
+                // console.log('url',url)
                 
                 let iconeElt =<NavLink to={url}><div className="card-content red-text"><MenuIcon/></div></NavLink>
                 return iconeElt

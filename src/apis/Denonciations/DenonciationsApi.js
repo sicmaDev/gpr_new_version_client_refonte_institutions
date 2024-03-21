@@ -295,7 +295,11 @@ export const transmissionDenunciationApi = async (data, props) => {
         })
         .catch(function (error) {
             props.etat3Changed(false)
-            notify("Erreur - Veuillez réessayer!", "error");
+            if (error.response.data.content !=="") {
+                notify(error.response.data.content.message, "error");
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
             // console.log("erreur",error)
         });
 }
