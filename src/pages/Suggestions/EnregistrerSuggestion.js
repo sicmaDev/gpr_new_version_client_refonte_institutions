@@ -84,7 +84,7 @@ const EnregistrerSuggestion = (props) => {
     const licenseControl = async () => {
       try {
         let resultat = await licenseInfo();
-        console.log("resultat", resultat);
+        // console.log("resultat", resultat);
         setActif(resultat.actif)
         
       } catch (error) {
@@ -386,7 +386,7 @@ const EnregistrerSuggestion = (props) => {
             formData.append("files", files[index]);
         }
         
-        console.log(formData);
+        // console.log(formData);
         //HERE
         props.etatChanged(true)
         if (mode === 1) {

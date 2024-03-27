@@ -16,7 +16,7 @@ export const isLicenseExpired = () => {
 export const licenseControl = async () => {
     try {
         const resultat = await licenseInfo();
-        console.log("actiffff",resultat)
+        // console.log("actiffff",resultat)
         
         return resultat.actif;
     } catch (error) {

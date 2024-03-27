@@ -34,7 +34,7 @@ const Institution = (props) => {
       props.paysChanged(valueP.label)
       props.paysCodeChanged(valueP.value)
       setValueC(valueC)
-      console.log("payssss",valueP.label)
+    //   console.log("payssss",valueP.label)
     }
   
 

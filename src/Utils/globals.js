@@ -17,6 +17,6 @@ export const APP_OWNER = "SICMA ET ASSOCIES"
 export const APP_OWNER_WEBSITE = "https://sicmagroup.com"
 export const PROD_SERVER = "https://test-gpr-sicma.sicmagroup.com"  //"http://127.0.0.1:3000"    
 function hostEval(){ 
-    return "http://localhost:8080/"  //"https://gprserver.com:9195/"  //"https://gprserver.com:9195/"  // "https://89.117.37.251:9195/"//  "http://192.168.100.6:8080/"  //  //"https://gprserver.com:9195/"
+    return  "https://server-figec.gprserver.com/"  //"http://localhost:8080/"  //"https://gprserver.com:9195/"  //"https://gprserver.com:9195/"  // "https://89.117.37.251:9195/"//  "http://192.168.100.6:8080/"  //  //"https://gprserver.com:9195/"
   
 }

@@ -287,7 +287,7 @@ const Bceao = (props) => {
   
   
     const prepareToPrint = async (type = "pdf") => {
-        console.log("startDate", startDate);
+        // console.log("startDate", startDate);
       let entete = document.querySelector("#enteteRapport").innerHTML;
       let title = document.querySelector("#titleRapport").innerHTML;
       let critere = document.querySelector("#critereRapport").innerHTML;
@@ -322,7 +322,7 @@ const Bceao = (props) => {
       document.querySelector("#trSimple").innerHTML = data;
   
       let results = document.querySelector("#trSimple").innerHTML;
-      console.log( "periode", periode );
+      // console.log( "periode", periode );
 
       document.querySelector("#trSimple").innerHTML = "";
       return results;
