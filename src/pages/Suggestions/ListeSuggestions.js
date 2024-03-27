@@ -992,25 +992,7 @@ const ListeSuggestions = (props) => {
                                         ""
                                       ))
                                   }
-                                  {
-                                    (crew =
-                                      props.crew !== "" ? (
-                                        <>
-                                          <div
-                                            className="col l6 s12 df pb-2"
-                                            id="dossierimf"
-                                          >
-                                            {" "}
-                                            <Diversity3Icon
-                                              sx={{ mr: 2 }}
-                                            />{" "}
-                                            {props.crew}
-                                          </div>
-                                        </>
-                                      ) : (
-                                        ""
-                                      ))
-                                  }
+                                 
                                 </div>
                               </div>
                             </div>

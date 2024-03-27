@@ -32,6 +32,7 @@ import {
   authorizeChanged,
   solutionIdChanged,
   createdByChanged,
+  createdAtChanged,
   etatChanged,
   selectedItemAudioChanged,
   etat2Changed,
@@ -84,6 +85,8 @@ import { TransitionProps } from "@mui/material/transitions";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import { licenseInfo } from "../../apis/LoginApi";
+import axios from "axios";
+import { HOST } from "../../Utils/globals";
 
 
 const styles = {
@@ -124,8 +127,87 @@ const handleClose = () => {
     let hbt = (user.posteDto.habilitations).split(',');
     let addR = (user.additionalRole);
 
+
+    let alreadyCall = false;
+    useEffect(() => {
+      //  console.log("params",props.match.params)
+      //  console.log("params 2",props.id)
+      if(props.match.params.code !== "all" && alreadyCall === false){
+        alreadyCall = true;
+        async function details() {
+          let cc = await axios({
+            method: "get",
+            url: HOST + "api/v1/claim/" + props.match.params.code + "/details",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + loadItemFromSessionStorage("token"),
+            },
+          });
+          if(cc.status >= 200 && cc.status <= 299) {
+            // await listeTreat(props);
+            let data = cc.data.content;
+            // console.log("tmp", data);
+           
+            clearComponentState();
+            
+            props.idChanged(data.id ? data.id : "");
+            props.lastnameChanged(
+              data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
+            );
+            props.firstnameChanged(
+              data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
+            );
+            props.addressChanged(data.address ? data.address : "");
+            props.phoneChanged(data.tel ? data.tel : "");
+            props.genderChanged(data.gender ? data.gender : "");
+            props.languageChanged(data.language.libelle ? data.language.libelle : "");
+            props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+            props.codeChanged(data.code ? data.code : "");
+            props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
+            props.collectChanged(data.collectionChannel.libelle ? data.collectionChannel.libelle : "");
+            props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
+            props.underSubjectChanged(data.objet.categorie.libelle ? data.objet.categorie.libelle : "");
+            props.productChanged(data.product.libelle ? data.product.libelle : "");
+            props.unitChanged(data.servicePoint.libelle ? data.servicePoint.libelle : "");
+            props.contentChanged(data.content ? data.content : "");
+            props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
+            props.solutionIdChanged(data.solutionDtos[0] !== undefined ? data.solutionDtos[0].id : "");
+            props.createdByChanged(data.collector.firstAndLastName ? data.collector.firstAndLastName : "");
+            // props.commentChanged(data.comment ? data.comment : "");
+            props.statusChanged(data.status ? data.status : "");
+            props.selectedItemChanged(data);
+            // console.log("soluion",props.solutionId)
+            //fetch attachments for selected claim
+            // http.get("/files/list/claim/" + data.code).then((response) => {
+            //   props.selectedItemFilesChanged(response.data);
+            // });
+        
+            getFillesApi(data.id, props);
+            getClaimAudioApi(data.id, props);
+
+            handleClickOpen();
+            // if (props.id) {
+             
+            // } 
+            // setOpen((prev) => {
+            //   return false;
+            // });
+          };
+        }
+      
+        details();
+       
+      }
+    }, []);
+
   useEffect(() => {
-    listeByStatut(props, "TREAT").then((r) => {});
+    if (props.match.params.code === "all") {
+      listeByStatut(props, "TREAT").then((r) => {});
+    } else {
+     
+    }
+   
 
     window
       .$(".buttons-excel")
@@ -317,6 +399,7 @@ const handleClose = () => {
     props.contentChanged(data.content ? data.content : "");
     props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
     props.solutionIdChanged(data.solutionDtos[0] !== undefined ? data.solutionDtos[0].id : "");
+    props.createdAtChanged(data.createdAt ? data.createdAt : "");
     props.createdByChanged(data.collector.firstAndLastName ? data.collector.firstAndLastName : "");
     // props.commentChanged(data.comment ? data.comment : "");
     props.statusChanged(data.status ? data.status : "");
@@ -356,6 +439,7 @@ const handleClose = () => {
     props.contentChanged("");
     props.solutionChanged("");
     props.commentChanged("");
+    props.commentaChanged("");
     props.appraisalChanged("");
     props.statusChanged("");
     props.claimAppraiseErrors("");
@@ -796,7 +880,7 @@ const handleClose = () => {
     }).format(new Date(element.createdAt));
     element.createdAtFormated = createdAt;
   });
-
+  console.log("props created at",props.created_at)
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
 
   return (
@@ -841,14 +925,25 @@ const handleClose = () => {
                         }}
                       >
                         <Toolbar>
-                          <IconButton
-                            edge="start"
-                            color="inherit"
-                            onClick={handleClose}
-                            aria-label="close"
-                          >
-                            <CloseIcon />
-                          </IconButton>
+                        { props?.match?.params?.code==="all" ? 
+                            <IconButton
+                              edge="start"
+                              color="inherit"
+                              onClick={handleClose}
+                              aria-label="close"
+                            >
+                              <CloseIcon />
+                            </IconButton> 
+                          : 
+                            <IconButton
+                              edge="start"
+                              color="inherit"
+                              // onClick={handleClose}
+                              aria-label="close"
+                            >
+                              <NavLink to="/alertes/reclamations"><div className="card-content text-white"><CloseIcon/></div></NavLink>
+                            </IconButton> 
+                        }
                           <Typography
                             sx={{ ml: 2, flex: 1 }}
                             variant="h6"
@@ -936,25 +1031,7 @@ const handleClose = () => {
                                           ""
                                         ))
                                     }
-                                    {
-                                      (crew =
-                                        props.crew !== "" ? (
-                                          <>
-                                            <div
-                                              className="col l6 s12 df pb-2"
-                                              id="dossierimf"
-                                            >
-                                              {" "}
-                                              <Diversity3Icon
-                                                sx={{ mr: 2 }}
-                                              />{" "}
-                                              {props.crew}
-                                            </div>
-                                          </>
-                                        ) : (
-                                          ""
-                                        ))
-                                    }
+                                   
                                   </div>
                                 </div>
                               </div>
@@ -1251,6 +1328,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     handledByChanged: (handledBy) => {
       dispatch(handledByChanged(handledBy));
+    },
+    createdAtChanged: (createdAt) => {
+      dispatch(createdAtChanged(createdAt));
     },
     createdByChanged: (createdBy) => {
       dispatch(createdByChanged(createdBy));

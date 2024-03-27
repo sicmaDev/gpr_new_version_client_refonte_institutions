@@ -556,7 +556,7 @@ const AssuranceReclamation = (props) => {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
+        <div className="col xl12 l12 m12 s12 mt-4" key={attachment.id}>
           <div className="card box-shadow-none mb-1 app-file-info">
             <div className="card-content">
               <div className="row">
@@ -604,7 +604,7 @@ const AssuranceReclamation = (props) => {
       );
     });
     attachmentList = (
-      <div className="col s12 app-file-content grey lighten-4">
+      <div className="col s12 mt-4 app-file-content grey lighten-4">
         <span className="app-file-label">Fichiers joints</span>
         <div className="row app-file-recent-access mb-3">
           {attachmentListChild}
@@ -1100,25 +1100,7 @@ const AssuranceReclamation = (props) => {
                                           ""
                                         ))
                                     }
-                                    {
-                                      (crew =
-                                        props.crew !== "" ? (
-                                          <>
-                                            <div
-                                              className="col l6 s12 df pb-2"
-                                              id="dossierimf"
-                                            >
-                                              {" "}
-                                              <Diversity3Icon
-                                                sx={{ mr: 2 }}
-                                              />{" "}
-                                              {props.crew}
-                                            </div>
-                                          </>
-                                        ) : (
-                                          ""
-                                        ))
-                                    }
+                                  
                                   </div>
                                 </div>
                               </div>

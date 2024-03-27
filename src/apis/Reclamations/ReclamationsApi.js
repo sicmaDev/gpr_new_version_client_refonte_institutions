@@ -67,7 +67,7 @@ export const listeByStatut = async (props,state) => {
     };
     await axios(config)
         .then(function (response) {
-           
+            console.log("mesureliste",response.data.content)
             // console.log("response",response.data.content)
             props.itemsChanged(response.data.content)
 
@@ -91,13 +91,15 @@ export const listeTreat = async (props) => {
     await axios(config)
         .then(function (response) {
            
-            // console.log("responsetreat",response.data.content)
+            console.log("responsetreat",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
         })
         .catch(function (error) {
+            console.log("responsetreaterror",error)
             return error;
+
         });
 }
 
@@ -237,6 +239,7 @@ export const treatClaimApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
+           
             notify("Bravo - Réclamation traitée", "success");
             if (data.type) {
                 if (data.type==="assurance") {
@@ -403,7 +406,11 @@ export const transmissionClaimApi = async (data, props) => {
         })
         .catch(function (error) {
             props.etat3Changed(false)
-            notify("Erreur - Veuillez réessayer!", "error");
+            if (error.response.data.content !=="") {
+                notify(error.response.data.content.message, "error");
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
             // console.log("erreur",error)
         });
 }

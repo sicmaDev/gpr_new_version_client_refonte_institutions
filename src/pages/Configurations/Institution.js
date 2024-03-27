@@ -108,7 +108,7 @@ const Institution = (props) => {
     }
     const handleValidation = () => {
         let isValid = true;
-
+      
         if ((props.denomination === "" || props.denomination === undefined || props.denomination === null)) {
             isValid = false;
             errors["denomination"] = "Champ incorrect";
@@ -129,6 +129,10 @@ const Institution = (props) => {
             isValid = false;
             errors["phone"] = "Champ incorrect";
         }
+        if ((props.pays === "" || props.pays === undefined || props.pays === null)) {
+            isValid = false;
+            errors["pays"] = "Champ incorrect";
+        }
         if ((props.logo === "" || props.logo === undefined || props.logo === null)) {
             isValid = false;
             errors["logo"] = "Champ incorrect";
@@ -138,7 +142,7 @@ const Institution = (props) => {
     }
     const handleSubmit = (e) => {
         e.preventDefault()
-        if (handleValidation) {
+        if (handleValidation()) {
             let item = {}
             item["denomination"] = props.denomination;
             item["numAgrement"] = props.reference;

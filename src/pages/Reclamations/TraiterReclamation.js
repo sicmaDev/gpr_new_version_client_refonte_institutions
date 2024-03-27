@@ -43,6 +43,7 @@ import {
   etat2Changed,
   etatChanged,
   anonymatChanged,
+  transmittedChanged,
   selectedItemAudioChanged,
   solutionExistantChanged,
   etat3Changed,
@@ -207,7 +208,7 @@ const TraiterReclamation = (props) => {
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
-
+// console.log("userrrrrrrrrr",user.id)
   //vérification if user is in guest
   let showJoinBtn = false;
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
@@ -215,8 +216,8 @@ const TraiterReclamation = (props) => {
   if((potentialGuest != null && potentialGuest.length > 0) || (potentialMember != null && potentialMember.length > 0 ) ){
     showJoinBtn = true;
   }
-
-
+  // console.log("userrrrrrrrrr",potentialMember)
+  // console.log("userrrrrrrrrr",showJoinBtn)
 
   let handlingForms;
   const [agentsMailOptions, setAgentsMailOptions] = useState([]);
@@ -457,8 +458,6 @@ const TraiterReclamation = (props) => {
       listeTreat(props).then((r) => {});
     } else {
      
-     
-      
     }
 
     window
@@ -510,13 +509,15 @@ const TraiterReclamation = (props) => {
     let ids = (props?.session?.guests)?.map((e)=>{
       return e.id;
     })
+
+   
    
     let princ = users.filter((e) => {
       return (
-        (e.additionalRole !== "MEMBRE_CGR") && (e.additionalRole !== "PR_CGR") && !ids.includes(e.id)
+        !ids.includes(e.id)
       );
     })
-   
+    // console.log("idssssss",princ)
     const { value } = event.target;
     if (value !=="") {
       let coco = []
@@ -1322,6 +1323,9 @@ const TraiterReclamation = (props) => {
     props.anonymatChanged(
       data.affectedAnonymous !== null ? "" + data.affectedAnonymous + "" : ""
     );
+    props.transmittedChanged(
+      data.transmitted !== null ? "" +data.transmitted + "" : ""
+    );
     props.sessionChanged(data.session !== null ? data.session : "");
     props.handledByChanged(
       data.treatmentAffectedTo ? data.treatmentAffectedTo.firstAndLastName : ""
@@ -1345,7 +1349,7 @@ const TraiterReclamation = (props) => {
             <div class="people-list" id="people-list">
             { props.session.createdBy.id === user.id ? 
               <div class="search">
-                <input type="text" placeholder="search" onChange={invitation} />
+                <input type="text" placeholder="Rechercher" onChange={invitation} />
               </div> : null}
               <div id="listI" ref={maDivRef} style={{display:"none" }}>
                
@@ -2457,103 +2461,111 @@ const TraiterReclamation = (props) => {
       });
       // console.log("solutionsLISTE", solutionsListe);
 
-      if (hbt.includes("H6") || addR === "PILOTE") {
-        affectForm = (
-          <>
-            <form id="claimAssignForm">
-              <div className="row">
-                <div className="col s12">
-                  <details>
-                    <summary className="text-details">
-                      Affectation de la réclamation
-                    </summary>
-  
-                    <div className="col s12 input-field">
-                      <Select
-                        options={agentsMailOptions}
-                        className="react-select-container mt-4"
-                        classNamePrefix="react-select"
-                        style={styles}
-                        placeholder="Sélectionner l'agent"
-                        onChange={(e) => {
-                          props.handledByChanged(e.value);
-                          setAffectEmail(e.email);
-                        }}
-                      />
-                      <label htmlFor="gender" className={"active"}>
-                        Affectée à
-                        <span>
-                          (<span className="red-text darken-2 ">*</span>)
-                        </span>
-                      </label>
-                      <small className="errorTxt4">
-                        <div id="cpassword-error" className="error">
-                          {props.errors !== undefined
-                            ? props.errors.handled_by
-                            : ""}
-                        </div>
-                      </small>
-                    </div>
-                    <div className="col s12 input-field mb-2">
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            onChange={(e) => {
-                              handleAnonymat();
-                            }}
-                          />
-                        }
-                        label="Cacher l'identité du plaignant ? "
-                      />
-                    </div>
-                    <div className="col s12 display-flex justify-content-end mt-3">
-
-                      {
-                         (actif !== undefined && actif)  ?
-                          <LoadingButton
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (handleValidationForAssign()) {
-                                //setShowSelectPrintItem(true);
-                                handleAssign(e);
-                              }
-                              props.claimHandleErrors(errors);
-                            }}
-                            className="waves-effect waves-effect-b waves-light btn-small"
-                            loading={props.etat}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{
-                              backgroundColor: "#1e2188",
-                              textTransform: "initial",
-                            }}
-                        >
-                          <span>Affecter</span>
-                          </LoadingButton>
-                        :
-                        <div className="card-alert card red lighten-5">
-                          <div className="card-content red-text">
-                              <ul>
-                                  Veuillez activer une licence.
-                              </ul>
+      if (hbt.includes("H6") || addR === "PILOTE")
+      {
+        if (props.objetLevel === "MINEUR" &&
+        user.firstAndLastName === props.created_by &&
+        props.transmitted === "true") {
+          affectForm=""
+        } else {
+          affectForm = (
+            <>
+              <form id="claimAssignForm">
+                <div className="row">
+                  <div className="col s12">
+                    <details>
+                      <summary className="text-details">
+                        Affectation de la réclamation
+                      </summary>
+    
+                      <div className="col s12 input-field">
+                        <Select
+                          options={agentsMailOptions}
+                          className="react-select-container mt-4"
+                          classNamePrefix="react-select"
+                          style={styles}
+                          placeholder="Sélectionner l'agent"
+                          onChange={(e) => {
+                            props.handledByChanged(e.value);
+                            setAffectEmail(e.email);
+                          }}
+                        />
+                        <label htmlFor="gender" className={"active"}>
+                          Affectée à
+                          <span>
+                            (<span className="red-text darken-2 ">*</span>)
+                          </span>
+                        </label>
+                        <small className="errorTxt4">
+                          <div id="cpassword-error" className="error">
+                            {props.errors !== undefined
+                              ? props.errors.handled_by
+                              : ""}
                           </div>
-                        </div>
-                      }
-                     
-                    
-                    </div>
-                  </details>
+                        </small>
+                      </div>
+                      <div className="col s12 input-field mb-2">
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              onChange={(e) => {
+                                handleAnonymat();
+                              }}
+                            />
+                          }
+                          label="Cacher l'identité du plaignant ? "
+                        />
+                      </div>
+                      <div className="col s12 display-flex justify-content-end mt-3">
+  
+                        {
+                           (actif !== undefined && actif)  ?
+                            <LoadingButton
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (handleValidationForAssign()) {
+                                  //setShowSelectPrintItem(true);
+                                  handleAssign(e);
+                                }
+                                props.claimHandleErrors(errors);
+                              }}
+                              className="waves-effect waves-effect-b waves-light btn-small"
+                              loading={props.etat}
+                              loadingPosition="end"
+                              endIcon={<SaveIcon />}
+                              variant="contained"
+                              sx={{
+                                backgroundColor: "#1e2188",
+                                textTransform: "initial",
+                              }}
+                          >
+                            <span>Affecter</span>
+                            </LoadingButton>
+                          :
+                          <div className="card-alert card red lighten-5">
+                            <div className="card-content red-text">
+                                <ul>
+                                    Veuillez activer une licence.
+                                </ul>
+                            </div>
+                          </div>
+                        }
+                       
+                      
+                      </div>
+                    </details>
+                  </div>
                 </div>
-              </div>
-            </form>
-          </>
-        );
+              </form>
+            </>
+          );
+        }
+      
       }else{
         affectForm=""
       }
      
-      if (hbt.includes("H2","H3","H4") && props.created_by === user.firstAndLastName)  {
+      if (hbt.includes("H2","H3","H4") && props.created_by === user.firstAndLastName && props.transmitted === "false")  {
         treatForm = (
           <>
             
@@ -2705,144 +2717,304 @@ const TraiterReclamation = (props) => {
         </span>
       );
 
-     
+      if(props.solution?.length === 0){
 
-      if (props.handled_by === user.firstAndLastName) {
-        treatForm = (
-          <div className="row">
-            {/* details affectation */}
-            <div className="col s12 pb-2">
-              Réclamation affectée à{" "}
-              <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-              {props.assigned_by} le {formatDate(props.assignedAt)}
-            </div>
-  
-            {/* resolution */}
-            {props.authorize ? (
-              <form id="claimHandleAgainForm">
-                <div className="row">
-                  <div className="col s12">
-                    <details open>
-                      <summary className="text-details">
-                        Traitement de la réclamation
-                      </summary>
-                      <div className="col s12 input-field">
-                        <textarea
-                          id="solution"
-                          name="solution"
-                          placeholder=""
-                          className="materialize-textarea textarea-size"
-                          value={props.solution}
-                          onChange={(e) => props.solutionChanged(e.target.value)}
-                        ></textarea>
-                        <label htmlFor="content" className={"active"}>
-                          Solution
-                          <span>
-                            (<span className="red-text darken-2 ">*</span>)
-                          </span>
-                        </label>
-                        <small className="errorTxt4">
-                          <div id="cpassword-error" className="error">
-                            {props.errors !== undefined
-                              ? props.errors.solution
-                              : ""}
-                          </div>
-                        </small>
-                      </div>
-                      <div className="col s12 input-field">
-                        <textarea
-                          id="comment"
-                          name="comment"
-                          placeholder=""
-                          className="materialize-textarea textarea-size"
-                          value={props.comment}
-                          onChange={(e) => props.commentChanged(e.target.value)}
-                        ></textarea>
-                        <label htmlFor="content" className={"active"}>
-                          Commentaires/Observations
-                          <span>
-                            (<span className="red-text darken-2 ">*</span>)
-                          </span>
-                        </label>
-                        <small className="errorTxt4">
-                          <div id="cpassword-error" className="error">
-                            {props.errors !== undefined
-                              ? props.errors.comment
-                              : ""}
-                          </div>
-                        </small>
-                      </div>
-                      <div className="col s12 display-flex justify-content-end mt-3">
-                        {
-                           (actif !== undefined && actif)  ?
-                            <LoadingButton
-                              onClick={handleSolve}
-                              className="waves-effect waves-effect-b waves-light btn-small"
-                              loading={props.etat2}
-                              loadingPosition="end"
-                              endIcon={<SaveIcon />}
-                              variant="contained"
-                              sx={{
-                                backgroundColor: "#1e2188",
-                                textTransform: "initial",
-                              }}
-                            >
-                              <span>Traiter</span>
-                            </LoadingButton>
-                          :
-                          <div className="card-alert card red lighten-5">
-                            <div className="card-content red-text">
-                                <ul>
-                                    Veuillez activer une licence.
-                                </ul>
-                            </div>
-                          </div>
-
-
-                        }
-                      
-                      </div>
-                    </details>
-                  </div>
-                </div>
-              </form>
-            ) : (
-              <div className="row">
-                <div className="col s12">
-                  <details open>
-                    <summary className="text-details">
-                      Resolution de la réclamation
-                    </summary>
-                    <div className="card-alert card red lighten-5">
-                      <div
-                        className="card-content red-text"
-                        style={{ textAlign: "center" }}
-                      >
-                        <ul>Vous ne pouvez pas traiter cette réclamation</ul>
-                      </div>
-                    </div>
-                  </details>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      } else {
-        if (hbt.includes("H14") || addR !== "MOLDUE") {
+        if (props.handled_by === user.firstAndLastName) {
           treatForm = (
             <div className="row">
+              {/* details affectation */}
               <div className="col s12 pb-2">
                 Réclamation affectée à{" "}
                 <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
                 {props.assigned_by} le {formatDate(props.assignedAt)}
               </div>
+    
+              {/* resolution */}
+              {props.authorize ? (
+                <form id="claimHandleAgainForm">
+                  <div className="row">
+                    <div className="col s12">
+                      <details open>
+                        <summary className="text-details">
+                          Traitement de la réclamation
+                        </summary>
+                        <div className="col s12 input-field">
+                          <textarea
+                            id="solution"
+                            name="solution"
+                            placeholder=""
+                            className="materialize-textarea textarea-size"
+                            value={props.solution}
+                            onChange={(e) => props.solutionChanged(e.target.value)}
+                          ></textarea>
+                          <label htmlFor="content" className={"active"}>
+                            Solution
+                            <span>
+                              (<span className="red-text darken-2 ">*</span>)
+                            </span>
+                          </label>
+                          <small className="errorTxt4">
+                            <div id="cpassword-error" className="error">
+                              {props.errors !== undefined
+                                ? props.errors.solution
+                                : ""}
+                            </div>
+                          </small>
+                        </div>
+                        <div className="col s12 input-field">
+                          <textarea
+                            id="comment"
+                            name="comment"
+                            placeholder=""
+                            className="materialize-textarea textarea-size"
+                            value={props.comment}
+                            onChange={(e) => props.commentChanged(e.target.value)}
+                          ></textarea>
+                          <label htmlFor="content" className={"active"}>
+                            Commentaires/Observations
+                            <span>
+                              (<span className="red-text darken-2 ">*</span>)
+                            </span>
+                          </label>
+                          <small className="errorTxt4">
+                            <div id="cpassword-error" className="error">
+                              {props.errors !== undefined
+                                ? props.errors.comment
+                                : ""}
+                            </div>
+                          </small>
+                        </div>
+                        <div className="col s12 display-flex justify-content-end mt-3">
+                          {
+                             (actif !== undefined && actif)  ?
+                              <LoadingButton
+                                onClick={handleSolve}
+                                className="waves-effect waves-effect-b waves-light btn-small"
+                                loading={props.etat2}
+                                loadingPosition="end"
+                                endIcon={<SaveIcon />}
+                                variant="contained"
+                                sx={{
+                                  backgroundColor: "#1e2188",
+                                  textTransform: "initial",
+                                }}
+                              >
+                                <span>Traiter</span>
+                              </LoadingButton>
+                            :
+                            <div className="card-alert card red lighten-5">
+                              <div className="card-content red-text">
+                                  <ul>
+                                      Veuillez activer une licence.
+                                  </ul>
+                              </div>
+                            </div>
+  
+  
+                          }
+                        
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                <div className="row">
+                  <div className="col s12">
+                    <details open>
+                      <summary className="text-details">
+                        Resolution de la réclamation
+                      </summary>
+                      <div className="card-alert card red lighten-5">
+                        <div
+                          className="card-content red-text"
+                          style={{ textAlign: "center" }}
+                        >
+                          <ul>Vous ne pouvez pas traiter cette réclamation</ul>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              )}
             </div>
-          )
-        }else{
-          treatForm=""
+          );
+        } else {
+          if (hbt.includes("H14") || addR !== "MOLDUE") {
+            treatForm = (
+              <div className="row">
+                <div className="col s12 pb-2">
+                  Réclamation affectée à{" "}
+                  <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
+                  {props.assigned_by} le {formatDate(props.assignedAt)}
+                </div>
+              </div>
+            )
+          }else{
+            treatForm=""
+          }
+          
         }
-        
+      }else{
+       
+
+         // console.log("props.handle_by",props.handled_by)
+        if (props.handled_by === user.firstAndLastName) {
+          treatForm = (
+            <>
+              {/* details affectation */}
+              <div className="col s12 pb-2">
+                Réclamation affectée à{" "}
+                <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
+                {props.assigned_by} le {formatDate(props.assignedAt)}
+              </div>
+              {/* historique */}
+              <div className="row">
+                <div className="col s12">
+                  <details>
+                    <summary className="text-details">
+                      Historique de la réclamation
+                    </summary>
+                    <div className="row">
+                      <div className="col s12 df pb-2">
+                        <span
+                          className="chip indigo lighten-5"
+                          style={{ cursor: "pointer", height: "auto" }}
+                        >
+                          <span className="indigo-text">Traitement en interne</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="row">
+                      <div className="col s12 m12">
+                        <div className="row">{details}</div>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+    
+              {/* retraitement */}
+              {props.authorize ? (
+                <form id="claimHandleAgainForm">
+                  <div className="row">
+                    <div className="col s12">
+                      <details open>
+                        <summary className="text-details">
+                          Retraitement de la réclamation
+                        </summary>
+    
+                        <div className="col s12 input-field">
+                          <textarea
+                            id="solution"
+                            name="solution"
+                            placeholder=""
+                            className="materialize-textarea textarea-size"
+                            value={props.new_solution}
+                            onChange={(e) =>
+                              props.newSolutionChanged(e.target.value)
+                            }
+                          ></textarea>
+                          <label htmlFor="content" className={"active"}>
+                            Solution
+                            <span>
+                              (<span className="red-text darken-2 ">*</span>)
+                            </span>
+                          </label>
+                          <small className="errorTxt4">
+                            <div id="cpassword-error" className="error">
+                              {props.errors !== undefined
+                                ? props.errors.new_solution
+                                : ""}
+                            </div>
+                          </small>
+                        </div>
+                        <div className="col s12 input-field">
+                          <textarea
+                            id="comment"
+                            name="comment"
+                            placeholder=""
+                            className="materialize-textarea textarea-size"
+                            value={props.new_comment}
+                            onChange={(e) =>
+                              props.newCommentChanged(e.target.value)
+                            }
+                          ></textarea>
+                          <label htmlFor="content" className={"active"}>
+                            Commentaires/Observations
+                            <span>
+                              (<span className="red-text darken-2 ">*</span>)
+                            </span>
+                          </label>
+                          <small className="errorTxt4">
+                            <div id="cpassword-error" className="error">
+                              {props.errors !== undefined
+                                ? props.errors.new_comment
+                                : ""}
+                            </div>
+                          </small>
+                        </div>
+    
+                        <div className="col s12 display-flex justify-content-end mt-3">
+                          {
+                            (actif !== undefined && actif)  ?
+                              <LoadingButton
+                                onClick={handleReSolve}
+                                className="waves-effect waves-effect-b waves-light btn-small"
+                                loading={props.etat2}
+                                loadingPosition="end"
+                                endIcon={<SaveIcon />}
+                                variant="contained"
+                                sx={{
+                                  backgroundColor: "#1e2188",
+                                  textTransform: "initial",
+                                }}
+                              >
+                                <span>Retraiter</span>
+                              </LoadingButton>
+                            :
+
+                            <div className="card-alert card red lighten-5">
+                              <div className="card-content red-text">
+                                  <ul>
+                                      Veuillez activer une licence.
+                                  </ul>
+                              </div>
+                            </div>
+
+
+                          }
+                        
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                <div className="row">
+                  <div className="col s12">
+                    <details open>
+                      <summary className="text-details">
+                        Retraitement de la réclamation
+                      </summary>
+                      <div className="card-alert card red lighten-5">
+                        <div
+                          className="card-content red-text"
+                          style={{ textAlign: "center" }}
+                        >
+                          <ul>Vous ne pouvez pas traiter cette réclamation</ul>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              )}
+            </>
+          );
+        } 
       }
+      
+
     
       break;
     case "TO_APPROUVED":
@@ -3191,6 +3363,104 @@ const TraiterReclamation = (props) => {
      
       break;
     case "UNSATISFIED":
+      //ils peuvent affecter les réclamations non satisfaites
+      if (hbt.includes("H6") || addR === "PILOTE")
+      {
+        affectForm = (
+          <>
+            <form id="claimAssignForm">
+              <div className="row">
+                <div className="col s12">
+                  <details>
+                    <summary className="text-details">
+                      Affectation de la réclamation
+                    </summary>
+
+                    <div className="col s12 input-field">
+                      <Select
+                        options={agentsMailOptions}
+                        className="react-select-container mt-4"
+                        classNamePrefix="react-select"
+                        style={styles}
+                        placeholder="Sélectionner l'agent"
+                        onChange={(e) => {
+                          props.handledByChanged(e.value);
+                          setAffectEmail(e.email);
+                        }}
+                      />
+                      <label htmlFor="gender" className={"active"}>
+                        Affectée à
+                        <span>
+                          (<span className="red-text darken-2 ">*</span>)
+                        </span>
+                      </label>
+                      <small className="errorTxt4">
+                        <div id="cpassword-error" className="error">
+                          {props.errors !== undefined
+                            ? props.errors.handled_by
+                            : ""}
+                        </div>
+                      </small>
+                    </div>
+                    <div className="col s12 input-field mb-2">
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            onChange={(e) => {
+                              handleAnonymat();
+                            }}
+                          />
+                        }
+                        label="Cacher l'identité du plaignant ? "
+                      />
+                    </div>
+                    <div className="col s12 display-flex justify-content-end mt-3">
+
+                      {
+                          (actif !== undefined && actif)  ?
+                          <LoadingButton
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (handleValidationForAssign()) {
+                                //setShowSelectPrintItem(true);
+                                handleAssign(e);
+                              }
+                              props.claimHandleErrors(errors);
+                            }}
+                            className="waves-effect waves-effect-b waves-light btn-small"
+                            loading={props.etat}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{
+                              backgroundColor: "#1e2188",
+                              textTransform: "initial",
+                            }}
+                        >
+                          <span>Affecter</span>
+                          </LoadingButton>
+                        :
+                        <div className="card-alert card red lighten-5">
+                          <div className="card-content red-text">
+                              <ul>
+                                  Veuillez activer une licence.
+                              </ul>
+                          </div>
+                        </div>
+                      }
+                      
+                    
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </form>
+          </>
+        );
+      
+      }else{
+        affectForm=""
+      }
       
       statusElt = (
         <span className="chip unSatisfiedBgColor lighten-5 mb-4">
@@ -3199,6 +3469,105 @@ const TraiterReclamation = (props) => {
       );
       break;
     case "PARTIAL_SATISFIED":
+      //ils peuvent affecter les réclamations non satisfaites
+      if (hbt.includes("H6") || addR === "PILOTE")
+       {
+         affectForm = (
+           <>
+             <form id="claimAssignForm">
+               <div className="row">
+                 <div className="col s12">
+                   <details>
+                     <summary className="text-details">
+                       Affectation de la réclamation
+                     </summary>
+ 
+                     <div className="col s12 input-field">
+                       <Select
+                         options={agentsMailOptions}
+                         className="react-select-container mt-4"
+                         classNamePrefix="react-select"
+                         style={styles}
+                         placeholder="Sélectionner l'agent"
+                         onChange={(e) => {
+                           props.handledByChanged(e.value);
+                           setAffectEmail(e.email);
+                         }}
+                       />
+                       <label htmlFor="gender" className={"active"}>
+                         Affectée à
+                         <span>
+                           (<span className="red-text darken-2 ">*</span>)
+                         </span>
+                       </label>
+                       <small className="errorTxt4">
+                         <div id="cpassword-error" className="error">
+                           {props.errors !== undefined
+                             ? props.errors.handled_by
+                             : ""}
+                         </div>
+                       </small>
+                     </div>
+                     <div className="col s12 input-field mb-2">
+                       <FormControlLabel
+                         control={
+                           <Checkbox
+                             onChange={(e) => {
+                               handleAnonymat();
+                             }}
+                           />
+                         }
+                         label="Cacher l'identité du plaignant ? "
+                       />
+                     </div>
+                     <div className="col s12 display-flex justify-content-end mt-3">
+ 
+                       {
+                           (actif !== undefined && actif)  ?
+                           <LoadingButton
+                             onClick={(e) => {
+                               e.preventDefault();
+                               if (handleValidationForAssign()) {
+                                 //setShowSelectPrintItem(true);
+                                 handleAssign(e);
+                               }
+                               props.claimHandleErrors(errors);
+                             }}
+                             className="waves-effect waves-effect-b waves-light btn-small"
+                             loading={props.etat}
+                             loadingPosition="end"
+                             endIcon={<SaveIcon />}
+                             variant="contained"
+                             sx={{
+                               backgroundColor: "#1e2188",
+                               textTransform: "initial",
+                             }}
+                         >
+                           <span>Affecter</span>
+                           </LoadingButton>
+                         :
+                         <div className="card-alert card red lighten-5">
+                           <div className="card-content red-text">
+                               <ul>
+                                   Veuillez activer une licence.
+                               </ul>
+                           </div>
+                         </div>
+                       }
+                       
+                     
+                     </div>
+                   </details>
+                 </div>
+               </div>
+             </form>
+           </>
+         );
+       
+      }else{
+         affectForm=""
+      }
+       
       statusElt = (
         <span className="chip partialBgColor lighten-5 mb-4">
           <span className="">Partiellement Satisfait</span>
@@ -3206,6 +3575,105 @@ const TraiterReclamation = (props) => {
       );
       break;
     case "CLASSED":
+      //ils peuvent affecter les réclamations non satisfaites
+      if (hbt.includes("H6") || addR === "PILOTE")
+      {
+        affectForm = (
+          <>
+            <form id="claimAssignForm">
+              <div className="row">
+                <div className="col s12">
+                  <details>
+                    <summary className="text-details">
+                      Affectation de la réclamation
+                    </summary>
+
+                    <div className="col s12 input-field">
+                      <Select
+                        options={agentsMailOptions}
+                        className="react-select-container mt-4"
+                        classNamePrefix="react-select"
+                        style={styles}
+                        placeholder="Sélectionner l'agent"
+                        onChange={(e) => {
+                          props.handledByChanged(e.value);
+                          setAffectEmail(e.email);
+                        }}
+                      />
+                      <label htmlFor="gender" className={"active"}>
+                        Affectée à
+                        <span>
+                          (<span className="red-text darken-2 ">*</span>)
+                        </span>
+                      </label>
+                      <small className="errorTxt4">
+                        <div id="cpassword-error" className="error">
+                          {props.errors !== undefined
+                            ? props.errors.handled_by
+                            : ""}
+                        </div>
+                      </small>
+                    </div>
+                    <div className="col s12 input-field mb-2">
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            onChange={(e) => {
+                              handleAnonymat();
+                            }}
+                          />
+                        }
+                        label="Cacher l'identité du plaignant ? "
+                      />
+                    </div>
+                    <div className="col s12 display-flex justify-content-end mt-3">
+
+                      {
+                          (actif !== undefined && actif)  ?
+                          <LoadingButton
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (handleValidationForAssign()) {
+                                //setShowSelectPrintItem(true);
+                                handleAssign(e);
+                              }
+                              props.claimHandleErrors(errors);
+                            }}
+                            className="waves-effect waves-effect-b waves-light btn-small"
+                            loading={props.etat}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{
+                              backgroundColor: "#1e2188",
+                              textTransform: "initial",
+                            }}
+                        >
+                          <span>Affecter</span>
+                          </LoadingButton>
+                        :
+                        <div className="card-alert card red lighten-5">
+                          <div className="card-content red-text">
+                              <ul>
+                                  Veuillez activer une licence.
+                              </ul>
+                          </div>
+                        </div>
+                      }
+                      
+                    
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </form>
+          </>
+        );
+      
+      }else{
+        affectForm=""
+      }
+       
         statusElt = (
           <span className="chip classedBgColor lighten-5">
             <span className="">Classée</span>
@@ -3478,19 +3946,7 @@ const TraiterReclamation = (props) => {
                       ""
                     ))
                 }
-                {
-                  (crew =
-                    props.crew !== "" ? (
-                      <>
-                        <div className="col l6 s12 df pb-2" id="dossierimf">
-                          {" "}
-                          <Diversity3Icon sx={{ mr: 2 }} /> {props.crew}
-                        </div>
-                      </>
-                    ) : (
-                      ""
-                    ))
-                }
+              
               </div>
             </div>
           </div>
@@ -3508,7 +3964,9 @@ const TraiterReclamation = (props) => {
   
   if (
     props.objetLevel === "MINEUR" &&
-    user.firstAndLastName === props.created_by 
+    user.firstAndLastName === props.created_by &&
+    props.transmitted ==="false" &&
+    props.status === "SAVED"
   ) {
     transmettre = (
       <>
@@ -3528,7 +3986,8 @@ const TraiterReclamation = (props) => {
   } else {
     transmettre = "";
   }
-  if (user.firstAndLastName === props.created_by || showJoinBtn) {
+  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by ) ){
+    // console.log("lol","azert")
     if (props.session === "" && props.session.status !== "OPEN") {
       btnS = 
       (actif !== undefined && actif) ?
@@ -3603,6 +4062,7 @@ const TraiterReclamation = (props) => {
           </div>
         </div>
     } else {
+      // console.log("lol1","azert")
       btnS = "";
     }
   }
@@ -3660,14 +4120,25 @@ const TraiterReclamation = (props) => {
                         }}
                       >
                         <Toolbar>
-                          <IconButton
-                            edge="start"
-                            color="inherit"
-                            onClick={handleClose}
-                            aria-label="close"
-                          >
-                            <CloseIcon />
-                          </IconButton>
+                        { props?.match?.params?.code==="all" ? 
+                            <IconButton
+                              edge="start"
+                              color="inherit"
+                              onClick={handleClose}
+                              aria-label="close"
+                            >
+                              <CloseIcon />
+                            </IconButton> 
+                          : 
+                            <IconButton
+                              edge="start"
+                              color="inherit"
+                              // onClick={handleClose}
+                              aria-label="close"
+                            >
+                              <NavLink to="/alertes/reclamations"><div className="card-content"><CloseIcon/></div></NavLink>
+                            </IconButton> 
+                        }
                           <Typography
                             sx={{ ml: 2, flex: 1 }}
                             variant="h6"
@@ -3901,6 +4372,7 @@ const mapStateToProps = (state) => {
     etat2: state.claim_handle.etat2,
     etat3: state.claim_handle.etat3,
     anonymat: state.claim_handle.anonymat,
+    transmitted: state.claim_handle.transmitted,
     session: state.claim_handle.session,
     solutionExistant: state.claim_handle.solutionExistant,
   };
@@ -4039,6 +4511,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     anonymatChanged: (anonymat) => {
       dispatch(anonymatChanged(anonymat));
+    },
+    transmittedChanged: (transmitted) => {
+      dispatch(transmittedChanged(transmitted));
     },
     sessionChanged: (session) => {
       dispatch(sessionChanged(session));

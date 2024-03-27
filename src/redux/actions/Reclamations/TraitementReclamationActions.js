@@ -322,6 +322,13 @@ export const anonymatChanged = (anonymat) =>{
         info: 'This action is used to ...'
     }
 };
+export const transmittedChanged = (transmitted) =>{
+    return {
+        type: 'CLAIM_HANDLE_TRANSMITTED_CHANGED',
+        payload: transmitted,
+        info: 'This action is used to ...'
+    }
+};
 export const sessionChanged = (session) =>{
     return {
         type: 'CLAIM_HANDLE_SESSION_CHANGED',

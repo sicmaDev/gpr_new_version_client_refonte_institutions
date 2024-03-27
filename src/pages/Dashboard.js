@@ -254,7 +254,34 @@ const Dashboard = (props) => {
                 
                 let url;
                 if(claim.type === "CLAIM"){
-                    url = "/reclamations/traitement/"+claim.claimCode;
+                   
+                    switch (claim.status) {
+                      case "SAVED":
+                        url = "/reclamations/traitement/"+claim.claimCode
+                        break;
+                      case "AFFECTED":
+                        url = "/reclamations/traitement/"+claim.claimCode
+                        break;
+                      case "DESAPPROUVED":
+                        url = "/reclamations/traitement/"+claim.claimCode
+                        break;
+                      case "TREAT":
+                        url = "/reclamations/mesure/"+claim.claimCode
+                        break;
+                      case "UNSATISFIED":
+                        url = "/reclamations/traitement/"+claim.claimCode
+                        break;
+                      case "PARTIAL_SATISFIED":
+                        url = "/reclamations/traitement/"+claim.claimCode
+                        break;
+                      case "CLASSED":
+                        url = "/reclamations/traitement/"+claim.claimCode
+                        break;
+            
+                      default:
+                        url = "/reclamations/traitement/"+claim.claimCode
+                        break;
+                    }
                 }else {
                     url = "/denonciations/traitement/"+claim.claimCode;
                 }

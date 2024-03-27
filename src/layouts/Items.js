@@ -134,7 +134,7 @@ const logOut = (e) => {
         </NavLink> : "";
 
     let RMesure = (hbt.includes("H5") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
-        <NavLink to="/reclamations/mesure" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+        <NavLink to="/reclamations/mesure/all" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
                     <DeviceThermostatIcon style={{ color:"white" }} />
