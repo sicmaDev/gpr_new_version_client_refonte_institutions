@@ -1162,11 +1162,7 @@ const Global = (props) => {
                         Affectée
                       </span>
                     </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        A approuver
-                      </span>
-                    </td>
+                   
                     <td className="center">
                       <span style={{ fontSize: "13px", fontWeight: "bold" }}>
                         Désapprouvée
@@ -1222,14 +1218,7 @@ const Global = (props) => {
                         }
                       </span>
                     </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        {
-                          props.claimReport?.basicStats?.statusAndValue
-                            ?.TO_APPROUVED
-                        }
-                      </span>
-                    </td>
+                    
                     <td className="center">
                       <span style={{ fontSize: "13px", fontWeight: "bold" }}>
                         {
@@ -1395,11 +1384,7 @@ const Global = (props) => {
                         Affectée
                       </span>
                     </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        A approuver
-                      </span>
-                    </td>
+                  
                     <td className="center">
                       <span style={{ fontSize: "13px", fontWeight: "bold" }}>
                         Désapprouvée
@@ -1430,14 +1415,7 @@ const Global = (props) => {
                         }
                       </span>
                     </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        {
-                          props.denunReport?.basicStats?.statusAndValue
-                            ?.TO_APPROUVED
-                        }
-                      </span>
-                    </td>
+                   
                     <td className="center">
                       <span style={{ fontSize: "13px", fontWeight: "bold" }}>
                         {
@@ -1828,25 +1806,7 @@ const Global = (props) => {
               </div>
             </div>
           </div>
-          {/* <div className="col s12 m12 l12 input-field" id="page4">
-            <textarea
-              data-limit-rows="true"
-              id="comment1"
-              name="comment1"
-              placeholder=""
-              rows={"13"}
-              className="materialize-textarea materialize-textarea-b"
-              onChange={(e) => {}}
-            ></textarea>
-            <label htmlFor="content" className={"active"}>
-              Commentaires:
-            </label>
-            <small className="errorTxt4">
-              <div id="cpassword-error" className="error">
-                {props.errors !== undefined ? props.errors.content : ""}
-              </div>
-            </small>
-          </div> */}
+         
         </div>
       </div>
 
@@ -1873,19 +1833,6 @@ const Global = (props) => {
                     ref={resolutionPieChartRef}
                   />
 
-                  {/* <GaugeChart id="gauge-chart5"
-                    ref={resolutionPieChartRef}
-                    nrOfLevels={420}
-                    arcsLength={[0.3, 0.5, 0.2]}
-                    arcWidth = {0.2}
-                    colors={['#5BE12C', '#F5CD19', '#EA4228']}
-                    textColor="#000000"
-                    // needleColor="#EA4228"
-                    // needleBaseColor="#EA4228"
-                    percent={parseFloat(props.global_trend?.tauxResolution)}
-                    arcPadding={0.02}
-                    // style={"height:25px"}
-                  /> */}
                 </div>
               </div>
             </div>
@@ -4284,7 +4231,6 @@ const Global = (props) => {
                             setOptionsState([
                               { label: "A traiter", value: "SAVED" },
                               { label: "Affectée", value: "AFFECTED" },
-                              { label: "A approuver", value: "TO_APPROUVED" },
                               { label: "Désapprouvée", value: "DESAPPROUVED" },
                               { label: "Traitée", value: "TREAT" },
                             ]);
@@ -4294,7 +4240,6 @@ const Global = (props) => {
                             setOptionsState([
                               { label: "A traiter", value: "SAVED" },
                               { label: "Affectée", value: "AFFECTED" },
-                              { label: "A approuver", value: "TO_APPROUVED" },
                               { label: "Désapprouvée", value: "DESAPPROUVED" },
                               { label: "Traitée", value: "TREAT" },
                               { label: "Non satisfait", value: "UNSATISFIED" },

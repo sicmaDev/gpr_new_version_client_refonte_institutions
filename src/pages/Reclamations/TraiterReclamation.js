@@ -208,7 +208,7 @@ const TraiterReclamation = (props) => {
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
-
+// console.log("userrrrrrrrrr",user.id)
   //vérification if user is in guest
   let showJoinBtn = false;
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
@@ -216,8 +216,8 @@ const TraiterReclamation = (props) => {
   if((potentialGuest != null && potentialGuest.length > 0) || (potentialMember != null && potentialMember.length > 0 ) ){
     showJoinBtn = true;
   }
-
-
+  // console.log("userrrrrrrrrr",potentialMember)
+  // console.log("userrrrrrrrrr",showJoinBtn)
 
   let handlingForms;
   const [agentsMailOptions, setAgentsMailOptions] = useState([]);
@@ -509,13 +509,15 @@ const TraiterReclamation = (props) => {
     let ids = (props?.session?.guests)?.map((e)=>{
       return e.id;
     })
+
+   
    
     let princ = users.filter((e) => {
       return (
-        (e.additionalRole !== "MEMBRE_CGR") && (e.additionalRole !== "PR_CGR") && !ids.includes(e.id)
+        !ids.includes(e.id)
       );
     })
-   
+    // console.log("idssssss",princ)
     const { value } = event.target;
     if (value !=="") {
       let coco = []
@@ -1334,7 +1336,7 @@ const TraiterReclamation = (props) => {
 
     getFillesApi(data.id, props);
     getClaimAudioApi(data.id, props);
-    console.log("create",props.created_by);
+    // console.log("create",props.created_by);
   };
   
   let tchat;
@@ -1347,7 +1349,7 @@ const TraiterReclamation = (props) => {
             <div class="people-list" id="people-list">
             { props.session.createdBy.id === user.id ? 
               <div class="search">
-                <input type="text" placeholder="search" onChange={invitation} />
+                <input type="text" placeholder="Rechercher" onChange={invitation} />
               </div> : null}
               <div id="listI" ref={maDivRef} style={{display:"none" }}>
                
@@ -3963,7 +3965,8 @@ const TraiterReclamation = (props) => {
   if (
     props.objetLevel === "MINEUR" &&
     user.firstAndLastName === props.created_by &&
-    props.transmitted ==="false"
+    props.transmitted ==="false" &&
+    props.status === "SAVED"
   ) {
     transmettre = (
       <>
@@ -3983,7 +3986,8 @@ const TraiterReclamation = (props) => {
   } else {
     transmettre = "";
   }
-  if ((user.firstAndLastName === props.created_by && props.transmitted === "false") || showJoinBtn) {
+  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by ) ){
+    // console.log("lol","azert")
     if (props.session === "" && props.session.status !== "OPEN") {
       btnS = 
       (actif !== undefined && actif) ?
@@ -4058,6 +4062,7 @@ const TraiterReclamation = (props) => {
           </div>
         </div>
     } else {
+      // console.log("lol1","azert")
       btnS = "";
     }
   }
