@@ -436,7 +436,6 @@ const ListeSuggestions = (props) => {
     { value: "Status", label: "Status" },
     { value: "Enregistrer le", label: "Enregistrer le" },
     { value: "Telephone", label: "Téléphone" },
-    { value: "Groupe", label: "Groupe" },
     { value: "Enregistrer par", label: "Enregistrer par" },
     { value: "Produit", label: "Produit" },
     { value: "Moyens de collecte", label: "Moyen de collecte" },

@@ -453,10 +453,7 @@ export const getExportHtml2 = (columns, records, id = "") => {
           let telephone = record.id ?  record.tel === null ? "-" : record.tel : record.phone;
             return (tableHtml += "<td>" + telephone + "</td>");
         }
-        if (column === "Groupe") {
-            let groupe =  record.crew === null ? "-" : record.crew;
-            return (tableHtml += "<td>" + groupe + "</td>");
-        }
+       
         if (column === "Code") {
           return (tableHtml += "<td>" + record.code + "</td>");
         }
@@ -619,10 +616,7 @@ export const getExportHtml3 = (columns, records, id = "") => {
           let telephone = record.id ?  record.tel === null ? "-" : record.tel : record.phone;
             return (tableHtml += "<td>" + telephone + "</td>");
         }
-        if (column === "Groupe") {
-            let groupe =  record.crew === "" ? "<i>-</i>" : record.crew;
-            return (tableHtml += "<td>" + groupe + "</td>");
-        }
+      
         if (column === "Code") {
           let code =  record.code === "" ? "<i>-</i>" : record.code;
           return (tableHtml += "<td>" + code + "</td>");
