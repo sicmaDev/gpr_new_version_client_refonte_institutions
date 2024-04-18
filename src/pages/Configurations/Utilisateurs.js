@@ -68,7 +68,7 @@ const Utilisateurs = (props) => {
     const licenseControl = async () => {
       try {
         let resultat = await licenseInfo();
-        console.log("resultat", resultat);
+        // console.log("resultat", resultat);
         setMax(resultat.maxPoste)
         
       } catch (error) {

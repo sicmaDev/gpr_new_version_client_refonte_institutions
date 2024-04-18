@@ -485,7 +485,7 @@ const TraiterReclamation = (props) => {
     const licenseControl = async () => {
       try {
         let resultat = await licenseInfo();
-        console.log("resultat", resultat);
+        // console.log("resultat", resultat);
         setActif(resultat.actif)
         
       } catch (error) {
@@ -736,7 +736,7 @@ const TraiterReclamation = (props) => {
 
 
   const onError = (err) => {
-    console.log(err);
+    // console.log(err);
   };
 
   const handleMessage = (event) => {
@@ -1217,7 +1217,7 @@ const TraiterReclamation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    console.log("session",data);
+    // console.log("session",data);
     handleClickOpen();
     clearComponentState();
     // console.log("donnees",data)

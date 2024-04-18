@@ -73,7 +73,7 @@ const Login = (props) =>{
 
         if(handleValidation()){
             props.etatChanged(true)
-            console.log("online",online)
+            // console.log("online",online)
             if (online) {
                 LoginApi(credentials, props)
             } else {

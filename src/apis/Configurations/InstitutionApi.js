@@ -70,7 +70,7 @@ export const createLicense = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            console.log("responsegpradmin",response.data.data);
+            // console.log("responsegpradmin",response.data.data);
             let resultat = response.data.data;
 
             let finResultat = {
@@ -97,7 +97,7 @@ export const createLicense = async (data, props) => {
         })
         .catch(function (error) {
             // props.etatChanged(false)
-            console.log("responsegpradmineror",error);
+            // console.log("responsegpradmineror",error);
             notify("Erreur - Veuillez réessayer!", "error");
         });
 
@@ -121,10 +121,10 @@ export const createLicenseFile = async (data) => {
     await axios(config).then(function(response){
         //let resultat = response.data.data;
         // console.log("createFile2","success")
-        console.log("reponsefile",response)
+        // console.log("reponsefile",response)
     }).catch(function (error) {
         // console.log("createfile3")
-        console.log("fileeroor",error)
+        // console.log("fileeroor",error)
         notify("ErreurFile -  Veuillez réessayer!", "error");
     });
 }

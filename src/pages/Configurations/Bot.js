@@ -66,7 +66,7 @@ const Bot = (props) => {
     const licenseControl = async () => {
       try {
         let resultat = await licenseInfo();
-        console.log("resultat", resultat);
+        // console.log("resultat", resultat);
         setActif(resultat.actif)
         
       } catch (error) {

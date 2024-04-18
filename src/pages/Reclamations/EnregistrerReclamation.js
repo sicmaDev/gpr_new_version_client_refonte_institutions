@@ -719,7 +719,7 @@ const EnregistrerReclamation = (props) => {
             onClick={(e) => {
               e.preventDefault();
               if (handleValidation()) {
-                console.log("mode",mode)
+                // console.log("mode",mode)
                 if (mode === 1) {
                   setShowSmsBox(true);
                   setOpen(true);
@@ -1208,15 +1208,15 @@ const EnregistrerReclamation = (props) => {
     };
     await axios(config)
       .then(function (response) {
-        console.log("smsurl", (props.phone));
-        console.log("smsurl", cleanPhoneNumber3(props.phone));
-        console.log("sms", response);
+        // console.log("smsurl", (props.phone));
+        // console.log("smsurl", cleanPhoneNumber3(props.phone));
+        // console.log("sms", response);
         handleSubmit(e);
         notify("SMS envoyé", "success");
       })
       .catch(function (error) {
         handleSubmit(e);
-        console.log("smscatch", error);
+        // console.log("smscatch", error);
         notify(
           "Erreur - Sms non envoyé, mais réclamation enregistrée",
           "warning"

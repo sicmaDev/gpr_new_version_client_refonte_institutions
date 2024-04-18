@@ -157,7 +157,7 @@ const Solutions = (props) => {
             let item = {}
             item["objet"] = props.objet;
             item["content"] = props.solution;
-            console.log("solutionitem",item)
+            // console.log("solutionitem",item)
             props.etatChanged(true)
             ajout(item, props).then(() => {
                 handleCancel(e)
