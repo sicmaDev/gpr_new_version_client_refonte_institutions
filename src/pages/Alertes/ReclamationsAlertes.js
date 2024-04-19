@@ -17,6 +17,7 @@ const ReclamationsAlertes = (props) => {
         props.itemsChanged([])
     }
     useEffect(() => {
+        props.itemsChanged([])
         alertReclamationApi(props).then((r) => {});
 
         window.$('.buttons-excel').html('<span><i class="fa fa-file-excel"></i></span>')

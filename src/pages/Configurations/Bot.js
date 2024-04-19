@@ -13,6 +13,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import { notify } from "../../Utils/alert";
 import axios from "axios";
 import { licenseInfo } from "../../apis/LoginApi";
+import { QRCode } from 'react-qrcode-logo';
+import logo from '../../assets/images/GPR_192.png';
 
 
 const Bot = (props) => {
@@ -105,40 +107,47 @@ const Bot = (props) => {
         let item = {}
         item["apiKey"] = props.apiKey;
         item["apiSecret"] = props.apiSecret;
+
+        let itemb = {}
+        itemb["apikey"] = props.apiKey;
+        itemb["apisecret"] = props.apiSecret;
         props.etatChanged(true)
-        ajout(item, props).then(() => {
-            // handleCancel(e)
-        })
-        // if (handleValidation()) {
-        //     //send request to verify
-        //     const API_URL = "https://gpradmin.sicmagroup.com/api/verifiedKey"
-        //     const config = {
-        //         method: 'post',
-        //         url: API_URL,
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'Authorization': loadItemFromSessionStorage('tok')
-        //         },
-        //         data: item
-        //     };
-        //     axios(config)
-        //         .then(function (response) {
-        //            // console.log(response);
-        //             let resultat = response.data;
+      
+        if (handleValidation()) {
+            //send request to verify
+            // console.log("botload2",itemb);
+            const API_URL = "https://gpradmin.sicmagroup.com/api/verifiedKey"
+            const config = {
+                method: 'post',
+                url: API_URL,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+                },
+                data: itemb
+            };
+            axios(config)
+                .then(function (response) {
+                //    console.log("botload",response);
+                    let resultat = response.data;
+
+                    if(resultat.status == "error"){
+                        notify(resultat.data, "error");
+                        props.etatChanged(false)
+                      //  console.log(resultat);
+                    } else {
+                        ajout(item, props).then(() => {
+                            // handleCancel(e)
+                        })
+                       // console.log(response);
+                    }
             
-        //             ajout(item, props).then(() => {
-        //                 // handleCancel(e)
-        //             })
                     
-        //         })
-        //         ;
+                    
+                })
+                ;
            
-        // } 
-        // else {
-           
-        //     notify("Echec de l'enregistrement", "error");
-        //     //console.log("in false");
-        // }
+        } 
 
         props.gprbotErrors(errors)
        
@@ -155,7 +164,7 @@ const Bot = (props) => {
                     <div className="row">
                     
 
-                        <div className="col s12 m6">
+                        <div className="col s6 m6">
                             <div className="row">
 
                                 <div className="col s12 input-field">
@@ -186,32 +195,75 @@ const Bot = (props) => {
                                         <div id="cpassword-error" className="error">{props.gprbotErrors.apiSecret}</div>
                                     </small>
                                 </div>
+                                <div className="col s12 display-flex justify-content-start mt-3">
+                                    { (actif !== undefined && actif)  ? (
+                                        <LoadingButton
+                                            className="btn waves-effect waves-light mr-1 btn-small"
+                                            onClick={(e) => handleSubmit(e)}
+                                            loading={props.etat}
+                                            loadingPosition="end"
+                                            endIcon={<SaveIcon />}
+                                            variant="contained"
+                                            sx={{ textTransform:"initial" }}
+                                        >
+                                            <span>Enregistrer</span>
+                                        </LoadingButton>
+                                    ) :
+                                    (<div className="card-alert card red lighten-5">
+                                        <div className="card-content red-text">
+                                            <ul>
+                                                Veuillez activer une licence.
+                                            </ul>
+                                        </div>
+                                    </div>)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col s6 m6">
+                            <div className="row">
+
+                                <div className="col s12 display-flex justify-content-center">
+                                    <div style={{ position: 'relative', width: '250px', height: '250px' }}>
+                                        {/* Fond blanc semi-transparent */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                                            zIndex: 1,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}>
+                                            {/* Cercle bleu */}
+                                            <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'blue', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                                {/* Flèche */}
+                                                <div style={{ width: '20px', height: '20px', borderBottom: '3px solid white', borderRight: '3px solid white', transform: 'rotate(45deg)' }}></div>
+                                                {/* Texte "Actualiser" */}
+                                                <span style={{ color: 'white', fontSize: '12px', marginTop: '5px' }}>Actualiser</span>
+                                            </div>
+                                        </div>
+                                        {/* QR code */}
+                                        <QRCode
+                                            value="https://github.com/gcoro/react-qrcode-logo"
+                                            size="238"
+                                            bgColor="#FFFFFF"
+                                            fgColor="#ff5733"
+                                            logoImage={logo}
+                                            logoWidth="50"
+                                            logoHeight=""
+                                            logoOpacity={0.9}
+                                            style={{ position: 'relative', zIndex: 0 }}
+                                        />
+                                    </div>
+                                </div>
+                               
                             </div>
                         </div>
                         
-
-                        <div className="col s12 display-flex justify-content-end mt-3">
-                            { (actif !== undefined && actif)  ? (
-                                <LoadingButton
-                                    className="btn waves-effect waves-light mr-1 btn-small"
-                                    onClick={(e) => handleSubmit(e)}
-                                    loading={props.etat}
-                                    loadingPosition="end"
-                                    endIcon={<SaveIcon />}
-                                    variant="contained"
-                                    sx={{ textTransform:"initial" }}
-                                >
-                                    <span>Enregistrer</span>
-                                </LoadingButton>
-                            ) :
-                                (<div className="card-alert card red lighten-5">
-                                    <div className="card-content red-text">
-                                        <ul>
-                                            Veuillez activer une licence.
-                                        </ul>
-                                    </div>
-                                </div>)}
-                        </div>
                     </div>
                 </form>
 

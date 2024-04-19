@@ -455,6 +455,7 @@ const TraiterReclamation = (props) => {
   useEffect(() => {
     // console.log("params",props.match.params)
     if (props.match.params.code === "all") {
+      props.itemsChanged([])
       listeTreat(props).then((r) => {});
     } else {
      
@@ -2466,7 +2467,7 @@ const TraiterReclamation = (props) => {
         if (props.objetLevel === "MINEUR" &&
         user.firstAndLastName === props.created_by &&
         props.transmitted === "true") {
-          affectForm=""
+          affectForm="Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
         } else {
           affectForm = (
             <>

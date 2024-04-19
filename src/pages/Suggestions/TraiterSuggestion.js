@@ -110,6 +110,7 @@ const TraiterSuggestion = (props) => {
   
 
   useEffect(() => {
+    props.itemsChanged([])
     listeByStatut(props,"SAVED").then((r) => {});
 
     window

@@ -203,6 +203,7 @@ const handleClose = () => {
 
   useEffect(() => {
     if (props.match.params.code === "all") {
+      props.itemsChanged([])
       listeByStatut(props, "TREAT").then((r) => {});
     } else {
      
