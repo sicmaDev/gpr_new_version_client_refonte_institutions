@@ -455,6 +455,7 @@ const TraiterReclamation = (props) => {
   useEffect(() => {
     // console.log("params",props.match.params)
     if (props.match.params.code === "all") {
+      props.itemsChanged([])
       listeTreat(props).then((r) => {});
     } else {
      

@@ -122,8 +122,10 @@ const ListeSuggestions = (props) => {
 
   useEffect(() => {
     if (mode === 1) {
+      props.itemsChanged([])
       listeTousStatuts(props).then((r) => {});
     } else {
+      props.itemsChanged([])
       listeTousStatutsOffline(props).then((r) => {});
     }
 
