@@ -133,6 +133,7 @@ const ListeReclamationsClassees = (props) => {
   let dimf, crew;
 
   useEffect(() => {
+    props.itemsChanged([])
     listeByStatut(props,"CLASSED").then((r) => {});
     
     window

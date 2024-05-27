@@ -136,6 +136,7 @@ const AssuranceReclamation = (props) => {
   let dimf, crew;
 
   useEffect(() => {
+    props.itemsChanged([])
     listeAssurance(props).then((r) => {});
     
     window

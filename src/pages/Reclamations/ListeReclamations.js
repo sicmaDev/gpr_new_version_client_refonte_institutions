@@ -202,8 +202,10 @@ const ListeReclamations = (props) => {
 
   useEffect(() => {
     if (mode === 1) {
+      props.itemsChanged([])
       listeTousStatuts(props).then((r) => {});
     } else {
+      props.itemsChanged([])
       listeTousStatutsOffline(props).then((r) => {});
     }
 
@@ -894,7 +896,6 @@ const ListeReclamations = (props) => {
     { value: "Status", label: "Status" },
     { value: "Enregistrer le", label: "Enregistrer le" },
     { value: "Telephone", label: "Téléphone" },
-    { value: "Groupe", label: "Groupe" },
     { value: "Enregistrer par", label: "Enregistrer par" },
     { value: "Produit", label: "Produit" },
     { value: "Objet", label: "Objet" },

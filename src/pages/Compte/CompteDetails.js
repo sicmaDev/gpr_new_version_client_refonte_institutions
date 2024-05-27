@@ -34,7 +34,7 @@ const CompteDetails = (props) => {
     const [h14, setH14] = useState("");
 
     useEffect(() => {
-        const sessionUser = JSON.parse(loadItemFromLocalStorage('app-user'))
+        const sessionUser = JSON.parse(loadItemFromSessionStorage('app-user'))
         props.idChanged(sessionUser.id)
         props.emailChanged(sessionUser.email)
         props.phoneChanged(sessionUser.tel)

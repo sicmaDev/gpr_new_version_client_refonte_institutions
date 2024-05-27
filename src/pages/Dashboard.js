@@ -113,6 +113,8 @@ const Dashboard = (props) => {
     compte = utilisateurs.length!==0 ? compte+1 : compte+0; 
     compte = supports.length!==0 ? compte+1 : compte+0; 
     // compte = recours.length!==0 ? compte+1 : compte+0; 
+    let className =  compte < 7 ? 'col l8 m8 s12' : 'col l12 m12 s12'
+    
 
    // console.log(compte);
     const settingTauxRef = useRef(null);
@@ -126,7 +128,7 @@ const Dashboard = (props) => {
                 <div className="card">
                     <div className="card-content">
                         <div className='row'>
-                            <div className='col l8 m8 s12'>
+                            <div className={className}>
                                
                                 <p className="medium-small"></p>
                                 <div className="total-transaction-container">

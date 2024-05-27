@@ -149,8 +149,10 @@ const EnregistrerReclamation = (props) => {
 
   useEffect(() => {
     if (mode === 1) {
+      props.itemsChanged([])
       listeByStatut(props, "TEMP_SAVED").then((r) => {});
     } else {
+      props.itemsChanged([])
       listeByStatutOffline(props, "TEMP_SAVED").then((r) => {});
     }
 
