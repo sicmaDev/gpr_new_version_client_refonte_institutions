@@ -3,9 +3,9 @@ import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSe
 import { connect } from "react-redux";
 import HelpIcon from '@mui/icons-material/Help';
 import {modalify} from "../../Utils/modal";
-import { ajout } from "../../apis/Configurations/BotApi";
+import { ajout, genererToken } from "../../apis/Configurations/BotApi";
 import {
-    apiKeyChanged, apiSecretChanged, gprbotErrors, etatChanged
+    apiKeyChanged, apiSecretChanged, gprbotErrors, etatChanged, etat1Changed, qrcodeChanged
 } from "../../redux/actions/Configurations/BotActions";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
@@ -18,11 +18,13 @@ import logo from '../../assets/images/GPR_192.png';
 
 
 const Bot = (props) => {
-
+    let appBot;
+    
     useEffect(() => {
         try {
-            let appBot =  loadItemFromLocalStorage("app-bot") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-bot")) : undefined;
-           
+            // appBot =  loadItemFromLocalStorage("app-bot") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-bot")) : undefined;
+            let appBot =  loadItemFromLocalStorage("app-bot") !== undefined && (loadItemFromLocalStorage("app-bot").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-bot")) : undefined;
+            console.log("bot premier",appBot)
             if (appBot !== undefined || appBot !== "") {
                 props.apiKeyChanged(appBot.apiKey)
                 props.apiSecretChanged(appBot.apiSecret);
@@ -30,6 +32,7 @@ const Bot = (props) => {
             } else {
             }
         } catch (e) {
+            console.log("bot premier",e)
         }
        
         //UI Fixes
@@ -153,6 +156,60 @@ const Bot = (props) => {
        
     }
 
+    const genererCode = (e) => {
+        e.preventDefault()
+        console.log("resultatccccc");
+        props.etat1Changed(true)
+        // let itemb = {}
+        // itemb["apikey"] = props.apiKey;
+        // itemb["apisecret"] = props.apiSecret;
+        // props.etatChanged(true)
+
+        genererToken(props).then(() => {
+            // handleCancel(e)
+        })
+      
+        // if (handleValidation()) {
+        //     //send request to verify
+        //     // console.log("botload2",itemb);
+        //     const API_URL = "https://gpradmin.sicmagroup.com/api/verifiedKey"
+          
+        //     const config = {
+        //         method: 'post',
+        //         url: API_URL,
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        //         },
+        //         data: itemb
+        //     };
+        //     axios(config)
+        //         .then(function (response) {
+        //            console.log("botload",response);
+        //             let resultat = response.data;
+
+        //             if(resultat.status == "error"){
+        //                 notify(resultat.data, "error");
+        //                 // props.etatChanged(false)
+        //                console.log("resultat",resultat);
+        //             } else {
+        //                 // genererToken(props).then(() => {
+        //                 //     // handleCancel(e)
+        //                 // })
+        //                // console.log(response);
+        //             }
+            
+                    
+                    
+        //         })
+        //         ;
+           
+        // } 
+
+        props.gprbotErrors(errors)
+       
+    }
+    console.log("appbot contenu",appBot !=="");
     return (
         <>
             <div className="card-panel">
@@ -216,6 +273,17 @@ const Bot = (props) => {
                                             </ul>
                                         </div>
                                     </div>)}
+                                    <LoadingButton
+                                            className="btn waves-effect waves-light mr-1 btn-small"
+                                            onClick={(e) => genererCode(e)}
+                                            loading={props.etat}
+                                            loadingPosition="end"
+                                            endIcon={<SaveIcon />}
+                                            variant="contained"
+                                            sx={{ textTransform:"initial" }}
+                                        >
+                                            <span>Générer</span>
+                                        </LoadingButton>
                                 </div>
                             </div>
                         </div>
@@ -226,7 +294,7 @@ const Bot = (props) => {
                                 <div className="col s12 display-flex justify-content-center">
                                     <div style={{ position: 'relative', width: '250px', height: '250px' }}>
                                         {/* Fond blanc semi-transparent */}
-                                        <div style={{
+                                        {/* <div style={{
                                             position: 'absolute',
                                             top: 0,
                                             left: 0,
@@ -237,28 +305,33 @@ const Bot = (props) => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                        }}>
+                                        }}> */}
                                             {/* Cercle bleu */}
-                                            <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'blue', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                            {/* <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'blue', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}> */}
                                                 {/* Flèche */}
-                                                <div style={{ width: '20px', height: '20px', borderBottom: '3px solid white', borderRight: '3px solid white', transform: 'rotate(45deg)' }}></div>
+                                                {/* <div style={{ width: '20px', height: '20px', borderBottom: '3px solid white', borderRight: '3px solid white', transform: 'rotate(45deg)' }}></div> */}
                                                 {/* Texte "Actualiser" */}
-                                                <span style={{ color: 'white', fontSize: '12px', marginTop: '5px' }}>Actualiser</span>
-                                            </div>
-                                        </div>
+                                                {/* <span style={{ color: 'white', fontSize: '12px', marginTop: '5px' }}>Actualiser</span> */}
+                                            {/* </div> */}
+                                        {/* </div> */}
                                         {/* QR code */}
-                                        <QRCode
-                                            value="https://github.com/gcoro/react-qrcode-logo"
-                                            size="238"
-                                            bgColor="#FFFFFF"
-                                            fgColor="#ff5733"
-                                            logoImage={logo}
-                                            logoWidth="50"
-                                            logoHeight=""
-                                            logoOpacity={0.9}
-                                            style={{ position: 'relative', zIndex: 0 }}
-                                        />
+                                        {appBot !== undefined || appBot !== "" ? 
+                                            <QRCode
+                                                value="zer"
+                                                size="238"
+                                                bgColor="#FFFFFF"
+                                                fgColor="#ff5733"
+                                                // logoImage={logo}
+                                                logoWidth="50"
+                                                logoHeight=""
+                                                logoOpacity={0.9}
+                                                style={{ position: 'relative', zIndex: 0 }}
+                                            />
+                                            : "azerty"
+                                        }
+                                       
                                     </div>
+                                    <img src={props.qrcode} alt="BOT QR" className="responsive-img"/>
                                 </div>
                                
                             </div>
@@ -277,7 +350,9 @@ const mapStateToProps = (state) => {
         apiKey: state.gprbot.apiKey,
         apiSecret: state.gprbot.apiSecret,
         gprbotErrors: state.gprbot.gprbotErrors,
-        etat: state.gprbot.etat
+        etat: state.gprbot.etat,
+        etat1: state.gprbot.etat1,
+        qrcode: state.gprbot.qrcode
     }
 };
 
@@ -294,6 +369,12 @@ const mapDispatchToProps = (dispatch) => {
         },
         etatChanged: (etat) => {
             dispatch(etatChanged(etat))
+        },
+        etat1Changed: (etat1) => {
+            dispatch(etat1Changed(etat1))
+        },
+        qrcodeChanged: (qrcode) => {
+            dispatch(qrcodeChanged(qrcode))
         },
          
     }

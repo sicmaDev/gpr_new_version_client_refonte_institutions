@@ -46,7 +46,6 @@ const Objets = (props) => {
         categories=[];
     }
 
-
     useEffect(() => {
         liste(props).then((r) => {});
 
