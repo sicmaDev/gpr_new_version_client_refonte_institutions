@@ -13,10 +13,27 @@ import {
     urlChange,smsErrors, libelleIdChanged, libelleMessageChanged, valuePwdChanged, libellePwdChanged, libelleReceiverChanged, libelleSenderChanged, valueIdChanged, valueSenderChanged, etatChanged
 } from "../../redux/actions/Configurations/SmsActions";
 import { licenseInfo } from "../../apis/LoginApi";
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 
 
 const Sms = (props) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPassword1, setShowPassword1] = useState(false);
+
+    const toggleShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const toggleShowPassword1 = () => {
+        setShowPassword1(!showPassword1);
+    };
+
+    const handleChange = (e) => {
+        props.posteChanged(e.value)
+        props.posteLibelleChanged(e.label)
+    }
 
     useEffect(() => {
         try {
@@ -234,7 +251,7 @@ const Sms = (props) => {
                                 </div>
                             <div className="row">
                                 <div className="col s6 input-field">
-                                    <input id="libelle_pwd" placeholder="" name="libelle_pwd" type="text"
+                                    <input id="libelle_pwd" placeholder="" name="libelle_pwd" type={showPassword1 ? "text" : "password"}
                                         className="validate" value={props.libellePwd}
                                         onChange={(e) => props.libellePwdChanged(e.target.value)}
                                         data-error=".errorTxt1" />
@@ -246,9 +263,21 @@ const Sms = (props) => {
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.libelle_pwd}</div>
                                     </small>
+                                    <span
+                                        onClick={toggleShowPassword1}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '10px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {showPassword1 ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                    </span>
                                 </div>
                                 <div className="col s6 input-field">
-                                    <input id="value_pwd" placeholder="" name="value_pwd" type="password"
+                                    <input id="value_pwd" placeholder="" name="value_pwd" type={showPassword ? "text" : "password"}
                                         className="validate" value={props.valuePwd}
                                         onChange={(e) => props.valuePwdChanged(e.target.value)}
                                         data-error=".errorTxt1" />
@@ -260,6 +289,18 @@ const Sms = (props) => {
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.value_pwd}</div>
                                     </small>
+                                    <span
+                                        onClick={toggleShowPassword}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '10px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                    </span>
                                 </div>
                             </div>
                         </div>

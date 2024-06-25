@@ -15,10 +15,16 @@ import axios from "axios";
 import { licenseInfo } from "../../apis/LoginApi";
 import { QRCode } from 'react-qrcode-logo';
 import logo from '../../assets/images/GPR_192.png';
-
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 const Bot = (props) => {
     let appBot;
+    const [showPassword, setShowPassword] = useState(false);
+
+    const toggleShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
     
     useEffect(() => {
         try {
@@ -239,7 +245,7 @@ const Bot = (props) => {
                                     </small>
                                 </div>
                                 <div className="col s12 input-field">
-                                    <input id="apisecret" placeholder="" name="apisecret" type="password"
+                                    <input id="apisecret" placeholder="" name="apisecret" type={showPassword ? "text" : "password"}
                                         className="validate" value={props.apiSecret}
                                         onChange={(e) => props.apiSecretChanged(e.target.value)} maxLength="36"
                                         data-error=".errorTxt1" />
@@ -251,6 +257,18 @@ const Bot = (props) => {
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.gprbotErrors.apiSecret}</div>
                                     </small>
+                                    <span
+                                        onClick={toggleShowPassword}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '10px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                    </span>
                                 </div>
                                 <div className="col s12 display-flex justify-content-start mt-3">
                                     { (actif !== undefined && actif)  ? (

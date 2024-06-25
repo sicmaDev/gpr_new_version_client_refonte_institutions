@@ -30,8 +30,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { licenseInfo } from "../../apis/LoginApi";
-
-
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 
 const styles = {
@@ -43,6 +43,16 @@ const styles = {
     menu: provided => ({...provided, zIndex: 9999})
 };
 const Utilisateurs = (props) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPassword1, setShowPassword1] = useState(false);
+
+    const toggleShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const toggleShowPassword1 = () => {
+        setShowPassword1(!showPassword1);
+    };
 
     const handleChange = (e) => {
         props.posteChanged(e.value)
@@ -579,7 +589,8 @@ const Utilisateurs = (props) => {
                                 {/* <div className="row"> */}
                                     <div className="col s12">
                                         <div className="input-field">
-                                            <input id="newpswd" name="newpswd" type="password"
+                                            <input id="newpswd" name="newpswd" 
+                                                type={showPassword ? "text" : "password"}
                                                 placeholder=""
                                                 data-error=".errorTxt5" value={props.pass}
                                                 onChange={(e) => props.passwordChanged(e.target.value)}/> 
@@ -591,6 +602,18 @@ const Utilisateurs = (props) => {
                                             <small className="errorTxt4">
                                                 <div id="cpassword-error" className="error">{props.errors.pass}</div>
                                             </small>
+                                            <span
+                                                onClick={toggleShowPassword}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: '10px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                            </span>
 
                                             {/* <span class="material-icons indigo-text">visibility</span> */}
                                         </div>
@@ -603,15 +626,29 @@ const Utilisateurs = (props) => {
                                
                                 <div className="col s12">
                                     <div className="input-field">
-                                        <input id="usrepswd" type="password" name="repswd"
-                                               placeholder=""
-                                               data-error=".errorTxt6"
-                                               value={props.pass_again}
-                                               onChange={(e) => props.passwordAgainChanged(e.target.value)}/>
+                                        <input id="usrepswd" 
+                                            type={showPassword1 ? "text" : "password"}
+                                            name="repswd"
+                                            placeholder=""
+                                            data-error=".errorTxt6"
+                                            value={props.pass_again}
+                                            onChange={(e) => props.passwordAgainChanged(e.target.value)}/>
                                         <label htmlFor="usrepswd" className={"active"}>Mot de passe encore</label>
                                         <small className="errorTxt4">
                                             <div id="cpassword-error" className="error">{props.errors.pass_again}</div>
                                         </small>
+                                        <span
+                                            onClick={toggleShowPassword1}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '10px',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {showPassword1 ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                        </span>
                                     </div>
                                 </div>
                             </div>

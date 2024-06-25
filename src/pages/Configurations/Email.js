@@ -13,9 +13,15 @@ import {
     portChanged, hostChanged, passwordChanged, userChanged, loadingChanged, etatChanged
 } from "../../redux/actions/Configurations/EmailActions";
 import { licenseInfo } from "../../apis/LoginApi";
-
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 const Email = (props) => {
+    const [showPassword, setShowPassword] = useState(false);
+
+    const toggleShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
 
     useEffect(() => {
 
@@ -178,7 +184,7 @@ const Email = (props) => {
                                     </small>
                                 </div>
                                 <div className="col s12 input-field">
-                                    <input id="password" name="password" placeholder="" type="password"
+                                    <input id="password" name="password" placeholder="" type={showPassword ? "text" : "password"}
                                         onChange={(e) => props.passwordChanged(e.target.value)}
                                         className=""
                                         value={props.password} />
@@ -186,6 +192,18 @@ const Email = (props) => {
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error"></div>
                                     </small>
+                                    <span
+                                        onClick={toggleShowPassword}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '10px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                    </span>
 
                                 </div>
 
