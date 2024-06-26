@@ -273,7 +273,7 @@ const Sms = (props) => {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        {showPassword1 ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                        {showPassword1 ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                     </span>
                                 </div>
                                 <div className="col s6 input-field">
@@ -299,7 +299,7 @@ const Sms = (props) => {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                     </span>
                                 </div>
                             </div>

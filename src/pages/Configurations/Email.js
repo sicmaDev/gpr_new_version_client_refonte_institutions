@@ -202,7 +202,7 @@ const Email = (props) => {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                     </span>
 
                                 </div>

@@ -267,7 +267,7 @@ const Bot = (props) => {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                     </span>
                                 </div>
                                 <div className="col s12 display-flex justify-content-start mt-3">

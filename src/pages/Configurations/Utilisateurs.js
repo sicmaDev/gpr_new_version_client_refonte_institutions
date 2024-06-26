@@ -612,7 +612,7 @@ const Utilisateurs = (props) => {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                                {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                             </span>
 
                                             {/* <span class="material-icons indigo-text">visibility</span> */}
@@ -647,7 +647,7 @@ const Utilisateurs = (props) => {
                                                 cursor: 'pointer'
                                             }}
                                         >
-                                            {showPassword1 ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                            {showPassword1 ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                         </span>
                                     </div>
                                 </div>
