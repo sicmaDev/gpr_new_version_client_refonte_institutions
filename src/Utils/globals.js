@@ -1,7 +1,7 @@
 import { loadItemFromLocalStorage } from "./utils";
 
 let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !==0)  ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
-           
+
 export const MAX_SUBJECT_DURATION = 30
 export const INSTITUTION_LOGO = appInstitution !== undefined ? appInstitution.logo : ""
 export const INSTITUTION_NAME = appInstitution !== undefined ? appInstitution.denomination : ""

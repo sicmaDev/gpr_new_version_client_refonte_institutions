@@ -980,16 +980,16 @@ const EnregistrerSuggestion = (props) => {
                                                                 value={(props.gender) ? {
                                                                     label: props.gender,
                                                                     value: props.gender
-                                                                } : {label: "Sélectionner le sexe", value: ""}}
+                                                                } : {label: "Sélectionner le genre", value: ""}}
                                                                 options={genderOptions}
                                                                 className='react-select-container mt-4'
                                                                 classNamePrefix="react-select"
                                                                 style={styles}
-                                                                placeholder="Sélectionner le sexe"
+                                                                placeholder="Sélectionner le genre"
                                                                 onChange={(e) => props.genderChanged(e.value)}
                                                             />
                                                             <label htmlFor="gender"
-                                                                   className={"active"}>Sexe<span></span></label>
+                                                                   className={"active"}>Genre<span></span></label>
                                                             <small className="errorTxt4">
                                                                 <div id="cpassword-error"
                                                                      className="error">{(props.errors !== undefined) ? props.errors.gender : ""}</div>

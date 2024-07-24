@@ -1529,7 +1529,7 @@ const EnregistrerReclamation = (props) => {
                                         value: props.gender,
                                       }
                                     : {
-                                        label: "Sélectionner le sexe",
+                                        label: "Sélectionner le genre",
                                         value: "",
                                       }
                                 }
@@ -1537,11 +1537,11 @@ const EnregistrerReclamation = (props) => {
                                 className="react-select-container mt-4"
                                 classNamePrefix="react-select"
                                 style={styles}
-                                placeholder="Sélectionner le sexe"
+                                placeholder="Sélectionner le genre"
                                 onChange={(e) => props.genderChanged(e.value)}
                               />
                               <label htmlFor="gender" className={"active"}>
-                                Sexe
+                                Genre
                                 <span>
                                   (<span className="red-text darken-2 ">*</span>
                                   )
