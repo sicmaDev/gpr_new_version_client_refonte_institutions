@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from "react";
 import { v4 as uuidv4 } from 'uuid';
 
-import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage,sleep, today} from "../../Utils/utils";
+import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep, today} from "../../Utils/utils";
 import { connect } from "react-redux";
 import {modalify} from "../../Utils/modal";
-import { ajout, test } from "../../apis/Configurations/MailApi";
+import { ajout,test } from "../../apis/Configurations/MailApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
@@ -26,12 +26,35 @@ const Email = (props) => {
     const toggleShowPassword = () => {
         setShowPassword(!showPassword);
     };
-
     const [showTestModal, setShowTestModal] = useState(false);
     const [to, setTo] = useState(null)
     const [subject, setSubject] = useState(null)
     const [message, setMessage] = useState(null)
 
+    const handleTest = async () => {
+        if(to !== "" && to && subject !== "" && subject && message !== "" && message ){
+            setShowTestModal(false);
+            KTApp.blockPage({
+                overlayColor: '#000000',
+                type: 'v2',
+                state: 'danger',
+                message: 'En cours...'
+            });
+            await sleep(3000);
+            test({ to,subject,message }).then(({ data }) => {
+                notify("Super - Mail envoyé", "success");
+            }).catch((err) => {
+                notify("Oups - Mail non envoyé; Vérifier la configuration de votre serveur", "error");
+            }).finally(() => {
+                KTApp.unblockPage();
+            })
+        }else{
+            notify("Les champs sont obligatoires","error")
+        }
+       
+
+    }
+    
     useEffect(() => {
 
         try {
@@ -77,6 +100,10 @@ const Email = (props) => {
         //cleanup
        
     }, []);
+
+    const { t } = useTranslation();
+    const stepList = [t("configurationEmailTitre"),t("configurationEmailDescription"),t("configurationEmailServer"),t("configurationEmailText"),t("configurationEmailPort"),t("configurationEmailPassword"),t("configurationEmailButtonSave"),t("configurationEmailActiveLicence")];
+
 
     const [actif, setActif] = useState();
   
@@ -124,30 +151,7 @@ const Email = (props) => {
         return isValid
     }
 
-    
-    const handleTest = async () => {
-        if(to !== "" && to && subject !== "" && subject && message !== "" && message ){
-            setShowTestModal(false);
-            KTApp.blockPage({
-                overlayColor: '#000000',
-                type: 'v2',
-                state: 'danger',
-                message: 'En cours...'
-            });
-            await sleep(3000);
-            test({ to,subject,message }).then(({ data }) => {
-                notify("Super - Mail envoyé", "success");
-            }).catch((err) => {
-                notify("Oups - Mail non envoyé; Vérifier la configuration de votre serveur", "error");
-            }).finally(() => {
-                KTApp.unblockPage();
-            })
-        }else{
-            notify("Les champs sont obligatoires","error")
-        }
-       
-
-    }
+  
 
 
     const handleSubmit = (e) => {
@@ -239,9 +243,77 @@ const Email = (props) => {
                 </DialogActions>
             </Dialog>
             <div className="card-panel">
+            <Dialog open={showTestModal} onClose={(e) => { setShowTestModal(false) }}>
+                    <DialogTitle >
+                        Vérification de la configuration
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            Renseigner les informations nécessaire pour le teste
+                        </DialogContentText>
+                        <div className="row">
+                            
+                            <div className="col l12 m12 s12 input-field">
+                                <input
+                                    style={{ minWidth: "100%" }}
+                                    defaultValue={to}
+                                    type="email"
+
+                                    onChange={(e) =>
+                                        setTo(e.target.value)
+                                    }
+                                />
+                                <label htmlFor="phone" className={"active"}>
+                                    Email
+                                </label>
+
+                            </div>
+                            <div className="col l12 m12 s12 input-field">
+                                <input
+                                    style={{ minWidth: "100%" }}
+                                    defaultValue={subject}
+
+                                    onChange={(e) =>
+                                        setSubject(e.target.value)
+                                    }
+                                />
+                                <label htmlFor="phone" className={"active"}>
+                                    Objet
+                                </label>
+
+                            </div>
+                            <div className="col l12 m12 s12 input-field">
+                                <Input
+                                    style={{ minWidth: "100%" }}
+                                    defaultValue={message}
+                                    multiline={true}
+
+                                    onChange={(e) =>
+                                        setMessage(e.target.value)
+                                    }
+                                    minRows={3}
+                                />
+                                <label htmlFor="phone" className={"active"}>
+                                    Message
+                                </label>
+
+                            </div>
+                        </div>
+
+
+                    </DialogContent>
+                    <DialogActions>
+                        <Button variant="contained" color="error" onClick={(e) => {
+                            setShowTestModal(false)
+                        }}>Fermer</Button>
+                        <Button variant="contained" onClick={handleTest}>Envoyez</Button>
+
+
+                    </DialogActions>
+                </Dialog>
                 <div className="row mb-2">
-                    <div className="col s12"><h6 className="card-title">Serveur mail</h6>
-                        <p>Il s'agit d'enregistrer les accès à votre serveur mail pour pouvoir envoyez des mails</p></div>
+                    <div className="col s12"><h6 className="card-title">{t("configurationEmailTitre")}</h6>
+                        <p>{t("configurationEmailDescription")}</p></div>
                 </div>
                 <form id="accountForm" onSubmit={handleSubmit}>
                     <div className="row">
@@ -253,7 +325,7 @@ const Email = (props) => {
                                         className="validate" value={props.host}
                                         onChange={(e) => props.hostChanged(e.target.value)}
                                         data-error=".errorTxt1" />
-                                    <label htmlFor="host" className={"active"}>Serveur {"(Host)"}</label>
+                                    <label htmlFor="host" className={"active"}>{t("configurationEmailServer")} {"(Host)"}</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error"></div>
                                     </small></div>
@@ -262,7 +334,7 @@ const Email = (props) => {
                                         className="validate" value={props.user}
                                         onChange={(e) => props.userChanged(e.target.value)}
                                         data-error=".errorTxt1" />
-                                    <label htmlFor="user" className={"active"}>Utilisateur mail(User)</label>
+                                    <label htmlFor="user" className={"active"}>{t("configurationEmailText")}(User)</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error"></div>
                                     </small>
@@ -279,7 +351,7 @@ const Email = (props) => {
                                         className="validate materialize-textarea" value={props.port}
                                         onChange={(e) => props.portChanged(e.target.value)}
                                         data-error=".errorTxt2" />
-                                    <label htmlFor="port" className={"active"}>Port</label>
+                                    <label htmlFor="port" className={"active"}>{t("configurationEmailPort")}</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error"></div>
                                     </small>
@@ -289,7 +361,7 @@ const Email = (props) => {
                                         onChange={(e) => props.passwordChanged(e.target.value)}
                                         className=""
                                         value={props.password} />
-                                    <label htmlFor="password" className={"active"}>Mot de passe {"(Password)"}</label>
+                                    <label htmlFor="password" className={"active"}>{t("configurationEmailPassword")} {"(Password)"}</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error"></div>
                                     </small>
@@ -303,7 +375,7 @@ const Email = (props) => {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
                                     </span>
 
                                 </div>
@@ -312,8 +384,8 @@ const Email = (props) => {
                         </div>
 
                         <div className="col s12 display-flex justify-content-end mt-3">
-                          
-                            <>
+                            { (actif !== undefined && actif)  ? (
+                                <>
                                 <LoadingButton
                                         className="btn  waves-light mr-1 btn-small"
                                         onClick={(e) => {
@@ -334,10 +406,16 @@ const Email = (props) => {
                                     variant="contained"
                                     sx={{ textTransform:"initial" }}
                                 >
-                                    <span>Enregistrer</span>
-                                </LoadingButton>
-                            </>
-                           
+                                    <span>{t("configurationEmailButtonSave")}</span>
+                                </LoadingButton></>
+                            ) :
+                                (<div className="card-alert card red lighten-5">
+                                    <div className="card-content red-text">
+                                        <ul>
+                                            {t("configurationEmailActiveLicence")}.
+                                        </ul>
+                                    </div>
+                                </div>)}
                         </div>
                     </div>
                 </form>

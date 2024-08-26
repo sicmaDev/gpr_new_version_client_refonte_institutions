@@ -7,6 +7,7 @@ import { HOST } from "../../Utils/globals";
 const ADD_SETTING_API = HOST + "api/v1/config/setting/others/mail/create"
 const TEST_MAIL_API = HOST + "api/v1/config/setting/others/mail/test"
 
+
 export const ajout = async (data, props) => {
 
     const config = {

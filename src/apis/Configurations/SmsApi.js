@@ -7,6 +7,7 @@ import { HOST } from "../../Utils/globals";
 const ADD_SETTING_API = HOST + "api/v1/config/setting/others/sms/create"
 const TEST_SMS_API = HOST + "api/v1/config/setting/others/sms/test"
 
+
 export const ajout = async (data, props) => {
 
     const config = {
@@ -54,3 +55,5 @@ export const test =  (data) => {
     return axios(config);
 
 }
+
+
