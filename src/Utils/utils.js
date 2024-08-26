@@ -37,9 +37,7 @@ export const saveItemToSessionStorage = (item, field) => {
     } catch (e) {
     }
 }
-export const sleep = (ms) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+
 export const loadItemFromSessionStorage = (field) => {
     try {
        

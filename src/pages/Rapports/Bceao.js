@@ -144,70 +144,70 @@ const Bceao = (props) => {
 
         <tbody>
           <tr>
-            <td>{t("Rapportgpays")} </td>
+            <td>Pays </td>
             <td colSpan={2}>
             {pays}
             </td>
           </tr>
           <tr>
-            <td>{t("RapportgEtablissement")}</td>
+            <td>Etablissement Déclarant</td>
             <td colSpan={2}>
             {institution}
             </td>
           </tr>
           <tr>
-            <td>{t("RapportgNomprenomPrepose")} :  </td>
+            <td>Nom et prenoml(s) du préposé à la gestion des plaintes :  </td>
             <td colSpan={2} id="piloteName">{props.global?.piloteName}</td>
           </tr>
           <tr>
-            <td>{t("RapportgContact")} : </td>
+            <td>Contact du préposé à la gestion des plaintes : </td>
             <td colSpan={2} id="piloteContact">{props.global?.piloteContact} </td>
           </tr>
           <tr>
-            <td>{t("RapportgPeriode")} </td>
-            <td colSpan={2} id="periode">{props.global?.periode}  </td>
-          </tr>
-          <tr>
-            <td rowSpan={10}>{t("RapportBCAOStatistique")}</td>
-            <td>{t("RapportBCAONombreRéclamation")}</td>
-            <td>{props.global?.totalClaim}</td>
-          </tr>
-          <tr>
-            <td>{t("RapportBCAONombreDenonciation")}</td>
-            <td>{props.global?.totalDenun}</td>
-          </tr>
-          <tr>
-            <td>{t("RapportBCAONombreSuggestion")}</td>
-            <td>{props.global?.totalSuggest}</td>
-          </tr>
-          <tr>
-            <td>{t("RapportBCAONombreReclamationTraite")}</td>
-            <td>{props.global?.totalClaimTreat}</td>
-          </tr>
-          <tr>
-            <td>{t("RapportBCAONombreReclamationNonResolus")}</td>
-            <td>{props.global?.totalClaimUnResolve}</td>
-          </tr>
-          <tr>
-            <td>{t("RapportBCAONombreReclamationTraitees")}</td>
-            <td>{props.global?.tauxClaimTreat}%</td>
-          </tr>
-          <tr>
-            <td>{t("RapportBCAONombreReclamationTriaterDelai")} :</td>
-            <td>{props.global?.tauxClaimTreatRespectingTiming}%</td>
-          </tr>
-          <tr>
-            <td>{t("RapportBCAOTauxSatisfaction")}</td>
-            <td>{props.global?.tauxSatisfaction}%</td>
-          </tr>
-          <tr>
-            <td>{t("RapportBCAONombreReclamationTribunaux")}</td>
-            <td>{props.global?.totalLigitigateClaimInPeriode}</td>
-          </tr>
-          <tr>
-            <td>{t("RapportBCAONombreTotalReclamationTribunaux")}</td>
-            <td>{props.global?.totalLitigateClaim}</td>
-          </tr>
+                    <td>Période concernée  </td>
+                    <td colSpan={2} id="periode">{props.global?.periode}  </td>
+                </tr>
+                <tr>
+                    <td rowSpan={10}>Statistiques de la période concernée  </td>
+                    <td>Nombre de réclamations </td>
+                    <td>{props.global?.totalClaim}</td>
+                </tr>
+                <tr>
+                    <td>Nombre de dénonciations </td>
+                    <td>{props.global?.totalDenun}</td>
+                </tr>
+                <tr>
+                    <td>Nombre de suggestions </td>
+                    <td>{props.global?.totalSuggest}</td>
+                </tr>
+                <tr>
+                    <td>Nombre de réclamations traitées</td>
+                    <td>{props.global?.totalClaimTreat}</td>
+                </tr>
+                <tr>
+                    <td>Nombre de réclamations non résolues</td>
+                    <td>{props.global?.totalClaimUnResolve}</td>
+                </tr>
+                <tr>
+                    <td>% des réclamations traitées</td>
+                    <td>{props.global?.tauxClaimTreat}%</td>
+                </tr>
+                <tr>
+                    <td>% des réclamations traitées dans le délai d’un mois :</td>
+                    <td>{props.global?.tauxClaimTreatRespectingTiming}%</td>
+                </tr>
+                <tr>
+                    <td>Taux de satisfaction des clients </td>
+                    <td>{props.global?.tauxSatisfaction}%</td>
+                </tr>
+                <tr>
+                    <td>Nombre de réclamations devant les tribunaux sur la période </td>
+                    <td>{props.global?.totalLigitigateClaimInPeriode}</td>
+                </tr>
+                <tr>
+                    <td>Nombre total des réclamations devant les tribunaux</td>
+                    <td>{props.global?.totalLitigateClaim}</td>
+                </tr>
         </tbody>
       </table>
     );
@@ -225,9 +225,9 @@ const Bceao = (props) => {
         id="bodyClaimEx">
         <thead>
           <tr>
-            <td className="center">{t("RapportBCAONumeroOrdre")}</td>
-            <td className="center">{t("RapportBCAOProduit")}</td>
-            <td className="center">{t("RapportBCAOResume")}</td>
+            <td className="center">Numéro d’ordre </td>
+            <td className="center">Produits ou services concernés </td>
+            <td className="center">Résumé synthétique de la réclamations (30 mots au maximum) </td>
           </tr>
         </thead>
         <tbody>
@@ -448,7 +448,7 @@ const Bceao = (props) => {
               fontSize={"23px"}
               fontWeight={"bold"}
             >
-              {t("RapportBCAODefinisPeriode")}
+              Définir une période
             </DialogTitle>
 
             <DialogContent style={{ overflowY: "auto", overflowX: "hidden", minHeight: "50px", }}>
@@ -468,7 +468,7 @@ const Bceao = (props) => {
                     locale="fr"
                   />
                   <label htmlFor="idStartDate" className={"active"}>
-                    {t("RapportBCAODateDebut")}
+                  Date de début
                   </label>
                 </div>
                 {/*Date end*/}
@@ -486,7 +486,7 @@ const Bceao = (props) => {
                     locale="fr"
                   />
                   <label htmlFor="idEndDate" className={"active"}>
-                    {t("RapportBCAODateFin")}
+                  Date de Fin
                   </label>
                 </div>
                 <div className="col l12 m12 s12 mt-4">
@@ -502,7 +502,7 @@ const Bceao = (props) => {
                     }}
                     className="btn indigo lighten-5 indigo-text waves-effect waves-effect-b waves-light display-flex align-items-center justify-content-center mt-1"
                   >
-                    <span className="text-nowrap">{t("RapportEffacer")}</span>
+                    <span className="text-nowrap">Effacer Tout</span>
                   </a>
                 </div>
                 <div className="col l6 m6 s12 mt-4">
@@ -515,7 +515,7 @@ const Bceao = (props) => {
                   >
                     <CheckIcon />
                     <span className="text-nowrap" style={{ fontSize: "15px" }}>
-                      {t("RapportGenerer")}
+                      Générer
                     </span>
                   </a>
                 </div>
@@ -810,28 +810,28 @@ const Bceao = (props) => {
                       </b>
                       <br />
                       <i>
-                        <span>{t("RapportNumeroAgrement")}: </span>
+                        <span>Agrément: </span>
                         {agrement}
                       </i>
                       <br />
                       <i>
-                        <span>{t("Addrese")}: </span>
+                        <span>Adresse: </span>
                         {adresse}
                       </i>
                       <br />
                       <i>
-                        <span>{t("RapportTel")}: </span>
+                        <span>Téléphone: </span>
                         {tel}
                       </i>
                       <br />
                       <i>
-                        <span>{t("RapportEmail")}: </span>
+                        <span>Email: </span>
                         {email}
                       </i>
                     </div>
                     <div className="col l2 m2 s2">
                       <i>
-                        {t("RapportGenererLe")}{" "}
+                        Générer le {" "}
                         {new Date().toLocaleDateString("fr-FR", {
                           day: "numeric",
                           year: "numeric",
@@ -849,7 +849,7 @@ const Bceao = (props) => {
                 >
                   <div className="col s12 l12 m12 center">
                     <span style={{ color: "#015182", fontSize: "25px" }}>
-                      {t("RapportSousFormatBCAO")}
+                    Rapport sous le format de la Commission Bancaire
                     </span>
                   </div>
                 </div>
@@ -862,12 +862,12 @@ const Bceao = (props) => {
                     <ul>
                       <li>
                         <b style={{ fontSize: "15px" }}>
-                          {t("RapportgPeriode")} : {props.global?.periode}
+                          Période Concernée : {props.global?.periode}
                         </b>
                       </li>
                       <li>
                         <b>
-                          {t("RapportGenererpar")} :{" "}
+                          Générer par :{" "}
                           {userAuth.firstAndLastName}
                         </b>
                       </li>
@@ -891,7 +891,7 @@ const Bceao = (props) => {
                             }}
 
                           >
-                            {t("RapportStatistiques")}
+                            Statistiques
                           </span>
                           <br />
                         </div>
@@ -913,7 +913,7 @@ const Bceao = (props) => {
                               fontWeight: "bold",
                             }}
                           >
-                            {t("RapportDetailReclamationDenonciation")}
+                            Details des réclamations ou dénonciations
                           </span>
                           <br />
                         </div>

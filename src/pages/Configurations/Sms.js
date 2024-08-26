@@ -15,7 +15,6 @@ import {
 import { licenseInfo } from "../../apis/LoginApi";
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { useTranslation } from "react-i18next";
 import { ForwardToInboxOutlined } from "@mui/icons-material";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Input, TextareaAutosize } from "@mui/material";
 import PhoneInput from "react-phone-number-input";
@@ -24,7 +23,7 @@ import { notify } from "../../Utils/alert";
 
 
 const Sms = (props) => {
-    const { t } = useTranslation();
+   
     const [showPassword, setShowPassword] = useState(false);
     const [showPassword1, setShowPassword1] = useState(false);
 
@@ -292,71 +291,72 @@ const Sms = (props) => {
 
                     </DialogActions>
                 </Dialog>
+               
                 <div className="row">
-                    <div className="col s12"><h6 className="card-title">{t("configurationSMSTitre")}</h6>
-                        <p>{t("configurationSMSTitreDesription")}</p></div>
+                    <div className="col s12"><h6 className="card-title">Configuration SMS</h6>
+                        <p>Il s'agit de configurer GPR pour utiliser l'API de votre fournisseur de SMS Banking</p></div>
                 </div>
                 <form id="accountForm" onSubmit={handleSubmit}>
                     <div className="row">
-
+                    
 
                         <div className="col s12 m6">
                             <div className="row">
-                                <div className="col s12"><p className="">{t("configurationSMSInfoGeneral")}</p></div>
+                            <div className="col s12"><p className="">Information Générale</p></div>
 
                                 <div className="col s12 input-field">
                                     <input id="url" placeholder="" name="url" type="url"
                                         className="validate" value={props.url}
                                         onChange={(e) => props.urlChange(e.target.value)}
                                         data-error=".errorTxt1" />
-                                    <label htmlFor="url" className={"active"}>{t("configurationSMSAPIURL")} {"(url)"}</label>
+                                    <label htmlFor="url" className={"active"}>API URL {"(url)"}</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.url}</div>
                                     </small>
                                 </div>
                             </div>
                             <div className="row">
-                                <div className="col s12"><p className="">{t("configurationSMSInformationIdentificationCompte")}</p></div>
+                                <div className="col s12"><p className="">Informations d'identification de votre compte SMS Banking</p></div>
 
-                                <div className="col s6 input-field">
-                                    <input id="libelle_id" placeholder="" name="libelle_id" type="text"
-                                        className="validate" value={props.libelleId}
-                                        onChange={(e) => props.libelleIdChanged(e.target.value)}
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="libelle_id" className={"active"}>{t("configurationSMSlibelleCompte")}&nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
+                                    <div className="col s6 input-field">
+                                        <input id="libelle_id" placeholder="" name="libelle_id" type="text"
+                                            className="validate" value={props.libelleId}
+                                            onChange={(e) => props.libelleIdChanged(e.target.value)}
+                                            data-error=".errorTxt1" />
+                                        <label htmlFor="libelle_id" className={"active"}>Libelle paramètre id &nbsp;
+                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
                                             data-tooltip="Il s'agit du nom du paramètre représentant l'identifiant de votre compte de SMS Banking.">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.smsErrors.libelle_id}</div>
-                                    </small>
-                                </div>
-                                <div className="col s6 input-field">
-                                    <input id="value_id" placeholder="" name="value_id" type="text"
-                                        className="validate" value={props.valueId}
-                                        onChange={(e) => props.valueIdChanged(e.target.value)}
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="value_id" className={"active"}>{t("configurationSMSValeurCompte")}&nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
+                                                <HelpIcon/>
+                                            </a></label>
+                                        <small className="errorTxt4">
+                                            <div id="cpassword-error" className="error">{props.smsErrors.libelle_id}</div>
+                                        </small>
+                                    </div>
+                                    <div className="col s6 input-field">
+                                        <input id="value_id" placeholder="" name="value_id" type="text"
+                                            className="validate" value={props.valueId}
+                                            onChange={(e) => props.valueIdChanged(e.target.value)}
+                                            data-error=".errorTxt1" />
+                                        <label htmlFor="value_id" className={"active"}>Valeur id &nbsp;
+                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
                                             data-tooltip="Il s'agit de la valeur de votre identifiant de votre compte de SMS Banking.">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.smsErrors.value_id}</div>
-                                    </small>
+                                                <HelpIcon/>
+                                            </a></label>
+                                        <small className="errorTxt4">
+                                            <div id="cpassword-error" className="error">{props.smsErrors.value_id}</div>
+                                        </small>
+                                    </div>
                                 </div>
-                            </div>
                             <div className="row">
                                 <div className="col s6 input-field">
                                     <input id="libelle_pwd" placeholder="" name="libelle_pwd" type={showPassword1 ? "text" : "password"}
                                         className="validate" value={props.libellePwd}
                                         onChange={(e) => props.libellePwdChanged(e.target.value)}
                                         data-error=".errorTxt1" />
-                                    <label htmlFor="libelle_pwd" className={"active"}>{t("configurationSMSlibellePassword")}&nbsp;
+                                    <label htmlFor="libelle_pwd" className={"active"}>Libelle paramètre mot de passe &nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit du nom du paramètre représentant le mot de passe de votre compte de SMS Banking.">
-                                            <HelpIcon />
+                                           data-tooltip="Il s'agit du nom du paramètre représentant le mot de passe de votre compte de SMS Banking.">
+                                             <HelpIcon/>
                                         </a></label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.libelle_pwd}</div>
@@ -371,7 +371,7 @@ const Sms = (props) => {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        {showPassword1 ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                        {showPassword1 ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                     </span>
                                 </div>
                                 <div className="col s6 input-field">
@@ -379,10 +379,10 @@ const Sms = (props) => {
                                         className="validate" value={props.valuePwd}
                                         onChange={(e) => props.valuePwdChanged(e.target.value)}
                                         data-error=".errorTxt1" />
-                                    <label htmlFor="value_pwd" className={"active"}>{t("configurationSMSValeurPassword")}&nbsp;
+                                    <label htmlFor="value_pwd" className={"active"}>Valeur mot de passe &nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit de la valeur du mot de passe de votre compte de SMS Banking.">
-                                            <HelpIcon />
+                                           data-tooltip="Il s'agit de la valeur du mot de passe de votre compte de SMS Banking.">
+                                             <HelpIcon/>
                                         </a></label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.value_pwd}</div>
@@ -397,24 +397,24 @@ const Sms = (props) => {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                     </span>
                                 </div>
                             </div>
                         </div>
                         <div className="col s12 m6">
                             <div className="row">
-                                <div className="col s12"><p className="">{t("configurationSMSInfoEmetteur")}</p></div>
+                                <div className="col s12"><p className="">Informations sur l'emetteur SMS Banking</p></div>
 
                                 <div className="col s6 input-field">
                                     <input id="libelle_sender" placeholder="" name="libelle_sender" type="text"
                                         className="validate" value={props.libelleSender}
                                         onChange={(e) => props.libelleSenderChanged(e.target.value)}
                                         data-error=".errorTxt1" />
-                                    <label htmlFor="libelle_sender" className={"active"}>{t("configurationSMSlibelleEmetteur")}&nbsp;
+                                    <label htmlFor="libelle_sender" className={"active"}>Libelle paramètre emetteur &nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit du nom du paramètre représentant le sender de votre compte de SMS Banking.">
-                                            <HelpIcon />
+                                           data-tooltip="Il s'agit du nom du paramètre représentant le sender de votre compte de SMS Banking.">
+                                             <HelpIcon/>
                                         </a></label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.libelle_sender}</div>
@@ -425,10 +425,10 @@ const Sms = (props) => {
                                         className="validate" value={props.valueSender}
                                         onChange={(e) => props.valueSenderChanged(e.target.value)}
                                         data-error=".errorTxt1" />
-                                    <label htmlFor="value_sender" className={"active"}>{t("configurationSMSValeurEmetteur")}&nbsp;
+                                    <label htmlFor="value_sender" className={"active"}>Valeur emetteur &nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit de la valeur du sender de vos messages configurer auprès de votre fournisseur de SMS Banking.">
-                                            <HelpIcon />
+                                           data-tooltip="Il s'agit de la valeur du sender de vos messages configurer auprès de votre fournisseur de SMS Banking.">
+                                             <HelpIcon/>
                                         </a></label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.value_sender}</div>
@@ -437,16 +437,16 @@ const Sms = (props) => {
                             </div>
                             <div className="row">
                                 <div className="col s6">
-                                    <div className="col s12"><p className="">{t("configurationSMSInfoRecepteur")}</p></div>
+                                    <div className="col s12"><p className="">Informations sur le récepteur </p></div>
                                     <div className="col s12 input-field">
                                         <input id="libelle_receiver" placeholder="" name="libelle_receiver" type="text"
                                             className="validate" value={props.libelleReceiver}
                                             onChange={(e) => props.libelleReceiverChanged(e.target.value)}
                                             data-error=".errorTxt1" />
-                                        <label htmlFor="libelle_receiver" className={"active"}>{t("configurationSMSlibelledestinataire")}&nbsp;
+                                        <label htmlFor="libelle_receiver" className={"active"}>Libelle paramètre destinataire &nbsp;
                                             <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                                data-tooltip="Il s'agit du nom du paramètre représentant le destinataire du message.">
-                                                <HelpIcon />
+                                            data-tooltip="Il s'agit du nom du paramètre représentant le destinataire du message.">
+                                                 <HelpIcon/>
                                             </a></label>
                                         <small className="errorTxt4">
                                             <div id="cpassword-error" className="error">{props.smsErrors.libelle_receiver}</div>
@@ -454,16 +454,16 @@ const Sms = (props) => {
                                     </div>
                                 </div>
                                 <div className="col s6">
-                                    <div className="col s12"><p className="card-title">{t("configurationSMSInfoMessage")}</p></div>
+                                    <div className="col s12"><p className="card-title">Informations sur le message </p></div>
                                     <div className="col s12 input-field">
                                         <input id="libelle_message" placeholder="" name="libelle_message" type="text"
                                             className="validate" value={props.libelleMessage}
                                             onChange={(e) => props.libelleMessageChanged(e.target.value)}
                                             data-error=".errorTxt1" />
-                                        <label htmlFor="libelle_message" className={"active"}>{t("configurationSMSLibelleMessage")}&nbsp;
+                                        <label htmlFor="libelle_message" className={"active"}>Libelle paramètre message &nbsp;
                                             <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                                data-tooltip="Il s'agit du nom du paramètre représentant le message à envoyer au client.">
-                                                <HelpIcon />
+                                            data-tooltip="Il s'agit du nom du paramètre représentant le message à envoyer au client.">
+                                                <HelpIcon/>
                                             </a></label>
                                         <small className="errorTxt4">
                                             <div id="cpassword-error" className="error">{props.smsErrors.libelle_message}</div>
@@ -472,7 +472,7 @@ const Sms = (props) => {
                                 </div>
                             </div>
                         </div>
-
+                       
 
                         <div className="col s12 display-flex justify-content-end mt-3">
                         
@@ -503,6 +503,8 @@ const Sms = (props) => {
                         </div>
                     </div>
                 </form>
+
+           
 
             </div>
         </>
