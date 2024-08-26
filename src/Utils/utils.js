@@ -253,6 +253,9 @@ export const selectableYears = (startYear)=>{
     }
     return years.reverse();
 }
+export const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export const normalizeStats = (value) => {
 

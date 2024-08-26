@@ -2,10 +2,10 @@ import React, {useEffect, useState} from "react";
 import HelpIcon from '@mui/icons-material/Help';
 import { v4 as uuidv4 } from 'uuid';
 
-import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
+import {cleanPhoneNumber, cleanPhoneNumber3, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage,sleep, today} from "../../Utils/utils";
 import { connect } from "react-redux";
 import {modalify} from "../../Utils/modal";
-import { ajout } from "../../apis/Configurations/SmsApi";
+import { ajout, test } from "../../apis/Configurations/SmsApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
@@ -15,7 +15,11 @@ import {
 import { licenseInfo } from "../../apis/LoginApi";
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-
+import { KTApp } from "../../Utils/blockui";
+import { notify } from "../../Utils/alert";
+import PhoneInput from "react-phone-number-input";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Input } from "@mui/material";
+import { ForwardToInboxOutlined } from "@mui/icons-material";
 
 
 const Sms = (props) => {
@@ -34,6 +38,9 @@ const Sms = (props) => {
         props.posteChanged(e.value)
         props.posteLibelleChanged(e.label)
     }
+    const [showTestModal, setShowTestModal] = useState(false);
+    const [messageTest, setMessageTest] = useState(null);
+    const [phoneTest, setPhoneTest] = useState(null);
 
     useEffect(() => {
         try {
@@ -41,14 +48,14 @@ const Sms = (props) => {
            
             if (appSms !== undefined || appSms !== "") {
                 props.urlChange(appSms.url)
-                props.libelleIdChanged(appSms.libelle_id);
-                props.valueIdChanged(appSms.value_id);
-                props.libellePwdChanged(appSms.libelle_pwd);
-                props.valuePwdChanged(appSms.value_pwd);
-                props.libelleSenderChanged(appSms.libelle_sender);
-                props.valueSenderChanged(appSms.value_sender);
-                props.libelleReceiverChanged(appSms.libelle_receiver);
-                props.libelleMessageChanged(appSms.libelle_message);
+                props.libelleIdChanged(appSms.libId);
+                props.valueIdChanged(appSms.valId);
+                props.libellePwdChanged(appSms.libMdp);
+                props.valuePwdChanged(appSms.valMdp);
+                props.libelleSenderChanged(appSms.libEmetteur);
+                props.valueSenderChanged(appSms.valEmetteur);
+                props.libelleReceiverChanged(appSms.libDestinataire);
+                props.libelleMessageChanged(appSms.libMessage);
         
             } else {
             }
@@ -191,9 +198,88 @@ const Sms = (props) => {
         //console.log(errors.contenu);
     }
 
+    
+    const handleTest = async () => {
+        if(phoneTest !== "" && phoneTest && messageTest !== "" && messageTest ){
+        
+        setShowTestModal(false);
+        KTApp.blockPage({
+            overlayColor: '#000000',
+            type: 'v2',
+            state: 'danger',
+            message: 'En cours...'
+        });
+        await sleep(3000);
+        test({ phone: cleanPhoneNumber3(phoneTest), message: messageTest }).then(({ data }) => {
+            console.log("first : ",phoneTest);
+            console.log("second : ",cleanPhoneNumber3(phoneTest));
+            notify("Super - SMS envoyé", "success");
+        }).catch((err) => {
+            notify("Oups - SMS non envoyé; Vérifier la configuration de votre serveur", "error");
+        }).finally(() => {
+            KTApp.unblockPage();
+        })}else{
+            notify("Les champs sont obligatoires","error")
+        }
+
+    }
+
     return (
         <>
             <div className="card-panel">
+            <Dialog open={showTestModal} onClose={(e) => { setShowTestModal(false) }}>
+                    <DialogTitle >
+                        Vérification de la configuration
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            Renseigner les informations nécessaire pour le teste
+                        </DialogContentText>
+                        <div className="row">
+                            <div className="col l12 m12 s12 input-field">
+                                <PhoneInput
+                                    international
+                                    countryCallingCodeEditable={false}
+                                    value={phoneTest}
+                                    onChange={(e) =>
+                                        setPhoneTest(e)
+                                    }
+                                />
+                                <label htmlFor="phone" className={"active"}>
+                                    Téléphone
+
+                                </label>
+
+                            </div>
+                            <div className="col l12 m12 s12 input-field">
+                                <Input
+                                    style={{ minWidth: "100%" }}
+                                    defaultValue={messageTest}
+                                    multiline={true}
+
+                                    onChange={(e) =>
+                                        setMessageTest(e.target.value)
+                                    }
+                                    minRows={3}
+                                />
+                                <label htmlFor="phone" className={"active"}>
+                                    Message
+                                </label>
+
+                            </div>
+                        </div>
+
+
+                    </DialogContent>
+                    <DialogActions>
+                        
+                        <Button variant="contained" color="error" onClick={(e) => {
+                            setShowTestModal(false)
+                        }}>Fermer</Button>
+                        <Button variant="contained" onClick={handleTest}>Envoyez</Button>
+
+                    </DialogActions>
+                </Dialog>
                 <div className="row">
                     <div className="col s12"><h6 className="card-title">Configuration SMS</h6>
                         <p>Il s'agit de configurer GPR pour utiliser l'API de votre fournisseur de SMS Banking</p></div>
@@ -377,26 +463,31 @@ const Sms = (props) => {
                        
 
                         <div className="col s12 display-flex justify-content-end mt-3">
-                            { (actif !== undefined && actif)  ? (
+                        
+                            <>
                                 <LoadingButton
-                                    className="btn waves-effect waves-light mr-1 btn-small"
+                                    className="btn  waves-light mr-1 btn-small"
+                                    onClick={(e) => {
+                                        setShowTestModal(true);
+                                    }}
+                                    loadingPosition="end"
+                                    endIcon={<ForwardToInboxOutlined />}
+                                    variant="oulined"
+                                >
+                                    <span>Tester</span>
+                                </LoadingButton>
+                                <LoadingButton
+                                    className="btn  waves-light mr-1 btn-small"
                                     onClick={(e) => handleSubmit(e)}
                                     loading={props.etat}
                                     loadingPosition="end"
                                     endIcon={<SaveIcon />}
                                     variant="contained"
-                                    sx={{ textTransform:"initial" }}
+                                    sx={{ textTransform: "initial" }}
                                 >
                                     <span>Enregistrer</span>
                                 </LoadingButton>
-                            ) :
-                                (<div className="card-alert card red lighten-5">
-                                    <div className="card-content red-text">
-                                        <ul>
-                                            Veuillez activer une licence.
-                                        </ul>
-                                    </div>
-                                </div>)}
+                            </>
                         </div>
                     </div>
                 </form>

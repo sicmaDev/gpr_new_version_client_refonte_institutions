@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from "react";
 import { v4 as uuidv4 } from 'uuid';
 
-import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
+import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage,sleep, today} from "../../Utils/utils";
 import { connect } from "react-redux";
 import {modalify} from "../../Utils/modal";
-import { ajout } from "../../apis/Configurations/MailApi";
+import { ajout, test } from "../../apis/Configurations/MailApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
@@ -15,6 +15,10 @@ import {
 import { licenseInfo } from "../../apis/LoginApi";
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { KTApp } from "../../Utils/blockui";
+import { notify } from "../../Utils/alert";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Input } from "@mui/material";
+import { ForwardToInboxOutlined } from "@mui/icons-material";
 
 const Email = (props) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -22,6 +26,11 @@ const Email = (props) => {
     const toggleShowPassword = () => {
         setShowPassword(!showPassword);
     };
+
+    const [showTestModal, setShowTestModal] = useState(false);
+    const [to, setTo] = useState(null)
+    const [subject, setSubject] = useState(null)
+    const [message, setMessage] = useState(null)
 
     useEffect(() => {
 
@@ -32,7 +41,7 @@ const Email = (props) => {
                 props.userChanged(appMail.user)
                 props.hostChanged(appMail.host)
                 props.portChanged(appMail.port)
-                props.passwordChanged(appMail.logo)
+                props.passwordChanged(appMail.pwd)
 
             } else {
             }
@@ -115,6 +124,30 @@ const Email = (props) => {
         return isValid
     }
 
+    
+    const handleTest = async () => {
+        if(to !== "" && to && subject !== "" && subject && message !== "" && message ){
+            setShowTestModal(false);
+            KTApp.blockPage({
+                overlayColor: '#000000',
+                type: 'v2',
+                state: 'danger',
+                message: 'En cours...'
+            });
+            await sleep(3000);
+            test({ to,subject,message }).then(({ data }) => {
+                notify("Super - Mail envoyé", "success");
+            }).catch((err) => {
+                notify("Oups - Mail non envoyé; Vérifier la configuration de votre serveur", "error");
+            }).finally(() => {
+                KTApp.unblockPage();
+            })
+        }else{
+            notify("Les champs sont obligatoires","error")
+        }
+       
+
+    }
 
 
     const handleSubmit = (e) => {
@@ -137,6 +170,74 @@ const Email = (props) => {
 
     return (
         <>
+            <Dialog open={showTestModal} onClose={(e) => { setShowTestModal(false) }}>
+                <DialogTitle >
+                    Vérification de la configuration
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Renseigner les informations nécessaire pour le teste
+                    </DialogContentText>
+                    <div className="row">
+                        
+                        <div className="col l12 m12 s12 input-field">
+                            <input
+                                style={{ minWidth: "100%" }}
+                                defaultValue={to}
+                                type="email"
+
+                                onChange={(e) =>
+                                    setTo(e.target.value)
+                                }
+                            />
+                            <label htmlFor="phone" className={"active"}>
+                                Email
+                            </label>
+
+                        </div>
+                        <div className="col l12 m12 s12 input-field">
+                            <input
+                                style={{ minWidth: "100%" }}
+                                defaultValue={subject}
+
+                                onChange={(e) =>
+                                    setSubject(e.target.value)
+                                }
+                            />
+                            <label htmlFor="phone" className={"active"}>
+                                Objet
+                            </label>
+
+                        </div>
+                        <div className="col l12 m12 s12 input-field">
+                            <Input
+                                style={{ minWidth: "100%" }}
+                                defaultValue={message}
+                                multiline={true}
+
+                                onChange={(e) =>
+                                    setMessage(e.target.value)
+                                }
+                                minRows={3}
+                            />
+                            <label htmlFor="phone" className={"active"}>
+                                Message
+                            </label>
+
+                        </div>
+                    </div>
+
+
+                </DialogContent>
+                <DialogActions>
+                    <Button variant="contained" color="error" onClick={(e) => {
+                        setShowTestModal(false)
+                    }}>Fermer</Button>
+                    <Button variant="contained" onClick={handleTest}>Envoyez</Button>
+
+
+                </DialogActions>
+            </Dialog>
             <div className="card-panel">
                 <div className="row mb-2">
                     <div className="col s12"><h6 className="card-title">Serveur mail</h6>
@@ -211,9 +312,21 @@ const Email = (props) => {
                         </div>
 
                         <div className="col s12 display-flex justify-content-end mt-3">
-                            { (actif !== undefined && actif)  ? (
+                          
+                            <>
                                 <LoadingButton
-                                    className="btn waves-effect waves-light mr-1 btn-small"
+                                        className="btn  waves-light mr-1 btn-small"
+                                        onClick={(e) => {
+                                            setShowTestModal(true);
+                                        }}
+                                        loadingPosition="end"
+                                        endIcon={<ForwardToInboxOutlined />}
+                                        variant="oulined"
+                                    >
+                                        <span>Tester</span>
+                                    </LoadingButton>
+                                <LoadingButton
+                                    className="btn waves-light mr-1 btn-small"
                                     onClick={(e) => handleSubmit(e)}
                                     loading={props.etat}
                                     loadingPosition="end"
@@ -223,14 +336,8 @@ const Email = (props) => {
                                 >
                                     <span>Enregistrer</span>
                                 </LoadingButton>
-                            ) :
-                                (<div className="card-alert card red lighten-5">
-                                    <div className="card-content red-text">
-                                        <ul>
-                                            Veuillez activer une licence.
-                                        </ul>
-                                    </div>
-                                </div>)}
+                            </>
+                           
                         </div>
                     </div>
                 </form>

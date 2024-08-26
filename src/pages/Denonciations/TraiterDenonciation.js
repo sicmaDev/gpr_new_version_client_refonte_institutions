@@ -112,7 +112,7 @@ import ForumIcon from '@mui/icons-material/Forum';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { licenseInfo } from "../../apis/LoginApi";
 import { Redirect } from 'react-router-dom';
-
+import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 const styles = {
   control: (base) => ({
     ...base,
@@ -934,22 +934,51 @@ const TraiterDenonciation = (props) => {
       sortable: true,
       cell: (claim, index) => {
        
+        
         let codi;
         if (claim.session !==null && claim.session !=="") {
-          codi = (
-          <>
-            <div className="df">
-              <span className="mr-1">{claim.code}</span>
-              <div className="card-content red-text ml-4"><ForumIcon/></div>
-            </div>
-            
-          </>
-            
-          );
+          if (claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+            codi = (
+              <>
+                <div className="df">
+                  <span className="mr-1">{claim.code}</span>
+                  <div className="card-content red-text ml-4"><AlternateEmailIcon/></div>
+                  <div className="card-content red-text ml-4"><ForumIcon/></div>
+                </div>
+                
+              </>
+            );
+          } else {
+            codi = (
+              <>
+                <div className="df">
+                  <span className="mr-1">{claim.code}</span>
+                  <div className="card-content red-text ml-4"><ForumIcon/></div>
+                </div>
+                
+              </>
+              
+            );
+          }
+         
+          
         }else{
-          codi = (
-            <span className="">{claim.code}</span>
-          );
+          if (claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+            codi = (
+              <>
+                <div className="df">
+                  <span className="mr-1">{claim.code}</span>
+                  <div className="card-content red-text ml-4"><AlternateEmailIcon/></div>
+                </div>
+                
+              </>
+            );
+          } else {
+            codi = (
+              <span className="">{claim.code}</span>
+            );
+          }
+         
         }
 
         return codi;

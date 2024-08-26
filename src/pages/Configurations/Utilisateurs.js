@@ -386,6 +386,24 @@ const Utilisateurs = (props) => {
 
         props.userErrors(errors)
     }
+
+    const generateCode = () => {
+        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const number = "0123456789"
+        const speciaux = "@_%+-";
+        let retVal = ""
+        for (var i = 0, n = charset.length; i < 8; ++i) {
+            retVal += charset.charAt(Math.floor(Math.random() * n));
+        }
+        retVal = retVal.replaceAll(retVal[6], number[Math.floor(Math.random() * 8)])
+        retVal = retVal.replaceAll(retVal[7], speciaux[Math.floor(Math.random() * 5)])
+
+        props.passwordAgainChanged(retVal);
+        props.passwordChanged(retVal);
+        setShowPassword(true);
+
+
+    }
     const rowClickedHandler = (event, data, rowIndex) => {
         props.idChanged(data.id?data.id:"")
         props.codeChanged(data.code?data.code:"")
@@ -595,9 +613,10 @@ const Utilisateurs = (props) => {
                                                 data-error=".errorTxt5" value={props.pass}
                                                 onChange={(e) => props.passwordChanged(e.target.value)}/> 
                                             <label htmlFor="usnewpswd" className={"active"}>Mot de passe
-                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Le mot de passe doit contenir au moins un chiffre et un symbol">
-                                                <HelpIcon/>
-                                            </a>
+                                                <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Le mot de passe doit contenir au moins un chiffre et un symbol">
+                                                    <HelpIcon/>
+                                                </a>
+                                                <span style={{ color: "#007bff", cursor: "pointer", margin: "0px 15px" }} onClick={generateCode}>Générer un mot de passe</span>
                                             </label>
                                             <small className="errorTxt4">
                                                 <div id="cpassword-error" className="error">{props.errors.pass}</div>
