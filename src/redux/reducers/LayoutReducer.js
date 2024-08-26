@@ -18,6 +18,11 @@ const LayoutReducer = (state = initialState, action) => {
                 ...state,
                 isAuthenticated: !state.isAuthenticated,
             };
+        case 'SET_AUTHENTICATED':
+            return {
+                ...state,
+                isAuthenticated: action.payload,
+            };
         case 'PAGE':
             return {
                 ...state,
