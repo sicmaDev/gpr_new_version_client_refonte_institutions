@@ -95,7 +95,6 @@ import html2canvas from "html2canvas";
 import { MyGaugeChart } from "../../Utils/MyGaugeChart";
 import { XAxis } from "recharts";
 import { notify } from "../../Utils/alert";
-import { useTranslation } from "react-i18next";
 
 Chart.register(ChartDataLabels);
 Chart.register(...registerables);
@@ -131,7 +130,7 @@ const styles = {
 };
 
 const Global = (props) => {
-  const { t } = useTranslation();
+
   const [open, setOpen] = React.useState(false);
   const [showSearch, setshowSearch] = useState(false);
   const [startDate, setStartDate] = useState("");
@@ -1000,799 +999,6 @@ const Global = (props) => {
     reportApiFiltres(props, filtres, setDataRaport).then((r) => {});
   };
 
-  // const rapportSubmit = (e) => {
-  //   e.preventDefault();
-  //   let claimShow,
-  //     suggestionShow,
-  //     denunciationShow = false;
-  //   setshowSearch(false);
-  //   setDenunciationShow(false);
-  //   setClaimShow(false);
-  //   setSuggestionShow(false);
-  //   if (plainteType.length != 0) {
-  //     plainteType.forEach((type) => {
-  //       if (type == "suggestion") {
-  //         suggestionShow = true;
-  //         setSuggestionShow(true);
-  //       }
-  //       if (type == "claim") {
-  //         claimShow = true;
-  //         setClaimShow(true);
-  //       }
-  //       if (type == "denunciation") {
-  //         denunciationShow = true;
-  //         setDenunciationShow(true);
-  //       }
-
-  //       return 0;
-  //     });
-  //   } else {
-  //     suggestionShow = true;
-  //     claimShow = true;
-  //     denunciationShow = true;
-  //     setDenunciationShow(true);
-  //     setClaimShow(true);
-  //     setSuggestionShow(true);
-  //   }
-  //   if (suggestionShow) {
-  //     let traite = false;
-  //     if (suggestionAll.length != 0) {
-  //       let resultState = [];
-  //       if (etatState.length != 0) {
-  //         etatState.forEach((etat) => {
-  //           if (etat == "nontraite") {
-  //             let okay = suggestionAll.filter((e) => e.status == 1);
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-  //           if (etat == "traite") {
-  //             traite = true;
-  //             let okay = suggestionAll.filter((e) => e.status == 2);
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-  //           return resultState;
-  //         });
-  //       } else {
-  //         resultState = suggestionAll;
-  //         traite = true;
-  //       }
-
-  //       //Product
-  //       let resultProduct = [];
-  //       if (product.length != 0) {
-  //         product.forEach((prod) => {
-  //           let okay = resultState.filter((e) => e.product == prod);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultProduct.push(ok);
-  //               return resultProduct;
-  //             });
-  //           }
-  //           return resultProduct;
-  //         });
-  //       } else {
-  //         resultProduct = resultState;
-  //       }
-
-  //       //Unite operationelle
-  //       let resultUnit = [];
-  //       if (unit.length != 0) {
-  //         unit.forEach((un) => {
-  //           let okay = resultProduct.filter((e) => e.unit == un);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultUnit.push(ok);
-  //               return resultUnit;
-  //             });
-  //           }
-  //           return resultUnit;
-  //         });
-  //       } else {
-  //         resultUnit = resultProduct;
-  //       }
-
-  //       //Base de provenance
-  //       let resultSource = [];
-  //       if (agency.length != 0) {
-  //         agency.forEach((ag) => {
-  //           let okay = resultUnit.filter((e) => e.source == ag);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultSource.push(ok);
-  //               return resultSource;
-  //             });
-  //           }
-  //           return resultSource;
-  //         });
-  //       } else {
-  //         resultSource = resultUnit;
-  //       }
-
-  //       //Enregistrer par
-  //       let resultRecordBy = [];
-  //       if (recoredBy.length != 0) {
-  //         recoredBy.forEach((rec) => {
-  //           let okay = resultSource.filter((e) => e.recorded_by.id == rec);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultRecordBy.push(ok);
-  //               return resultRecordBy;
-  //             });
-  //           }
-  //           return resultRecordBy;
-  //         });
-  //       } else {
-  //         resultRecordBy = resultSource;
-  //       }
-
-  //       //Traiter par
-  //       let resultHandleBy = [];
-  //       if (handleBy.length != 0) {
-  //         handleBy.forEach((rec) => {
-  //           let okay = resultRecordBy
-  //             .filter((e) => e.handled_by != null)
-  //             .filter((e) => e.handled_by.id == rec);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultHandleBy.push(ok);
-  //               return resultHandleBy;
-  //             });
-  //           }
-  //           return resultHandleBy;
-  //         });
-  //       } else {
-  //         resultHandleBy = resultRecordBy;
-  //       }
-
-  //       //Enregistrer le
-
-  //       let resultRecordDate = [];
-  //       if (startDate != "" && endDate != "") {
-  //         resultRecordDate = resultHandleBy.filter((e) => {
-  //           let t = e.createdAt.split("T");
-  //           let endDateTommorow = new Date(endDate);
-  //           endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //           return (
-  //             new Date(t[0]) >= startDate && new Date(t[0]) <= endDateTommorow
-  //           );
-  //         });
-  //       } else if (startDate == "" && endDate != "") {
-  //         resultRecordDate = resultHandleBy.filter((e) => {
-  //           let t = e.createdAt.split("T");
-  //           let endDateTommorow = new Date(endDate);
-  //           endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //           return (
-  //             new Date(t[0]) >= new Date("1999-01-01") &&
-  //             new Date(t[0]) <= endDateTommorow
-  //           );
-  //         });
-  //       } else if (startDate != "" && endDate == "") {
-  //         resultRecordDate = resultHandleBy.filter((e) => {
-  //           let t = e.createdAt.split("T");
-
-  //           let endDateTommorow = new Date();
-  //           endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-  //           return (
-  //             new Date(t[0]) >= startDate && new Date(t[0]) <= endDateTommorow
-  //           );
-  //         });
-  //       } else {
-  //         resultRecordDate = resultHandleBy;
-  //       }
-
-  //       //Traiter le
-
-  //       let resultHandleDate = [];
-  //       if (traite) {
-  //         if (startHandleDate != "" && endHandleDate != "") {
-  //           resultHandleDate = resultRecordDate.filter((e) => {
-  //             let t = e.handledAt.split("T");
-  //             let endDateTommorow = new Date(endHandleDate);
-  //             endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //             return (
-  //               new Date(t[0]) >= startHandleDate &&
-  //               new Date(t[0]) <= endDateTommorow
-  //             );
-  //           });
-  //         } else if (startHandleDate == "" && endHandleDate != "") {
-  //           resultHandleDate = resultRecordDate.filter((e) => {
-  //             let t = e.handledAt.split("T");
-  //             let endDateTommorow = new Date(endHandleDate);
-  //             endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //             return (
-  //               new Date(t[0]) >= new Date("1999-01-01") &&
-  //               new Date(t[0]) <= endDateTommorow
-  //             );
-  //           });
-  //         } else if (startHandleDate != "" && endHandleDate == "") {
-  //           resultHandleDate = resultRecordDate.filter((e) => {
-  //             let t = e.handledAt.split("T");
-
-  //             let endDateTommorow = new Date();
-  //             endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-  //             return (
-  //               new Date(t[0]) >= startHandleDate &&
-  //               new Date(t[0]) <= endDateTommorow
-  //             );
-  //           });
-  //         } else {
-  //           resultHandleDate = resultRecordDate;
-  //         }
-  //       } else {
-  //         resultHandleDate = resultRecordDate;
-  //       }
-
-  //       setResultGeneralSuggestion(resultHandleDate);
-  //     } else {
-  //       setResultGeneralSuggestion([]);
-  //     }
-  //   } else {
-  //     setResultGeneralSuggestion([]);
-  //   }
-
-  //   if (claimShow) {
-  //     let traite = false;
-  //     if (claimAll.length != 0) {
-  //       //Etat
-  //       let resultState = [];
-
-  //       if (etatState.length != 0) {
-  //         etatState.forEach((etat) => {
-  //           if (etat == "nontraite") {
-  //             let okay = claimAll.filter((e) => e.status == 1);
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-  //           if (etat == "traite") {
-  //             traite = true;
-  //             let okay = claimAll.filter((e) => e.status == 5);
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-  //           if (etat == "affecte") {
-  //             let okay = claimAll.filter((e) => e.status == 2);
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-  //           if (etat == "satisfait") {
-  //             let okay = claimAll.filter(
-  //               (e) => e.status == 6 && e.appraisal == 1
-  //             );
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-  //           if (etat == "nonsatisfaire") {
-  //             let okay = claimAll.filter(
-  //               (e) => e.status == 6 && e.appraisal == 0
-  //             );
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-  //           if (etat == "approuver") {
-  //             let okay = claimAll.filter((e) => e.status == 3);
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-  //           if (etat == "desapprouver") {
-  //             let okay = claimAll.filter((e) => e.status == 4);
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-
-  //           return resultState;
-  //         });
-  //       } else {
-  //         resultState = claimAll;
-  //         traite = true;
-  //       }
-
-  //       //Objet
-  //       let resultObjet = [];
-
-  //       if (objet.length != 0) {
-  //         let tabSearch = objet;
-  //         if (toutsauf == "oui") {
-  //           tabSearch = [];
-  //           subjects.map((sub) => {
-  //             return tabSearch.push(sub.name);
-  //           });
-  //           objet.map((ob) => {
-  //             if (tabSearch.includes(ob)) {
-  //               tabSearch.splice(tabSearch.indexOf(ob), 1);
-  //             }
-  //           });
-  //         }
-  //         tabSearch.forEach((ob) => {
-  //           let okay = resultState.filter((sub) => {
-  //             return sub.subject == ob;
-  //           });
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultObjet.push(ok);
-  //             });
-  //           }
-  //         });
-  //       } else {
-  //         resultObjet = resultState;
-  //       }
-
-  //       //Product
-  //       let resultProduct = [];
-  //       if (product.length != 0) {
-  //         product.forEach((prod) => {
-  //           let okay = resultObjet.filter((e) => e.product == prod);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultProduct.push(ok);
-  //               return resultProduct;
-  //             });
-  //           }
-  //           return resultProduct;
-  //         });
-  //       } else {
-  //         resultProduct = resultObjet;
-  //       }
-
-  //       //Unite operationelle
-  //       let resultUnit = [];
-  //       if (unit.length != 0) {
-  //         unit.forEach((un) => {
-  //           let okay = resultProduct.filter((e) => e.unit == un);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultUnit.push(ok);
-  //               return resultUnit;
-  //             });
-  //           }
-  //           return resultUnit;
-  //         });
-  //       } else {
-  //         resultUnit = resultProduct;
-  //       }
-
-  //       //Base de provenance
-  //       let resultSource = [];
-  //       if (agency.length != 0) {
-  //         agency.forEach((ag) => {
-  //           let okay = resultUnit.filter((e) => e.source == ag);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultSource.push(ok);
-  //               return resultSource;
-  //             });
-  //           }
-  //           return resultSource;
-  //         });
-  //       } else {
-  //         resultSource = resultUnit;
-  //       }
-
-  //       //Enregistrer par
-  //       let resultRecordBy = [];
-  //       if (recoredBy.length != 0) {
-  //         recoredBy.forEach((rec) => {
-  //           let okay = resultSource.filter((e) => e.recorded_by.id == rec);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultRecordBy.push(ok);
-  //               return resultRecordBy;
-  //             });
-  //           }
-  //           return resultRecordBy;
-  //         });
-  //       } else {
-  //         resultRecordBy = resultSource;
-  //       }
-
-  //       //Traiter par
-  //       let resultHandleBy = [];
-  //       if (handleBy.length != 0) {
-  //         handleBy.forEach((rec) => {
-  //           let okay = resultRecordBy
-  //             .filter((e) => e.handled_by != null)
-  //             .filter((e) => e.handled_by.id == rec);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultHandleBy.push(ok);
-  //               return resultHandleBy;
-  //             });
-  //           }
-  //           return resultHandleBy;
-  //         });
-  //       } else {
-  //         resultHandleBy = resultRecordBy;
-  //       }
-
-  //       //Enregistrer le
-
-  //       let resultRecordDate = [];
-  //       if (startDate != "" && endDate != "") {
-  //         resultRecordDate = resultHandleBy.filter((e) => {
-  //           let t = e.createdAt.split("T");
-  //           let endDateTommorow = new Date(endDate);
-  //           endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //           return (
-  //             new Date(t[0]) >= startDate && new Date(t[0]) <= endDateTommorow
-  //           );
-  //         });
-  //       } else if (startDate == "" && endDate != "") {
-  //         resultRecordDate = resultHandleBy.filter((e) => {
-  //           let t = e.createdAt.split("T");
-  //           let endDateTommorow = new Date(endDate);
-  //           endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //           return (
-  //             new Date(t[0]) >= new Date("1999-01-01") &&
-  //             new Date(t[0]) <= endDateTommorow
-  //           );
-  //         });
-  //       } else if (startDate != "" && endDate == "") {
-  //         resultRecordDate = resultHandleBy.filter((e) => {
-  //           let t = e.createdAt.split("T");
-
-  //           let endDateTommorow = new Date();
-  //           endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-  //           return (
-  //             new Date(t[0]) >= startDate && new Date(t[0]) <= endDateTommorow
-  //           );
-  //         });
-  //       } else {
-  //         resultRecordDate = resultHandleBy;
-  //       }
-
-  //       //Traiter le
-
-  //       let resultHandleDate = [];
-  //       if (traite) {
-  //         if (startHandleDate != "" && endHandleDate != "") {
-  //           resultHandleDate = resultRecordDate.filter((e) => {
-  //             let t = e.handledAt.split("T");
-  //             let endDateTommorow = new Date(endHandleDate);
-  //             endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //             return (
-  //               new Date(t[0]) >= startHandleDate &&
-  //               new Date(t[0]) <= endDateTommorow
-  //             );
-  //           });
-  //         } else if (startHandleDate == "" && endHandleDate != "") {
-  //           resultHandleDate = resultRecordDate.filter((e) => {
-  //             let t = e.handledAt.split("T");
-  //             let endDateTommorow = new Date(endHandleDate);
-  //             endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //             return (
-  //               new Date(t[0]) >= new Date("1999-01-01") &&
-  //               new Date(t[0]) <= endDateTommorow
-  //             );
-  //           });
-  //         } else if (startHandleDate != "" && endHandleDate == "") {
-  //           resultHandleDate = resultRecordDate.filter((e) => {
-  //             let t = e.handledAt.split("T");
-
-  //             let endDateTommorow = new Date();
-  //             endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-  //             return (
-  //               new Date(t[0]) >= startHandleDate &&
-  //               new Date(t[0]) <= endDateTommorow
-  //             );
-  //           });
-  //         } else {
-  //           resultHandleDate = resultRecordDate;
-  //         }
-  //       } else {
-  //         resultHandleDate = resultRecordDate;
-  //       }
-
-  //       claimDashboard(resultHandleDate);
-
-  //       setResultGeneralClaim(resultHandleDate);
-
-  //     } else {
-  //       setResultGeneralClaim([]);
-  //     }
-  //   } else {
-  //     setResultGeneralClaim([]);
-  //   }
-
-  //   if (denunciationShow) {
-  //     let traite = false;
-  //     if (denonciationAll.length != 0) {
-  //       //Etat
-  //       let resultState = [];
-
-  //       if (etatState.length != 0) {
-  //         etatState.forEach((etat) => {
-  //           if (etat == "nontraite") {
-  //             let okay = denonciationAll.filter((e) => e.status == 1);
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-  //           if (etat == "traite") {
-  //             traite = true;
-  //             let okay = denonciationAll.filter((e) => e.status == 2);
-
-  //             if (okay.length >= 1) {
-  //               okay.forEach((ok) => {
-  //                 resultState.push(ok);
-  //                 return resultState;
-  //               });
-  //             }
-  //           }
-
-  //           return resultState;
-  //         });
-  //       } else {
-  //         resultState = denonciationAll;
-  //         traite = true;
-  //       }
-
-  //       //Objet
-  //       let resultObjet = [];
-
-  //       if (objet.length != 0) {
-  //         let tabSearch = objet;
-  //         if (toutsauf == "oui") {
-  //           tabSearch = [];
-  //           subjects.map((sub) => {
-  //             return tabSearch.push(sub.name);
-  //           });
-  //           objet.map((ob) => {
-  //             if (tabSearch.includes(ob)) {
-  //               tabSearch.splice(tabSearch.indexOf(ob), 1);
-  //             }
-  //           });
-  //         }
-  //         tabSearch.forEach((ob) => {
-  //           let okay = resultState.filter((sub) => {
-  //             return sub.subject == ob;
-  //           });
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultObjet.push(ok);
-  //             });
-  //           }
-  //         });
-  //       } else {
-  //         resultObjet = resultState;
-  //       }
-
-  //       //Product
-  //       let resultProduct = [];
-  //       if (product.length != 0) {
-  //         product.forEach((prod) => {
-  //           let okay = resultObjet.filter((e) => e.product == prod);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultProduct.push(ok);
-  //               return resultProduct;
-  //             });
-  //           }
-  //           return resultProduct;
-  //         });
-  //       } else {
-  //         resultProduct = resultObjet;
-  //       }
-
-  //       //Unite operationelle
-  //       let resultUnit = [];
-  //       if (unit.length != 0) {
-  //         unit.forEach((un) => {
-  //           let okay = resultProduct.filter((e) => e.unit == un);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultUnit.push(ok);
-  //               return resultUnit;
-  //             });
-  //           }
-  //           return resultUnit;
-  //         });
-  //       } else {
-  //         resultUnit = resultProduct;
-  //       }
-
-  //       //Base de provenance
-  //       let resultSource = [];
-  //       if (agency.length != 0) {
-  //         agency.forEach((ag) => {
-  //           let okay = resultUnit.filter((e) => e.source == ag);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultSource.push(ok);
-  //               return resultSource;
-  //             });
-  //           }
-  //           return resultSource;
-  //         });
-  //       } else {
-  //         resultSource = resultUnit;
-  //       }
-
-  //       //Enregistrer par
-  //       let resultRecordBy = [];
-  //       if (recoredBy.length != 0) {
-  //         recoredBy.forEach((rec) => {
-  //           let okay = resultSource.filter((e) => e.recorded_by.id == rec);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultRecordBy.push(ok);
-  //               return resultRecordBy;
-  //             });
-  //           }
-  //           return resultRecordBy;
-  //         });
-  //       } else {
-  //         resultRecordBy = resultSource;
-  //       }
-
-  //       //Traiter par
-  //       let resultHandleBy = [];
-  //       if (handleBy.length != 0) {
-  //         handleBy.forEach((rec) => {
-  //           let okay = resultRecordBy
-  //             .filter((e) => e.handled_by != null)
-  //             .filter((e) => e.handled_by.id == rec);
-  //           if (okay.length >= 1) {
-  //             okay.forEach((ok) => {
-  //               resultHandleBy.push(ok);
-  //               return resultHandleBy;
-  //             });
-  //           }
-  //           return resultHandleBy;
-  //         });
-  //       } else {
-  //         resultHandleBy = resultRecordBy;
-  //       }
-
-  //       //Enregistrer le
-
-  //       let resultRecordDate = [];
-  //       if (startDate != "" && endDate != "") {
-  //         resultRecordDate = resultHandleBy.filter((e) => {
-  //           let t = e.createdAt.split("T");
-  //           let endDateTommorow = new Date(endDate);
-  //           endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //           return (
-  //             new Date(t[0]) >= startDate && new Date(t[0]) <= endDateTommorow
-  //           );
-  //         });
-  //       } else if (startDate == "" && endDate != "") {
-  //         resultRecordDate = resultHandleBy.filter((e) => {
-  //           let t = e.createdAt.split("T");
-  //           let endDateTommorow = new Date(endDate);
-  //           endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //           return (
-  //             new Date(t[0]) >= new Date("1999-01-01") &&
-  //             new Date(t[0]) <= endDateTommorow
-  //           );
-  //         });
-  //       } else if (startDate != "" && endDate == "") {
-  //         resultRecordDate = resultHandleBy.filter((e) => {
-  //           let t = e.createdAt.split("T");
-
-  //           let endDateTommorow = new Date();
-  //           endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-  //           return (
-  //             new Date(t[0]) >= startDate && new Date(t[0]) <= endDateTommorow
-  //           );
-  //         });
-  //       } else {
-  //         resultRecordDate = resultHandleBy;
-  //       }
-
-  //       //Traiter le
-
-  //       let resultHandleDate = [];
-  //       if (traite) {
-  //         if (startHandleDate != "" && endHandleDate != "") {
-  //           resultHandleDate = resultRecordDate.filter((e) => {
-  //             let t = e.handledAt.split("T");
-  //             let endDateTommorow = new Date(endHandleDate);
-  //             endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //             return (
-  //               new Date(t[0]) >= startHandleDate &&
-  //               new Date(t[0]) <= endDateTommorow
-  //             );
-  //           });
-  //         } else if (startHandleDate == "" && endHandleDate != "") {
-  //           resultHandleDate = resultRecordDate.filter((e) => {
-  //             let t = e.handledAt.split("T");
-  //             let endDateTommorow = new Date(endHandleDate);
-  //             endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-
-  //             return (
-  //               new Date(t[0]) >= new Date("1999-01-01") &&
-  //               new Date(t[0]) <= endDateTommorow
-  //             );
-  //           });
-  //         } else if (startHandleDate != "" && endHandleDate == "") {
-  //           resultHandleDate = resultRecordDate.filter((e) => {
-  //             let t = e.handledAt.split("T");
-
-  //             let endDateTommorow = new Date();
-  //             endDateTommorow.setDate(endDateTommorow.getDate() + 1);
-  //             return (
-  //               new Date(t[0]) >= startHandleDate &&
-  //               new Date(t[0]) <= endDateTommorow
-  //             );
-  //           });
-  //         } else {
-  //           resultHandleDate = resultRecordDate;
-  //         }
-  //       } else {
-  //         resultHandleDate = resultRecordDate;
-  //       }
-
-  //       setResultGeneralDenonciation(resultHandleDate);
-  //     } else {
-  //       setResultGeneralDenonciation([]);
-  //     }
-  //   } else {
-  //     setResultGeneralDenonciation([]);
-  //   }
-  // };
-
-  // //Dashboard Affichage
-  
   const claimDashboard = () => {
     let dableReturn = (
       <div className="col l12 s12 m12 mb-2">
@@ -1816,51 +1022,51 @@ const Global = (props) => {
               {
                 <>
                   <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gATraiter")}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gAffectee")}
-                    </span>
-                  </td>
-
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gDesapprouver")}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gTraiter")}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gSatisfait")}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gpatiellementSatisfait")}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gNonSatisfait")}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gContencieux")}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gClassee")}
-                    </span>
-                  </td>
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        A traiter
+                      </span>
+                    </td>
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Affectée
+                      </span>
+                    </td>
+                   
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Désapprouvée
+                      </span>
+                    </td>
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Traitée
+                      </span>
+                    </td>
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Satisfait
+                      </span>
+                    </td>
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Partiellement satisfait
+                      </span>
+                    </td>
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Non satisfait
+                      </span>
+                    </td>
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Contentieux
+                      </span>
+                    </td>
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Classée
+                      </span>
+                    </td>
                 </>
               }
             </tr>
@@ -1949,7 +1155,7 @@ const Global = (props) => {
         >
           <span style={{ fontSize: "18px", color: "#015182" }}>
             <b>{props.sugReport?.basicStats?.total} </b>
-            {t("RapportGlobalSuggestions")}
+           Suggestions(s)
           </span>
 
           <table
@@ -1959,23 +1165,18 @@ const Global = (props) => {
             <tr>
               {
                 <>
-                  <td className="center">
-                    <span style={{ fontWeight: "bold" }}>
-                      {" "}
-                      {t("gATraiter")}
-                    </span>
-                  </td>
+                    <td className="center">
+                      <span style={{ fontWeight: "bold" }}> A traiter</span>
+                    </td>
 
-                  <td className="center">
-                    <span style={{ fontWeight: "bold" }}>
-                      {t("RapportGlobalPriseCompte")}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontWeight: "bold" }}>
-                      {t("RapportGlobalNonPriseCompte")}
-                    </span>
-                  </td>
+                    <td className="center">
+                      <span style={{ fontWeight: "bold" }}>Pris en Compte</span>
+                    </td>
+                    <td className="center">
+                      <span style={{ fontWeight: "bold" }}>
+                        Non Pris en Compte
+                      </span>
+                    </td>
                 </>
               }
             </tr>
@@ -2020,7 +1221,7 @@ const Global = (props) => {
         >
           <span style={{ fontSize: "18px", color: "#015182" }}>
             <b>{props.denunReport?.basicStats?.total} </b>
-            {t("RapportGlobalDenonciation")}
+            Dénonciation(s)
           </span>
 
           <br />
@@ -2032,27 +1233,27 @@ const Global = (props) => {
             <tr>
               {
                 <>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gATraiter")}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gAffectee")}
-                    </span>
-                  </td>
-
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gDesapprouver")}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {t("gTraiter")}
-                    </span>
-                  </td>
+                 <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        A traiter
+                      </span>
+                    </td>
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Affectée
+                      </span>
+                    </td>
+                  
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Désapprouvée
+                      </span>
+                    </td>
+                    <td className="center">
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        Traitée
+                      </span>
+                    </td>
                 </>
               }
             </tr>
@@ -2145,7 +1346,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">{t("RapportGlobalEvolutionGlissement")}</h8> */}
+            
               <div
                 className="total-transaction-container "
                 style={{ flex: "1 auto" }}
@@ -2230,9 +1431,7 @@ const Global = (props) => {
                 overflow: "auto",
               }}
             >
-              {/* <h8 className=" mb-4">
-                {t("RapportGlobalNombreRSDModaliteDepot")}
-              </h8> */}
+            
               <div style={{ flex: "1 auto" }}>
                 <Bar
                   redraw={true}
@@ -2299,9 +1498,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalRepartitionReclamDenonParObjet")}
-              </h8> */}
+            
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2402,7 +1599,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <h8 className="mb-4">{t("RapportGlobalTauxResolution")}</h8>
+              <h8 className="mb-4">Taux de résolution des plaintes</h8>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2616,9 +1813,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalRepartitionReclamAgence")}
-              </h8> */}
+            
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2656,10 +1851,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalNombreReclamAgence")}
-              </h8> */}
-
+             
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2769,9 +1961,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h6 className="c mb-4">
-                {t("RapportGlobalNombreDenonciationParAgence")}
-              </h6> */}
+             
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2883,9 +2073,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className=" mb-4" >
-                {t("RapportGlobalNombreSuggestionParAgence")}
-              </h8> */}
+              
               <div
                 className="total-transaction-container "
                 style={{ flex: "1 auto" }}
@@ -3000,9 +2188,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-               {t("RapportGlobalNombreReclamModaliteDepotAgence")} 
-              </h8> */}
+            
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3085,9 +2271,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className=" mb-4">
-                {t("RapportGlobalRepartitionModaliteDepotDenonce")}
-              </h8> */}
+             
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3124,9 +2308,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className=" mb-4">
-                {t("RapportGlobalNombreDenonceModaliteDepotAgence")}
-              </h8> */}
+           
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3209,9 +2391,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className=" mb-4">
-                {t("RapportGlobalRepartitionModaliteDepotSuggestions")}
-              </h8> */}
+            
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3249,9 +2429,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalNombreSuggestionModaliteDepotAgence")}
-              </h8> */}
+            
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3496,9 +2674,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                 {t("RapportGlobalNombreDenonceObjetAgence")}
-              </h8> */}
+           
 
               <div
                 className="total-transaction-container"
@@ -3581,10 +2757,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className=" mb-4">
-                {t("RapportGlobalRepartitionReclamGenre")}
-              </h8> */}
-
+            
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3622,10 +2795,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalNombreReclamGenreAgence")}
-              </h8> */}
-
+            
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3710,10 +2880,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className=" mb-4">
-                {t("RapportGlobalRepartitionSuggestionGenre")}
-              </h8> */}
-
+           
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3751,10 +2918,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalNombreSuggestionGenreAgence")}
-              </h8> */}
-
+            
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3838,10 +3002,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalRepartitionReclamNiveauGravite")}
-              </h8> */}
-
+           
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3879,10 +3040,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalRepartitionReclamNiveauGraviteAgence")}
-              </h8> */}
-
+            
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3965,10 +3123,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalRepartitionDenonceNiveauGravite")}
-              </h8> */}
-
+           
               <div className="total-transaction-container" style={{ flex: 1 }}>
                 <Pie
                   redraw={true}
@@ -4007,10 +3162,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalNombreDenonceNivGravityAgence")}
-              </h8> */}
-
+         
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -4092,10 +3244,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalRepartitionSatisfactionReclam")}
-              </h8> */}
-
+             
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -4134,10 +3283,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              {/* <h8 className="mb-4">
-                {t("RapportGlobalEvolutionglissementAnnuelleSatisfactionReclam")}
-              </h8> */}
-
+             
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -4962,7 +4108,7 @@ const Global = (props) => {
         {showSearch && (
           <Dialog open={open} onClose={handleClose}>
             <div className="row mt-2">
-              <DialogContentText>{t("RapportGlobalFiltre")}</DialogContentText>
+              <DialogContentText>Filtres</DialogContentText>
             </div>
 
             <DialogContent
@@ -4984,13 +4130,13 @@ const Global = (props) => {
                     onChange={(e) => props.yearChanged(e.value)}
                   />
                   <label htmlFor="agency" className={"active"}>
-                    {t("RapportGlobalAnnee")}:
+                    Année:
                   </label>
                 </div>
                 {/* Select Type de plainte */}
                 <div className="col s12 l12 m12 input-field">
                   <label htmlFor="typePlainte" className={"active"}>
-                    {t("RapportGlobalTypePlainte")}
+                    Type de Plainte
                   </label>
                   <Select
                     isMulti
@@ -5070,7 +4216,7 @@ const Global = (props) => {
                         }}
                       />
                       <label htmlFor="idObjet" className={"active"}>
-                        {t("RapportGlobalObjets")}
+                        Objets
                       </label>
                     </div>
                   </>
@@ -5094,7 +4240,7 @@ const Global = (props) => {
                     }}
                   />
                   <label htmlFor="idRecoredBy" className={"active"}>
-                    {t("RapportGlobalEtatPlainte")}
+                    Etat de la plainte
                   </label>
                 </div>
                 {/*Autres options */}
@@ -5108,7 +4254,7 @@ const Global = (props) => {
                     textAlign: "center",
                   }}
                 >
-                  {!other ? " + Plus" : " - Moins"} {t("RapportGlobalOptions")}
+                  {!other ? " + Plus" : " - Moins"} d'options
                 </span>
 
                 {other && (
@@ -5132,7 +4278,7 @@ const Global = (props) => {
                         }}
                       />
                       <label htmlFor="idProduct" className={"active"}>
-                        {t("RapportGlobalProduit")}
+                        Produits
                       </label>
                     </div>
                     {/* Enregistrer par */}
@@ -5155,13 +4301,13 @@ const Global = (props) => {
                         }}
                       />
                       <label htmlFor="idEtatPlainte" className={"active"}>
-                        {t("RapportGlobalEnregistrerpar")}
+                      Enregistrer par
                       </label>
                     </div>
                     {/*Dates row*/}
                     <div className="row">
                       <div className="col l12 s12 m12 text-center">
-                        {t("RapportGlobalRecuEntre")}:
+                      Reçu entre:
                       </div>
                       {/*Date start*/}
                       <div className="col s12 m12 l6 input-field">
@@ -5177,7 +4323,7 @@ const Global = (props) => {
                           locale="fr"
                         />
                         <label htmlFor="idStartDate" className={"active"}>
-                          {t("RapportGlobalDateDeb")}
+                        Date de debut 
                         </label>
                       </div>
                       {/*Date end*/}
@@ -5195,7 +4341,7 @@ const Global = (props) => {
                           locale="fr"
                         />
                         <label htmlFor="idEndDate" className={"active"}>
-                          {t("RapportBCAODateFin")}
+                        Date de fin
                         </label>
                       </div>
                     </div>
@@ -5220,7 +4366,7 @@ const Global = (props) => {
                         }}
                       />
                       <label htmlFor="agency" className={"active"}>
-                        {t("RapportGlobalPointsService")}:
+                        Points de service:
                       </label>
                     </div>
                   </>
@@ -5232,7 +4378,7 @@ const Global = (props) => {
                     }}
                     className="btn indigo lighten-5 indigo-text waves-effect waves-effect-b waves-light display-flex align-items-center justify-content-center mt-1"
                   >
-                    <span className="text-nowrap">{t("RapportEffacer")}</span>
+                    <span className="text-nowrap">Effacer Tout</span>
                   </a>
                 </div>
                 <div className="col l6 m6 s12 mt-4">
@@ -5244,7 +4390,7 @@ const Global = (props) => {
                   >
                     <CheckIcon />
                     <span className="text-nowrap" style={{ fontSize: "15px" }}>
-                      {t("RapportGenerer")}
+                      Générer
                     </span>
                   </a>
                 </div>
@@ -5382,28 +4528,28 @@ const Global = (props) => {
                       <b>{institution}</b>
                       <br />
                       <i>
-                        <span>{t("RapportNumeroAgrement")}: </span>
+                        <span>Agrément: </span>
                         {agrement}
                       </i>
                       <br />
                       <i>
-                        <span>{t("RapportAddresse")}: </span>
+                        <span>Adresse: </span>
                         {adresse}
                       </i>
                       <br />
                       <i>
-                        <span>{t("RapportTel")}: </span>
+                        <span>Téléphone: </span>
                         {tel}
                       </i>
                       <br />
                       <i>
-                        <span>{t("RapportEmail")}: </span>
+                        <span>Emai: </span>
                         {email}
                       </i>
                     </div>
                   </div>
                   <i style={{ marginRight: "10px" }}>
-                    {t("RapportGenererLe")}{" "}
+                    Générer le {" "}
                     {new Date().toLocaleDateString("fr-FR", {
                       day: "numeric",
                       year: "numeric",
@@ -5418,7 +4564,7 @@ const Global = (props) => {
                 >
                   <div className="col s12 l12 m12 center">
                     <span style={{ color: "#015182", fontSize: "25px" }}>
-                      {t("RapportGlobalGestionPlaintesSuggestion")}
+                    Rapport de la gestion des plaintes ou réclamations
                     </span>
                   </div>
                 </div>
@@ -5428,72 +4574,12 @@ const Global = (props) => {
                   id="critereRapport"
                 >
                   <div className="col l12">
-                    {/* <ul>
-                      <li>
-                        <b style={{ fontSize: "15px" }}>Critères:</b>
-                      </li>
-                    </ul> */}
+                 
                     <ul style={{ paddingLeft: "15px" }}>
-                      {/* <li>
-                        <>Type de plainte:</>
-                        {plainteType.length == 0
-                          ? "Tous"
-                          : plainteType.map((plainte) => {
-                              return (
-                                <>
-                                  {plainte == "claim"
-                                    ? " Réclamations,"
-                                    : plainte == "suggestion"
-                                    ? " Suggestion,"
-                                    : plainte == "denunciation"
-                                    ? " Dénonciation,"
-                                    : ""}
-                                </>
-                              );
-                            })}
-                        <br />
-                      </li>
-                      <li>
-                        <>Etat de plainte:</>
-                        {etatState.length == 0
-                          ? " Tous"
-                          : etatState.map((etat) => {
-                              return (
-                                <>
-                                  {etat == "traite"
-                                    ? " Résolue,"
-                                    : etat == "nontraite"
-                                    ? " A traiter,"
-                                    : etat == "approuver"
-                                    ? " Approuver,"
-                                    : etat == "desapprouver"
-                                    ? " Desapprouver,"
-                                    : etat == "satisfait"
-                                    ? " Satisfait,"
-                                    : etat == "nonsatisfaire"
-                                    ? " Non satisfait,"
-                                    : etat == "affecte"
-                                    ? " Affecter,"    
-                                    : ""}
-                                </>
-                              );
-                            })}
-                        <br />
-                      </li>
-                      
-                      <li>
-                        Unité operationelle:
-                        {unit.length == 0
-                          ? "Tous"
-                          : unit.map((u) => {
-                              return <> {u},</>;
-                            })}
-                        <br />
-                        <br />
-                      </li> */}
+                     
                       <li>
                         <b>
-                          {t("RapportGenererpar")}: {userAuth.firstAndLastName}
+                         Générer par: {userAuth.firstAndLastName}
                         </b>
                       </li>
                     </ul>
@@ -5529,7 +4615,7 @@ const Global = (props) => {
                             fontWeight: "bold",
                           }}
                         >
-                          {t("RapportGlobalReclamations")}
+                          Réclamations
                         </span>
                         <br />
                       </div>
@@ -5556,7 +4642,7 @@ const Global = (props) => {
                                     fontWeight: "bold",
                                   }}
                                 >
-                                  {t("RapportGlobalStatistiqueReclamAgence")}
+                                  Statistiques des réclamations par agences
                                 </span>
                                 <br />
                               </div>
@@ -5578,9 +4664,8 @@ const Global = (props) => {
                                     fontWeight: "bold",
                                   }}
                                 >
-                                  {t(
-                                    "RapportGlobalStatistiqueModaliteDepotReclam"
-                                  )}
+                                  Statistiques des modalités de dépôt
+                                  réclamations
                                 </span>
                                 <br />
                               </div>
@@ -5602,7 +4687,7 @@ const Global = (props) => {
                                     fontWeight: "bold",
                                   }}
                                 >
-                                  {t("RapportGlobalStatistiqueObjetsReclam")}
+                                  Statistiques des objets des réclamations
                                 </span>
                                 <br />
                               </div>
@@ -5624,7 +4709,7 @@ const Global = (props) => {
                                     fontWeight: "bold",
                                   }}
                                 >
-                                  {t("RapportGlobalStatistiqueReclamGenre")}
+                                  Statistiques des réclamations par genre
                                 </span>
                                 <br />
                               </div>
@@ -5646,9 +4731,8 @@ const Global = (props) => {
                                     fontWeight: "bold",
                                   }}
                                 >
-                                  {t(
-                                    "RapportGlobalStatistiqueReclamNivGravity"
-                                  )}
+                                  Statistiques des réclamations par niveaux de
+                                  gravité
                                 </span>
                                 <br />
                               </div>
@@ -5670,9 +4754,7 @@ const Global = (props) => {
                                     fontWeight: "bold",
                                   }}
                                 >
-                                  {t(
-                                    "RapportGlobalStatistiqueSatisfactionReclamant"
-                                  )}
+                                  Statistiques de la satisfaction des réclamants
                                 </span>
                                 <br />
                               </div>
@@ -5691,7 +4773,7 @@ const Global = (props) => {
                                     fontWeight: "bold",
                                   }}
                                 >
-                                  {t("RapportGlobalStatistiqueReclamations")}
+                                  Statistiques des réclamations
                                 </span>
                                 <br />
                                 {claimTableStat()}
@@ -5703,7 +4785,7 @@ const Global = (props) => {
                     ) : (
                       <div className="row mt-1 mb-3 center">
                         <span style={{ fontSize: "20px", fontWeight: "bold" }}>
-                          {t("RapportGlobalAucuneReclamCorrespondCritere")}
+                        Aucune réclamation ne correspond aux critères de tri
                         </span>
                       </div>
                     )}
@@ -5721,7 +4803,7 @@ const Global = (props) => {
                             fontWeight: "bold",
                           }}
                         >
-                          {t("RapportGlobalDenonce")}
+                         Dénonciations
                         </span>
                         <br />
                       </div>
@@ -5734,7 +4816,7 @@ const Global = (props) => {
                     </div>
                     {props.denunReport.length != 0 ? (
                       <>
-                        <div className="row">
+                       <div className="row">
                           <div className="col l12 mb-4" id="toeDenun">
                             <span
                               className="mt-2"
@@ -5743,7 +4825,7 @@ const Global = (props) => {
                                 fontWeight: "bold",
                               }}
                             >
-                              {t("RapportGlobalStatistiqueDenonce")}
+                              Statistiques des dénonciations par agences
                             </span>
                             <br />
                             {denunByAgenceChart}
@@ -5756,9 +4838,8 @@ const Global = (props) => {
                                 fontWeight: "bold",
                               }}
                             >
-                              {t(
-                                "RapportGlobalStatistiqueModaliteDepotDenonce"
-                              )}
+                              Statistiques des modalités de dépôt des
+                              dénonciations
                             </span>
                             <br />
                             <div className="col l12 s12 m12">
@@ -5773,7 +4854,7 @@ const Global = (props) => {
                                 fontWeight: "bold",
                               }}
                             >
-                              {t("RapportGlobalStatistiqueObjetDenonce")}
+                              Statistiques des objets des dénonciations
                             </span>
                             <br />
                             <div className="col l12 s12 m12">
@@ -5788,7 +4869,8 @@ const Global = (props) => {
                                 fontWeight: "bold",
                               }}
                             >
-                              {t("RapportGlobalStatistiqueDenonceNivGravity")}
+                              Statistiques des dénonciations par niveau de
+                              gravité
                             </span>
                             <br />
                             <div className="col l12 s12 m12">
@@ -5804,7 +4886,7 @@ const Global = (props) => {
                                   fontWeight: "bold",
                                 }}
                               >
-                                {t("RapportGlobalStatistiqueDenonciations")}
+                                Statistiques des dénonciations
                               </span>
                               <br />
                               {denunTableStat()}
@@ -5815,7 +4897,7 @@ const Global = (props) => {
                     ) : (
                       <div className="row mt-1 mb-3 center">
                         <span style={{ fontSize: "20px", fontWeight: "bold" }}>
-                          {t("RapportGlobalAucuneDenonceCorrespondCritere")}
+                        Aucune denonciation ne correspond aux critères de tri
                         </span>
                       </div>
                     )}
@@ -5833,7 +4915,7 @@ const Global = (props) => {
                             fontWeight: "bold",
                           }}
                         >
-                          {t("RapportGlobalSuggestion")}
+                          Suggestions
                         </span>
                         <br />
                       </div>
@@ -5855,7 +4937,7 @@ const Global = (props) => {
                                   fontWeight: "bold",
                                 }}
                               >
-                                {t("RapportGlobalStatisqueSuggestionAgence")}
+                                Statistiques des suggestions par agences
                               </span>
                               <br />
                             </div>
@@ -5873,9 +4955,7 @@ const Global = (props) => {
                                   fontWeight: "bold",
                                 }}
                               >
-                                {t(
-                                  "RapportGlobalStatistiqueModaliteDepotSuggestion"
-                                )}
+                                Statistiques des modalités de dépôt suggestions
                               </span>
                               <br />
                             </div>
@@ -5893,7 +4973,7 @@ const Global = (props) => {
                                   fontWeight: "bold",
                                 }}
                               >
-                                {t("RapportGlobalStatistiqueSuggestionGenre")}
+                                Statistiques des suggestions par genre
                               </span>
                               <br />
                             </div>
@@ -5910,7 +4990,7 @@ const Global = (props) => {
                                   fontWeight: "bold",
                                 }}
                               >
-                                {t("RapportGlobalStatistiqueSuggestion")}
+                                Statistiques des suggestions
                               </span>
                               <br />
                               {sugTableStat()}
@@ -5921,7 +5001,7 @@ const Global = (props) => {
                     ) : (
                       <div className="row mt-1 mb-3 center">
                         <span style={{ fontSize: "20px", fontWeight: "bold" }}>
-                          {t("RapportGlobalAucuneSuggestionCorrespondCritere")}
+                        Aucune suggestion ne correspond aux critères de tri
                         </span>
                       </div>
                     )}

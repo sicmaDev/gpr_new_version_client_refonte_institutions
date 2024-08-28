@@ -113,6 +113,7 @@ import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineOppositeContent from "@mui/lab/TimelineOppositeContent";
 import TimelineDot from "@mui/lab/TimelineDot";
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import {
   Avatar,
   Card,
@@ -1026,22 +1027,51 @@ const TraiterReclamation = (props) => {
       sortable: true,
       cell: (claim, index) => {
        
+       
         let codi;
         if (claim.session !==null && claim.session !=="") {
-          codi = (
-          <>
-            <div className="df">
-              <span className="mr-1">{claim.code}</span>
-              <div className="card-content red-text ml-4"><ForumIcon/></div>
-            </div>
-            
-          </>
-            
-          );
+          if (claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+            codi = (
+              <>
+                <div className="df">
+                  <span className="mr-1">{claim.code}</span>
+                  <div className="card-content red-text ml-4"><AlternateEmailIcon/></div>
+                  <div className="card-content red-text ml-4"><ForumIcon/></div>
+                </div>
+                
+              </>
+            );
+          } else {
+            codi = (
+              <>
+                <div className="df">
+                  <span className="mr-1">{claim.code}</span>
+                  <div className="card-content red-text ml-4"><ForumIcon/></div>
+                </div>
+                
+              </>
+              
+            );
+          }
+         
+          
         }else{
-          codi = (
-            <span className="">{claim.code}</span>
-          );
+          if (claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+            codi = (
+              <>
+                <div className="df">
+                  <span className="mr-1">{claim.code}</span>
+                  <div className="card-content red-text ml-4"><AlternateEmailIcon/></div>
+                </div>
+                
+              </>
+            );
+          } else {
+            codi = (
+              <span className="">{claim.code}</span>
+            );
+          }
+         
         }
 
         return codi;
@@ -2717,19 +2747,115 @@ const TraiterReclamation = (props) => {
           <span className="">Affectée</span>
         </span>
       );
+      let tmp;
+      let afForm;
+      let personAffect = 
+      <>
+       {/* details affectation */}
+       <div className="row">
+        <div className="col s12 pb-2">
+            Réclamation affectée à{" "}
+            <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
+            {props.assigned_by} le {formatDate(props.assignedAt)}
+          </div>
+        </div>
+      </>
+     
+
+       //ils peuvent reaffecter les réclamations en cas d'erreur ou d'indisponibilité
+      
+        afForm= (
+          <>
+           <div className="row mb-4">
+              <form id="claimAssignForm">
+                <div className="row">
+                  <div className="col s12">
+                    <details>
+                      <summary className="text-details">
+                        Réaffectation de la réclamation
+                      </summary>
+
+                      <div className="col s12 input-field">
+                        <Select
+                          options={agentsMailOptions}
+                          className="react-select-container mt-4"
+                          classNamePrefix="react-select"
+                          style={styles}
+                          placeholder="Sélectionner l'agent"
+                          onChange={(e) => {
+                            props.handledByChanged(e.value);
+                            setAffectEmail(e.email);
+                          }}
+                        />
+                        <label htmlFor="gender" className={"active"}>
+                          Affectée à
+                          <span>
+                            (<span className="red-text darken-2 ">*</span>)
+                          </span>
+                        </label>
+                        <small className="errorTxt4">
+                          <div id="cpassword-error" className="error">
+                            {props.errors !== undefined
+                              ? props.errors.handled_by
+                              : ""}
+                          </div>
+                        </small>
+                      </div>
+                      <div className="col s12 input-field mb-2">
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              onChange={(e) => {
+                                handleAnonymat();
+                              }}
+                            />
+                          }
+                          label="Cacher l'identité du plaignant ? "
+                        />
+                      </div>
+                      <div className="col s12 display-flex justify-content-end mt-3">
+
+                     
+                            <LoadingButton
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (handleValidationForAssign()) {
+                                  //setShowSelectPrintItem(true);
+                                  handleAssign(e);
+                                }
+                                props.claimHandleErrors(errors);
+                              }}
+                              className="waves-effect waves-effect-b waves-light btn-small"
+                              loading={props.etat}
+                              loadingPosition="end"
+                              endIcon={<SaveIcon />}
+                              variant="contained"
+                              sx={{
+                                backgroundColor: "#1e2188",
+                                textTransform: "initial",
+                              }}
+                          >
+                            <span>Affecter</span>
+                            </LoadingButton>
+                         
+                        
+                        
+                      
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </>
+        );
+       
 
       if(props.solution?.length === 0){
 
         if (props.handled_by === user.firstAndLastName) {
-          treatForm = (
+          tmp = (
             <div className="row">
-              {/* details affectation */}
-              <div className="col s12 pb-2">
-                Réclamation affectée à{" "}
-                <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-                {props.assigned_by} le {formatDate(props.assignedAt)}
-              </div>
-    
               {/* resolution */}
               {props.authorize ? (
                 <form id="claimHandleAgainForm">
@@ -2819,6 +2945,7 @@ const TraiterReclamation = (props) => {
                     </div>
                   </div>
                 </form>
+                
               ) : (
                 <div className="row">
                   <div className="col s12">
@@ -2840,9 +2967,29 @@ const TraiterReclamation = (props) => {
               )}
             </div>
           );
+
+          if (hbt.includes("H6") || addR === "PILOTE") {
+            treatForm = (
+              <>
+                {personAffect}
+                {afForm}
+                {tmp}
+               
+              </>
+            );
+          } else {
+            treatForm = (
+              <>
+                {personAffect}
+                {tmp}
+               
+              </>
+            );
+          }
+         
         } else {
           if (hbt.includes("H14") || addR !== "MOLDUE") {
-            treatForm = (
+            tmp = (
               <div className="row">
                 <div className="col s12 pb-2">
                   Réclamation affectée à{" "}
@@ -2851,15 +2998,28 @@ const TraiterReclamation = (props) => {
                 </div>
               </div>
             )
+            
           }else{
-            treatForm=""
+            tmp=""
           }
+
+          if (hbt.includes("H6") || addR === "PILOTE") {
+            treatForm = (
+              <>
+                {afForm}
+                {tmp}
+                
+              </>
+            );
+          } else {
+            treatForm = <>{tmp}</>;
+          }
+
           
         }
       }else{
        
-
-         // console.log("props.handle_by",props.handled_by)
+        // console.log("props.handle_by",props.handled_by)
         if (props.handled_by === user.firstAndLastName) {
           treatForm = (
             <>

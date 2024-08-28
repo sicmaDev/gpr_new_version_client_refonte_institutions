@@ -15,7 +15,6 @@ import {
 import { licenseInfo } from "../../apis/LoginApi";
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { useTranslation } from "react-i18next";
 import { KTApp } from "../../Utils/blockui";
 import { notify } from "../../Utils/alert";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Input } from "@mui/material";
@@ -65,7 +64,7 @@ const Email = (props) => {
                 props.userChanged(appMail.user)
                 props.hostChanged(appMail.host)
                 props.portChanged(appMail.port)
-                props.passwordChanged(appMail.logo)
+                props.passwordChanged(appMail.pwd)
 
             } else {
             }
@@ -102,9 +101,7 @@ const Email = (props) => {
        
     }, []);
 
-    const { t } = useTranslation();
-    const stepList = [t("configurationEmailTitre"),t("configurationEmailDescription"),t("configurationEmailServer"),t("configurationEmailText"),t("configurationEmailPort"),t("configurationEmailPassword"),t("configurationEmailButtonSave"),t("configurationEmailActiveLicence")];
-
+   
 
     const [actif, setActif] = useState();
   
@@ -152,6 +149,7 @@ const Email = (props) => {
         return isValid
     }
 
+  
 
 
     const handleSubmit = (e) => {
@@ -173,9 +171,9 @@ const Email = (props) => {
     }
 
     return (
-        <>
-            <div className="card-panel">
-            <Dialog open={showTestModal} onClose={(e) => { setShowTestModal(false) }}>
+        <> 
+        <div className="card-panel">
+                <Dialog open={showTestModal} onClose={(e) => { setShowTestModal(false) }}>
                     <DialogTitle >
                         Vérification de la configuration
                     </DialogTitle>
@@ -243,9 +241,11 @@ const Email = (props) => {
 
                     </DialogActions>
                 </Dialog>
+           
+          
                 <div className="row mb-2">
-                    <div className="col s12"><h6 className="card-title">{t("configurationEmailTitre")}</h6>
-                        <p>{t("configurationEmailDescription")}</p></div>
+                    <div className="col s12"><h6 className="card-title">Serveur mail</h6>
+                        <p>Il s'agit d'enregistrer les accès à votre serveur mail pour pouvoir envoyez des mails</p></div>
                 </div>
                 <form id="accountForm" onSubmit={handleSubmit}>
                     <div className="row">
@@ -257,7 +257,7 @@ const Email = (props) => {
                                         className="validate" value={props.host}
                                         onChange={(e) => props.hostChanged(e.target.value)}
                                         data-error=".errorTxt1" />
-                                    <label htmlFor="host" className={"active"}>{t("configurationEmailServer")} {"(Host)"}</label>
+                                    <label htmlFor="host" className={"active"}>Serveur {"(Host)"}</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error"></div>
                                     </small></div>
@@ -266,7 +266,7 @@ const Email = (props) => {
                                         className="validate" value={props.user}
                                         onChange={(e) => props.userChanged(e.target.value)}
                                         data-error=".errorTxt1" />
-                                    <label htmlFor="user" className={"active"}>{t("configurationEmailText")}(User)</label>
+                                    <label htmlFor="user" className={"active"}>Utilisateur mail (User)</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error"></div>
                                     </small>
@@ -283,7 +283,7 @@ const Email = (props) => {
                                         className="validate materialize-textarea" value={props.port}
                                         onChange={(e) => props.portChanged(e.target.value)}
                                         data-error=".errorTxt2" />
-                                    <label htmlFor="port" className={"active"}>{t("configurationEmailPort")}</label>
+                                    <label htmlFor="port" className={"active"}>Port</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error"></div>
                                     </small>
@@ -293,7 +293,7 @@ const Email = (props) => {
                                         onChange={(e) => props.passwordChanged(e.target.value)}
                                         className=""
                                         value={props.password} />
-                                    <label htmlFor="password" className={"active"}>{t("configurationEmailPassword")} {"(Password)"}</label>
+                                    <label htmlFor="password" className={"active"}>Mot de Passe {"(Password)"}</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error"></div>
                                     </small>
@@ -316,8 +316,8 @@ const Email = (props) => {
                         </div>
 
                         <div className="col s12 display-flex justify-content-end mt-3">
-                            { (actif !== undefined && actif)  ? (
-                                <>
+                           
+                            <>
                                 <LoadingButton
                                         className="btn  waves-light mr-1 btn-small"
                                         onClick={(e) => {
@@ -338,16 +338,10 @@ const Email = (props) => {
                                     variant="contained"
                                     sx={{ textTransform:"initial" }}
                                 >
-                                    <span>{t("configurationEmailButtonSave")}</span>
-                                </LoadingButton></>
-                            ) :
-                                (<div className="card-alert card red lighten-5">
-                                    <div className="card-content red-text">
-                                        <ul>
-                                            {t("configurationEmailActiveLicence")}.
-                                        </ul>
-                                    </div>
-                                </div>)}
+                                    <span>Enregistrer</span>
+                                </LoadingButton>
+                            </>
+                           
                         </div>
                     </div>
                 </form>
