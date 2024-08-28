@@ -251,7 +251,8 @@ const PointsServices = (props) => {
 
         })
         .catch(function (error) {
-            notify("Erreur - Le compte n'a pas été désactivé","error")
+            
+            notify(`Erreur - Le point de service n'a pas été ${isDisabled ? "désactivé" :"activé"}`,"error")
         });
 
     }

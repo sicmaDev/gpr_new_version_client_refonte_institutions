@@ -102,13 +102,13 @@ const Utilisateurs = (props) => {
         e.stopPropagation();
 
         disabled(props,id,isDisabled).then(function (response) {
-            notify(`Bravo - Le point de service a été ${isDisabled ? "désactivé" :"activé"} avec succes`,"success")
+            notify(`Bravo - Le compte de l'utilisateur a été ${isDisabled ? "désactivé" :"activé"} avec succes`,"success")
             all(props).then((r) => { });
             handleCancel(e)
 
         })
         .catch(function (error) {
-            notify("Erreur - Le compte n'a pas été désactivé","error")
+            notify(`Erreur - Le compte de l'utilisateur n'a pas été ${isDisabled ? "désactivé" :"activé"}`,"error")
         });
 
     }
