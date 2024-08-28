@@ -5,11 +5,12 @@ import {  isAuth } from "../redux/actions/LayoutActions";
 // import {claimColorChanged, denunColorChanged} from "../redux/actions/alert/headerActions"
 
 import { loadItemFromSessionStorage, sleep } from "../Utils/utils"
-import  { notify } from "../Utils/alert";
+import  Alert, { notify } from "../Utils/alert";
 import Template2 from "./template2";
 import { connect } from "react-redux";
 import { saveAuthDataToLocal, userAuthDetail } from "../apis/CheckToken";
 import Login from "../pages/Login";
+import Modal from "../Utils/modal";
 
 
 const Layout = (props) => {
@@ -77,6 +78,8 @@ const Layout = (props) => {
 
     return (
         <>
+          <Alert />
+          <Modal />
             {isLoading ?
                 <>
                     <div style={{ width: "100vw", height: "100vh", backgroundColor: "#005081", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>

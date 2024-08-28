@@ -182,6 +182,7 @@ const EnregistrerDenonciation = (props) => {
     let agencyOptions
     let directionOptions
     let guichetOptions
+    units  = units.filter((un)=> !un.deleted)
     let unitsGroupByType = (units!==undefined)? groupBy(units, "type"): undefined;
     //
     if (unitsGroupByType!== undefined && unitsGroupByType["AGENCE"] !== undefined) {

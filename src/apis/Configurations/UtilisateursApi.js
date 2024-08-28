@@ -5,6 +5,10 @@ import { HOST } from "../../Utils/globals";
 
 // GET
 const GET_SETTING_API = HOST + "api/v1/config/user/list/false"
+//All
+const GET_SETTING_ALL_API = HOST + "api/v1/config/user/list"
+//All
+const GET_SETTING_DISABLED_API = HOST + "api/v1/config/user/disabled"
 // ADD
 const ADD_SETTING_API = HOST + "api/v1/config/user/register"
 // PUT
@@ -37,6 +41,46 @@ export let liste = async (props) => {
         .catch(function (error) {
            
         });
+}
+export let all = async (props) => {
+
+    const config = {
+        method: 'GET',
+        url: GET_SETTING_ALL_API,
+        headers: {
+            
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    await axios(config)
+        .then(function (response) {
+            //console.log("reponse", response.data)
+            if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
+                saveItemToSessionStorage(JSON.stringify(response.data.content),"app-users")
+                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
+                props.itemsChanged(response.data.content);
+                // console.log("reponseuser", response.data.content)
+            }
+
+        })
+        .catch(function (error) {
+           
+        });
+}
+
+export let disabled = async (props,id,isDisabled) => {
+
+    const config = {
+        method: 'DELETE',
+        url: `${GET_SETTING_DISABLED_API}/${id}/${isDisabled}`,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    return axios(config)
+        
 }
 
 export const ajout = async (data, props) => {
