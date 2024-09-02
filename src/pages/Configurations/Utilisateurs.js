@@ -18,7 +18,7 @@ import {cleanPhoneNumber, isValidMdp, isValidPhone, loadItemFromSessionStorage, 
 // import {useOnScreen} from "../../utils/custom_hooks";
 import {modalify} from "../../Utils/modal";
 import { connect } from "react-redux";
-import { ajout, liste, modification, suppression } from "../../apis/Configurations/UtilisateursApi";
+import { ajout, all, disabled, liste, modification, suppression } from "../../apis/Configurations/UtilisateursApi";
 // import IntlTelInput from 'react-intl-tel-input';
 // import 'react-intl-tel-input/dist/main.css';
 import excel from '../../assets/images/excel.svg'
@@ -32,6 +32,9 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import { licenseInfo } from "../../apis/LoginApi";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { Chip } from "@mui/material";
+import { Block, TaskAlt } from "@mui/icons-material";
+import { notify } from "../../Utils/alert";
 
 
 const styles = {
@@ -66,7 +69,7 @@ const Utilisateurs = (props) => {
     let users = loadItemFromLocalStorage("app-users") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-users")) : undefined;
     let nba = users !== undefined ? users.length : 0;
     useEffect(() => {
-        liste(props).then((r) => {});
+        all(props).then((r) => {});
       
         window.$('.tooltipped').tooltip();
         //cleanup
@@ -93,6 +96,27 @@ const Utilisateurs = (props) => {
   
       fetchData();
     }, []);
+
+    const handleDisable = (e,id,isDisabled=true) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        disabled(props,id,isDisabled).then(function (response) {
+            notify(`Bravo - Le compte de l'utilisateur a été ${isDisabled ? "désactivé" :"activé"} avec succes`,"success")
+            all(props).then((r) => { });
+            handleCancel(e)
+
+        })
+        .catch(function (error) {
+            notify(`Erreur - Le compte de l'utilisateur n'a pas été ${isDisabled ? "désactivé" :"activé"}`,"error")
+        });
+
+    }
+    const handleDisabledModal = (e,spId) => {
+        e.stopPropagation();
+    
+        modalify("Confirmation", "Voulez-vous vraiment désactivé ce compte ?", "confirm", (e)=>{handleDisable(e,spId)})
+    }
 
     let code;
     let columns = [
@@ -164,6 +188,9 @@ const Utilisateurs = (props) => {
             align: "left",
             sortable: true,
             cell: (user, index) => {
+                if (user.deleted) {
+                    return <div style={{ display: "flex", alignItems: "center" }}><Block color="darkred" fontSize="10px" /><div><i style={{color:"lightgray"}}>{user.code}</i><br /><i className="truncate" style={{color:"lightgray"}}>{user.firstAndLastName}</i></div></div>
+                }
                 return (<><span>{user.code}</span><br /><span className="truncate">{user.firstAndLastName}</span> <br /></>)
             }
         },
@@ -179,6 +206,10 @@ const Utilisateurs = (props) => {
                     if(user.additionalRole==="DE") additionalRole = "Directeur Exécutif";
                     if(user.additionalRole==="PILOTE") additionalRole ="Pilote";
                 }
+                if (user.deleted) {
+                    return (<><i style={{color:"lightgray"}}>{user.posteDto.libelle}</i><br /><i style={{color:"lightgray"}} className="truncate">{user.servicePointDto.libelle}</i> <br /><i style={{color:"lightgray"}}>{additionalRole}</i></>)
+                
+                }
                 return (<><span>{user.posteDto.libelle}</span><br /><span className="truncate">{user.servicePointDto.libelle}</span> <br /><span>{additionalRole}</span></>)
             }
         },
@@ -189,6 +220,9 @@ const Utilisateurs = (props) => {
             align: "left",
             sortable: true,
             cell: (user, index) => {
+                if (user.deleted) {
+                    return ( <><i className="truncate" style={{color:"lightgray"}}>{user.email}</i> <br /> <i className="truncate" style={{color:"lightgray"}}>{user.tel}</i></>)
+                }
                 return ( <><span className="truncate">{user.email}</span> <br /> <span className="truncate">{user.tel}</span></>)
             }
         },
@@ -205,7 +239,26 @@ const Utilisateurs = (props) => {
                     month: "long",
                     day: "2-digit"
                 }).format(new Date(user.createdAt));
+                if (user.deleted) {
+                    return <i style={{color:"lightgray"}}>{createdAt}</i>
+                }
                 return (createdAt);
+            }
+        },
+        {
+            key: "action",
+            text: "Actions",
+            className: "action",
+            align: "left",
+            cell: (user) => {
+                if (user.deleted) {
+                    return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e,user.id,false)} icon={<TaskAlt />}  />
+                }else{
+                    return  <Chip label="Désactiver ?"  onClick={(e) => handleDisabledModal(e,user.id)} icon={<Block  />} variant="outlined" />
+                   
+                }
+             
+
             }
         },
     ];

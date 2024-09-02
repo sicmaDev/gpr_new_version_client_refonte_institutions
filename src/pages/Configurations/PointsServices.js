@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import Select from "react-select";
 import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
@@ -17,18 +17,21 @@ import {
 import { connect } from "react-redux";
 import excel from '../../assets/images/excel.svg'
 import pdf from '../../assets/images/pdf.svg'
-import {loadItemFromSessionStorage, today} from "../../Utils/utils";
-import {modalify} from "../../Utils/modal";
+import { loadItemFromSessionStorage, today } from "../../Utils/utils";
+import { modalify } from "../../Utils/modal";
 import ee from "event-emitter";
-import { ajout, liste, modification, suppression } from "../../apis/Configurations/PointsServicesApi";
-import {handlePrint} from "../../Utils/tables";
-import {table2XLSX} from "../../Utils/tabletoexcel";
+import { ajout, all, disabled, modification, suppression } from "../../apis/Configurations/PointsServicesApi";
+import { handlePrint } from "../../Utils/tables";
+import { table2XLSX } from "../../Utils/tabletoexcel";
 import BorderColorIcon from '@mui/icons-material/BorderColor';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { Block, BlockOutlined, PersonOff, TaskAlt } from "@mui/icons-material";
+import { notify } from "../../Utils/alert";
+import { Chip } from "@mui/material";
 
 const emitter = new ee();
 const styles = {
@@ -37,13 +40,13 @@ const styles = {
         height: 35,
         minHeight: 35
     }),
-    menu: provided => ({...provided, zIndex: 9999})
+    menu: provided => ({ ...provided, zIndex: 9999 })
 };
 const PointsServices = (props) => {
     useEffect(() => {
-        liste(props).then((r) => {});
-        
-        emitter.on('confirm',(e) => {
+        all(props).then((r) => { });
+
+        emitter.on('confirm', (e) => {
             handleDelete(e);
         });
         window.$('.tooltipped').tooltip();
@@ -60,38 +63,60 @@ const PointsServices = (props) => {
             className: "name",
             align: "left",
             sortable: true,
+            cell: (sp) => {
+                let libelle = sp.libelle;
+                if (sp.deleted)
+                    return <div style={{ display: "flex", alignItems: "center" }}><Block color="darkred" fontSize="10px" /><i style={{ color: "lightgray" }}>{libelle}</i></div>
+                return libelle;
+            },
+
         },
         {
             key: "description",
             text: "Description",
             className: "description",
             align: "left",
-            sortable: true
+            sortable: true,
+            cell: (sp) => {
+                let description = sp.description;
+                if (sp.deleted)
+                    return <i style={{ color: "lightgray" }}>{description}</i>
+                return description;
+            },
         },
         {
             key: "type",
             text: "Type",
             className: "type",
             align: "left",
-            sortable: true
+            sortable: true,
+            cell: (sp) => {
+                let type = sp.type;
+                if (sp.deleted)
+                    return <i style={{ color: "lightgray" }}>{type}</i>
+                return type;
+            },
         },
-        // {
-        //     key: "action",
-        //     text: "Actions",
-        //     className: "action",
-        //     align: "left",
-        //     cell: () => {
-        //         return (<>
-        //         <span onClick={rowClickedHandler}><BorderColorIcon/></span>
-        //         <span className=""><DeleteForeverIcon/></span>
-        //         </>)
-        //     }
-        // },
+        {
+            key: "action",
+            text: "Actions",
+            className: "action",
+            align: "left",
+            cell: (sp) => {
+                if (sp.deleted) {
+                    return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e,sp.id,false)} icon={<TaskAlt />}  />
+                }else{
+                    return  <Chip label="Désactiver ?"  onClick={(e) => handleDisabledModal(e,sp.id)} icon={<Block  />} variant="outlined" />
+                   
+                }
+             
+            }
+        },
     ];
 
     let config = {
         page_size: 15,
-        length_menu: [ 15, 25, 50, 100],
+        length_menu: [15, 25, 50, 100],
         show_filter: true,
         show_pagination: true,
         filename: "Points de Services",
@@ -104,14 +129,14 @@ const PointsServices = (props) => {
             length_menu: "Afficher _MENU_ éléments",
             filter: "Rechercher...",
             info: "Affichage de l'élement _START_ à _END_ sur _TOTAL_ éléments",
-            zero_records:    "Aucun élément à afficher",
+            zero_records: "Aucun élément à afficher",
             no_data_text: "Aucun élément à afficher",
             loading_text: "Chargement en cours...",
             pagination: {
-                first: <FirstPageIcon/>,
-                previous: <ChevronLeftIcon/>,
-                next: <ChevronRightIcon/>,
-                last: <LastPageIcon/>
+                first: <FirstPageIcon />,
+                previous: <ChevronLeftIcon />,
+                next: <ChevronRightIcon />,
+                last: <LastPageIcon />
             }
         }
     }
@@ -119,9 +144,9 @@ const PointsServices = (props) => {
     let typeOptions
     if (props.type !== undefined) {
         typeOptions = [
-            {"label": "Direction", "value": "DIRECTION" },
-            {"label": "Agence", "value": "AGENCE" },
-            {"label": "Guichet", "value": "GUICHET" },
+            { "label": "Direction", "value": "DIRECTION" },
+            { "label": "Agence", "value": "AGENCE" },
+            { "label": "Guichet", "value": "GUICHET" },
         ]
 
     } else {
@@ -143,10 +168,10 @@ const PointsServices = (props) => {
             isValid = false;
             errors["type"] = "Champ incorrect";
         }
-       
+
         return isValid
     }
-    const  clearComponentState = ()=> {
+    const clearComponentState = () => {
         props.idChanged("")
         props.libelleChanged("")
         props.typeChanged("")
@@ -160,7 +185,7 @@ const PointsServices = (props) => {
             item["type"] = props.type;
             item["libelle"] = props.libelle;
             item["description"] = props.description;
-           
+
             props.etatChanged(true)
             ajout(item, props).then(() => {
                 handleCancel(e)
@@ -173,16 +198,16 @@ const PointsServices = (props) => {
     const handleEdit = (e) => {
         e.preventDefault()
         if (handleValidation()) {
-           
+
             //Create updated version of selected item
             let item = {}
             item["id"] = props.id;
             item["libelle"] = props.libelle;
             item["type"] = props.type;
             item["description"] = props.description;
-          
+
             props.etat2Changed(true)
-            modification (item, props).then(() => {
+            modification(item, props).then(() => {
                 handleCancel(e)
             })
 
@@ -190,6 +215,12 @@ const PointsServices = (props) => {
         } else {
         }
         props.psErrors(errors)
+    }
+    const handleDisabledModal = (e,spId) => {
+        e.stopPropagation();
+    
+
+        modalify("Confirmation", "Voulez-vous vraiment désactivé ce compte ?", "confirm", (e)=>{handleDisable(e,spId)})
     }
     const handleModal = (e) => {
         e.preventDefault()
@@ -201,26 +232,43 @@ const PointsServices = (props) => {
     }
     const handleDelete = (e) => {
         e.preventDefault()
+        
         props.etat3Changed(true)
         suppression(props).then(() => {
             handleCancel(e)
         })
-        
+
         props.psErrors(errors)
     }
+    const handleDisable = (e,id,isDisabled=true) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        disabled(props,id,isDisabled).then(function (response) {
+            notify(`Bravo - Le point de service a été ${isDisabled ? "désactivé" :"activé"} avec succes`,"success")
+            all(props).then((r) => { });
+            handleCancel(e)
+
+        })
+        .catch(function (error) {
+            
+            notify(`Erreur - Le point de service n'a pas été ${isDisabled ? "désactivé" :"activé"}`,"error")
+        });
+
+    }
     const rowClickedHandler = (event, data, rowIndex) => {
-        props.idChanged(data.id?data.id:"")
-        props.typeChanged(data.type?data.type:"")
-        props.libelleChanged(data.libelle?data.libelle:"")
-        props.typeChanged(data.type?data.type:"")
-        props.descriptionChanged(data.description?data.description:"")
-        props.selectedItemChanged(data?data:{})
+        props.idChanged(data.id ? data.id : "")
+        props.typeChanged(data.type ? data.type : "")
+        props.libelleChanged(data.libelle ? data.libelle : "")
+        props.typeChanged(data.type ? data.type : "")
+        props.descriptionChanged(data.description ? data.description : "")
+        props.selectedItemChanged(data ? data : {})
     }
-    const  tableChangeHandler = data => {
+    const tableChangeHandler = data => {
     }
-    let titleText = props.selectedItem.id!== undefined ? "Modifier ou Supprimer" : "Ajouter";
-   
-    let buttons = props.selectedItem.id!== undefined ?
+    let titleText = props.selectedItem.id !== undefined ? "Modifier ou Supprimer" : "Ajouter";
+
+    let buttons = props.selectedItem.id !== undefined ?
 
         (<>
             <LoadingButton
@@ -230,7 +278,7 @@ const PointsServices = (props) => {
                 loadingPosition="end"
                 endIcon={<DeleteIcon />}
                 variant="contained"
-                sx={{ textTransform:"initial" }}
+                sx={{ textTransform: "initial" }}
             >
                 <span>Supprimer</span>
             </LoadingButton>
@@ -242,7 +290,7 @@ const PointsServices = (props) => {
                 loadingPosition="end"
                 endIcon={<CancelIcon />}
                 variant="contained"
-                sx={{ textTransform:"initial" }}
+                sx={{ textTransform: "initial" }}
             >
                 <span>Annuler</span>
             </LoadingButton>
@@ -254,11 +302,11 @@ const PointsServices = (props) => {
                 loadingPosition="end"
                 endIcon={<SaveIcon />}
                 variant="contained"
-                sx={{ textTransform:"initial" }}
+                sx={{ textTransform: "initial" }}
             >
                 <span>Modifier</span>
             </LoadingButton>
-           
+
         </>)
         :
         (
@@ -269,13 +317,13 @@ const PointsServices = (props) => {
                 loadingPosition="end"
                 endIcon={<SaveIcon />}
                 variant="contained"
-                sx={{ textTransform:"initial" }}
+                sx={{ textTransform: "initial" }}
             >
                 <span>Ajouter</span>
             </LoadingButton>
-            
+
         )
-    
+
     return (
         <>
             <div className="card-panel">
@@ -284,7 +332,7 @@ const PointsServices = (props) => {
                         <div className="col s12">
                             <h6 className="card-title">{titleText} un point de service</h6>
                             <p>Il s'agit d'enregistrer les agences, guichets de votre institution</p>
-                            
+
                         </div>
                     </div>
 
@@ -292,14 +340,14 @@ const PointsServices = (props) => {
                         <div className="col s12">
                             <div className="input-field">
                                 <input id="uname" name="libelle" type="text"
-                                       data-error=".errorTxt4"
-                                       placeholder=""
-                                       value={props.libelle}
-                                       onChange={(e) => props.libelleChanged(e.target.value)}/>
+                                    data-error=".errorTxt4"
+                                    placeholder=""
+                                    value={props.libelle}
+                                    onChange={(e) => props.libelleChanged(e.target.value)} />
 
                                 <label htmlFor="uname" className="active">Intitulé&nbsp;
                                     <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: Direction Générale, Agence d'Amlamè etc... ">
-                                        <HelpIcon/>
+                                        <HelpIcon />
                                     </a>
                                 </label>
                                 <small className="errorTxt4">
@@ -308,15 +356,15 @@ const PointsServices = (props) => {
                             </div>
                         </div>
                         <div className="col s12 input-field">
-                                    <textarea id="udescription" name="description" type="text"
-                                              className="validate materialize-textarea"
-                                              placeholder=""
-                                              value={props.description}
-                                              onChange={(e) => props.descriptionChanged(e.target.value)}
-                                              data-error=".errorTxt2"/>
+                            <textarea id="udescription" name="description" type="text"
+                                className="validate materialize-textarea"
+                                placeholder=""
+                                value={props.description}
+                                onChange={(e) => props.descriptionChanged(e.target.value)}
+                                data-error=".errorTxt2" />
                             <label htmlFor="udescription" className="active">Description&nbsp;
                                 <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: L'agence de tokoin situé à ... comprend ... et est dirigé par ...">
-                                    <HelpIcon/>
+                                    <HelpIcon />
                                 </a>
                             </label>
                             <small className="errorTxt4">
@@ -332,12 +380,12 @@ const PointsServices = (props) => {
                                     style={styles}
                                     placeholder="Sélectionner le type"
                                     options={typeOptions}
-                                    value={{"label": props.type, "value": props.type }}
+                                    value={{ "label": props.type, "value": props.type }}
                                     onChange={(e) => props.typeChanged(e.value)}
                                 />
-                                <label htmlFor="ulevel" className="active mb-4" style={{top:'-18%'}}>Type&nbsp;
+                                <label htmlFor="ulevel" className="active mb-4" style={{ top: '-18%' }}>Type&nbsp;
                                     <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: Agence, Guichet etc.. ">
-                                        <HelpIcon/>
+                                        <HelpIcon />
                                     </a>
                                 </label>
                                 <small className="errorTxt4">
@@ -346,7 +394,7 @@ const PointsServices = (props) => {
                             </div>
                         </div>
                         <div className="col s12 display-flex justify-content-end form-action">
-                            {buttons}   
+                            {buttons}
                         </div>
                     </div>
                 </form>
@@ -359,16 +407,16 @@ const PointsServices = (props) => {
                                     <div className="col l6 m6 s12">
                                         <h4 className="card-title">Liste des points de services&nbsp;</h4>
                                     </div>
-                                    <div className="col l6 m6 s12" style={{ textAlign:"end" }}>
-                                        <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0)}} />
-                                        <img src={excel} alt="" style={{ cursor:"pointer" }} onClick={(e) => {table2XLSX("Liste_des_unités_opérationnelles" + today().replaceAll("/", ""),"app-ps")}} />
+                                    <div className="col l6 m6 s12" style={{ textAlign: "end" }}>
+                                        <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }} onClick={(e) => { handlePrint(config, columns, props.items, 0) }} />
+                                        <img src={excel} alt="" style={{ cursor: "pointer" }} onClick={(e) => { table2XLSX("Liste_des_unités_opérationnelles" + today().replaceAll("/", ""), "app-ps") }} />
                                     </div>
                                 </div>
-                               
+
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className = {"responsive-table table-xlsx app-ps"}
+                                            className={"responsive-table table-xlsx app-ps"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
@@ -377,7 +425,7 @@ const PointsServices = (props) => {
                                         />
                                     </div>
                                 </div>
-                               
+
                             </div>
                         </div>
                     </div>
