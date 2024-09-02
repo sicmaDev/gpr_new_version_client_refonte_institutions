@@ -271,26 +271,19 @@ const Bot = (props) => {
                                     </span>
                                 </div>
                                 <div className="col s12 display-flex justify-content-start mt-3">
-                                    { (actif !== undefined && actif)  ? (
-                                        <LoadingButton
-                                            className="btn waves-effect waves-light mr-1 btn-small"
-                                            onClick={(e) => handleSubmit(e)}
-                                            loading={props.etat}
-                                            loadingPosition="end"
-                                            endIcon={<SaveIcon />}
-                                            variant="contained"
-                                            sx={{ textTransform:"initial" }}
-                                        >
-                                            <span>Enregistrer</span>
-                                        </LoadingButton>
-                                    ) :
-                                    (<div className="card-alert card red lighten-5">
-                                        <div className="card-content red-text">
-                                            <ul>
-                                                Veuillez activer une licence.
-                                            </ul>
-                                        </div>
-                                    </div>)}
+                                 
+                                    <LoadingButton
+                                        className="btn waves-effect waves-light mr-1 btn-small"
+                                        onClick={(e) => handleSubmit(e)}
+                                        loading={props.etat}
+                                        loadingPosition="end"
+                                        endIcon={<SaveIcon />}
+                                        variant="contained"
+                                        sx={{ textTransform:"initial" }}
+                                    >
+                                        <span>Enregistrer</span>
+                                    </LoadingButton>
+                                    
                                     <LoadingButton
                                             className="btn waves-effect waves-light mr-1 btn-small"
                                             onClick={(e) => genererCode(e)}

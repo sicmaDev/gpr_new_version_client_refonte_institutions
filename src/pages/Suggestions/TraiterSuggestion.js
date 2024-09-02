@@ -399,7 +399,7 @@ const TraiterSuggestion = (props) => {
                 <div className="col s12 display-flex justify-content-end mt-3">
 
                   {
-                    (actif !== undefined && actif)  ?
+                    // (actif !== undefined && actif)  ?
                       <>
                           <LoadingButton
                             onClick={(e) => {
@@ -430,14 +430,14 @@ const TraiterSuggestion = (props) => {
                               <span>Prendre en compte</span>
                           </LoadingButton>
                       </>
-                    :
-                    <div className="card-alert card red lighten-5">
-                      <div className="card-content red-text">
-                          <ul>
-                              Veuillez activer une licence.
-                          </ul>
-                      </div>
-                    </div>
+                    // :
+                    // <div className="card-alert card red lighten-5">
+                    //   <div className="card-content red-text">
+                    //       <ul>
+                    //           Veuillez activer une licence.
+                    //       </ul>
+                    //   </div>
+                    // </div>
                   }
                 </div>
               </details>

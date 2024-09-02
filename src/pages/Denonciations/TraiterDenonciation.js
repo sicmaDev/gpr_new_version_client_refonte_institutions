@@ -2319,7 +2319,7 @@ const TraiterDenonciation = (props) => {
                       
                           <div className="col s12 display-flex justify-content-end mt-3">
                             {
-                                (actif !== undefined && actif)  ?
+                                // (actif !== undefined && actif)  ?
                                 <LoadingButton
                                   onClick={(e) => {
                                     e.preventDefault();
@@ -2341,14 +2341,14 @@ const TraiterDenonciation = (props) => {
                                 >
                                   <span>Affecter</span>
                                 </LoadingButton>
-                              :
-                              <div className="card-alert card red lighten-5">
-                                <div className="card-content red-text">
-                                    <ul>
-                                        Veuillez activer une licence.
-                                    </ul>
-                                </div>
-                              </div>
+                              // :
+                              // <div className="card-alert card red lighten-5">
+                              //   <div className="card-content red-text">
+                              //       <ul>
+                              //           Veuillez activer une licence.
+                              //       </ul>
+                              //   </div>
+                              // </div>
                             }
                           
                           </div>
@@ -2448,7 +2448,7 @@ const TraiterDenonciation = (props) => {
                     </div>
                     <div className="col s12 display-flex justify-content-end">
                       {
-                          (actif !== undefined && actif)  ?
+                          // (actif !== undefined && actif)  ?
                           <LoadingButton
                             onClick={handleSolve}
                             className="waves-effect waves-effect-b waves-light btn-small"
@@ -2463,14 +2463,14 @@ const TraiterDenonciation = (props) => {
                           >
                             <span>Résoudre</span>
                           </LoadingButton>
-                         :
-                          <div className="card-alert card red lighten-5">
-                              <div className="card-content red-text">
-                                <ul>
-                                  Veuillez activer une licence.
-                                </ul>
-                              </div>
-                          </div>
+                        //  :
+                        //   <div className="card-alert card red lighten-5">
+                        //       <div className="card-content red-text">
+                        //         <ul>
+                        //           Veuillez activer une licence.
+                        //         </ul>
+                        //       </div>
+                        //   </div>
 
                       }
                     
@@ -2588,7 +2588,7 @@ const TraiterDenonciation = (props) => {
                       </div>
                       <div className="col s12 display-flex justify-content-end mt-3">
                         {
-                           (actif !== undefined && actif)  ?
+                          //  (actif !== undefined && actif)  ?
                             <LoadingButton
                               onClick={handleSolve}
                               className="waves-effect waves-effect-b waves-light btn-small"
@@ -2603,14 +2603,14 @@ const TraiterDenonciation = (props) => {
                             >
                               <span>Traiter</span>
                             </LoadingButton>
-                          :
-                            <div className="card-alert card red lighten-5">
-                                <div className="card-content red-text">
-                                    <ul>
-                                        Veuillez activer une licence.
-                                    </ul>
-                                </div>
-                            </div>
+                          // :
+                          //   <div className="card-alert card red lighten-5">
+                          //       <div className="card-content red-text">
+                          //           <ul>
+                          //               Veuillez activer une licence.
+                          //           </ul>
+                          //       </div>
+                          //   </div>
                         }
                        
                       </div>
@@ -2760,7 +2760,7 @@ const TraiterDenonciation = (props) => {
                 </div>
                 <div className="col s12 display-flex justify-content-end mt-3">
                   {
-                     (actif !== undefined && actif)  ?
+                    //  (actif !== undefined && actif)  ?
                     <>
                       <LoadingButton
                         onClick={
@@ -2790,14 +2790,14 @@ const TraiterDenonciation = (props) => {
                           <span>Approuver</span>
                       </LoadingButton>
                     </>
-                    :
-                    <div className="card-alert card red lighten-5">
-                      <div className="card-content red-text">
-                          <ul>
-                              Veuillez activer une licence.
-                          </ul>
-                      </div>
-                    </div>
+                    // :
+                    // <div className="card-alert card red lighten-5">
+                    //   <div className="card-content red-text">
+                    //       <ul>
+                    //           Veuillez activer une licence.
+                    //       </ul>
+                    //   </div>
+                    // </div>
 
                   }
                 
@@ -2919,7 +2919,7 @@ const TraiterDenonciation = (props) => {
   
                       <div className="col s12 display-flex justify-content-end mt-3">
                         {
-                           (actif !== undefined && actif)  ?
+                          //  (actif !== undefined && actif)  ?
                             <LoadingButton
                               onClick={handleReSolve}
                               className="waves-effect waves-effect-b waves-light btn-small"
@@ -2934,14 +2934,14 @@ const TraiterDenonciation = (props) => {
                             >
                               <span>Retraiter</span>
                             </LoadingButton>
-                          :
-                          <div className="card-alert card red lighten-5">
-                            <div className="card-content red-text">
-                               <ul>
-                                   Veuillez activer une licence.
-                               </ul>
-                            </div>
-                          </div>
+                          // :
+                          // <div className="card-alert card red lighten-5">
+                          //   <div className="card-content red-text">
+                          //      <ul>
+                          //          Veuillez activer une licence.
+                          //      </ul>
+                          //   </div>
+                          // </div>
                         }
                        
                       </div>
@@ -3126,7 +3126,7 @@ const TraiterDenonciation = (props) => {
   if ((user.firstAndLastName === props.created_by && props.transmitted === "false") || showJoinBtn) {
     if (props.session === "" && props.session.status !== "OPEN") {
       btnS = 
-       (actif !== undefined && actif)  ?
+      //  (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => registerUser(e)}
@@ -3140,18 +3140,18 @@ const TraiterDenonciation = (props) => {
             <span>Ouvrir une session</span>
           </LoadingButton>
         </>
-      :
-        <div className="card-alert card red lighten-5">
-          <div className="card-content red-text">
-              <ul>
-                Veuillez activer une licence.
-              </ul>
-          </div>
-        </div>
+      // :
+      //   <div className="card-alert card red lighten-5">
+      //     <div className="card-content red-text">
+      //         <ul>
+      //           Veuillez activer une licence.
+      //         </ul>
+      //     </div>
+      //   </div>
       
     } else if (props.session !== "" && props.session.status === "OPEN" ) {
       btnS = 
-       (actif !== undefined && actif)  ?
+      //  (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -3165,18 +3165,18 @@ const TraiterDenonciation = (props) => {
             <span>Rejoindre la session</span>
           </LoadingButton>
         </>
-      :
-      <div className="card-alert card red lighten-5">
-        <div className="card-content red-text">
-            <ul>
-                Veuillez activer une licence.
-            </ul>
-        </div>
-      </div>
+      // :
+      // <div className="card-alert card red lighten-5">
+      //   <div className="card-content red-text">
+      //       <ul>
+      //           Veuillez activer une licence.
+      //       </ul>
+      //   </div>
+      // </div>
       
     } else if (props.session !== "" && props.session.status === "CLOSED") {
       btnS = 
-       (actif !== undefined && actif)  ?
+      //  (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -3190,14 +3190,14 @@ const TraiterDenonciation = (props) => {
             <span>Voir la discussion</span>
           </LoadingButton>
         </>
-      :
-      <div className="card-alert card red lighten-5">
-        <div className="card-content red-text">
-            <ul>
-                Veuillez activer une licence.
-            </ul>
-        </div>
-      </div>
+      // :
+      // <div className="card-alert card red lighten-5">
+      //   <div className="card-content red-text">
+      //       <ul>
+      //           Veuillez activer une licence.
+      //       </ul>
+      //   </div>
+      // </div>
       
     } else {
       btnS = "";
