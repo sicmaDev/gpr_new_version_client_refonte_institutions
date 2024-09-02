@@ -1359,7 +1359,7 @@ const Global = (props) => {
                     plugins: {
                       title: {
                         display: true,
-                        text: "Glissement annuel des RSD",
+                        text: "Glissement annuel des RSD (%)",
                         position: "top",
                       },
                       legend: {
@@ -1406,7 +1406,7 @@ const Global = (props) => {
                       title: {
                         display: true,
                         text: "Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)",
-                        position: "bottom",
+                        position: "top",
                       },
                       legend: {
                         position: "bottom",
@@ -1441,8 +1441,8 @@ const Global = (props) => {
                     plugins: {
                       title: {
                         display: true,
-                        text: "Répartition des RSD par modalité de dépôt et par agence",
-                        position: "bottom",
+                        text: "Répartition des RSD par modalité de dépôt et par agence (%)",
+                        position: "top",
                       },
                       legend: {
                         position: "bottom",
@@ -1513,7 +1513,7 @@ const Global = (props) => {
                       title: {
                         display: true,
                         text: "Répartition des réclamations, dénonciations par objets (%)",
-                        position: "bottom",
+                        position: "top",
                       },
                       legend: {
                         position: "bottom",
@@ -1550,8 +1550,8 @@ const Global = (props) => {
                     plugins: {
                       title: {
                         display: true,
-                        text: "Répartition des Réclamations et Dénonciations par objets et par agence",
-                        position: "bottom",
+                        text: "Répartition des Réclamations et Dénonciations par objets et par agence(%)",
+                        position: "top",
                       },
                       legend: {
                         position: "bottom",
@@ -1718,7 +1718,7 @@ const Global = (props) => {
                   options={{
                     plugins: {
                       title: {
-                        text: "Evolution annuelle des réclamations, dénonciations, suggestions par agence",
+                        text: "Evolution annuelle des réclamations, dénonciations, suggestions par agence (%)",
                         position: "top",
                         display: true,
                       },
@@ -1827,7 +1827,7 @@ const Global = (props) => {
                       title: {
                         display: true,
                         text: "Répartition des réclamations par agence (%)",
-                        position: "bottom",
+                        position: "top",
                       },
                       legend: {
                         position: "bottom",
@@ -1865,6 +1865,7 @@ const Global = (props) => {
                       title: {
                         display: true,
                         text: "Nombre de réclamations par Agence",
+                        position:"top"
                       },
                       labels: {
                         render: "value",
