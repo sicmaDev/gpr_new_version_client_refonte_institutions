@@ -9,6 +9,7 @@ const initialState = {
     gender: "",
     language: "",
     dossierimf: "",
+    selectedItemAudio:[],
     code: "",
     recorded_at: "",
     recorded_at_dp: "",
@@ -218,6 +219,11 @@ const EnregistrementSuggestionReducer = (state = initialState, action) => {
             return {
                 ...state,
                 selectedFiles: [...state.selectedFiles, action.payload],
+            };
+        case 'SUGGESTION_RECORD_SELECTED_ITEM_AUDIO_CHANGED':
+            return {
+                ...state,
+                selectedItemAudio:  action.payload,
             };
         case 'SUGGESTION_RECORD_SELECTED_FILES_RESET':
             return {

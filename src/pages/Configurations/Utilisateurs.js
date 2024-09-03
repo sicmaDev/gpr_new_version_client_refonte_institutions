@@ -811,7 +811,7 @@ const Utilisateurs = (props) => {
                                         <h4 className="card-title">Liste des Utilisateurs&nbsp;</h4>
                                     </div>
                                     <div className="col l6 m6 s12" style={{ textAlign:"end" }}>
-                                        <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0)}} />
+                                        <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0,["Actions"])}} />
                                         <img src={excel} alt="" style={{ cursor:"pointer" }} onClick={(e) => {table2XLSX("Liste_des_utilisateurs" + today().replaceAll("/", ""),"app-users")}} />
                                     </div>
                                 </div>

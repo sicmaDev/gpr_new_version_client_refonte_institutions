@@ -42,6 +42,7 @@ import Institution from '../pages/Configurations/Institution';
 import Email from '../pages/Configurations/Email';
 import Sms from '../pages/Configurations/Sms';
 import Bot from '../pages/Configurations/Bot';
+import Log from '../pages/Configurations/Log';
 
 
 export default function Contenu() { 
@@ -111,6 +112,7 @@ export default function Contenu() {
                     <Route path="/configurations/email" component={Email} />
                     <Route path="/configurations/sms" component={Sms} />
                     <Route path="/configurations/bot" component={Bot} />
+                    <Route path="/configurations/logs" component={Log} />
                     <Route path="/ressources/documents" component={Documents} />
                     <Route path="/ressources/faq" component={Faq} />
                     <Route path="/configurations/notifications" component={Notifications} />

@@ -408,7 +408,7 @@ const PointsServices = (props) => {
                                         <h4 className="card-title">Liste des points de services&nbsp;</h4>
                                     </div>
                                     <div className="col l6 m6 s12" style={{ textAlign: "end" }}>
-                                        <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }} onClick={(e) => { handlePrint(config, columns, props.items, 0) }} />
+                                        <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }} onClick={(e) => { handlePrint(config, columns, props.items, 0,["Actions"]) }} />
                                         <img src={excel} alt="" style={{ cursor: "pointer" }} onClick={(e) => { table2XLSX("Liste_des_unités_opérationnelles" + today().replaceAll("/", ""), "app-ps") }} />
                                     </div>
                                 </div>

@@ -32,6 +32,7 @@ const initialState = {
     selectedItem: {},
     selectedFiles: [],
     selectedItemFiles: [],
+    selectedItemAudio: [],
     showSelectPrintItem : false
 };
 const TraitementSuggestionReducer = (state = initialState, action) => {
@@ -192,6 +193,12 @@ const TraitementSuggestionReducer = (state = initialState, action) => {
             return {
                 ...state,
                 selectedItemFiles: action.payload,
+            };
+
+        case 'SUGGESTION_HANDLE_SELECTED_ITEM_AUDIO_CHANGED':
+            return {
+                ...state,
+                selectedItemAudio: action.payload,
             };
         case 'SUGGESTION_HANDLE_SHOW_SELECT_PRINT_ITEMS':
             return{
