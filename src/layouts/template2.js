@@ -6,9 +6,9 @@ import Footer from './Footer';
 // import { IdleTimerProvider } from 'react-idle-timer';
 
 export default function Template2() { 
-    const onIdle = ()=>{
-        console.log("je teste")
-    }
+    // const onIdle = ()=>{
+    //     console.log("je teste")
+    // }
     return (
         
         <Suspense fallback="loading">

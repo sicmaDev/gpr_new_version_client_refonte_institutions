@@ -500,7 +500,7 @@ const Dashboard = (props) => {
                                    
                                 </span>
                                 <br/>
-                                <span style={{fontSize:"12px" }}>Plaintes et Suggestions</span>
+                                <span style={{fontSize:"10px" }}>Réclamations,Dénonciation et Suggestions</span>
                                 
                                 
                             </Typography>
@@ -532,12 +532,70 @@ const Dashboard = (props) => {
                                 </span>
                                 
                                  <br/>
-                                <span style={{fontSize:"12px" }}>Réclamations</span>
+                                <span style={{fontSize:"10px" }}>Réclamations</span>
                                 
                             </Typography>
                             
                             <Typography  sx={{ width: "50%",textAlign:"end" }}>
                                 <ReceiptLongIcon style={{ color:"#f96f00",fontSize:50 }} />
+                            </Typography>
+                        
+                        </CardContent>
+                        
+                    </Card>
+                </div>
+
+                <div className='col l4 s12 m6 mt-2'>
+                    <Card style={{ borderLeft:"7px solid #f96f00" }}>
+                        <CardContent sx={{ display: 'flex'}}>
+                            <Typography sx={{ width: "50%" }} >
+                                <span style={{ fontWeight:"bold",fontSize:"18px" }}>
+                                    {
+                                        props.etat1 === false ?
+                                            <Box sx={{ display: 'flex' }}>
+                                                <CircularProgress sx={{ width:"25px!important",height:"25px!important" }} />
+                                            </Box>
+                                        :
+                                        props.dashboard?.claimsTreat
+                                        
+                                    }
+                                </span>
+                               
+                                 <br/>
+                                 <span style={{fontSize:"10px" }}>Réclamations Traitées</span>
+                                
+                            </Typography>
+                            <Typography  sx={{ width: "50%",textAlign:"end" }}>
+                                <RecyclingIcon style={{ color:"#f96f00",fontSize:50 }} />
+                            </Typography>
+                        
+                        </CardContent>
+                        
+                    </Card>
+                </div>
+
+                <div className='col l4 s12 m6 mt-2'>
+                    <Card  style={{ borderLeft:"7px solid #059db1" }}>
+                        <CardContent sx={{ display: 'flex'}}>
+                            <Typography sx={{ width: "50%" }} >
+                                <span style={{ fontWeight:"bold",fontSize:"18px" }}>
+                                    {
+                                        props.etat1 === false ?
+                                            <Box sx={{ display: 'flex' }}>
+                                                <CircularProgress sx={{ width:"25px!important",height:"25px!important" }} />
+                                            </Box>
+                                        :
+                                        props.dashboard?.claimsAffected
+                                        
+                                    }
+                                </span>
+                            
+                                 <br/>
+                                 <span style={{fontSize:"10px" }}> Réclamation affectées</span>
+                               
+                            </Typography>
+                            <Typography  sx={{ width: "50%",textAlign:"end" }}>
+                                <RedoIcon style={{ color:"#059db1",fontSize:50 }} />
                             </Typography>
                         
                         </CardContent>
@@ -562,7 +620,7 @@ const Dashboard = (props) => {
                                 </span>
                               
                                  <br/>
-                                 <span style={{fontSize:"12px" }}>Dénonciations</span>
+                                 <span style={{fontSize:"10px" }}>Dénonciations</span>
                                 
                             </Typography>
                             <Typography  sx={{width: "50%",textAlign:"end" }}>
@@ -591,7 +649,7 @@ const Dashboard = (props) => {
                                 </span>
                                
                                  <br/>
-                                 <span style={{fontSize:"12px" }}>Suggestions</span>
+                                 <span style={{fontSize:"10px" }}>Suggestions</span>
                                 
                             </Typography>
                             <Typography  sx={{ width: "50%",textAlign:"end" }}>
@@ -604,63 +662,9 @@ const Dashboard = (props) => {
                 </div>
 
 
-                <div className='col l4 s12 m6 mt-2'>
-                    <Card  style={{ borderLeft:"7px solid #059db1" }}>
-                        <CardContent sx={{ display: 'flex'}}>
-                            <Typography sx={{ width: "50%" }} >
-                                <span style={{ fontWeight:"bold",fontSize:"18px" }}>
-                                    {
-                                        props.etat1 === false ?
-                                            <Box sx={{ display: 'flex' }}>
-                                                <CircularProgress sx={{ width:"25px!important",height:"25px!important" }} />
-                                            </Box>
-                                        :
-                                        props.dashboard?.claimsAffected
-                                        
-                                    }
-                                </span>
-                            
-                                 <br/>
-                                 <span style={{fontSize:"12px" }}> Plaintes affectées</span>
-                               
-                            </Typography>
-                            <Typography  sx={{ width: "50%",textAlign:"end" }}>
-                                <RedoIcon style={{ color:"#059db1",fontSize:50 }} />
-                            </Typography>
-                        
-                        </CardContent>
-                        
-                    </Card>
-                </div>
+               
 
-                <div className='col l4 s12 m6 mt-2'>
-                    <Card style={{ borderLeft:"7px solid #f96f00" }}>
-                        <CardContent sx={{ display: 'flex'}}>
-                            <Typography sx={{ width: "50%" }} >
-                                <span style={{ fontWeight:"bold",fontSize:"18px" }}>
-                                    {
-                                        props.etat1 === false ?
-                                            <Box sx={{ display: 'flex' }}>
-                                                <CircularProgress sx={{ width:"25px!important",height:"25px!important" }} />
-                                            </Box>
-                                        :
-                                        props.dashboard?.claimsTreat
-                                        
-                                    }
-                                </span>
-                               
-                                 <br/>
-                                 <span style={{fontSize:"12px" }}>Traitées</span>
-                                
-                            </Typography>
-                            <Typography  sx={{ width: "50%",textAlign:"end" }}>
-                                <RecyclingIcon style={{ color:"#f96f00",fontSize:50 }} />
-                            </Typography>
-                        
-                        </CardContent>
-                        
-                    </Card>
-                </div>
+                
 
                 <div className='col l4 s12 m6 mt-2'>
                     <Card  style={{ borderLeft:"7px solid #f9005e" }}>
@@ -679,7 +683,7 @@ const Dashboard = (props) => {
                                 </span>
                                
                                  <br/>
-                                 <span style={{fontSize:"12px" }}>En retard de traitement</span>
+                                 <span style={{fontSize:"10px" }}>En retard de traitement</span>
                                 
                             </Typography>
                             <Typography  sx={{ width: "50%",textAlign:"end" }}>
@@ -709,7 +713,7 @@ const Dashboard = (props) => {
                                 </span>
                              
                                  <br/>
-                                 <span style={{fontSize:"12px" }}>Satisfaction cliente</span>
+                                 <span style={{fontSize:"10px" }}>Satisfaction cliente</span>
                                 
                             </Typography>
                             <Typography  sx={{ width: "50%",textAlign:"end" }}>
