@@ -8,8 +8,8 @@ import './assets/css/style.css';
 import './assets/css/custom.css';
 import reportWebVitals from "./reportWebVitals";
 import swDev from './swDev'
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+// import i18n from 'i18next';
+// import { initReactI18next } from 'react-i18next';
 import en from './lang/en.json';
 import fr from './lang/fr.json';
 import es from './lang/es.json';
@@ -23,21 +23,21 @@ import es from './lang/es.json';
 //   document.getElementById('root')
 // );
 
-i18n.use(initReactI18next).init({
+// i18n.use(initReactI18next).init({
 
   
-  resources:{
-    en,
-    fr,
-    es
+//   resources:{
+//     en,
+//     fr,
+//     es
 
-  },
-  lng:"fr",
-  fallbackLng:"fr",
-  interpolation:{
-    escapeValue:false,
-  },
-})
+//   },
+//   lng:"fr",
+//   fallbackLng:"fr",
+//   interpolation:{
+//     escapeValue:false,
+//   },
+// })
 const root = ReactDOM.createRoot(document.getElementById("root"));
 document.getElementById("root").style.overflowY = "hidden";
 root.render(

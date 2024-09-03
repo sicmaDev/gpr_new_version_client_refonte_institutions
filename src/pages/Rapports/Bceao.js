@@ -20,10 +20,10 @@ import PDF_IMG from "../../assets/images/reports/pdf.svg"
 import EXCEL_IMG from "../../assets/images/reports/excel.svg"
 import WORD_IMG from "../../assets/images/reports/word.svg"
 import FILTER_IMG from "../../assets/images/reports/filter2.svg"
-import { useTranslation } from "react-i18next";
+// import { useTranslation } from "react-i18next";
 
 const Bceao = (props) => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
   const [claimShow, setClaimShow] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
