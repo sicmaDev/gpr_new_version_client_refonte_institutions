@@ -3,6 +3,7 @@ import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DatePicker, { registerLocale, setDefaultLocale } from "react-datepicker";
 import fr from 'date-fns/locale/fr';
+import RecordingsList from "../../components/recordings-list";
 import "react-datepicker/dist/react-datepicker.css";
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -10,6 +11,7 @@ import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { connect } from "react-redux";
+import { v4 as uuid } from "uuid";
 import {
     addressChanged,
     claimRecordErrors,
@@ -37,6 +39,7 @@ import {
     selectedFilesReset,
     selectedItemChanged,
     selectedItemFilesChanged,
+  selectedItemAudioChanged,
     subjectChanged,
     subjectLibelleChanged,
     underSubjectChanged,
@@ -47,14 +50,17 @@ import {
 import { cleanPhoneNumber, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage } from "../../Utils/utils";
 import http from "../../apis/http-common";
 import {KTApp} from "../../Utils/blockui";
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, TextField } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import { notify } from "../../Utils/alert";
 import axios from "axios";
-import { addDenunciationApi, addDenunciationApiOffline, addTempDenunciationApi, addTempDenunciationApiOffline, downloadFillesApi, getFillesApi, listeByStatut, listeByStatutOffline } from "../../apis/Denonciations/DenonciationsApi";
+import { addDenunciationApi, addDenunciationApiOffline, addTempDenunciationApi, addTempDenunciationApiOffline, downloadAudioApi, downloadFillesApi, getDenunAudioApi, getFillesApi, listeByStatut, listeByStatutOffline } from "../../apis/Denonciations/DenonciationsApi";
 import { licenseInfo } from "../../apis/LoginApi";
+import useRecorder from "../../hooks/useRecorder";
+import RecorderControls from "../../components/recorder-controls";
+import { Mic } from "@mui/icons-material";
 // import { licenseControl } from "../../Utils/license";
 // import DateInput from "../ui/DateInput";
 //import IntlTelInput from 'react-intl-tel-input';
@@ -73,6 +79,9 @@ const EnregistrerDenonciation = (props) => {
     const [open, setOpen] = React.useState(false)
     const [files, setFiles] = React.useState([]);
     const [underSubjectOptions, setUnderSubjectOptions] = useState([]);
+
+    const { recorderState, ...handlers } = useRecorder();
+    let { audio } = recorderState;
 
     let settingComplete = isSettingComplete()
     let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))): undefined;
@@ -126,6 +135,11 @@ const EnregistrerDenonciation = (props) => {
         window.$('.tooltipped').tooltip();
        
     }, []);
+
+    const [open2, setOpen2] = React.useState(false);
+    const [showAudioBox, setAudioBox] = useState(false);
+    const [showAudioPlayer, setAudioPlayer] = useState("");
+    const [currentAudio, setCurrentAudio] = useState("");
 
    
     //Handling the form
@@ -273,7 +287,9 @@ const EnregistrerDenonciation = (props) => {
         props.claimRecordErrors("")
         props.selectedFilesReset([])
         props.selectedItemChanged({})
+        props.selectedItemAudioChanged([]);
         props.selectedItemFilesChanged([])
+        audio =[]
     }
 
     const handleCancel = (e) => {
@@ -301,10 +317,16 @@ const EnregistrerDenonciation = (props) => {
             isValid = false;
             errors["underSubject"] = "Champ incorrect";
         }
-        if ((props.content === "" || props.content === undefined || props.content === null)) {
+        if (
+            (props.content === "" ||
+              props.content === undefined ||
+              props.content === null) &&
+            audio === null &&
+            (props.selectedItemAudio === null || (props.selectedItemAudio !== null && props.selectedItemAudio.length == 0))
+          ) {
             isValid = false;
             errors["content"] = "Champ incorrect";
-        }
+          }
         if ((props.product === "" || props.product === undefined || props.product === null)) {
             isValid = false;
             errors["product"] = "Champ incorrect";
@@ -340,6 +362,12 @@ const EnregistrerDenonciation = (props) => {
              //console.log("claimenregistrer",formData);
             //HERE
             // console.log("etattttttttttttt",props.etat2)
+            if (audio != null) {
+                const audioFile = new File([audio], "denonciation_record_" + uuid() + ".ogg", {
+                  type: "audio/ogg; codecs=opus",
+                });
+                formData.append("audios", audioFile);
+              }
             props.etat2Changed(true)
             if (mode === 1) {
                 addDenunciationApi(formData, props).then(() => {
@@ -375,6 +403,12 @@ const EnregistrerDenonciation = (props) => {
         for (let index = 0; index < files.length; index++) {
             formData.append("files", files[index]);
         }
+         if (audio != null) {
+                const audioFile = new File([audio], "denonciation_record_" + uuid() + ".ogg", {
+                  type: "audio/ogg; codecs=opus",
+                });
+                formData.append("audios", audioFile);
+              }
         
         // console.log(formData);
         //HERE
@@ -578,7 +612,11 @@ const EnregistrerDenonciation = (props) => {
             props.contentChanged(data.content ? data.content : "");
             props.selectedItemChanged(data ? data : "");
             //fetch attachments for selected claim
+            
             getFillesApi(data.id, props);
+            getDenunAudioApi(data.id, props);
+            
+
         } else {
             if (data.id) {
                 // console.log("datarowsig2",data)
@@ -662,6 +700,9 @@ const EnregistrerDenonciation = (props) => {
         let filesArray = Array.prototype.slice.call(e.target.files)
         return Promise.all(filesArray.map(fileToDataURL))
     }
+    const handleClose2 = () => {
+        setOpen2(false);
+      };
 
     let jfichiers;
     if (mode ===1) {
@@ -748,6 +789,63 @@ const EnregistrerDenonciation = (props) => {
     else {
 
     }
+    let audioList;
+  if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
+    let audioListChild = props.selectedItemAudio.map((attachment) => {
+   
+      return (
+        <div className="col xl12 l12 m12 s12" key={attachment.id}>
+         
+          <div className="card box-shadow-none mb-1 ">
+            <div className="card-content">
+              <div className="row">
+                <div className="col xl11 l11 s11 m11">
+                  <div className="app-file-recent-details">
+                    <div className="app-file-name font-weight-700 truncate">
+                      {attachment.name}
+                    </div>
+                    <div className="app-file-size">
+                      {Math.round(
+                        (attachment.size / 1024 + Number.EPSILON) * 100
+                      ) / 100}{" "}
+                      Ko
+                    </div>
+                    <div className="app-file-last-access" id={"audio-"+attachment.id}>
+                      <a
+                         style={{ cursor: "pointer" }}
+                         onClick={(e) => {
+                          downloadAudioApi(attachment.id, attachment.name).then(
+                            (data) => {
+                              // console.log(data);
+                              
+                              let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
+                              let aud = new Audio(window.URL.createObjectURL(blobAudio));
+                              setCurrentAudio(window.URL.createObjectURL(blobAudio))
+                              setAudioPlayer("audio-"+attachment.id)
+                            }
+                          )
+                         }}
+                      >{showAudioPlayer === "audio-"+attachment.id && ("")} {showAudioPlayer !=="audio-"+attachment.id && ("Afficher")}</a>
+                       
+                      {showAudioPlayer === "audio-"+attachment.id  && (<audio controls autoPlay onEnded={(e) => {setAudioPlayer("")}}>
+                        <source src= {currentAudio} type="audio/ogg"  />
+                        Votre navigateur ne prend pas en charge l'élément audio.
+                      </audio>) }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    });
+    audioList = (
+      <div className="col s12 app-file-content">
+        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
+      </div>
+    );
+  }
   
     let content = [];
     content = props.items;
@@ -764,12 +862,81 @@ const EnregistrerDenonciation = (props) => {
         element.createdAtFormated = createdAt;
     });
 
+    let formAudio;
+  if (mode === 1) {
+    formAudio = (
+      <>
+        <div
+          style={{
+            position: "absolute",
+            right: "0px",
+            top: "-16px",
+          }}
+        >
+          <Fab
+            color="primary"
+            aria-label="audio"
+            size="small"
+            onClick={(e) => {
+              e.preventDefault();
+              setAudioBox(true);
+              setOpen2(true);
+            }}
+          >
+            <Mic />
+          </Fab>
+        </div> 
+      </>
+    )
+  } else {
+    formAudio = ""
+  }
+
 //   default sms notification
   
 
     return (
         //  'Enregistrer dénonciation'
         <div id="main">
+            {showAudioBox && (
+        <div>
+          <Dialog
+            open={open2}
+            onClose={handleClose2}
+            style={{ padding: "16px" }}
+          >
+            <DialogTitle
+              align="center"
+              color={"#1E2188"}
+              fontSize={"23px"}
+              fontWeight={"bold"}
+            >
+              Enregistreur vocal dénonciations
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText
+                align="center"
+                fontSize={"14px"}
+                textAlign={"center"}
+              >
+                Cliquez sur le bouton ci-dessous et parler dans le micro de
+                votre téléphone, ou branchez un casque ou des écouteurs
+              </DialogContentText>
+
+              <section className="voice-recorder">
+                <div className="recorder-container">
+                  <RecorderControls
+                    recorderState={recorderState}
+                    handlers={handlers}
+                    closeAction={handleClose2}
+                  />
+                  {/* <RecordingsList audio={audio} /> */}
+                </div>
+              </section>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
            
             <div className="row">
               
@@ -992,6 +1159,7 @@ const EnregistrerDenonciation = (props) => {
                                                             </small>
                                                         </div>
                                                         <div className="col l12 m12 s12 input-field">
+                                                        {formAudio}
                                                             <textarea id="content" name="content" placeholder="" rows={"2"}
                                                                 className="materialize-textarea"
                                                                 value={props.content}
@@ -1005,6 +1173,11 @@ const EnregistrerDenonciation = (props) => {
                                                                      className="error">{(props.errors !== undefined) ? props.errors.content : ""}</div>
                                                             </small>
                                                         </div>
+                                                        <div className="col l12 m12 s12 mb-3">
+                               <RecordingsList audio={audio} /> 
+                              
+                            </div>
+                            <div className="row">{audioList}</div>
                                                         {jfichiers}
                                                         <div className="row">
                                                             {attachmentList}
@@ -1055,6 +1228,7 @@ const mapStateToProps = (state) => {
         selectedFiles: state.claim_record.selectedFiles,
         selectedItem: state.claim_record.selectedItem,
         selectedItemFiles: state.claim_record.selectedItemFiles,
+        selectedItemAudio: state.claim_record.selectedItemAudio,
         etat: state.claim_record.etat,
         etat2: state.claim_record.etat2,
     }
@@ -1128,6 +1302,9 @@ const mapDispatchToProps = (dispatch) => {
         selectedItemFilesChanged: (selectedItemFiles) => {
             dispatch(selectedItemFilesChanged(selectedItemFiles))
         },
+        selectedItemAudioChanged: (selectedItemAudio) => {
+            dispatch(selectedItemAudioChanged(selectedItemAudio));
+          },
         etatChanged: (etat) => {
             dispatch(etatChanged(etat))
         },

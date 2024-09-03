@@ -18,6 +18,8 @@ const LIST_DENUNCIATION_API_TO_ASSURE_SATISFACTION = HOST + "api/v1/denunciation
 const FILES_DENUNCIATION_API = HOST + "api/v1/denunciation/getFilesBy/%s"
 const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const TRANSMISSION_DENUNCIATION_API = HOST + "api/v1/denunciation/transmit_to"
+const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
+const AUDIOS_DENUNCIATION_API = HOST + "api/v1/claim/getAudiosBy/%s"
 
 
 
@@ -41,6 +43,29 @@ export const listeTousStatuts = async (props) => {
         })
         .catch(function (error) {
             return error;
+        });
+}
+export const getDenunAudioApi = async (data, props) => {
+
+    const config = {
+        method: 'get',
+        url: AUDIOS_DENUNCIATION_API.replace("%s", data),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    await axios(config)
+        .then(function (response) {
+
+            // notify("Bravo - Mesure de satisfaction effectuée", "success");
+            // console.log("response data content",response.data)
+            props.selectedItemAudioChanged(response.data)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreur",error)
         });
 }
 
@@ -163,6 +188,52 @@ export const addDenunciationApi = async (data, props) => {
             // console.log("erreur",error)
         });
 }
+export const downloadAudioApi = async (data, filename) => {
+
+    const config = {
+        method: 'get',
+        url: AUDIOS_DOWNLOAD_API.replace("%s", data),
+        responseType: 'blob',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token'),
+            
+        },
+    
+    };
+    try {
+        const response = await axios(config);
+        // console.log("response audio ", response.data);
+        return response.data;
+    } catch (error) {
+        notify("Erreur - Veuillez réessayer!", "error");
+                // console.log("erreur",error)
+    }
+    // await axios(config)
+    //     .then(function (response) {
+
+    //         notify("Bravo - Téléchargement du fichier effectué", "success");
+    //         console.log("response data content",response.data)
+    //         // Créez un objet URL à partir de la réponse
+    //         const url = window.URL.createObjectURL(new Blob([response.data]));
+
+    //         // Créez un lien invisible et déclenchez le téléchargement
+    //         const link = document.createElement('a');
+    //         link.href = url;
+    //         link.setAttribute('download', filename); // Remplacez 'nom_du_fichier.ext' par le nom du fichier
+    //         document.body.appendChild(link);
+    //         link.click();
+
+    //         // Libérez l'URL de l'objet lorsque le téléchargement est terminé
+    //         window.URL.revokeObjectURL(url);
+    //     })
+    //     .catch(function (error) {
+    //         notify("Erreur - Veuillez réessayer!", "error");
+    //         console.log("erreur",error)
+    //     });
+}
+
 
 export const affectDenunciationApi = async (data, props) => {
 

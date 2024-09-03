@@ -206,6 +206,13 @@ export const selectedItemFilesChanged = (selectedItemFiles) =>{
         info: 'This action is used to ...'
     }
 };
+export const selectedItemAudioChanged = (selectedItemAudio) =>{
+    return {
+        type: 'SUGGESTION_LIST_SELECTED_ITEM_AUDIO_CHANGED',
+        payload: selectedItemAudio,
+        info: 'This action is used to ...'
+    }
+};
 export const showSelectPrintItemChanged = (show) =>{
     return{
         type:'SUGGESTION_LIST_SHOW_SELECT_PRINT_ITEMS',

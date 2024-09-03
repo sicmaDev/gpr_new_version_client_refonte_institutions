@@ -50,6 +50,7 @@ import {
   crewChanged,
   underSubjectChanged,
   sessionChanged,
+  selectedItemAudioChanged,
 } from "../../redux/actions/Reclamations/ListeReclamationsActions";
 import http from "../../apis/http-common";
 import PrintIcon from '@mui/icons-material/Print';
@@ -99,7 +100,7 @@ import { formatDate, guessExtension, loadItemFromLocalStorage, loadItemFromSessi
 import { Avatar, DialogContent, DialogContentText } from "@mui/material";
 import GavelIcon from '@mui/icons-material/Gavel';
 import StopIcon from '@mui/icons-material/Stop';
-import { downloadFillesApi, getFillesApi, listeTousStatuts, listeTousStatutsOffline } from "../../apis/Denonciations/DenonciationsApi";
+import { downloadAudioApi, downloadFillesApi, getDenunAudioApi, getFillesApi, listeTousStatuts, listeTousStatutsOffline } from "../../apis/Denonciations/DenonciationsApi";
 import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from "../../Utils/globals";
 import MoveUpIcon from '@mui/icons-material/MoveUp';
 import SaveIcon from "@mui/icons-material/Save";
@@ -129,6 +130,68 @@ const ListeDenonciations = (props) => {
   let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))): undefined;
   let hbt = (user.posteDto.habilitations).split(',');
   let addR = (user.additionalRole);
+
+  const [showAudioPlayer, setAudioPlayer] = useState("");
+  const [currentAudio, setCurrentAudio] = useState("");
+
+  let audioList;
+  if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
+    let audioListChild = props.selectedItemAudio.map((attachment) => {
+   
+      return (
+        <div className="col xl12 l12 m12 s12" key={attachment.id}>
+         
+          <div className="card box-shadow-none mb-1 ">
+            <div className="card-content">
+              <div className="row">
+                <div className="col xl11 l11 s11 m11">
+                  <div className="app-file-recent-details">
+                    <div className="app-file-name font-weight-700 truncate">
+                      {attachment.name}
+                    </div>
+                    <div className="app-file-size">
+                      {Math.round(
+                        (attachment.size / 1024 + Number.EPSILON) * 100
+                      ) / 100}{" "}
+                      Ko
+                    </div>
+                    <div className="app-file-last-access" id={"audio-"+attachment.id}>
+                      <a
+                         style={{ cursor: "pointer" }}
+                         onClick={(e) => {
+                          downloadAudioApi(attachment.id, attachment.name).then(
+                            (data) => {
+                              // console.log(data);
+                              
+                              let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
+                              let aud = new Audio(window.URL.createObjectURL(blobAudio));
+                              setCurrentAudio(window.URL.createObjectURL(blobAudio))
+                              setAudioPlayer("audio-"+attachment.id)
+                            }
+                          )
+                         }}
+                      >{showAudioPlayer === "audio-"+attachment.id && ("")} {showAudioPlayer !=="audio-"+attachment.id && ("Afficher")}</a>
+                       
+                      {showAudioPlayer === "audio-"+attachment.id  && (<audio controls autoPlay onEnded={(e) => {setAudioPlayer("")}}>
+                        <source src= {currentAudio} type="audio/ogg"  />
+                        Votre navigateur ne prend pas en charge l'élément audio.
+                      </audio>) }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    });
+    audioList = (
+      <div className="col s12 app-file-content">
+        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
+      </div>
+    );
+  }
+
 
 
   let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))): undefined;
@@ -398,6 +461,8 @@ const ListeDenonciations = (props) => {
     props.selectedItemChanged({});
     props.selectedFilesReset([]);
     props.selectedItemFilesChanged([]);
+    setCurrentAudio("");
+    setAudioPlayer("");
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
@@ -428,6 +493,7 @@ const ListeDenonciations = (props) => {
       props.sessionChanged(data.session !== null ? data.session : "");
       //fetch attachments for selected claim
       getFillesApi(data.id, props);
+      getDenunAudioApi(data.id, props);
     } else {
       if ((data.id && data.collectionChannel)) {
         // console.log("dataofflineDen2",data)
@@ -454,6 +520,8 @@ const ListeDenonciations = (props) => {
         props.selectedItemChanged(data);
         //fetch attachments for selected claim
         getFillesApi(data.id, props);
+        getDenunAudioApi(data.id, props);
+        
       } else {
         // console.log("dataofflineDen",data)
         // props.idChanged(data.id ? data.id : "")
@@ -480,6 +548,8 @@ const ListeDenonciations = (props) => {
         props.selectedItemChanged(data ? data : "");
         //fetch attachments for selected claim
         // getFillesApi(data.id, props);
+        getDenunAudioApi(data.id, props);
+
       }
     }
 
@@ -1585,6 +1655,11 @@ const ListeDenonciations = (props) => {
                                     </div>
                                   </div>
 
+                                  <div className="col l12 s12 pb-2" id="">
+                                  {audioList}
+
+                                  </div>
+                                  
                                   <div className="col l12 s12 pb-2" id="fichiers">
                                     {attachmentList}
                                   </div>
@@ -1703,6 +1778,7 @@ const mapStateToProps = (state) => {
     selectedFiles: state.claim_list.selectedFiles,
     selectedItemFiles: state.claim_list.selectedItemFiles,
     session: state.claim_list.session,
+    selectedItemAudio: state.claim_list.selectedItemAudio,
     showSelectPrintItem: state.claim_list.showSelectPrintItem,
   };
 };
@@ -1801,6 +1877,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     selectedItemFilesChanged: (selectedItemFiles) => {
       dispatch(selectedItemFilesChanged(selectedItemFiles));
+    },
+    selectedItemAudioChanged: (selectedItemAudio) => {
+      dispatch(selectedItemAudioChanged(selectedItemAudio))
     },
     showSelectPrintItemChanged: (show) => {
       dispatch(showSelectPrintItemChanged(show));

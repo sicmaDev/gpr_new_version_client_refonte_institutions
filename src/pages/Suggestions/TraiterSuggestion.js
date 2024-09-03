@@ -39,6 +39,7 @@ import {
   etatChanged,
   etat2Changed,
   commentChanged,
+  selectedItemAudioChanged,
 } from "../../redux/actions/Suggestions/TraitementSuggestionActions";
 import { connect } from "react-redux";
 import {
@@ -72,10 +73,11 @@ import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { formatDate, guessExtension, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import SaveIcon from '@mui/icons-material/Save';
-import { downloadFillesApi, getFillesApi, listeByStatut, listeTousStatuts, treatSuggestionApi } from "../../apis/Suggestions/SuggestionsApi";
+import { downloadFillesApi, getFillesApi, getSuggeAudioApi, listeByStatut, listeTousStatuts, treatSuggestionApi } from "../../apis/Suggestions/SuggestionsApi";
 import { LoadingButton } from "@mui/lab";
 import { suggestionListErrors } from "../../redux/actions/Suggestions/TraitementSuggestionActions";
 import { licenseInfo } from "../../apis/LoginApi";
+import { downloadAudioApi } from "../../apis/Denonciations/DenonciationsApi";
 
 
 const styles = {
@@ -96,7 +98,7 @@ const TraiterSuggestion = (props) => {
   const [open, setOpen] = React.useState(false);
   const [interne, setInterne] = React.useState(false);
   const [impression, setImpression] = React.useState(false);
-  let user =loadItemFromSessionStorage("app-user") !== undefined? JSON.parse(loadItemFromSessionStorage("app-user")): undefined;
+  let user = loadItemFromSessionStorage("app-user") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-user")) : undefined;
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -107,11 +109,74 @@ const TraiterSuggestion = (props) => {
     setInterne(false);
     clearComponentState();
   };
-  
 
+
+
+  const [showAudioPlayer, setAudioPlayer] = useState("");
+  const [currentAudio, setCurrentAudio] = useState("");
+
+  let audioList;
+  if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
+    let audioListChild = props.selectedItemAudio.map((attachment) => {
+
+      return (
+        <div className="col xl12 l12 m12 s12" key={attachment.id}>
+
+          <div className="card box-shadow-none mb-1 ">
+            <div className="card-content">
+              <div className="row">
+                <div className="col xl11 l11 s11 m11">
+                  <div className="app-file-recent-details">
+                    <div className="app-file-name font-weight-700 truncate">
+                      {attachment.name}
+                    </div>
+                    <div className="app-file-size">
+                      {Math.round(
+                        (attachment.size / 1024 + Number.EPSILON) * 100
+                      ) / 100}{" "}
+                      Ko
+                    </div>
+                    <div className="app-file-last-access" id={"audio-" + attachment.id}>
+                      <a href=" "
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          downloadAudioApi(attachment.id, attachment.name).then(
+                            (data) => {
+                              // console.log(data);
+                              // console.log('data', data)
+
+                              let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
+                              let aud = new Audio(window.URL.createObjectURL(blobAudio));
+                              setCurrentAudio(window.URL.createObjectURL(blobAudio))
+                              setAudioPlayer("audio-" + attachment.id)
+                            }
+                          )
+                        }}
+                      >{showAudioPlayer === "audio-" + attachment.id && ("")} {showAudioPlayer !== "audio-" + attachment.id && ("Afficher")}</a>
+
+                      {showAudioPlayer === "audio-" + attachment.id && (<audio controls autoPlay onEnded={(e) => { setAudioPlayer("") }}>
+                        <source src={currentAudio} type="audio/ogg" />
+                        Votre navigateur ne prend pas en charge l'élément audio.
+                      </audio>)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    });
+    audioList = (
+      <div className="col s12 app-file-content">
+        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
+      </div>
+    );
+  }
   useEffect(() => {
     props.itemsChanged([])
-    listeByStatut(props,"SAVED").then((r) => {});
+    listeByStatut(props, "SAVED").then((r) => { });
 
     window
       .$(".buttons-excel")
@@ -134,25 +199,25 @@ const TraiterSuggestion = (props) => {
   }, []);
 
   const [actif, setActif] = useState();
-  
-    const licenseControl = async () => {
-      try {
-        let resultat = await licenseInfo();
-        // console.log("resultat", resultat);
-        setActif(resultat.actif)
-        
-      } catch (error) {
-        console.error("Une erreur s'est produite :", error);
-      }
+
+  const licenseControl = async () => {
+    try {
+      let resultat = await licenseInfo();
+      // console.log("resultat", resultat);
+      setActif(resultat.actif)
+
+    } catch (error) {
+      console.error("Une erreur s'est produite :", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await licenseControl();
     };
-  
-    useEffect(() => {
-      const fetchData = async () => {
-        await licenseControl();
-      };
-  
-      fetchData();
-    }, []);
+
+    fetchData();
+  }, []);
 
   //Handling the List
   let columns = [
@@ -170,7 +235,7 @@ const TraiterSuggestion = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let nom = claim.clientFirstAndLastName !== "" ? claim.clientFirstAndLastName :<i>Anonyme</i>;
+        let nom = claim.clientFirstAndLastName !== "" ? claim.clientFirstAndLastName : <i>Anonyme</i>;
         return nom;
       },
     },
@@ -287,14 +352,15 @@ const TraiterSuggestion = (props) => {
     props.selectedItemChanged({});
     props.selectedFilesReset([]);
     props.selectedItemFilesChanged([]);
+    props.selectedItemAudioChanged([]);
 
     props.commentChanged("");
-    
+
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
-   
+
     clearComponentState();
     props.idChanged(data.id ? data.id : "");
     props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");
@@ -315,6 +381,8 @@ const TraiterSuggestion = (props) => {
     props.handledByChanged(data.treatmentAffectedTo ? data.treatmentAffectedTo.firstAndLastName : "");
     props.selectedItemChanged(data);
     getFillesApi(data.id, props);
+    getSuggeAudioApi(data.id, props);
+
   };
 
   const handleCancel = (e) => {
@@ -335,7 +403,7 @@ const TraiterSuggestion = (props) => {
 
     return isValid;
   };
-  const handleTreatment = (e,pec) => {
+  const handleTreatment = (e, pec) => {
     e.preventDefault();
     if (handleValidation()) {
       let claim = {};
@@ -347,7 +415,7 @@ const TraiterSuggestion = (props) => {
       // console.log("etat",pec === false)
       // console.log("etatff",props)
 
-      if ( pec === false) {
+      if (pec === false) {
         props.etatChanged(true)
       } else {
         props.etat2Changed(true)
@@ -364,11 +432,11 @@ const TraiterSuggestion = (props) => {
   };
 
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
- 
+
   let details;
 
-  if (props.status ==="SAVED") {
-    details = 
+  if (props.status === "SAVED") {
+    details =
       <>
         <form id="claimApproveForm">
           <div className="row">
@@ -399,45 +467,45 @@ const TraiterSuggestion = (props) => {
                 <div className="col s12 display-flex justify-content-end mt-3">
 
                   {
-                    (actif !== undefined && actif)  ?
+                    (actif !== undefined && actif) ?
                       <>
-                          <LoadingButton
-                            onClick={(e) => {
-                                handleTreatment(e,false)
-                            }}
-                            
-                            className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                            loading={props.etat}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{textTransform:"initial" }}
-                          >
-                              <span>Ne pas prendre en compte</span>
-                          </LoadingButton>
+                        <LoadingButton
+                          onClick={(e) => {
+                            handleTreatment(e, false)
+                          }}
 
-                          <LoadingButton
-                            onClick={(e) => {
-                                handleTreatment(e,true)
-                            }}
-                            className="waves-effect waves-effect-b waves-light btn-small"
-                            loading={props.etat2}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
-                          >
-                              <span>Prendre en compte</span>
-                          </LoadingButton>
+                          className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                          loading={props.etat}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{ textTransform: "initial" }}
+                        >
+                          <span>Ne pas prendre en compte</span>
+                        </LoadingButton>
+
+                        <LoadingButton
+                          onClick={(e) => {
+                            handleTreatment(e, true)
+                          }}
+                          className="waves-effect waves-effect-b waves-light btn-small"
+                          loading={props.etat2}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                        >
+                          <span>Prendre en compte</span>
+                        </LoadingButton>
                       </>
-                    :
-                    <div className="card-alert card red lighten-5">
-                      <div className="card-content red-text">
+                      :
+                      <div className="card-alert card red lighten-5">
+                        <div className="card-content red-text">
                           <ul>
-                              Veuillez activer une licence.
+                            Veuillez activer une licence.
                           </ul>
+                        </div>
                       </div>
-                    </div>
                   }
                 </div>
               </details>
@@ -447,7 +515,7 @@ const TraiterSuggestion = (props) => {
       </>
   } else {
     details = ""
-    
+
   }
 
   let attachmentList;
@@ -512,7 +580,7 @@ const TraiterSuggestion = (props) => {
     );
   } else {
   }
-  
+
   let content = [];
   content = props.items;
   //darrell : add custome attribut for search
@@ -563,7 +631,7 @@ const TraiterSuggestion = (props) => {
                             Suggestions à traiter&nbsp;
                           </h5>
                         </div>
-                        
+
                       </div>
                       <div className="col s12">
                         <ReactDatatable
@@ -621,7 +689,7 @@ const TraiterSuggestion = (props) => {
                                 Fiche de la suggestion
                               </h5>
                             </div>
-                           
+
                           </div>
                           <div className="row">
                             <div className="col s12 m12">
@@ -688,7 +756,7 @@ const TraiterSuggestion = (props) => {
                                         ""
                                       ))
                                   }
-                                 
+
                                 </div>
                               </div>
                             </div>
@@ -711,7 +779,7 @@ const TraiterSuggestion = (props) => {
                                     id="recorded_at"
                                   >
                                     <CalendarMonthIcon sx={{ mr: 2 }} /> Date de
-                                    réception : { props.recorded_at}
+                                    réception : {props.recorded_at}
                                   </div>
 
                                   <div
@@ -761,9 +829,12 @@ const TraiterSuggestion = (props) => {
                                     </div>
                                     <div>{props.content}</div>
 
+                                    <div className="col l12 s12 pb-2" id="">
+                                      {audioList}
+                                    </div>
                                     <div>{attachmentList}</div>
                                   </div>
-                                  
+
                                 </div>
                               </div>
                             </div>
@@ -837,6 +908,7 @@ const mapStateToProps = (state) => {
     selectedItem: state.suggestion_handle.selectedItem,
     selectedFiles: state.suggestion_handle.selectedFiles,
     selectedItemFiles: state.suggestion_handle.selectedItemFiles,
+    selectedItemAudio: state.suggestion_handle.selectedItemAudio,
     showSelectPrintItem: state.suggestion_handle.showSelectPrintItem,
     etat: state.suggestion_handle.etat,
     etat2: state.suggestion_handle.etat2,
@@ -931,6 +1003,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     showSelectPrintItemChanged: (show) => {
       dispatch(showSelectPrintItemChanged(show));
+    },
+    selectedItemAudioChanged: (selectedItemAudio) => {
+      dispatch(selectedItemAudioChanged(selectedItemAudio))
     },
     commentChanged: (comment) => {
       dispatch(commentChanged(comment));

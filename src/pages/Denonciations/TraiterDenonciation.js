@@ -48,6 +48,8 @@ import {
   sessionChanged,
   solutionExistantChanged,
   transmittedChanged,
+  selectedItemAudioChanged,
+
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -95,7 +97,7 @@ import TimelineOppositeContent from "@mui/lab/TimelineOppositeContent";
 import TimelineDot from "@mui/lab/TimelineDot";
 import { Avatar, FormControl, FormControlLabel, FormLabel, LinearProgress, Radio, RadioGroup } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
-import { affectDenunciationApi, approveDenunciationSolutionApi, getFillesApi, listeTreat, transmissionDenunciationApi, treatDenunciationApi, unapproveDenunciationSolutionApi } from "../../apis/Denonciations/DenonciationsApi";
+import { affectDenunciationApi, approveDenunciationSolutionApi, downloadAudioApi, getDenunAudioApi, getFillesApi, listeTreat, transmissionDenunciationApi, treatDenunciationApi, unapproveDenunciationSolutionApi } from "../../apis/Denonciations/DenonciationsApi";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import { modalify } from "../../Utils/modal";
 import SendIcon from '@mui/icons-material/Send';
@@ -206,12 +208,12 @@ const TraiterDenonciation = (props) => {
   //#darrell
   const [usersCGR, setUsersCGR] = React.useState([]);
 
-  
+
   //vérification if user is in guest
   let showJoinBtn = false;
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
   let potentialMember = props.session?.members?.filter((e) => e.id === user.id);
-  if((potentialGuest != null && potentialGuest.length > 0) || (potentialMember != null && potentialMember.length > 0 ) ){
+  if ((potentialGuest != null && potentialGuest.length > 0) || (potentialMember != null && potentialMember.length > 0)) {
     showJoinBtn = true;
   }
 
@@ -253,8 +255,8 @@ const TraiterDenonciation = (props) => {
   }, []);
 
   useEffect(() => {
-     // console.log(publicChats);
-     if (bottomRef.current) {
+    // console.log(publicChats);
+    if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [publicChats]);
@@ -264,25 +266,25 @@ const TraiterDenonciation = (props) => {
   }, [props?.session?.guests]);
 
   const [actif, setActif] = useState();
-  
-    const licenseControl = async () => {
-      try {
-        let resultat = await licenseInfo();
-        console.log("resultat", resultat);
-        setActif(resultat.actif)
-        
-      } catch (error) {
-        console.error("Une erreur s'est produite :", error);
-      }
+
+  const licenseControl = async () => {
+    try {
+      let resultat = await licenseInfo();
+      console.log("resultat", resultat);
+      setActif(resultat.actif)
+
+    } catch (error) {
+      console.error("Une erreur s'est produite :", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await licenseControl();
     };
-  
-    useEffect(() => {
-      const fetchData = async () => {
-        await licenseControl();
-      };
-  
-      fetchData();
-    }, []);
+
+    fetchData();
+  }, []);
 
 
   const handleClickOpen = () => {
@@ -298,32 +300,32 @@ const TraiterDenonciation = (props) => {
     return <Redirect to="/alertes/denonciations" />
   };
 
- 
+
   const { id } = useParams();
   //console.log("params",props.match)
 
   useEffect(() => {
-    if (props.match.params.code==="all") {
+    if (props.match.params.code === "all") {
       props.itemsChanged([])
-      listeTreat(props).then((r) => {});
+      listeTreat(props).then((r) => { });
     } else {
 
-      async function details(){
+      async function details() {
         await axios({
           method: "get",
-          url: HOST + "api/v1/denunciation/"+props.match.params.code+"/details",
+          url: HOST + "api/v1/denunciation/" + props.match.params.code + "/details",
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
           },
         }).then(function (response) {
-          listeTreat(props).then((r) => {});
+          listeTreat(props).then((r) => { });
           let data = response.data.content;
           // console.log("tmp",data)
           handleClickOpen();
           clearComponentState();
-          
+
           let agentMailOptions = [];
 
           switch (data.objet.risqueLevel) {
@@ -341,7 +343,7 @@ const TraiterDenonciation = (props) => {
               setAgentsMailOptions(agentMailOptions);
               if (hbt.includes("H2")) {
                 props.authorizeChanged(true)
-              }else{
+              } else {
                 props.authorizeChanged(false)
               }
               break;
@@ -359,7 +361,7 @@ const TraiterDenonciation = (props) => {
               setAgentsMailOptions(agentMailOptions);
               if (hbt.includes("H3")) {
                 props.authorizeChanged(true)
-              }else{
+              } else {
                 props.authorizeChanged(false)
               }
               break;
@@ -377,11 +379,11 @@ const TraiterDenonciation = (props) => {
               setAgentsMailOptions(agentMailOptions);
               if (hbt.includes("H4")) {
                 props.authorizeChanged(true)
-              }else{
+              } else {
                 props.authorizeChanged(false)
               }
               break;
-      
+
             default:
               break;
           }
@@ -404,12 +406,12 @@ const TraiterDenonciation = (props) => {
           props.selectedItemChanged(data);
           //fetch attachments for selected claim
           getFillesApi(data.id, props);
-         
+
         });
       }
-      
+
       details()
-     
+
     }
 
     window
@@ -433,23 +435,23 @@ const TraiterDenonciation = (props) => {
   }, [props.match.params.code]);
 
   const invitation = (event) => {
-    
-    let ids = (props?.session?.guests)?.map((e)=>{
+
+    let ids = (props?.session?.guests)?.map((e) => {
       return e.id;
     })
-   
+
     let princ = users.filter((e) => {
       return (
         (e.additionalRole !== "MEMBRE_CGR") && (e.additionalRole !== "PR_CGR") && !ids.includes(e.id)
       );
     })
-   
+
     const { value } = event.target;
-    if (value !=="") {
+    if (value !== "") {
       let coco = []
       coco = princ.filter((e) => {
         return (
-          ((e.firstAndLastName).includes(value)) 
+          ((e.firstAndLastName).includes(value))
         );
       })
 
@@ -459,31 +461,31 @@ const TraiterDenonciation = (props) => {
       });
 
       // setUsersCGR(coco)
-      if (usersCGR.length!==0) {
+      if (usersCGR.length !== 0) {
         maDivRef.current.style.display = "block"
-      } else{
+      } else {
         setUsersCGR((prevList) => {
           const newList = coco;
           return princ;
         });
-       
+
         maDivRef.current.style.display = "none"
       }
       // console.log("cg",usersCGR)
     } else {
       maDivRef.current.style.display = "none"
     }
-    
+
     // console.log("valeur",value)
   }
 
-  const handleInvitation = (e,idi) => {
-     var chatMessage = {
+  const handleInvitation = (e, idi) => {
+    var chatMessage = {
       userId: idi,
       claimCode: props.code,
       status: "INVITATION",
     };
-   
+
     // console.log("codeconnected42", idi);
     stompClient.send(
       "/api/v1/session/join/guest/" + props.code + "",
@@ -492,13 +494,13 @@ const TraiterDenonciation = (props) => {
     );
   }
 
-  const handleEject = (e,idi) => {
-     var chatMessage = {
+  const handleEject = (e, idi) => {
+    var chatMessage = {
       userId: idi,
       claimCode: props.code,
       status: "EJECTION",
     };
-   
+
     // console.log("codeconnected42", idi);
     stompClient.send(
       "/api/v1/session/eject/guest/" + props.code + "",
@@ -508,7 +510,7 @@ const TraiterDenonciation = (props) => {
   }
 
   const connect = () => {
-    let Sock = new SockJS(HOST+"ws");
+    let Sock = new SockJS(HOST + "ws");
     stompClient = over(Sock);
     stompClient.connect({}, onConnected, onError);
   };
@@ -572,17 +574,17 @@ const TraiterDenonciation = (props) => {
         // console.log("message", list);
         // setPublicChats(list);
         // if(publicChats !== null && publicChats.length > 0 ){
-          setPublicChats((prevPublicChats) => {
-            if(prevPublicChats=== undefined || prevPublicChats === null){
-              return [payloadData];
-            }
-            const newList = [...prevPublicChats, payloadData];
-            return newList;
-          });
+        setPublicChats((prevPublicChats) => {
+          if (prevPublicChats === undefined || prevPublicChats === null) {
+            return [payloadData];
+          }
+          const newList = [...prevPublicChats, payloadData];
+          return newList;
+        });
         // } else {
         //   setPublicChats( [payloadData]);
         // }
-      
+
         // props.sessionChanged(list);
         // console.log("message",publicChats)
         // publicChats.set(payloadData,publicChats);
@@ -603,36 +605,36 @@ const TraiterDenonciation = (props) => {
           code: payloadData.code,
           firstAndLastName: payloadData.firstAndLastName,
         };
-       
+
         setGuests((prevGuests) => {
-          if(prevGuests === undefined){
+          if (prevGuests === undefined) {
             return [chatGuest]
           }
           let prevG = prevGuests.filter((e) => {
             return e.id !== chatGuest.id
           })
-          if(prevG === null || prevG === undefined){
+          if (prevG === null || prevG === undefined) {
             return [chatGuest]
           }
           const newList = [...prevG, chatGuest];
           return newList;
         });
 
-      break;
+        break;
       case "EJECTION":
         // console.log("payloadEjection",payloadData)
         let nouveaux = [];
         let list = props.session.guests;
-        if(list === undefined){
+        if (list === undefined) {
           setGuests([]);
         } else {
-          nouveaux = list.filter((e)=>{
+          nouveaux = list.filter((e) => {
             return e.id !== payloadData.id;
           })
-          
-        //  console.log("ejection",nouveaux)
+
+          //  console.log("ejection",nouveaux)
           setGuests((prevGuests) => {
-            if(prevGuests === undefined){
+            if (prevGuests === undefined) {
               return [nouveaux]
             }
             const newList = nouveaux;
@@ -641,14 +643,14 @@ const TraiterDenonciation = (props) => {
         }
         // console.log("condition", payloadData.id === user.id)
         // console.log("condition 2", payloadData.id == user.id)
-        if(payloadData.id === user.id){
+        if (payloadData.id === user.id) {
           notify("Un membre du CGR vous a éjecté", "info");
           setTimeout(() => {
             window.location.reload();
           }, 3000);
         }
 
-      break;
+        break;
       case "CONFIRME_SOLUTION":
         notify("Bravo - Réclamation traitée", "success");
         setTimeout(() => {
@@ -692,14 +694,75 @@ const TraiterDenonciation = (props) => {
         );
         setUserData({ ...userData, message: "" });
       } else {
-        
+
       }
-     
+
       // console.log("msg", publicChats);
     } else {
       // console.log("errorr", "nop");
     }
   };
+
+  const [showAudioPlayer, setAudioPlayer] = useState("");
+  const [currentAudio, setCurrentAudio] = useState("");
+
+  let audioList;
+  if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
+    let audioListChild = props.selectedItemAudio.map((attachment) => {
+
+      return (
+        <div className="col xl12 l12 m12 s12" key={attachment.id}>
+
+          <div className="card box-shadow-none mb-1 ">
+            <div className="card-content">
+              <div className="row">
+                <div className="col xl11 l11 s11 m11">
+                  <div className="app-file-recent-details">
+                    <div className="app-file-name font-weight-700 truncate">
+                      {attachment.name}
+                    </div>
+                    <div className="app-file-size">
+                      {Math.round(
+                        (attachment.size / 1024 + Number.EPSILON) * 100
+                      ) / 100}{" "}
+                      Ko
+                    </div>
+                    <div className="app-file-last-access" id={"audio-" + attachment.id}>
+                      <a
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
+                          downloadAudioApi(attachment.id, attachment.name).then(
+                            (data) => {
+                              // console.log(data);
+
+                              let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
+                              let aud = new Audio(window.URL.createObjectURL(blobAudio));
+                              setCurrentAudio(window.URL.createObjectURL(blobAudio))
+                              setAudioPlayer("audio-" + attachment.id)
+                            }
+                          )
+                        }}
+                      >{showAudioPlayer === "audio-" + attachment.id && ("")} {showAudioPlayer !== "audio-" + attachment.id && ("Afficher")}</a>
+
+                      {showAudioPlayer === "audio-" + attachment.id && (<audio controls autoPlay onEnded={(e) => { setAudioPlayer("") }}>
+                        <source src={currentAudio} type="audio/ogg" />
+                        Votre navigateur ne prend pas en charge l'élément audio.
+                      </audio>)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    });
+    audioList = (
+      <div className="col s12 app-file-content">
+        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
+      </div>
+    );
+  }
 
   const sendVote = () => {
     if (propositionCommentaire === "" || propositionSolution === "") {
@@ -748,14 +811,14 @@ const TraiterDenonciation = (props) => {
 
   const handleVote = (e, info) => {
     const selectedValue = e.target.value;
-    if(selectedOption !== ""){
+    if (selectedOption !== "") {
       //removeVote
       let voteRequest = {
         removeVote: true,
         pour: selectedValue === "POUR",
         claimCode: props.code,
         authorId: user.id,
-        messageId:  info
+        messageId: info
       }
       // console.log("voteRequest - remove", voteRequest);
 
@@ -770,7 +833,7 @@ const TraiterDenonciation = (props) => {
         pour: selectedValue === "POUR",
         claimCode: props.code,
         authorId: user.id,
-        messageId:  info
+        messageId: info
       }
       // console.log("voteRequest", voteRequest);
 
@@ -780,7 +843,7 @@ const TraiterDenonciation = (props) => {
         JSON.stringify(voteRequest)
       );
     }
-    
+
 
     // Mettez à jour le nombre de votes en fonction de l'option sélectionnée
     // if (selectedValue === "for") {
@@ -820,7 +883,7 @@ const TraiterDenonciation = (props) => {
         "/api/v1/session/confirm-solution/" + props.code + "",
         {},
         JSON.stringify(confirmSolution)
-      ); 
+      );
     }
   }
 
@@ -849,7 +912,7 @@ const TraiterDenonciation = (props) => {
     props.selectedItemFilesChanged([]);
     props.sessionChanged("");
     setShowSelectPrintItem(false);
-    if(stompClient){
+    if (stompClient) {
       stompClient.disconnect();
       setUserData({ ...userData, connected: false });
       setPublicChats([]);
@@ -933,19 +996,19 @@ const TraiterDenonciation = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-       
-        
+
+
         let codi;
-        if (claim.session !==null && claim.session !=="") {
+        if (claim.session !== null && claim.session !== "") {
           if (claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
             codi = (
               <>
                 <div className="df">
                   <span className="mr-1">{claim.code}</span>
-                  <div className="card-content red-text ml-4"><AlternateEmailIcon/></div>
-                  <div className="card-content red-text ml-4"><ForumIcon/></div>
+                  <div className="card-content red-text ml-4"><AlternateEmailIcon /></div>
+                  <div className="card-content red-text ml-4"><ForumIcon /></div>
                 </div>
-                
+
               </>
             );
           } else {
@@ -953,24 +1016,24 @@ const TraiterDenonciation = (props) => {
               <>
                 <div className="df">
                   <span className="mr-1">{claim.code}</span>
-                  <div className="card-content red-text ml-4"><ForumIcon/></div>
+                  <div className="card-content red-text ml-4"><ForumIcon /></div>
                 </div>
-                
+
               </>
-              
+
             );
           }
-         
-          
-        }else{
+
+
+        } else {
           if (claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
             codi = (
               <>
                 <div className="df">
                   <span className="mr-1">{claim.code}</span>
-                  <div className="card-content red-text ml-4"><AlternateEmailIcon/></div>
+                  <div className="card-content red-text ml-4"><AlternateEmailIcon /></div>
                 </div>
-                
+
               </>
             );
           } else {
@@ -978,7 +1041,7 @@ const TraiterDenonciation = (props) => {
               <span className="">{claim.code}</span>
             );
           }
-         
+
         }
 
         return codi;
@@ -1045,16 +1108,16 @@ const TraiterDenonciation = (props) => {
           case "MINEUR":
             if (claim.transmitted) {
               graviteElt = (
-              <>
-                <div className="df">
-                  <span className="green-text text-bold mr-2">Mineur</span>
-                  <div className="card-content red-text ml-4"><MoveUpIcon/></div>
-                </div>
-                
-              </>
-                
+                <>
+                  <div className="df">
+                    <span className="green-text text-bold mr-2">Mineur</span>
+                    <div className="card-content red-text ml-4"><MoveUpIcon /></div>
+                  </div>
+
+                </>
+
               );
-            }else{
+            } else {
               graviteElt = (
                 <span className="green-text text-bold">Mineur</span>
               );
@@ -1072,7 +1135,7 @@ const TraiterDenonciation = (props) => {
             );
             break;
           default:
-           graviteElt = (
+            graviteElt = (
               <span className="chip indigo lighten-5">
                 <span className="indigo-text">Nan</span>
               </span>
@@ -1131,7 +1194,7 @@ const TraiterDenonciation = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
     clearComponentState();
-    
+
     //console.log("level",data.objet.risqueLevel)
     let agentMailOptions = [];
 
@@ -1150,7 +1213,7 @@ const TraiterDenonciation = (props) => {
         setAgentsMailOptions(agentMailOptions);
         if (hbt.includes("H2")) {
           props.authorizeChanged(true)
-        }else{
+        } else {
           props.authorizeChanged(false)
         }
         break;
@@ -1168,7 +1231,7 @@ const TraiterDenonciation = (props) => {
         setAgentsMailOptions(agentMailOptions);
         if (hbt.includes("H3")) {
           props.authorizeChanged(true)
-        }else{
+        } else {
           props.authorizeChanged(false)
         }
         break;
@@ -1186,7 +1249,7 @@ const TraiterDenonciation = (props) => {
         setAgentsMailOptions(agentMailOptions);
         if (hbt.includes("H4")) {
           props.authorizeChanged(true)
-        }else{
+        } else {
           props.authorizeChanged(false)
         }
         break;
@@ -1213,55 +1276,57 @@ const TraiterDenonciation = (props) => {
     props.handledByChanged(data.treatmentAffectedTo ? data.treatmentAffectedTo.firstAndLastName : "");
     props.selectedItemChanged(data);
     props.transmittedChanged(
-      data.transmitted !== null ? "" +data.transmitted + "" : ""
+      data.transmitted !== null ? "" + data.transmitted + "" : ""
     );
     //fetch attachments for selected claim
     getFillesApi(data.id, props);
+    getDenunAudioApi(data.id, props);
+
     props.sessionChanged(data.session !== null ? data.session : "");
   };
 
   /*tchat */
   let tchat;
-  if ( (showJoinBtn)) {
+  if ((showJoinBtn)) {
     tchat = (
       <>
         {userData.connected ? (
           <div className="row containera clearfix mt-5">
-          
+
             <div class="people-list" id="people-list">
-            { props.session.createdBy.id === user.id ? 
-              <div class="search">
-                <input type="text" placeholder="search" onChange={invitation} />
-              </div> : null}
-              <div id="listI" ref={maDivRef} style={{display:"none" }}>
-               
+              {props.session.createdBy.id === user.id ?
+                <div class="search">
+                  <input type="text" placeholder="search" onChange={invitation} />
+                </div> : null}
+              <div id="listI" ref={maDivRef} style={{ display: "none" }}>
+
                 <ul class="list">
-                  <label className="text-xl mb-2" style={{color: "white", fontSize: "18px", fontWeight: "600"}}>A Inviter</label>
-                  
+                  <label className="text-xl mb-2" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>A Inviter</label>
+
                   {usersCGR.map((member) => (
                     <>
-                        <li class="clearfix" key={member.id} style={{ display: "flex", verticalAlign: "center"}}>
-                          <Avatar sx={{ width: 40, height: 40,backgroundColor:"#1E2188" }}>{member.firstAndLastName[0]}</Avatar>
-                          
-                          <div class="about" style={{ marginTop: "0px" }}>
-                            <div class="name">{member.firstAndLastName}</div>
-                            <div class="" style={{ fontSize:"10px" }}>
-                              {member.posteDto.libelle}
-                            </div>
+                      <li class="clearfix" key={member.id} style={{ display: "flex", verticalAlign: "center" }}>
+                        <Avatar sx={{ width: 40, height: 40, backgroundColor: "#1E2188" }}>{member.firstAndLastName[0]}</Avatar>
+
+                        <div class="about" style={{ marginTop: "0px" }}>
+                          <div class="name">{member.firstAndLastName}</div>
+                          <div class="" style={{ fontSize: "10px" }}>
+                            {member.posteDto.libelle}
                           </div>
-                          <IconButton   onClick={(e) => handleInvitation(e,member.id)} color="primary" aria-label="Ajouter"  style={{marginLeft: "auto"}}>
-                            <AddCircleOutline/>
-                          </IconButton>
-                        </li>
+                        </div>
+                        <IconButton onClick={(e) => handleInvitation(e, member.id)} color="primary" aria-label="Ajouter" style={{ marginLeft: "auto" }}>
+                          <AddCircleOutline />
+                        </IconButton>
+                      </li>
                     </>
-                  
+
                   ))}
-                  
+
                 </ul>
               </div>
-             
+
               <ul class="list">
-                <label className="text-xl mb-4" style={{color: "white", fontSize: "18px", fontWeight: "600"}}>Membres</label>
+                <label className="text-xl mb-4" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>Membres</label>
                 {props?.session?.members?.map((member) => (
                   <>
                     <li
@@ -1291,7 +1356,7 @@ const TraiterDenonciation = (props) => {
                   </>
                 ))}
                 <div className="d-flex">
-                  <label className="text-xl" style={{color: "white", fontSize: "18px", fontWeight: "600"}}>Invité(s)</label>
+                  <label className="text-xl" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>Invité(s)</label>
                 </div>
 
                 {guests !== null && (guests)?.length > 0 && guests.at(0).firstAndLastName != null ? (
@@ -1299,25 +1364,25 @@ const TraiterDenonciation = (props) => {
 
                     {(guests)?.map((guest) => (
                       <li className="clearfix" key={guest.id} style={{ display: "flex", verticalAlign: "center" }}>
-                        <Avatar sx={{width: 48, height: 48, backgroundColor: "#1E2188",}}>
+                        <Avatar sx={{ width: 48, height: 48, backgroundColor: "#1E2188", }}>
                           {guest !== null && guest.firstAndLastName != null && guest?.firstAndLastName[0]}
                         </Avatar>
 
                         <div className="about" style={{ marginTop: "9.5px" }}>
                           <div className="name text-bold">
-                          {guest?.firstAndLastName}
+                            {guest?.firstAndLastName}
                           </div>
                           {/* <div className="status">
                               <i className="fa fa-circle online"></i> online
                             </div> */}
                         </div>
-                        { !showJoinBtn ?
-                        <IconButton   onClick={(e) => handleEject(e,guest.id)} color="primary" aria-label="Ajouter"  style={{marginLeft: "auto"}}>
-                        <RemoveCircleOutlineIcon/>
-                      </IconButton>
-                       : null}
+                        {!showJoinBtn ?
+                          <IconButton onClick={(e) => handleEject(e, guest.id)} color="primary" aria-label="Ajouter" style={{ marginLeft: "auto" }}>
+                            <RemoveCircleOutlineIcon />
+                          </IconButton>
+                          : null}
                       </li>
-                      
+
                     ))}
                   </>
                 ) : (
@@ -1364,15 +1429,15 @@ const TraiterDenonciation = (props) => {
                       </div>
                     </div>
                     <div style={{ marginLeft: "auto" }}>
-                      { props.session.createdBy.id === user.id ? 
+                      {props.session.createdBy.id === user.id ?
                         <>
                           <IconButton onClick={handleShowVoteField}>
                             <HowToVoteIcon />
                           </IconButton>
-                        </> : 
+                        </> :
                         null
                       }
-                     
+
                     </div>
                   </div>
                   <div className="chat-history">
@@ -1394,7 +1459,7 @@ const TraiterDenonciation = (props) => {
                                       </span>
                                     </div>
                                     <div className="message other-message float-right">
-                                      <div className="row" style={{display: "grid", justifyContent:"end"}}>
+                                      <div className="row" style={{ display: "grid", justifyContent: "end" }}>
                                         <HowToVoteIcon />
                                       </div>
                                       <div>
@@ -1415,8 +1480,8 @@ const TraiterDenonciation = (props) => {
                                         </blockquote>
                                       </div>
 
-                                      <FormControl component="fieldset" style={{  width: "100%"}}>
-                                        <FormLabel component="legend" className="text-white text-md text" style={{ color:"white" }}>
+                                      <FormControl component="fieldset" style={{ width: "100%" }}>
+                                        <FormLabel component="legend" className="text-white text-md text" style={{ color: "white" }}>
                                           Que votez-vous pour cette proposition
                                           ?
                                         </FormLabel>
@@ -1426,49 +1491,49 @@ const TraiterDenonciation = (props) => {
                                           value={(chat?.voteDto?.userVote).filter((e) => {
                                             // console.log("filter", e.author.id === user.id  );
                                             // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                             return e.author.id === user.id 
-                                          })[0]?.voteType+""}
-                                          onChange={(e) => handleVote(e, chat.id)} 
+                                            return e.author.id === user.id
+                                          })[0]?.voteType + ""}
+                                          onChange={(e) => handleVote(e, chat.id)}
                                         >
-                                         
+
                                           <FormControlLabel
                                             value="POUR"
                                             control={
                                               <Radio
-                                              color="error"
+                                                color="error"
                                                 sx={{
                                                   "& .MuiSvgIcon-root": {
                                                     display: "none",
                                                     color: "white"
                                                   },
-                                                  
+
                                                 }}
                                               />
                                             }
                                             label="Pour"
-                                            style={{  color: "white", borderColor: "white"}}
+                                            style={{ color: "white", borderColor: "white" }}
                                           />
                                           <div>
-                                          <LinearProgress
-                                            variant="determinate" 
-                                            color="success"
-                                            value={((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                              return e.voteType === "POUR" 
-                                           }).length /((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                            return e.voteType === "POUR" 
-                                         }).length + (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "CONTRE" 
-                                       }).length)) * 100}
-                                          />
-                                          <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                             return e.voteType === "POUR" 
-                                          }).length} vote(s)</p>
+                                            <LinearProgress
+                                              variant="determinate"
+                                              color="success"
+                                              value={((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length)) * 100}
+                                            />
+                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
+
+                                              return e.voteType === "POUR"
+                                            }).length} vote(s)</p>
                                           </div>
-                                           
+
                                           <FormControlLabel
                                             value="CONTRE"
                                             control={<Radio sx={{
@@ -1480,90 +1545,90 @@ const TraiterDenonciation = (props) => {
                                                 color: "white",
                                                 fontWeight: "bold"
                                               }
-                                            }}/>}
+                                            }} />}
                                             label="Contre"
-                                            style={{  color: "white", borderColor: "white"}}
+                                            style={{ color: "white", borderColor: "white" }}
                                           />
                                           <div>
-                                          <LinearProgress
-                                            variant="determinate"  color="success"
-                                            value={((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                              return e.voteType === "CONTRE" 
-                                           }).length /((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                            return e.voteType === "POUR" 
-                                         }).length + (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "CONTRE" 
-                                       }).length)) * 100}
-                                          />
-                                          <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                            // console.log("filter", e.author.id === user.id  );
-                                            // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                             return e.voteType === "CONTRE" 
-                                          }).length} vote(s)</p>
-                                        </div>
+                                            <LinearProgress
+                                              variant="determinate" color="success"
+                                              value={((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length)) * 100}
+                                            />
+                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
+                                              // console.log("filter", e.author.id === user.id  );
+                                              // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
+                                              return e.voteType === "CONTRE"
+                                            }).length} vote(s)</p>
+                                          </div>
                                         </RadioGroup>
-                                      
-                                        
+
+
                                       </FormControl>
-                                      
-                                        {(chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                           return e.voteType === "POUR" 
-                                        }).length > (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "CONTRE" 
-                                       }).length ? <>
-                                         <hr style={{ borderColor: "white" }} />
-                                         <div style={{marginLeft: "auto", marginRight: "auto" , display: "grid"}}>
-                                          {showConfirmChooseSolution ? 
-                                          <div style={{ display: "flex", justifyContent: "space-evenly"}}>
-                                            <label style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>Poursuivre ? </label>
-                                            <button  onClick={handleChooseVoteConfirm} className="" style={{
+
+                                      {(chat?.voteDto?.userVote).filter((e) => {
+
+                                        return e.voteType === "POUR"
+                                      }).length > (chat?.voteDto?.userVote).filter((e) => {
+
+                                        return e.voteType === "CONTRE"
+                                      }).length ? <>
+                                        <hr style={{ borderColor: "white" }} />
+                                        <div style={{ marginLeft: "auto", marginRight: "auto", display: "grid" }}>
+                                          {showConfirmChooseSolution ?
+                                            <div style={{ display: "flex", justifyContent: "space-evenly" }}>
+                                              <label style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>Poursuivre ? </label>
+                                              <button onClick={handleChooseVoteConfirm} className="" style={{
                                                 color: "black",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
-                                                  backgroundColor: "transparent",
-                                                  marginRight: "6px"
+                                                backgroundColor: "transparent",
+                                                marginRight: "6px"
                                               }}  >
                                                 Non
-                                            </button>
-                                            <button  onClick={(e) => handleChooseVote(chat.id)} className="" style={{
+                                              </button>
+                                              <button onClick={(e) => handleChooseVote(chat.id)} className="" style={{
                                                 color: "white",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
                                                 backgroundColor: "transparent"
-                                                
+
                                               }}  >
                                                 Oui
-                                            </button>
-                                          </div> : 
-                                          <>
-                                            <button  onClick={handleChooseVoteConfirm} className="" style={{
+                                              </button>
+                                            </div> :
+                                            <>
+                                              <button onClick={handleChooseVoteConfirm} className="" style={{
                                                 color: "white",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
                                                 backgroundColor: "transparent"
-                                                
+
                                               }}  >
                                                 Utiliser comme solution
-                                            </button>
-                                          </>}
-                                            
-                                          </div>
-                                       </>  : null }
-                                     
-                                    
+                                              </button>
+                                            </>}
+
+                                        </div>
+                                      </> : null}
+
+
                                     </div>
-                                    
+
                                   </li>
                                 </>
                               ) : (
@@ -1597,7 +1662,7 @@ const TraiterDenonciation = (props) => {
                                       </span>
                                     </div>
                                     <div className="message my-message">
-                                    <div className="row" style={{display: "grid", justifyContent:"end"}}>
+                                      <div className="row" style={{ display: "grid", justifyContent: "end" }}>
                                         <HowToVoteIcon />
                                       </div>
                                       <div>
@@ -1618,8 +1683,8 @@ const TraiterDenonciation = (props) => {
                                         </blockquote>
                                       </div>
 
-                                      <FormControl component="fieldset"  style={{  width: "100%"}}>
-                                        <FormLabel component="legend" className="text-white text-md text" style={{ color:"white" }}>
+                                      <FormControl component="fieldset" style={{ width: "100%" }}>
+                                        <FormLabel component="legend" className="text-white text-md text" style={{ color: "white" }}>
                                           Que votez-vous pour cette proposition
                                           ?
                                         </FormLabel>
@@ -1628,11 +1693,11 @@ const TraiterDenonciation = (props) => {
                                           name="vote-options"
                                           value={(chat?.voteDto?.userVote).filter((e) => {
                                             // console.log("filter", e.author.id === user.id  );
-                                             return e.author.id === user.id 
-                                          })[0]?.voteType+""}
-                                          onChange={(e) => handleVote(e, chat.id)} 
+                                            return e.author.id === user.id
+                                          })[0]?.voteType + ""}
+                                          onChange={(e) => handleVote(e, chat.id)}
                                         >
-                                         
+
                                           <FormControlLabel
                                             value="POUR"
                                             control={
@@ -1649,28 +1714,28 @@ const TraiterDenonciation = (props) => {
                                               />
                                             }
                                             label="Pour"
-                                            style={{  color: "white", borderColor: "white"}}
+                                            style={{ color: "white", borderColor: "white" }}
                                           />
                                           <div>
-                                          <LinearProgress
-                                            variant="determinate"   color="success"
-                                            value={((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                              return e.voteType === "POUR" 
-                                           }).length /((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                            return e.voteType === "POUR" 
-                                         }).length + (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "CONTRE" 
-                                       }).length)) * 100}
-                                          />
-                                          <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                            // console.log("filter", e.author.id === user.id  );
-                                             return e.voteType === "POUR" 
-                                          }).length} vote(s)</p>
+                                            <LinearProgress
+                                              variant="determinate" color="success"
+                                              value={((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length)) * 100}
+                                            />
+                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
+                                              // console.log("filter", e.author.id === user.id  );
+                                              return e.voteType === "POUR"
+                                            }).length} vote(s)</p>
                                           </div>
-                                           
+
                                           <FormControlLabel
                                             value="CONTRE"
                                             control={<Radio sx={{
@@ -1681,88 +1746,88 @@ const TraiterDenonciation = (props) => {
                                                 color: "white",
                                                 fontWeight: "bold"
                                               }
-                                            }}/>}
+                                            }} />}
                                             label="Contre"
-                                            style={{  color: "white", borderColor: "white"}}
+                                            style={{ color: "white", borderColor: "white" }}
                                           />
                                           <div>
-                                          <LinearProgress
-                                            variant="determinate"  color="success"
-                                            value={((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                              return e.voteType === "CONTRE" 
-                                           }).length /((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                            return e.voteType === "CONTRE" 
-                                         }).length + (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "POUR" 
-                                       }).length)) * 100}
-                                          />
-                                          <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                            // console.log("filter", e.author.id === user.id  );
-                                            // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                             return e.voteType === "CONTRE" 
-                                          }).length} vote(s)</p>
-                                        </div>
+                                            <LinearProgress
+                                              variant="determinate" color="success"
+                                              value={((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length)) * 100}
+                                            />
+                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
+                                              // console.log("filter", e.author.id === user.id  );
+                                              // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
+                                              return e.voteType === "CONTRE"
+                                            }).length} vote(s)</p>
+                                          </div>
                                         </RadioGroup>
-                                      
-                                        
+
+
                                       </FormControl>
-                                     
+
                                       {(chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                           return e.voteType === "POUR" 
-                                        }).length > (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "CONTRE" 
-                                       }).length ? <>
-                                         <hr style={{ borderColor: "white" }} />
-                                         <div style={{marginLeft: "auto", marginRight: "auto" , display: "grid"}}>
-                                         {showConfirmChooseSolution ? 
-                                          <div style={{ display: "flex", justifyContent: "space-evenly"}}>
-                                            <label style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>Poursuivre ? </label>
-                                            <button  onClick={handleChooseVoteConfirm} className="" style={{
+
+                                        return e.voteType === "POUR"
+                                      }).length > (chat?.voteDto?.userVote).filter((e) => {
+
+                                        return e.voteType === "CONTRE"
+                                      }).length ? <>
+                                        <hr style={{ borderColor: "white" }} />
+                                        <div style={{ marginLeft: "auto", marginRight: "auto", display: "grid" }}>
+                                          {showConfirmChooseSolution ?
+                                            <div style={{ display: "flex", justifyContent: "space-evenly" }}>
+                                              <label style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>Poursuivre ? </label>
+                                              <button onClick={handleChooseVoteConfirm} className="" style={{
                                                 color: "black",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
-                                                  backgroundColor: "transparent",
-                                                  marginRight: "6px"
+                                                backgroundColor: "transparent",
+                                                marginRight: "6px"
                                               }}  >
                                                 Non
-                                            </button>
-                                            <button  onClick={(e) => handleChooseVote(chat.id)} className="" style={{
+                                              </button>
+                                              <button onClick={(e) => handleChooseVote(chat.id)} className="" style={{
                                                 color: "white",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
                                                 backgroundColor: "transparent"
-                                                
+
                                               }}  >
                                                 Oui
-                                            </button>
-                                          </div> : 
-                                          <>
-                                            <button  onClick={handleChooseVoteConfirm} className="" style={{
+                                              </button>
+                                            </div> :
+                                            <>
+                                              <button onClick={handleChooseVoteConfirm} className="" style={{
                                                 color: "white",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
                                                 backgroundColor: "transparent"
-                                                
+
                                               }}  >
                                                 Utiliser comme solution
-                                            </button>
-                                          </>}
-                                          </div>
-                                       </>  : null }
-                                     
+                                              </button>
+                                            </>}
+                                        </div>
+                                      </> : null}
+
                                     </div>
-                                    
+
                                   </li>
                                 </>
                               ) : (
@@ -1783,7 +1848,7 @@ const TraiterDenonciation = (props) => {
                                 </>
                               )}
                             </>
-                            
+
                           )}
                         </>
                       ))}
@@ -1837,23 +1902,23 @@ const TraiterDenonciation = (props) => {
                       ></textarea>
                     )}
                     <div className="">
-                    {showVoteField ? 
-                      <button onClick={handleShowVoteField} className="btn btn-secondary ml-4" style={{
-                        float: "right",
-                        color: "white",
-                        fontSize: "16px",
-                        textTransform: "uppercase",
-                        border: "none",
-                        cursor: "pointer",
-                        fontWeight: 'bold',
-                        backgroundColor: "gray"
-                        
-                      }}  >
-                        Annuler
-                      </button>
-                    : null
-                    }
-                    <button onClick={showVoteField ? sendVote : sendValue} className="btn btn-primary" style={{
+                      {showVoteField ?
+                        <button onClick={handleShowVoteField} className="btn btn-secondary ml-4" style={{
+                          float: "right",
+                          color: "white",
+                          fontSize: "16px",
+                          textTransform: "uppercase",
+                          border: "none",
+                          cursor: "pointer",
+                          fontWeight: 'bold',
+                          backgroundColor: "gray"
+
+                        }}  >
+                          Annuler
+                        </button>
+                        : null
+                      }
+                      <button onClick={showVoteField ? sendVote : sendValue} className="btn btn-primary" style={{
                         float: "right",
                         color: "white",
                         fontSize: "16px",
@@ -1863,11 +1928,11 @@ const TraiterDenonciation = (props) => {
                         fontWeight: 'bold',
                         backgroundColor: "#84cd3e"
                       }} >
-                      {showVoteField ? "Soumettre pour vote" : "Envoyer"}
-                    </button>
+                        {showVoteField ? "Soumettre pour vote" : "Envoyer"}
+                      </button>
 
                     </div>
-                    
+
                   </div>
                 </div>
 
@@ -1889,119 +1954,60 @@ const TraiterDenonciation = (props) => {
 
 
   /*Hisotrique*/
- 
+
 
   let details;
-  if ((props.solution).length!==0 ) {
-   
+  if ((props.solution).length !== 0) {
+
     if (props.status === "TO_APPROUVED" || props.status === "DESAPPROUVED") {
       // console.log("abcde",props.status)
-      let index=0;
-      let solutions = Array.from(props.solution) ;
-      let couleurs =["#333300","#00cc00","#99003d","#3333ff","#666666","#253858","#00875A","#36B37E","#FFC400","#FF8B00","#FF5630","#5243AA","#0052CC","#00B8D9"]
-      
-      if (solutions.length !==0) {
-        details=(
+      let index = 0;
+      let solutions = Array.from(props.solution);
+      let couleurs = ["#333300", "#00cc00", "#99003d", "#3333ff", "#666666", "#253858", "#00875A", "#36B37E", "#FFC400", "#FF8B00", "#FF5630", "#5243AA", "#0052CC", "#00B8D9"]
+
+      if (solutions.length !== 0) {
+        details = (
           <>
             <div className="col s12">
               {/* let solutions =  */}
               {Array.from(solutions).map((solution) => {
                 let fond = couleurs[getRandomInt(couleurs.length)];
-                
+
                 let mesure = "";
                 if (solution.status === "APPROVED" && solution.satisfactionMeasureDto !== null) {
-                  let degre = solution.satisfactionMeasureDto.status === "SATISFIED" ? "Satisfait" : solution.satisfactionMeasureDto.status === "UNSATISFIED" ? "Non satisfait" : solution.satisfactionMeasureDto.status === "PARTIAL" ? "Partiellement satisfait":"";
-                  mesure = 
-                  <>
-                    <Typography component="div" >
-                      <div>
-                        <span className="chip2" style={{ backgroundColor:fond }}>
-                          <span className="hero">
-                            Client {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
-                          </span>
-                        </span>
-                      </div>
-                    </Typography>
-                  </>
-                }else if(solution.status === "APPROVED" && solution.satisfactionMeasureDto === null){
+                  let degre = solution.satisfactionMeasureDto.status === "SATISFIED" ? "Satisfait" : solution.satisfactionMeasureDto.status === "UNSATISFIED" ? "Non satisfait" : solution.satisfactionMeasureDto.status === "PARTIAL" ? "Partiellement satisfait" : "";
                   mesure =
-                  <>
-                    <span className="chip2" style={{ backgroundColor:fond }}>
-                      <span className="hero">
-                       Traitée
-                      </span>
-                      {/* <span className="hero">
+                    <>
+                      <Typography component="div" >
+                        <div>
+                          <span className="chip2" style={{ backgroundColor: fond }}>
+                            <span className="hero">
+                              Client {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                            </span>
+                          </span>
+                        </div>
+                      </Typography>
+                    </>
+                } else if (solution.status === "APPROVED" && solution.satisfactionMeasureDto === null) {
+                  mesure =
+                    <>
+                      <span className="chip2" style={{ backgroundColor: fond }}>
+                        <span className="hero">
+                          Traitée
+                        </span>
+                        {/* <span className="hero">
                         En attente de mesure de satisfaction
                       </span> */}
-                    </span>
-                  </> 
+                      </span>
+                    </>
                 }
-  
+
                 let approbation = "";
                 if (solution.status === "UNAPPROVED" && solution.motifDesaprobation !== null) {
-                
-                  approbation = 
-                  <>
-                    <Typography component="div" >
-                      <div className="row">
-                        <div
-                          className="col l12 s12 pb-2"
-                          id="content"
-                        >
-                          <div className="df pb-2">
-                            <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                            Motif de désapprobation
-                          </div>
-                          <div>{solution.motifDesaprobation !== null ? solution.motifDesaprobation:""}</div>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="chip2" style={{ backgroundColor:fond }}>
-                          <span className="hero">
-                            Désapprouvée par {solution.unApprouver !== null ? solution.unApprouver.firstAndLastName:""} le {formatDate(solution.unApprouvedAt)}
-                          </span>
-                        </span>
-                      </div>
-                    </Typography>
-                  </>
-                }else if(solution.status === "UNAPPROVED" && solution.motifDesaprobation === null){
+
                   approbation =
-                  <>
-                    <span className="chip2" style={{ backgroundColor:fond }}>
-                      <span className="hero">
-                        En attente d'approbation
-                      </span>
-                    </span>
-                  </> 
-                }
-      
-                let enregistrement = 
-                <>
-              
-                  <Timeline
-                    
-                  >
-                    <TimelineItem >
-                      <TimelineOppositeContent
-                        sx={{ m: 'auto 0',flex:"0" }}
-                        variant="body2"
-                        color="text.secondary"
-                      >
-                      </TimelineOppositeContent>
-                      <TimelineSeparator>
-                        <TimelineConnector />
-                        <TimelineDot style={{ fontSize:"25px" }}>
-                          <Avatar sx={{ width: 32, height: 32,backgroundColor:fond }}>{ index=index+1}</Avatar>
-                        </TimelineDot>
-                        <TimelineConnector />
-                      </TimelineSeparator>
-                      <TimelineContent sx={{ py: '12px', px: 2 }}>
-      
-                        <Typography variant="h6" component="span">
-                          {solution.author.firstAndLastName} - <span style={{ fontSize:"12px" }}>{formatDate(solution.createdAt)}</span> 
-                        </Typography>
-      
-                        <Typography className="pb-2" component="div">
+                    <>
+                      <Typography component="div" >
                         <div className="row">
                           <div
                             className="col l12 s12 pb-2"
@@ -2009,52 +2015,111 @@ const TraiterDenonciation = (props) => {
                           >
                             <div className="df pb-2">
                               <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                              Solution
+                              Motif de désapprobation
                             </div>
-                            <div>{solution.content}</div>
-                          </div>
-
-                          <div
-                            className="col l12 s12 pb-2"
-                            id="content"
-                          >
-                            <div className="df pb-2">
-                              <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                              Commentaire
-                            </div>
-                            <div>{solution.commentaire}</div>
+                            <div>{solution.motifDesaprobation !== null ? solution.motifDesaprobation : ""}</div>
                           </div>
                         </div>
-                       
-                        </Typography>
-                        {approbation}
-                        {mesure}
-      
-                      </TimelineContent>
-                    </TimelineItem>
-            
-                  </Timeline>
-              
-                </>
-            
+                        <div>
+                          <span className="chip2" style={{ backgroundColor: fond }}>
+                            <span className="hero">
+                              Désapprouvée par {solution.unApprouver !== null ? solution.unApprouver.firstAndLastName : ""} le {formatDate(solution.unApprouvedAt)}
+                            </span>
+                          </span>
+                        </div>
+                      </Typography>
+                    </>
+                } else if (solution.status === "UNAPPROVED" && solution.motifDesaprobation === null) {
+                  approbation =
+                    <>
+                      <span className="chip2" style={{ backgroundColor: fond }}>
+                        <span className="hero">
+                          En attente d'approbation
+                        </span>
+                      </span>
+                    </>
+                }
+
+                let enregistrement =
+                  <>
+
+                    <Timeline
+
+                    >
+                      <TimelineItem >
+                        <TimelineOppositeContent
+                          sx={{ m: 'auto 0', flex: "0" }}
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                        </TimelineOppositeContent>
+                        <TimelineSeparator>
+                          <TimelineConnector />
+                          <TimelineDot style={{ fontSize: "25px" }}>
+                            <Avatar sx={{ width: 32, height: 32, backgroundColor: fond }}>{index = index + 1}</Avatar>
+                          </TimelineDot>
+                          <TimelineConnector />
+                        </TimelineSeparator>
+                        <TimelineContent sx={{ py: '12px', px: 2 }}>
+
+                          <Typography variant="h6" component="span">
+                            {solution.author.firstAndLastName} - <span style={{ fontSize: "12px" }}>{formatDate(solution.createdAt)}</span>
+                          </Typography>
+
+                          <Typography className="pb-2" component="div">
+                            <div className="row">
+                              <div
+                                className="col l12 s12 pb-2"
+                                id="content"
+                              >
+                                <div className="df pb-2">
+                                  <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                  Solution
+                                </div>
+                                <div>{solution.content}</div>
+                              </div>
+
+                              <div
+                                className="col l12 s12 pb-2"
+                                id="content"
+                              >
+                                <div className="df pb-2">
+                                  <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                  Commentaire
+                                </div>
+                                <div>{solution.commentaire}</div>
+                              </div>
+                            </div>
+
+                          </Typography>
+                          {approbation}
+                          {mesure}
+
+                        </TimelineContent>
+                      </TimelineItem>
+
+                    </Timeline>
+
+                  </>
+
                 return (
                   <>
-                
+
                     {enregistrement}
-                  
+
                   </>
                 );
-      
+
               })}
             </div>
           </>);
       } else {
         details = "Aucune donnée"
-      } 
+      }
     }
-    
-  } else if ((props.solution).length===0 ) { 
-    details="Cette dénonciation est en attente de traitement";
+
+  } else if ((props.solution).length === 0) {
+    details = "Cette dénonciation est en attente de traitement";
   }
 
   let formButtons;
@@ -2129,20 +2194,20 @@ const TraiterDenonciation = (props) => {
   const handleSolve = (e) => {
     e.preventDefault();
     // if (handleValidation()) {
-      let claim = {};
-      claim["claimId"] = props.id;
-      claim["treatorId"] = user.id;
-      claim["solution"] = props.solution.length !== 0 ? props.solution : "";
-      claim["commentaire"] = props.comment;
-      claim["existingId"] = props.solutionExistant;
-      claim["isExisting"] = props.solutionExistant !== "" ? true : false;
+    let claim = {};
+    claim["claimId"] = props.id;
+    claim["treatorId"] = user.id;
+    claim["solution"] = props.solution.length !== 0 ? props.solution : "";
+    claim["commentaire"] = props.comment;
+    claim["existingId"] = props.solutionExistant;
+    claim["isExisting"] = props.solutionExistant !== "" ? true : false;
 
-      // console.log("traitementclaim", claim);
-      props.etat2Changed(true)
-      treatDenunciationApi(claim, props).then(() => {
-        handleCancel(e);
-        handleClose();
-      });
+    // console.log("traitementclaim", claim);
+    props.etat2Changed(true)
+    treatDenunciationApi(claim, props).then(() => {
+      handleCancel(e);
+      handleClose();
+    });
     // } else {
     // }
     props.claimHandleErrors(errors);
@@ -2225,7 +2290,7 @@ const TraiterDenonciation = (props) => {
       handleCancel(e);
       handleClose();
     });
-    
+
   };
 
   const handleModal = (e) => {
@@ -2275,9 +2340,9 @@ const TraiterDenonciation = (props) => {
 
       if (hbt.includes("H6") || addR === "PILOTE") {
         if (props.objetLevel === "MINEUR" &&
-        user.firstAndLastName === props.created_by &&
-        props.transmitted === "true") {
-          affectForm=""
+          user.firstAndLastName === props.created_by &&
+          props.transmitted === "true") {
+          affectForm = ""
         } else {
           affectForm = (
             <>
@@ -2288,7 +2353,7 @@ const TraiterDenonciation = (props) => {
                       <summary className="text-details">
                         Affectation de la dénonciation
                       </summary>
-    
+
                       <div className="col s12 input-field">
                         <Select
                           options={agentsMailOptions}
@@ -2316,48 +2381,48 @@ const TraiterDenonciation = (props) => {
                         </small>
                       </div>
 
-                      
-                          <div className="col s12 display-flex justify-content-end mt-3">
-                            {
-                                (actif !== undefined && actif)  ?
-                                <LoadingButton
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    if (handleValidationForAssign()) {
-                                      //setShowSelectPrintItem(true);
-                                      handleAssign(e);
-                                    }
-                                    props.claimHandleErrors(errors);
-                                  }}
-                                  className="waves-effect waves-effect-b waves-light btn-small"
-                                  loading={props.etat}
-                                  loadingPosition="end"
-                                  endIcon={<SaveIcon />}
-                                  variant="contained"
-                                  sx={{
-                                    backgroundColor: "#1e2188",
-                                    textTransform: "initial",
-                                  }}
-                                >
-                                  <span>Affecter</span>
-                                </LoadingButton>
-                              :
-                              <div className="card-alert card red lighten-5">
-                                <div className="card-content red-text">
-                                    <ul>
-                                        Veuillez activer une licence.
-                                    </ul>
-                                </div>
-                              </div>
-                            }
-                          
-                          </div>
-                        
 
-                          
-                      
-                    
-                    
+                      <div className="col s12 display-flex justify-content-end mt-3">
+                        {
+                          (actif !== undefined && actif) ?
+                            <LoadingButton
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (handleValidationForAssign()) {
+                                  //setShowSelectPrintItem(true);
+                                  handleAssign(e);
+                                }
+                                props.claimHandleErrors(errors);
+                              }}
+                              className="waves-effect waves-effect-b waves-light btn-small"
+                              loading={props.etat}
+                              loadingPosition="end"
+                              endIcon={<SaveIcon />}
+                              variant="contained"
+                              sx={{
+                                backgroundColor: "#1e2188",
+                                textTransform: "initial",
+                              }}
+                            >
+                              <span>Affecter</span>
+                            </LoadingButton>
+                            :
+                            <div className="card-alert card red lighten-5">
+                              <div className="card-content red-text">
+                                <ul>
+                                  Veuillez activer une licence.
+                                </ul>
+                              </div>
+                            </div>
+                        }
+
+                      </div>
+
+
+
+
+
+
                     </details>
                   </div>
                 </div>
@@ -2365,19 +2430,19 @@ const TraiterDenonciation = (props) => {
             </>
           );
         }
-      }else{
-        affectForm=""
+      } else {
+        affectForm = ""
       }
 
-      if (hbt.includes("H2","H3","H4") && props.created_by === user.firstAndLastName && props.transmitted === "false" ) {
+      if (hbt.includes("H2", "H3", "H4") && props.created_by === user.firstAndLastName && props.transmitted === "false") {
         treatForm = (
           <>
-            
-            
+
+
             {/* {solutionsListe} */}
             {props.authorize ? (
               <>
-                {solutionsListe !== undefined && solutionsListe.length !==0 ? 
+                {solutionsListe !== undefined && solutionsListe.length !== 0 ?
                   <div className="row">
                     <div className="col l12">
                       <details>
@@ -2388,7 +2453,7 @@ const TraiterDenonciation = (props) => {
                       </details>
                     </div>
                   </div>
-                :""}
+                  : ""}
 
                 <form id="claimHandleForm">
                   <div className="row mb-2">
@@ -2443,12 +2508,12 @@ const TraiterDenonciation = (props) => {
                             </div>
                           </small>
                         </div>
-                        
+
                       </details>
                     </div>
                     <div className="col s12 display-flex justify-content-end">
                       {
-                          (actif !== undefined && actif)  ?
+                        (actif !== undefined && actif) ?
                           <LoadingButton
                             onClick={handleSolve}
                             className="waves-effect waves-effect-b waves-light btn-small"
@@ -2463,22 +2528,22 @@ const TraiterDenonciation = (props) => {
                           >
                             <span>Résoudre</span>
                           </LoadingButton>
-                         :
+                          :
                           <div className="card-alert card red lighten-5">
-                              <div className="card-content red-text">
-                                <ul>
-                                  Veuillez activer une licence.
-                                </ul>
-                              </div>
+                            <div className="card-content red-text">
+                              <ul>
+                                Veuillez activer une licence.
+                              </ul>
+                            </div>
                           </div>
 
                       }
-                    
+
                     </div>
                   </div>
                 </form>
 
-              
+
               </>
             ) : (
               <div className="row">
@@ -2501,8 +2566,8 @@ const TraiterDenonciation = (props) => {
             )}
           </>
         );
-      }else{
-        treatForm=""
+      } else {
+        treatForm = ""
       }
 
 
@@ -2514,7 +2579,7 @@ const TraiterDenonciation = (props) => {
 
       break;
     case "AFFECTED":
-    
+
       statusElt = (
         <span className="affectedBgColor chip z-depth-1">
           <span className="">Affectée</span>
@@ -2530,7 +2595,7 @@ const TraiterDenonciation = (props) => {
               <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
               {props.assigned_by} le {formatDate(props.assignedAt)}
             </div>
-  
+
             {/* resolution */}
             {props.authorize ? (
               <form id="claimHandleAgainForm">
@@ -2588,7 +2653,7 @@ const TraiterDenonciation = (props) => {
                       </div>
                       <div className="col s12 display-flex justify-content-end mt-3">
                         {
-                           (actif !== undefined && actif)  ?
+                          (actif !== undefined && actif) ?
                             <LoadingButton
                               onClick={handleSolve}
                               className="waves-effect waves-effect-b waves-light btn-small"
@@ -2603,16 +2668,16 @@ const TraiterDenonciation = (props) => {
                             >
                               <span>Traiter</span>
                             </LoadingButton>
-                          :
+                            :
                             <div className="card-alert card red lighten-5">
-                                <div className="card-content red-text">
-                                    <ul>
-                                        Veuillez activer une licence.
-                                    </ul>
-                                </div>
+                              <div className="card-content red-text">
+                                <ul>
+                                  Veuillez activer une licence.
+                                </ul>
+                              </div>
                             </div>
                         }
-                       
+
                       </div>
                     </details>
                   </div>
@@ -2650,8 +2715,8 @@ const TraiterDenonciation = (props) => {
               </div>
             </div>
           )
-        }else{
-          treatForm=""
+        } else {
+          treatForm = ""
         }
       }
       break;
@@ -2690,7 +2755,7 @@ const TraiterDenonciation = (props) => {
                     <div className="row">{details}</div>
                   </div>
                 </div>
-                
+
               </details>
             </div>
           </div>
@@ -2718,9 +2783,9 @@ const TraiterDenonciation = (props) => {
                       Solution
                     </div>
                     <div>
-                    {props.solution[0] !== undefined
-                          ? props.solution[0].content
-                          : ""}
+                      {props.solution[0] !== undefined
+                        ? props.solution[0].content
+                        : ""}
                     </div>
                   </div>
 
@@ -2733,9 +2798,9 @@ const TraiterDenonciation = (props) => {
                       Commentaire
                     </div>
                     <div>
-                    {props.solution[0] !== undefined
-                          ? props.solution[0].commentaire
-                          : ""}
+                      {props.solution[0] !== undefined
+                        ? props.solution[0].commentaire
+                        : ""}
                     </div>
                   </div>
                 </div>
@@ -2760,47 +2825,47 @@ const TraiterDenonciation = (props) => {
                 </div>
                 <div className="col s12 display-flex justify-content-end mt-3">
                   {
-                     (actif !== undefined && actif)  ?
-                    <>
-                      <LoadingButton
-                        onClick={
-                          handleDisapprove
-                        }
-                        className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                        loading={props.etat}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{textTransform:"initial" }}
-                      >
+                    (actif !== undefined && actif) ?
+                      <>
+                        <LoadingButton
+                          onClick={
+                            handleDisapprove
+                          }
+                          className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                          loading={props.etat}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{ textTransform: "initial" }}
+                        >
                           <span>Désapprouver</span>
-                      </LoadingButton>
+                        </LoadingButton>
 
-                      <LoadingButton
-                        onClick={
-                          handleApprove
-                        }
-                        className="waves-effect waves-effect-b waves-light btn-small"
-                        loading={props.etat2}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
-                      >
+                        <LoadingButton
+                          onClick={
+                            handleApprove
+                          }
+                          className="waves-effect waves-effect-b waves-light btn-small"
+                          loading={props.etat2}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                        >
                           <span>Approuver</span>
-                      </LoadingButton>
-                    </>
-                    :
-                    <div className="card-alert card red lighten-5">
-                      <div className="card-content red-text">
+                        </LoadingButton>
+                      </>
+                      :
+                      <div className="card-alert card red lighten-5">
+                        <div className="card-content red-text">
                           <ul>
-                              Veuillez activer une licence.
+                            Veuillez activer une licence.
                           </ul>
+                        </div>
                       </div>
-                    </div>
 
                   }
-                
+
                 </div>
               </details>
             </div>
@@ -2818,7 +2883,7 @@ const TraiterDenonciation = (props) => {
       } else {
         treatForm = <>{historique}</>;
       }
-     
+
 
       break;
     case "DESAPPROUVED":
@@ -2855,7 +2920,7 @@ const TraiterDenonciation = (props) => {
                 </details>
               </div>
             </div>
-  
+
             {/* retraitement */}
             {props.authorize ? (
               <form id="claimHandleAgainForm">
@@ -2865,7 +2930,7 @@ const TraiterDenonciation = (props) => {
                       <summary className="text-details">
                         Retraitement de la dénonciation
                       </summary>
-  
+
                       <div className="col s12 input-field">
                         <textarea
                           id="solution"
@@ -2916,10 +2981,10 @@ const TraiterDenonciation = (props) => {
                           </div>
                         </small>
                       </div>
-  
+
                       <div className="col s12 display-flex justify-content-end mt-3">
                         {
-                           (actif !== undefined && actif)  ?
+                          (actif !== undefined && actif) ?
                             <LoadingButton
                               onClick={handleReSolve}
                               className="waves-effect waves-effect-b waves-light btn-small"
@@ -2934,16 +2999,16 @@ const TraiterDenonciation = (props) => {
                             >
                               <span>Retraiter</span>
                             </LoadingButton>
-                          :
-                          <div className="card-alert card red lighten-5">
-                            <div className="card-content red-text">
-                               <ul>
-                                   Veuillez activer une licence.
-                               </ul>
+                            :
+                            <div className="card-alert card red lighten-5">
+                              <div className="card-content red-text">
+                                <ul>
+                                  Veuillez activer une licence.
+                                </ul>
+                              </div>
                             </div>
-                          </div>
                         }
-                       
+
                       </div>
                     </details>
                   </div>
@@ -2971,7 +3036,7 @@ const TraiterDenonciation = (props) => {
           </>
         );
       } else {
-        
+
       }
       break;
     default:
@@ -3082,9 +3147,9 @@ const TraiterDenonciation = (props) => {
         graviteElt = "";
         break;
     }
-   
+
     element.risqueLevel = graviteElt;
-    
+
     //date createdAt
     let createdAt = new Intl.DateTimeFormat("fr-FR", {
       year: "numeric",
@@ -3096,14 +3161,14 @@ const TraiterDenonciation = (props) => {
     element.createdAtFormated = createdAt;
   });
 
-  
+
   let transmettre = "";
   let btnS = "";
-  
+
   if (
     props.objetLevel === "MINEUR" &&
     user.firstAndLastName === props.created_by &&
-    props.transmitted ==="false"
+    props.transmitted === "false"
   ) {
     transmettre = (
       <>
@@ -3125,80 +3190,80 @@ const TraiterDenonciation = (props) => {
   }
   if ((user.firstAndLastName === props.created_by && props.transmitted === "false") || showJoinBtn) {
     if (props.session === "" && props.session.status !== "OPEN") {
-      btnS = 
-       (actif !== undefined && actif)  ?
-        <>
-          <LoadingButton
-            onClick={(e) => registerUser(e)}
-            className="waves-effect waves-effect-b waves-light btn-small"
-            loading={props.etat4}
-            loadingPosition="end"
-            endIcon={<ChatIcon />}
-            variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-          >
-            <span>Ouvrir une session</span>
-          </LoadingButton>
-        </>
-      :
-        <div className="card-alert card red lighten-5">
-          <div className="card-content red-text">
+      btnS =
+        (actif !== undefined && actif) ?
+          <>
+            <LoadingButton
+              onClick={(e) => registerUser(e)}
+              className="waves-effect waves-effect-b waves-light btn-small"
+              loading={props.etat4}
+              loadingPosition="end"
+              endIcon={<ChatIcon />}
+              variant="contained"
+              sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+            >
+              <span>Ouvrir une session</span>
+            </LoadingButton>
+          </>
+          :
+          <div className="card-alert card red lighten-5">
+            <div className="card-content red-text">
               <ul>
                 Veuillez activer une licence.
               </ul>
+            </div>
           </div>
-        </div>
-      
-    } else if (props.session !== "" && props.session.status === "OPEN" ) {
-      btnS = 
-       (actif !== undefined && actif)  ?
-        <>
-          <LoadingButton
-            onClick={(e) => connect()}
-            className="waves-effect waves-effect-b waves-light btn-small"
-            loading={props.etat4}
-            loadingPosition="end"
-            endIcon={<ChatIcon />}
-            variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-          >
-            <span>Rejoindre la session</span>
-          </LoadingButton>
-        </>
-      :
-      <div className="card-alert card red lighten-5">
-        <div className="card-content red-text">
-            <ul>
+
+    } else if (props.session !== "" && props.session.status === "OPEN") {
+      btnS =
+        (actif !== undefined && actif) ?
+          <>
+            <LoadingButton
+              onClick={(e) => connect()}
+              className="waves-effect waves-effect-b waves-light btn-small"
+              loading={props.etat4}
+              loadingPosition="end"
+              endIcon={<ChatIcon />}
+              variant="contained"
+              sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+            >
+              <span>Rejoindre la session</span>
+            </LoadingButton>
+          </>
+          :
+          <div className="card-alert card red lighten-5">
+            <div className="card-content red-text">
+              <ul>
                 Veuillez activer une licence.
-            </ul>
-        </div>
-      </div>
-      
+              </ul>
+            </div>
+          </div>
+
     } else if (props.session !== "" && props.session.status === "CLOSED") {
-      btnS = 
-       (actif !== undefined && actif)  ?
-        <>
-          <LoadingButton
-            onClick={(e) => connect()}
-            className="waves-effect waves-effect-b waves-light btn-small"
-            loading={props.etat4}
-            loadingPosition="end"
-            endIcon={<ChatIcon />}
-            variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-          >
-            <span>Voir la discussion</span>
-          </LoadingButton>
-        </>
-      :
-      <div className="card-alert card red lighten-5">
-        <div className="card-content red-text">
-            <ul>
+      btnS =
+        (actif !== undefined && actif) ?
+          <>
+            <LoadingButton
+              onClick={(e) => connect()}
+              className="waves-effect waves-effect-b waves-light btn-small"
+              loading={props.etat4}
+              loadingPosition="end"
+              endIcon={<ChatIcon />}
+              variant="contained"
+              sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+            >
+              <span>Voir la discussion</span>
+            </LoadingButton>
+          </>
+          :
+          <div className="card-alert card red lighten-5">
+            <div className="card-content red-text">
+              <ul>
                 Veuillez activer une licence.
-            </ul>
-        </div>
-      </div>
-      
+              </ul>
+            </div>
+          </div>
+
     } else {
       btnS = "";
     }
@@ -3210,15 +3275,15 @@ const TraiterDenonciation = (props) => {
 
   // Parcourez la liste d'éléments
   elements.forEach(element => {
-      // Vérifiez si l'élément n'a pas l'attribut aria-hidden="true"
-      if (element.hasAttribute('aria-hidden') || element.getAttribute('aria-hidden') === 'true') {
-          // Masquez l'élément en définissant son style sur "none"
-          element.style.display = 'none';
-      }
+    // Vérifiez si l'élément n'a pas l'attribut aria-hidden="true"
+    if (element.hasAttribute('aria-hidden') || element.getAttribute('aria-hidden') === 'true') {
+      // Masquez l'élément en définissant son style sur "none"
+      element.style.display = 'none';
+    }
   });
-  
 
- 
+
+
   return (
     <div id="main">
       <div className="row">
@@ -3251,13 +3316,13 @@ const TraiterDenonciation = (props) => {
                       open={open}
                       // onClose={ handleClose}
                       onClose={() => {
-                        console.log("paramsdanslui",props?.match?.params?.code)
-                        if (props?.match?.params?.code==="all") {
+                        console.log("paramsdanslui", props?.match?.params?.code)
+                        if (props?.match?.params?.code === "all") {
                           handleClose();
-                        }else{
+                        } else {
                           handleFerme()
                         }
-                      
+
                       }}
                       TransitionComponent={Transition}
                     >
@@ -3268,7 +3333,7 @@ const TraiterDenonciation = (props) => {
                         }}
                       >
                         <Toolbar>
-                          { props?.match?.params?.code==="all" ? 
+                          {props?.match?.params?.code === "all" ?
                             <IconButton
                               edge="start"
                               color="inherit"
@@ -3276,16 +3341,16 @@ const TraiterDenonciation = (props) => {
                               aria-label="close"
                             >
                               <CloseIcon />
-                            </IconButton> 
-                          : 
+                            </IconButton>
+                            :
                             <IconButton
                               edge="start"
                               color="inherit"
                               // onClick={handleClose}
                               aria-label="close"
                             >
-                              <NavLink to="/alertes/denonciations"><div className="card-content"><CloseIcon/></div></NavLink>
-                            </IconButton> 
+                              <NavLink to="/alertes/denonciations"><div className="card-content"><CloseIcon /></div></NavLink>
+                            </IconButton>
                           }
                           <Typography
                             sx={{ ml: 2, flex: 1 }}
@@ -3310,7 +3375,7 @@ const TraiterDenonciation = (props) => {
                               </div>
                             </div>
                             <div className="row">
-                             
+
                               <div className="col s12 m12">
                                 <div className="row">
                                   <div className="col s12 pb-2">
@@ -3401,6 +3466,10 @@ const TraiterDenonciation = (props) => {
                                       </div>
                                       <div>{props.content}</div>
                                     </div>
+                                    <div className="col l12 s12 pb-2" id="">
+                                      {audioList}
+
+                                    </div>
                                     <div className="mt-5">{attachmentList}</div>
 
                                     {/* {dimf = props.dossierimf !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <FolderSharedIcon sx={{ mr: 2}}/> {props.dossierimf}</div></>:""}
@@ -3426,24 +3495,24 @@ const TraiterDenonciation = (props) => {
 
                                 {
                                   transmettre === "" || btnS === "" ?
-                                  <div className="col l6 m6 s12 df justify-content-end">
-                                    {transmettre}
-                                    {btnS}
-                                  </div>
-                                  :
-                                  <div className="col l6 m6 s12 df justify-content-between">
-                                    {transmettre}
-                                    {btnS}
-                                  </div>
+                                    <div className="col l6 m6 s12 df justify-content-end">
+                                      {transmettre}
+                                      {btnS}
+                                    </div>
+                                    :
+                                    <div className="col l6 m6 s12 df justify-content-between">
+                                      {transmettre}
+                                      {btnS}
+                                    </div>
                                 }
                               </div>
                               <div className="col s12 input-field">
                                 Etat: &nbsp;{statusElt}
                               </div>
                             </div>
-                           
-                           
-                            
+
+
+
                             {affectForm}
                             {treatForm}
                             {tchat}
@@ -3497,6 +3566,7 @@ const mapStateToProps = (state) => {
     selectedItem: state.claim_handle.selectedItem,
     selectedFiles: state.claim_handle.selectedFiles,
     selectedItemFiles: state.claim_handle.selectedItemFiles,
+    selectedItemAudio: state.claim_handle.selectedItemAudio,
     authorize: state.claim_handle.authorize,
     etat: state.claim_handle.etat,
     etat2: state.claim_handle.etat2,
@@ -3601,6 +3671,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     etatChanged: (etat) => {
       dispatch(etatChanged(etat));
+    },
+    selectedItemAudioChanged: (selectedItemAudio) => {
+      dispatch(selectedItemAudioChanged(selectedItemAudio))
     },
     etat2Changed: (etat2) => {
       dispatch(etat2Changed(etat2));

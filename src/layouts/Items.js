@@ -42,6 +42,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import SmsIcon from '@mui/icons-material/Sms';
 import EmailIcon from '@mui/icons-material/Email';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
+import { AddToDriveOutlined } from '@mui/icons-material';
 
 export const Items = (props) =>{
 
@@ -476,6 +477,14 @@ const logOut = (e) => {
                                 <SmsIcon style={{ color:"white" }} />
                             </ListItemIcon>
                             <ListItemText primary="SMS" />
+                        </ListItemButton>
+                    </NavLink>
+                    <NavLink to="/configurations/logs" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                        <ListItemButton sx={{ pl: 4 }} className='lib'>
+                            <ListItemIcon>
+                                <AddToDriveOutlined style={{ color:"white" }} />
+                            </ListItemIcon>
+                            <ListItemText primary="Log Systeme" />
                         </ListItemButton>
                     </NavLink>
 

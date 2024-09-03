@@ -37,6 +37,7 @@ import {
   crewChanged,
   suggestionListErrors,
   commentChanged,
+  selectedItemAudioChanged,
 } from "../../redux/actions/Suggestions/ListeSuggestionsActions";
 import http from "../../apis/http-common";
 import PrintIcon from "@mui/icons-material/Print";
@@ -79,9 +80,11 @@ import excel from "../../assets/images/excel.svg";
 import pdf from "../../assets/images/pdf.svg";
 import { formatDate, guessExtension, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import { Avatar, DialogContent, DialogContentText } from "@mui/material";
-import { downloadFillesApi, getFillesApi, listeTousStatuts, listeTousStatutsOffline } from "../../apis/Suggestions/SuggestionsApi";
+import { downloadFillesApi, getFillesApi, getSuggeAudioApi, listeTousStatuts, listeTousStatutsOffline } from "../../apis/Suggestions/SuggestionsApi";
 import GavelIcon from "@mui/icons-material/Gavel";
 import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from "../../Utils/globals";
+import { downloadAudioApi } from "../../apis/Denonciations/DenonciationsApi";
+// import { downloadAudioApi, getDenunAudioApi } from "../../apis/Denonciations/DenonciationsApi";
 
 
 const styles = {
@@ -119,6 +122,69 @@ const ListeSuggestions = (props) => {
   const handleImpression = () => {
     setImpression(!impression);
   };
+  const [showAudioPlayer, setAudioPlayer] = useState("");
+  const [currentAudio, setCurrentAudio] = useState("");
+
+  let audioList;
+  if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
+    let audioListChild = props.selectedItemAudio.map((attachment) => {
+   
+      return (
+        <div className="col xl12 l12 m12 s12" key={attachment.id}>
+         
+          <div className="card box-shadow-none mb-1 ">
+            <div className="card-content">
+              <div className="row">
+                <div className="col xl11 l11 s11 m11">
+                  <div className="app-file-recent-details">
+                    <div className="app-file-name font-weight-700 truncate">
+                      {attachment.name}
+                    </div>
+                    <div className="app-file-size">
+                      {Math.round(
+                        (attachment.size / 1024 + Number.EPSILON) * 100
+                      ) / 100}{" "}
+                      Ko
+                    </div>
+                    <div className="app-file-last-access" id={"audio-"+attachment.id}>
+                      <a href=" "
+                         style={{ cursor: "pointer" }}
+                         onClick={(e) => {
+                          e.preventDefault()
+                          downloadAudioApi(attachment.id, attachment.name).then(
+                            (data) => {
+                              // console.log(data);
+                              // console.log('data', data)
+                              
+                              let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
+                              let aud = new Audio(window.URL.createObjectURL(blobAudio));
+                              setCurrentAudio(window.URL.createObjectURL(blobAudio))
+                              setAudioPlayer("audio-"+attachment.id)
+                            }
+                          )
+                         }}
+                      >{showAudioPlayer === "audio-"+attachment.id && ("")} {showAudioPlayer !=="audio-"+attachment.id && ("Afficher")}</a>
+                       
+                      {showAudioPlayer === "audio-"+attachment.id  && (<audio controls autoPlay onEnded={(e) => {setAudioPlayer("")}}>
+                        <source src= {currentAudio} type="audio/ogg"  />
+                        Votre navigateur ne prend pas en charge l'élément audio.
+                      </audio>) }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    });
+    audioList = (
+      <div className="col s12 app-file-content">
+        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
+      </div>
+    );
+  }
+
 
   useEffect(() => {
     if (mode === 1) {
@@ -280,6 +346,10 @@ const ListeSuggestions = (props) => {
     props.selectedItemChanged({});
     props.selectedFilesReset([]);
     props.selectedItemFilesChanged([]);
+    props.selectedItemAudioChanged([]);
+
+    setCurrentAudio("");
+    setAudioPlayer("");
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
@@ -310,6 +380,8 @@ const ListeSuggestions = (props) => {
       props.commentChanged(data.commentaire ? data.commentaire : "");
       props.selectedItemChanged(data);
       getFillesApi(data.id, props);
+      getSuggeAudioApi(data.id, props);
+
     } else {
       if ((data.id && data.canal)) {
         props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");
@@ -333,6 +405,7 @@ const ListeSuggestions = (props) => {
         props.solutionChanged(data.accepted ? data.accepted : "");
         props.commentChanged(data.commentaire ? data.commentaire : "");
         props.selectedItemChanged(data);
+        getSuggeAudioApi(data.id, props);
         getFillesApi(data.id, props);
       } else {
         // props.idChanged(data.id ? data.id : "")
@@ -1067,6 +1140,9 @@ const ListeSuggestions = (props) => {
                                     <div>{props.content}</div>
 
                                   </div>
+                                  <div className="col l12 s12 pb-2" id="">
+                                  {audioList}
+                                  </div>
                                   <div>{attachmentList}</div>
                                 </div>
                               </div>
@@ -1139,6 +1215,7 @@ const mapStateToProps = (state) => {
     errors: state.suggestion_list.suggestion_list_errors,
     items: state.suggestion_list.items,
     selectedItem: state.suggestion_list.selectedItem,
+    selectedItemAudio: state.suggestion_list.selectedItemAudio,
     selectedFiles: state.suggestion_list.selectedFiles,
     selectedItemFiles: state.suggestion_list.selectedItemFiles,
     showSelectPrintItem: state.suggestion_list.showSelectPrintItem,
@@ -1230,6 +1307,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     selectedItemFilesChanged: (selectedItemFiles) => {
       dispatch(selectedItemFilesChanged(selectedItemFiles));
+    },
+    selectedItemAudioChanged: (selectedItemAudio) => {
+      dispatch(selectedItemAudioChanged(selectedItemAudio))
     },
     showSelectPrintItemChanged: (show) => {
       dispatch(showSelectPrintItemChanged(show));

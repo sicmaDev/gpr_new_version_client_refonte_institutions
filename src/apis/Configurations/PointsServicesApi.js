@@ -103,7 +103,7 @@ export const ajout = async (data, props) => {
             props.etatChanged(false)
             notify("Bravo - Point de service ajouté", "success");
            
-           liste(props)
+           all(props)
 
         })
         .catch(function (error) {
@@ -134,7 +134,7 @@ export const modification = async (data, props) => {
             props.etat2Changed(false)
             notify("Bravo - Point de service modifié", "success");
            
-            liste(props)
+            all(props)
 
         })
         .catch(function (error) {
@@ -166,7 +166,7 @@ export const suppression = async (props) => {
            
             notify("Bravo - Point de service supprimé", "success");
            
-           liste(props)
+           all(props)
 
         })
         .catch(function (error) {

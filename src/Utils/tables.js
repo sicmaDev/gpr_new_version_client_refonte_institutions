@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from "./globals";
 let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))): undefined;
 
-export const getExportHtml = (columns, records) => {
+export const getExportHtml = (columns, records,without=[]) => {
   try {
     // console.log(columns);
     // console.log(records);
@@ -12,6 +12,11 @@ export const getExportHtml = (columns, records) => {
     tableHtml += "<thead>";
     tableHtml += "<tr style='font-weight: bold'>";
     columns.map((column) => {
+      console.log('column.text', column.text)
+      console.log('without', without)
+      if(without.includes(column.text)){
+        return (tableHtml += "");
+      }
       return (tableHtml += "<td>" + column.text + "</td>");
     });
     tableHtml += "</tr>";
@@ -100,6 +105,9 @@ export const getExportHtml = (columns, records) => {
             record.base === 1 || record.base === "1" ? "Oui" : "Non";
           return (tableHtml += "<td>" + baseValue + "</td>");
         }
+        if(without.includes(column.text)){
+          return (tableHtml +="")
+        }
         return (tableHtml += "<td>" + record[columns[index].key] + "</td>");
       });
       tableHtml += "</tr>";
@@ -110,6 +118,9 @@ export const getExportHtml = (columns, records) => {
     tableHtml += "<tfoot>";
     tableHtml += "<tr style='font-weight: bold'>";
     columns.map((column) => {
+      if(without.includes(column.text)){
+        return (tableHtml +="")
+      }
       return (tableHtml += "<td>" + column.text + "</td>");
     });
     tableHtml += "</tr>";
@@ -127,7 +138,7 @@ const resetColumns = (columns, hook) => {
   console.debug(columns);
 };
 
-export const handlePrint = (config, columns, records, hook) => {
+export const handlePrint = (config, columns, records, hook,without=[]) => {
   if (hook === 1) {
     columns.splice(1, 0, {
       key: "subject",
@@ -147,7 +158,7 @@ export const handlePrint = (config, columns, records, hook) => {
     style + "table, th, td {border: solid 1px #DDD; border-collapse: collapse;";
   style = style + "padding: 2px 3px;text-align:left;}";
   style = style + "</style>";
-  let tableHTML = getExportHtml(columns, records, hook);
+  let tableHTML = getExportHtml(columns, records,without);
   childWindow.document.write(style);
   childWindow.document.write(
     '<h2 style="display:inline-block">' +

@@ -107,7 +107,7 @@ export const ajout = async (data, props) => {
             
                 notify("Bravo - Utilisateur ajouté", "success");
             
-                liste(props)
+                all(props)
             } else {
                 notify(response.data.response.content.message, "error");
             }
@@ -143,7 +143,7 @@ export const modification = async (data, props) => {
            
             notify("Bravo - Utilisateur modifié", "success");
            
-            liste(props)
+            all(props)
 
         })
         .catch(function (error) {
@@ -174,7 +174,7 @@ export const suppression = async (props) => {
            
             notify("Bravo - Utilisateur supprimé", "success");
            
-            liste(props)
+            all(props)
 
         })
         .catch(function (error) {

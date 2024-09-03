@@ -30,6 +30,8 @@ const initialState = {
     selectedItem: {},
     selectedFiles: [],
     selectedItemFiles: [],
+    selectedItemAudio: [],
+
     showSelectPrintItem : false
 };
 const ListeSuggestionsReducer = (state = initialState, action) => {
@@ -191,6 +193,13 @@ const ListeSuggestionsReducer = (state = initialState, action) => {
                 ...state,
                 selectedItemFiles: action.payload,
             };
+
+        case 'SUGGESTION_LIST_SELECTED_ITEM_AUDIO_CHANGED':
+            return {
+                ...state,
+                selectedItemAudio:  action.payload,
+            };
+            
         case 'SUGGESTION_LIST_SHOW_SELECT_PRINT_ITEMS':
             return{
                 ...state,
