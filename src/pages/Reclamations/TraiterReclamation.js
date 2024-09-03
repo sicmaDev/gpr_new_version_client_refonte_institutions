@@ -229,6 +229,7 @@ const TraiterReclamation = (props) => {
   const [open, setOpen] = React.useState(false);
   const [interne, setInterne] = React.useState(true);
   const [anonymat, setAnonymat] = useState(false);
+  const [reafect, setReacfect] = useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
   let compteur = 0;
@@ -929,6 +930,7 @@ const TraiterReclamation = (props) => {
     props.handledByChanged("");
     props.solutionChanged("");
     props.solutionIdChanged("");
+    props.solutionExistantChanged("");
     props.commentChanged("");
     props.newSolutionChanged("");
     props.newCommentChanged("");
@@ -956,19 +958,21 @@ const TraiterReclamation = (props) => {
   };
   const handleValidation = () => {
     let isValid = true;
-
+    console.log("props.solution",props.solutionExistant)
     if (
+      (props.solutionExistant === "") && (
       props.solution === "" ||
       props.solution === undefined ||
-      props.solution === null
+      props.solution === null || props.solution.length ===0)
     ) {
       isValid = false;
       errors["solution"] = "Champ incorrect";
     }
     if (
-      props.comment === "" ||
+      (props.solutionExistant === "") && (props.comment === "" ||
       props.comment === undefined ||
-      props.comment === null
+      props.comment === null)
+      
     ) {
       isValid = false;
       errors["comment"] = "Champ incorrect";
@@ -979,19 +983,22 @@ const TraiterReclamation = (props) => {
 
   const handleReValidation = () => {
     let isValid = true;
-
+    console.log("props.solution",props.new_solution)
+    console.log("props.solution2",props.solutionExistant)
     if (
-      props.new_solution === "" ||
-      props.new_solution === undefined ||
-      props.new_solution === null
+      (props.solutionExistant === "") && (
+        props.new_solution === "" ||
+        props.new_solution === undefined ||
+        props.new_solution === null || props.new_solution.length ===0)
     ) {
       isValid = false;
       errors["new_solution"] = "Champ incorrect";
     }
     if (
+      (props.solutionExistant === "") && (
       props.new_comment === "" ||
       props.new_comment === undefined ||
-      props.new_comment === null
+      props.new_comment === null)
     ) {
       isValid = false;
       errors["new_comment"] = "Champ incorrect";
@@ -1030,7 +1037,7 @@ const TraiterReclamation = (props) => {
        
         let codi;
         if (claim.session !==null && claim.session !=="") {
-          if (claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+          if (claim.status==="AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
             codi = (
               <>
                 <div className="df">
@@ -1056,7 +1063,7 @@ const TraiterReclamation = (props) => {
          
           
         }else{
-          if (claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+          if (claim.status==="AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
             codi = (
               <>
                 <div className="df">
@@ -2319,6 +2326,20 @@ const TraiterReclamation = (props) => {
 
     return isValid;
   };
+  const handleValidationForReAssign = () => {
+    let isValid = true;
+
+    if (
+      reafect === "" ||
+      reafect === undefined ||
+      reafect === null
+    ) {
+      isValid = false;
+      errors["handled_by"] = "Champ incorrect";
+    }
+
+    return isValid;
+  };
   const handleAssign = (e) => {
     e.preventDefault();
     if (handleValidationForAssign()) {
@@ -2342,11 +2363,34 @@ const TraiterReclamation = (props) => {
     }
     props.claimHandleErrors(errors);
   };
+  const handleReAssign = (e) => {
+    e.preventDefault();
+    if (handleValidationForReAssign()) {
+      let claim = {};
+      // console.log(props.code);
+
+      claim["claimId"] = props.id;
+      claim["affectToId"] = reafect;
+      claim["affectorId"] = user.id;
+      claim["affectedAnonymous"] = anonymat;
+
+      // console.log("anonymaty", anonymat);
+
+      //console.log("props.handled_by",claim);
+      props.etatChanged(true);
+      affectClaimApi(claim, props).then(() => {
+        handleCancel(e);
+        handleClose();
+      });
+    } else {
+    }
+    props.claimHandleErrors(errors);
+  };
 
   const handleSolve = (e) => {
     e.preventDefault();
     // console.log("traitementclaim", props);
-    // if (handleValidation()) {
+    if (handleValidation()) {
     let claim = {};
     claim["claimId"] = props.id;
     claim["treatorId"] = user.id;
@@ -2361,8 +2405,8 @@ const TraiterReclamation = (props) => {
       handleCancel(e);
       handleClose();
     });
-    // } else {
-    // }
+    } else {
+    }
     props.claimHandleErrors(errors);
   };
 
@@ -2370,10 +2414,18 @@ const TraiterReclamation = (props) => {
     e.preventDefault();
     if (handleReValidation()) {
       let claim = {};
+      // claim["claimId"] = props.id;
+      // claim["treatorId"] = user.id;
+      // claim["solution"] = props.new_solution;
+      // claim["commentaire"] = props.new_comment;
+
       claim["claimId"] = props.id;
       claim["treatorId"] = user.id;
       claim["solution"] = props.new_solution;
       claim["commentaire"] = props.new_comment;
+      claim["existingId"] = props.solutionExistant;
+      claim["isExisting"] = props.solutionExistant !== "" ? true : false;
+
       // console.log("traitementclaim", claim);
       props.etat2Changed(true);
       treatClaimApi(claim, props).then(() => {
@@ -2760,6 +2812,35 @@ const TraiterReclamation = (props) => {
           </div>
         </div>
       </>
+
+
+        let solutions1 = props.selectedItem?.objet?.existingSolutions;
+
+        solutionsListe = solutions1?.map((solution, index) => {
+        let words = String(solution.content).split(" ");
+        let thirtyWords = "";
+        let taille = words.length;
+        if (taille < 30) {
+          thirtyWords = solution.content;
+        } else {
+          for (let i = 0; i < 50; i++) {
+            const o = words[i];
+            thirtyWords = thirtyWords + o + " ";
+          }
+          thirtyWords =
+            thirtyWords + "......... (Déroulez pour voir la solution complète)";
+        }
+
+        return {
+          props: props,
+          index: index,
+          id: solution.id,
+          taille: taille,
+          title: thirtyWords,
+          content: solution.content,
+          compteur: solution.compteur,
+        };
+        });
      
 
        //ils peuvent reaffecter les réclamations en cas d'erreur ou d'indisponibilité
@@ -2783,7 +2864,7 @@ const TraiterReclamation = (props) => {
                           style={styles}
                           placeholder="Sélectionner l'agent"
                           onChange={(e) => {
-                            props.handledByChanged(e.value);
+                            setReacfect(e.value);
                             setAffectEmail(e.email);
                           }}
                         />
@@ -2819,9 +2900,9 @@ const TraiterReclamation = (props) => {
                             <LoadingButton
                               onClick={(e) => {
                                 e.preventDefault();
-                                if (handleValidationForAssign()) {
+                                if (handleValidationForReAssign()) {
                                   //setShowSelectPrintItem(true);
-                                  handleAssign(e);
+                                  handleReAssign(e);
                                 }
                                 props.claimHandleErrors(errors);
                               }}
@@ -2858,94 +2939,107 @@ const TraiterReclamation = (props) => {
             <div className="row">
               {/* resolution */}
               {props.authorize ? (
-                <form id="claimHandleAgainForm">
-                  <div className="row">
-                    <div className="col s12">
-                      <details open>
-                        <summary className="text-details">
-                          Traitement de la réclamation
-                        </summary>
-                        <div className="col s12 input-field">
-                          <textarea
-                            id="solution"
-                            name="solution"
-                            placeholder=""
-                            className="materialize-textarea textarea-size"
-                            value={props.solution}
-                            onChange={(e) => props.solutionChanged(e.target.value)}
-                          ></textarea>
-                          <label htmlFor="content" className={"active"}>
-                            Solution
-                            <span>
-                              (<span className="red-text darken-2 ">*</span>)
-                            </span>
-                          </label>
-                          <small className="errorTxt4">
-                            <div id="cpassword-error" className="error">
-                              {props.errors !== undefined
-                                ? props.errors.solution
-                                : ""}
-                            </div>
-                          </small>
-                        </div>
-                        <div className="col s12 input-field">
-                          <textarea
-                            id="comment"
-                            name="comment"
-                            placeholder=""
-                            className="materialize-textarea textarea-size"
-                            value={props.comment}
-                            onChange={(e) => props.commentChanged(e.target.value)}
-                          ></textarea>
-                          <label htmlFor="content" className={"active"}>
-                            Commentaires/Observations
-                            <span>
-                              (<span className="red-text darken-2 ">*</span>)
-                            </span>
-                          </label>
-                          <small className="errorTxt4">
-                            <div id="cpassword-error" className="error">
-                              {props.errors !== undefined
-                                ? props.errors.comment
-                                : ""}
-                            </div>
-                          </small>
-                        </div>
-                        <div className="col s12 display-flex justify-content-end mt-3">
-                          {
-                            //  (actif !== undefined && actif)  ?
-                              <LoadingButton
-                                onClick={handleSolve}
-                                className="waves-effect waves-effect-b waves-light btn-small"
-                                loading={props.etat2}
-                                loadingPosition="end"
-                                endIcon={<SaveIcon />}
-                                variant="contained"
-                                sx={{
-                                  backgroundColor: "#1e2188",
-                                  textTransform: "initial",
-                                }}
-                              >
-                                <span>Traiter</span>
-                              </LoadingButton>
-                            // :
-                            // <div className="card-alert card red lighten-5">
-                            //   <div className="card-content red-text">
-                            //       <ul>
-                            //           Veuillez activer une licence.
-                            //       </ul>
-                            //   </div>
-                            // </div>
-  
-  
-                          }
-                        
-                        </div>
-                      </details>
+                <>
+                  {solutionsListe !== undefined && solutionsListe.length !==0 ? 
+                    <div className="row">
+                      <div className="col l12">
+                        <details>
+                          <summary className="text-details">
+                            Solutions potentielles
+                          </summary>
+                          <CardList cards={solutionsListe} />
+                        </details>
+                      </div>
                     </div>
-                  </div>
-                </form>
-                
+                  :""}
+                  <form id="claimHandleAgainForm">
+                    <div className="row">
+                      <div className="col s12">
+                        <details open>
+                          <summary className="text-details">
+                            Traitement de la réclamation
+                          </summary>
+                          <div className="col s12 input-field">
+                            <textarea
+                              id="solution"
+                              name="solution"
+                              placeholder=""
+                              className="materialize-textarea textarea-size"
+                              value={props.new_solution}
+                              onChange={(e) => props.newSolutionChanged(e.target.value)}
+                            ></textarea>
+                            <label htmlFor="content" className={"active"}>
+                              Solution
+                              <span>
+                                (<span className="red-text darken-2 ">*</span>)
+                              </span>
+                            </label>
+                            <small className="errorTxt4">
+                              <div id="cpassword-error" className="error">
+                                {props.errors !== undefined
+                                  ? props.errors.new_solution
+                                  : ""}
+                              </div>
+                            </small>
+                          </div>
+                          <div className="col s12 input-field">
+                            <textarea
+                              id="comment"
+                              name="comment"
+                              placeholder=""
+                              className="materialize-textarea textarea-size"
+                              value={props.new_comment}
+                              onChange={(e) => props.newCommentChanged(e.target.value)}
+                            ></textarea>
+                            <label htmlFor="content" className={"active"}>
+                              Commentaires/Observations
+                              <span>
+                                (<span className="red-text darken-2 ">*</span>)
+                              </span>
+                            </label>
+                            <small className="errorTxt4">
+                              <div id="cpassword-error" className="error">
+                                {props.errors !== undefined
+                                  ? props.errors.new_comment
+                                  : ""}
+                              </div>
+                            </small>
+                          </div>
+                          <div className="col s12 display-flex justify-content-end mt-3">
+                            {
+                              //  (actif !== undefined && actif)  ?
+                                <LoadingButton
+                                  onClick={handleReSolve}
+                                  className="waves-effect waves-effect-b waves-light btn-small"
+                                  loading={props.etat2}
+                                  loadingPosition="end"
+                                  endIcon={<SaveIcon />}
+                                  variant="contained"
+                                  sx={{
+                                    backgroundColor: "#1e2188",
+                                    textTransform: "initial",
+                                  }}
+                                >
+                                  <span>Traiter</span>
+                                </LoadingButton>
+                              // :
+                              // <div className="card-alert card red lighten-5">
+                              //   <div className="card-content red-text">
+                              //       <ul>
+                              //           Veuillez activer une licence.
+                              //       </ul>
+                              //   </div>
+                              // </div>
+    
+    
+                            }
+                          
+                          </div>
+                        </details>
+                      </div>
+                    </div>
+                  </form>
+                </>
               ) : (
                 <div className="row">
                   <div className="col s12">

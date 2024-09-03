@@ -220,15 +220,15 @@ const PointsServices = (props) => {
         e.stopPropagation();
     
 
-        modalify("Confirmation", "Voulez-vous vraiment désactivé ce compte ?", "confirm", (e)=>{handleDisable(e,spId)})
+        modalify("Confirmation", "Voulez-vous vraiment désactivé ce point de service ?", "confirm", (e)=>{handleDisable(e,spId)})
     }
     const handleModal = (e) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", handleDelete)
+        modalify("Confirmation", "Confirmez vous la suppression de cet élément ?", "confirm", handleDelete)
     }
     const handleEditModal = (e) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la modification de cet élément?", "confirm", handleEdit)
+        modalify("Confirmation", "Confirmez vous la modification de cet élément ?", "confirm", handleEdit)
     }
     const handleDelete = (e) => {
         e.preventDefault()
@@ -286,7 +286,7 @@ const PointsServices = (props) => {
             <LoadingButton
                 className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
                 onClick={(e) => handleCancel(e)}
-                loading={props.etat2}
+                // loading={props.etat2}
                 loadingPosition="end"
                 endIcon={<CancelIcon />}
                 variant="contained"
@@ -298,7 +298,7 @@ const PointsServices = (props) => {
             <LoadingButton
                 className="btn waves-effect waves-light mr-1 btn-small"
                 onClick={(e) => handleEditModal(e)}
-                loading={props.etat}
+                loading={props.etat2}
                 loadingPosition="end"
                 endIcon={<SaveIcon />}
                 variant="contained"
