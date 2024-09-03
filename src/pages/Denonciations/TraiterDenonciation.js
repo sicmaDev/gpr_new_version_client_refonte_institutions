@@ -2381,43 +2381,43 @@ const TraiterDenonciation = (props) => {
                         </small>
                       </div>
 
-
-                      <div className="col s12 display-flex justify-content-end mt-3">
-                        {
-                          (actif !== undefined && actif) ?
-                            <LoadingButton
-                              onClick={(e) => {
-                                e.preventDefault();
-                                if (handleValidationForAssign()) {
-                                  //setShowSelectPrintItem(true);
-                                  handleAssign(e);
-                                }
-                                props.claimHandleErrors(errors);
-                              }}
-                              className="waves-effect waves-effect-b waves-light btn-small"
-                              loading={props.etat}
-                              loadingPosition="end"
-                              endIcon={<SaveIcon />}
-                              variant="contained"
-                              sx={{
-                                backgroundColor: "#1e2188",
-                                textTransform: "initial",
-                              }}
-                            >
-                              <span>Affecter</span>
-                            </LoadingButton>
-                            :
-                            <div className="card-alert card red lighten-5">
-                              <div className="card-content red-text">
-                                <ul>
-                                  Veuillez activer une licence.
-                                </ul>
-                              </div>
-                            </div>
-                        }
-
-                      </div>
-
+                      
+                          <div className="col s12 display-flex justify-content-end mt-3">
+                            {
+                                // (actif !== undefined && actif)  ?
+                                <LoadingButton
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    if (handleValidationForAssign()) {
+                                      //setShowSelectPrintItem(true);
+                                      handleAssign(e);
+                                    }
+                                    props.claimHandleErrors(errors);
+                                  }}
+                                  className="waves-effect waves-effect-b waves-light btn-small"
+                                  loading={props.etat}
+                                  loadingPosition="end"
+                                  endIcon={<SaveIcon />}
+                                  variant="contained"
+                                  sx={{
+                                    backgroundColor: "#1e2188",
+                                    textTransform: "initial",
+                                  }}
+                                >
+                                  <span>Affecter</span>
+                                </LoadingButton>
+                              // :
+                              // <div className="card-alert card red lighten-5">
+                              //   <div className="card-content red-text">
+                              //       <ul>
+                              //           Veuillez activer une licence.
+                              //       </ul>
+                              //   </div>
+                              // </div>
+                            }
+                          
+                          </div>
+                        
 
 
 
@@ -2513,7 +2513,7 @@ const TraiterDenonciation = (props) => {
                     </div>
                     <div className="col s12 display-flex justify-content-end">
                       {
-                        (actif !== undefined && actif) ?
+                          // (actif !== undefined && actif)  ?
                           <LoadingButton
                             onClick={handleSolve}
                             className="waves-effect waves-effect-b waves-light btn-small"
@@ -2528,14 +2528,14 @@ const TraiterDenonciation = (props) => {
                           >
                             <span>Résoudre</span>
                           </LoadingButton>
-                          :
-                          <div className="card-alert card red lighten-5">
-                            <div className="card-content red-text">
-                              <ul>
-                                Veuillez activer une licence.
-                              </ul>
-                            </div>
-                          </div>
+                        //  :
+                        //   <div className="card-alert card red lighten-5">
+                        //       <div className="card-content red-text">
+                        //         <ul>
+                        //           Veuillez activer une licence.
+                        //         </ul>
+                        //       </div>
+                        //   </div>
 
                       }
 
@@ -2653,7 +2653,7 @@ const TraiterDenonciation = (props) => {
                       </div>
                       <div className="col s12 display-flex justify-content-end mt-3">
                         {
-                          (actif !== undefined && actif) ?
+                          //  (actif !== undefined && actif)  ?
                             <LoadingButton
                               onClick={handleSolve}
                               className="waves-effect waves-effect-b waves-light btn-small"
@@ -2668,14 +2668,14 @@ const TraiterDenonciation = (props) => {
                             >
                               <span>Traiter</span>
                             </LoadingButton>
-                            :
-                            <div className="card-alert card red lighten-5">
-                              <div className="card-content red-text">
-                                <ul>
-                                  Veuillez activer une licence.
-                                </ul>
-                              </div>
-                            </div>
+                          // :
+                          //   <div className="card-alert card red lighten-5">
+                          //       <div className="card-content red-text">
+                          //           <ul>
+                          //               Veuillez activer une licence.
+                          //           </ul>
+                          //       </div>
+                          //   </div>
                         }
 
                       </div>
@@ -2825,19 +2825,19 @@ const TraiterDenonciation = (props) => {
                 </div>
                 <div className="col s12 display-flex justify-content-end mt-3">
                   {
-                    (actif !== undefined && actif) ?
-                      <>
-                        <LoadingButton
-                          onClick={
-                            handleDisapprove
-                          }
-                          className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                          loading={props.etat}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{ textTransform: "initial" }}
-                        >
+                    //  (actif !== undefined && actif)  ?
+                    <>
+                      <LoadingButton
+                        onClick={
+                          handleDisapprove
+                        }
+                        className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                        loading={props.etat}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{textTransform:"initial" }}
+                      >
                           <span>Désapprouver</span>
                         </LoadingButton>
 
@@ -2853,16 +2853,16 @@ const TraiterDenonciation = (props) => {
                           sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
                         >
                           <span>Approuver</span>
-                        </LoadingButton>
-                      </>
-                      :
-                      <div className="card-alert card red lighten-5">
-                        <div className="card-content red-text">
-                          <ul>
-                            Veuillez activer une licence.
-                          </ul>
-                        </div>
-                      </div>
+                      </LoadingButton>
+                    </>
+                    // :
+                    // <div className="card-alert card red lighten-5">
+                    //   <div className="card-content red-text">
+                    //       <ul>
+                    //           Veuillez activer une licence.
+                    //       </ul>
+                    //   </div>
+                    // </div>
 
                   }
 
@@ -2984,7 +2984,7 @@ const TraiterDenonciation = (props) => {
 
                       <div className="col s12 display-flex justify-content-end mt-3">
                         {
-                          (actif !== undefined && actif) ?
+                          //  (actif !== undefined && actif)  ?
                             <LoadingButton
                               onClick={handleReSolve}
                               className="waves-effect waves-effect-b waves-light btn-small"
@@ -2999,14 +2999,14 @@ const TraiterDenonciation = (props) => {
                             >
                               <span>Retraiter</span>
                             </LoadingButton>
-                            :
-                            <div className="card-alert card red lighten-5">
-                              <div className="card-content red-text">
-                                <ul>
-                                  Veuillez activer une licence.
-                                </ul>
-                              </div>
-                            </div>
+                          // :
+                          // <div className="card-alert card red lighten-5">
+                          //   <div className="card-content red-text">
+                          //      <ul>
+                          //          Veuillez activer une licence.
+                          //      </ul>
+                          //   </div>
+                          // </div>
                         }
 
                       </div>
@@ -3190,80 +3190,80 @@ const TraiterDenonciation = (props) => {
   }
   if ((user.firstAndLastName === props.created_by && props.transmitted === "false") || showJoinBtn) {
     if (props.session === "" && props.session.status !== "OPEN") {
-      btnS =
-        (actif !== undefined && actif) ?
-          <>
-            <LoadingButton
-              onClick={(e) => registerUser(e)}
-              className="waves-effect waves-effect-b waves-light btn-small"
-              loading={props.etat4}
-              loadingPosition="end"
-              endIcon={<ChatIcon />}
-              variant="contained"
-              sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-            >
-              <span>Ouvrir une session</span>
-            </LoadingButton>
-          </>
-          :
-          <div className="card-alert card red lighten-5">
-            <div className="card-content red-text">
-              <ul>
-                Veuillez activer une licence.
-              </ul>
-            </div>
-          </div>
-
-    } else if (props.session !== "" && props.session.status === "OPEN") {
-      btnS =
-        (actif !== undefined && actif) ?
-          <>
-            <LoadingButton
-              onClick={(e) => connect()}
-              className="waves-effect waves-effect-b waves-light btn-small"
-              loading={props.etat4}
-              loadingPosition="end"
-              endIcon={<ChatIcon />}
-              variant="contained"
-              sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-            >
-              <span>Rejoindre la session</span>
-            </LoadingButton>
-          </>
-          :
-          <div className="card-alert card red lighten-5">
-            <div className="card-content red-text">
-              <ul>
-                Veuillez activer une licence.
-              </ul>
-            </div>
-          </div>
-
+      btnS = 
+      //  (actif !== undefined && actif)  ?
+        <>
+          <LoadingButton
+            onClick={(e) => registerUser(e)}
+            className="waves-effect waves-effect-b waves-light btn-small"
+            loading={props.etat4}
+            loadingPosition="end"
+            endIcon={<ChatIcon />}
+            variant="contained"
+            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+          >
+            <span>Ouvrir une session</span>
+          </LoadingButton>
+        </>
+      // :
+      //   <div className="card-alert card red lighten-5">
+      //     <div className="card-content red-text">
+      //         <ul>
+      //           Veuillez activer une licence.
+      //         </ul>
+      //     </div>
+      //   </div>
+      
+    } else if (props.session !== "" && props.session.status === "OPEN" ) {
+      btnS = 
+      //  (actif !== undefined && actif)  ?
+        <>
+          <LoadingButton
+            onClick={(e) => connect()}
+            className="waves-effect waves-effect-b waves-light btn-small"
+            loading={props.etat4}
+            loadingPosition="end"
+            endIcon={<ChatIcon />}
+            variant="contained"
+            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+          >
+            <span>Rejoindre la session</span>
+          </LoadingButton>
+        </>
+      // :
+      // <div className="card-alert card red lighten-5">
+      //   <div className="card-content red-text">
+      //       <ul>
+      //           Veuillez activer une licence.
+      //       </ul>
+      //   </div>
+      // </div>
+      
     } else if (props.session !== "" && props.session.status === "CLOSED") {
-      btnS =
-        (actif !== undefined && actif) ?
-          <>
-            <LoadingButton
-              onClick={(e) => connect()}
-              className="waves-effect waves-effect-b waves-light btn-small"
-              loading={props.etat4}
-              loadingPosition="end"
-              endIcon={<ChatIcon />}
-              variant="contained"
-              sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-            >
-              <span>Voir la discussion</span>
-            </LoadingButton>
-          </>
-          :
-          <div className="card-alert card red lighten-5">
-            <div className="card-content red-text">
-              <ul>
-                Veuillez activer une licence.
-              </ul>
-            </div>
-          </div>
-
+      btnS = 
+      //  (actif !== undefined && actif)  ?
+        <>
+          <LoadingButton
+            onClick={(e) => connect()}
+            className="waves-effect waves-effect-b waves-light btn-small"
+            loading={props.etat4}
+            loadingPosition="end"
+            endIcon={<ChatIcon />}
+            variant="contained"
+            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+          >
+            <span>Voir la discussion</span>
+          </LoadingButton>
+        </>
+      // :
+      // <div className="card-alert card red lighten-5">
+      //   <div className="card-content red-text">
+      //       <ul>
+      //           Veuillez activer une licence.
+      //       </ul>
+      //   </div>
+      // </div>
+      
     } else {
       btnS = "";
     }

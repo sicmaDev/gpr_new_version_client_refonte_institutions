@@ -647,7 +647,7 @@ const EnregistrerReclamation = (props) => {
   if (!settingComplete.length) {
     if (isEmpty(props.selectedItem)) {
       formButtons = 
-      (actif !== undefined && actif)  ?
+      // (actif !== undefined && actif)  ?
           <>
             <LoadingButton
               className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
@@ -685,18 +685,18 @@ const EnregistrerReclamation = (props) => {
               <span>Enregistrer</span>
             </LoadingButton>
           </>
-        :
-        <div className="card-alert card red lighten-5">
-          <div className="card-content red-text">
-              <ul>
-                  Veuillez activer une licence.
-              </ul>
-          </div>
-        </div>
+        // :
+        // <div className="card-alert card red lighten-5">
+        //   <div className="card-content red-text">
+        //       <ul>
+        //           Veuillez activer une licence.
+        //       </ul>
+        //   </div>
+        // </div>
       
     } else {
       formButtons = 
-      (actif !== undefined && actif)  ?
+      // (actif !== undefined && actif)  ?
         <>
           <button
             type="button"
@@ -743,14 +743,14 @@ const EnregistrerReclamation = (props) => {
             <span>Enregistrer</span>
           </LoadingButton>
         </>
-      :
-      <div className="card-alert card red lighten-5">
-          <div className="card-content red-text">
-              <ul>
-                  Veuillez activer une licence.
-              </ul>
-          </div>
-      </div>
+      // :
+      // <div className="card-alert card red lighten-5">
+      //     <div className="card-content red-text">
+      //         <ul>
+      //             Veuillez activer une licence.
+      //         </ul>
+      //     </div>
+      // </div>
       
     }
   } else {

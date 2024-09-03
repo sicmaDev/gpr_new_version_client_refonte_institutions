@@ -855,7 +855,7 @@ const MesurerReclamation = (props) => {
                 </div>
 
                 <div className="col s12 display-flex justify-content-end mt-3">
-                  {actif !== undefined && actif ? (
+                  {/* {actif !== undefined && actif ? ( */}
                     <LoadingButton
                       onClick={handleAppraise}
                       className="waves-effect waves-effect-b waves-light btn-small"
@@ -870,13 +870,15 @@ const MesurerReclamation = (props) => {
                     >
                       <span>Mesurer</span>
                     </LoadingButton>
-                  ) : (
-                    <div className="card-alert card red lighten-5">
-                      <div className="card-content red-text">
-                        <ul>Veuillez activer une licence.</ul>
-                      </div>
-                    </div>
-                  )}
+                  {/* // ) 
+                  // : (
+                  //   <div className="card-alert card red lighten-5">
+                  //     <div className="card-content red-text">
+                  //       <ul>Veuillez activer une licence.</ul>
+                  //     </div>
+                  //   </div>
+                  // )
+                  // } */}
                 </div>
               </details>
             </div>

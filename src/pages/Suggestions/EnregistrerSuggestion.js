@@ -455,60 +455,60 @@ const EnregistrerSuggestion = (props) => {
 
             formButtons =
 
-                (actif !== undefined && actif) ?
-                    <>
-                        <LoadingButton
-                            className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                            onClick={handleSave}
-                            loading={props.etat}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{ textTransform: "initial" }}
+            // (actif !== undefined && actif)  ?
+                <>
+                    <LoadingButton
+                        className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                        onClick={handleSave}
+                        loading={props.etat}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{ textTransform:"initial" }}
                         >
                             <span>Sauvegarder</span>
                         </LoadingButton>
 
-                        <LoadingButton
-                            onClick={(e) => {
-                                e.preventDefault();
-                                if (handleValidation()) {
-                                    if (mode === 1) {
-                                        setShowSmsBox(true);
-                                        setOpen(true);
-                                    } else {
-                                        handleSubmit(e)
-                                    }
-
+                    <LoadingButton
+                        onClick={(e) => {
+                        e.preventDefault();
+                            if (handleValidation()) {
+                                if (mode === 1) {
+                                    setShowSmsBox(true);
+                                    setOpen(true);
+                                } else {
+                                    handleSubmit(e)
                                 }
-
-                                props.suggestionsRecordErrors(errors);
-                            }}
-                            className="waves-effect waves-effect-b waves-light btn-small"
-                            loading={props.etat2}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-                        >
-                            <span>Enregistrer</span>
-                        </LoadingButton>
-
-                    </>
-                    :
-                    <div className="card-alert card red lighten-5">
-                        <div className="card-content red-text">
-                            <ul>
-                                Veuillez activer une licence.
-                            </ul>
-                        </div>
-                    </div>
-
+                                
+                            }
+                            
+                            props.suggestionsRecordErrors(errors);
+                        }}
+                        className="waves-effect waves-effect-b waves-light btn-small"
+                        loading={props.etat2}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+                    >
+                        <span>Enregistrer</span>
+                    </LoadingButton>
+                  
+                </>
+            // :
+            // <div className="card-alert card red lighten-5">
+            //     <div className="card-content red-text">
+            //         <ul>
+            //             Veuillez activer une licence.
+            //         </ul>
+            //     </div>
+            // </div>
+            
         } else {
-            formButtons =
-                (actif !== undefined && actif) ?
-                    <>
-                        <button type="button" onClick={(e) => handleCancel(e)}
+            formButtons = 
+            // (actif !== undefined && actif)  ?
+                <>
+                    <button type="button" onClick={(e) => handleCancel(e)}
                             className="waves-effect waves-effect-b waves-light red-text white lighten-4 btn-small mr-1">
                             Annuler
                         </button>
@@ -541,19 +541,19 @@ const EnregistrerSuggestion = (props) => {
                             variant="contained"
                             sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
                         >
-                            <span>Enregistrer</span>
-                        </LoadingButton>
-
-                    </>
-                    :
-                    <div className="card-alert card red lighten-5">
-                        <div className="card-content red-text">
-                            <ul>
-                                Veuillez activer une licence.
-                            </ul>
-                        </div>
-                    </div>
-
+                        <span>Enregistrer</span>
+                    </LoadingButton>
+                  
+                </>
+            // :
+            // <div className="card-alert card red lighten-5">
+            //     <div className="card-content red-text">
+            //         <ul>
+            //             Veuillez activer une licence.
+            //         </ul>
+            //     </div>
+            // </div>
+            
         }
     } else {
         let output = settingComplete.map(message => {

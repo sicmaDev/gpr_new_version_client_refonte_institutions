@@ -433,7 +433,7 @@ const EnregistrerDenonciation = (props) => {
         if (isEmpty(props.selectedItem)) {
            
             formButtons = 
-            (actif !== undefined && actif) ?
+            // (actif !== undefined && actif) ?
           
             <>
                 <LoadingButton
@@ -468,18 +468,18 @@ const EnregistrerDenonciation = (props) => {
             
             </>
                
-            :
-            <div className="card-alert card red lighten-5">
-                <div className="card-content red-text">
-                    <ul>
-                        Veuillez activer une licence.
-                    </ul>
-                </div>
-            </div>
+            // :
+            // <div className="card-alert card red lighten-5">
+            //     <div className="card-content red-text">
+            //         <ul>
+            //             Veuillez activer une licence.
+            //         </ul>
+            //     </div>
+            // </div>
         } else {
            
             formButtons = 
-            (actif !== undefined && actif) ?
+            // (actif !== undefined && actif) ?
                 <>
                     <button type="button" onClick={(e) => handleCancel(e)}
                             className="waves-effect waves-effect-b waves-light red-text white lighten-4 btn-small mr-1">
@@ -517,14 +517,14 @@ const EnregistrerDenonciation = (props) => {
                     </LoadingButton>
                   
                 </>
-            :
-            <div className="card-alert card red lighten-5">
-                <div className="card-content red-text">
-                    <ul>
-                        Veuillez activer une licence.
-                    </ul>
-                </div>
-            </div>
+            // :
+            // <div className="card-alert card red lighten-5">
+            //     <div className="card-content red-text">
+            //         <ul>
+            //             Veuillez activer une licence.
+            //         </ul>
+            //     </div>
+            // </div>
         }
     } else {
         let output = settingComplete.map(message => {
