@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { HashRouter } from "react-router-dom";
 import Haut from './Haut';
 import Footer from './Footer';
-import { IdleTimerProvider } from 'react-idle-timer';
+// import { IdleTimerProvider } from 'react-idle-timer';
 
 export default function Template2() { 
     const onIdle = ()=>{
@@ -12,13 +12,13 @@ export default function Template2() {
     return (
         
         <Suspense fallback="loading">
-            <IdleTimerProvider timeout={1000*10} onIdle={onIdle} >
+            {/* <IdleTimerProvider timeout={1000*10} onIdle={onIdle} > */}
             <HashRouter>
                 
                <Haut/>
                {/* <Footer /> */}
             </HashRouter>
-            </IdleTimerProvider>
+            {/* </IdleTimerProvider> */}
         </Suspense>
     );
     
