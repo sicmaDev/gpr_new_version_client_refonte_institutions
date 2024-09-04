@@ -740,8 +740,8 @@ const Dashboard = (props) => {
                             <div className="card-panel pb-5">
                                 <div className="row">
                                 <div className="col s12">
-                                    <h6 className="card-title">
-                                    Alertes liées aux Plaintes &nbsp;
+                                    <h6 className="card-title" >
+                                    <b>Alertes liées aux Réclamations et aux Dénonciations &nbsp; </b>
                                     </h6>
                                 </div>
                                 <div className="col s12">
