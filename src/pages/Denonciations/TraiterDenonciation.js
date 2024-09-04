@@ -652,7 +652,7 @@ const TraiterDenonciation = (props) => {
 
         break;
       case "CONFIRME_SOLUTION":
-        notify("Bravo - Réclamation traitée", "success");
+        notify("Bravo - Dénonciation traitée", "success");
         setTimeout(() => {
           window.location.reload();
         }, 3000);
@@ -956,17 +956,19 @@ const TraiterDenonciation = (props) => {
     let isValid = true;
 
     if (
-      props.new_solution === "" ||
-      props.new_solution === undefined ||
-      props.new_solution === null
+      (props.solutionExistant === "") && (
+        props.new_solution === "" ||
+        props.new_solution === undefined ||
+        props.new_solution === null || props.new_solution.length ===0)
     ) {
       isValid = false;
       errors["new_solution"] = "Champ incorrect";
     }
     if (
-      props.new_comment === "" ||
-      props.new_comment === undefined ||
-      props.new_comment === null
+      (props.solutionExistant === "") && (
+        props.new_comment === "" ||
+        props.new_comment === undefined ||
+        props.new_comment === null)
     ) {
       isValid = false;
       errors["new_comment"] = "Champ incorrect";
@@ -2261,8 +2263,10 @@ const TraiterDenonciation = (props) => {
       let claim = {};
       claim["claimId"] = props.id;
       claim["treatorId"] = user.id;
-      claim["solution"] = props.new_solution
-      claim["commentaire"] = props.new_comment
+      claim["solution"] = props.new_solution;
+      claim["commentaire"] = props.new_comment;
+      claim["existingId"] = props.solutionExistant;
+      claim["isExisting"] = props.solutionExistant !== "" ? true : false;
       // console.log("traitementclaim", claim);
       props.etat2Changed(true)
       treatDenunciationApi(claim, props).then(() => {
@@ -2636,7 +2640,7 @@ const TraiterDenonciation = (props) => {
        {/* details affectation */}
        <div className="row">
         <div className="col s12 pb-2">
-            Réclamation affectée à{" "}
+            Dénonciation affectée à{" "}
             <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
             {props.assigned_by} le {formatDate(props.assignedAt)}
           </div>
@@ -2671,7 +2675,7 @@ const TraiterDenonciation = (props) => {
       };
       });
 
-      //ils peuvent reaffecter les réclamations en cas d'erreur ou d'indisponibilité
+      //ils peuvent reaffecter les Dénonciations en cas d'erreur ou d'indisponibilité
     
       afForm= (
         <>
@@ -2681,7 +2685,7 @@ const TraiterDenonciation = (props) => {
                 <div className="col s12">
                   <details>
                     <summary className="text-details">
-                      Réaffectation de la réclamation
+                      Réaffectation de la Dénonciation
                     </summary>
 
                     <div className="col s12 input-field">
@@ -2747,245 +2751,41 @@ const TraiterDenonciation = (props) => {
           </div>
         </>
       );
-   
-
-      if(props.solution?.length === 0){
-
-        if (props.handled_by === user.firstAndLastName) {
-          tmp = (
-            <div className="row">
-              {/* resolution */}
-              {props.authorize ? (
-                <>
-                  {solutionsListe !== undefined && solutionsListe.length !==0 ? 
-                    <div className="row">
-                      <div className="col l12">
-                        <details>
-                          <summary className="text-details">
-                            Solutions potentielles
-                          </summary>
-                          <CardList cards={solutionsListe} />
-                        </details>
-                      </div>
+      console.log("props.solution",props.solution);
+      console.log("props.code",props.code);
+      if (props.handled_by === user.firstAndLastName) {
+        tmp = (
+          <div className="row">
+            {/* resolution */}
+            {props.authorize ? (
+              <>
+                {solutionsListe !== undefined && solutionsListe.length !==0 ? 
+                  <div className="row">
+                    <div className="col l12">
+                      <details>
+                        <summary className="text-details">
+                          Solutions potentielles
+                        </summary>
+                        <CardList cards={solutionsListe} />
+                      </details>
                     </div>
-                  :""}
-                  <form id="claimHandleAgainForm">
-                    <div className="row">
-                      <div className="col s12">
-                        <details open>
-                          <summary className="text-details">
-                            Traitement de la réclamation
-                          </summary>
-                          <div className="col s12 input-field">
-                            <textarea
-                              id="solution"
-                              name="solution"
-                              placeholder=""
-                              className="materialize-textarea textarea-size"
-                              value={props.new_solution}
-                              onChange={(e) => props.newSolutionChanged(e.target.value)}
-                            ></textarea>
-                            <label htmlFor="content" className={"active"}>
-                              Solution
-                              <span>
-                                (<span className="red-text darken-2 ">*</span>)
-                              </span>
-                            </label>
-                            <small className="errorTxt4">
-                              <div id="cpassword-error" className="error">
-                                {props.errors !== undefined
-                                  ? props.errors.new_solution
-                                  : ""}
-                              </div>
-                            </small>
-                          </div>
-                          <div className="col s12 input-field">
-                            <textarea
-                              id="comment"
-                              name="comment"
-                              placeholder=""
-                              className="materialize-textarea textarea-size"
-                              value={props.new_comment}
-                              onChange={(e) => props.newCommentChanged(e.target.value)}
-                            ></textarea>
-                            <label htmlFor="content" className={"active"}>
-                              Commentaires/Observations
-                              <span>
-                                (<span className="red-text darken-2 ">*</span>)
-                              </span>
-                            </label>
-                            <small className="errorTxt4">
-                              <div id="cpassword-error" className="error">
-                                {props.errors !== undefined
-                                  ? props.errors.new_comment
-                                  : ""}
-                              </div>
-                            </small>
-                          </div>
-                          <div className="col s12 display-flex justify-content-end mt-3">
-                            {
-                              //  (actif !== undefined && actif)  ?
-                                <LoadingButton
-                                  onClick={handleReSolve}
-                                  className="waves-effect waves-effect-b waves-light btn-small"
-                                  loading={props.etat2}
-                                  loadingPosition="end"
-                                  endIcon={<SaveIcon />}
-                                  variant="contained"
-                                  sx={{
-                                    backgroundColor: "#1e2188",
-                                    textTransform: "initial",
-                                  }}
-                                >
-                                  <span>Traiter</span>
-                                </LoadingButton>
-                              // :
-                              // <div className="card-alert card red lighten-5">
-                              //   <div className="card-content red-text">
-                              //       <ul>
-                              //           Veuillez activer une licence.
-                              //       </ul>
-                              //   </div>
-                              // </div>
-    
-    
-                            }
-                          
-                          </div>
-                        </details>
-                      </div>
-                    </div>
-                  </form>
-                </>
-              ) : (
-                <div className="row">
-                  <div className="col s12">
-                    <details open>
-                      <summary className="text-details">
-                        Resolution de la réclamation
-                      </summary>
-                      <div className="card-alert card red lighten-5">
-                        <div
-                          className="card-content red-text"
-                          style={{ textAlign: "center" }}
-                        >
-                          <ul>Vous ne pouvez pas traiter cette réclamation</ul>
-                        </div>
-                      </div>
-                    </details>
                   </div>
-                </div>
-              )}
-            </div>
-          );
-
-          if (hbt.includes("H6") || addR === "PILOTE") {
-            treatForm = (
-              <>
-                {personAffect}
-                {afForm}
-                {tmp}
-               
-              </>
-            );
-          } else {
-            treatForm = (
-              <>
-                {personAffect}
-                {tmp}
-               
-              </>
-            );
-          }
-         
-        } else {
-          if (hbt.includes("H14") || addR !== "MOLDUE") {
-            tmp = (
-              <div className="row">
-                <div className="col s12 pb-2">
-                  Réclamation affectée à{" "}
-                  <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-                  {props.assigned_by} le {formatDate(props.assignedAt)}
-                </div>
-              </div>
-            )
-            
-          }else{
-            tmp=""
-          }
-
-          if (hbt.includes("H6") || addR === "PILOTE") {
-            treatForm = (
-              <>
-                {afForm}
-                {tmp}
-                
-              </>
-            );
-          } else {
-            treatForm = <>{tmp}</>;
-          }
-
-          
-        }
-      }else{
-       
-        // console.log("props.handle_by",props.handled_by)
-        if (props.handled_by === user.firstAndLastName) {
-          treatForm = (
-            <>
-              {/* details affectation */}
-              <div className="col s12 pb-2">
-                Réclamation affectée à{" "}
-                <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-                {props.assigned_by} le {formatDate(props.assignedAt)}
-              </div>
-              {/* historique */}
-              <div className="row">
-                <div className="col s12">
-                  <details>
-                    <summary className="text-details">
-                      Historique de la réclamation
-                    </summary>
-                    <div className="row">
-                      <div className="col s12 df pb-2">
-                        <span
-                          className="chip indigo lighten-5"
-                          style={{ cursor: "pointer", height: "auto" }}
-                        >
-                          <span className="indigo-text">Traitement en interne</span>
-                        </span>
-                      </div>
-                    </div>
-                    <div className="row">
-                      <div className="col s12 m12">
-                        <div className="row">{details}</div>
-                      </div>
-                    </div>
-                  </details>
-                </div>
-              </div>
-    
-              {/* retraitement */}
-              {props.authorize ? (
+                :""}
                 <form id="claimHandleAgainForm">
                   <div className="row">
                     <div className="col s12">
                       <details open>
                         <summary className="text-details">
-                          Retraitement de la réclamation
+                          Traitement de la Dénonciation
                         </summary>
-    
                         <div className="col s12 input-field">
                           <textarea
                             id="solution"
                             name="solution"
                             placeholder=""
                             className="materialize-textarea textarea-size"
-                            value={props.new_solution}
-                            onChange={(e) =>
-                              props.newSolutionChanged(e.target.value)
-                            }
+                            value={props.solution}
+                            onChange={(e) => props.solutionChanged(e.target.value)}
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
                             Solution
@@ -2996,7 +2796,7 @@ const TraiterDenonciation = (props) => {
                           <small className="errorTxt4">
                             <div id="cpassword-error" className="error">
                               {props.errors !== undefined
-                                ? props.errors.new_solution
+                                ? props.errors.solution
                                 : ""}
                             </div>
                           </small>
@@ -3007,10 +2807,8 @@ const TraiterDenonciation = (props) => {
                             name="comment"
                             placeholder=""
                             className="materialize-textarea textarea-size"
-                            value={props.new_comment}
-                            onChange={(e) =>
-                              props.newCommentChanged(e.target.value)
-                            }
+                            value={props.comment}
+                            onChange={(e) => props.commentChanged(e.target.value)}
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
                             Commentaires/Observations
@@ -3021,17 +2819,16 @@ const TraiterDenonciation = (props) => {
                           <small className="errorTxt4">
                             <div id="cpassword-error" className="error">
                               {props.errors !== undefined
-                                ? props.errors.new_comment
+                                ? props.errors.comment
                                 : ""}
                             </div>
                           </small>
                         </div>
-    
                         <div className="col s12 display-flex justify-content-end mt-3">
                           {
-                            // (actif !== undefined && actif)  ?
+                            //  (actif !== undefined && actif)  ?
                               <LoadingButton
-                                onClick={handleReSolve}
+                                onClick={handleSolve}
                                 className="waves-effect waves-effect-b waves-light btn-small"
                                 loading={props.etat2}
                                 loadingPosition="end"
@@ -3042,10 +2839,9 @@ const TraiterDenonciation = (props) => {
                                   textTransform: "initial",
                                 }}
                               >
-                                <span>Retraiter</span>
+                                <span>Traiter</span>
                               </LoadingButton>
                             // :
-
                             // <div className="card-alert card red lighten-5">
                             //   <div className="card-content red-text">
                             //       <ul>
@@ -3053,8 +2849,8 @@ const TraiterDenonciation = (props) => {
                             //       </ul>
                             //   </div>
                             // </div>
-
-
+  
+  
                           }
                         
                         </div>
@@ -3062,29 +2858,80 @@ const TraiterDenonciation = (props) => {
                     </div>
                   </div>
                 </form>
-              ) : (
-                <div className="row">
-                  <div className="col s12">
-                    <details open>
-                      <summary className="text-details">
-                        Retraitement de la réclamation
-                      </summary>
-                      <div className="card-alert card red lighten-5">
-                        <div
-                          className="card-content red-text"
-                          style={{ textAlign: "center" }}
-                        >
-                          <ul>Vous ne pouvez pas traiter cette réclamation</ul>
-                        </div>
+              </>
+            ) : (
+              <div className="row">
+                <div className="col s12">
+                  <details open>
+                    <summary className="text-details">
+                      Resolution de la Dénonciation
+                    </summary>
+                    <div className="card-alert card red lighten-5">
+                      <div
+                        className="card-content red-text"
+                        style={{ textAlign: "center" }}
+                      >
+                        <ul>Vous ne pouvez pas traiter cette Dénonciation</ul>
                       </div>
-                    </details>
-                  </div>
+                    </div>
+                  </details>
                 </div>
-              )}
+              </div>
+            )}
+          </div>
+        );
+
+        if (hbt.includes("H6") || addR === "PILOTE") {
+          treatForm = (
+            <>
+              {personAffect}
+              {afForm}
+              {tmp}
+              
             </>
           );
-        } 
+        } else {
+          treatForm = (
+            <>
+              {personAffect}
+              {tmp}
+              
+            </>
+          );
+        }
+        
+      } else {
+        if (hbt.includes("H14") || addR !== "MOLDUE") {
+          tmp = (
+            <div className="row">
+              <div className="col s12 pb-2">
+                Dénonciation affectée à{" "}
+                <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
+                {props.assigned_by} le {formatDate(props.assignedAt)}
+              </div>
+            </div>
+          )
+          
+        }else{
+          tmp=""
+        }
+
+        if (hbt.includes("H6") || addR === "PILOTE") {
+          treatForm = (
+            <>
+              {afForm}
+              {tmp}
+              
+            </>
+          );
+        } else {
+          treatForm = <>{tmp}</>;
+        }
+
+        
       }
+
+      
       break;
     case "TO_APPROUVED":
       statusElt = (
