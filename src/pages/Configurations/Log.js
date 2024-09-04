@@ -92,7 +92,7 @@ const Log = () => {
         },
         {
             key: "createdAt",
-            text: "Enrégistré le",
+            text: "Enregistré le",
             className: "created_at",
             align: "left",
             sortable: true,
