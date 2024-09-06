@@ -392,6 +392,7 @@ const Utilisateurs = (props) => {
     const handleEdit = (e) => {
         e.preventDefault()
         let data = {}
+        console.log('props', props)
         data["id"] = props.id;
         data["firstAndLastName"] = props.name;
         data["posteId"] = props.poste;
@@ -538,7 +539,7 @@ const Utilisateurs = (props) => {
     let buttons = props.selectedItem.id!== undefined ?
     (<>
         <LoadingButton
-            className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+            className="btn  waves-light btn-small mr-1 red-text red lighten-4"
             onClick={(e) => handleModal(e)}
             loading={props.etat3}
             loadingPosition="end"
@@ -550,7 +551,7 @@ const Utilisateurs = (props) => {
         </LoadingButton>
 
         <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
+            className="btn waves-light mr-1 btn-small red-text white lighten-4"
             onClick={(e) => handleCancel(e)}
             loading={props.etat2}
             loadingPosition="end"
@@ -562,7 +563,7 @@ const Utilisateurs = (props) => {
         </LoadingButton>
 
         <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
+            className="btn  waves-light mr-1 btn-small"
             onClick={(e) => handleEditModal(e)}
             loading={props.etat}
             loadingPosition="end"

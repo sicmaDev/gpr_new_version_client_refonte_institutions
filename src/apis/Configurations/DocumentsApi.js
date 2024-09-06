@@ -10,7 +10,7 @@ const ADD_SETTING_API = HOST + "api/v1/config/doc/store"
 // DELETE
 const DELETE_SETTING_API = HOST + "api/v1/config/doc/id/delete"
 //download
-const FILES_DOWNLOAD_API = HOST + "api/v1/config/doc/get/%id"
+const FILES_DOWNLOAD_API = HOST + "api/v1/doc/get/%id"
 
 export let liste = async (props) => {
 
