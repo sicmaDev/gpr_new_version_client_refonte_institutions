@@ -38,7 +38,7 @@ const Categories = (props) => {
     useEffect(() => {
        
         liste(props).then((r) => {});
-        //UI Fixes
+        //UI Fixebs
        
         window.$('.dropdown-trigger').dropdown({
                 inDuration: 300,
