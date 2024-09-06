@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import ReactDatatable from '@ashvin27/react-datatable';
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -31,6 +31,9 @@ const Categories = (props) => {
 
     // props.pageChanged("hello")
     // console.log("prego1",props.page)
+    const [deleteIsLoading,setDeleteIsLoading] = useState(false);
+    const [createIsLoading,setCreateIsLoading] = useState(false);
+    const [updateIsLoading,setUpdateIsLoading] = useState(false);
    
     useEffect(() => {
        
@@ -121,7 +124,7 @@ const Categories = (props) => {
     const handleSubmit = (e) => {
         e.preventDefault()
         if (handleValidation()) {
-           
+           setCreateIsLoading(true)
            
             let item = {}
             item["libelle"] = props.libelle;
@@ -130,6 +133,8 @@ const Categories = (props) => {
             props.etatChanged(true)
             ajout(item, props).then(() => {
                 handleCancel(e)
+            }).finally(()=>{
+                setCreateIsLoading(false)
             })
         } else {
         }
@@ -150,6 +155,7 @@ const Categories = (props) => {
     const handleEdit = (e) => {
         e.preventDefault()
         if (handleValidation()) {
+            setUpdateIsLoading(true)
            
             //Create updated version of selected item
             let item = {}
@@ -160,6 +166,8 @@ const Categories = (props) => {
             props.etat2Changed(true)
             modification(item, props).then(() => {
                 handleCancel(e)
+            }).finally(()=>{
+                setUpdateIsLoading(false)
             })
             clearComponentState()
         }
@@ -167,6 +175,7 @@ const Categories = (props) => {
         }
         props.categorieErrors(errors)
     }
+   
     const handleModal = (e) => {
         e.preventDefault()
         modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", handleDelete)
@@ -177,10 +186,14 @@ const Categories = (props) => {
     }
     const handleDelete = (e) => {
         e.preventDefault()
+
+        setDeleteIsLoading(true)
        
         props.etat3Changed(true)
         suppression(props).then(() => {
             handleCancel(e)
+        }).finally(()=>{
+            setDeleteIsLoading(false)
         })
        
         props.categorieErrors(errors)
@@ -201,7 +214,7 @@ const Categories = (props) => {
         <LoadingButton
             className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
             onClick={(e) => handleModal(e)}
-            loading={props.etat3}
+            loading={deleteIsLoading}
             loadingPosition="end"
             endIcon={<DeleteIcon />}
             variant="contained"
@@ -225,7 +238,7 @@ const Categories = (props) => {
         <LoadingButton
             className="btn waves-effect waves-light mr-1 btn-small"
             onClick={(e) => handleEditModal(e)}
-            loading={props.etat}
+            loading={updateIsLoading}
             loadingPosition="end"
             endIcon={<SaveIcon />}
             variant="contained"
@@ -240,7 +253,7 @@ const Categories = (props) => {
         <LoadingButton
             className="btn waves-effect waves-light mr-1 btn-small"
             onClick={(e) => handleSubmit(e)}
-            loading={props.etat}
+            loading={createIsLoading}
             loadingPosition="end"
             endIcon={<SaveIcon />}
             variant="contained"
