@@ -880,7 +880,7 @@ const EnregistrerSuggestion = (props) => {
                 </div>
             );
         });
-        console.log('props.selectedItemAudio', props.selectedItemAudio)
+        // console.log('props.selectedItemAudio', props.selectedItemAudio)
         audioList = (
             <div className="col s12 app-file-content">
                 <div className="row app-file-recent-access mb-3">{audioListChild}</div>

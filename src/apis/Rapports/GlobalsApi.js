@@ -50,7 +50,7 @@ export const reportApi = async (props,setData) => {
         })
         .catch(function (error) {
             KTApp.unblockPage();
-            console.log('report error', error);
+            // console.log('report error', error);
             setData(null)
             notify("Une erreur s'est produtie", "error");
             // console.log("erreurREPORT",error)

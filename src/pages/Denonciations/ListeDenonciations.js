@@ -266,7 +266,7 @@ const ListeDenonciations = (props) => {
    
     {
       key: "statusStr",
-      text: "Status",
+      text: "Statut",
       className: "status",
       align: "left",
       sortable: true,
@@ -1079,66 +1079,121 @@ const ListeDenonciations = (props) => {
 //   } else {
 //   }
  
-  const printRecu = (e)=>{
+  const printRecu = (e) => {
+    e.preventDefault();
+
+    // Entête de la page
     let image = '<img src="'+INSTITUTION_LOGO+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
     let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
     entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">'+image+'</div>';
     entete += '<div className="col l8 s7 m7"><b>'+INSTITUTION_NAME+'</b><br /><i><span>Numéro Agrément: </span>'+INSTITUTION_AGREMENT+'</i><br /><i><span>Addrese: </span>'+INSTITUTION_ADDRESS+'</i><br /><i><span>Tel: </span>'+INSTITUTION_TEL+'</i><br /><i><span>Email: </span>'+INSTITUTION_EMAIL+'</i></div></div>';
   
 
-    e.preventDefault()
-    //  console.log('props', props)
-    let description2 = props.selectedItem.objetId ? (JSON.parse(loadItemFromSessionStorage('app-objets'))).filter((e) => {return e.id === props.selectedItem.objetId}) : ""
-    let description3 = props.selectedItem.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => {return e.id === props.selectedItem.productId}) : ""
-    let description5 = props.selectedItem.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => {return e.id === props.selectedItem.collectorId}) : ""
-      
-    let statusElt;
-    switch (props.selectedItem.status) {
-     
-      case "SAVED":
-        statusElt = "Enregistrée"
-        break;
-      case "TEMP_SAVED":
-        statusElt = "Sauvegardée"
-        break;
-      case "AFFECTED":
-        statusElt = "Affectée"
-        break;
-      case "TO_APPROUVED":
-        statusElt = "A approuver"
-        break;
-      case "DESAPPROUVED":
-        statusElt ="Désapprouvée"
-        break;
-      case "TREAT":
-        statusElt = "Traitée"
-        break;
-     
-      default:
-        statusElt = ""
-        break;
-    }
-    let datee = props.selectedItem.createdAt !== null ? formatDate(props.selectedItem.createdAt):""
-    let addByTemp = mode ===1 ? props.selectedItem.collector.firstAndLastName : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.collector.firstAndLastName : description5[0].firstAndLastName;
-    let objetTemp = mode ===1 ? props.selectedItem.objet.libelle : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.objet.libelle : description2[0].libelle;
-    let produitTemp = mode ===1 ? props.selectedItem.product.libelle : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.product.libelle : description3[0].libelle;
-    
-    
-    const enregistrerle ='<div class="row"><div class="col l3"><b style="font-size:20px"> Enregistrer le  :</b></div><div class="col l9" style="font-size:20px">'+datee+'</div><br/><br/><br/>'
-    const enregistrerpar ='<div class="row"><div class="col l3"><b style="font-size:20px"> Enregistrer par  :</b></div><div class="col l9" style="font-size:20px">'+addByTemp+'</div></div><br/><br/><br/>'
-    const code ='<div class="row"><div class="col l12"><span style="font-size:18px"><b>Code:</b> '+props.selectedItem.code+' </span></div></div><br/><br/><br/>'
-    const datereception ='<div class="row"><div class="col l4"><b style="font-size:20px"> Date de reception de la dénonciation :</b></div><div class="col l8" style="font-size:20px">'+props.selectedItem.receiptDateTime+'</div></div><br/><br/><br/>'
-    const objet ='<div class="row"><div class="col l"><b style="font-size:20px"> Objet de plainte   :</b></div><div class="col l9" style="font-size:20px">'+objetTemp+'</div></div><br/><br/><br/>'
-    const product ='<div class="row"><div class="col l3"><b style="font-size:20px"> Produit concerné  :</b></div><div class="col l9" style="font-size:20px">'+produitTemp+'</div></div><br/><br/><br/>'
-    const statut ='<div class="row"><div class="col l3"><b style="font-size:20px"> Statut  :</b></div><div class="col l9" style="font-size:20px">'+statusElt+'</div></div><br/><br/><br/>'
-    
-    const toStri = entete+code+objet+product+datereception+enregistrerpar+enregistrerle+statut
-    //  const name ='<label  className="active"> Nom & Prénoms:</label>'+props.selectedItem.recorded_by.firstname+" "+props.selectedItem.recorded_by.lastname
-    handlePrintAvance(toStri)
-  
 
+    // Données de l'élément sélectionné
+    let description2 = props.selectedItem.objetId 
+      ? JSON.parse(loadItemFromSessionStorage('app-objets')).filter(e => e.id === props.selectedItem.objetId)
+      : "";
+    let description3 = props.selectedItem.productId 
+      ? JSON.parse(loadItemFromSessionStorage('app-produits')).filter(e => e.id === props.selectedItem.productId)
+      : "";
+    let description5 = props.selectedItem.collectorId 
+      ? JSON.parse(loadItemFromSessionStorage('app-users')).filter(e => e.id === props.selectedItem.collectorId)
+      : "";
+
+    // Détermination du statut
+    let statusElt = {
+      "SAVED": "Enregistrée",
+      "TEMP_SAVED": "Sauvegardée",
+      "AFFECTED": "Affectée",
+      "TO_APPROUVED": "À approuver",
+      "DESAPPROUVED": "Désapprouvée",
+      "TREAT": "Traitée"
+    }[props.selectedItem.status] || "";
+
+    let datee = props.selectedItem.createdAt ? formatDate(props.selectedItem.createdAt) : "";
+    
+    let addByTemp = mode === 1
+      ? props.selectedItem.collector.firstAndLastName
+      : (props.selectedItem.id && props.selectedItem.collectionChannel
+          ? props.selectedItem.collector.firstAndLastName
+          : description5[0]?.firstAndLastName || "<i>Non défini</i>");
+
+    let objetTemp = mode === 1
+      ? props.selectedItem.objet.libelle
+      : (props.selectedItem.id && props.selectedItem.collectionChannel
+          ? props.selectedItem.objet.libelle
+          : description2[0]?.libelle || "<i>Non défini</i>");
+
+    let produitTemp = mode === 1
+      ? props.selectedItem.product.libelle
+      : (props.selectedItem.id && props.selectedItem.collectionChannel
+          ? props.selectedItem.product.libelle
+          : description3[0]?.libelle || "<i>Non défini</i>");
+
+    // Création des sections du document
+    const sections = {
+      enregistrerle: `
+        <div class="row" style="margin-bottom: 20px;">
+          <div class="col l3"><b style="font-size: 20px;">Enregistré le:</b></div>
+          <div class="col l9" style="font-size: 20px;">${datee}</div>
+        </div>
+      `,
+      enregistrerpar: `
+        <div class="row" style="margin-bottom: 20px;">
+          <div class="col l3"><b style="font-size: 20px;">Enregistré par:</b></div>
+          <div class="col l9" style="font-size: 20px;">${addByTemp}</div>
+        </div>
+      `,
+      code: `
+        <div class="row" style="margin-bottom: 20px;">
+          <div class="col l12">
+            <span style="font-size: 18px;"><b>Code:</b> ${props.selectedItem.code}</span>
+          </div>
+        </div>
+      `,
+      datereception: `
+        <div class="row" style="margin-bottom: 20px;">
+          <div class="col l4"><b style="font-size: 20px;">Date de réception de la dénonciation:</b></div>
+          <div class="col l8" style="font-size: 20px;">${props.selectedItem.receiptDateTime}</div>
+        </div>
+      `,
+      objet: `
+        <div class="row" style="margin-bottom: 20px;">
+          <div class="col l3"><b style="font-size: 20px;">Objet de plainte:</b></div>
+          <div class="col l9" style="font-size: 20px;">${objetTemp}</div>
+        </div>
+      `,
+      product: `
+        <div class="row" style="margin-bottom: 20px;">
+          <div class="col l3"><b style="font-size: 20px;">Produit concerné:</b></div>
+          <div class="col l9" style="font-size: 20px;">${produitTemp}</div>
+        </div>
+      `,
+      statut: `
+        <div class="row" style="margin-bottom: 20px;">
+          <div class="col l3"><b style="font-size: 20px;">Statut:</b></div>
+          <div class="col l9" style="font-size: 20px;">${statusElt}</div>
+        </div>
+      `
+    };
+
+    // Assemblage du contenu
+    const toStri = `
+      ${entete}
+      ${sections.code}
+      ${sections.objet}
+      ${sections.product}
+      ${sections.datereception}
+      ${sections.enregistrerpar}
+      ${sections.enregistrerle}
+      ${sections.statut}
+    `;
+
+    handlePrintAvance(toStri);
   }
-   
+
+
 
   let content = [];
   content = props.items;
@@ -1523,24 +1578,46 @@ const ListeDenonciations = (props) => {
                             <h5 className="card-title">Liste des dénonciations&nbsp;</h5>
                         </div>
                         <div className="col l6 m6 s12" style={{ textAlign:"end" }}>
-                            <img 
-                              src={pdf} alt="" 
-                              style={{ marginRight:"15px",cursor:"pointer" }}
+                        {hbt.includes("H7") ? (
+                            <img
+                              src={pdf}
+                              alt=""
+                              style={{ marginRight: "15px", cursor: "pointer" }}
                               onClick={(e) => {
-                                handleImpression()
-                                // props.showSelectPrintItemChanged(true);
-                                setChangeButtonPrint(true);
+                                 // Vérifie si hbt inclut "H8" avant d'exécuter handleImpression
+                                if (hbt.includes("H8")) {
+                                  handleImpression();
+                                  setChangeButtonPrint(true);
+                                }else{
+                                  handlePrint2(config, selectOption, props.items);
+                                }
                               }}
                             />
-                            <img 
-                              src={excel} alt="" 
-                              style={{ cursor:"pointer" }}  
-                              onClick={(e) => {
-                                handleImpression()
-                                // props.showSelectPrintItemChanged(true);
+                          ) : ""}
+
+                          {hbt.includes("H9") ? (
+                            <img
+                            src={excel}
+                            alt=""
+                            style={{ cursor: "pointer" }}
+                            onClick={(e) => {
+                              if (hbt.includes("H10")) {
+                                handleImpression();
                                 setChangeButtonPrint(false);
-                              }}
-                            />
+                              }else{
+                                table2XLS2X(
+                                  "Liste_des_denonciations" +
+                                    today().replaceAll("/", ""),
+                                  "brke",
+                                  selectOption,
+                                  props.items
+                                );
+                              }
+                              
+                            }}
+                          />
+                          ) : ""}
+
                         </div>
                       </div>
                       <div className="col s12">

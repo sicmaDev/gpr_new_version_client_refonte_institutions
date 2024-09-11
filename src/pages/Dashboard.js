@@ -500,7 +500,7 @@ const Dashboard = (props) => {
                                    
                                 </span>
                                 <br/>
-                                <span style={{fontSize:"10px" }}>Réclamations,Dénonciation et Suggestions</span>
+                                <span style={{fontSize:"10px" }}>Réclamations, Dénonciations et Suggestions</span>
                                 
                                 
                             </Typography>

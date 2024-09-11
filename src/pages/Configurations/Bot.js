@@ -30,7 +30,7 @@ const Bot = (props) => {
         try {
             // appBot =  loadItemFromLocalStorage("app-bot") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-bot")) : undefined;
             let appBot =  loadItemFromLocalStorage("app-bot") !== undefined && (loadItemFromLocalStorage("app-bot").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-bot")) : undefined;
-            console.log("bot premier",appBot)
+            // console.log("bot premier",appBot)
             if (appBot !== undefined || appBot !== "") {
                 props.apiKeyChanged(appBot.apiKey)
                 props.apiSecretChanged(appBot.apiSecret);
@@ -38,7 +38,7 @@ const Bot = (props) => {
             } else {
             }
         } catch (e) {
-            console.log("bot premier",e)
+            // console.log("bot premier",e)
         }
        
         //UI Fixes
@@ -164,7 +164,7 @@ const Bot = (props) => {
 
     const genererCode = (e) => {
         e.preventDefault()
-        console.log("resultatccccc");
+        // console.log("resultatccccc");
         props.etat1Changed(true)
         // let itemb = {}
         // itemb["apikey"] = props.apiKey;
@@ -215,7 +215,7 @@ const Bot = (props) => {
         props.gprbotErrors(errors)
        
     }
-    console.log("appbot contenu",appBot !=="");
+    // console.log("appbot contenu",appBot !=="");
     return (
         <>
             <div className="card-panel">
@@ -225,11 +225,8 @@ const Bot = (props) => {
                 </div>
                 <form id="accountForm" onSubmit={handleSubmit}>
                     <div className="row">
-                    
-
                         <div className="col s6 m6">
                             <div className="row">
-
                                 <div className="col s12 input-field">
                                     <input id="apikey" placeholder="" name="apikey" type="text"
                                         className="validate" value={props.apiKey}
@@ -284,7 +281,7 @@ const Bot = (props) => {
                                         <span>Enregistrer</span>
                                     </LoadingButton>
                                     
-                                    <LoadingButton
+                                    {/* <LoadingButton
                                             className="btn waves-effect waves-light mr-1 btn-small"
                                             onClick={(e) => genererCode(e)}
                                             loading={props.etat}
@@ -294,18 +291,18 @@ const Bot = (props) => {
                                             sx={{ textTransform:"initial" }}
                                         >
                                             <span>Générer</span>
-                                        </LoadingButton>
+                                        </LoadingButton> */}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="col s6 m6">
+                        {/* <div className="col s6 m6">
                             <div className="row">
 
                                 <div className="col s12 display-flex justify-content-center">
                                     <div style={{ position: 'relative', width: '250px', height: '250px' }}>
-                                        {/* Fond blanc semi-transparent */}
-                                        {/* <div style={{
+                                        Fond blanc semi-transparent
+                                        <div style={{
                                             position: 'absolute',
                                             top: 0,
                                             left: 0,
@@ -316,16 +313,16 @@ const Bot = (props) => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                        }}> */}
-                                            {/* Cercle bleu */}
-                                            {/* <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'blue', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}> */}
-                                                {/* Flèche */}
-                                                {/* <div style={{ width: '20px', height: '20px', borderBottom: '3px solid white', borderRight: '3px solid white', transform: 'rotate(45deg)' }}></div> */}
-                                                {/* Texte "Actualiser" */}
-                                                {/* <span style={{ color: 'white', fontSize: '12px', marginTop: '5px' }}>Actualiser</span> */}
-                                            {/* </div> */}
-                                        {/* </div> */}
-                                        {/* QR code */}
+                                        }}>
+                                            Cercle bleu
+                                            <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'blue', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                                Flèche
+                                                <div style={{ width: '20px', height: '20px', borderBottom: '3px solid white', borderRight: '3px solid white', transform: 'rotate(45deg)' }}></div>
+                                                Texte "Actualiser"
+                                                <span style={{ color: 'white', fontSize: '12px', marginTop: '5px' }}>Actualiser</span>
+                                            </div>
+                                        </div>
+                                        QR code
                                         {appBot !== undefined || appBot !== "" ? 
                                             <QRCode
                                                 value="zer"
@@ -346,7 +343,7 @@ const Bot = (props) => {
                                 </div>
                                
                             </div>
-                        </div>
+                        </div> */}
                         
                     </div>
                 </form>

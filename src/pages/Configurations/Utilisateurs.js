@@ -392,7 +392,7 @@ const Utilisateurs = (props) => {
     const handleEdit = (e) => {
         e.preventDefault()
         let data = {}
-        console.log('props', props)
+        // console.log('props', props)
         data["id"] = props.id;
         data["firstAndLastName"] = props.name;
         data["posteId"] = props.poste;
@@ -404,7 +404,7 @@ const Utilisateurs = (props) => {
 
        
         if (handleValidation()) {
-            props.etat2Changed(true)
+            props.etatChanged(true)
             if((props.pass==="" || props.pass===undefined || props.pass===null)){
                 modification (data, props).then(() => {
                     handleCancel(e)

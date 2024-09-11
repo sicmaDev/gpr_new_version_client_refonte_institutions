@@ -994,7 +994,7 @@ const Global = (props) => {
     filtres["receiveEnd"] = cleanDate(endDate);
     filtres["servicePoints"] = unit;
     filtres["canals"] = [];
-
+    // console.log("filtres",filtres);
     handleClose(e);
     reportApiFiltres(props, filtres, setDataRaport).then((r) => {});
   };
@@ -1359,7 +1359,7 @@ const Global = (props) => {
                     plugins: {
                       title: {
                         display: true,
-                        text: "Glissement annuel des RSD (%)",
+                        text: "Glissement annuel des RSD",
                         position: "top",
                       },
                       legend: {
@@ -1574,7 +1574,10 @@ const Global = (props) => {
                     maintainAspectRatio: false,
                   }}
                 />
+
+                
               </div>
+              
             </div>
           </div>
         </div>

@@ -25,7 +25,7 @@ export const LoginApi = (credentials, props) => {
             if (response.data.response.status) {
                 notify("Bravo - Vous êtes authentifié", "success");
                 props.authenticate()
-                 console.log("loginresponse",response.data.response.content.settings)
+                //  console.log("loginresponse",response.data.response.content.settings)
                 //enregistrement dans la session storage
                 saveItemToSessionStorage(response.data.response.content.token, 'token')
                 saveItemToSessionStorage(1, 'logged')

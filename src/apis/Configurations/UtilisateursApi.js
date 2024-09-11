@@ -139,7 +139,7 @@ export const modification = async (data, props) => {
             saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
 
-            props.etat2Changed(false)
+            props.etatChanged(false)
            
             notify("Bravo - Utilisateur modifié", "success");
            
@@ -147,7 +147,7 @@ export const modification = async (data, props) => {
 
         })
         .catch(function (error) {
-            props.etat2Changed(false)
+            props.etatChanged(false)
             notify("Erreur - Veuillez réessayer!", "error");
         });
 

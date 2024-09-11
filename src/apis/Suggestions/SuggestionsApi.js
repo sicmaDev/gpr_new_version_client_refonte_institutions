@@ -107,7 +107,7 @@ export const addSuggestionApi = async (data, props) => {
         .catch(function (error) {
             props.etat2Changed(false)
             notify("Erreur - Veuillez réessayer!", "error");
-            console.log("erreur",error)
+            // console.log("erreur",error)
         });
 }
 

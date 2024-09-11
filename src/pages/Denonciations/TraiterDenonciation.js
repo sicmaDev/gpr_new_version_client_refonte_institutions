@@ -270,7 +270,7 @@ const TraiterDenonciation = (props) => {
   const licenseControl = async () => {
     try {
       let resultat = await licenseInfo();
-      console.log("resultat", resultat);
+      // console.log("resultat", resultat);
       setActif(resultat.actif)
 
     } catch (error) {
@@ -296,7 +296,7 @@ const TraiterDenonciation = (props) => {
     history.push("/denonciations/traitement/all");
   };
   const handleFerme = () => {
-    console.log("je suis dans ferme")
+    // console.log("je suis dans ferme")
     return <Redirect to="/alertes/denonciations" />
   };
 
@@ -926,8 +926,8 @@ const TraiterDenonciation = (props) => {
     clearComponentState();
   };
   const handleValidation = () => {
-    console.log("props.solution",props.solution)
-    console.log("props.solution2",props.solutionExistant)
+    // console.log("props.solution",props.solution)
+    // console.log("props.solution2",props.solutionExistant)
     let isValid = true;
 
     if (
@@ -1056,7 +1056,7 @@ const TraiterDenonciation = (props) => {
     },
     {
       key: "statusStr",
-      text: "Status",
+      text: "Statut",
       className: "status",
       align: "left",
       sortable: true,
@@ -2751,8 +2751,8 @@ const TraiterDenonciation = (props) => {
           </div>
         </>
       );
-      console.log("props.solution",props.solution);
-      console.log("props.code",props.code);
+      // console.log("props.solution",props.solution);
+      // console.log("props.code",props.code);
       if (props.handled_by === user.firstAndLastName) {
         tmp = (
           <div className="row">
@@ -3531,7 +3531,7 @@ const TraiterDenonciation = (props) => {
                       open={open}
                       // onClose={ handleClose}
                       onClose={() => {
-                        console.log("paramsdanslui", props?.match?.params?.code)
+                        // console.log("paramsdanslui", props?.match?.params?.code)
                         if (props?.match?.params?.code === "all") {
                           handleClose();
                         } else {

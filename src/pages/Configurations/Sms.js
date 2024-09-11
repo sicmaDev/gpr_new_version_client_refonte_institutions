@@ -221,8 +221,8 @@ const Sms = (props) => {
         });
         await sleep(3000);
         test({ phone: cleanPhoneNumber3(phoneTest), message: messageTest }).then(({ data }) => {
-            console.log("first : ",phoneTest);
-            console.log("second : ",cleanPhoneNumber3(phoneTest));
+            // console.log("first : ",phoneTest);
+            // console.log("second : ",cleanPhoneNumber3(phoneTest));
             notify("Super - SMS envoyé", "success");
         }).catch((err) => {
             notify("Oups - SMS non envoyé; Vérifier la configuration de votre serveur", "error");

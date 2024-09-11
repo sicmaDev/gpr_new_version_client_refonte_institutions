@@ -67,7 +67,7 @@ export const listeByStatut = async (props,state) => {
     };
     await axios(config)
         .then(function (response) {
-            console.log("mesureliste",response.data.content)
+            // console.log("mesureliste",response.data.content)
             // console.log("response",response.data.content)
             props.itemsChanged(response.data.content)
 
@@ -91,13 +91,13 @@ export const listeTreat = async (props) => {
     await axios(config)
         .then(function (response) {
            
-            console.log("responsetreat",response.data.content)
+            // console.log("responsetreat",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
         })
         .catch(function (error) {
-            console.log("responsetreaterror",error)
+            // console.log("responsetreaterror",error)
             return error;
 
         });

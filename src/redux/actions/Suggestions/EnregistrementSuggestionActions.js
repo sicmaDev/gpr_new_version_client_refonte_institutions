@@ -242,7 +242,7 @@ export const selectedFilesChanged = (selectedFiles) =>{
     }
 };
 export const selectedItemAudioChanged = (selectedItemAudio) =>{
-    console.log('SUGGESTION_RECORD_SELECTED_ITEM_AUDIO_CHANGED', selectedItemAudio)
+    // console.log('SUGGESTION_RECORD_SELECTED_ITEM_AUDIO_CHANGED', selectedItemAudio)
     return {
         type: 'SUGGESTION_RECORD_SELECTED_ITEM_AUDIO_CHANGED',
         payload: selectedItemAudio,

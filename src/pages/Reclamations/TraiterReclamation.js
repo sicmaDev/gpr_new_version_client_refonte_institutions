@@ -958,7 +958,7 @@ const TraiterReclamation = (props) => {
   };
   const handleValidation = () => {
     let isValid = true;
-    console.log("props.solution",props.solutionExistant)
+    // console.log("props.solution",props.solutionExistant)
     if (
       (props.solutionExistant === "") && (
       props.solution === "" ||
@@ -983,8 +983,8 @@ const TraiterReclamation = (props) => {
 
   const handleReValidation = () => {
     let isValid = true;
-    console.log("props.solution",props.new_solution)
-    console.log("props.solution2",props.solutionExistant)
+    // console.log("props.solution",props.new_solution)
+    // console.log("props.solution2",props.solutionExistant)
     if (
       (props.solutionExistant === "") && (
         props.new_solution === "" ||
@@ -1094,7 +1094,7 @@ const TraiterReclamation = (props) => {
 
     {
       key: "statusStr",
-      text: "Status",
+      text: "Statut",
       className: "status",
       align: "left",
       sortable: true,
