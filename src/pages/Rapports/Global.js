@@ -2898,7 +2898,7 @@ const Global = (props) => {
                       title: {
                         display: true,
                         text: "Répartition des suggestions par genre (%)",
-                        position: "bottom",
+                        position: "top",
                       },
                       legend: {
                         position: "bottom",
@@ -3020,7 +3020,7 @@ const Global = (props) => {
                       title: {
                         display: true,
                         text: "Répartition des réclamations par niveau de gravité (%)",
-                        position: "bottom",
+                        position: "top",
                       },
                       legend: {
                         position: "bottom",
@@ -3139,7 +3139,7 @@ const Global = (props) => {
                       title: {
                         display: true,
                         text: "Répartition des dénonciations par niveau de gravité (%)",
-                        position: "bottom",
+                        position: "top",
                       },
                       legend: {
                         position: "top",
@@ -3263,7 +3263,7 @@ const Global = (props) => {
                       title: {
                         display: true,
                         text: "Répartition de la satisfaction des réclamants (%)",
-                        position: "bottom",
+                        position: "top",
                       },
                       legend: {
                         position: "bottom",

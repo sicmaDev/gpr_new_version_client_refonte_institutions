@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import {authenticate} from "../redux/actions/LayoutActions";
 import { connect } from "react-redux";
 import {emailChanged, etatChanged, loginErrors, passChanged} from "../redux/actions/LoginActions";
@@ -9,8 +9,16 @@ import loginPhoto from "../assets/images/login_photo.png"
 import LoadingButton from '@mui/lab/LoadingButton';
 import LoginIcon from '@mui/icons-material/Login';
 import { notify } from "../Utils/alert";
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+
 
 const Login = (props) =>{
+    const [showPassword, setShowPassword] = useState(false);
+
+    const toggleShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
    
     const clearComponentState = () => {
         props.emailChanged("")
@@ -150,13 +158,25 @@ const Login = (props) =>{
                                     </div>
                                     <div className="row">
                                         <div className="input-field col m12 s12 bf">
-                                            <input id="pass" type="password" placeholder="" className="validate" onChange={(e) => props.passChanged(e.target.value)}/>
+                                            <input id="pass" type={showPassword ? "text" : "password"} placeholder="" className="validate" onChange={(e) => props.passChanged(e.target.value)}/>
                                             <label htmlFor="pass" className="active">Mot de passe</label>
                                             <small className="errorTxt4">
                                                 <div id="cpassword-error" className="error">
                                                     {props.errors.pass}
                                                 </div>
                                             </small>
+                                            <span
+                                                onClick={toggleShowPassword}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: '10px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                            </span>
                                         </div>
 
                                     </div>
