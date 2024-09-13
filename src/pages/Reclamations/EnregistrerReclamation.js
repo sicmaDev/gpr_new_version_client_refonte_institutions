@@ -134,7 +134,9 @@ const EnregistrerReclamation = (props) => {
     loadItemFromLocalStorage("app-mode") !== undefined
       ? JSON.parse(loadItemFromLocalStorage("app-mode"))
       : undefined;
-      
+
+  let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !==0)  ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -248,7 +250,7 @@ const EnregistrerReclamation = (props) => {
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
   const [underSubjectOptions, setUnderSubjectOptions] = useState([]);
-
+  const [clearAudio, setClearAudio] = useState(0)
   useEffect(() => {}, [showAudioPlayer, currentAudio])
 
                                               
@@ -409,7 +411,7 @@ const EnregistrerReclamation = (props) => {
     props.selectedItemChanged({});
     props.selectedItemFilesChanged([]);
     props.selectedItemAudioChanged([]);
-    audio = [];
+    setClearAudio(clearAudio + 1);
     
   };
 
@@ -1482,7 +1484,7 @@ const EnregistrerReclamation = (props) => {
                               <PhoneInput
                                 international
                                 countryCallingCodeEditable={false}
-                                defaultCountry={INSTITUTION_PAYS_CODE}
+                                defaultCountry={appInstitution !== undefined ? appInstitution.paysCode : "BJ"}
                                 value={props.phone}
                                 onChange={(e) =>
                                   props.phoneChanged(e)
@@ -1906,7 +1908,7 @@ const EnregistrerReclamation = (props) => {
                               </small>
                             </div>
                             <div className="col l12 m12 s12 mb-3">
-                               <RecordingsList audio={audio} /> 
+                                 <RecordingsList audio={audio} persistAll={clearAudio} /> 
                               
                             </div>
                             <div className="row">{audioList}</div>
