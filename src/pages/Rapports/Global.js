@@ -791,7 +791,7 @@ const Global = (props) => {
       labels: [],
       datasets: [],
     };
-
+    console.log("data new version : ",data);
     if (data) {
       const datasetsKey = [];
       result.labels = Object.keys(data);
@@ -852,19 +852,20 @@ const Global = (props) => {
       let resultDatasets = [];
 
       newDatasets.forEach((dd, i) => {
+        //console.log(" boucle",dd);
         if (i > 9) {
           otherPush.isInit = true;
-          if (otherPush.data.length > 0) {
+          if (otherPush?.data?.length > 0) {
             otherPush.data.forEach((ot, j) => {
               otherPush.data[j] =
                 parseFloat(
-                  ot.toLocaleString("en-US", {
+                  ot?.toLocaleString("en-US", {
                     maximumFractionDigits: 2,
                     minimumFractionDigits: 0,
                   })
                 ) +
                 parseFloat(
-                  dd.data[j].toLocaleString("en-US", {
+                  dd?.data[j]?.toLocaleString("en-US", {
                     maximumFractionDigits: 2,
                     minimumFractionDigits: 0,
                   })
@@ -1246,11 +1247,6 @@ const Global = (props) => {
                   
                     <td className="center">
                       <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Désapprouvée
-                      </span>
-                    </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
                         Traitée
                       </span>
                     </td>
@@ -1272,14 +1268,6 @@ const Global = (props) => {
                     </span>
                   </td>
 
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {
-                        props.denunReport?.basicStats?.statusAndValue
-                          ?.DESAPPROUVED
-                      }
-                    </span>
-                  </td>
                   <td className="center">
                     <span style={{ fontSize: "13px", fontWeight: "bold" }}>
                       {props.denunReport?.basicStats?.statusAndValue?.TREAT}
