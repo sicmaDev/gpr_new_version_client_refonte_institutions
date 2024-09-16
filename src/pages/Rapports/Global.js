@@ -11,6 +11,7 @@ import { mdColors } from "../../Utils/colors";
 import { Link, NavLink } from "react-router-dom";
 import {
   cleanDate,
+  generateString,
   loadItemFromSessionStorage,
   normalizeStats,
   resizeImage,
@@ -4028,11 +4029,15 @@ const Global = (props) => {
       chartInfo:[{type:"Pie",title:"Répartition des suggestions par genre (%)",tablePosition:0},{type:"Chart",title:"Répartition des Suggestions par genre et par agences en %  ",tablePosition:2}],
       tables:[{title:"",data:rdsPieGenreSugge},{title:"Nombre de Suggestions par agence",data:dataRaport.newVersionStat["AgencePerGenre"]["suggestions"] ?? []},{title:"Répartition des Suggestions par genre par agence",data:rdsBarGenreSugge}],
     })
+
+    const generateName = generateString(10)
+
+    dataPrepare.push(generateName)
    
 
 
     if (dataPrepare.length) {
-      reportNewVersionExport(filename, dataPrepare);
+      reportNewVersionExport(filename,generateName, dataPrepare);
     } else {
       notify("Imspossible d'exporter,Ressayez", "error");
     }
@@ -4619,7 +4624,7 @@ const Global = (props) => {
                       {claimShow ? claimDashboard() : ""}
                     </div>
 
-                    {props.claimReport.length != 0 ? (
+                    {props.claimReport.length !== 0 ? (
                       <>
                         <div className="row mt-4">
                           <div className="col l12 s12 m12 mb-4">
@@ -4918,7 +4923,7 @@ const Global = (props) => {
                     >
                       {suggestionShow ? suggestionDashboard() : ""}
                     </div>
-                    {props.sugReport.length != 0 ? (
+                    {props.sugReport.length !== 0 ? (
                       <div className="row mt-2 ">
                         <div className="col l12 mb-4">
                           <div className="row" id="tpeSugg">
@@ -5102,9 +5107,7 @@ const mapDispatchToProps = (dispatch) => {
     claimReportChanged: (claimReport) => {
       dispatch(claimReportChanged(claimReport));
     },
-    claimReportChanged: (claimReport) => {
-      dispatch(claimReportChanged(claimReport));
-    },
+   
     denunReportChanged: (denunReport) => {
       dispatch(denunReportChanged(denunReport));
     },
@@ -5114,24 +5117,7 @@ const mapDispatchToProps = (dispatch) => {
     statChanged: (stat) => {
       dispatch(statChanged(stat));
     },
-    yearChanged: (year) => {
-      dispatch(yearChanged(year));
-    },
-    startChanged: (start) => {
-      dispatch(startChanged(start));
-    },
-    endChanged: (end) => {
-      dispatch(endChanged(end));
-    },
-    startDPChanged: (start) => {
-      dispatch(startDPChanged(start));
-    },
-    endDPChanged: (end) => {
-      dispatch(endDPChanged(end));
-    },
-    unitChanged: (unit) => {
-      dispatch(unitChanged(unit));
-    },
+    
     // basicStatChanged: (basicStat) => {
     //   dispatch(basicStatChanged(basicStat));
     // },
