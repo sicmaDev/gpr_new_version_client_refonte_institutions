@@ -456,6 +456,14 @@ const logOut = (e) => {
                             <ListItemText primary="Log Systeme" />
                         </ListItemButton>
                     </NavLink>
+                    <NavLink to="/configurations/exportations" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                        <ListItemButton sx={{ pl: 4 }} className='lib'>
+                            <ListItemIcon>
+                                <AddToDriveOutlined style={{ color:"white" }} />
+                            </ListItemIcon>
+                            <ListItemText primary="Exportation" />
+                        </ListItemButton>
+                    </NavLink>
 
                     <NavLink to="/configurations/bot" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
