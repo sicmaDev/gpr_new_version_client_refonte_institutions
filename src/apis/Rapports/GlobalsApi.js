@@ -53,7 +53,7 @@ export const reportApi = async (props,setData) => {
             // console.log('report error', error);
             setData(null)
             notify("Une erreur s'est produtie", "error");
-            // console.log("erreurREPORT",error)
+            console.log("erreurREPORT",error)
         });
 }
 
@@ -89,9 +89,21 @@ export const reportApiFiltres = async (props, body,setData) => {
                 props.statChanged(response.data.statistic)
                 setData(response.data)
 
+                // setData(prevData => {
+                //     if (!prevData) {
+                //         return { newData: response.data }; // Si prevData est null ou undefined
+                //     }
+                //     return {
+                //         ...prevData,
+                //         newData: response.data
+                //     };
+                // });
+                
+                  
+
 
                 KTApp.unblockPage();
-                notify("Bravo - Rapport généré", "success");
+                notify("Bravo - Rapport filtré généré", "success");
             }
 
 
