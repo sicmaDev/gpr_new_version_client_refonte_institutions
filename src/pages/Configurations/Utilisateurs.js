@@ -166,7 +166,7 @@ const Utilisateurs = (props) => {
             cell: (user, index) => {
                 let additionalRole =""
                 if(user.additionalRole !==undefined){
-                    if(user.additionalRole==="DE") additionalRole = "Directeur Exécutif";
+                    if(user.additionalRole==="DE") additionalRole = "Directeur";
                     if(user.additionalRole==="PILOTE") additionalRole ="Pilote";
                 }
                 return additionalRole
@@ -203,7 +203,7 @@ const Utilisateurs = (props) => {
             cell: (user, index) => {
                 let additionalRole =""
                 if(user.additionalRole !==undefined){
-                    if(user.additionalRole==="DE") additionalRole = "Directeur Exécutif";
+                    if(user.additionalRole==="DE") additionalRole = "Directeur";
                     if(user.additionalRole==="PILOTE") additionalRole ="Pilote";
                 }
                 if (user.deleted) {
@@ -294,13 +294,37 @@ const Utilisateurs = (props) => {
     let roleOptions
     if (props.additionalRole !== undefined) {
         roleOptions = [
-            {"label": "Directeur Exécutif", "value": "DE" },
+            {"label": "Directeur", "value": "DE" },
             {"label": "Pilote", "value": "PILOTE" },
             {"label": "Aucun", "value": "MOLDUE" },
         ]
 
     } else {
         roleOptions = ""
+    }
+
+    const [ca, setCa] = useState(false);
+    const [caOptions, setCaOptions] = useState([
+        {"label": "Sélectionnez votre réponse", "value": "" },
+        {"label": "Non", "value": false },
+        {"label": "Oui", "value": true },
+    ]);
+    // if (props.director !== undefined) {
+    //     caOptions = [
+    //         {"label": "Sélectionnez votre réponse", "value": "" },
+    //         {"label": "Non", "value": 0 },
+    //         {"label": "Oui", "value": 1 },
+    //     ]
+
+    // } else {
+    //     caOptions = ""
+    // }
+
+    const handleChange12 = (obj) => {
+        setCa(obj.value)
+        // props.unitLibelleChanged(obj.label)
+
+        // console.log(props.unit)
     }
 
 
@@ -360,7 +384,8 @@ const Utilisateurs = (props) => {
         data["servicePointId"] = props.unit;
         data["additionalRole"] = props.additionalRole;
         data["password"] = props.pass;
-       
+        data["ra"] = ca;
+    //    console.log("ca",ca)
        
         if(handleValidation() && handleMdp()){
             props.etatChanged(true)
@@ -384,6 +409,7 @@ const Utilisateurs = (props) => {
         props.passwordChanged("")
         props.passwordAgainChanged("")
         props.selectedItemChanged({})
+        setCa(false);
     }
     const handleCancel = (e) => {
         e.preventDefault()
@@ -401,7 +427,7 @@ const Utilisateurs = (props) => {
         data["tel"] = props.phone;
         data["additionalRole"] = props.additionalRole;
         data["password"] = props.pass;
-
+        data["ra"] = ca;
        
         if (handleValidation()) {
             props.etatChanged(true)
@@ -776,13 +802,39 @@ const Utilisateurs = (props) => {
                                         classNamePrefix="react-select"
                                         style={styles}
                                         placeholder="Sélectionnez le role"
+                                        options={caOptions}
+                                       
+                                        value={ca}
+                                        onChange={handleChange12}
+                                    />
+                                    <label htmlFor="usrole" className={"active"}>Est-il le gérant du point de service ?&nbsp;
+                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
+                                           data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
+                                            <HelpIcon/>
+                                        </a>
+                                    </label>
+                                    <small className="errorTxt4">
+                                        <div id="cpassword-error" className="error">
+                                            {/* {props.errors.additionalRole} */}
+                                        </div>
+                                    </small>
+                                </div>
+
+                                <div className="col s12 input-field">
+
+                                    <Select
+                                        id={"usrole"}
+                                        className='react-select-container mt-4'
+                                        classNamePrefix="react-select"
+                                        style={styles}
+                                        placeholder="Sélectionnez le role"
                                         options={roleOptions}
                                         value={roleValue}
                                         onChange={(e) => props.additionalRoleChanged(e.value)}
                                     />
-                                    <label htmlFor="usrole" className={"active"}>Role Spécifique&nbsp;
+                                    <label htmlFor="usrole" className={"active"}>Privilège Spécifique&nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                           data-tooltip="L'un des rôles spécifiques qui accorde certains privilèges">
+                                        data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
                                             <HelpIcon/>
                                         </a>
                                     </label>

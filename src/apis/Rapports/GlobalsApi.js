@@ -115,6 +115,7 @@ export const reportApiFiltres = async (props, body,setData) => {
             // console.log("erreurREPORTfiltres",error)
         });
 }
+
 export const reportNewVersionExport = async (filename,generateName, body) => {
     KTApp.blockPage({
         overlayColor: '#000000',
@@ -149,7 +150,7 @@ export const reportNewVersionExport = async (filename,generateName, body) => {
         })
         .catch(function (error) {
             KTApp.unblockPage();
-            notify("Erreur,une erreure s'est produite","error")
+            notify("Erreur,une erreur s'est produite","error")
 
             // console.log("erreurREPORTfiltres",error)
         });
@@ -166,7 +167,7 @@ export const deleteFileAfterDownload = async (generateName) => {
 
     axios.get(`${REPORT_DELETE_API}/${generateName}`)
         .then(function (response) {
-            console.log("Fichier supprimer")
+            // console.log("Fichier supprimer")
             
             KTApp.unblockPage();
             
@@ -174,7 +175,7 @@ export const deleteFileAfterDownload = async (generateName) => {
             
         })
         .catch(function (error) {
-            console.log(`Fichier no delete ${error}`)
+            // console.log(`Fichier no delete ${error}`)
             KTApp.unblockPage();
             
         }).finally(()=>{

@@ -12,12 +12,14 @@ import {
     itemsChanged,
     psErrors,
     typeChanged,
-    libelleChanged, selectedItemChanged, etatChanged, etat2Changed, etat3Changed
+    libelleChanged, selectedItemChanged, etatChanged, etat2Changed, etat3Changed,
+    unitLibelleChanged,
+    unitChanged
 } from "../../redux/actions/Configurations/PointsServicesActions";
 import { connect } from "react-redux";
 import excel from '../../assets/images/excel.svg'
 import pdf from '../../assets/images/pdf.svg'
-import { loadItemFromSessionStorage, today } from "../../Utils/utils";
+import { groupBy, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import { modalify } from "../../Utils/modal";
 import ee from "event-emitter";
 import { ajout, all, disabled, modification, suppression } from "../../apis/Configurations/PointsServicesApi";
@@ -141,6 +143,31 @@ const PointsServices = (props) => {
         }
     }
 
+    let units
+    try{
+        units = JSON.parse(loadItemFromLocalStorage('app-ps'));
+    }
+    catch (e) {
+        units=[];
+    }
+
+    let unitOptions
+    let directionOptions
+    let unitsGroupByType = (units!==undefined)? groupBy(units, "type"): undefined;
+    //
+    if (unitsGroupByType!== undefined && unitsGroupByType["DIRECTION"] !== undefined) {
+        directionOptions = unitsGroupByType["DIRECTION"].map(direction => {
+            return {"label": direction.libelle, "value": direction.id}
+        })
+    } else {
+        directionOptions = ""
+    }
+   
+    unitOptions = []
+    if(directionOptions!==""){unitOptions.push({"label": "Direction", "options": directionOptions})}
+   
+    // //
+
     let typeOptions
     if (props.type !== undefined) {
         typeOptions = [
@@ -152,6 +179,15 @@ const PointsServices = (props) => {
     } else {
         typeOptions = ""
     }
+
+    const handleChange1 = (obj) => {
+        // console.log(obj)
+        props.unitChanged(obj.value)
+        props.unitLibelleChanged(obj.label)
+
+        // console.log(props.unit)
+    }
+
     let errors = {};
     const handleCancel = (e) => {
         e.preventDefault()
@@ -175,6 +211,7 @@ const PointsServices = (props) => {
         props.idChanged("")
         props.libelleChanged("")
         props.typeChanged("")
+        props.unitChanged("")
         props.descriptionChanged("")
         props.selectedItemChanged({})
     }
@@ -185,7 +222,8 @@ const PointsServices = (props) => {
             item["type"] = props.type;
             item["libelle"] = props.libelle;
             item["description"] = props.description;
-
+            item["direction_id"] = props.unit;
+            // console.log("props.unit",props.unit)
             props.etatChanged(true)
             ajout(item, props).then(() => {
                 handleCancel(e)
@@ -205,6 +243,7 @@ const PointsServices = (props) => {
             item["libelle"] = props.libelle;
             item["type"] = props.type;
             item["description"] = props.description;
+            item["direction_id"] = props.unit;
 
             props.etat2Changed(true)
             modification(item, props).then(() => {
@@ -371,7 +410,7 @@ const PointsServices = (props) => {
                                 <div id="cpassword-error" className="error">{props.errors.description}</div>
                             </small>
                         </div>
-                        <div className="col s12">
+                        <div className="col s12 l6">
                             <div className="input-field">
                                 <Select
                                     id={"ulevel"}
@@ -393,6 +432,27 @@ const PointsServices = (props) => {
                                 </small>
                             </div>
                         </div>
+
+                        <div className="col s12 l6 input-field">
+                            <Select
+                                id="usunit"
+                                options={unitOptions}
+                                className='react-select-container mt-2'
+                                classNamePrefix="react-select"
+                                style={styles}
+                                placeholder="Sélectionnez"
+                                value={props.unit ? {"label": props.unitLibelle, "value": props.unit } : "Sélectionner l'unité organisationnelle"}
+                                // onChange={(e) => props.unitChanged(e.value)}
+                                onChange={handleChange1}
+                            />
+                            <label htmlFor="usunit" className={"active"}>Lier ce point de service à une direction </label>
+                            <small className="errorTxt4">
+                                <div id="cpassword-error" className="error">
+                                    {props.errors.unit}
+                                </div>
+                            </small>
+                        </div>
+                        
                         <div className="col s12 display-flex justify-content-end form-action">
                             {buttons}
                         </div>
@@ -443,6 +503,8 @@ const mapStateToProps = (state) => {
         libelle: state.ps.libelle,
         type: state.ps.type,
         description: state.ps.description,
+        unit: state.ps.unit,
+        unitLibelle: state.ps.unitLibelle,
         items: state.ps.items,
         selectedItem: state.ps.selectedItem,
         errors: state.ps.ps_errors,
@@ -469,6 +531,12 @@ const mapDispatchToProps = (dispatch) => {
         },
         descriptionChanged: (description) => {
             dispatch(descriptionChanged(description))
+        },
+        unitChanged: (unit) => {
+            dispatch(unitChanged(unit))
+        },
+        unitLibelleChanged: (unitLibelle) => {
+            dispatch(unitLibelleChanged(unitLibelle))
         },
         itemsChanged: (items) => {
             dispatch(itemsChanged(items))

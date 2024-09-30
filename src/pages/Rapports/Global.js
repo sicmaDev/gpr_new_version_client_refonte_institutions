@@ -507,11 +507,11 @@ const Global = (props) => {
     datasets: [],
   });
 
-  console.log("taille ps:",rdsBarModaliteGlobal?.datasets[0]?.data?.length)
+  // console.log("taille ps:",rdsBarModaliteGlobal?.datasets[0]?.data?.length)
   // const nba = unit.length === 0 ? ((ps.length)*100)+"px" : ((unit.length)*100)+"px" ;
   let nba = ((rdsBarModaliteGlobal?.datasets[0]?.data?.length)*100);
   nba = (parseInt(nba) < 600) ? 600+"px" : parseInt(nba)+"px";
-  console.log("nba : ",nba)
+  // console.log("nba : ",nba)
 
   const delaiFunction = (data) => {
     const result = {
@@ -572,7 +572,7 @@ const Global = (props) => {
             newreport["GeneralPerAgence"]["RSDObjet"] ?? []
           )
         );
-        console.log("objets", newreport["GeneralPerAgence"]["RSDObjet"]);
+        // console.log("objets", newreport["GeneralPerAgence"]["RSDObjet"]);
         //Claims
         setRdsBarGravityClaim(
           newReportGlobalTreatment(
@@ -691,7 +691,7 @@ const Global = (props) => {
           oldReportTreatment(oldreport.global["repartitionObjectByObj"])
         );
 
-        console.log("nbreClaimTreatInDelaiOrNotByMonth = ",oldreport.claimReport)
+        // console.log("nbreClaimTreatInDelaiOrNotByMonth = ",oldreport.claimReport)
         setRdsBarDelaiGlobal(
           // delaiFunction(
             oldreport.claimReport["nbreClaimTreatInDelaiOrNotByMonth"] ?? []
@@ -904,36 +904,153 @@ const Global = (props) => {
 
 
 
+  // const newReportGlobalTreatment = (data) => {
+  //   let result = {
+  //     labels: [],
+  //     datasets: [],
+  //   };
+  //   console.log("data new version : ",data);
+  //   if (data) {
+  //     const datasetsKey = [];
+  //     result.labels = Object.keys(data);
+  //     result.labels.forEach((lb) => {
+  //       let dataAgences = data[lb]["data"] ?? [];
+  //       let totalAgences = data[lb]["totals"] == "0" ? 1 : data[lb]["totals"];
+  //       // console.log("totalAgences",totalAgences);
+        
+  //       let purcentageCal = 100 / parseInt(totalAgences);
+
+  //       dataAgences.forEach((agence) => {
+  //         let totalClaimsAgence = dataAgences.reduce((acc, ag) => acc + parseFloat(ag.nbre), 0);
+  //         let dataPerc = ((parseFloat(agence.nbre) / totalClaimsAgence) * 100).toFixed(2);
+
+  //         // let dataPerc = (
+  //         //   parseFloat(agence.nbre) * purcentageCal
+  //         // ).toLocaleString("en-US", {
+  //         //   maximumFractionDigits: 2,
+  //         //   minimumFractionDigits: 0,
+  //         // });
+  //         // let dataPerc = Math.round(parseInt(agence.nbre) * purcentageCal);
+  //         // let dataPerc =agence.nbre * purcentageCal
+
+  //         // let dataPerc = (parseFloat(agence.nbre) * purcentageCal).toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+  //         if (datasetsKey.includes(agence.name)) {
+  //           const resultdata = [];
+  //           result.datasets.forEach((d) => {
+  //             if (d.label === agence.name) {
+  //               resultdata.push({
+  //                 label: d.label,
+  //                 data: [...d.data, dataPerc],
+  //                 stack: "Stack 0",
+  //                 backgroundColor: d.backgroundColor,
+  //               });
+  //             } else {
+  //               resultdata.push(d);
+  //             }
+  //           });
+  //           result.datasets = resultdata;
+  //         } else {
+  //           datasetsKey.push(agence.name);
+  //           result.datasets.push({
+  //             label: agence.name,
+  //             data: [dataPerc],
+  //             backgroundColor: agence.color,
+  //             stack: "Stack 0",
+  //             totalWt: totalAgences,
+  //           });
+  //         }
+  //       });
+  //     });
+
+  //     let newDatasets = result.datasets.sort((a, b) => b.totalWt - a.totalWt);
+  //     // console.log ("newDatasets",newDatasets);
+  //     const otherPush = {
+  //       label: "Autres",
+  //       data: [],
+  //       backgroundColor: "rgb(10,114,153)",
+  //       stack: "Stack 0",
+  //       isInit: false,
+  //     };
+  //     let resultDatasets = [];
+
+  //     newDatasets.forEach((dd, i) => {
+  //       //console.log(" boucle",dd +"  --  i :",i);
+  //       if (i > 9) {
+  //         otherPush.isInit = true;
+  //         if (otherPush?.data?.length > 0) {
+  //           otherPush.data.forEach((ot, j) => {
+  //             otherPush.data[j] =
+  //               parseFloat(
+  //                 ot?.toLocaleString("en-US", {
+  //                   maximumFractionDigits: 2,
+  //                   minimumFractionDigits: 0,
+  //                 })
+  //               ) +
+  //               parseFloat(
+  //                 dd?.data[j]?.toLocaleString("en-US", {
+  //                   maximumFractionDigits: 2,
+  //                   minimumFractionDigits: 0,
+  //                 })
+  //               );
+  //           });
+  //         } else {
+  //           otherPush.data = dd.data;
+  //         }
+  //       } else {
+  //         resultDatasets.push(dd);
+  //       }
+  //     });
+
+  //     if (otherPush.isInit) {
+  //       resultDatasets.push(otherPush);
+  //     }
+  //     result.datasets = resultDatasets;
+  //   }
+
+  //   // Créer un tableau de paires [label, data] pour les trier
+  //   let combined = result.labels.map((label, index) => {
+  //     return { label: label, data: result?.datasets[0]?.data[index] };
+  //   });
+
+  //   // Trier les paires par ordre décroissant des valeurs de `data`
+  //   combined.sort((a, b) => b.data - a.data);
+
+  //   // Réorganiser les labels et les data en fonction du tri
+  //   // Vérification avant d'affecter les données triées
+  //   if (result.datasets && result.datasets.length > 0) {
+  //     result.datasets[0].data = combined.map(item => item.data);
+  //   } else {
+  //     result.datasets = [{ data: new Array(result.labels.length).fill(0) }]; // Par exemple, un tableau de zéros
+  //     console.error("Error: datasets is undefined or empty");
+  //   }
+
+  //   console.log("result result = ",result);
+  //   return result;
+
+
+  // };
+
   const newReportGlobalTreatment = (data) => {
     let result = {
       labels: [],
       datasets: [],
     };
-    console.log("data new version : ",data);
+  
+    // console.log("data new version : ", data);
+  
     if (data) {
       const datasetsKey = [];
       result.labels = Object.keys(data);
       result.labels.forEach((lb) => {
         let dataAgences = data[lb]["data"] ?? [];
         let totalAgences = data[lb]["totals"] == "0" ? 1 : data[lb]["totals"];
-        // console.log("totalAgences",totalAgences);
         
         let purcentageCal = 100 / parseInt(totalAgences);
-
+  
         dataAgences.forEach((agence) => {
-          let totalClaimsAgence = dataAgences.reduce((acc, ag) => acc + parseFloat(ag.nbre), 0);
-          let dataPerc = ((parseFloat(agence.nbre) / totalClaimsAgence) * 100).toFixed(2);
-
-          // let dataPerc = (
-          //   parseFloat(agence.nbre) * purcentageCal
-          // ).toLocaleString("en-US", {
-          //   maximumFractionDigits: 2,
-          //   minimumFractionDigits: 0,
-          // });
-          // let dataPerc = Math.round(parseInt(agence.nbre) * purcentageCal);
-          // let dataPerc =agence.nbre * purcentageCal
-
-          // let dataPerc = (parseFloat(agence.nbre) * purcentageCal).toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+          let dataPerc = ((parseFloat(agence.nbre) / totalAgences) * 100).toFixed(2);
+          // console.log("totalClaimsAgence - " + lb, dataPerc);
+  
           if (datasetsKey.includes(agence.name)) {
             const resultdata = [];
             result.datasets.forEach((d) => {
@@ -961,9 +1078,9 @@ const Global = (props) => {
           }
         });
       });
-
-      let newDatasets = result.datasets.sort((a, b) => b.totalWt - a.totalWt);
-      // console.log ("newDatasets",newDatasets);
+  
+      let newDatasets = result.datasets;
+  
       const otherPush = {
         label: "Autres",
         data: [],
@@ -971,10 +1088,10 @@ const Global = (props) => {
         stack: "Stack 0",
         isInit: false,
       };
+      
       let resultDatasets = [];
-
+  
       newDatasets.forEach((dd, i) => {
-        //console.log(" boucle",dd +"  --  i :",i);
         if (i > 9) {
           otherPush.isInit = true;
           if (otherPush?.data?.length > 0) {
@@ -1000,35 +1117,17 @@ const Global = (props) => {
           resultDatasets.push(dd);
         }
       });
-
+  
       if (otherPush.isInit) {
         resultDatasets.push(otherPush);
       }
       result.datasets = resultDatasets;
     }
-
-    // Créer un tableau de paires [label, data] pour les trier
-    let combined = result.labels.map((label, index) => {
-      return { label: label, data: result?.datasets[0]?.data[index] };
-    });
-
-    // Trier les paires par ordre décroissant des valeurs de `data`
-    combined.sort((a, b) => b.data - a.data);
-
-    // Réorganiser les labels et les data en fonction du tri
-    // Vérification avant d'affecter les données triées
-    if (result.datasets && result.datasets.length > 0) {
-      result.datasets[0].data = combined.map(item => item.data);
-    } else {
-      result.datasets = [{ data: new Array(result.labels.length).fill(0) }]; // Par exemple, un tableau de zéros
-      console.error("Error: datasets is undefined or empty");
-    }
-
-    console.log("result result = ",result);
+  
+    // console.log("result result = ", result);
     return result;
-
-
   };
+  
 
   const oldReportTreatment = (info, limit = 10) => {
     let result = {
@@ -1150,11 +1249,11 @@ const Global = (props) => {
     filtres["receiveEnd"] = cleanDate(endDate);
     filtres["servicePoints"] = unit;
     filtres["canals"] = [];
-    console.log("filtres",filtres);
+    // console.log("filtres",filtres);
     handleClose(e);
     // setDataRaport(null);
     reportApiFiltres(props, filtres, setDataRaport).then((r) => {});
-    console.log('Data after API call:', dataRaport);
+    // console.log('Data after API call:', dataRaport);
   };
 
   const claimDashboard = () => {

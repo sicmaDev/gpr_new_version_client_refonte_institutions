@@ -49,6 +49,7 @@ import {
   solutionExistantChanged,
   transmittedChanged,
   selectedItemAudioChanged,
+  transmittedToChanged,
 
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
 import LastPageIcon from "@mui/icons-material/LastPage";
@@ -2384,13 +2385,18 @@ const TraiterDenonciation = (props) => {
         };
       });
       // console.log("solutionsLISTE", solutionsListe);
-
-      if (hbt.includes("H6") || addR === "PILOTE") {
-        if (props.objetLevel === "MINEUR" &&
+      if ((props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
           user.firstAndLastName === props.created_by &&
           props.transmitted === "true") {
-          affectForm = ""
-        } else {
+         affectForm="Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
+      }
+
+      if (hbt.includes("H6") || addR === "PILOTE") {
+        // if ((props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+        //   user.firstAndLastName === props.created_by &&
+        //   props.transmitted === "true") {
+        //  affectForm="Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
+        // } else {
           affectForm = (
             <>
               <form id="claimAssignForm">
@@ -2476,12 +2482,12 @@ const TraiterDenonciation = (props) => {
               </form>
             </>
           );
-        }
+        // }
       } else {
         affectForm = ""
       }
 
-      if (hbt.includes("H2", "H3", "H4") && props.created_by === user.firstAndLastName && props.transmitted === "false") {
+      if (hbt.includes("H2", "H3", "H4") &&(( props.created_by === user.firstAndLastName && props.transmitted === "false") || (props.transmittedTo === user.firstAndLastName && props.transmitted === "true" && addR==="MOLDUE"))) {
         treatForm = (
           <>
 
@@ -3379,9 +3385,12 @@ const TraiterDenonciation = (props) => {
   let btnS = "";
 
   if (
-    props.status === "SAVED" && props.objetLevel === "MINEUR" &&
-    user.firstAndLastName === props.created_by &&
-    props.transmitted === "false"
+    (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+    ((user.firstAndLastName === props.created_by &&
+    props.transmitted ==="false") || 
+    (user.firstAndLastName === props.transmittedTo &&
+      props.transmitted ==="true" && addR==="MOLDUE") ) &&
+    props.status === "SAVED"
   ) {
     transmettre = (
       <>
@@ -3402,7 +3411,7 @@ const TraiterDenonciation = (props) => {
     transmettre = "";
   }
   
-  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by ) ){
+  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by ) || (props.transmitted !== "false" && user.firstAndLastName === props.transmittedTo && props.status === "SAVED" && addR==="MOLDUE") ){
   
     if (props.session === "" && props.session.status !== "OPEN") {
       btnS = 
@@ -3904,6 +3913,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     transmittedChanged: (transmitted) => {
       dispatch(transmittedChanged(transmitted));
+    },
+    transmittedToChanged: (transmittedTo) => {
+      dispatch(transmittedToChanged(transmittedTo));
     },
     solutionExistantChanged: (solutionExistant) => {
       dispatch(solutionExistantChanged(solutionExistant));

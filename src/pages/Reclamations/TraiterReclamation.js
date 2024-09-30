@@ -50,6 +50,7 @@ import {
   etat4Changed,
   sessionChanged,
   underSubjectChanged,
+  transmittedToChanged,
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -1364,6 +1365,10 @@ const TraiterReclamation = (props) => {
     props.transmittedChanged(
       data.transmitted !== null ? "" +data.transmitted + "" : ""
     );
+    props.transmittedToChanged(
+      data.transmittedTo !== null ? "" +data.transmittedTo.firstAndLastName + "" : ""
+    );
+    // console.log("tr",data)
     props.sessionChanged(data.session !== null ? data.session : "");
     props.handledByChanged(
       data.treatmentAffectedTo ? data.treatmentAffectedTo.firstAndLastName : ""
@@ -2546,7 +2551,7 @@ const TraiterReclamation = (props) => {
 
       if (hbt.includes("H6") || addR === "PILOTE")
       {
-        if (props.objetLevel === "MINEUR" &&
+        if ((props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
         user.firstAndLastName === props.created_by &&
         props.transmitted === "true") {
           affectForm="Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
@@ -2648,7 +2653,7 @@ const TraiterReclamation = (props) => {
         affectForm=""
       }
      
-      if (hbt.includes("H2","H3","H4") && props.created_by === user.firstAndLastName && props.transmitted === "false")  {
+      if (hbt.includes("H2","H3","H4") && ((props.created_by === user.firstAndLastName && props.transmitted === "false") || (props.transmittedTo === user.firstAndLastName && props.transmitted === "true" && addR==="MOLDUE")) )  {
         treatForm = (
           <>
             
@@ -4218,9 +4223,11 @@ const TraiterReclamation = (props) => {
   let btnS = "";
   
   if (
-    props.objetLevel === "MINEUR" &&
-    user.firstAndLastName === props.created_by &&
-    props.transmitted ==="false" &&
+    (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+    ((user.firstAndLastName === props.created_by &&
+    props.transmitted ==="false") || 
+    (user.firstAndLastName === props.transmittedTo &&
+      props.transmitted ==="true" && addR==="MOLDUE") ) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -4241,7 +4248,8 @@ const TraiterReclamation = (props) => {
   } else {
     transmettre = "";
   }
-  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by ) ){
+  // console.log("props;transmitttedTo",props.transmittedTo);
+  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by ) || (props.transmitted !== "false" && user.firstAndLastName === props.transmittedTo && props.status === "SAVED" && addR==="MOLDUE") ){
     // console.log("lol","azert")
     if (props.session === "" && props.session.status !== "OPEN") {
       btnS = 
@@ -4629,6 +4637,7 @@ const mapStateToProps = (state) => {
     etat3: state.claim_handle.etat3,
     anonymat: state.claim_handle.anonymat,
     transmitted: state.claim_handle.transmitted,
+    transmittedTo: state.claim_handle.transmittedTo,
     session: state.claim_handle.session,
     solutionExistant: state.claim_handle.solutionExistant,
   };
@@ -4770,6 +4779,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     transmittedChanged: (transmitted) => {
       dispatch(transmittedChanged(transmitted));
+    },
+    transmittedToChanged: (transmittedTo) => {
+      dispatch(transmittedToChanged(transmittedTo));
     },
     sessionChanged: (session) => {
       dispatch(sessionChanged(session));

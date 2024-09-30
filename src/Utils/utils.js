@@ -94,15 +94,17 @@ export const today = (items)=>{
     return new Intl.DateTimeFormat("fr-FR", {year: "numeric", month: "2-digit", day: "2-digit"}).format(new Date(Date.now()));
 }
 export const groupBy = (array, key) => {
-    // Return the end result
+    // Vérifier si `array` est bien un tableau
+    if (!Array.isArray(array)) {
+        return {}; // retourner un objet vide si ce n'est pas un tableau
+    }
+
+    // Retourner le résultat final
     return array.reduce((result, currentValue) => {
-        // If an array already present for key, push it to the array. Else create an array and push the object
-        (result[currentValue[key]] = result[currentValue[key]] || []).push(
-            currentValue
-        );
-        // Return the current iteration `result` value, this will be taken as next iteration `result` value and accumulate
-        return result;
-    }, {}); // empty object is the initial value for result object
+        // Si un tableau est déjà présent pour la clé, on ajoute l'élément, sinon on crée un nouveau tableau
+        (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
+        return result; // Accumuler le résultat à chaque itération
+    }, {}); // L'objet vide est la valeur initiale du résultat
 };
 export const hexToRgb = (hex) => {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")

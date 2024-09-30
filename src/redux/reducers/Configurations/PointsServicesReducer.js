@@ -6,6 +6,8 @@ const initialState = {
     libelle: "",
     type: "",
     description: "",
+    unit: "",
+    unitLibelle: "",
     items: [],
     selectedItem: {},
     etat: false,
@@ -55,6 +57,16 @@ const PointsServicesReducer = (state = initialState, action) => {
             return {
                 ...state,
                 items: action.payload,
+            };
+        case 'PS_UNIT_CHANGED':
+            return {
+                ...state,
+                unit: action.payload,
+            };
+        case 'PS_UNIT_LIBELLE_CHANGED':
+            return {
+                ...state,
+                unitLibelle: action.payload,
             };
         case 'PS_ITEM_CHANGED':
             return {

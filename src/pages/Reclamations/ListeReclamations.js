@@ -157,6 +157,7 @@ const ListeReclamations = (props) => {
   const [impression, setImpression] = React.useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
+  const [fond, setFond] = useState("");
 
   let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))): undefined;
   let hbt = (user.posteDto.habilitations).split(',');
@@ -200,6 +201,8 @@ const ListeReclamations = (props) => {
     return Math.floor(Math.random() * max);
   }
 
+
+
   useEffect(() => {
     if (mode === 1) {
       props.itemsChanged([])
@@ -208,7 +211,24 @@ const ListeReclamations = (props) => {
       props.itemsChanged([])
       listeTousStatutsOffline(props).then((r) => {});
     }
-
+    //couleurs
+    let couleurs = [
+      "#333300",
+      "#00cc00",
+      "#99003d",
+      "#3333ff",
+      "#666666",
+      "#253858",
+      "#00875A",
+      "#36B37E",
+      "#FFC400",
+      "#FF8B00",
+      "#FF5630",
+      "#5243AA",
+      "#0052CC",
+      "#00B8D9",
+    ];
+    setFond(couleurs[getRandomInt(couleurs.length)]);
     window
       .$(".buttons-excel")
       .html('<span><i class="fa fa-file-excel"></i></span>');
@@ -933,22 +953,7 @@ const ListeReclamations = (props) => {
             ? " Détails du traitement - Interactions avec le client"
             : " Détails du traitement - En interne";
       }
-      let couleurs = [
-        "#333300",
-        "#00cc00",
-        "#99003d",
-        "#3333ff",
-        "#666666",
-        "#253858",
-        "#00875A",
-        "#36B37E",
-        "#FFC400",
-        "#FF8B00",
-        "#FF5630",
-        "#5243AA",
-        "#0052CC",
-        "#00B8D9",
-      ];
+     
   
       if (solutions.length !== 0) {
         details = (
@@ -981,7 +986,7 @@ const ListeReclamations = (props) => {
   
               {/* let solutions =  */}
               {Array.from(solutions).map((solution) => {
-                let fond = couleurs[getRandomInt(couleurs.length)];
+                // let fond = couleurs[getRandomInt(couleurs.length)];
   
                 let mesure = "";
                 if (

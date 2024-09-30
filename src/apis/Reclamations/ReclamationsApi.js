@@ -401,7 +401,7 @@ export const transmissionClaimApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat3Changed(false)
-            notify("Bravo - Réclamation transmise au pilote", "success");
+            notify("Bravo - Réclamation transmise avec succès", "success");
             listeTreat(props)
         })
         .catch(function (error) {

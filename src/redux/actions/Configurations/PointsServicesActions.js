@@ -46,6 +46,20 @@ export const typeChanged = (type) =>{
         info: 'This action is used to ...'
     }
 };
+export const unitChanged = (unit) =>{
+    return {
+        type: 'PS_UNIT_CHANGED',
+        payload: unit,
+        info: 'This action is used to ...'
+    }
+};
+export const unitLibelleChanged = (unitLibelle) =>{
+    return {
+        type: 'PS_UNIT_LIBELLE_CHANGED',
+        payload: unitLibelle,
+        info: 'This action is used to ...'
+    }
+};
 export const itemsChanged = (items) =>{
     return {
         type: 'PS_ITEMS_CHANGED',
