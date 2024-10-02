@@ -978,7 +978,7 @@ const TraiterReclamation = (props) => {
       isValid = false;
       errors["comment"] = "Champ incorrect";
     }
-
+    console.log("isValid",isValid);
     return isValid;
   };
 
@@ -1004,7 +1004,7 @@ const TraiterReclamation = (props) => {
       isValid = false;
       errors["new_comment"] = "Champ incorrect";
     }
-
+  // console.log("isValid",isValid);
     return isValid;
   };
   const handleSubmit = (e) => {
@@ -2399,7 +2399,7 @@ const TraiterReclamation = (props) => {
     let claim = {};
     claim["claimId"] = props.id;
     claim["treatorId"] = user.id;
-    claim["solution"] = props.solution.length !== 0 ? props.solution : "";
+    claim["solution"] = props.solution;
     claim["commentaire"] = props.comment;
     claim["existingId"] = props.solutionExistant;
     claim["isExisting"] = props.solutionExistant !== "" ? true : false;

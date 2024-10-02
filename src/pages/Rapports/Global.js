@@ -4746,7 +4746,7 @@ const Global = (props) => {
                     </ul>
                   </div>
                 </div>
-                { <div
+                {/* { <div
                   className="row"
                   style={{ marginTop: "20px" }}
                   id="critereRapport"
@@ -4817,7 +4817,7 @@ const Global = (props) => {
                      
                     </ul>
                   </div>
-                </div> }
+                </div> } */}
                 {globalShow && (
                   <>
                     <div className="row">
