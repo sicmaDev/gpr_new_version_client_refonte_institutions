@@ -11,6 +11,7 @@ import RecoursExternesReducer from "./reducers/Configurations/RecoursExternesRed
 import UtilisateursReducer from "./reducers/Configurations/UtilisateursReducer";
 import EnregistrementReclamationReducer from "./reducers/Reclamations/EnregistrementReclamationReducer";
 import ListeReclamationsReducer from "./reducers/Reclamations/ListeReclamationsReducer";
+import PartialSatisfiedReducer from "./reducers/Reclamations/PartialSatisfiedReducer";
 import TraitementReclamationReducer from "./reducers/Reclamations/TraitementReclamationReducer";
 import MesurerReclamationReducer from "./reducers/Reclamations/MesureReclamationReducer";
 import AssuranceReclamationReducer from "./reducers/Reclamations/AssuranceReclamationReducer";

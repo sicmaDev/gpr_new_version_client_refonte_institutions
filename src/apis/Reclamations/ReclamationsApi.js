@@ -20,6 +20,7 @@ const LIST_CLAIM_DETAILS_API_TO_TREAT = HOST + "api/v1/claim/params/details"
 const LIST_CLAIM_API_BY_STATE = HOST + "api/v1/claim/list/state"
 const LIST_CLAIM_API_TO_ASSURE_SATISFACTION = HOST + "api/v1/claim/listAssuranceSatisfaction"
 const CLASSIFY_CLAIM_API = HOST + "api/v1/claim/classedClaim"
+const PARTIAL_SATISFIED_CLAIM_API = HOST + "api/v1/claim/PARTIAL_SATISFIED"
 const TRANSMISSION_CLAIM_API = HOST + "api/v1/claim/transmit_to"
 const FILES_CLAIM_API = HOST + "api/v1/claim/getFilesBy/%s"
 const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
@@ -147,6 +148,32 @@ export const listeAssurance = async (props) => {
             return error;
         });
 }
+
+
+
+export const PARTIAL_SATISFIED = async (props) => {
+    const config = {
+        method: 'get',
+        url: PARTIAL_SATISFIED_CLAIM_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    await axios(config)
+        .then(function (response) {
+           
+            // console.log("responseassure",response.data.content)
+            props.itemsChanged(response.data.content)
+
+            return response.data.content
+        })
+        .catch(function (error) {
+            return error;
+        });
+}
+
 
 export const addTempClaimApi = async (data, props) => {
     // console.log("data",data)

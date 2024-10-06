@@ -153,6 +153,16 @@ const logOut = (e) => {
             </ListItemButton>
         </NavLink> : "";
 
+    let RListePartialSatisfied = (hbt.includes("H5") || addR === "PILOTE" || addR === "DE") && mode === 1 ? 
+    <NavLink to="/reclamations/partialSatisfied" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+        <ListItemButton sx={{ pl: 4 }} className='lib'>
+            <ListItemIcon>
+                <SentimentSatisfiedAltIcon style={{ color:"white" }} />
+            </ListItemIcon>
+            <ListItemText primary="Partiellement Satisfait" />
+        </ListItemButton>
+    </NavLink> : "";
+
     let RListe = 
         <NavLink to="/reclamations/liste" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>

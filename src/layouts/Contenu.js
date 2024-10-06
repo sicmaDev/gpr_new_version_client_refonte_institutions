@@ -17,6 +17,7 @@ import TraiterReclamation from '../pages/Reclamations/TraiterReclamation';
 import MesurerReclamation from '../pages/Reclamations/MesurerReclamation';
 import AssuranceReclamation from '../pages/Reclamations/AssuranceReclamation';
 import ListeReclamations from '../pages/Reclamations/ListeReclamations';
+import ReclamationPartiellementSatisfait from '../pages/Reclamations/ReclamationPartiellementSatisfait';
 import ListeReclamationsClassees from '../pages/Reclamations/ListeReclamationsClassees';
 import EnregistrerDenonciation from '../pages/Denonciations/EnregistrerDenonciation';
 import TraiterDenonciation from '../pages/Denonciations/TraiterDenonciation';
@@ -122,6 +123,7 @@ export default function Contenu() {
                     <Route path="/reclamations/assurance" component={AssuranceReclamation} />
                     <Route path="/reclamations/liste" component={ListeReclamations} />
                     <Route path="/reclamations/classees" component={ListeReclamationsClassees} />
+                    <Route path="/reclamations/partialSatisfied" component={ReclamationPartiellementSatisfait} />
                     
                     {/* denonciations */}
                     <Route path="/denonciations/enregistrement" component={EnregistrerDenonciation} />

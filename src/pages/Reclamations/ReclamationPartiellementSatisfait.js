@@ -22,6 +22,7 @@ import {
   selectedFilesReset,
   selectedItemChanged,
   selectedItemFilesChanged,
+  selectedItemAudioChanged,
   solutionChanged,
   statusChanged,
   subjectChanged,
@@ -35,9 +36,6 @@ import {
   authorizeChanged,
   createdByChanged,
   etat2Changed,
-  etatChanged,
-  etat3Changed,
-  selectedItemAudioChanged,
   underSubjectChanged,
 } from "../../redux/actions/Reclamations/AssuranceReclamationActions";
 import ReactDatatable from "@ashvin27/react-datatable";
@@ -61,6 +59,7 @@ import {
   getClaimAudioApi,
   getFillesApi,
   listeAssurance,
+  listeByStatut,
   treatClaimApi,
 } from "../../apis/Reclamations/ReclamationsApi";
 
@@ -115,16 +114,14 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const AssuranceReclamation = (props) => {
-  let user =loadItemFromSessionStorage("app-user") !== undefined? JSON.parse(loadItemFromSessionStorage("app-user")): undefined;
+const ReclamationPartiellementSatisfait = (props) => {
+  let user =
+    loadItemFromSessionStorage("app-user") !== undefined
+      ? JSON.parse(loadItemFromSessionStorage("app-user"))
+      : undefined;
   let hbt = user.posteDto.habilitations.split(",");
 
   const [open, setOpen] = React.useState(false);
-  const [couleur, setCouleur] = React.useState(false);
-  const [showAudioPlayer, setAudioPlayer] = useState("");
-  const [currentAudio, setCurrentAudio] = useState("");
-
-  useEffect(() => {}, [showAudioPlayer, currentAudio])
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -137,7 +134,7 @@ const AssuranceReclamation = (props) => {
 
   useEffect(() => {
     props.itemsChanged([])
-    listeAssurance(props).then((r) => {});
+    listeByStatut(props,"PARTIAL_SATISFIED").then((r) => {});
     
     window
       .$(".buttons-excel")
@@ -159,51 +156,12 @@ const AssuranceReclamation = (props) => {
     window.$("#as-react-datatable tr").addClass("cursor-pointer");
   }, []);
 
-  let recours;
-  let recourOptions;
-  recours =
-    loadItemFromSessionStorage("app-recours") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-recours"))
-      : undefined;
-  if (recours !== undefined) {
-    recourOptions = recours.map((recour) => {
-      return { label: recour.libelle, value: recour };
-    });
-  } else {
-    recourOptions = [];
-  }
-
-  
-  const [recour, setRecours] = useState([]);
+ 
   const [interne, setInterne] = React.useState(false);
-   
-  const handleClassify = (e) => {
-    e.preventDefault();
-    let user =
-      loadItemFromSessionStorage("app-user") !== undefined
-        ? JSON.parse(loadItemFromSessionStorage("app-user"))
-        : undefined;
+  const [showAudioPlayer, setAudioPlayer] = useState("");
+  const [currentAudio, setCurrentAudio] = useState("");
 
-    let info = {
-      "userId": user.id,
-      "claimId": props.id,
-    };
-    props.etat3Changed(true)
-    classifyClaimApi(info, props).then(() => {
-      handleCancel(e);
-    });
-    handleClose();
-  };
-  const handleModal = (e) => {
-    e.preventDefault();
-    handleClose();
-    modalify(
-      "Confirmation",
-      "Confirmez vous la classification de cette réclamation ? Pour la déclassé il faudra proposer une nouvelle solution dans le menu classée.",
-      "confirm",
-      handleClassify
-    );
-  };
+  useEffect(() => {}, [showAudioPlayer, currentAudio])
 
   let content = [];
   content = props.items;
@@ -214,12 +172,6 @@ const AssuranceReclamation = (props) => {
     let statusElt;
 
     switch (element.status) {
-      case "SATISFIED":
-        statusElt = "Satisfait";
-        break;
-      case "UNSATISFIED":
-        statusElt = "Non Satisfait";
-        break;
       case "PARTIAL_SATISFIED":
         statusElt = "Partiellement Satisfait";
         break;
@@ -285,21 +237,14 @@ const AssuranceReclamation = (props) => {
         let statusElt;
 
         switch (claim.status) {
-          case "UNSATISFIED":
-            statusElt = (
-              <span className="chip unSatisfiedBgColor lighten-5">
-                <span className="">Non Satisfait</span>
-              </span>
-            );
-            break;
           case "PARTIAL_SATISFIED":
             statusElt = (
-              <span className="chip partialBgColor lighten-5">
+              <span className="chip classedBgColor lighten-5">
                 <span className="">Partiellement Satisfait</span>
               </span>
             );
             break;
-
+          
           default:
             statusElt = (
               <span className="chip indigo lighten-5">
@@ -372,7 +317,7 @@ const AssuranceReclamation = (props) => {
     length_menu: [15, 25, 50, 100],
     show_filter: true,
     show_pagination: true,
-    filename: "Liste des réclamations à traiter",
+    filename: "Liste des réclamations Partiellement Satisfait",
     // button: {
     //     excel: true,
     //     pdf: true,
@@ -397,7 +342,6 @@ const AssuranceReclamation = (props) => {
 
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    clearComponentState();
     handleClickOpen();
 
     switch (data.objet.risqueLevel) {
@@ -442,30 +386,31 @@ const AssuranceReclamation = (props) => {
     props.unitChanged(data.servicePoint.libelle ? data.servicePoint.libelle : "");
     props.contentChanged(data.content ? data.content : "");
     props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
+    // props.newSolutionChanged(data.assuranceSolution ? data.assuranceSolution : "");
+    // props.newCommentChanged(data.assuranceComment ? data.assuranceComment : "");
     props.createdByChanged(data.collector.firstAndLastName ? data.collector.firstAndLastName : "");
+    // props.motifChanged(data.motif)
     props.statusChanged(data.status ? data.status : "");
     props.selectedItemChanged(data);
+
+    //fetch attachments for selected claim
+    // http.get("/files/list/claim/" + data.code).then((response) => {
+    //   props.selectedItemFilesChanged(response.data);
+    // });
     getFillesApi(data.id, props);
     getClaimAudioApi(data.id, props);
   };
 
   let statusElt;
-  // console.log("props.status", props.status);
   switch (props.status) {
-    case "UNSATISFIED":
-      statusElt = (
-        <span className="chip unSatisfiedBgColor z-depth-1">
-          <span className="">Non Satisfait</span>
-        </span>
-      );
-      break;
     case "PARTIAL_SATISFIED":
       statusElt = (
-        <span className="chip partialBgColor z-depth-1">
-          <span className="">Partiellement Satisfait</span>
+        <span className="chip classedBgColor z-depth-1">
+          <span className=""></span>
         </span>
       );
       break;
+    
     default:
       statusElt = "";
       break;
@@ -499,8 +444,8 @@ const AssuranceReclamation = (props) => {
     props.selectedFilesReset([]);
     props.selectedItemFilesChanged([]);
     props.selectedItemAudioChanged([]);
-    setCurrentAudio("")
-    setAudioPlayer("")
+    setCurrentAudio("");
+    setAudioPlayer("");
   };
 
   const handleCancel = (e) => {
@@ -508,56 +453,16 @@ const AssuranceReclamation = (props) => {
     clearComponentState();
   };
 
-  const handleValidationForRecours = () => {
-    //console.log("props.external_remedies",recour)
-    let isValid = true;
-
-    if (
-      recour === "" ||
-      recour === undefined ||
-      recour === null ||
-      recour.length == 0
-    ) {
-      isValid = false;
-      errors["external_remedies"] = "Champ incorrect";
-    }
-
-    return isValid;
-  };
-  const handleRecours = (e) => {
-    e.preventDefault();
-    if (handleValidationForRecours()) {
-      //console.log("recours2",recour);
-      let recourToSend = [];
-      for (let index = 0; index < recour.length; index++) {
-        recourToSend.push(recour[index].id);
-      }
-      let claim = {};
-      claim["claimId"] = props.id;
-      claim["externalRecourseChoosed"] = recourToSend.join(",");
-      claim["userId"] = user.id;
-      // claim["status"] = 7;
-      props.etatChanged(true)
-      addRecoursClaimSolutionApi(claim, props).then(() => {
-        handleCancel(e);
-      });
-      handleClose();
-    } else {
-    }
-    props.claimAssuranceErrors(errors);
-  };
-
   function getRandomInt(max) {
     return Math.floor(Math.random() * max);
   }
-
 
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
-        <div className="col xl12 l12 m12 s12 mt-4" key={attachment.id}>
+        <div className="col xl12 l12 m12 s12" key={attachment.id}>
           <div className="card box-shadow-none mb-1 app-file-info">
             <div className="card-content">
               <div className="row">
@@ -605,7 +510,7 @@ const AssuranceReclamation = (props) => {
       );
     });
     attachmentList = (
-      <div className="col s12 mt-4 app-file-content grey lighten-4">
+      <div className="col s12 app-file-content grey lighten-4 mt-4">
         <span className="app-file-label">Fichiers joints</span>
         <div className="row app-file-recent-access mb-3">
           {attachmentListChild}
@@ -701,7 +606,7 @@ const AssuranceReclamation = (props) => {
       claim["treatorId"] = user.id;
       claim["solution"] = props.new_solution;
       claim["commentaire"] = props.new_comment;
-      claim["type"] = "assurance";
+      claim["type"] = "PARTIAL_SATISFIED";
 
       //console.log("assuranceclaim",claim)
       props.etat2Changed(true)
@@ -724,7 +629,6 @@ const AssuranceReclamation = (props) => {
   let details;
 
   if (props.solution.length !== 0) {
-    // console.log("tu es la", "oh oh")
     let type;
     let index = 0;
     let solutions =
@@ -748,7 +652,7 @@ const AssuranceReclamation = (props) => {
             {/* let solutions =  */}
             {Array.from(solutions).map((solution) => {
               let fond = couleurs[getRandomInt(couleurs.length)];
-              
+            
               let mesure = "";
               if (solution.status === "APPROVED" && solution.satisfactionMeasureDto !== null) {
                 let degre = solution.satisfactionMeasureDto.status === "SATISFIED" ? "Satisfait" : solution.satisfactionMeasureDto.status === "UNSATISFIED" ? "Non satisfait" : solution.satisfactionMeasureDto.status === "PARTIAL" ? "Partiellement satisfait":"";
@@ -781,6 +685,7 @@ const AssuranceReclamation = (props) => {
                 approbation = 
                 <>
                   <Typography component="div" >
+
                     <div className="row">
                       <div
                         className="col l12 s12 pb-2"
@@ -793,6 +698,7 @@ const AssuranceReclamation = (props) => {
                         <div>{solution.motifDesaprobation !== null ? solution.motifDesaprobation:""}</div>
                       </div>
                     </div>
+                    
                     <div>
                       <span className="chip2" style={{ backgroundColor:fond }}>
                         <span className="hero">
@@ -813,7 +719,7 @@ const AssuranceReclamation = (props) => {
                 </> 
               }
     
-              let enregistrement =  
+              let enregistrement = 
               <>
             
                 <Timeline
@@ -863,7 +769,6 @@ const AssuranceReclamation = (props) => {
                             <div>{solution.commentaire}</div>
                           </div>
 
-                          
                           {
                             solution.satisfactionMeasureDto ? 
                               solution.satisfactionMeasureDto.commentaire !== null ? 
@@ -881,7 +786,6 @@ const AssuranceReclamation = (props) => {
 
                             : ""
                           }
-
                         </div>
                        
                       </Typography>
@@ -955,13 +859,13 @@ const AssuranceReclamation = (props) => {
                 <div className="row">{details}</div>
               </div>
             </div>
-            
+           
           </details>
         </div>
       </div>
     </>
   );
-
+   
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
 
   return (
@@ -976,7 +880,7 @@ const AssuranceReclamation = (props) => {
                     <div className="row">
                       <div className="col s12">
                         <h6 className="card-title">
-                          Réclamations en attente d'assurance de satisfaction
+                          Réclamations Partiellement Satisfait
                         </h6>
                       </div>
                       <div className="col s12">
@@ -1101,7 +1005,7 @@ const AssuranceReclamation = (props) => {
                                           ""
                                         ))
                                     }
-                                  
+                                   
                                   </div>
                                 </div>
                               </div>
@@ -1145,6 +1049,7 @@ const AssuranceReclamation = (props) => {
                                       <DataObjectIcon sx={{ mr: 2 }} />{" "}
                                       {props.underSubject}
                                     </div>
+
                                     <div
                                       className="col l12 s12 df pb-2"
                                       id="subject"
@@ -1215,21 +1120,10 @@ const AssuranceReclamation = (props) => {
                               <div className="col s12">
                                 <h5
                                   className="card-title df "
-                                  style={{ justifyContent: "space-between" }}
+                                 
                                 >
-                                  Assurer la satisfaction
-                                  
-                                  <LoadingButton
-                                    onClick={(e) => handleModal(e)}
-                                    className="waves-effect waves-effect-b waves-light btn-small"
-                                    loading={props.etat3}
-                                    loadingPosition="end"
-                                    endIcon={<SaveIcon />}
-                                    variant="contained"
-                                    sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
-                                  >
-                                      <span>Classer</span>
-                                  </LoadingButton>
+                                  Détails de la réclamation
+                                 
                                 </h5>
                               </div>
                             </div>
@@ -1246,7 +1140,7 @@ const AssuranceReclamation = (props) => {
                                     <div className="col s12">
                                       <details open>
                                         <summary className="text-details">
-                                          Resolution de la réclamation
+                                          Déclassifier la réclamation
                                         </summary>
 
                                         <div className="col s12 input-field">
@@ -1256,11 +1150,10 @@ const AssuranceReclamation = (props) => {
                                             placeholder=""
                                             className="materialize-textarea textarea-size"
                                             value={props.new_solution}
-                                            
                                             onChange={(e) =>
-                                             
-                                              props.newSolutionChanged(e.target.value)
-                                              
+                                              props.newSolutionChanged(
+                                                e.target.value
+                                              )
                                             }
                                           ></textarea>
                                           <label
@@ -1325,12 +1218,7 @@ const AssuranceReclamation = (props) => {
                                           </small>
                                         </div>
                                         <div className="col s12 display-flex justify-content-end mt-3">
-                                          {/* <a
-                                            onClick={handleSolve}
-                                            className="waves-effect waves-effect-b waves-light btn-small"
-                                          >
-                                            Résoudre
-                                          </a> *
+                                          
                                           <LoadingButton
                                             onClick={
                                               handleSolve
@@ -1372,71 +1260,7 @@ const AssuranceReclamation = (props) => {
                                 </div>
                               </>
                             )} */}
-                            <form
-                              id="claimRecoursForm"
-                            
-                            >
-                              <div className="row">
-                                <div className="col s12">
-                                  <details>
-                                    <summary className="text-details">
-                                      Réclamation Contentieuse ?
-                                    </summary>
-
-                                    <div className="col s12 input-field">
-                                      <Select
-                                        isMulti
-                                        className="react-select-container mt-4"
-                                        classNamePrefix="react-select"
-                                        style={styles}
-                                        placeholder="Le client a t-il fait recours a des entités externes ?"
-                                        options={recourOptions}
-                                        onChange={(e) => {
-                                          let recs = [];
-
-                                          for (let i = 0; i < e.length; i++) {
-                                            recs.push(e[i].value);
-                                          }
-                                          setRecours(recs);
-                                        }}
-                                      />
-                                      <label
-                                        htmlFor="idObjet"
-                                        className={"active"}
-                                      >
-                                        Recours Externes
-                                      </label>
-                                      <small className="errorTxt4">
-                                        <div
-                                          id="cpassword-error"
-                                          className="error"
-                                        >
-                                          {props.errors !== undefined
-                                            ? props.errors.external_remedies
-                                            : ""}
-                                        </div>
-                                      </small>
-                                    </div>
-                                    <div className="col s12 display-flex justify-content-end mt-3">
-
-                                      <LoadingButton
-                                        onClick={
-                                          handleRecours
-                                        }
-                                        className="waves-effect waves-effect-b waves-light btn-small"
-                                        loading={props.etat}
-                                        loadingPosition="end"
-                                        endIcon={<SaveIcon />}
-                                        variant="contained"
-                                        sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
-                                      >
-                                          <span>Enregistrer</span>
-                                      </LoadingButton>
-                                    </div>
-                                  </details>
-                                </div>
-                              </div>
-                            </form>
+                           
                           </div>
                         </div>
                       </div>
@@ -1497,9 +1321,7 @@ const mapStateToProps = (state) => {
     selectedItemFiles: state.claim_assurance.selectedItemFiles,
     selectedItemAudio: state.claim_assurance.selectedItemAudio,
     authorize: state.claim_assurance.authorize,
-    etat: state.claim_assurance.etat,
     etat2: state.claim_assurance.etat2,
-    etat3: state.claim_assurance.etat3,
   };
 };
 
@@ -1610,18 +1432,12 @@ const mapDispatchToProps = (dispatch) => {
     authorizeChanged: (item) => {
       dispatch(authorizeChanged(item));
     },
-    etatChanged: (etat) => {
-      dispatch(etatChanged(etat));
-    },
     etat2Changed: (etat2) => {
       dispatch(etat2Changed(etat2));
-    },
-    etat3Changed: (etat3) => {
-      dispatch(etat3Changed(etat3));
     },
   };
 };
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(AssuranceReclamation);
+)(ReclamationPartiellementSatisfait);
