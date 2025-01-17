@@ -62,5 +62,8 @@
     "build:css": "grunt css",
     "build:img": "grunt img",
     "watch": "grunt watch"
+  },
+  "dependencies": {
+    "intl-tel-input": "file:"
   }
 }
