@@ -7,9 +7,10 @@ import { HOST, REPORT_HOST } from "../../Utils/globals";
 const REPORT_GLOBAL_API = HOST + "api/v1/report/global"
 const REPORT_GLOBAL_API_FILTRES = HOST + "api/v1/report/filtered"
 const REPORT_NEW_VERSION_API = REPORT_HOST + "api/v1/exportReport"
+const REPORT_DELETE_API = REPORT_HOST + "api/v1/delete"
 
 
-export const reportApi = async (props,setData) => {
+export const reportApi = async (props, setData) => {
     KTApp.blockPage({
         overlayColor: '#000000',
         type: 'v2',
@@ -57,7 +58,7 @@ export const reportApi = async (props,setData) => {
         });
 }
 
-export const reportApiFiltres = async (props, body,setData) => {
+export const reportApiFiltres = async (props, body, setData) => {
     KTApp.blockPage({
         overlayColor: '#000000',
         type: 'v2',
@@ -103,7 +104,7 @@ export const reportApiFiltres = async (props, body,setData) => {
             // console.log("erreurREPORTfiltres",error)
         });
 }
-export const reportNewVersionExport = async (filename, body) => {
+export const reportNewVersionExport = async (filename, generateName, body) => {
     KTApp.blockPage({
         overlayColor: '#000000',
         type: 'v2',
@@ -111,33 +112,27 @@ export const reportNewVersionExport = async (filename, body) => {
         message: 'En cours...'
     });
 
-    const config = {
-        method: 'POST',
-        url: REPORT_NEW_VERSION_API,
-        responseType: "blob",
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        data: body
-    };
-    axios.post(REPORT_NEW_VERSION_API,body,{responseType:"blob"})
-        .then(function (response) {
-            notify("Bravo - Téléchargement du fichier effectué", "success");
+   
+    axios.post(REPORT_NEW_VERSION_API, body, { responseType: "blob" })
+        .then(async function (response) {
+           
             // console.log("response data content",response.data)
             // Créez un objet URL à partir de la réponse
             const url = window.URL.createObjectURL(new Blob([response.data]));
+            await deleteFileAfterDownload(generateName)
 
-            // Créez un lien invisible et déclenchez le téléchargement
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', filename); // Remplacez 'nom_du_fichier.ext' par le nom du fichier
-            document.body.appendChild(link);
-            link.click();
-            
-            // Libérez l'URL de l'objet lorsque le téléchargement est terminé
-            window.URL.revokeObjectURL(url);
-            link.remove();
+           
+
+             // Créez un lien invisible et déclenchez le téléchargement
+             const link = document.createElement('a');
+             link.href = url;
+             link.setAttribute('download', filename); // Remplacez 'nom_du_fichier.ext' par le nom du fichier
+             document.body.appendChild(link);
+             link.click();
+ 
+             // Libérez l'URL de l'objet lorsque le téléchargement est terminé
+             window.URL.revokeObjectURL(url);
+             link.remove();
             KTApp.unblockPage();
 
 
@@ -145,9 +140,34 @@ export const reportNewVersionExport = async (filename, body) => {
         })
         .catch(function (error) {
             KTApp.unblockPage();
-            notify("Erreur,une erreure s'est produite","error")
+            notify("Erreur,une erreure s'est produite", "error")
 
             // console.log("erreurREPORTfiltres",error)
+        });
+}
+
+export const deleteFileAfterDownload = async (generateName) => {
+    KTApp.blockPage({
+        overlayColor: '#000000',
+        type: 'v2',
+        state: 'danger',
+        message: 'En cours...'
+    });
+
+
+    axios.get(`${REPORT_DELETE_API}/${generateName}`)
+        .then(function (response) {
+            console.log("Fichier supprimer")
+            
+            KTApp.unblockPage();
+            
+            
+            
+        })
+        .catch(function (error) {
+            console.log(`Fichier no delete ${error}`)
+            KTApp.unblockPage();
+            
         });
 }
 

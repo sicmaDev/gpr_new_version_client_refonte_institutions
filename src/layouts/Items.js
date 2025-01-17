@@ -42,7 +42,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import SmsIcon from '@mui/icons-material/Sms';
 import EmailIcon from '@mui/icons-material/Email';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
-import { AddToDriveOutlined } from '@mui/icons-material';
+import { AddToDriveOutlined, KeyOffTwoTone, KeyTwoTone } from '@mui/icons-material';
 
 export const Items = (props) =>{
 
@@ -487,6 +487,14 @@ const logOut = (e) => {
                             <ListItemText primary="Log Systeme" />
                         </ListItemButton>
                     </NavLink>
+                    <NavLink to="/configurations/exportations" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                        <ListItemButton sx={{ pl: 4 }} className='lib'>
+                            <ListItemIcon>
+                                <AddToDriveOutlined style={{ color:"white" }} />
+                            </ListItemIcon>
+                            <ListItemText primary="Exportation" />
+                        </ListItemButton>
+                    </NavLink>
 
                     <NavLink to="/configurations/bot" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
@@ -494,6 +502,14 @@ const logOut = (e) => {
                                 <SmartToyIcon style={{ color:"white" }} />
                             </ListItemIcon>
                             <ListItemText primary="GPR BOT" />
+                        </ListItemButton>
+                    </NavLink>
+                    <NavLink to="/configurations/apikey" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                        <ListItemButton sx={{ pl: 4 }} className='lib'>
+                            <ListItemIcon>
+                                <KeyTwoTone style={{ color:"white" }} />
+                            </ListItemIcon>
+                            <ListItemText primary="API KEY" />
                         </ListItemButton>
                     </NavLink>
 

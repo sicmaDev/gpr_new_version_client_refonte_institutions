@@ -4,21 +4,16 @@ import { HashRouter } from "react-router-dom";
 import Haut from './Haut';
 import Footer from './Footer';
 // import { IdleTimerProvider } from 'react-idle-timer';
+// import { useReactInactivity } from 'react-inactivity';
 
 export default function Template2() { 
-    // const onIdle = ()=>{
-    //     console.log("je teste")
-    // }
+    // const {isIdeal} = useReactInactivity({minute:0.5})
     return (
         
         <Suspense fallback="loading">
-            {/* <IdleTimerProvider timeout={1000*10} onIdle={onIdle} > */}
             <HashRouter>
-                
                <Haut/>
-               {/* <Footer /> */}
             </HashRouter>
-            {/* </IdleTimerProvider> */}
         </Suspense>
     );
     

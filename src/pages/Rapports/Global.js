@@ -11,6 +11,7 @@ import { mdColors } from "../../Utils/colors";
 import { Link, NavLink } from "react-router-dom";
 import {
   cleanDate,
+  generateString,
   loadItemFromSessionStorage,
   normalizeStats,
   resizeImage,
@@ -104,22 +105,9 @@ Chart.defaults.set("plugins.datalabels", {
   font: {
     weight: "bold",
   },
-  // render: "percentage",
-
-  // labels: {
-  //   render: "percentage",
-  //   fontColor: function (data) {
-  //     let rgb = hexToRgb(data.dataset.backgroundColor[data.index]);
-  //     let threshold = 140;
-  //     let luminance = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
-  //     return luminance > threshold ? "black" : "white";
-  //   },
-  // },
 });
-// Chart.register(LineController, LineElement, PointElement, LinearScale, Title, CategoryScale,GaugeController);
 
-// Chart.register(ArcElement, Tooltip, Legend);
-// Chart.register(BarController, DoughnutController, LineController, PieController);
+
 const styles = {
   control: (base) => ({
     ...base,
@@ -1423,8 +1411,8 @@ const Global = (props) => {
             <div
               className="card"
               style={{
-                height: "500px",
-                maxHeight: "500px",
+                height: "400px",
+                maxHeight: "400px",
                 display: "flex",
                 flexDirection: "column",
                 padding: "10px",
@@ -1460,14 +1448,10 @@ const Global = (props) => {
                         },
                         min: 0,
                         max: 100,
-                        beginAtZero: 0,
                         offset: false,
                       },
 
-                      y: {
-                        stacked: true,
-                        max: 100,
-                      },
+
                     },
 
                     maintainAspectRatio: false,
@@ -1574,6 +1558,7 @@ const Global = (props) => {
                     maintainAspectRatio: false,
                   }}
                 />
+                z
               </div>
             </div>
           </div>
@@ -3774,8 +3759,12 @@ const Global = (props) => {
     const toStri = await prepareToPrint();
     handlePrintAvance(toStri);
   };
+
+  const [nameReport, setNameReport] = useState("")
   const prepareReportTablesToXLSX = () => {
-    let filename = "Statistiques_GPR_" + today().replaceAll("/", "") + ".xlsx";
+    let name = today().replaceAll("/", "")
+    let filename = `Statistiques_GPR_${name}.xlsx`;
+   
     // table2XLSX(filename, "", 0);
     const dataPrepare = [];
 
@@ -4037,11 +4026,15 @@ const Global = (props) => {
       chartInfo:[{type:"Pie",title:"Répartition des suggestions par genre (%)",tablePosition:0},{type:"Chart",title:"Répartition des Suggestions par genre et par agences en %  ",tablePosition:2}],
       tables:[{title:"",data:rdsPieGenreSugge},{title:"Nombre de Suggestions par agence",data:dataRaport.newVersionStat["AgencePerGenre"]["suggestions"] ?? []},{title:"Répartition des Suggestions par genre par agence",data:rdsBarGenreSugge}],
     })
+
+    const generateName = generateString(10)
+
+    dataPrepare.push(generateName)
    
 
 
     if (dataPrepare.length) {
-      reportNewVersionExport(filename, dataPrepare);
+      reportNewVersionExport(filename,generateName, dataPrepare);
     } else {
       notify("Imspossible d'exporter,Ressayez", "error");
     }
@@ -4383,7 +4376,7 @@ const Global = (props) => {
                   </a>
                 </div>
                 <div className="col l6 m6 s12 mt-4">
-                  <a
+                  <a 
                     className="btn waves-effect waves-effect-b waves-light display-flex align-items-center justify-content-center mt-1"
                     onClick={(e) => {
                       genereReport(e);
@@ -4628,7 +4621,7 @@ const Global = (props) => {
                       {claimShow ? claimDashboard() : ""}
                     </div>
 
-                    {props.claimReport.length != 0 ? (
+                    {props.claimReport.length !== 0 ? (
                       <>
                         <div className="row mt-4">
                           <div className="col l12 s12 m12 mb-4">
@@ -4927,7 +4920,7 @@ const Global = (props) => {
                     >
                       {suggestionShow ? suggestionDashboard() : ""}
                     </div>
-                    {props.sugReport.length != 0 ? (
+                    {props.sugReport.length !== 0 ? (
                       <div className="row mt-2 ">
                         <div className="col l12 mb-4">
                           <div className="row" id="tpeSugg">
@@ -5111,9 +5104,7 @@ const mapDispatchToProps = (dispatch) => {
     claimReportChanged: (claimReport) => {
       dispatch(claimReportChanged(claimReport));
     },
-    claimReportChanged: (claimReport) => {
-      dispatch(claimReportChanged(claimReport));
-    },
+  
     denunReportChanged: (denunReport) => {
       dispatch(denunReportChanged(denunReport));
     },
@@ -5123,24 +5114,7 @@ const mapDispatchToProps = (dispatch) => {
     statChanged: (stat) => {
       dispatch(statChanged(stat));
     },
-    yearChanged: (year) => {
-      dispatch(yearChanged(year));
-    },
-    startChanged: (start) => {
-      dispatch(startChanged(start));
-    },
-    endChanged: (end) => {
-      dispatch(endChanged(end));
-    },
-    startDPChanged: (start) => {
-      dispatch(startDPChanged(start));
-    },
-    endDPChanged: (end) => {
-      dispatch(endDPChanged(end));
-    },
-    unitChanged: (unit) => {
-      dispatch(unitChanged(unit));
-    },
+   
     // basicStatChanged: (basicStat) => {
     //   dispatch(basicStatChanged(basicStat));
     // },

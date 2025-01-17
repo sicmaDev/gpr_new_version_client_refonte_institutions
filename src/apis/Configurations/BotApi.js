@@ -8,6 +8,11 @@ const ADD_SETTING_API = HOST + "api/v1/config/setting/others/bot/create"
 const API_BOT_URL = "http://localhost:21465/api/session/start-session"
 const API_BOT_TOKEN_URL = "http://localhost:21465/api/TESTBOT/MYSECRETKEY/generate-token"
 
+
+const API_API_KEY_LIST = HOST+"api/v1/config/setting/key"
+const API_API_KEY_GENERATE = HOST+"api/v1/config/setting/key/generate"
+const API_API_KEY_REGENERATE = HOST+"api/v1/config/setting/key/generate/{id}"
+const API_API_KEY_DELETE = HOST+"api/v1/config/setting/key/{id}/delete"
 export const ajout = async (data, props) => {
 
     const config = {
@@ -96,5 +101,62 @@ export const generer = async (token,session,props) => {
             notify("Erreur - Veuillez réessayer!", "error");
         });
 
+}
+
+export const apiKeyTokenGenerator = (data)=>{
+    const config = {
+        method: 'post',
+        url: API_API_KEY_GENERATE,
+        data,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        // data: data
+    };
+    return axios(config)
+}
+export const apiKeyTokenReGenerator = (id)=>{
+    const config = {
+        method: 'put',
+        url: API_API_KEY_REGENERATE.replace("{id}",id),
+        data:null,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        // data: data
+    };
+    return axios(config)
+}
+export const apiKeyTokenDelete = (id)=>{
+    const config = {
+        method: 'delete',
+        url: API_API_KEY_DELETE.replace("{id}",id),
+        data:null,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        // data: data
+    };
+    return axios(config)
+}
+export const apiKeyTokens = ()=>{
+    const config = {
+        method: 'get',
+        url: API_API_KEY_LIST,
+        data:null,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        // data: data
+    };
+    return axios(config)
 }
 

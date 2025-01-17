@@ -1,63 +1,211 @@
-import React, {useEffect, useState} from "react";
-import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
-import { connect } from "react-redux";
-import HelpIcon from '@mui/icons-material/Help';
-import {modalify} from "../../Utils/modal";
-import { ajout, genererToken } from "../../apis/Configurations/BotApi";
-import {
-    apiKeyChanged, apiSecretChanged, gprbotErrors, etatChanged, etat1Changed, qrcodeChanged
-} from "../../redux/actions/Configurations/BotActions";
-import { LoadingButton } from "@mui/lab";
-import SaveIcon from '@mui/icons-material/Save';
+import React, { useEffect, useState } from "react";
 
-import { notify } from "../../Utils/alert";
+
+import ReactDatatable from '@ashvin27/react-datatable';
+import HelpIcon from '@mui/icons-material/Help';
+
+import LastPageIcon from '@mui/icons-material/LastPage';
+import FirstPageIcon from '@mui/icons-material/FirstPage';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+
 import axios from "axios";
 import { licenseInfo } from "../../apis/LoginApi";
 import { QRCode } from 'react-qrcode-logo';
-import logo from '../../assets/images/GPR_192.png';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { Button, Chip } from "@mui/material";
+import { LoadingButton } from "@mui/lab";
+import { QrCode } from "@mui/icons-material";
 
 const Bot = (props) => {
-    let appBot;
-    const [showPassword, setShowPassword] = useState(false);
 
-    const toggleShowPassword = () => {
-        setShowPassword(!showPassword);
+    const [form, setForm] = useState({ libelle: "", number: "" });
+
+    const [createSession, setCreateSession] = useState({
+        isLoading: false,
+        showMessage: false,
+        message: "",
+        isSuccess: false,
+        isGenerate: false,
+        qrCode: null,
+        items: null,
+
+    })
+
+    const [bots, setBots] = useState([])
+
+
+ 
+
+
+    const handleFormChange = (e) => {
+        const { name, value } = e.target;
+        setForm((prevForm) => ({
+            ...prevForm,
+            [name]: value,
+        }));
     };
-    
-    useEffect(() => {
-        try {
-            // appBot =  loadItemFromLocalStorage("app-bot") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-bot")) : undefined;
-            let appBot =  loadItemFromLocalStorage("app-bot") !== undefined && (loadItemFromLocalStorage("app-bot").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-bot")) : undefined;
-            console.log("bot premier",appBot)
-            if (appBot !== undefined || appBot !== "") {
-                props.apiKeyChanged(appBot.apiKey)
-                props.apiSecretChanged(appBot.apiSecret);
-              
-            } else {
+
+    const getQrcode = (token) => {
+        const number = form.number.trim();
+        createSession.isLoading = true
+        createSession.isGenerate = false
+        createSession.showMessage = false
+
+
+        axios.get(`http://localhost:21465/api/${number}_session/qrcode-session`, {
+            headers: {
+                'Authorization': "Bearer " + token
             }
-        } catch (e) {
-            console.log("bot premier",e)
+        }).then(({ data }) => {
+
+            // console.log('data qrcode', data)
+        }).catch((err) => {
+            console.log('err', err)
+        }).finally(() => {
+            createSession.isLoading = false
+            createSession.isGenerate = true
+        })
+
+    }
+    const generateToken = (session) => {
+        return axios.post(`http://localhost:21465/api/${session}/THISISMYSECURETOKEN/generate-token`)
+    }
+    const createNewSession = (e,sessionPass="vide") => {
+        const number = form.number.trim();
+        const label = form.libelle.trim().replace(/[\/?&= ]/g, '_');
+        const url = sessionPass ==="vide" ? `${number}_wpp_${label}`:sessionPass
+
+       
+        if(sessionPass === "vide" &&( label === "" || number === "")){
+            return false
+        }else{
+            setCreateSession((prevState) => ({
+                ...prevState,
+                isLoading: true,
+                isGenerate: false,
+                showMessage: false,
+            }));
+            generateToken(url).then(({ data }) => {
+                axios.post(`http://localhost:21465/api/${url}/start-session`, {
+                    "webhook": "http://localhost:8080/api/v1/webhook/save",
+                    "waitQrCode": true
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${data?.token ?? 'vide'}`
+                    }
+                }).then(({ data }) => {
+                    setCreateSession({
+                        isLoading: false,
+                        isGenerate: true,
+                        isSuccess: true,
+                        qrCode: data.urlcode ?? "Aucune URL reçue",
+                    });
+                }).catch((err) => {
+                    console.error('Erreur de création de session:', err);
+                    setCreateSession({
+                        isLoading: false,
+                        isGenerate: true,
+                        isSuccess: false,
+                        message: "Échec de la création de session. Veuillez réessayer.",
+                    });
+                });
+            }).catch((err) => {
+                console.log('err', err)
+            })
         }
-       
+    
+        
+
+        
+    };
+
+    
+    const getAllSessions = () => {
+
+        axios.get(`http://localhost:21465/api/THISISMYSECURETOKEN/show-all-sessions`).then(({ data }) => {
+            const result = data?.response?.map((da) => {
+                return { name: da.split("_wpp_")[1] ?? "Non Defini", number: da.split("_wpp_")[0], session: da, color: "info", message: 'No check', status: false }
+            }) ?? []
+            console.log('result', result)
+            setBots(result);
+        }).catch((err) => {
+            console.log('err', err)
+        })
+
+    }
+    const checkConnection = (session) => {
+
+        generateToken(session).then(({ data }) => {
+            const token = data.token
+            axios.get(`http://localhost:21465/api/${session}/check-connection-session`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(({ data }) => {
+                const result = bots.map((er) => {
+                    if (er.session === session) {
+                        return { ...er, ...data }
+                    }
+                    return er
+                })
+                setBots(result)
+            }).catch((err) => {
+                console.log('err', err)
+            })
+        }).catch((err) => {
+            console.log('err generator', err)
+
+        })
+
+
+    }
+    const logoutSession = (session) => {
+
+        generateToken(session).then(({ data }) => {
+            const token = data.token
+            axios.post(`http://localhost:21465/api/${session}/logout-session`, {}, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(({ data }) => {
+                getAllSessions()
+            }).catch((err) => {
+                console.log('err', err)
+            })
+        }).catch((err) => {
+            console.log('err generator', err)
+
+        })
+
+
+    }
+
+
+
+
+
+
+    useEffect(() => {
+
+
+        getAllSessions()
         //UI Fixes
-       
+
         window.$('.dropdown-trigger').dropdown({
-                inDuration: 300,
-                outDuration: 225,
-                constrainWidth: false, // Does not change width of dropdown to that of the activator
-                click: true, // Activate on hover
-                gutter: 0, // Spacing from edge
-                coverTrigger: false, // Displays dropdown below the button
-                alignment: 'left', // Displays dropdown with edge aligned to the left of button
-                stopPropagation: false // Stops event propagation
-            }
+            inDuration: 300,
+            outDuration: 225,
+            constrainWidth: false, // Does not change width of dropdown to that of the activator
+            click: true, // Activate on hover
+            gutter: 0, // Spacing from edge
+            coverTrigger: false, // Displays dropdown below the button
+            alignment: 'left', // Displays dropdown with edge aligned to the left of button
+            stopPropagation: false // Stops event propagation
+        }
         );
-       
+
         window.$('.buttons-excel').html('<span><i class="fa fa-file-excel"></i></span>')
-        window.$('ul.pagination').parent().parent().css({marginTop:"1%", boxShadow:"none"})
-        window.$('ul.pagination').parent().css({boxShadow:"none"})
+        window.$('ul.pagination').parent().parent().css({ marginTop: "1%", boxShadow: "none" })
+        window.$('ul.pagination').parent().css({ boxShadow: "none" })
         window.$('ul.pagination').parent().addClass('white')
         window.$('ul.pagination').addClass('right-align')
         window.$('a.page-link input').addClass('indigo-text bold-text')
@@ -67,331 +215,227 @@ const Bot = (props) => {
         window.$('#as-react-datatable tr').addClass('cursor-pointer')
         window.$('.tooltipped').tooltip();
         //cleanup
-       
+
     }, []);
 
-    const [actif, setActif] = useState();
-  
+    let columns = [
+        {
+            key: "name",
+            text: "Intitulé",
+            className: "name",
+            align: "left",
+            sortable: true,
+        },
+        {
+            key: "number",
+            text: "Numéro de téléphone",
+            className: "number",
+            align: "left",
+            sortable: true
+        },
+        {
+            key: "message",
+            text: "Status",
+            className: "number",
+            align: "left",
+            sortable: false
+        },
+
+        {
+            key: "action",
+            text: "Actions",
+            className: "action",
+            align: "left",
+            cell: (sessions) => {
+
+                return <div style={{ display: 'flex', width: "fit-content" }}>
+
+                    <Chip label="Vérifier connexion" onClick={(e) => { checkConnection(sessions.session) }} />
+                    {
+                        sessions.message !== "No check" && (sessions.status ?
+                            <Chip label="Disconnect" onClick={(e) => { logoutSession(sessions.session) }} color="error" style={{ marginLeft: "5px" }} /> :
+                            <Chip label="Connect" color="info" style={{ marginLeft: "5px" }} />)
+                    }
+
+
+                </div>
+
+
+
+            }
+        },
+
+    ];
+
+    let config = {
+        page_size: 15,
+        length_menu: [15, 25, 50, 100],
+        show_filter: true,
+        show_pagination: true,
+        button: {
+            //excel: true,
+            //pdf: true,
+            //print: true,
+        },
+        language: {
+            length_menu: "Afficher _MENU_ éléments",
+            filter: "Rechercher...",
+            info: "Affichage de l'élement _START_ à _END_ sur _TOTAL_ éléments",
+            zero_records: "Aucun élément à afficher",
+            no_data_text: "Aucun élément à afficher",
+            loading_text: "Chargement en cours...",
+            pagination: {
+                first: <FirstPageIcon />,
+                previous: <ChevronLeftIcon />,
+                next: <ChevronRightIcon />,
+                last: <LastPageIcon />
+            }
+        }
+    }
+    const rowClickedHandler = (event, data, rowIndex) => {
+        console.log('data', data)
+    }
+
+
     const licenseControl = async () => {
-      try {
-        let resultat = await licenseInfo();
-        // console.log("resultat", resultat);
-        setActif(resultat.actif)
-        
-      } catch (error) {
-        console.error("Une erreur s'est produite :", error);
-      }
+        try {
+            await licenseInfo();
+
+
+        } catch (error) {
+            console.error("Une erreur s'est produite :", error);
+        }
     };
-  
+
     useEffect(() => {
-      const fetchData = async () => {
-        await licenseControl();
-      };
-  
-      fetchData();
+        const fetchData = async () => {
+            await licenseControl();
+        };
+
+        fetchData();
     }, []);
 
     let errors = {};
 
-    const handleValidation = () => {
-        let isValid = true;
 
-        if ((props.apiKey === "" || props.apiKey === undefined || props.apiKey === null )) {
-            isValid = false;
-            errors["apiKey"] = "Champ incorrect";
-           // console.log(props.apiKey);
-        }
-        if(props.apiSecret === "" || props.apiSecret === undefined || props.apiSecret === null ){
-            isValid = false;
-            errors["apiSecret"] = "Champ incorrect";
-           // console.log(props.apiSecret);
-        }
-       
-        return isValid
-    }
 
     const handleSubmit = (e) => {
         e.preventDefault()
-       
-        let item = {}
-        item["apiKey"] = props.apiKey;
-        item["apiSecret"] = props.apiSecret;
 
-        let itemb = {}
-        itemb["apikey"] = props.apiKey;
-        itemb["apisecret"] = props.apiSecret;
-        props.etatChanged(true)
-      
-        if (handleValidation()) {
-            //send request to verify
-            // console.log("botload2",itemb);
-            const API_URL = "https://gpradmin.sicmagroup.com/api/verifiedKey"
-            const config = {
-                method: 'post',
-                url: API_URL,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': "Bearer " + loadItemFromSessionStorage('token')
-                },
-                data: itemb
-            };
-            axios(config)
-                .then(function (response) {
-                //    console.log("botload",response);
-                    let resultat = response.data;
 
-                    if(resultat.status == "error"){
-                        notify(resultat.data, "error");
-                        props.etatChanged(false)
-                      //  console.log(resultat);
-                    } else {
-                        ajout(item, props).then(() => {
-                            // handleCancel(e)
-                        })
-                       // console.log(response);
-                    }
-            
-                    
-                    
-                })
-                ;
-           
-        } 
 
-        props.gprbotErrors(errors)
-       
     }
 
-    const genererCode = (e) => {
-        e.preventDefault()
-        console.log("resultatccccc");
-        props.etat1Changed(true)
-        // let itemb = {}
-        // itemb["apikey"] = props.apiKey;
-        // itemb["apisecret"] = props.apiSecret;
-        // props.etatChanged(true)
 
-        genererToken(props).then(() => {
-            // handleCancel(e)
-        })
-      
-        // if (handleValidation()) {
-        //     //send request to verify
-        //     // console.log("botload2",itemb);
-        //     const API_URL = "https://gpradmin.sicmagroup.com/api/verifiedKey"
-          
-        //     const config = {
-        //         method: 'post',
-        //         url: API_URL,
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
-        //         },
-        //         data: itemb
-        //     };
-        //     axios(config)
-        //         .then(function (response) {
-        //            console.log("botload",response);
-        //             let resultat = response.data;
 
-        //             if(resultat.status == "error"){
-        //                 notify(resultat.data, "error");
-        //                 // props.etatChanged(false)
-        //                console.log("resultat",resultat);
-        //             } else {
-        //                 // genererToken(props).then(() => {
-        //                 //     // handleCancel(e)
-        //                 // })
-        //                // console.log(response);
-        //             }
-            
-                    
-                    
-        //         })
-        //         ;
-           
-        // } 
-
-        props.gprbotErrors(errors)
-       
-    }
-    console.log("appbot contenu",appBot !=="");
     return (
         <>
-            <div className="card-panel">
-                <div className="row">
-                    <div className="col s12"><h6 className="card-title">Configuration GPR BOT</h6>
-                        <p>Il s'agit de configurer GPR BOT pour recevoir vos réclamations / suggestion depuis vos réseaux sociaux</p></div>
-                </div>
-                <form id="accountForm" onSubmit={handleSubmit}>
-                    <div className="row">
-                    
-
-                        <div className="col s6 m6">
-                            <div className="row">
-
-                                <div className="col s12 input-field">
-                                    <input id="apikey" placeholder="" name="apikey" type="text"
-                                        className="validate" value={props.apiKey}
-                                        onChange={(e) => props.apiKeyChanged(e.target.value)} maxLength="36"
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="apikey" className={"active"}>API KEY &nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="API_KEY fourni par SICMA ET ASSOCIES pour utiliser GPR BOT">
-                                            <HelpIcon/>
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.gprbotErrors.apiKey}</div>
-                                    </small>
-                                </div>
-                                <div className="col s12 input-field">
-                                    <input id="apisecret" placeholder="" name="apisecret" type={showPassword ? "text" : "password"}
-                                        className="validate" value={props.apiSecret}
-                                        onChange={(e) => props.apiSecretChanged(e.target.value)} maxLength="36"
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="apisecret" className={"active"}>API SECRET &nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="API_SECRET fourni par SICMA ET ASSOCIES  pour utiliser GPR BOT">
-                                            <HelpIcon/>
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.gprbotErrors.apiSecret}</div>
-                                    </small>
-                                    <span
-                                        onClick={toggleShowPassword}
-                                        style={{
-                                            position: 'absolute',
-                                            right: '10px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                    </span>
-                                </div>
-                                <div className="col s12 display-flex justify-content-start mt-3">
-                                 
-                                    <LoadingButton
-                                        className="btn waves-effect waves-light mr-1 btn-small"
-                                        onClick={(e) => handleSubmit(e)}
-                                        loading={props.etat}
-                                        loadingPosition="end"
-                                        endIcon={<SaveIcon />}
-                                        variant="contained"
-                                        sx={{ textTransform:"initial" }}
-                                    >
-                                        <span>Enregistrer</span>
-                                    </LoadingButton>
-                                    
-                                    <LoadingButton
-                                            className="btn waves-effect waves-light mr-1 btn-small"
-                                            onClick={(e) => genererCode(e)}
-                                            loading={props.etat}
-                                            loadingPosition="end"
-                                            endIcon={<SaveIcon />}
-                                            variant="contained"
-                                            sx={{ textTransform:"initial" }}
-                                        >
-                                            <span>Générer</span>
-                                        </LoadingButton>
-                                </div>
-                            </div>
+            <div className="row">
+                <div className="col s12 m4">
+                    <div className="card-panel">
+                        <div className="row">
+                            <div className="col s12"><h6 className="card-title">Configuration GPR BOT</h6>
+                                <p>Il s'agit de configurer GPR BOT pour recevoir vos réclamations / suggestion depuis vos réseaux sociaux</p></div>
                         </div>
-
-                        <div className="col s6 m6">
+                        <form id="accountForm" onSubmit={handleSubmit}>
                             <div className="row">
 
-                                <div className="col s12 display-flex justify-content-center">
-                                    <div style={{ position: 'relative', width: '250px', height: '250px' }}>
-                                        {/* Fond blanc semi-transparent */}
-                                        {/* <div style={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                                            zIndex: 1,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}> */}
-                                            {/* Cercle bleu */}
-                                            {/* <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'blue', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}> */}
-                                                {/* Flèche */}
-                                                {/* <div style={{ width: '20px', height: '20px', borderBottom: '3px solid white', borderRight: '3px solid white', transform: 'rotate(45deg)' }}></div> */}
-                                                {/* Texte "Actualiser" */}
-                                                {/* <span style={{ color: 'white', fontSize: '12px', marginTop: '5px' }}>Actualiser</span> */}
-                                            {/* </div> */}
-                                        {/* </div> */}
-                                        {/* QR code */}
-                                        {appBot !== undefined || appBot !== "" ? 
-                                            <QRCode
-                                                value="zer"
-                                                size="238"
-                                                bgColor="#FFFFFF"
-                                                fgColor="#ff5733"
-                                                // logoImage={logo}
-                                                logoWidth="50"
-                                                logoHeight=""
-                                                logoOpacity={0.9}
-                                                style={{ position: 'relative', zIndex: 0 }}
-                                            />
-                                            : "azerty"
-                                        }
-                                       
+
+                                <div className="col s12 m12">
+                                    <div className="row">
+
+                                        <div className="col s12 input-field">
+                                            <input id="apisecret" placeholder="" name="libelle" type="text"
+                                                className="validate" value={form.libelle} onChange={handleFormChange} maxLength="36"
+                                                data-error=".errorTxt1" />
+                                            <label htmlFor="apisecret" className={"active"}>Intitulé &nbsp;
+                                                <span className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
+                                                    data-tooltip="NOM DE LA SESSION">
+                                                    <HelpIcon />
+                                                </span></label>
+                                            <small className="errorTxt4">
+                                                <div id="cpassword-error" className="error"></div>
+                                            </small>
+
+                                        </div>
+                                        <div className="col s12 input-field">
+                                            <input id="apikey" placeholder="" name="number" type="tel"
+                                                className="validate" value={form.number} onChange={handleFormChange} maxLength="12"
+                                                data-error=".errorTxt1" />
+                                            <label htmlFor="apikey" className={"active"}>Numero de téléphone &nbsp;
+                                                <span className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
+                                                    data-tooltip="NUMERO DE TELEPHONE WHATSAPP">
+                                                    <HelpIcon />
+                                                </span></label>
+                                            <small className="errorTxt4">
+                                                <div id="cpassword-error" className="error"></div>
+                                            </small>
+                                        </div>
+                                        <div className="col s12 display-flex justify-content-center">
+                                            {createSession.isLoading ? (
+                                                <div>En cours de chargement...</div>
+                                            ) : createSession.qrCode ? (
+                                                <QRCode value={createSession.qrCode} size={400} bgColor="#FFFFFF" fgColor="#005081" />
+                                            ) : createSession.isGenerate && (
+                                                <div>Pas de QR Code, réessayez.</div>
+                                            )}
+
+
+                                        </div>
+
+                                        <div className="">
+
+
+
+                                            <LoadingButton
+                                                className="btn  waves-light  btn-small col s12 display-flex justify-content-start mt-3"
+                                                onClick={createNewSession}
+                                                loading={props.etat}
+                                                loadingPosition="end"
+                                                endIcon={<QrCode />}
+                                                variant="contained"
+                                                sx={{ textTransform: "initial" }}
+                                            >
+                                                <span>Créer une nouvelle session</span>
+                                            </LoadingButton>
+                                        </div>
                                     </div>
-                                    <img src={props.qrcode} alt="BOT QR" className="responsive-img"/>
                                 </div>
-                               
+
+
+
+                            </div>
+                        </form>
+
+                    </div>
+
+                </div>
+                <div className="col s12 m8">
+                    <div className="card-panel">
+                        <div className="row">
+                            <div className="col s12"><h6 className="card-title">Liste des appareils connectes</h6>
+                                <p>Il s'agit de la liste des appareils connectes</p></div>
+                        </div>
+                        <div className="row">
+                            <div className="col s12">
+                                <ReactDatatable
+                                    className={"responsive-table table-xlsx app-categories"}
+                                    config={config}
+                                    records={bots}
+                                    columns={columns}
+                                    onRowClicked={rowClickedHandler}
+                                />
                             </div>
                         </div>
-                        
-                    </div>
-                </form>
 
-            </div>       <div className="row"></div>
+                    </div>
+                </div>
+
+            </div>
+
+
         </>
     )
 }
 
-const mapStateToProps = (state) => {
-    return {
-        apiKey: state.gprbot.apiKey,
-        apiSecret: state.gprbot.apiSecret,
-        gprbotErrors: state.gprbot.gprbotErrors,
-        etat: state.gprbot.etat,
-        etat1: state.gprbot.etat1,
-        qrcode: state.gprbot.qrcode
-    }
-};
-
-const mapDispatchToProps = (dispatch) => {
-    return {
-        gprbotErrors: (err) => {
-            dispatch(gprbotErrors(err))
-        },
-        apiKeyChanged: (apikey) => {
-            dispatch(apiKeyChanged(apikey))
-        },
-        apiSecretChanged: (apiSecret) => {
-            dispatch(apiSecretChanged(apiSecret))
-        },
-        etatChanged: (etat) => {
-            dispatch(etatChanged(etat))
-        },
-        etat1Changed: (etat1) => {
-            dispatch(etat1Changed(etat1))
-        },
-        qrcodeChanged: (qrcode) => {
-            dispatch(qrcodeChanged(qrcode))
-        },
-         
-    }
-};
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(Bot)
+export default Bot

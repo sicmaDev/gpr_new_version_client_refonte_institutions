@@ -246,6 +246,37 @@ export const formatDate = (date) => {
     return (createdAt)
 }
 
+export const convertToCsv = (objArray)=> {
+    var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+    var str = '';
+
+    for (var i = 0; i < array.length; i++) {
+        var line = '';
+        for (var index in array[i]) {
+            if (line !== '') line += ','
+
+            line += array[i][index];
+        }
+
+        str += line + '\r\n';
+    }
+
+    return str;
+}
+export const generateString  = (count)=>{
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < count) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      counter += 1;
+    }
+    return result;
+
+}
+
+
 export const selectableYears = (startYear)=>{
     let currentYear = new Date().getFullYear(), years = [];
     startYear = startYear || 1980;

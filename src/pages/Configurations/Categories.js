@@ -153,6 +153,7 @@ const Categories = (props) => {
         clearComponentState()
     }
     const handleEdit = (e) => {
+        
         e.preventDefault()
         if (handleValidation()) {
             setUpdateIsLoading(true)
