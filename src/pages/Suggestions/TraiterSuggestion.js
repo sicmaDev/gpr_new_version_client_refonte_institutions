@@ -241,7 +241,7 @@ const TraiterSuggestion = (props) => {
     },
     {
       key: "statusStr",
-      text: "Status",
+      text: "Statut",
       className: "status",
       align: "left",
       sortable: true,

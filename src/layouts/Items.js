@@ -105,7 +105,7 @@ const logOut = (e) => {
 
     //reclamations
 
-    let REntete = hbt.includes("H1","H2","H3","H4","H5","H6","H7","H8","H9","H10","H14") ?
+    let REntete = hbt.some(item => ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H14"].includes(item)) ?
         <ListItemButton onClick={handleClick} >
             <ListItemIcon>
                 <InboxIcon style={{ color:"white" }} />
@@ -124,7 +124,7 @@ const logOut = (e) => {
             </ListItemButton>
         </NavLink> : "";
 
-    let RTraitement = (hbt.includes("H2","H3","H4","H6") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
+    let RTraitement = (hbt.some(item => ["H2","H3","H4","H6"].includes(item)) || addR === "PILOTE" || addR === "DE") && mode === 1 ?
         <NavLink to="/reclamations/traitement/all" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
@@ -176,7 +176,7 @@ const logOut = (e) => {
 
     //denonciations
 
-    let DEntete = hbt.includes("H1","H2","H3","H4","H5","H6","H7","H8","H9","H10","H14") ?
+    let DEntete = hbt.some(item => ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H14"].includes(item)) ?
         <ListItemButton onClick={handleClick1}>
             <ListItemIcon>
                 <InboxIcon style={{ color:"white" }} />
@@ -195,7 +195,7 @@ const logOut = (e) => {
             </ListItemButton>
         </NavLink> : "";
     
-    let DTraitement = (hbt.includes("H2","H3","H4","H6") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
+    let DTraitement = (hbt.some(item => ["H2","H3","H4","H6"].includes(item)) || addR === "PILOTE" || addR === "DE") && mode === 1 ?
         <NavLink to="/denonciations/traitement/all" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
@@ -204,27 +204,6 @@ const logOut = (e) => {
                 <ListItemText primary="Traitement" />
             </ListItemButton>
         </NavLink> : "";
-
-
-    // let DMesure = hbt.includes("H5") ?
-    //     <NavLink to="/denonciations/mesure" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
-    //         <ListItemButton sx={{ pl: 4 }} className='lib'>
-    //             <ListItemIcon>
-    //                 <DeviceThermostatIcon style={{ color:"white" }} />
-    //             </ListItemIcon>
-    //             <ListItemText primary="Mesure de satisfaction" />
-    //         </ListItemButton>
-    //     </NavLink> : "";
-
-    // let DAssurance = hbt.includes("H5") ? 
-    //     <NavLink to="/denonciations/assurance" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
-    //         <ListItemButton sx={{ pl: 4 }} className='lib'>
-    //             <ListItemIcon>
-    //                 <SentimentSatisfiedAltIcon style={{ color:"white" }} />
-    //             </ListItemIcon>
-    //             <ListItemText primary="Assurance Satisfaction" />
-    //         </ListItemButton>
-    //     </NavLink> : "";
 
     let DListe = 
         <NavLink to="/denonciations/liste" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
@@ -236,19 +215,9 @@ const logOut = (e) => {
             </ListItemButton>
         </NavLink> 
 
-    // let DClassees = hbt.includes("H5") ? 
-    //     <NavLink to="/denonciations/classees" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
-    //         <ListItemButton sx={{ pl: 4 }} className='lib'>
-    //             <ListItemIcon>
-    //                 <FolderSpecialIcon style={{ color:"white" }} />
-    //             </ListItemIcon>
-    //             <ListItemText primary="Classées" />
-    //         </ListItemButton>
-    //     </NavLink> : "";
-
     //suggestions
 
-    let SEntete = hbt.includes("H1","H7","H8","H9","H10","H14") ?
+    let SEntete = hbt.some(item => ["H1","H7","H8","H9","H10","H14"].includes(item)) ?
         <ListItemButton onClick={handleClick2}>
             <ListItemIcon>
                 <InboxIcon style={{ color:"white" }} />

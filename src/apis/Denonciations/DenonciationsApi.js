@@ -361,7 +361,7 @@ export const transmissionDenunciationApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat3Changed(false)
-            notify("Bravo - Dénonciation transmise au pilote", "success");
+            notify("Bravo - Dénonciation transmise avec succès", "success");
             listeTreat(props)
         })
         .catch(function (error) {

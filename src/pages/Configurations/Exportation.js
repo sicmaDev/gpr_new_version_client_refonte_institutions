@@ -4,7 +4,7 @@ import Select from "react-select"
 import { useState } from "react";
 import { exportConfigs } from "../../apis/Configurations/ExportationApi";
 import { generateString } from "../../Utils/utils";
-
+import React from "react";
 
 const styles = {
     control: base => ({
@@ -18,11 +18,14 @@ const Exportation = () => {
 
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [typeExport, setTypeExport] = useState("configs");
+    const [typeExport, setTypeExport] = useState({
+        value:"configs",
+        label:""
+    });
 
     const handleSubmit = (e) => {
-        const jsonFile = `exportation_${generateString(5)}.json`
-        exportConfigs(typeExport, jsonFile)
+        const jsonFile = `Exportation_${typeExport.label}_${generateString(5)}.json`
+        exportConfigs(typeExport.value, jsonFile)
 
     }
 

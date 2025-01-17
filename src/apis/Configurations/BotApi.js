@@ -45,7 +45,7 @@ export const ajout = async (data, props) => {
 }
 
 export const genererToken = async (props) => {
-    console.log("response token api")
+    // console.log("response token api")
     const config = {
         method: 'post',
         url: API_BOT_TOKEN_URL,
@@ -59,14 +59,14 @@ export const genererToken = async (props) => {
         .then(function (response) {
            
             props.etat1Changed(false)
-            console.log("response token",response)
+            // console.log("response token",response)
             generer(response.data.token,response.data.session,props);
             // notify("Bravo - Code généré", "success");
 
         })
         .catch(function (error) {
             props.etat1Changed(false)
-            console.log("response token error",error)
+            // console.log("response token error",error)
             notify("Erreur - Veuillez réessayer!", "error");
         });
 
@@ -89,7 +89,7 @@ export const generer = async (token,session,props) => {
         .then(function (response) {
            
             props.etat1Changed(false)
-            console.log("code genere",response.data.urlcode);
+            // console.log("code genere",response.data.urlcode);
             props.qrcodeChanged(response.data.qrcode);
             // liste(props)
             notify("Bravo - Code généré", "success");
@@ -97,7 +97,7 @@ export const generer = async (token,session,props) => {
         })
         .catch(function (error) {
             props.etat1Changed(false)
-            console.log("code genere error",error)
+            // console.log("code genere error",error)
             notify("Erreur - Veuillez réessayer!", "error");
         });
 

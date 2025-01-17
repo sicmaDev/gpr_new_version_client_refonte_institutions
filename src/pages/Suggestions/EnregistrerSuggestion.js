@@ -56,6 +56,7 @@ const EnregistrerSuggestion = (props) => {
     let settingComplete = isSettingComplete()
     let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
     let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
+    let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !==0)  ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -250,7 +251,7 @@ const EnregistrerSuggestion = (props) => {
 
     const [showAudioPlayer, setAudioPlayer] = useState("");
     const [currentAudio, setCurrentAudio] = useState("");
-
+    const [clearAudio, setClearAudio] = useState(0)
 
     let errors = {};
     const clearComponentState = () => {
@@ -277,7 +278,7 @@ const EnregistrerSuggestion = (props) => {
         props.selectedItemChanged({})
         props.selectedItemFilesChanged([])
         props.selectedItemAudioChanged([]);
-        audio = [];
+        setClearAudio(clearAudio + 1);
     }
 
     const handleCancel = (e) => {
@@ -880,7 +881,7 @@ const EnregistrerSuggestion = (props) => {
                 </div>
             );
         });
-        console.log('props.selectedItemAudio', props.selectedItemAudio)
+        // console.log('props.selectedItemAudio', props.selectedItemAudio)
         audioList = (
             <div className="col s12 app-file-content">
                 <div className="row app-file-recent-access mb-3">{audioListChild}</div>
@@ -1132,7 +1133,7 @@ const EnregistrerSuggestion = (props) => {
                                                             <PhoneInput
                                                                 international
                                                                 countryCallingCodeEditable={false}
-                                                                defaultCountry={INSTITUTION_PAYS_CODE}
+                                                                defaultCountry={appInstitution !== undefined ? appInstitution.paysCode : "BJ"}
                                                                 value={props.phone}
                                                                 onChange={(e) =>
                                                                     props.phoneChanged(e)
@@ -1321,7 +1322,7 @@ const EnregistrerSuggestion = (props) => {
                                                             {formAudio}
                                                         </div>
                                                         <div className="col l12 m12 s12 mb-3">
-                                                            <RecordingsList audio={audio} />
+                                                        <RecordingsList audio={audio} persistAll={clearAudio} />
 
                                                         </div>
                                                         <div className="row">{audioList}</div>

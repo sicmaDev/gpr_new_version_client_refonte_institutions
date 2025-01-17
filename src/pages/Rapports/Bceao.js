@@ -55,6 +55,7 @@ const Bceao = (props) => {
       setAdresse(instu.adresse ?? "");
       setTel(instu.tel ?? "");
       setEmail(instu.email ?? "");
+      setPays(instu.pays ?? "");
     }
   }, ["alberic"]);
 
@@ -66,6 +67,8 @@ const Bceao = (props) => {
 
   let userAuth = loadItemFromSessionStorage("app-user") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-user")) : undefined;
   let users = loadItemFromSessionStorage("app-users") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-users")) : undefined;
+  let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !==0)  ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+
   //Effacer tout
   const cleanForm = () => {
     setStartDate("");

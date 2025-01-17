@@ -12,8 +12,8 @@ export const getExportHtml = (columns, records,without=[]) => {
     tableHtml += "<thead>";
     tableHtml += "<tr style='font-weight: bold'>";
     columns.map((column) => {
-      console.log('column.text', column.text)
-      console.log('without', without)
+      // console.log('column.text', column.text)
+      // console.log('without', without)
       if(without.includes(column.text)){
         return (tableHtml += "");
       }

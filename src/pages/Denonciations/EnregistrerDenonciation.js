@@ -140,7 +140,7 @@ const EnregistrerDenonciation = (props) => {
     const [showAudioBox, setAudioBox] = useState(false);
     const [showAudioPlayer, setAudioPlayer] = useState("");
     const [currentAudio, setCurrentAudio] = useState("");
-
+    const [clearAudio, setClearAudio] = useState(0)
    
     //Handling the form
     let collects
@@ -289,7 +289,7 @@ const EnregistrerDenonciation = (props) => {
         props.selectedItemChanged({})
         props.selectedItemAudioChanged([]);
         props.selectedItemFilesChanged([])
-        audio =[]
+        setClearAudio(clearAudio + 1);
     }
 
     const handleCancel = (e) => {
@@ -1174,7 +1174,7 @@ const EnregistrerDenonciation = (props) => {
                                                             </small>
                                                         </div>
                                                         <div className="col l12 m12 s12 mb-3">
-                               <RecordingsList audio={audio} /> 
+                                                        <RecordingsList audio={audio} persistAll={clearAudio} />
                               
                             </div>
                             <div className="row">{audioList}</div>

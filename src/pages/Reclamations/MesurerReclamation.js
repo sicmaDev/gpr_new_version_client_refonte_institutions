@@ -289,7 +289,7 @@ const MesurerReclamation = (props) => {
     },
     {
       key: "statusStr",
-      text: "Status",
+      text: "Statut",
       className: "status",
       align: "left",
       sortable: true,
@@ -1001,7 +1001,7 @@ const MesurerReclamation = (props) => {
     }).format(new Date(element.createdAt));
     element.createdAtFormated = createdAt;
   });
-  console.log("props created at", props.created_at);
+  // console.log("props created at", props.created_at);
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
 
   return (

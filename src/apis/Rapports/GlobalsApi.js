@@ -51,10 +51,10 @@ export const reportApi = async (props, setData) => {
         })
         .catch(function (error) {
             KTApp.unblockPage();
-            console.log('report error', error);
+            // console.log('report error', error);
             setData(null)
             notify("Une erreur s'est produtie", "error");
-            // console.log("erreurREPORT",error)
+            console.log("erreurREPORT",error)
         });
 }
 
@@ -90,9 +90,21 @@ export const reportApiFiltres = async (props, body, setData) => {
                 props.statChanged(response.data.statistic)
                 setData(response.data)
 
+                // setData(prevData => {
+                //     if (!prevData) {
+                //         return { newData: response.data }; // Si prevData est null ou undefined
+                //     }
+                //     return {
+                //         ...prevData,
+                //         newData: response.data
+                //     };
+                // });
+                
+                  
+
 
                 KTApp.unblockPage();
-                notify("Bravo - Rapport généré", "success");
+                notify("Bravo - Rapport filtré généré", "success");
             }
 
 
@@ -118,6 +130,7 @@ export const reportNewVersionExport = async (filename, generateName, body) => {
            
             // console.log("response data content",response.data)
             // Créez un objet URL à partir de la réponse
+            
             const url = window.URL.createObjectURL(new Blob([response.data]));
             await deleteFileAfterDownload(generateName)
 
@@ -140,7 +153,7 @@ export const reportNewVersionExport = async (filename, generateName, body) => {
         })
         .catch(function (error) {
             KTApp.unblockPage();
-            notify("Erreur,une erreure s'est produite", "error")
+            notify("Erreur,une erreur s'est produite","error")
 
             // console.log("erreurREPORTfiltres",error)
         });
@@ -157,7 +170,7 @@ export const deleteFileAfterDownload = async (generateName) => {
 
     axios.get(`${REPORT_DELETE_API}/${generateName}`)
         .then(function (response) {
-            console.log("Fichier supprimer")
+            // console.log("Fichier supprimer")
             
             KTApp.unblockPage();
             
@@ -165,9 +178,11 @@ export const deleteFileAfterDownload = async (generateName) => {
             
         })
         .catch(function (error) {
-            console.log(`Fichier no delete ${error}`)
+            // console.log(`Fichier no delete ${error}`)
             KTApp.unblockPage();
             
+        }).finally(()=>{
+            notify("Bravo - Téléchargement du fichier effectué", "success");
         });
 }
 
