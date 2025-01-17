@@ -77,7 +77,6 @@ import { registerables } from "chart.js";
 import GaugeChart from "react-gauge-chart";
 import { Dialog, DialogContent, DialogContentText } from "@mui/material";
 import { Chat } from "@mui/icons-material";
-import "chartjs-to-image";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 // import ChartDataLabels from "chartjs-plugin-labels";
 import html2canvas from "html2canvas";

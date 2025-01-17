@@ -89,7 +89,6 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Chat, NoBackpack } from "@mui/icons-material";
-import "chartjs-to-image";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 // import ChartDataLabels from "chartjs-plugin-labels";
 import html2canvas from "html2canvas";
