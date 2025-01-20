@@ -15,8 +15,10 @@ import { QRCode } from 'react-qrcode-logo';
 import { Button, Chip } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { QrCode } from "@mui/icons-material";
+import { WPP_CONNECT_LINK, WPP_CONNECT_OPTIONS, WPP_CONNECT_TOKEN } from "../../Utils/globals";
 
 const Bot = (props) => {
+
 
     const [form, setForm] = useState({ libelle: "", number: "" });
 
@@ -30,12 +32,18 @@ const Bot = (props) => {
         items: null,
 
     })
+    const [generateTokenData, setGenerateTokenData] = useState({
+        isLoading: false,
+        showMessage: false,
+        message: "",
+        isSuccess: false,
+        token: null,
+        items: null,
+
+    })
+    const [messageSession, setMessageSession] = useState("")
 
     const [bots, setBots] = useState([])
-
-
- 
-
 
     const handleFormChange = (e) => {
         const { name, value } = e.target;
@@ -68,28 +76,51 @@ const Bot = (props) => {
 
     }
     const generateToken = (session) => {
-        return axios.post(`http://localhost:21465/api/${session}/THISISMYSECURETOKEN/generate-token`)
+        return axios.post(`${WPP_CONNECT_LINK}/${session}/${WPP_CONNECT_TOKEN}/generate-token`)
     }
-    const createNewSession = (e,sessionPass="vide") => {
+    const createNewSession = (e, sessionPass = "vide") => {
         const number = form.number.trim();
         const label = form.libelle.trim().replace(/[\/?&= ]/g, '_');
-        const url = sessionPass ==="vide" ? `${number}_wpp_${label}`:sessionPass
+        const url = sessionPass === "vide" ? `${number}_wpp_${label}` : sessionPass
 
-       
-        if(sessionPass === "vide" &&( label === "" || number === "")){
+
+        if (sessionPass === "vide" && (label === "" || number === "")) {
+            setMessageSession("Les champs sont obligatoires")
             return false
-        }else{
-            setCreateSession((prevState) => ({
+        } else {
+
+            setGenerateTokenData((prevState) => ({
                 ...prevState,
                 isLoading: true,
-                isGenerate: false,
-                showMessage: false,
+                isSuccess: false,
+                token: null,
+                items: null,
+                showMessage: true
             }));
+            setMessageSession("Etape 1/2 : Veuillez patitenter")
             generateToken(url).then(({ data }) => {
-                axios.post(`http://localhost:21465/api/${url}/start-session`, {
-                    "webhook": "http://localhost:8080/api/v1/webhook/save",
-                    "waitQrCode": true
-                }, {
+
+                setGenerateTokenData((prevState) => ({
+                    ...prevState,
+                    isLoading: false,
+                    isSuccess: true,
+                    items: data,
+                    token: data?.token ?? null,
+                    showMessage: false,
+                }));
+                setCreateSession((prevState) => ({
+                    ...prevState,
+                    isLoading: true,
+                    isGenerate: false,
+                    isSuccess: false,
+                    showMessage: true,
+                    qrCode: null,
+                    message: ""
+
+                }));
+                setMessageSession("Etape 2/2 : En cour, Veuillez patienter")
+
+                axios.post(`${WPP_CONNECT_LINK}/${url}/start-session`, WPP_CONNECT_OPTIONS, {
                     headers: {
                         'Authorization': `Bearer ${data?.token ?? 'vide'}`
                     }
@@ -97,29 +128,40 @@ const Bot = (props) => {
                     setCreateSession({
                         isLoading: false,
                         isGenerate: true,
+                        showMessage: true,
                         isSuccess: true,
-                        qrCode: data.urlcode ?? "Aucune URL reçue",
+                        message: "Etape 2/2 : Success,Le QRCODE sera invalide dans 60s",
+                        qrCode: data.urlcode ?? null,
                     });
+                    
                 }).catch((err) => {
-                    console.error('Erreur de création de session:', err);
+                    setMessageSession("Etape 2/2: Échec lors de la création de votre session. Veuillez réessayer.")
+
                     setCreateSession({
                         isLoading: false,
-                        isGenerate: true,
+                        isGenerate: false,
                         isSuccess: false,
-                        message: "Échec de la création de session. Veuillez réessayer.",
+                        qrCode: null,
                     });
                 });
             }).catch((err) => {
-                console.log('err', err)
+                setMessageSession("Etape 1/2: Échec lors de la création du token. Veuillez réessayer.")
+
+                setGenerateTokenData({
+                    isLoading: false,
+                    token: null,
+                    isSuccess: false,
+                    message: "",
+                });
             })
         }
-    
-        
 
-        
+
+
+
     };
 
-    
+
     const getAllSessions = () => {
 
         axios.get(`http://localhost:21465/api/THISISMYSECURETOKEN/show-all-sessions`).then(({ data }) => {
@@ -254,7 +296,7 @@ const Bot = (props) => {
                     {
                         sessions.message !== "No check" && (sessions.status ?
                             <Chip label="Disconnect" onClick={(e) => { logoutSession(sessions.session) }} color="error" style={{ marginLeft: "5px" }} /> :
-                            <Chip label="Connect" color="info" style={{ marginLeft: "5px" }} />)
+                            <Chip label="Connect"  onClick={(e) => { createNewSession(e,sessions.session) }} color="info" style={{ marginLeft: "5px" }} />)
                     }
 
 
@@ -331,7 +373,7 @@ const Bot = (props) => {
     return (
         <>
             <div className="row">
-                <div className="col s12 m4">
+                <div className="col m12 l12 xl4">
                     <div className="card-panel">
                         <div className="row">
                             <div className="col s12"><h6 className="card-title">Configuration GPR BOT</h6>
@@ -359,26 +401,26 @@ const Bot = (props) => {
 
                                         </div>
                                         <div className="col s12 input-field">
-                                            <input id="apikey" placeholder="" name="number" type="tel"
+                                            <input id="apikey" placeholder="" name="number" type="number"
                                                 className="validate" value={form.number} onChange={handleFormChange} maxLength="12"
                                                 data-error=".errorTxt1" />
                                             <label htmlFor="apikey" className={"active"}>Numero de téléphone &nbsp;
                                                 <span className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                                    data-tooltip="NUMERO DE TELEPHONE WHATSAPP">
+                                                    data-tooltip="Numero de téléphone whatsapp">
                                                     <HelpIcon />
                                                 </span></label>
                                             <small className="errorTxt4">
                                                 <div id="cpassword-error" className="error"></div>
                                             </small>
                                         </div>
+
+                                            <div className="col s12"><b>{messageSession}</b></div>
                                         <div className="col s12 display-flex justify-content-center">
-                                            {createSession.isLoading ? (
-                                                <div>En cours de chargement...</div>
-                                            ) : createSession.qrCode ? (
-                                                <QRCode value={createSession.qrCode} size={400} bgColor="#FFFFFF" fgColor="#005081" />
-                                            ) : createSession.isGenerate && (
-                                                <div>Pas de QR Code, réessayez.</div>
-                                            )}
+                                            {
+                                                ((createSession.isSuccess && generateTokenData.isSuccess && createSession.qrCode)
+                                                    ? <QRCode value={createSession.qrCode} size={400} bgColor="#FFFFFF" fgColor="#005081" />
+                                                    : "")
+                                            }
 
 
                                         </div>
@@ -393,6 +435,7 @@ const Bot = (props) => {
                                                 loading={props.etat}
                                                 loadingPosition="end"
                                                 endIcon={<QrCode />}
+                                                disabled={createSession.isLoading || generateTokenData.isLoading}
                                                 variant="contained"
                                                 sx={{ textTransform: "initial" }}
                                             >
@@ -410,7 +453,7 @@ const Bot = (props) => {
                     </div>
 
                 </div>
-                <div className="col s12 m8">
+                <div className="col m12 l12 xl8">
                     <div className="card-panel">
                         <div className="row">
                             <div className="col s12"><h6 className="card-title">Liste des appareils connectes</h6>

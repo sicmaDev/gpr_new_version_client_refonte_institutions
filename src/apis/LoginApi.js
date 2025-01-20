@@ -10,7 +10,7 @@ const RECEIVE_DATA_API = HOST + "api/v1/sync/allList"
 const SYNCHRON_DATA_API = HOST + "api/v1/sync/claim"
 const READ_LICENSE_INFO = HOST + "api/v1/auth/infoLicense";
 
-export const LoginApi = (credentials, props) => {
+export const LoginApi = (credentials, props,isLocked =false) => {
     const config = {
         method: 'post',
         url: LOGIN_API,
@@ -23,8 +23,16 @@ export const LoginApi = (credentials, props) => {
     axios(config)
         .then(function (response) {
             if (response.data.response.status) {
-                notify("Bravo - Vous êtes authentifié", "success");
+                
                 props.authenticate()
+                if(isLocked){
+                    props.setUnlocked()
+                    props.isAuth(true)
+
+
+                }else{
+                    notify("Bravo - Vous êtes authentifié", "success");
+                }
                 //  console.log("loginresponse",response.data.response.content.settings)
                 //enregistrement dans la session storage
                 saveItemToSessionStorage(response.data.response.content.token, 'token')
@@ -48,6 +56,7 @@ export const LoginApi = (credentials, props) => {
                 response.data.response.content.settings.help ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.help), 'help') : saveItemToSessionStorage([], 'help');
 
 
+                
                 //enregistrement dans le local storage
                 saveItemToLocalStorage(response.data.response.content.token, 'token')
                 saveItemToLocalStorage(1, 'logged')

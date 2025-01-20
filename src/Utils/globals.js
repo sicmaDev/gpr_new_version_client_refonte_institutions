@@ -25,3 +25,12 @@ function reportHost(){
     // return "http://127.0.0.1:5000/"
     return "https://gpr-rapport-excel-python-script.onrender.com/"
 }
+
+export const LOCKSCREEN_TIMEOUT = 300000; //5min
+export const WPP_CONNECT_IS_DEV = true;
+export const  WPP_CONNECT_TOKEN = "THISISMYSECURETOKEN"
+export const  WPP_CONNECT_OPTIONS = {waitQrCode:true,webhook:HOST+"api/v1/webhook/save"}
+export const WPP_CONNECT_LINK =!WPP_CONNECT_IS_DEV?"https://gpr-rapport-excel-python-script.onrender.com/api" :"http://localhost:21465/api"
+
+
+

@@ -16,10 +16,9 @@ import CategoryIcon from '@mui/icons-material/Category';
 import DataObjectIcon from '@mui/icons-material/DataObject';
 import GavelIcon from '@mui/icons-material/Gavel';
 import { hexToRgb, loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToSessionStorage } from '../Utils/utils';
-import { PieChart } from '@mui/x-charts';
+
 import { titre } from '../layouts/Haut';
 import CircleIcon from '@mui/icons-material/Circle';
-import { ReactMic } from 'react-mic';
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
 import AssignmentLateIcon from '@mui/icons-material/AssignmentLate';
 import { dashboardChanged, etat1Changed } from '../redux/actions/DashboardActions';
