@@ -45,6 +45,7 @@ import Bot from '../pages/Configurations/Bot';
 import Log from '../pages/Configurations/Log';
 import Exportation from '../pages/Configurations/Exportation';
 import ApiKey from '../pages/Configurations/ApiKey';
+import Whatsapp from '../pages/Whatsapp';
 
 
 export default function Contenu() { 
@@ -141,6 +142,10 @@ export default function Contenu() {
                     <Route path="/suggestions/enregistrement" component={EnregistrerSuggestion} />
                     <Route path="/suggestions/traitement" component={TraiterSuggestion} />
                     <Route path="/suggestions/liste" component={ListeSuggestions} />
+
+
+                    {/* whatsapp */}
+                    <Route path="/whatsapp/liste" component={Whatsapp} />
 
                     {/* alertes */}
                     <Route path="/alertes/reclamations" component={ReclamationsAlertes} />

@@ -34,6 +34,7 @@ import EmailReducer from "./reducers/Configurations/EmailReducer";
 import SmsReducer from "./reducers/Configurations/SmsReducer";
 import BotReducer from "./reducers/Configurations/BotReducer";
 import LockscreenReducer from "./reducers/LockscreenReducer";
+import WhatsappReducer from "./reducers/WhatsappReducer";
 
 
 const reducer = combineReducers({
@@ -71,7 +72,8 @@ const reducer = combineReducers({
     mail : EmailReducer,
     sms : SmsReducer,
     gprbot : BotReducer,
-    lockscreen:LockscreenReducer
+    lockscreen:LockscreenReducer,
+    whatsapp:WhatsappReducer
     
 
 });

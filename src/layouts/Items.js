@@ -27,7 +27,7 @@ import WorkIcon from '@mui/icons-material/Work';
 import CategoryIcon from '@mui/icons-material/Category';
 import DataObjectIcon from '@mui/icons-material/DataObject';
 import GavelIcon from '@mui/icons-material/Gavel';
-import {NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from '../Utils/utils';
 import { connect } from 'react-redux';
 import { authenticate } from '../redux/actions/LayoutActions';
@@ -42,9 +42,9 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import SmsIcon from '@mui/icons-material/Sms';
 import EmailIcon from '@mui/icons-material/Email';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
-import { AddToDriveOutlined, KeyOffTwoTone, KeyTwoTone } from '@mui/icons-material';
+import { AddToDriveOutlined, KeyOffTwoTone, KeyTwoTone, WhatsApp } from '@mui/icons-material';
 
-export const Items = (props) =>{
+export const Items = (props) => {
 
     const [open, setOpen] = React.useState(false);
     const [open1, setOpen1] = React.useState(false);
@@ -76,99 +76,99 @@ export const Items = (props) =>{
         setOpen6(!open6);
     };
 
-const history = useHistory();
-const logOut = (e) => {
-    e.preventDefault();
-    sessionStorage.clear();
-    props.authenticate();
-    history.push("/");
-};
-    let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))): undefined;
-    let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))): undefined;
+    const history = useHistory();
+    const logOut = (e) => {
+        e.preventDefault();
+        sessionStorage.clear();
+        props.authenticate();
+        history.push("/");
+    };
+    let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
+    let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
     let hbt = (user.posteDto.habilitations).split(',');
     let addR = (user.additionalRole);
 
 
     //fonctions
-    let dashboard = mode === 1 ? 
-        <NavLink to="/dashboard" 
+    let dashboard = mode === 1 ?
+        <NavLink to="/dashboard"
             activeClassName="hero"
-            style={{ color:"white",textDecoration:"none"}}
+            style={{ color: "white", textDecoration: "none" }}
         >
             <ListItemButton className='lib'  >
                 <ListItemIcon>
-                    <DashboardIcon style={{ color:"white" }}  />
+                    <DashboardIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Dashboard" />
             </ListItemButton>
-        </NavLink> :""
+        </NavLink> : ""
 
     //reclamations
 
     let REntete = hbt.some(item => ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H14"].includes(item)) ?
         <ListItemButton onClick={handleClick} >
             <ListItemIcon>
-                <InboxIcon style={{ color:"white" }} />
+                <InboxIcon style={{ color: "white" }} />
             </ListItemIcon>
             <ListItemText primary="Réclamations" />
             {open ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton> : "";
 
     let REnregistrement = hbt.includes("H1") ?
-        <NavLink to="/reclamations/enregistrement" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+        <NavLink to="/reclamations/enregistrement" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <AddCircleIcon style={{ color:"white" }} />
+                    <AddCircleIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Enregistrement" />
             </ListItemButton>
         </NavLink> : "";
 
-    let RTraitement = (hbt.some(item => ["H2","H3","H4","H6"].includes(item)) || addR === "PILOTE" || addR === "DE") && mode === 1 ?
-        <NavLink to="/reclamations/traitement/all" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+    let RTraitement = (hbt.some(item => ["H2", "H3", "H4", "H6"].includes(item)) || addR === "PILOTE" || addR === "DE") && mode === 1 ?
+        <NavLink to="/reclamations/traitement/all" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <RecyclingIcon style={{ color:"white" }} />
+                    <RecyclingIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Traitement" />
             </ListItemButton>
         </NavLink> : "";
 
     let RMesure = (hbt.includes("H5") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
-        <NavLink to="/reclamations/mesure/all" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+        <NavLink to="/reclamations/mesure/all" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <DeviceThermostatIcon style={{ color:"white" }} />
+                    <DeviceThermostatIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Mesure de satisfaction" />
             </ListItemButton>
         </NavLink> : "";
 
-    let RAssurance = (hbt.includes("H5") || addR === "PILOTE" || addR === "DE") && mode === 1 ? 
-        <NavLink to="/reclamations/assurance" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+    let RAssurance = (hbt.includes("H5") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
+        <NavLink to="/reclamations/assurance" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <SentimentSatisfiedAltIcon style={{ color:"white" }} />
+                    <SentimentSatisfiedAltIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Assurance Satisfaction" />
             </ListItemButton>
         </NavLink> : "";
 
-    let RListe = 
-        <NavLink to="/reclamations/liste" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+    let RListe =
+        <NavLink to="/reclamations/liste" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <ReceiptLongIcon style={{ color:"white" }} />
+                    <ReceiptLongIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Liste des réclamations" />
             </ListItemButton>
         </NavLink>
 
-    let RClassees = (hbt.includes("H5") || addR === "PILOTE" || addR === "DE") && mode === 1 ? 
-        <NavLink to="/reclamations/classees" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+    let RClassees = (hbt.includes("H5") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
+        <NavLink to="/reclamations/classees" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <FolderSpecialIcon style={{ color:"white" }} />
+                    <FolderSpecialIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Classées" />
             </ListItemButton>
@@ -179,108 +179,108 @@ const logOut = (e) => {
     let DEntete = hbt.some(item => ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H14"].includes(item)) ?
         <ListItemButton onClick={handleClick1}>
             <ListItemIcon>
-                <InboxIcon style={{ color:"white" }} />
+                <InboxIcon style={{ color: "white" }} />
             </ListItemIcon>
             <ListItemText primary="Dénonciations" />
             {open1 ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton> : "";
 
-    let DEnregistrement = hbt.includes("H1") ? 
-        <NavLink to="/denonciations/enregistrement" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+    let DEnregistrement = hbt.includes("H1") ?
+        <NavLink to="/denonciations/enregistrement" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <AddCircleIcon style={{ color:"white" }} />
+                    <AddCircleIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Enregistrement" />
             </ListItemButton>
         </NavLink> : "";
-    
-    let DTraitement = (hbt.some(item => ["H2","H3","H4","H6"].includes(item)) || addR === "PILOTE" || addR === "DE") && mode === 1 ?
-        <NavLink to="/denonciations/traitement/all" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+
+    let DTraitement = (hbt.some(item => ["H2", "H3", "H4", "H6"].includes(item)) || addR === "PILOTE" || addR === "DE") && mode === 1 ?
+        <NavLink to="/denonciations/traitement/all" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <RecyclingIcon style={{ color:"white" }} />
+                    <RecyclingIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Traitement" />
             </ListItemButton>
         </NavLink> : "";
 
-    let DListe = 
-        <NavLink to="/denonciations/liste" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+    let DListe =
+        <NavLink to="/denonciations/liste" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <ReceiptLongIcon style={{ color:"white" }} />
+                    <ReceiptLongIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Liste des dénonciations" />
             </ListItemButton>
-        </NavLink> 
+        </NavLink>
 
     //suggestions
 
-    let SEntete = hbt.some(item => ["H1","H7","H8","H9","H10","H14"].includes(item)) ?
+    let SEntete = hbt.some(item => ["H1", "H7", "H8", "H9", "H10", "H14"].includes(item)) ?
         <ListItemButton onClick={handleClick2}>
             <ListItemIcon>
-                <InboxIcon style={{ color:"white" }} />
+                <InboxIcon style={{ color: "white" }} />
             </ListItemIcon>
             <ListItemText primary="Suggestions" />
             {open2 ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton> : "";
-            
+
     let SEnregistrement = hbt.includes("H1") ?
-        <NavLink to="/suggestions/enregistrement" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+        <NavLink to="/suggestions/enregistrement" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <AddCircleIcon style={{ color:"white" }} />
+                    <AddCircleIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Enregistrement" />
             </ListItemButton>
         </NavLink> : "";
 
 
-    let STraitement = (addR === "PILOTE" || addR === "DE") && mode === 1 ? 
-        <NavLink to="/suggestions/traitement" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero"> 
+    let STraitement = (addR === "PILOTE" || addR === "DE") && mode === 1 ?
+        <NavLink to="/suggestions/traitement" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <RecyclingIcon style={{ color:"white" }} />
+                    <RecyclingIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Traitement" />
             </ListItemButton>
         </NavLink> : "";
 
-    let SListe =  
-        <NavLink to="/suggestions/liste" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+    let SListe =
+        <NavLink to="/suggestions/liste" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton sx={{ pl: 4 }} className='lib'>
                 <ListItemIcon>
-                    <ReceiptLongIcon style={{ color:"white" }} />
+                    <ReceiptLongIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Liste des suggestions" />
             </ListItemButton>
-        </NavLink> 
+        </NavLink>
 
     let Rapports = hbt.includes("H11") && mode === 1 ?
         <>
             <ListItemButton onClick={handleClick3}>
                 <ListItemIcon>
-                    <BarChartIcon style={{ color:"white" }} />
+                    <BarChartIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Rapports" />
                 {open3 ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
             <Collapse in={open3} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
-                    <NavLink to="/rapports/global" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/rapports/global" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <PublicIcon style={{ color:"white" }} />
+                                <PublicIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Global" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/rapports/bceao" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/rapports/bceao" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <StarBorder style={{ color:"white" }} />
+                                <StarBorder style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Commission Bancaire" />
                         </ListItemButton>
@@ -293,26 +293,26 @@ const logOut = (e) => {
         <>
             <ListItemButton onClick={handleClick5}>
                 <ListItemIcon>
-                    <NotificationImportantIcon style={{ color:"white" }} />
+                    <NotificationImportantIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Alertes" />
                 {open5 ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
             <Collapse in={open5} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
-                    <NavLink to="/alertes/reclamations" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/alertes/reclamations" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <ReceiptLongIcon style={{ color:"white" }} />
+                                <ReceiptLongIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Réclamations" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/alertes/denonciations" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/alertes/denonciations" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <ReceiptLongIcon style={{ color:"white" }} />
+                                <ReceiptLongIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Dénonciations" />
                         </ListItemButton>
@@ -320,181 +320,191 @@ const logOut = (e) => {
                 </List>
             </Collapse>
         </> : "";
-    
+    let Whatsapp = (hbt.includes("H13") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
+        <NavLink to="/whatsapp/liste" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
+            <ListItemButton >
+                <ListItemIcon>
+                    <WhatsApp style={{ color: "white" }} />
+                </ListItemIcon>
+                <ListItemText primary="Whatsapp" />
+            </ListItemButton>
+
+        </NavLink> : "";
+
     let Configs = hbt.includes("H12") && mode === 1 ?
         <>
             <ListItemButton onClick={handleClick4}>
                 <ListItemIcon>
-                    <SettingsIcon style={{ color:"white" }} />
+                    <SettingsIcon style={{ color: "white" }} />
                 </ListItemIcon>
                 <ListItemText primary="Configurations" />
                 {open4 ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
             <Collapse in={open4} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
-                    <NavLink to="/configurations/institution" 
-                        style={{ color:"white",textDecoration:"none" }}  
+                    <NavLink to="/configurations/institution"
+                        style={{ color: "white", textDecoration: "none" }}
                         activeClassName="hero"
-                       
+
                     >
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <HomeWorkIcon style={{ color:"white" }} />
+                                <HomeWorkIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Institution" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/pointsServices" 
-                        style={{ color:"white",textDecoration:"none" }}  
+                    <NavLink to="/configurations/pointsServices"
+                        style={{ color: "white", textDecoration: "none" }}
                         activeClassName="hero"
-                       
+
                     >
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <AddBusinessIcon style={{ color:"white" }} />
+                                <AddBusinessIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Points de services" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/postes" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/postes" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <WorkIcon style={{ color:"white" }} />
+                                <WorkIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Postes" />
                         </ListItemButton>
                     </NavLink>
-                    
-                    <NavLink to="/configurations/produits" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+
+                    <NavLink to="/configurations/produits" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <CategoryIcon style={{ color:"white" }} />
+                                <CategoryIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Produits / Services" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/categories" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/categories" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <ClassIcon style={{ color:"white" }} />
+                                <ClassIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Categories" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/objets" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/objets" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <DataObjectIcon style={{ color:"white" }} />
+                                <DataObjectIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Objets" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/solutions" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/solutions" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <TipsAndUpdatesIcon style={{ color:"white" }} />
+                                <TipsAndUpdatesIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Solutions" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/langues" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/langues" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <LanguageIcon style={{ color:"white" }} />
+                                <LanguageIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Langues" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/supportsCollectes" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/supportsCollectes" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <RecyclingIcon style={{ color:"white" }} />
+                                <RecyclingIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Supports de collecte" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/utilisateurs" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/utilisateurs" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <PersonIcon style={{ color:"white" }} />
+                                <PersonIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Compte Utilisateurs" />
                         </ListItemButton>
                     </NavLink>
 
-                   
-                    <NavLink to="/configurations/email" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+
+                    <NavLink to="/configurations/email" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <EmailIcon style={{ color:"white" }} />
+                                <EmailIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Email" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/sms" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/sms" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <SmsIcon style={{ color:"white" }} />
+                                <SmsIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="SMS" />
                         </ListItemButton>
                     </NavLink>
-                    <NavLink to="/configurations/logs" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/logs" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <AddToDriveOutlined style={{ color:"white" }} />
+                                <AddToDriveOutlined style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Log Systeme" />
                         </ListItemButton>
                     </NavLink>
-                    <NavLink to="/configurations/exportations" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/exportations" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <AddToDriveOutlined style={{ color:"white" }} />
+                                <AddToDriveOutlined style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Exportation" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/bot" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/bot" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <SmartToyIcon style={{ color:"white" }} />
+                                <SmartToyIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="GPR BOT" />
                         </ListItemButton>
                     </NavLink>
-                    <NavLink to="/configurations/apikey" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/apikey" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <KeyTwoTone style={{ color:"white" }} />
+                                <KeyTwoTone style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="API KEY" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/recoursExternes" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/recoursExternes" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <GavelIcon style={{ color:"white" }} />
+                                <GavelIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Recours Externes" />
                         </ListItemButton>
                     </NavLink>
 
-                    <NavLink to="/configurations/notifications" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                    <NavLink to="/configurations/notifications" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                         <ListItemButton sx={{ pl: 4 }} className='lib'>
                             <ListItemIcon>
-                                <NotificationAddIcon style={{ color:"white" }} />
+                                <NotificationAddIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Notifications" />
                         </ListItemButton>
@@ -502,141 +512,142 @@ const logOut = (e) => {
 
                     <ListItemButton onClick={handleClick6}>
                         <ListItemIcon>
-                            <ArticleIcon style={{ color:"white" }} />
+                            <ArticleIcon style={{ color: "white" }} />
                         </ListItemIcon>
                         <ListItemText primary="Ressources" />
                         {open6 ? <ExpandLess /> : <ExpandMore />}
                     </ListItemButton>
                     <Collapse in={open6} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
-                            <NavLink to="/ressources/documents" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                            <NavLink to="/ressources/documents" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                                 <ListItemButton sx={{ pl: 4 }} className='lib'>
                                     <ListItemIcon>
-                                        <MenuBookIcon style={{ color:"white" }} />
+                                        <MenuBookIcon style={{ color: "white" }} />
                                     </ListItemIcon>
                                     <ListItemText primary="Documents" />
                                 </ListItemButton>
                             </NavLink>
 
-                            <NavLink to="/ressources/faq" style={{ color:"white",textDecoration:"none" }}  activeClassName="hero">
+                            <NavLink to="/ressources/faq" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
                                 <ListItemButton sx={{ pl: 4 }} className='lib'>
                                     <ListItemIcon>
-                                        <QuizIcon style={{ color:"white" }} />
+                                        <QuizIcon style={{ color: "white" }} />
                                     </ListItemIcon>
                                     <ListItemText primary="FAQ" />
                                 </ListItemButton>
                             </NavLink>
                         </List>
                     </Collapse>
-                    
+
                 </List>
             </Collapse>
         </> : "";
 
-    
-  return(
-    <React.Fragment >
-        
-        {dashboard}
-        
-        {REntete}
-        <Collapse in={open} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding  >
-                {REnregistrement}
 
-                {RTraitement}
+    return (
+        <React.Fragment >
 
-                {RMesure}
+            {dashboard}
 
-                {RAssurance}
+            {REntete}
+            <Collapse in={open} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding  >
+                    {REnregistrement}
 
-                {RListe}
+                    {RTraitement}
 
-                {RClassees}
-                
-            </List>
-        </Collapse>
-       
-        {DEntete}
-        <Collapse in={open1} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-            {DEnregistrement}
+                    {RMesure}
 
-            {DTraitement}
+                    {RAssurance}
 
-            {/* {DMesure}
+                    {RListe}
+
+                    {RClassees}
+
+                </List>
+            </Collapse>
+
+            {DEntete}
+            <Collapse in={open1} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                    {DEnregistrement}
+
+                    {DTraitement}
+
+                    {/* {DMesure}
 
             {DAssurance} */}
 
-            {DListe}
+                    {DListe}
 
-            {/* {DClassees} */}
-                
-            </List>
-        </Collapse>
-        
-        
-        {SEntete}
-        <Collapse in={open2} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-                {SEnregistrement}
+                    {/* {DClassees} */}
 
-                {STraitement}
+                </List>
+            </Collapse>
 
-                {SListe}
-            </List>
-        </Collapse>
 
-        {Alertes}
-        
-        {Rapports}
-       
-        {Configs}
-         
-        <NavLink to="/help" 
-            activeClassName="hero"
-            style={{ color:"white",textDecoration:"none"}}
-        >
-            <ListItemButton className='lib'>
-                <ListItemIcon >
-                    <QuizIcon style={{ color:"white" }} />
-                </ListItemIcon>
-                <ListItemText primary="Aide" />
-            </ListItemButton>
-        </NavLink>
+            {SEntete}
+            <Collapse in={open2} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                    {SEnregistrement}
 
-        <NavLink to="/logout"
-            onClick={(e) => logOut(e)}  style={{ color:"white",textDecoration:"none" }}>
-            <ListItemButton >
-                <ListItemIcon>
-                    <LogoutIcon style={{ color:"white" }} />
-                </ListItemIcon>
-                <ListItemText primary="Déconnexion" />
-            </ListItemButton>
-        </NavLink>
-        
-    </React.Fragment>
-  );
+                    {STraitement}
+
+                    {SListe}
+                </List>
+            </Collapse>
+            {Whatsapp}
+
+            {Alertes}
+
+            {Rapports}
+
+            {Configs}
+
+            <NavLink to="/help"
+                activeClassName="hero"
+                style={{ color: "white", textDecoration: "none" }}
+            >
+                <ListItemButton className='lib'>
+                    <ListItemIcon >
+                        <QuizIcon style={{ color: "white" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Aide" />
+                </ListItemButton>
+            </NavLink>
+
+            <NavLink to="/logout"
+                onClick={(e) => logOut(e)} style={{ color: "white", textDecoration: "none" }}>
+                <ListItemButton >
+                    <ListItemIcon>
+                        <LogoutIcon style={{ color: "white" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Déconnexion" />
+                </ListItemButton>
+            </NavLink>
+
+        </React.Fragment>
+    );
 
 }
 
 const mapStateToProps = (state) => {
     return {
-      isAuthenticated: state.layout.isAuthenticated,
-      isLoading: state.layout.isLoading,
+        isAuthenticated: state.layout.isAuthenticated,
+        isLoading: state.layout.isLoading,
     };
 };
-  
+
 const mapDispatchToProps = (dispatch) => {
     return {
         authenticate: () => dispatch(authenticate()),
     };
 };
-  
+
 
 export default connect(
     mapStateToProps,
     mapDispatchToProps,
 )(Items)
-  
+
 
