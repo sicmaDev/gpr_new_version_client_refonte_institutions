@@ -100,18 +100,25 @@ const PointsServices = (props) => {
             },
         },
         {
+            key: "uuid",
+            text: "Uuid",
+            className: "description",
+            align: "left",
+            sortable: true
+        },
+        {
             key: "action",
             text: "Actions",
             className: "action",
             align: "left",
             cell: (sp) => {
                 if (sp.deleted) {
-                    return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e,sp.id,false)} icon={<TaskAlt />}  />
-                }else{
-                    return  <Chip label="Désactiver ?"  onClick={(e) => handleDisabledModal(e,sp.id)} icon={<Block  />} variant="outlined" />
-                   
+                    return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e, sp.id, false)} icon={<TaskAlt />} />
+                } else {
+                    return <Chip label="Désactiver ?" onClick={(e) => handleDisabledModal(e, sp.id)} icon={<Block />} variant="outlined" />
+
                 }
-             
+
             }
         },
     ];
@@ -144,28 +151,28 @@ const PointsServices = (props) => {
     }
 
     let units
-    try{
+    try {
         units = JSON.parse(loadItemFromLocalStorage('app-ps'));
     }
     catch (e) {
-        units=[];
+        units = [];
     }
 
     let unitOptions
     let directionOptions
-    let unitsGroupByType = (units!==undefined)? groupBy(units, "type"): undefined;
+    let unitsGroupByType = (units !== undefined) ? groupBy(units, "type") : undefined;
     //
-    if (unitsGroupByType!== undefined && unitsGroupByType["DIRECTION"] !== undefined) {
+    if (unitsGroupByType !== undefined && unitsGroupByType["DIRECTION"] !== undefined) {
         directionOptions = unitsGroupByType["DIRECTION"].map(direction => {
-            return {"label": direction.libelle, "value": direction.id}
+            return { "label": direction.libelle, "value": direction.id }
         })
     } else {
         directionOptions = ""
     }
-   
+
     unitOptions = []
-    if(directionOptions!==""){unitOptions.push({"label": "Direction", "options": directionOptions})}
-   
+    if (directionOptions !== "") { unitOptions.push({ "label": "Direction", "options": directionOptions }) }
+
     // //
 
     let typeOptions
@@ -255,11 +262,11 @@ const PointsServices = (props) => {
         }
         props.psErrors(errors)
     }
-    const handleDisabledModal = (e,spId) => {
+    const handleDisabledModal = (e, spId) => {
         e.stopPropagation();
-    
 
-        modalify("Confirmation", "Voulez-vous vraiment désactivé ce point de service ?", "confirm", (e)=>{handleDisable(e,spId)})
+
+        modalify("Confirmation", "Voulez-vous vraiment désactivé ce point de service ?", "confirm", (e) => { handleDisable(e, spId) })
     }
     const handleModal = (e) => {
         e.preventDefault()
@@ -271,7 +278,7 @@ const PointsServices = (props) => {
     }
     const handleDelete = (e) => {
         e.preventDefault()
-        
+
         props.etat3Changed(true)
         suppression(props).then(() => {
             handleCancel(e)
@@ -279,20 +286,20 @@ const PointsServices = (props) => {
 
         props.psErrors(errors)
     }
-    const handleDisable = (e,id,isDisabled=true) => {
+    const handleDisable = (e, id, isDisabled = true) => {
         e.preventDefault();
         e.stopPropagation();
 
-        disabled(props,id,isDisabled).then(function (response) {
-            notify(`Bravo - Le point de service a été ${isDisabled ? "désactivé" :"activé"} avec succes`,"success")
+        disabled(props, id, isDisabled).then(function (response) {
+            notify(`Bravo - Le point de service a été ${isDisabled ? "désactivé" : "activé"} avec succes`, "success")
             all(props).then((r) => { });
             handleCancel(e)
 
         })
-        .catch(function (error) {
-            
-            notify(`Erreur - Le point de service n'a pas été ${isDisabled ? "désactivé" :"activé"}`,"error")
-        });
+            .catch(function (error) {
+
+                notify(`Erreur - Le point de service n'a pas été ${isDisabled ? "désactivé" : "activé"}`, "error")
+            });
 
     }
     const rowClickedHandler = (event, data, rowIndex) => {
@@ -441,7 +448,7 @@ const PointsServices = (props) => {
                                 classNamePrefix="react-select"
                                 style={styles}
                                 placeholder="Sélectionnez"
-                                value={props.unit ? {"label": props.unitLibelle, "value": props.unit } : "Sélectionner l'unité organisationnelle"}
+                                value={props.unit ? { "label": props.unitLibelle, "value": props.unit } : "Sélectionner l'unité organisationnelle"}
                                 // onChange={(e) => props.unitChanged(e.value)}
                                 onChange={handleChange1}
                             />
@@ -452,7 +459,7 @@ const PointsServices = (props) => {
                                 </div>
                             </small>
                         </div>
-                        
+
                         <div className="col s12 display-flex justify-content-end form-action">
                             {buttons}
                         </div>
@@ -468,7 +475,7 @@ const PointsServices = (props) => {
                                         <h4 className="card-title">Liste des points de services&nbsp;</h4>
                                     </div>
                                     <div className="col l6 m6 s12" style={{ textAlign: "end" }}>
-                                        <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }} onClick={(e) => { handlePrint(config, columns, props.items, 0,["Actions"]) }} />
+                                        <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }} onClick={(e) => { handlePrint(config, columns, props.items, 0, ["Actions"]) }} />
                                         <img src={excel} alt="" style={{ cursor: "pointer" }} onClick={(e) => { table2XLSX("Liste_des_unités_opérationnelles" + today().replaceAll("/", ""), "app-ps") }} />
                                     </div>
                                 </div>

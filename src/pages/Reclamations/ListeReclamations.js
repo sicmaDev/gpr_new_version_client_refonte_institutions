@@ -159,12 +159,12 @@ const ListeReclamations = (props) => {
   const [currentAudio, setCurrentAudio] = useState("");
   const [fond, setFond] = useState("");
 
-  let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))): undefined;
+  let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
   let hbt = (user.posteDto.habilitations).split(',');
   let addR = (user.additionalRole);
 
 
-  useEffect(() => {}, [showAudioPlayer, currentAudio]);
+  useEffect(() => { }, [showAudioPlayer, currentAudio]);
 
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
@@ -206,10 +206,10 @@ const ListeReclamations = (props) => {
   useEffect(() => {
     if (mode === 1) {
       props.itemsChanged([])
-      listeTousStatuts(props).then((r) => {});
+      listeTousStatuts(props).then((r) => { });
     } else {
       props.itemsChanged([])
-      listeTousStatutsOffline(props).then((r) => {});
+      listeTousStatutsOffline(props).then((r) => { });
     }
     //couleurs
     let couleurs = [
@@ -254,6 +254,13 @@ const ListeReclamations = (props) => {
       key: "code",
       text: "Code",
       className: "code",
+      align: "left",
+      sortable: true,
+    },
+    {
+      key: "codeClient",
+      text: "Code client",
+      className: "codeClient",
       align: "left",
       sortable: true,
     },
@@ -374,7 +381,7 @@ const ListeReclamations = (props) => {
         if (mode === 1) {
           cmp = claim.objet.risqueLevel
         } else {
-          if (claim.id !=="") {
+          if (claim.id !== "") {
             cmp = claim.objet.risqueLevel
           } else {
             let idO = objets.filter((e) => {
@@ -384,27 +391,27 @@ const ListeReclamations = (props) => {
             })
             cmp = (idO[0]).risqueLevel
           }
-          
+
         }
         switch (cmp) {
           case "MINEUR":
             if (claim.transmitted) {
               graviteElt = (
-              <>
-                <div className="df">
-                  <span className="green-text text-bold mr-2">Mineur</span>
-                  <div className="card-content red-text ml-4"><MoveUpIcon/></div>
-                </div>
-                
-              </>
-                
+                <>
+                  <div className="df">
+                    <span className="green-text text-bold mr-2">Mineur</span>
+                    <div className="card-content red-text ml-4"><MoveUpIcon /></div>
+                  </div>
+
+                </>
+
               );
-            }else{
+            } else {
               graviteElt = (
                 <span className="green-text text-bold">Mineur</span>
               );
             }
-           
+
             break;
           case "MOYEN":
             graviteElt = (
@@ -418,7 +425,7 @@ const ListeReclamations = (props) => {
             );
             break;
           default:
-           graviteElt = (
+            graviteElt = (
               <span className="chip indigo lighten-5">
                 <span className="indigo-text">Nan</span>
               </span>
@@ -565,7 +572,7 @@ const ListeReclamations = (props) => {
       );
       props.sessionChanged(data.session !== null ? data.session : "");
       props.selectedItemChanged(data);
-     
+
       getFillesApi(data.id, props);
       getClaimAudioApi(data.id, props);
     } else {
@@ -640,46 +647,46 @@ const ListeReclamations = (props) => {
         props.statusChanged(data.status ? data.status : "");
         let description = data.languageId
           ? JSON.parse(loadItemFromSessionStorage("app-langues")).filter(
-              (e) => {
-                return e.id === data.languageId;
-              }
-            )
+            (e) => {
+              return e.id === data.languageId;
+            }
+          )
           : "";
         let description1 = data.collectionChannelId
           ? JSON.parse(loadItemFromSessionStorage("app-supports")).filter(
-              (e) => {
-                return e.id === data.collectionChannelId;
-              }
-            )
+            (e) => {
+              return e.id === data.collectionChannelId;
+            }
+          )
           : "";
         let description2 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-              return e.id === data.objetId;
-            })
+            return e.id === data.objetId;
+          })
           : "";
 
         let description6 = data.objetId
-        ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
+          ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
             return e.id === data.objetId;
           })
-        : "";
+          : "";
 
         let description3 = data.productId
           ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
-              (e) => {
-                return e.id === data.productId;
-              }
-            )
+            (e) => {
+              return e.id === data.productId;
+            }
+          )
           : "";
         let description4 = data.servicePointId
           ? JSON.parse(loadItemFromSessionStorage("app-ps")).filter((e) => {
-              return e.id === data.servicePointId;
-            })
+            return e.id === data.servicePointId;
+          })
           : "";
         let description5 = data.collectorId
           ? JSON.parse(loadItemFromSessionStorage("app-users")).filter((e) => {
-              return e.id === data.collectorId;
-            })
+            return e.id === data.collectorId;
+          })
           : "";
 
         props.languageChanged(data.languageId ? description[0].libelle : "");
@@ -940,12 +947,12 @@ const ListeReclamations = (props) => {
       let solutions =
         interne === false
           ? Array.from(
-              props.solution.filter((e) => {
-                return (
-                  e.status === "APPROVED" && e.satisfactionMeasureDto !== null
-                );
-              })
-            )
+            props.solution.filter((e) => {
+              return (
+                e.status === "APPROVED" && e.satisfactionMeasureDto !== null
+              );
+            })
+          )
           : Array.from(props.solution);
       if (props.solution.length !== 0) {
         type =
@@ -953,8 +960,8 @@ const ListeReclamations = (props) => {
             ? " Détails du traitement - Interactions avec le client"
             : " Détails du traitement - En interne";
       }
-     
-  
+
+
       if (solutions.length !== 0) {
         details = (
           <>
@@ -983,11 +990,11 @@ const ListeReclamations = (props) => {
             </div>
             <div className="col s12">
               <h6 className="card-title">{type}</h6>
-  
+
               {/* let solutions =  */}
               {Array.from(solutions).map((solution) => {
                 // let fond = couleurs[getRandomInt(couleurs.length)];
-  
+
                 let mesure = "";
                 if (
                   solution.status === "APPROVED" &&
@@ -997,10 +1004,10 @@ const ListeReclamations = (props) => {
                     solution.satisfactionMeasureDto.status === "SATISFIED"
                       ? "Satisfait"
                       : solution.satisfactionMeasureDto.status === "UNSATISFIED"
-                      ? "Non satisfait"
-                      : solution.satisfactionMeasureDto.status === "PARTIAL"
-                      ? "Partiellement satisfait"
-                      : "";
+                        ? "Non satisfait"
+                        : solution.satisfactionMeasureDto.status === "PARTIAL"
+                          ? "Partiellement satisfait"
+                          : "";
                   mesure = (
                     <>
                       <Typography component="div">
@@ -1039,7 +1046,7 @@ const ListeReclamations = (props) => {
                     </>
                   );
                 }
-  
+
                 let approbation = "";
                 if (
                   solution.status === "UNAPPROVED" &&
@@ -1061,7 +1068,7 @@ const ListeReclamations = (props) => {
                             </div>
                           </div>
                         </div>
-  
+
                         <div>
                           <span
                             className="chip2"
@@ -1091,7 +1098,7 @@ const ListeReclamations = (props) => {
                     </>
                   );
                 }
-  
+
                 let enregistrement = (
                   <>
                     <Timeline>
@@ -1123,7 +1130,7 @@ const ListeReclamations = (props) => {
                               {formatDate(solution.createdAt)}
                             </span>
                           </Typography>
-  
+
                           <Typography className="pb-2" component="div">
                             <div className="row">
                               <div className="col l12 s12 pb-2" id="content">
@@ -1132,7 +1139,7 @@ const ListeReclamations = (props) => {
                                 </div>
                                 <div>{solution.content}</div>
                               </div>
-  
+
                               <div className="col l12 s12 pb-2" id="content">
                                 <div className="df pb-2">
                                   <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
@@ -1141,21 +1148,21 @@ const ListeReclamations = (props) => {
                                 <div>{solution.commentaire}</div>
                               </div>
                               {
-                                solution.satisfactionMeasureDto ? 
-                                  solution.satisfactionMeasureDto.commentaire !== null && solution.satisfactionMeasureDto.commentaire !== "" ? 
+                                solution.satisfactionMeasureDto ?
+                                  solution.satisfactionMeasureDto.commentaire !== null && solution.satisfactionMeasureDto.commentaire !== "" ?
 
-                                  <div
-                                    className="col l12 s12 pb-2"
-                                    id="content"
-                                  >
-                                    <div className="df pb-2">
-                                      <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
-                                      Commentaire du client
-                                    </div>
-                                    <div>{solution.satisfactionMeasureDto.commentaire}</div>
-                                  </div> : ""
+                                    <div
+                                      className="col l12 s12 pb-2"
+                                      id="content"
+                                    >
+                                      <div className="df pb-2">
+                                        <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
+                                        Commentaire du client
+                                      </div>
+                                      <div>{solution.satisfactionMeasureDto.commentaire}</div>
+                                    </div> : ""
 
-                                : ""
+                                  : ""
                               }
                             </div>
                           </Typography>
@@ -1166,7 +1173,7 @@ const ListeReclamations = (props) => {
                     </Timeline>
                   </>
                 );
-  
+
                 return <>{enregistrement}</>;
               })}
             </div>
@@ -1174,8 +1181,8 @@ const ListeReclamations = (props) => {
         );
       } else {
         details =
-        <>
-          <div className="row">
+          <>
+            <div className="row">
               <div className="col s12 df pb-2">
                 <span
                   className="chip indigo lighten-5"
@@ -1201,7 +1208,7 @@ const ListeReclamations = (props) => {
             <div className="mt-2">
               Aucune donnée
             </div>
-        </> 
+          </>
       }
     } else if (props.solution.length === 0) {
       let affectation = "";
@@ -1222,46 +1229,46 @@ const ListeReclamations = (props) => {
         details = "Cette réclamation est en attente de traitement";
       }
     }
-  } else{
+  } else {
     // console.log(props.solution.length)
     //il n'a pas H14
     if (props.solution.length !== 0) {
       //LA RECLAMATION A AU MOINS UNE SOLUTION
-      details = 
-      <>
-        <div className="row pb-5 mt-4">
-          <div
-            className="col l12 s12 pb-3"
-            id="content"
-          >
-            <div className="df pb-2">
-              <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-              Solution
-            </div>
-            <div>
-            {props.solution[0] !== undefined
+      details =
+        <>
+          <div className="row pb-5 mt-4">
+            <div
+              className="col l12 s12 pb-3"
+              id="content"
+            >
+              <div className="df pb-2">
+                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                Solution
+              </div>
+              <div>
+                {props.solution[0] !== undefined
                   ? props.solution[0].content
                   : ""}
+              </div>
             </div>
-          </div>
 
-          <div
-            className="col l12 s12 pb-2"
-            id="content"
-          >
-            <div className="df pb-2">
-              <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-              Commentaire
-            </div>
-            <div>
-            {props.solution[0] !== undefined
+            <div
+              className="col l12 s12 pb-2"
+              id="content"
+            >
+              <div className="df pb-2">
+                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                Commentaire
+              </div>
+              <div>
+                {props.solution[0] !== undefined
                   ? props.solution[0].commentaire
                   : ""}
+              </div>
             </div>
           </div>
-        </div>
-      </>
-    }else if (props.solution.length === 0) {
+        </>
+    } else if (props.solution.length === 0) {
       //LA RECLAMATION N'A PAS DE SOLUTION
       let affectation = "";
       if (props.status === "AFFECTED") {
@@ -1283,7 +1290,7 @@ const ListeReclamations = (props) => {
     }
   }
 
- 
+
 
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
@@ -1459,14 +1466,14 @@ const ListeReclamations = (props) => {
 
   const printRecu = (e) => {
     e.preventDefault();
-  
-    let image = '<img src="'+INSTITUTION_LOGO+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
-    let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
-    entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">'+image+'</div>';
-    entete += '<div className="col l8 s7 m7"><b>'+INSTITUTION_NAME+'</b><br /><i><span>Numéro Agrément: </span>'+INSTITUTION_AGREMENT+'</i><br /><i><span>Addrese: </span>'+INSTITUTION_ADDRESS+'</i><br /><i><span>Tel: </span>'+INSTITUTION_TEL+'</i><br /><i><span>Email: </span>'+INSTITUTION_EMAIL+'</i></div></div>';
-  
 
-  
+    let image = '<img src="' + INSTITUTION_LOGO + '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+    let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
+    entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">' + image + '</div>';
+    entete += '<div className="col l8 s7 m7"><b>' + INSTITUTION_NAME + '</b><br /><i><span>Numéro Agrément: </span>' + INSTITUTION_AGREMENT + '</i><br /><i><span>Addrese: </span>' + INSTITUTION_ADDRESS + '</i><br /><i><span>Tel: </span>' + INSTITUTION_TEL + '</i><br /><i><span>Email: </span>' + INSTITUTION_EMAIL + '</i></div></div>';
+
+
+
     // Calcul des descriptions
     const description2 = props.selectedItem.objetId
       ? JSON.parse(loadItemFromSessionStorage("app-objets")).find(e => e.id === props.selectedItem.objetId)
@@ -1477,7 +1484,7 @@ const ListeReclamations = (props) => {
     const description5 = props.selectedItem.collectorId
       ? JSON.parse(loadItemFromSessionStorage("app-users")).find(e => e.id === props.selectedItem.collectorId)
       : {};
-  
+
     // Statut
     const statusMap = {
       SAVED: "Enregistrée",
@@ -1493,14 +1500,14 @@ const ListeReclamations = (props) => {
       CLASSED: "Classée",
     };
     const statusElt = statusMap[props.selectedItem.status] || "";
-  
+
     // Variables formatées
     const datee = props.selectedItem.createdAt ? formatDate(props.selectedItem.createdAt) : "";
     const telTemp = mode === 1 ? props.selectedItem.tel : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.tel : props.selectedItem.phone;
     const addByTemp = mode === 1 ? props.selectedItem.collector.firstAndLastName : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.collector.firstAndLastName : description5.firstAndLastName;
     const objetTemp = mode === 1 ? props.selectedItem.objet.libelle : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.objet.libelle : description2.libelle;
     const produitTemp = mode === 1 ? props.selectedItem.product.libelle : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.product.libelle : description3.libelle;
-  
+
     // Contenu du reçu avec marges inférieures ajustées
     const content = `
       ${entete}
@@ -1515,11 +1522,11 @@ const ListeReclamations = (props) => {
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Produit concerné :</b></div><div class="col l9" style="font-size:18px;">${produitTemp}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Statut :</b></div><div class="col l9" style="font-size:18px;">${statusElt}</div></div>
     `;
-  
+
     handlePrintAvance(content);
   };
-  
-  
+
+
   // const printRecu = (e) => {
   //   e.preventDefault();
   //   let image =
@@ -1742,7 +1749,7 @@ const ListeReclamations = (props) => {
     if (mode === 1) {
       cmp = element.objet?.risqueLevel
     } else {
-      if (element.id !=="") {
+      if (element.id !== "") {
         cmp = element.objet.risqueLevel
       } else {
         let idO = objets.filter((e) => {
@@ -1752,7 +1759,7 @@ const ListeReclamations = (props) => {
         })
         cmp = (idO[0]).risqueLevel
       }
-      
+
     }
     switch (cmp) {
       case "MINEUR":
@@ -1779,7 +1786,7 @@ const ListeReclamations = (props) => {
         );
         break;
     }
-    
+
     element.risqueLevel = graviteElt;
 
     //date createdAt
@@ -1798,64 +1805,64 @@ const ListeReclamations = (props) => {
   const prepareToPrint = async (type = "pdf") => {
     // console.log("mes données", props.session);
     let entete = "<h1>PV de Session</h1>"
-    let codeRec = "Réclamation : "+props.code;
+    let codeRec = "Réclamation : " + props.code;
     let participantsTab
     let guestsTab
     let votesTab
     let messagesTab
-    let participants 
-    let votes 
-    let messages 
-    
+    let participants
+    let votes
+    let messages
+
     //tableaux
-    participantsTab = (props?.session?.members).length !== 0 ? (props?.session?.members).map((e) => { return e.firstAndLastName}) : []
-    guestsTab = (props?.session?.guests).length !== 0 ? (props?.session?.guests).map((e) => { return e.firstAndLastName}) : []
-    votesTab = (props?.session?.messages).length !== 0 ? (props?.session?.messages).filter((e) => { if(e.vote === true){return e} }) : []
-    messagesTab = (props?.session?.messages).length !== 0 ? (props?.session?.messages).filter((e) => { if(e.vote === false){return e} }) : []
-   
+    participantsTab = (props?.session?.members).length !== 0 ? (props?.session?.members).map((e) => { return e.firstAndLastName }) : []
+    guestsTab = (props?.session?.guests).length !== 0 ? (props?.session?.guests).map((e) => { return e.firstAndLastName }) : []
+    votesTab = (props?.session?.messages).length !== 0 ? (props?.session?.messages).filter((e) => { if (e.vote === true) { return e } }) : []
+    messagesTab = (props?.session?.messages).length !== 0 ? (props?.session?.messages).filter((e) => { if (e.vote === false) { return e } }) : []
+
     // console.log("votesTab",votesTab)
     //participants et invités
     participants = "<div style='margin-top:75px!important'><h2>Participants</h2></div>";
     participants += "<ul>";
-    participantsTab.map((e)=>{ participants +=  "<li>"+e+"</li>"})
-    guestsTab.map((e)=>{ participants +=  "<li>"+e+"  (invité)  </li>"})
-    participants +="</ul>";
+    participantsTab.map((e) => { participants += "<li>" + e + "</li>" })
+    guestsTab.map((e) => { participants += "<li>" + e + "  (invité)  </li>" })
+    participants += "</ul>";
 
     //votes
- 
+
     votes = "<div style='margin-bottom:50px!important;'><h2>Votes</h2></div>"
-  
-    votesTab.map((e)=>{ 
+
+    votesTab.map((e) => {
       votes += "<table width='960' border='1'>"
-      votes += "<tr style='padding:80px!important;'><td style='margin:80px!important;'>Contenu</td><td>"+e.voteDto?.contenu+"</td></tr> "
-      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Commentaire</td><td>"+e.voteDto?.commentaire+"</td></tr>"
-      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Initié par</td><td>"+e.voteDto?.author?.firstAndLastName+"</td></tr>"
-      
+      votes += "<tr style='padding:80px!important;'><td style='margin:80px!important;'>Contenu</td><td>" + e.voteDto?.contenu + "</td></tr> "
+      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Commentaire</td><td>" + e.voteDto?.commentaire + "</td></tr>"
+      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Initié par</td><td>" + e.voteDto?.author?.firstAndLastName + "</td></tr>"
+
       votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Pour</td><td><ul>"
-      let votesPour = (e.voteDto?.userVote).length !== 0 ? (e.voteDto?.userVote).filter((vote) => { if(vote.voteType === "POUR"){return vote} }) : []
-      votesPour.map((k) => { votes += "<li>"+k?.author?.firstAndLastName+"</li>"})
+      let votesPour = (e.voteDto?.userVote).length !== 0 ? (e.voteDto?.userVote).filter((vote) => { if (vote.voteType === "POUR") { return vote } }) : []
+      votesPour.map((k) => { votes += "<li>" + k?.author?.firstAndLastName + "</li>" })
       votes += "</ul></td></tr>"
 
       votes += "<tr style='padding:80px!important;'><td>Contre</td><td><ul>"
-      let votesContre = (e.voteDto?.userVote).length !== 0 ? (e.voteDto?.userVote).filter((vote) => { if(vote.voteType === "CONTRE"){return vote} }) : []
-      votesContre.map((l) => { votes += "<li>"+l?.author?.firstAndLastName+"</li>"})
+      let votesContre = (e.voteDto?.userVote).length !== 0 ? (e.voteDto?.userVote).filter((vote) => { if (vote.voteType === "CONTRE") { return vote } }) : []
+      votesContre.map((l) => { votes += "<li>" + l?.author?.firstAndLastName + "</li>" })
       votes += "</ul></td></tr>"
 
       let decision = (e.voteDto?.choosed) === false ? "Solution non retenu" : "Solution retenu"
-      
-      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Décision</td><td style='padding:80px!important;'>"+decision+"</td></tr>"
+
+      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Décision</td><td style='padding:80px!important;'>" + decision + "</td></tr>"
       votes += "</table><br/><br /><br/><br /><br/><br />"
     })
-  
+
 
     //messages
     messages = "<div style='margin-bottom:50px!important;'><h2>Messages</h2></div>"
-    messagesTab.map((e)=>{ messages +=  "<div>"+e.content+" | "+e.createdAt+" | "+e.sender?.firstAndLastName+"</div><br/>"})
+    messagesTab.map((e) => { messages += "<div>" + e.content + " | " + e.createdAt + " | " + e.sender?.firstAndLastName + "</div><br/>" })
 
 
-   
-    let data = 
-      entete+
+
+    let data =
+      entete +
       "<br/><br />" +
       codeRec +
       "<br/><br />" +
@@ -1866,7 +1873,7 @@ const ListeReclamations = (props) => {
       messages +
       "<br/><br />" +
       '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>';
-   
+
     let results = data;
 
     return results;
@@ -1907,7 +1914,7 @@ const ListeReclamations = (props) => {
 
     // sleep(15000)
     // Specify file name
-    let filename = "PV_"+props.code +"_"+ today().replaceAll("/", "") + ".doc";
+    let filename = "PV_" + props.code + "_" + today().replaceAll("/", "") + ".doc";
 
     // Create download link element
     let downloadLink = document.createElement("a");
@@ -2048,7 +2055,7 @@ const ListeReclamations = (props) => {
                         onClick={(e) => {
                           table2XLS2X(
                             "Liste_des_réclamations" +
-                              today().replaceAll("/", ""),
+                            today().replaceAll("/", ""),
                             "brke",
                             selectOption,
                             props.items
@@ -2086,17 +2093,17 @@ const ListeReclamations = (props) => {
                           className="col l6 m6 s12"
                           style={{ textAlign: "end" }}
                         >
-                         {hbt.includes("H7") ? (
+                          {hbt.includes("H7") ? (
                             <img
                               src={pdf}
                               alt=""
                               style={{ marginRight: "15px", cursor: "pointer" }}
                               onClick={(e) => {
-                                 // Vérifie si hbt inclut "H8" avant d'exécuter handleImpression
+                                // Vérifie si hbt inclut "H8" avant d'exécuter handleImpression
                                 if (hbt.includes("H8")) {
                                   handleImpression();
                                   setChangeButtonPrint(true);
-                                }else{
+                                } else {
                                   handlePrint2(config, selectOption, props.items);
                                 }
                               }}
@@ -2105,28 +2112,28 @@ const ListeReclamations = (props) => {
 
                           {hbt.includes("H9") ? (
                             <img
-                            src={excel}
-                            alt=""
-                            style={{ cursor: "pointer" }}
-                            onClick={(e) => {
-                              if (hbt.includes("H10")) {
-                                handleImpression();
-                                setChangeButtonPrint(false);
-                              }else{
-                                table2XLS2X(
-                                  "Liste_des_réclamations" +
+                              src={excel}
+                              alt=""
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                if (hbt.includes("H10")) {
+                                  handleImpression();
+                                  setChangeButtonPrint(false);
+                                } else {
+                                  table2XLS2X(
+                                    "Liste_des_réclamations" +
                                     today().replaceAll("/", ""),
-                                  "brke",
-                                  selectOption,
-                                  props.items
-                                );
-                              }
-                              
-                            }}
-                          />
+                                    "brke",
+                                    selectOption,
+                                    props.items
+                                  );
+                                }
+
+                              }}
+                            />
                           ) : ""}
 
-                          
+
                         </div>
                       </div>
                       <div className="col s12">
@@ -2254,7 +2261,7 @@ const ListeReclamations = (props) => {
                                         ""
                                       ))
                                   }
-                                 
+
                                 </div>
                               </div>
                             </div>
@@ -2328,7 +2335,7 @@ const ListeReclamations = (props) => {
                                     (
                                       props.created_at_online !== "" ? (
                                         <>
-                                           <div
+                                          <div
                                             className="col l6 s12 df pb-2"
                                             id="content"
                                           >
@@ -2338,7 +2345,7 @@ const ListeReclamations = (props) => {
                                         </>
                                       ) : (
                                         <>
-                                           <div
+                                          <div
                                             className="col l6 s12 df pb-2"
                                             id="content"
                                           >
@@ -2410,36 +2417,36 @@ const ListeReclamations = (props) => {
                                 Détails du traitement
 
                                 {
-                                  (props.session !=="")  && (addR === "PILOTE" || addR === "DE") ? 
-                                    
+                                  (props.session !== "") && (addR === "PILOTE" || addR === "DE") ?
+
                                     <LoadingButton
-                                    onClick={(e) => {
-                                      if (mode === 1) {
-                                        printToWord()
-                                      } else {
-                                          notify("Passez en mode Online pour télécharger le PV de la session ","info")
-                                      }
-                                        
-                                    }}
-                                   
+                                      onClick={(e) => {
+                                        if (mode === 1) {
+                                          printToWord()
+                                        } else {
+                                          notify("Passez en mode Online pour télécharger le PV de la session ", "info")
+                                        }
+
+                                      }}
+
                                       className="waves-effect waves-effect-b waves-light btn-small"
                                       loading={props.etat3}
                                       loadingPosition="end"
                                       endIcon={<SaveIcon />}
                                       variant="contained"
-                                      sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+                                      sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
                                     >
                                       <span>Générer le PV de la session</span>
                                     </LoadingButton>
-                                  :""
+                                    : ""
                                 }
-                                
-                               
+
+
                               </h5>
                             </div>
                           </div>
 
-                          
+
 
                           <div className="row">
                             <div className="col s12 m12">

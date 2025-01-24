@@ -106,9 +106,9 @@ const ListeSuggestions = (props) => {
   const [interne, setInterne] = React.useState(false);
   const [changeButtonPrint, setChangeButtonPrint] = useState(false);
   const [impression, setImpression] = React.useState(false);
-  let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))): undefined;
+  let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
 
-  let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))): undefined;
+  let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
   let hbt = (user.posteDto.habilitations).split(',');
   let addR = (user.additionalRole);
 
@@ -132,10 +132,10 @@ const ListeSuggestions = (props) => {
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
     let audioListChild = props.selectedItemAudio.map((attachment) => {
-   
+
       return (
         <div className="col xl12 l12 m12 s12" key={attachment.id}>
-         
+
           <div className="card box-shadow-none mb-1 ">
             <div className="card-content">
               <div className="row">
@@ -150,29 +150,29 @@ const ListeSuggestions = (props) => {
                       ) / 100}{" "}
                       Ko
                     </div>
-                    <div className="app-file-last-access" id={"audio-"+attachment.id}>
+                    <div className="app-file-last-access" id={"audio-" + attachment.id}>
                       <a href=" "
-                         style={{ cursor: "pointer" }}
-                         onClick={(e) => {
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
                           e.preventDefault()
                           downloadAudioApi(attachment.id, attachment.name).then(
                             (data) => {
                               // console.log(data);
                               // console.log('data', data)
-                              
+
                               let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
                               let aud = new Audio(window.URL.createObjectURL(blobAudio));
                               setCurrentAudio(window.URL.createObjectURL(blobAudio))
-                              setAudioPlayer("audio-"+attachment.id)
+                              setAudioPlayer("audio-" + attachment.id)
                             }
                           )
-                         }}
-                      >{showAudioPlayer === "audio-"+attachment.id && ("")} {showAudioPlayer !=="audio-"+attachment.id && ("Afficher")}</a>
-                       
-                      {showAudioPlayer === "audio-"+attachment.id  && (<audio controls autoPlay onEnded={(e) => {setAudioPlayer("")}}>
-                        <source src= {currentAudio} type="audio/ogg"  />
+                        }}
+                      >{showAudioPlayer === "audio-" + attachment.id && ("")} {showAudioPlayer !== "audio-" + attachment.id && ("Afficher")}</a>
+
+                      {showAudioPlayer === "audio-" + attachment.id && (<audio controls autoPlay onEnded={(e) => { setAudioPlayer("") }}>
+                        <source src={currentAudio} type="audio/ogg" />
                         Votre navigateur ne prend pas en charge l'élément audio.
-                      </audio>) }
+                      </audio>)}
                     </div>
                   </div>
                 </div>
@@ -193,10 +193,10 @@ const ListeSuggestions = (props) => {
   useEffect(() => {
     if (mode === 1) {
       props.itemsChanged([])
-      listeTousStatuts(props).then((r) => {});
+      listeTousStatuts(props).then((r) => { });
     } else {
       props.itemsChanged([])
-      listeTousStatutsOffline(props).then((r) => {});
+      listeTousStatutsOffline(props).then((r) => { });
     }
 
     window
@@ -228,13 +228,20 @@ const ListeSuggestions = (props) => {
       sortable: true,
     },
     {
+      key: "codeClient",
+      text: "Code client",
+      className: "codeClient",
+      align: "left",
+      sortable: true,
+    },
+    {
       key: "clientFirstAndLastName",
       text: "Client",
       className: "client",
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let nom = claim.clientFirstAndLastName !== "" ? claim.clientFirstAndLastName :<i>Anonyme</i>;
+        let nom = claim.clientFirstAndLastName !== "" ? claim.clientFirstAndLastName : <i>Anonyme</i>;
         return nom;
       },
     },
@@ -279,9 +286,9 @@ const ListeSuggestions = (props) => {
         return statusElt;
       },
     },
-    
+
     {
-      
+
       key: "createdAtFormated",
       text: "Enregistrée le",
       className: "created_at",
@@ -423,16 +430,16 @@ const ListeSuggestions = (props) => {
         props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
         props.contentChanged(data.content ? data.content : "");
         props.statusChanged(data.status ? data.status : "");
-        let description = data.languageId ? (JSON.parse(loadItemFromSessionStorage('app-langues'))).filter((e) => {return e.id === data.languageId}) : ""
-        let description1 = data.collectionChannelId ? (JSON.parse(loadItemFromSessionStorage('app-supports'))).filter((e) => {return e.id === data.collectionChannelId}) : ""
-        let description3 = data.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => {return e.id === data.productId}) : ""
-        let description4 = data.servicePointId ? (JSON.parse(loadItemFromSessionStorage('app-ps'))).filter((e) => {return e.id === data.servicePointId}) : ""
-        let description5 = data.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => {return e.id === data.collectorId}) : ""
-      
-        props.languageChanged(data.languageId ? description[0].libelle  : "");
+        let description = data.languageId ? (JSON.parse(loadItemFromSessionStorage('app-langues'))).filter((e) => { return e.id === data.languageId }) : ""
+        let description1 = data.collectionChannelId ? (JSON.parse(loadItemFromSessionStorage('app-supports'))).filter((e) => { return e.id === data.collectionChannelId }) : ""
+        let description3 = data.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => { return e.id === data.productId }) : ""
+        let description4 = data.servicePointId ? (JSON.parse(loadItemFromSessionStorage('app-ps'))).filter((e) => { return e.id === data.servicePointId }) : ""
+        let description5 = data.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => { return e.id === data.collectorId }) : ""
+
+        props.languageChanged(data.languageId ? description[0].libelle : "");
         props.collectChanged(data.collectionChannelId ? description1[0].libelle : "");
-        props.productChanged(data.productId ? description3[0].libelle  : "");
-        props.unitChanged(data.servicePointId ? description4[0].libelle  : "");
+        props.productChanged(data.productId ? description3[0].libelle : "");
+        props.unitChanged(data.servicePointId ? description4[0].libelle : "");
         props.createdByChanged(data.collectorId ? description5[0].firstAndLastName : "");
         props.createdAtChanged(data.createdAt ? data.createdAt : "");
 
@@ -442,7 +449,7 @@ const ListeSuggestions = (props) => {
       }
     }
 
-    
+
   };
 
   let statusElt;
@@ -502,7 +509,7 @@ const ListeSuggestions = (props) => {
         </>
       );
       break;
-   
+
     default:
       statusElt = "";
       break;
@@ -531,12 +538,12 @@ const ListeSuggestions = (props) => {
 
   let details;
 
-  if (props.status ==="TREAT") {
+  if (props.status === "TREAT") {
     let decision = props.solution === true ? "Pris en compte" : "Non pris en compte";
-    details = 
+    details =
       <>
         <div className="row mt-5">
-        
+
           <div
             className="col l12 s12 df pb-2"
             id="firstname"
@@ -573,19 +580,19 @@ const ListeSuggestions = (props) => {
 
           </div>
         </div>
-        
+
       </>
   } else {
-    details = 
-    <>
-      <div className="row">
-        <div className="col l12 m12 s12 mt-4">
-          Cette suggestion est en atente de traitement
+    details =
+      <>
+        <div className="row">
+          <div className="col l12 m12 s12 mt-4">
+            Cette suggestion est en atente de traitement
+          </div>
+
         </div>
-        
-      </div>
-    </>
-    
+      </>
+
   }
 
   let attachmentList;
@@ -653,25 +660,25 @@ const ListeSuggestions = (props) => {
   const printRecu = (e) => {
     e.preventDefault();
 
-    let image = '<img src="'+INSTITUTION_LOGO+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+    let image = '<img src="' + INSTITUTION_LOGO + '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
     let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
-    entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">'+image+'</div>';
-    entete += '<div className="col l8 s7 m7"><b>'+INSTITUTION_NAME+'</b><br /><i><span>Numéro Agrément: </span>'+INSTITUTION_AGREMENT+'</i><br /><i><span>Addrese: </span>'+INSTITUTION_ADDRESS+'</i><br /><i><span>Tel: </span>'+INSTITUTION_TEL+'</i><br /><i><span>Email: </span>'+INSTITUTION_EMAIL+'</i></div></div>';
-  
-  
+    entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">' + image + '</div>';
+    entete += '<div className="col l8 s7 m7"><b>' + INSTITUTION_NAME + '</b><br /><i><span>Numéro Agrément: </span>' + INSTITUTION_AGREMENT + '</i><br /><i><span>Addrese: </span>' + INSTITUTION_ADDRESS + '</i><br /><i><span>Tel: </span>' + INSTITUTION_TEL + '</i><br /><i><span>Email: </span>' + INSTITUTION_EMAIL + '</i></div></div>';
+
+
     let description3 = props.selectedItem.productId
       ? JSON.parse(loadItemFromSessionStorage('app-produits')).filter((e) => e.id === props.selectedItem.productId)
       : "";
     let description5 = props.selectedItem.collectorId
       ? JSON.parse(loadItemFromSessionStorage('app-users')).filter((e) => e.id === props.selectedItem.collectorId)
       : "";
-  
+
     let statusElt;
     let decision = "";
     let traiteur = "";
     let dtraitement = "";
     let solution = "";
-  
+
     switch (props.selectedItem.status) {
       case "SAVED":
         statusElt = "Enregistrée";
@@ -686,35 +693,35 @@ const ListeSuggestions = (props) => {
         statusElt = "";
         break;
     }
-  
+
     let datee = props.selectedItem.createdAt ? formatDate(props.selectedItem.createdAt) : "";
     let dater = props.selectedItem.receiptDateTime ? formatDate(props.selectedItem.receiptDateTime) : "";
-  
+
     let telTemp = mode === 1
       ? (props.selectedItem.tel || "<i>Non défini</i>")
       : (props.selectedItem.id && props.selectedItem.canal
-          ? (props.selectedItem.tel || "<i>Non défini</i>")
-          : props.selectedItem.phone);
-    
+        ? (props.selectedItem.tel || "<i>Non défini</i>")
+        : props.selectedItem.phone);
+
     let addByTemp = mode === 1
       ? props.selectedItem.collecteur.firstAndLastName
       : (props.selectedItem.id && props.selectedItem.canal
-          ? props.selectedItem.collecteur.firstAndLastName
-          : description5[0]?.firstAndLastName || "<i>Non défini</i>");
-  
+        ? props.selectedItem.collecteur.firstAndLastName
+        : description5[0]?.firstAndLastName || "<i>Non défini</i>");
+
     let produitTemp = mode === 1
       ? (props.selectedItem.produit ? props.selectedItem.produit.libelle : "<i>Non défini</i>")
       : (props.selectedItem.id && props.selectedItem.canal
-          ? (props.selectedItem.produit ? props.selectedItem.produit.libelle : "<i>Non défini</i>")
-          : (description3.length > 0 ? description3[0].libelle : "<i>Non défini</i>"));
-  
+        ? (props.selectedItem.produit ? props.selectedItem.produit.libelle : "<i>Non défini</i>")
+        : (description3.length > 0 ? description3[0].libelle : "<i>Non défini</i>"));
+
     let nomtemp = props.selectedItem.clientFirstAndLastName || "<i>Anonyme</i>";
     let addtemp = props.selectedItem.address || "<i>Non défini</i>";
-  
+
     if (props.selectedItem.status === "TREAT") {
       decision = props.selectedItem.accepted ? "Pris en compte" : "Non pris en compte";
       let dTemp = formatDate(props.selectedItem.treatAt);
-      
+
       solution = `
         <div class="row" style="margin-bottom: 15px;">
           <div class="col l3"><b style="font-size: 18px;">Décision:</b></div>
@@ -734,7 +741,7 @@ const ListeSuggestions = (props) => {
         </div>
       `;
     }
-  
+
     const name = `
       <div class="row" style="margin-bottom: 15px;">
         <div class="col l3"><b style="font-size: 18px;">Nom du client:</b></div>
@@ -788,7 +795,7 @@ const ListeSuggestions = (props) => {
         <div class="col l9" style="font-size: 18px;">${statusElt}</div>
       </div>
     `;
-  
+
     const toStri = `
       ${entete}
       ${code}
@@ -804,10 +811,10 @@ const ListeSuggestions = (props) => {
       ${traiteur}
       ${dtraitement}
     `;
-  
+
     handlePrintAvance(toStri);
   }
-  
+
   // const printRecu = (e)=>{
   //   e.preventDefault()
 
@@ -815,8 +822,8 @@ const ListeSuggestions = (props) => {
   //   let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
   //   entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">'+image+'</div>';
   //   entete += '<div className="col l8 s7 m7"><b>'+INSTITUTION_NAME+'</b><br /><i><span>Numéro Agrément: </span>'+INSTITUTION_AGREMENT+'</i><br /><i><span>Addrese: </span>'+INSTITUTION_ADDRESS+'</i><br /><i><span>Tel: </span>'+INSTITUTION_TEL+'</i><br /><i><span>Email: </span>'+INSTITUTION_EMAIL+'</i></div></div>';
-  
-    
+
+
   //   let description3 = (props.selectedItem.productId) ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => {return e.id === props.selectedItem.productId}) : ""
   //   let description5 = props.selectedItem.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => {return e.id === props.selectedItem.collectorId}) : ""
   //   // console.log("description3",description3==="")
@@ -827,7 +834,7 @@ const ListeSuggestions = (props) => {
   //   let dtraitement;
   //   let solution;
   //   switch (props.selectedItem.status) {
-     
+
   //     case "SAVED":
   //       statusElt = "Enregistrée"
   //       break;
@@ -846,26 +853,26 @@ const ListeSuggestions = (props) => {
   //   let telTemp = mode ===1 ? (props.selectedItem.tel !== "" ? props.selectedItem.tel : "<i>Non défini</i>") : (props.selectedItem.id && props.selectedItem.canal) ? (props.selectedItem.tel !== "" ? props.selectedItem.tel : "<i>Non défini</i>") : props.selectedItem.phone;
   //   let addByTemp = mode ===1 ? props.selectedItem.collecteur.firstAndLastName : (props.selectedItem.id && props.selectedItem.canal) ? props.selectedItem.collecteur.firstAndLastName : description5[0].firstAndLastName;
   //   let produitTemp = mode ===1 ? (props.selectedItem.produit !== null ? props.selectedItem.produit.libelle : "<i>Non défini</i>") : (props.selectedItem.id && props.selectedItem.canal) ? (props.selectedItem.produit !== null ? props.selectedItem.produit.libelle : "<i>Non défini</i>") : (description3!=="") ? description3[0].libelle : "<i>Non défini</i>";
-    
+
 
   //   let nomtemp = props.selectedItem.clientFirstAndLastName !== "" ? props.selectedItem.clientFirstAndLastName : "<i>Anonyme</i>"
   //   let addtemp = props.selectedItem.address !== "" ? props.selectedItem.address : "<i>Non défini</i>"
-    
+
   //   if (props.status === "TREAT") {
-     
+
   //     decision = props.selectedItem.accepted === true ? "Pris en compte" : "Non pris en compte";
   //     let dTemp = formatDate(props.selectedItem.treatAt)
-     
+
   //     solution ='<div class="row"><div class="col l3"><b style="font-size:20px"> Décision  :</b></div><div class="col l9" style="font-size:20px">'+decision+'</div></div><br/><br/><br/>'
   //     traiteur = '<div class="row"><div class="col l3"><b style="font-size:20px"> Traiteur  :</b></div><div class="col l9" style="font-size:20px">'+props.selectedItem.traiteur.firstAndLastName+'</div></div><br/><br/><br/>'
   //     dtraitement = '<div class="row"><div class="col l3"><b style="font-size:20px"> Date de traitement  :</b></div><div class="col l9" style="font-size:20px">'+dTemp+'</div></div><br/><br/><br/>'
-      
+
   //   } else{
   //     solution="";
   //     traiteur="";
   //     dtraitement="";
   //   }
-  
+
 
   //   const name ='<div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px"> Nom du reclamant :</b></div><div class="col l9" style="font-size:18px">'+nomtemp+'</div></div><br/><br/><br/>'
   //   const telephone ='<div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px"> Téléphone :</b></div><div class="col l9" style="font-size:18px">'+telTemp+'</div></div><br/><br/><br/>'
@@ -876,16 +883,16 @@ const ListeSuggestions = (props) => {
   //   const datereception ='<div class="row" style="margin-bottom:15px;"><div class="col l4"><b style="font-size:18px"> Date de reception de la suggestion :</b></div><div class="col l8" style="font-size:18px">'+props.selectedItem.receiptDateTime+'</div></div><br/><br/><br/>'
   //   const product ='<div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px"> Produit concerné  :</b></div><div class="col l9" style="font-size:18px">'+produitTemp+'</div></div><br/><br/><br/>'
   //   const statut ='<div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px"> Statut  :</b></div><div class="col l9" style="font-size:18px">'+statusElt+'</div></div><br/><br/><br/>'
-    
-    
+
+
   //   const toStri = entete+code+name+telephone+address+product+datereception+enregistrerpar+enregistrerle+statut
   //   // const toStri = code+name+telephone+address+product+datereception+enregistrerpar+enregistrerle+statut+solution+traiteur+dtraitement
   //   //  const name ='<label  className="active"> Nom & Prénoms:</label>'+props.selectedItem.recorded_by.firstname+" "+props.selectedItem.recorded_by.lastname
   //   handlePrintAvance(toStri)
-  
+
 
   // }
-   
+
 
   let content = [];
   content = props.items;
@@ -921,7 +928,7 @@ const ListeSuggestions = (props) => {
     element.createdAtFormated = createdAt;
   });
 
-   
+
 
 
   return (
@@ -1042,7 +1049,7 @@ const ListeSuggestions = (props) => {
                         onClick={(e) => {
                           table3XLS2X(
                             "Liste_des_suggestions" +
-                              today().replaceAll("/", ""),
+                            today().replaceAll("/", ""),
                             "brke",
                             selectOption,
                             props.items
@@ -1080,17 +1087,17 @@ const ListeSuggestions = (props) => {
                           className="col l6 m6 s12"
                           style={{ textAlign: "end" }}
                         >
-                            {hbt.includes("H7") ? (
+                          {hbt.includes("H7") ? (
                             <img
                               src={pdf}
                               alt=""
                               style={{ marginRight: "15px", cursor: "pointer" }}
                               onClick={(e) => {
-                                 // Vérifie si hbt inclut "H8" avant d'exécuter handleImpression
+                                // Vérifie si hbt inclut "H8" avant d'exécuter handleImpression
                                 if (hbt.includes("H8")) {
                                   handleImpression();
                                   setChangeButtonPrint(true);
-                                }else{
+                                } else {
                                   handlePrint3(config, selectOption, props.items);
                                 }
                               }}
@@ -1099,28 +1106,28 @@ const ListeSuggestions = (props) => {
 
                           {hbt.includes("H9") ? (
                             <img
-                            src={excel}
-                            alt=""
-                            style={{ cursor: "pointer" }}
-                            onClick={(e) => {
-                              if (hbt.includes("H10")) {
-                                handleImpression();
-                                setChangeButtonPrint(false);
-                              }else{
-                                table3XLS2X(
-                                  "Liste_des_suggestions" +
+                              src={excel}
+                              alt=""
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                if (hbt.includes("H10")) {
+                                  handleImpression();
+                                  setChangeButtonPrint(false);
+                                } else {
+                                  table3XLS2X(
+                                    "Liste_des_suggestions" +
                                     today().replaceAll("/", ""),
-                                  "brke",
-                                  selectOption,
-                                  props.items
-                                );
-                              }
-                              
-                            }}
-                          />
+                                    "brke",
+                                    selectOption,
+                                    props.items
+                                  );
+                                }
+
+                              }}
+                            />
                           ) : ""}
 
-                         
+
                         </div>
                       </div>
                       <div className="col s12">
@@ -1248,7 +1255,7 @@ const ListeSuggestions = (props) => {
                                         ""
                                       ))
                                   }
-                                 
+
                                 </div>
                               </div>
                             </div>
@@ -1271,7 +1278,7 @@ const ListeSuggestions = (props) => {
                                     id="recorded_at"
                                   >
                                     <CalendarMonthIcon sx={{ mr: 2 }} /> Date de
-                                    réception : { props.recorded_at}
+                                    réception : {props.recorded_at}
                                   </div>
 
                                   <div
@@ -1323,7 +1330,7 @@ const ListeSuggestions = (props) => {
 
                                   </div>
                                   <div className="col l12 s12 pb-2" id="">
-                                  {audioList}
+                                    {audioList}
                                   </div>
                                   <div>{attachmentList}</div>
                                 </div>
