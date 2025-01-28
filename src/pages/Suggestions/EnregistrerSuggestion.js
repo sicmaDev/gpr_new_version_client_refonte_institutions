@@ -31,6 +31,11 @@ import RecorderControls from "../../components/recorder-controls";
 import { Mic } from "@mui/icons-material";
 import { downloadAudioApi, getClaimAudioApi } from "../../apis/Reclamations/ReclamationsApi";
 import RecordingsList from "../../components/recordings-list";
+import moment from "moment"
+import { downloadFilesApi } from "../../apis/WhatsappApi";
+import { reset } from "../../redux/actions/WhatsappActions";
+import { CancelOutlined } from "@mui/icons-material";
+
 
 // import DateInput from "../ui/DateInput";
 //import IntlTelInput from 'react-intl-tel-input';
@@ -56,7 +61,7 @@ const EnregistrerSuggestion = (props) => {
     let settingComplete = isSettingComplete()
     let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
     let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
-    let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !==0)  ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+    let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -345,6 +350,98 @@ const EnregistrerSuggestion = (props) => {
         return isValid
     }
 
+    // whatsapp
+
+    useEffect(() => {
+
+        if (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) {
+            clearComponentState();
+            props.contentChanged(transformConversation(props.whatsappSelectMessage))
+            props.phoneChanged(props.whatsappCurrentInbox.phone)
+        }
+    }, [""])
+
+    const transformConversation = (conversations = []) => {
+        var result = ""
+        const convert = conversations.sort((a, b) => {
+            return parseInt(a.date) - parseInt(b.date)
+        })
+
+        convert.forEach((msg) => {
+            if (msg.type === "chat") {
+
+                result += ` [${moment(parseInt(msg.date)).format("DD/MM/Y H:mm:ss")}]` + (msg.message_id.startsWith("false") ? " Plaignant: " : " GPR WHATSAPP: ") + " " + msg.content + " \n";
+            }
+        })
+        return result;
+    }
+
+    let whatsappAttachmentList;
+    // console.log("props.selectedItemFiles", props.selectedItemFiles);
+    if (props.whatsappSelectMessage.length > 0) {
+        const preuves = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat")) ?? []
+        let whatsappAttachmentListChild = preuves.map((msg) => {
+            let icon = guessExtension({ name: msg.type });
+            return (
+                <div className="col xl12 l12 m12 s12" key={msg.id}>
+                    <div className="card box-shadow-none mb-1 app-file-info">
+                        <div className="card-content">
+                            <div className="row">
+                                <div className="col xl1 l1 s1 m1">
+                                    <div className="app-file-content-logo">
+                                        <div className="fonticon hide">
+                                            <i className="material-icons ">more_vert</i>
+                                        </div>
+                                        <img
+                                            className="recent-file"
+                                            src={icon}
+                                            height="38"
+                                            width="30"
+                                            alt=""
+                                        />
+                                    </div>
+                                </div>
+                                <div className="col xl11 l11 s11 m11">
+                                    <div className="app-file-recent-details">
+                                        <div className="app-file-name font-weight-700 truncate">
+                                            {msg.content}
+                                        </div>
+                                        <div className="app-file-size">
+
+                                        </div>
+                                        <div className="app-file-last-access">
+                                            <span
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    // downloadFillesApi(attachment.id, attachment.name);
+                                                    downloadFilesApi(msg.content)
+                                                }}
+                                            >
+                                                Télécharger
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        });
+        whatsappAttachmentList = preuves.length ? (
+            <div className="col s12 app-file-content grey lighten-4">
+                <span className="app-file-label">Pieces joints(Whatsapp) </span>
+                <div className="row app-file-recent-access mb-3">
+                    {whatsappAttachmentListChild}
+                </div>
+            </div>
+        ) : <></>;
+    } else {
+    }
+
+
+
     const handleSubmit = (e) => {
         e.preventDefault()
         setShowSmsBox(false);
@@ -359,6 +456,9 @@ const EnregistrerSuggestion = (props) => {
             claim["phone"] = cleanPhoneNumber(props.phone);
             claim["collectionChannelId"] = props.collect;
             claim["servicePointId"] = props.unit;
+            claim["fromWhatsapp"] = (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false;
+            claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat"))
+            claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null
             claim["productId"] = props.product;
             claim["languageId"] = props.language;
             claim["folderCode"] = props.dossierimf;
@@ -388,11 +488,13 @@ const EnregistrerSuggestion = (props) => {
             if (mode === 1) {
                 addSuggestionApi(formData, props).then(() => {
                     handleCancel(e)
+                    props.resetWhatsapp()
                 })
 
             } else {
                 addSuggestionApiOffline(claim, props).then(() => {
                     handleCancel(e)
+                    props.resetWhatsapp()
                 })
             }
 
@@ -408,6 +510,9 @@ const EnregistrerSuggestion = (props) => {
         claim["gender"] = props.gender;
         claim["address"] = props.address;
         claim["phone"] = cleanPhoneNumber(props.phone);
+        claim["fromWhatsapp"] = (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false;
+        claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat"))
+        claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null
         claim["collectionChannelId"] = props.collect;
         claim["servicePointId"] = props.unit;
         claim["productId"] = props.product;
@@ -456,23 +561,33 @@ const EnregistrerSuggestion = (props) => {
 
             formButtons =
 
-            // (actif !== undefined && actif)  ?
+                // (actif !== undefined && actif)  ?
                 <>
-                    <LoadingButton
+                    {props.whatsappSelectMessage.length === 0 ? <LoadingButton
                         className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
                         onClick={handleSave}
                         loading={props.etat}
                         loadingPosition="end"
                         endIcon={<SaveIcon />}
                         variant="contained"
-                        sx={{ textTransform:"initial" }}
+                        sx={{ textTransform: "initial" }}
+                    >
+                        <span>Sauvegarder</span>
+                    </LoadingButton>
+                        : <LoadingButton
+                            className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                            onClick={() => { props.resetWhatsapp(); clearComponentState(); }}
+                            loading={props.etat}
+                            loadingPosition="end"
+                            endIcon={<CancelOutlined />}
+                            variant="contained"
+                            sx={{ textTransform: "initial" }}
                         >
-                            <span>Sauvegarder</span>
-                        </LoadingButton>
-
+                            <span>Annuler</span>
+                        </LoadingButton>}
                     <LoadingButton
                         onClick={(e) => {
-                        e.preventDefault();
+                            e.preventDefault();
                             if (handleValidation()) {
                                 if (mode === 1) {
                                     setShowSmsBox(true);
@@ -480,9 +595,9 @@ const EnregistrerSuggestion = (props) => {
                                 } else {
                                     handleSubmit(e)
                                 }
-                                
+
                             }
-                            
+
                             props.suggestionsRecordErrors(errors);
                         }}
                         className="waves-effect waves-effect-b waves-light btn-small"
@@ -490,11 +605,11 @@ const EnregistrerSuggestion = (props) => {
                         loadingPosition="end"
                         endIcon={<SaveIcon />}
                         variant="contained"
-                        sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+                        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
                     >
                         <span>Enregistrer</span>
                     </LoadingButton>
-                  
+
                 </>
             // :
             // <div className="card-alert card red lighten-5">
@@ -504,16 +619,16 @@ const EnregistrerSuggestion = (props) => {
             //         </ul>
             //     </div>
             // </div>
-            
+
         } else {
-            formButtons = 
-            // (actif !== undefined && actif)  ?
+            formButtons =
+                // (actif !== undefined && actif)  ?
                 <>
                     <button type="button" onClick={(e) => handleCancel(e)}
-                            className="waves-effect waves-effect-b waves-light red-text white lighten-4 btn-small mr-1">
-                            Annuler
-                        </button>
-
+                        className="waves-effect waves-effect-b waves-light red-text white lighten-4 btn-small mr-1">
+                        Annuler
+                    </button>
+                    {props.whatsappSelectMessage.length === 0 ?
                         <LoadingButton
                             className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
                             onClick={handleSave}
@@ -524,27 +639,27 @@ const EnregistrerSuggestion = (props) => {
                             sx={{ textTransform: "initial" }}
                         >
                             <span>Sauvegarder</span>
-                        </LoadingButton>
+                        </LoadingButton> : ""}
 
-                        <LoadingButton
-                            onClick={(e) => {
-                                e.preventDefault();
-                                if (handleValidation()) {
-                                    setShowSmsBox(true);
-                                    setOpen(true)
-                                }
-                                props.suggestionsRecordErrors(errors);
-                            }}
-                            className="waves-effect waves-effect-b waves-light btn-small"
-                            loading={props.etat2}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-                        >
+                    <LoadingButton
+                        onClick={(e) => {
+                            e.preventDefault();
+                            if (handleValidation()) {
+                                setShowSmsBox(true);
+                                setOpen(true)
+                            }
+                            props.suggestionsRecordErrors(errors);
+                        }}
+                        className="waves-effect waves-effect-b waves-light btn-small"
+                        loading={props.etat2}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                    >
                         <span>Enregistrer</span>
                     </LoadingButton>
-                  
+
                 </>
             // :
             // <div className="card-alert card red lighten-5">
@@ -554,7 +669,7 @@ const EnregistrerSuggestion = (props) => {
             //         </ul>
             //     </div>
             // </div>
-            
+
         }
     } else {
         let output = settingComplete.map(message => {
@@ -634,7 +749,7 @@ const EnregistrerSuggestion = (props) => {
 
     const rowClickedHandler = (event, data, rowIndex) => {
         clearComponentState();
-
+        props.resetWhatsapp();
         if (mode === 1) {
             props.idChanged(data.id ? data.id : "")
             props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");
@@ -852,7 +967,7 @@ const EnregistrerSuggestion = (props) => {
                                             Ko
                                         </div>
                                         <div className="app-file-last-access" id={"audio-" + attachment.id}>
-                                            <a
+                                            <span
                                                 style={{ cursor: "pointer" }}
                                                 onClick={(e) => {
                                                     downloadAudioApi(attachment.id, attachment.name).then(
@@ -866,7 +981,7 @@ const EnregistrerSuggestion = (props) => {
                                                         }
                                                     )
                                                 }}
-                                            >{showAudioPlayer === "audio-" + attachment.id && ("")} {showAudioPlayer !== "audio-" + attachment.id && ("Afficher")}</a>
+                                            >{showAudioPlayer === "audio-" + attachment.id && ("")} {showAudioPlayer !== "audio-" + attachment.id && ("Afficher")}</span>
 
                                             {showAudioPlayer === "audio-" + attachment.id && (<audio controls autoPlay onEnded={(e) => { setAudioPlayer("") }}>
                                                 <source src={currentAudio} type="audio/ogg" />
@@ -1322,7 +1437,7 @@ const EnregistrerSuggestion = (props) => {
                                                             {formAudio}
                                                         </div>
                                                         <div className="col l12 m12 s12 mb-3">
-                                                        <RecordingsList audio={audio} persistAll={clearAudio} />
+                                                            <RecordingsList audio={audio} persistAll={clearAudio} />
 
                                                         </div>
                                                         <div className="row">{audioList}</div>
@@ -1331,6 +1446,7 @@ const EnregistrerSuggestion = (props) => {
                                                         <div className="row">
                                                             {attachmentList}
                                                         </div>
+                                                        <div className="row">{whatsappAttachmentList}</div>
 
                                                     </div>
                                                 </div>
@@ -1356,6 +1472,11 @@ const EnregistrerSuggestion = (props) => {
 
 const mapStateToProps = (state) => {
     return {
+        whatsappInboxs: state.whatsapp.inboxs,
+        whatsappMessages: state.whatsapp.messages,
+        whatsappCurrentInbox: state.whatsapp.currentInbox,
+        whatsappSelectMessage: state.whatsapp.selectMessage,
+
         isLoading: state.suggestion_record.isLoading,
         id: state.suggestion_record.id,
         firstname: state.suggestion_record.firstname,
@@ -1515,6 +1636,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         selectedFilesChanged: (selectedFiles) => {
             dispatch(selectedFilesChanged(selectedFiles))
+        },
+        resetWhatsapp: () => {
+            dispatch(reset())
         },
     };
 };

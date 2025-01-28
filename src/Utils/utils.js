@@ -222,16 +222,22 @@ export const guessExtension = (attachment) => {
     if (attachment.name.split(".")[1]=== "xlsx" || attachment.name.split(".")[1] === "xls") {
         icon = excelIcon
     }
-    if (attachment.name.split(".")[1] === "docx" || attachment.name.split(".")[1] === "doc" || attachment.name.split(".")[1] === "rtf") {
+    if (attachment.name.split(".")[1] === "docx" || attachment.name.split(".")[1] === "doc" || attachment.name.split(".")[1] === "rtf" || attachment.name === "document") {
         icon = wordIcon
     }
     if (attachment.name.split(".")[1] === "jpg" || attachment.name.split(".")[1] === "png" || attachment.name.split(".")[1] === "jpeg") {
         icon = imageIcon
     }
+    if (attachment.name === "image" || attachment.name === "sticker" || attachment.name.split(".")[1] === "jpeg") {
+        icon = imageIcon
+    }
     if (attachment.name.split(".")[1] === "mp3" || attachment.name.split(".")[1] === "ogg" || attachment.name.split(".")[1] === "wav") {
         icon = audioIcon
     }
-    if (attachment.name.split(".")[1] === "mp4") {
+    if (attachment.name === "audio" || attachment.name === "ptt") {
+        icon = audioIcon
+    }
+    if (attachment.name.split(".")[1] === "mp4" || attachment.name === "video") {
         icon = videoIcon
     }
     return icon;

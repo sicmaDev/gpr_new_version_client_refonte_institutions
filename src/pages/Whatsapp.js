@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { connect } from 'react-redux';
 import { addSelectMessage, isFail, isOK, newConvert, removeSelectMessage, reset, resetConvert, resetSelectMessage, setCurrentInbox, setInboxs, setIsLoading, setMessage, setMessageIsLoading, setShowAside, setShowMessage, setStartConvert, toggleIsLoading, toggleMessageIsLoading, toggleShowAside } from '../redux/actions/WhatsappActions';
-import { Avatar, AvatarGroup, Badge, Box, Button, Checkbox, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Menu, Paper, styled, TextField, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Avatar, Badge, Box, Button, Checkbox, Dialog, DialogContent, DialogContentText, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Paper, styled, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { downloadFilesApi, getList } from '../apis/WhatsappApi';
-import { AudioFile, CheckBox, CheckBoxTwoTone, CheckRounded, CheckTwoTone, DownloadDoneTwoTone, DownloadTwoTone, FileDownload, FilePresent, FileUploadRounded, ImageRounded, MailSharp, MenuOpen, MessageRounded, Person, PictureAsPdf, PictureAsPdfOutlined, StickyNote2Rounded } from '@mui/icons-material';
-import { Card } from 'react-bootstrap';
-import { Dropdown } from '@mui/base/Dropdown';
-import { MenuButton, MenuItem } from '@mui/base';
+import { AudioFile, DownloadTwoTone, FileDownload, FilePresent, ImageRounded, MenuOpen, MessageRounded, Person, RefreshTwoTone, StickyNote2Rounded } from '@mui/icons-material';
+
+import { NavLink } from "react-router-dom";
+import moment from "moment"
+import "moment/locale/fr"
 
 const Container = styled(Box)(({ theme }) => ({
     display: "flex",
@@ -132,10 +133,12 @@ const ChatHeader = styled(Box)({
 const Whatsapp = (props) => {
 
 
+    const [claimTypeBox, setClaimTypeBox] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     useEffect(() => {
         getList(props);
+        moment.locale("fr")
 
     }, [""])
     const theme = useTheme();
@@ -173,9 +176,77 @@ const Whatsapp = (props) => {
         return newPath[newPath.length - 1] + ""
     }
 
+    const refreshConvert = (current)=>{
+        getList(props);
+        if(current){
+            props.setCurrentInbox(props.inboxs?.find(({id})=>current?.id === id) ?? null)
+        }
+
+    }
+
 
     return (
         <>
+
+
+            <div>
+                <Dialog open={claimTypeBox} onClose={() => { setClaimTypeBox(false) }}>
+                    <DialogContent>
+                       
+
+                        <div className="row">
+                            <div className="col l12 s12 pb-5">
+                                <div className="row">
+                                    <div className="col l12 s12 l12">
+                                        <span>
+                                            Cette conversation doit etre convertir en quelle type de plainte ?
+                                        </span>
+                                        <br />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="row">
+                            {/* <div className="col s12  justify-content-end mt-3"> */}
+                            <>
+
+
+                                <div className="col l4 m12 s12 mt-4">
+                                    <NavLink
+                                        to="/reclamations/enregistrement"
+                                        className="waves-effect waves-effect-b waves-light btn-small"
+                                        style={{ width: "100%" }}
+                                    >
+                                        Réclamations
+                                    </NavLink>
+                                </div>
+                                <div className="col l4 m12 s12 mt-4">
+                                    <NavLink
+                                        to="/denonciations/enregistrement"
+
+                                        className="waves-effect waves-effect-b waves-light btn-small"
+                                        style={{ width: "100%" }}
+                                    >
+                                        Dénonciations
+                                    </NavLink>
+                                </div>
+                                <div className="col l4 m12 s12 mt-4">
+                                    <NavLink
+                                        to="/suggestions/enregistrement"
+                                        className="waves-effect waves-effect-b waves-light btn-small"
+                                        style={{ width: "100%" }}
+                                    >
+                                        Suggestions
+                                    </NavLink>
+                                </div>
+
+                            </>
+                            {/* </div> */}
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            </div>
 
             <Container>
                 {isMobile && (
@@ -189,10 +260,10 @@ const Whatsapp = (props) => {
 
                                 {props.inboxs?.map((inbox) => {
 
-                                    return (<ListItemButton onClick={() => { props.setCurrentInbox(inbox) }} key={inbox.id} sx={{ pl: 1 }} className='lib'>
+                                    return (<ListItemButton  onClick={() => { props.resetConvert();props.setCurrentInbox(inbox) }} key={inbox.id} sx={{ pl: 1 }} className='lib' selected={inbox.id === props.currentInbox.id}>
 
-                                        <ListItemIcon>
-                                            <Avatar  ><MessageRounded /></Avatar>
+                                        <ListItemIcon >
+                                            <Avatar  ></Avatar>
                                         </ListItemIcon>
                                         <ListItemText primary={inbox.phone} secondary={inbox.messages[inbox.messages.length - 1] ? inbox.messages[inbox.messages.length - 1]["content"] : "-"} />
                                     </ListItemButton>)
@@ -207,20 +278,21 @@ const Whatsapp = (props) => {
                     <List>
                         <ChatHeader>
 
-                            <Box>
-                                <Typography variant="h6"><b>Liste des conversations</b> </Typography>
+                            <Box flex={"1 auto"}>
+                                <Typography variant="h6" ><b>Liste des conversations</b> </Typography>
 
                             </Box>
+                                <div><RefreshTwoTone onClick={()=>{refreshConvert(props.currentInbox)}} /></div> 
                         </ChatHeader>
 
                         {props.inboxs?.map((inbox) => {
 
-                            return (<ListItemButton onClick={() => { props.setCurrentInbox(inbox) }} key={inbox.id} sx={{ pl: 1 }} className='lib'>
+                            return (<ListItemButton onClick={() => { props.resetConvert();props.setCurrentInbox(inbox) }} key={inbox.id} sx={{ pl: 1 }} className='lib' selected={inbox.id === props.currentInbox?.id}>
 
                                 <ListItemIcon>
                                     <Avatar  ><Person /></Avatar>
                                 </ListItemIcon>
-                                <ListItemText primary={inbox.phone} secondary={inbox.messages[inbox.messages.length - 1] ? inbox.messages[inbox.messages.length - 1]["content"] : "-"} />
+                                <ListItemText primary={inbox.phone} secondary={inbox.messages[inbox.messages.length - 1] ? (inbox.messages[inbox.messages.length - 1]["type"] !== "chat" ? " Fichier" : inbox.messages[inbox.messages.length - 1]["content"]) : "-"} />
                             </ListItemButton>)
 
                         })}
@@ -262,7 +334,7 @@ const Whatsapp = (props) => {
                                     </Button></>) :
                                     <div style={{ display: "flex", alignItems: "center" }}>
                                         <b>{props.selectMessage.length} {props.selectMessage.length > 1 ? "messages" : "message"} dont({props.selectMessage.filter((data) => (data.type !== "chat"))?.length} preuves) </b>
-                                        {props.selectMessage.length > 0 && (<Button variant="contained" style={{  marginLeft: "4px" }} color="primary">
+                                        {props.selectMessage.length > 0 && (<Button onClick={(e) => { setClaimTypeBox(true) }} variant="contained" style={{ marginLeft: "4px" }} color="primary">
                                             Convertir
                                         </Button>)}
                                         <Button variant="contained" onClick={(e) => { props.setStartConvert(false) }} style={{ marginLeft: "4px" }} color="error">
@@ -292,7 +364,8 @@ const Whatsapp = (props) => {
                                             marginTop: 4
                                         }}
                                     >
-                                        {msg.date}
+
+                                        {moment(parseInt(msg.date)).fromNow()}
                                     </Typography>
                                     {/* </MessageBubble> */}
                                 </Message></> : <>

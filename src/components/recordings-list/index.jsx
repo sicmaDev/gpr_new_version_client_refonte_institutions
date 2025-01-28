@@ -11,7 +11,6 @@ export default function RecordingsList({ audio,persistAll=0 }) {
  
   useEffect(()=>{
     if(persistAll>0){
-      console.log('I run');
       recordings.forEach((re)=>{
         deleteAudio(re.key)
       })

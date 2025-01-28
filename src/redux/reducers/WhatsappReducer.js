@@ -8,7 +8,7 @@ const initialState = {
     messagesIsLoading: false,
     isSuccess: false,
     message: "",
-    messages:[],
+    messages: [],
     showMessage: false,
 
 };
@@ -17,7 +17,6 @@ const WhatsappReducer = (state = initialState, action) => {
     switch (action.type) {
         case 'SET_RESET':
             return {
-                ...state,
                 inboxs: [],
                 currentInbox: null,
                 selectMessage: [],
@@ -27,6 +26,7 @@ const WhatsappReducer = (state = initialState, action) => {
                 messagesIsLoading: false,
                 isSuccess: false,
                 message: "",
+                messages: [],
                 showMessage: false,
             };
         case 'SET_INBOXS':
@@ -38,8 +38,8 @@ const WhatsappReducer = (state = initialState, action) => {
             return {
                 ...state,
                 currentInbox: action.payload,
-                messages:action.payload?.messages ?? [],
-                messagesIsLoading:false,
+                messages: action.payload?.messages ?? [],
+                messagesIsLoading: false,
             };
         case 'RESET_SELECT_MESSAGE':
             return {
@@ -111,18 +111,18 @@ const WhatsappReducer = (state = initialState, action) => {
             return {
                 ...state,
                 isSuccess: true,
-                isLoading:false,
-                message:action.payload,
-                showMessage:true
+                isLoading: false,
+                message: action.payload,
+                showMessage: true
             };
         case 'IS_ERROR':
             return {
                 ...state,
                 isSuccess: false,
-                isLoading:false,
-                message:action.payload,
-                showMessage:true,
-                inboxs:[],
+                isLoading: false,
+                message: action.payload,
+                showMessage: true,
+                inboxs: [],
             };
         case 'SET_MESSAGE':
             return {
