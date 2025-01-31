@@ -75,10 +75,15 @@ export const addTempSuggestionApi = async (data, props) => {
     };
     await axios(config)
         .then(function (response) {
-
-            notify("Bravo - Suggestion sauvegardée", "success");
-            listeByStatut(props, "TEMP_SAVED")
             props.etatChanged(false)
+            if (response.data.status) {
+                notify("Bravo - Suggestion sauvegardée", "success");
+                listeByStatut(props, "TEMP_SAVED")
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
+
         })
         .catch(function (error) {
             props.etatChanged(false)
@@ -101,13 +106,18 @@ export const addSuggestionApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
-            notify("Bravo - Suggestion ajoutée", "success");
+            if (response.data.status) {
+                notify("Bravo - Suggestion ajoutée", "success");
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
             // listeTousStatuts(props)
         })
         .catch(function (error) {
             props.etat2Changed(false)
             notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreur",error)
+            console.log("erreur", error)
         });
 }
 
@@ -127,9 +137,13 @@ export const treatSuggestionApi = async (data, props) => {
         .then(function (response) {
             props.etatChanged(false)
             props.etat2Changed(false)
-            notify("Bravo - Suggestion traitée", "success");
+            if (response.data.status) {
+                notify("Bravo - Suggestion traitée", "success");
+                listeByStatut(props, "SAVED")
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
 
-            listeByStatut(props, "SAVED")
 
         })
         .catch(function (error) {

@@ -163,10 +163,14 @@ export const addTempClaimApi = async (data, props) => {
     };
     await axios(config)
         .then(function (response) {
-
-            notify("Bravo - Réclamation sauvegardée", "success");
-            listeByStatut(props, "TEMP_SAVED")
+            console.log("reponseaan", response)
             props.etatChanged(false)
+            if (response.data.status) {
+                notify("Bravo - Réclamation sauvegardée", "success");
+                listeByStatut(props, "TEMP_SAVED")
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
         })
         .catch(function (error) {
             props.etatChanged(false)
@@ -189,13 +193,19 @@ export const addClaimApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
-            notify("Bravo - Réclamation ajoutée", "success");
-            listeByStatut(props, "TEMP_SAVED")
+            if (response.data.status) {
+                // console.log("reponse1", response)
+                notify("Bravo - Réclamation ajoutée", "success");
+                listeByStatut(props, "TEMP_SAVED")
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etat2Changed(false)
             notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreur",error)
+            // console.log("rsponse1 ERREUR", error)
         });
 }
 
@@ -214,8 +224,13 @@ export const affectClaimApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etatChanged(false)
-            notify("Bravo - Réclamation affectée", "success");
-            listeTreat(props)
+            if (response.data.status) {
+                notify("Bravo - Réclamation affectée", "success");
+                listeTreat(props)
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etatChanged(false)
@@ -239,18 +254,22 @@ export const treatClaimApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
+            if (response.data.status) {
+                notify("Bravo - Réclamation traitée", "success");
+                if (data.type) {
+                    if (data.type === "assurance") {
+                        listeAssurance(props);
+                    } else if (data.type === "classee") {
+                        listeByStatut(props, "CLASSED");
+                    }
 
-            notify("Bravo - Réclamation traitée", "success");
-            if (data.type) {
-                if (data.type === "assurance") {
-                    listeAssurance(props);
-                } else if (data.type === "classee") {
-                    listeByStatut(props, "CLASSED");
+                } else {
+                    listeTreat(props)
                 }
-
             } else {
-                listeTreat(props)
+                notify("Erreur - Veuillez réessayer!", "error");
             }
+
 
         })
         .catch(function (error) {
@@ -275,8 +294,13 @@ export const approveClaimSolutionApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
-            notify("Bravo - Solution approuvée", "success");
-            listeTreat(props)
+            if (response.data.status) {
+                notify("Bravo - Solution approuvée", "success");
+                listeTreat(props)
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etat2Changed(false)
@@ -300,9 +324,14 @@ export const unapproveClaimSolutionApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
-            notify("Bravo - Solution désapprouvée", "success");
-            listeByStatut(props, "TREAT")
-            // listeTreat(props)
+            if (response.data.status) {
+                notify("Bravo - Solution désapprouvée", "success");
+                listeByStatut(props, "TREAT")
+                // listeTreat(props)
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etat2Changed(false)
@@ -326,8 +355,13 @@ export const mesurerClaimSolutionApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etatChanged(false)
-            notify("Bravo - Mesure de satisfaction effectuée", "success");
-            listeByStatut(props, "TREAT")
+            if (response.data.status) {
+                notify("Bravo - Mesure de satisfaction effectuée", "success");
+                listeByStatut(props, "TREAT")
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etatChanged(false)
@@ -351,8 +385,13 @@ export const addRecoursClaimSolutionApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etatChanged(false)
-            notify("Bravo - Recours externes ajouté(s)", "success");
-            listeAssurance(props);
+            if (response.data.status) {
+                notify("Bravo - Recours externes ajouté(s)", "success");
+                listeAssurance(props);
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etatChanged(false)
@@ -376,8 +415,13 @@ export const classifyClaimApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat3Changed(false)
-            notify("Bravo - Réclamation classée", "success");
-            listeAssurance(props);
+            if (response.data.status) {
+                notify("Bravo - Réclamation classée", "success");
+                listeAssurance(props);
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etat3Changed(false)
@@ -401,8 +445,13 @@ export const transmissionClaimApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat3Changed(false)
-            notify("Bravo - Réclamation transmise avec succès", "success");
-            listeTreat(props)
+            if (response.data.status) {
+                notify("Bravo - Réclamation transmise avec succès", "success");
+                listeTreat(props)
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etat3Changed(false)
