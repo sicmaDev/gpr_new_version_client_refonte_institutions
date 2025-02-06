@@ -1017,11 +1017,10 @@ const ListeReclamations = (props) => {
                             style={{ backgroundColor: fond }}
                           >
                             <span className="hero">
-                              Client {degre} : mesurée par{" "}
-                              {
-                                solution.satisfactionMeasureDto.measurer
-                                  .firstAndLastName
-                              }{" "}
+                              Client {degre} : mesurée {" "}
+                              {solution.satisfactionMeasureDto.measurer
+                                ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
+                                : " depuis le site web "}
                               le{" "}
                               {formatDate(
                                 solution.satisfactionMeasureDto.measureDateTime

@@ -466,6 +466,7 @@ const EnregistrerSuggestion = (props) => {
             claim["collectorId"] = user.id;
             claim["content"] = props.content;
             claim["code"] = props.code;
+            claim["id"] = props.id;
             // claim["files"] = props.selectedFiles;
             // claim["files"] = files;
 

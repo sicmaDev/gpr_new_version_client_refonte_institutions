@@ -210,12 +210,12 @@ const TraiterReclamation = (props) => {
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
-// console.log("userrrrrrrrrr",user.id)
+  // console.log("userrrrrrrrrr",user.id)
   //vérification if user is in guest
   let showJoinBtn = false;
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
   let potentialMember = props.session?.members?.filter((e) => e.id === user.id);
-  if((potentialGuest != null && potentialGuest.length > 0) || (potentialMember != null && potentialMember.length > 0 ) ){
+  if ((potentialGuest != null && potentialGuest.length > 0) || (potentialMember != null && potentialMember.length > 0)) {
     showJoinBtn = true;
   }
   // console.log("userrrrrrrrrr",potentialMember)
@@ -237,8 +237,8 @@ const TraiterReclamation = (props) => {
   const handleClickOpen = () => {
     compteur++;
     // console.log("affichage",open)
-   setOpen(!open);
-    
+    setOpen(!open);
+
   };
   // console.log("param 3", compteur);
   const history = useHistory();
@@ -251,7 +251,7 @@ const TraiterReclamation = (props) => {
     //   props.sessionChanged("");
     // }
     // clearComponentState();
-    
+
   };
   const handleAnonymat = () => {
     setAnonymat(!anonymat);
@@ -295,8 +295,8 @@ const TraiterReclamation = (props) => {
   }, []);
 
   useEffect(() => {
-     // console.log(publicChats);
-     if (bottomRef.current) {
+    // console.log(publicChats);
+    if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [publicChats]);
@@ -309,7 +309,7 @@ const TraiterReclamation = (props) => {
   useEffect(() => {
     //  console.log("params",props.match.params)
     //  console.log("params 2",props.id)
-    if(props.match.params.code !== "all" && alreadyCall === false){
+    if (props.match.params.code !== "all" && alreadyCall === false) {
       alreadyCall = true;
       async function details() {
         let cc = await axios({
@@ -321,11 +321,11 @@ const TraiterReclamation = (props) => {
             Authorization: "Bearer " + loadItemFromSessionStorage("token"),
           },
         });
-        if(cc.status >= 200 && cc.status <= 299) {
+        if (cc.status >= 200 && cc.status <= 299) {
           // await listeTreat(props);
           let data = cc.data.content;
           // console.log("tmp", data);
-         
+
           clearComponentState();
 
           //console.log("level",data.objet.risqueLevel)
@@ -435,23 +435,23 @@ const TraiterReclamation = (props) => {
           props.handledByChanged(
             data.treatmentAffectedTo ? data.treatmentAffectedTo.firstAndLastName : ""
           );
-            
+
           props.selectedItemChanged(data);
 
           getFillesApi(data.id, props);
           getClaimAudioApi(data.id, props);
           handleClickOpen();
           // if (props.id) {
-           
+
           // } 
           // setOpen((prev) => {
           //   return false;
           // });
         };
       }
-    
+
       details();
-     
+
     }
   }, []);
 
@@ -459,9 +459,9 @@ const TraiterReclamation = (props) => {
     // console.log("params",props.match.params)
     if (props.match.params.code === "all") {
       props.itemsChanged([])
-      listeTreat(props).then((r) => {});
+      listeTreat(props).then((r) => { });
     } else {
-     
+
     }
 
     window
@@ -483,39 +483,39 @@ const TraiterReclamation = (props) => {
       .addClass("highlight display dataTable dtr-inline");
     window.$("#as-react-datatable tr").addClass("cursor-pointer");
   }, [props.match.params.code]);
-  
+
   const [actif, setActif] = useState();
-  
-    const licenseControl = async () => {
-      try {
-        let resultat = await licenseInfo();
-        // console.log("resultat", resultat);
-        setActif(resultat.actif)
-        
-      } catch (error) {
-        console.error("Une erreur s'est produite :", error);
-      }
+
+  const licenseControl = async () => {
+    try {
+      let resultat = await licenseInfo();
+      // console.log("resultat", resultat);
+      setActif(resultat.actif)
+
+    } catch (error) {
+      console.error("Une erreur s'est produite :", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await licenseControl();
     };
-  
-    useEffect(() => {
-      const fetchData = async () => {
-        await licenseControl();
-      };
-  
-      fetchData();
-    }, []);
+
+    fetchData();
+  }, []);
 
 
   const maDivRef = useRef(null);
 
   const invitation = (event) => {
-    
-    let ids = (props?.session?.guests)?.map((e)=>{
+
+    let ids = (props?.session?.guests)?.map((e) => {
       return e.id;
     })
 
-   
-   
+
+
     let princ = users.filter((e) => {
       return (
         !ids.includes(e.id)
@@ -523,11 +523,11 @@ const TraiterReclamation = (props) => {
     })
     // console.log("idssssss",princ)
     const { value } = event.target;
-    if (value !=="") {
+    if (value !== "") {
       let coco = []
       coco = princ.filter((e) => {
         return (
-          ((e.firstAndLastName).includes(value)) 
+          ((e.firstAndLastName).includes(value))
         );
       })
 
@@ -537,9 +537,9 @@ const TraiterReclamation = (props) => {
       });
 
       // setUsersCGR(coco)
-      if (usersCGR.length!==0) {
+      if (usersCGR.length !== 0) {
         maDivRef.current.style.display = "block"
-      } else{
+      } else {
         setUsersCGR((prevList) => {
           const newList = coco;
           return princ;
@@ -551,17 +551,17 @@ const TraiterReclamation = (props) => {
     } else {
       maDivRef.current.style.display = "none"
     }
-    
+
     // console.log("valeur",value)
   }
 
-  const handleInvitation = (e,idi) => {
-     var chatMessage = {
+  const handleInvitation = (e, idi) => {
+    var chatMessage = {
       userId: idi,
       claimCode: props.code,
       status: "INVITATION",
     };
-   
+
     // console.log("codeconnected42", idi);
     stompClient.send(
       "/api/v1/session/join/guest/" + props.code + "",
@@ -570,13 +570,13 @@ const TraiterReclamation = (props) => {
     );
   }
 
-  const handleEject = (e,idi) => {
-     var chatMessage = {
+  const handleEject = (e, idi) => {
+    var chatMessage = {
       userId: idi,
       claimCode: props.code,
       status: "EJECTION",
     };
-   
+
     // console.log("codeconnected42", idi);
     stompClient.send(
       "/api/v1/session/eject/guest/" + props.code + "",
@@ -586,7 +586,7 @@ const TraiterReclamation = (props) => {
   }
 
   const connect = () => {
-    let Sock = new SockJS(HOST+"ws");
+    let Sock = new SockJS(HOST + "ws");
     stompClient = over(Sock);
     stompClient.connect({}, onConnected, onError);
   };
@@ -650,17 +650,17 @@ const TraiterReclamation = (props) => {
         // console.log("message", list);
         // setPublicChats(list);
         // if(publicChats !== null && publicChats.length > 0 ){
-          setPublicChats((prevPublicChats) => {
-            if(prevPublicChats=== undefined || prevPublicChats === null){
-              return [payloadData];
-            }
-            const newList = [...prevPublicChats, payloadData];
-            return newList;
-          });
+        setPublicChats((prevPublicChats) => {
+          if (prevPublicChats === undefined || prevPublicChats === null) {
+            return [payloadData];
+          }
+          const newList = [...prevPublicChats, payloadData];
+          return newList;
+        });
         // } else {
         //   setPublicChats( [payloadData]);
         // }
-      
+
         // props.sessionChanged(list);
         // console.log("message",publicChats)
         // publicChats.set(payloadData,publicChats);
@@ -683,15 +683,15 @@ const TraiterReclamation = (props) => {
           code: payloadData.code,
           firstAndLastName: payloadData.firstAndLastName,
         };
-       
+
         setGuests((prevGuests) => {
-          if(prevGuests === undefined || prevGuests === null){
+          if (prevGuests === undefined || prevGuests === null) {
             return [chatGuest]
           }
           let prevG = prevGuests.filter((e) => {
             return e.id !== chatGuest.id
           })
-          if(prevG === null || prevG === undefined){
+          if (prevG === null || prevG === undefined) {
             return [chatGuest]
           }
           const newList = [...prevG, chatGuest];
@@ -700,20 +700,20 @@ const TraiterReclamation = (props) => {
 
         break;
       case "EJECTION":
-       
+
         // console.log("payloadEjection",payloadData)
         let nouveaux = [];
         let list = props.session.guests;
-        if(list === undefined){
+        if (list === undefined) {
           setGuests([]);
         } else {
-          nouveaux = list.filter((e)=>{
+          nouveaux = list.filter((e) => {
             return e.id !== payloadData.id;
           })
-          
+
           //  console.log("ejection",nouveaux)
           setGuests((prevGuests) => {
-            if(prevGuests === undefined){
+            if (prevGuests === undefined) {
               return nouveaux
             }
             const newList = nouveaux;
@@ -722,13 +722,13 @@ const TraiterReclamation = (props) => {
         }
         // console.log("condition", payloadData.id === user.id)
         // console.log("condition 2", payloadData.id == user.id)
-        if(payloadData.id === user.id){
+        if (payloadData.id === user.id) {
           notify("Un membre du CGR vous a éjecté", "info");
           setTimeout(() => {
             window.location.reload();
           }, 3000);
         }
-      break;
+        break;
       case "CONFIRME_SOLUTION":
         notify("Bravo - Réclamation traitée", "success");
         setTimeout(() => {
@@ -757,7 +757,7 @@ const TraiterReclamation = (props) => {
   };
   const sendValue = () => {
     if (stompClient) {
-      if(userData.message !== ""){
+      if (userData.message !== "") {
         var chatMessage = {
           senderId: user.id,
           content: userData.message,
@@ -774,7 +774,7 @@ const TraiterReclamation = (props) => {
       } else {
         // setMessageError("Champ incr")
       }
-      
+
       // console.log("msg", publicChats);
     } else {
       // console.log("errorr", "nop");
@@ -828,14 +828,14 @@ const TraiterReclamation = (props) => {
 
   const handleVote = (e, info) => {
     const selectedValue = e.target.value;
-    if(selectedOption !== ""){
+    if (selectedOption !== "") {
       //removeVote
       let voteRequest = {
         removeVote: true,
         pour: selectedValue === "POUR",
         claimCode: props.code,
         authorId: user.id,
-        messageId:  info
+        messageId: info
       }
       // console.log("voteRequest - remove", voteRequest);
 
@@ -850,7 +850,7 @@ const TraiterReclamation = (props) => {
         pour: selectedValue === "POUR",
         claimCode: props.code,
         authorId: user.id,
-        messageId:  info
+        messageId: info
       }
       // console.log("voteRequest", voteRequest);
 
@@ -860,7 +860,7 @@ const TraiterReclamation = (props) => {
         JSON.stringify(voteRequest)
       );
     }
-    
+
 
     // Mettez à jour le nombre de votes en fonction de l'option sélectionnée
     // if (selectedValue === "for") {
@@ -902,7 +902,7 @@ const TraiterReclamation = (props) => {
         "/api/v1/session/confirm-solution/" + props.code + "",
         {},
         JSON.stringify(confirmSolution)
-      ); 
+      );
     }
   }
 
@@ -945,7 +945,7 @@ const TraiterReclamation = (props) => {
     setShowSelectPrintItem(false);
     setCurrentAudio("");
     setAudioPlayer("");
-    if(stompClient){
+    if (stompClient) {
       stompClient.disconnect();
       setUserData({ ...userData, connected: false });
       setPublicChats([]);
@@ -962,23 +962,23 @@ const TraiterReclamation = (props) => {
     // console.log("props.solution",props.solutionExistant)
     if (
       (props.solutionExistant === "") && (
-      props.solution === "" ||
-      props.solution === undefined ||
-      props.solution === null || props.solution.length ===0)
+        props.solution === "" ||
+        props.solution === undefined ||
+        props.solution === null || props.solution.length === 0)
     ) {
       isValid = false;
       errors["solution"] = "Champ incorrect";
     }
     if (
       (props.solutionExistant === "") && (props.comment === "" ||
-      props.comment === undefined ||
-      props.comment === null)
-      
+        props.comment === undefined ||
+        props.comment === null)
+
     ) {
       isValid = false;
       errors["comment"] = "Champ incorrect";
     }
-    console.log("isValid",isValid);
+    console.log("isValid", isValid);
     return isValid;
   };
 
@@ -990,21 +990,21 @@ const TraiterReclamation = (props) => {
       (props.solutionExistant === "") && (
         props.new_solution === "" ||
         props.new_solution === undefined ||
-        props.new_solution === null || props.new_solution.length ===0)
+        props.new_solution === null || props.new_solution.length === 0)
     ) {
       isValid = false;
       errors["new_solution"] = "Champ incorrect";
     }
     if (
       (props.solutionExistant === "") && (
-      props.new_comment === "" ||
-      props.new_comment === undefined ||
-      props.new_comment === null)
+        props.new_comment === "" ||
+        props.new_comment === undefined ||
+        props.new_comment === null)
     ) {
       isValid = false;
       errors["new_comment"] = "Champ incorrect";
     }
-  // console.log("isValid",isValid);
+    // console.log("isValid",isValid);
     return isValid;
   };
   const handleSubmit = (e) => {
@@ -1034,19 +1034,19 @@ const TraiterReclamation = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-       
-       
+
+
         let codi;
-        if (claim.session !==null && claim.session !=="") {
-          if (claim.status==="AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+        if (claim.session !== null && claim.session !== "") {
+          if (claim.status === "AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
             codi = (
               <>
                 <div className="df">
                   <span className="mr-1">{claim.code}</span>
-                  <div className="card-content red-text ml-4"><AlternateEmailIcon/></div>
-                  <div className="card-content red-text ml-4"><ForumIcon/></div>
+                  <div className="card-content red-text ml-4"><AlternateEmailIcon /></div>
+                  <div className="card-content red-text ml-4"><ForumIcon /></div>
                 </div>
-                
+
               </>
             );
           } else {
@@ -1054,24 +1054,24 @@ const TraiterReclamation = (props) => {
               <>
                 <div className="df">
                   <span className="mr-1">{claim.code}</span>
-                  <div className="card-content red-text ml-4"><ForumIcon/></div>
+                  <div className="card-content red-text ml-4"><ForumIcon /></div>
                 </div>
-                
+
               </>
-              
+
             );
           }
-         
-          
-        }else{
-          if (claim.status==="AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+
+
+        } else {
+          if (claim.status === "AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
             codi = (
               <>
                 <div className="df">
                   <span className="mr-1">{claim.code}</span>
-                  <div className="card-content red-text ml-4"><AlternateEmailIcon/></div>
+                  <div className="card-content red-text ml-4"><AlternateEmailIcon /></div>
                 </div>
-                
+
               </>
             );
           } else {
@@ -1079,7 +1079,7 @@ const TraiterReclamation = (props) => {
               <span className="">{claim.code}</span>
             );
           }
-         
+
         }
 
         return codi;
@@ -1145,12 +1145,12 @@ const TraiterReclamation = (props) => {
             );
             break;
           case "CLASSED":
-              statusElt = (
-                <span className="chip classedBgColor lighten-5">
-                  <span className="">Classée</span>
-                </span>
-              );
-              break;
+            statusElt = (
+              <span className="chip classedBgColor lighten-5">
+                <span className="">Classée</span>
+              </span>
+            );
+            break;
 
           default:
             statusElt = (
@@ -1175,16 +1175,16 @@ const TraiterReclamation = (props) => {
           case "MINEUR":
             if (claim.transmitted) {
               graviteElt = (
-              <>
-                <div className="df">
-                  <span className="green-text text-bold mr-2">Mineur</span>
-                  <div className="card-content red-text ml-4"><MoveUpIcon/></div>
-                </div>
-                
-              </>
-                
+                <>
+                  <div className="df">
+                    <span className="green-text text-bold mr-2">Mineur</span>
+                    <div className="card-content red-text ml-4"><MoveUpIcon /></div>
+                  </div>
+
+                </>
+
               );
-            }else{
+            } else {
               graviteElt = (
                 <span className="green-text text-bold">Mineur</span>
               );
@@ -1294,7 +1294,7 @@ const TraiterReclamation = (props) => {
           }
         });
         setAgentsMailOptions(agentMailOptions);
-        if (hbt.includes("H3") ) {
+        if (hbt.includes("H3")) {
           props.authorizeChanged(true);
         } else {
           props.authorizeChanged(false);
@@ -1363,17 +1363,17 @@ const TraiterReclamation = (props) => {
       data.affectedAnonymous !== null ? "" + data.affectedAnonymous + "" : ""
     );
     props.transmittedChanged(
-      data.transmitted !== null ? "" +data.transmitted + "" : ""
+      data.transmitted !== null ? "" + data.transmitted + "" : ""
     );
     props.transmittedToChanged(
-      data.transmittedTo !== null ? "" +data.transmittedTo.firstAndLastName + "" : ""
+      data.transmittedTo !== null ? "" + data.transmittedTo.firstAndLastName + "" : ""
     );
     // console.log("tr",data)
     props.sessionChanged(data.session !== null ? data.session : "");
     props.handledByChanged(
       data.treatmentAffectedTo ? data.treatmentAffectedTo.firstAndLastName : ""
     );
-   
+
 
     props.selectedItemChanged(data);
 
@@ -1381,48 +1381,48 @@ const TraiterReclamation = (props) => {
     getClaimAudioApi(data.id, props);
     // console.log("create",props.created_by);
   };
-  
+
   let tchat;
-  if ( (showJoinBtn)) {
+  if ((showJoinBtn)) {
     tchat = (
       <>
         {userData.connected ? (
           <div className="row containera clearfix mt-5">
-          
+
             <div class="people-list" id="people-list">
-            { props.session.createdBy.id === user.id ? 
-              <div class="search">
-                <input type="text" placeholder="Rechercher" onChange={invitation} />
-              </div> : null}
-              <div id="listI" ref={maDivRef} style={{display:"none" }}>
-               
+              {props.session.createdBy.id === user.id ?
+                <div class="search">
+                  <input type="text" placeholder="Rechercher" onChange={invitation} />
+                </div> : null}
+              <div id="listI" ref={maDivRef} style={{ display: "none" }}>
+
                 <ul class="list">
-                  <label className="text-xl mb-2" style={{color: "white", fontSize: "18px", fontWeight: "600"}}>A Inviter</label>
-                  
+                  <label className="text-xl mb-2" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>A Inviter</label>
+
                   {usersCGR.map((member) => (
                     <>
-                        <li class="clearfix" key={member.id} style={{ display: "flex", verticalAlign: "center"}}>
-                          <Avatar sx={{ width: 40, height: 40,backgroundColor:"#1E2188" }}>{member.firstAndLastName[0]}</Avatar>
-                          
-                          <div class="about" style={{ marginTop: "0px" }}>
-                            <div class="name">{member.firstAndLastName}</div>
-                            <div class="" style={{ fontSize:"10px" }}>
-                              {member.posteDto.libelle}
-                            </div>
+                      <li class="clearfix" key={member.id} style={{ display: "flex", verticalAlign: "center" }}>
+                        <Avatar sx={{ width: 40, height: 40, backgroundColor: "#1E2188" }}>{member.firstAndLastName[0]}</Avatar>
+
+                        <div class="about" style={{ marginTop: "0px" }}>
+                          <div class="name">{member.firstAndLastName}</div>
+                          <div class="" style={{ fontSize: "10px" }}>
+                            {member.posteDto.libelle}
                           </div>
-                          <IconButton   onClick={(e) => handleInvitation(e,member.id)} color="primary" aria-label="Ajouter"  style={{marginLeft: "auto"}}>
-                            <AddCircleOutline/>
-                          </IconButton>
-                        </li>
+                        </div>
+                        <IconButton onClick={(e) => handleInvitation(e, member.id)} color="primary" aria-label="Ajouter" style={{ marginLeft: "auto" }}>
+                          <AddCircleOutline />
+                        </IconButton>
+                      </li>
                     </>
-                  
+
                   ))}
-                  
+
                 </ul>
               </div>
-             
+
               <ul class="list">
-                <label className="text-xl mb-4" style={{color: "white", fontSize: "18px", fontWeight: "600"}}>Membres</label>
+                <label className="text-xl mb-4" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>Membres</label>
                 {props?.session?.members?.map((member) => (
                   <>
                     <li
@@ -1452,7 +1452,7 @@ const TraiterReclamation = (props) => {
                   </>
                 ))}
                 <div className="d-flex">
-                  <label className="text-xl" style={{color: "white", fontSize: "18px", fontWeight: "600"}}>Invité(s)</label>
+                  <label className="text-xl" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>Invité(s)</label>
                 </div>
 
                 {guests !== null && (guests)?.length > 0 && guests.at(0).firstAndLastName != null ? (
@@ -1460,26 +1460,26 @@ const TraiterReclamation = (props) => {
 
                     {(guests)?.map((guest) => (
                       <li className="clearfix" key={guest.id} style={{ display: "flex", verticalAlign: "center" }}>
-                        <Avatar sx={{width: 48, height: 48, backgroundColor: "#1E2188",}}>
+                        <Avatar sx={{ width: 48, height: 48, backgroundColor: "#1E2188", }}>
                           {guest !== null && guest.firstAndLastName != null && guest?.firstAndLastName[0]}
                         </Avatar>
 
                         <div className="about" style={{ marginTop: "9.5px" }}>
                           <div className="name text-bold">
-                          {guest?.firstAndLastName}
+                            {guest?.firstAndLastName}
                           </div>
                           {/* <div className="status">
                               <i className="fa fa-circle online"></i> online
                             </div> */}
                         </div>
-                       { !showJoinBtn ?
-                        <IconButton   onClick={(e) => handleEject(e,guest.id)} color="primary" aria-label="Ajouter"  style={{marginLeft: "auto"}}>
-                        <RemoveCircleOutlineIcon/>
-                      </IconButton>
-                       : null}
-                        
+                        {!showJoinBtn ?
+                          <IconButton onClick={(e) => handleEject(e, guest.id)} color="primary" aria-label="Ajouter" style={{ marginLeft: "auto" }}>
+                            <RemoveCircleOutlineIcon />
+                          </IconButton>
+                          : null}
+
                       </li>
-                      
+
                     ))}
                   </>
                 ) : (
@@ -1526,15 +1526,15 @@ const TraiterReclamation = (props) => {
                       </div>
                     </div>
                     <div style={{ marginLeft: "auto" }}>
-                      { props.session.createdBy.id === user.id ? 
+                      {props.session.createdBy.id === user.id ?
                         <>
                           <IconButton onClick={handleShowVoteField}>
                             <HowToVoteIcon />
                           </IconButton>
-                        </> : 
+                        </> :
                         null
                       }
-                     
+
                     </div>
                   </div>
                   <div className="chat-history">
@@ -1556,7 +1556,7 @@ const TraiterReclamation = (props) => {
                                       </span>
                                     </div>
                                     <div className="message other-message float-right">
-                                      <div className="row" style={{display: "grid", justifyContent:"end"}}>
+                                      <div className="row" style={{ display: "grid", justifyContent: "end" }}>
                                         <HowToVoteIcon />
                                       </div>
                                       <div>
@@ -1577,8 +1577,8 @@ const TraiterReclamation = (props) => {
                                         </blockquote>
                                       </div>
 
-                                      <FormControl component="fieldset" style={{  width: "100%"}}>
-                                        <FormLabel component="legend" className="text-white text-md text" style={{ color:"white" }}>
+                                      <FormControl component="fieldset" style={{ width: "100%" }}>
+                                        <FormLabel component="legend" className="text-white text-md text" style={{ color: "white" }}>
                                           Que votez-vous pour cette proposition
                                           ?
                                         </FormLabel>
@@ -1588,49 +1588,49 @@ const TraiterReclamation = (props) => {
                                           value={(chat?.voteDto?.userVote).filter((e) => {
                                             // console.log("filter", e.author.id === user.id  );
                                             // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                             return e.author.id === user.id 
-                                          })[0]?.voteType+""}
-                                          onChange={(e) => handleVote(e, chat.id)} 
+                                            return e.author.id === user.id
+                                          })[0]?.voteType + ""}
+                                          onChange={(e) => handleVote(e, chat.id)}
                                         >
-                                         
+
                                           <FormControlLabel
                                             value="POUR"
                                             control={
                                               <Radio
-                                              color="error"
+                                                color="error"
                                                 sx={{
                                                   "& .MuiSvgIcon-root": {
                                                     display: "none",
                                                     color: "white"
                                                   },
-                                                  
+
                                                 }}
                                               />
                                             }
                                             label="Pour"
-                                            style={{  color: "white", borderColor: "white"}}
+                                            style={{ color: "white", borderColor: "white" }}
                                           />
                                           <div>
-                                          <LinearProgress
-                                            variant="determinate" 
-                                            color="success"
-                                            value={((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                              return e.voteType === "POUR" 
-                                           }).length /((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                            return e.voteType === "POUR" 
-                                         }).length + (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "CONTRE" 
-                                       }).length)) * 100}
-                                          />
-                                          <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                             return e.voteType === "POUR" 
-                                          }).length} vote(s)</p>
+                                            <LinearProgress
+                                              variant="determinate"
+                                              color="success"
+                                              value={((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length)) * 100}
+                                            />
+                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
+
+                                              return e.voteType === "POUR"
+                                            }).length} vote(s)</p>
                                           </div>
-                                           
+
                                           <FormControlLabel
                                             value="CONTRE"
                                             control={<Radio sx={{
@@ -1642,90 +1642,90 @@ const TraiterReclamation = (props) => {
                                                 color: "white",
                                                 fontWeight: "bold"
                                               }
-                                            }}/>}
+                                            }} />}
                                             label="Contre"
-                                            style={{  color: "white", borderColor: "white"}}
+                                            style={{ color: "white", borderColor: "white" }}
                                           />
                                           <div>
-                                          <LinearProgress
-                                            variant="determinate"  color="success"
-                                            value={((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                              return e.voteType === "CONTRE" 
-                                           }).length /((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                            return e.voteType === "POUR" 
-                                         }).length + (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "CONTRE" 
-                                       }).length)) * 100}
-                                          />
-                                          <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                            // console.log("filter", e.author.id === user.id  );
-                                            // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                             return e.voteType === "CONTRE" 
-                                          }).length} vote(s)</p>
-                                        </div>
+                                            <LinearProgress
+                                              variant="determinate" color="success"
+                                              value={((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length)) * 100}
+                                            />
+                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
+                                              // console.log("filter", e.author.id === user.id  );
+                                              // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
+                                              return e.voteType === "CONTRE"
+                                            }).length} vote(s)</p>
+                                          </div>
                                         </RadioGroup>
-                                      
-                                        
+
+
                                       </FormControl>
-                                      
-                                        {(chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                           return e.voteType === "POUR" 
-                                        }).length > (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "CONTRE" 
-                                       }).length ? <>
-                                         <hr style={{ borderColor: "white" }} />
-                                         <div style={{marginLeft: "auto", marginRight: "auto" , display: "grid"}}>
-                                          {showConfirmChooseSolution ? 
-                                          <div style={{ display: "flex", justifyContent: "space-evenly"}}>
-                                            <label style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>Poursuivre ? </label>
-                                            <button  onClick={handleChooseVoteConfirm} className="" style={{
+
+                                      {(chat?.voteDto?.userVote).filter((e) => {
+
+                                        return e.voteType === "POUR"
+                                      }).length > (chat?.voteDto?.userVote).filter((e) => {
+
+                                        return e.voteType === "CONTRE"
+                                      }).length ? <>
+                                        <hr style={{ borderColor: "white" }} />
+                                        <div style={{ marginLeft: "auto", marginRight: "auto", display: "grid" }}>
+                                          {showConfirmChooseSolution ?
+                                            <div style={{ display: "flex", justifyContent: "space-evenly" }}>
+                                              <label style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>Poursuivre ? </label>
+                                              <button onClick={handleChooseVoteConfirm} className="" style={{
                                                 color: "black",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
-                                                  backgroundColor: "transparent",
-                                                  marginRight: "6px"
+                                                backgroundColor: "transparent",
+                                                marginRight: "6px"
                                               }}  >
                                                 Non
-                                            </button>
-                                            <button  onClick={(e) => handleChooseVote(chat.id)} className="" style={{
+                                              </button>
+                                              <button onClick={(e) => handleChooseVote(chat.id)} className="" style={{
                                                 color: "white",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
                                                 backgroundColor: "transparent"
-                                                
+
                                               }}  >
                                                 Oui
-                                            </button>
-                                          </div> : 
-                                          <>
-                                            <button  onClick={handleChooseVoteConfirm} className="" style={{
+                                              </button>
+                                            </div> :
+                                            <>
+                                              <button onClick={handleChooseVoteConfirm} className="" style={{
                                                 color: "white",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
                                                 backgroundColor: "transparent"
-                                                
+
                                               }}  >
                                                 Utiliser comme solution
-                                            </button>
-                                          </>}
-                                            
-                                          </div>
-                                       </>  : null }
-                                     
-                                    
+                                              </button>
+                                            </>}
+
+                                        </div>
+                                      </> : null}
+
+
                                     </div>
-                                    
+
                                   </li>
                                 </>
                               ) : (
@@ -1759,7 +1759,7 @@ const TraiterReclamation = (props) => {
                                       </span>
                                     </div>
                                     <div className="message my-message">
-                                    <div className="row" style={{display: "grid", justifyContent:"end"}}>
+                                      <div className="row" style={{ display: "grid", justifyContent: "end" }}>
                                         <HowToVoteIcon />
                                       </div>
                                       <div>
@@ -1780,8 +1780,8 @@ const TraiterReclamation = (props) => {
                                         </blockquote>
                                       </div>
 
-                                      <FormControl component="fieldset"  style={{  width: "100%"}}>
-                                        <FormLabel component="legend" className="text-white text-md text" style={{ color:"white" }}>
+                                      <FormControl component="fieldset" style={{ width: "100%" }}>
+                                        <FormLabel component="legend" className="text-white text-md text" style={{ color: "white" }}>
                                           Que votez-vous pour cette proposition
                                           ?
                                         </FormLabel>
@@ -1790,11 +1790,11 @@ const TraiterReclamation = (props) => {
                                           name="vote-options"
                                           value={(chat?.voteDto?.userVote).filter((e) => {
                                             // console.log("filter", e.author.id === user.id  );
-                                             return e.author.id === user.id 
-                                          })[0]?.voteType+""}
-                                          onChange={(e) => handleVote(e, chat.id)} 
+                                            return e.author.id === user.id
+                                          })[0]?.voteType + ""}
+                                          onChange={(e) => handleVote(e, chat.id)}
                                         >
-                                         
+
                                           <FormControlLabel
                                             value="POUR"
                                             control={
@@ -1811,28 +1811,28 @@ const TraiterReclamation = (props) => {
                                               />
                                             }
                                             label="Pour"
-                                            style={{  color: "white", borderColor: "white"}}
+                                            style={{ color: "white", borderColor: "white" }}
                                           />
                                           <div>
-                                          <LinearProgress
-                                            variant="determinate"   color="success"
-                                            value={((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                              return e.voteType === "POUR" 
-                                           }).length /((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                            return e.voteType === "POUR" 
-                                         }).length + (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "CONTRE" 
-                                       }).length)) * 100}
-                                          />
-                                          <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                            // console.log("filter", e.author.id === user.id  );
-                                             return e.voteType === "POUR" 
-                                          }).length} vote(s)</p>
+                                            <LinearProgress
+                                              variant="determinate" color="success"
+                                              value={((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length)) * 100}
+                                            />
+                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
+                                              // console.log("filter", e.author.id === user.id  );
+                                              return e.voteType === "POUR"
+                                            }).length} vote(s)</p>
                                           </div>
-                                           
+
                                           <FormControlLabel
                                             value="CONTRE"
                                             control={<Radio sx={{
@@ -1843,88 +1843,88 @@ const TraiterReclamation = (props) => {
                                                 color: "white",
                                                 fontWeight: "bold"
                                               }
-                                            }}/>}
+                                            }} />}
                                             label="Contre"
-                                            style={{  color: "white", borderColor: "white"}}
+                                            style={{ color: "white", borderColor: "white" }}
                                           />
                                           <div>
-                                          <LinearProgress
-                                            variant="determinate"  color="success"
-                                            value={((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                              return e.voteType === "CONTRE" 
-                                           }).length /((chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                            return e.voteType === "CONTRE" 
-                                         }).length + (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "POUR" 
-                                       }).length)) * 100}
-                                          />
-                                          <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                            // console.log("filter", e.author.id === user.id  );
-                                            // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                             return e.voteType === "CONTRE" 
-                                          }).length} vote(s)</p>
-                                        </div>
+                                            <LinearProgress
+                                              variant="determinate" color="success"
+                                              value={((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "CONTRE"
+                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
+
+                                                return e.voteType === "POUR"
+                                              }).length)) * 100}
+                                            />
+                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
+                                              // console.log("filter", e.author.id === user.id  );
+                                              // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
+                                              return e.voteType === "CONTRE"
+                                            }).length} vote(s)</p>
+                                          </div>
                                         </RadioGroup>
-                                      
-                                        
+
+
                                       </FormControl>
-                                     
+
                                       {(chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                           return e.voteType === "POUR" 
-                                        }).length > (chat?.voteDto?.userVote).filter((e) => {
-                                           
-                                          return e.voteType === "CONTRE" 
-                                       }).length ? <>
-                                         <hr style={{ borderColor: "white" }} />
-                                         <div style={{marginLeft: "auto", marginRight: "auto" , display: "grid"}}>
-                                         {showConfirmChooseSolution ? 
-                                          <div style={{ display: "flex", justifyContent: "space-evenly"}}>
-                                            <label style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>Poursuivre ? </label>
-                                            <button  onClick={handleChooseVoteConfirm} className="" style={{
+
+                                        return e.voteType === "POUR"
+                                      }).length > (chat?.voteDto?.userVote).filter((e) => {
+
+                                        return e.voteType === "CONTRE"
+                                      }).length ? <>
+                                        <hr style={{ borderColor: "white" }} />
+                                        <div style={{ marginLeft: "auto", marginRight: "auto", display: "grid" }}>
+                                          {showConfirmChooseSolution ?
+                                            <div style={{ display: "flex", justifyContent: "space-evenly" }}>
+                                              <label style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>Poursuivre ? </label>
+                                              <button onClick={handleChooseVoteConfirm} className="" style={{
                                                 color: "black",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
-                                                  backgroundColor: "transparent",
-                                                  marginRight: "6px"
+                                                backgroundColor: "transparent",
+                                                marginRight: "6px"
                                               }}  >
                                                 Non
-                                            </button>
-                                            <button  onClick={(e) => handleChooseVote(chat.id)} className="" style={{
+                                              </button>
+                                              <button onClick={(e) => handleChooseVote(chat.id)} className="" style={{
                                                 color: "white",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
                                                 backgroundColor: "transparent"
-                                                
+
                                               }}  >
                                                 Oui
-                                            </button>
-                                          </div> : 
-                                          <>
-                                            <button  onClick={handleChooseVoteConfirm} className="" style={{
+                                              </button>
+                                            </div> :
+                                            <>
+                                              <button onClick={handleChooseVoteConfirm} className="" style={{
                                                 color: "white",
                                                 fontSize: "16px",
                                                 border: "none",
                                                 cursor: "pointer",
                                                 fontWeight: 'bold',
                                                 backgroundColor: "transparent"
-                                                
+
                                               }}  >
                                                 Utiliser comme solution
-                                            </button>
-                                          </>}
-                                          </div>
-                                       </>  : null }
-                                     
+                                              </button>
+                                            </>}
+                                        </div>
+                                      </> : null}
+
                                     </div>
-                                    
+
                                   </li>
                                 </>
                               ) : (
@@ -1945,7 +1945,7 @@ const TraiterReclamation = (props) => {
                                 </>
                               )}
                             </>
-                            
+
                           )}
                         </>
                       ))}
@@ -2002,26 +2002,26 @@ const TraiterReclamation = (props) => {
                           {messageError}
                         </div> */}
                       </>
-                      
+
                     )}
                     <div className="">
-                    {showVoteField ? 
-                      <button onClick={handleShowVoteField} className="btn btn-secondary ml-4" style={{
-                        float: "right",
-                        color: "white",
-                        fontSize: "16px",
-                        textTransform: "uppercase",
-                        border: "none",
-                        cursor: "pointer",
-                        fontWeight: 'bold',
-                        backgroundColor: "gray"
-                        
-                      }}  >
-                        Annuler
-                      </button>
-                    : null
-                    }
-                    <button onClick={showVoteField ? sendVote : sendValue} className="btn btn-primary" style={{
+                      {showVoteField ?
+                        <button onClick={handleShowVoteField} className="btn btn-secondary ml-4" style={{
+                          float: "right",
+                          color: "white",
+                          fontSize: "16px",
+                          textTransform: "uppercase",
+                          border: "none",
+                          cursor: "pointer",
+                          fontWeight: 'bold',
+                          backgroundColor: "gray"
+
+                        }}  >
+                          Annuler
+                        </button>
+                        : null
+                      }
+                      <button onClick={showVoteField ? sendVote : sendValue} className="btn btn-primary" style={{
                         float: "right",
                         color: "white",
                         fontSize: "16px",
@@ -2031,11 +2031,11 @@ const TraiterReclamation = (props) => {
                         fontWeight: 'bold',
                         backgroundColor: "#84cd3e"
                       }} >
-                      {showVoteField ? "Soumettre pour vote" : "Envoyer"}
-                    </button>
+                        {showVoteField ? "Soumettre pour vote" : "Envoyer"}
+                      </button>
 
                     </div>
-                    
+
                   </div>
                 </div>
 
@@ -2065,177 +2065,181 @@ const TraiterReclamation = (props) => {
     let solutions =
       interne === false
         ? Array.from(
-            props.solution.filter((e) => {
-              return (
-                e.status === "APPROVED" && e.satisfactionMeasureDto !== null
-              );
-            })
-          )
+          props.solution.filter((e) => {
+            return (
+              e.status === "APPROVED" && e.satisfactionMeasureDto !== null
+            );
+          })
+        )
         : Array.from(props.solution);
-    
-    let couleurs = ["#333300","#00cc00","#99003d","#3333ff","#666666","#253858","#00875A","#36B37","#FFC400","#FF8B00","#FF5630","#5243AA","#0052CC","#00B8D9",];
+
+    let couleurs = ["#333300", "#00cc00", "#99003d", "#3333ff", "#666666", "#253858", "#00875A", "#36B37", "#FFC400", "#FF8B00", "#FF5630", "#5243AA", "#0052CC", "#00B8D9",];
 
     if (solutions.length !== 0) {
       details = (
         <>
           <div className="col s12">
-            
+
             {/* let solutions =  */}
             {Array.from(solutions).map((solution) => {
               let fond = couleurs[getRandomInt(couleurs.length)];
-              
+
               let mesure = "";
               if (solution.status === "APPROVED" && solution.satisfactionMeasureDto !== null) {
-                let degre = solution.satisfactionMeasureDto.status === "SATISFIED" ? "Satisfait" : solution.satisfactionMeasureDto.status === "UNSATISFIED" ? "Non satisfait" : solution.satisfactionMeasureDto.status === "PARTIAL" ? "Partiellement satisfait":"";
-                mesure = 
-                <>
-                  <Typography component="div" >
-                    <div>
-                      <span className="chip2" style={{ backgroundColor:fond }}>
-                        <span className="hero">
-                          Client {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
-                        </span>
-                      </span>
-                    </div>
-                  </Typography>
-                </>
-              }else if(solution.status === "APPROVED" && solution.satisfactionMeasureDto === null){
+                let degre = solution.satisfactionMeasureDto.status === "SATISFIED" ? "Satisfait" : solution.satisfactionMeasureDto.status === "UNSATISFIED" ? "Non satisfait" : solution.satisfactionMeasureDto.status === "PARTIAL" ? "Partiellement satisfait" : "";
                 mesure =
-                <>
-                  <span className="chip2" style={{ backgroundColor:fond }}>
-                    <span className="hero">
-                      En attente de mesure de satisfaction
+                  <>
+                    <Typography component="div" >
+                      <div>
+                        <span className="chip2" style={{ backgroundColor: fond }}>
+                          <span className="hero">
+                            Client {degre} : mesurée
+                            {solution.satisfactionMeasureDto.measurer
+                              ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
+                              : " depuis le site web "}
+                            le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                          </span>
+                        </span>
+                      </div>
+                    </Typography>
+                  </>
+              } else if (solution.status === "APPROVED" && solution.satisfactionMeasureDto === null) {
+                mesure =
+                  <>
+                    <span className="chip2" style={{ backgroundColor: fond }}>
+                      <span className="hero">
+                        En attente de mesure de satisfaction
+                      </span>
                     </span>
-                  </span>
-                </> 
+                  </>
               }
 
               let approbation = "";
               if (solution.status === "UNAPPROVED" && solution.motifDesaprobation !== null) {
-              
-                approbation = 
-                <>
-                  <Typography component="div" >
-                    <div className="row">
-                      <div
-                        className="col l12 s12 pb-2"
-                        id="content"
-                      >
-                        <div className="df pb-2">
-                          <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                          Motif de désapprobation
-                        </div>
-                        <div>{solution.motifDesaprobation !== null ? solution.motifDesaprobation:""}</div>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="chip2" style={{ backgroundColor:fond }}>
-                        <span className="hero">
-                          Désapprouvée par {solution.unApprouver.firstAndLastName} le {formatDate(solution.unApprouvedAt)}
-                        </span>
-                      </span>
-                    </div>
-                  </Typography>
-                </>
-              }else if(solution?.status === "UNAPPROVED" && solution?.motifDesaprobation === null){
+
                 approbation =
-                <>
-                  <span className="chip2" style={{ backgroundColor:fond }}>
-                    <span className="hero">
-                      En attente d'approbation
-                    </span>
-                  </span>
-                </> 
-              }
-    
-              let enregistrement = 
-              <>
-            
-                <Timeline
-                  
-                >
-                  <TimelineItem >
-                    <TimelineOppositeContent
-                      sx={{ m: 'auto 0',flex:"0" }}
-                      variant="body2"
-                      color="text.secondary"
-                    >
-                    </TimelineOppositeContent>
-                    <TimelineSeparator>
-                      <TimelineConnector />
-                      <TimelineDot style={{ fontSize:"25px" }}>
-                        <Avatar sx={{ width: 32, height: 32,backgroundColor:fond }}>{ index=index+1}</Avatar>
-                      </TimelineDot>
-                      <TimelineConnector />
-                    </TimelineSeparator>
-                    <TimelineContent sx={{ py: '12px', px: 2 }}>
-    
-                      <Typography variant="h6" component="span">
-                        {solution?.author?.firstAndLastName} - <span style={{ fontSize:"12px" }}>{ solution !==  null && solution?.createdAt !== null && solution?.createdAt !== undefined ? formatDate(solution?.createdAt) : ""}</span> 
-                      </Typography>
-    
-                      <Typography className="pb-2" component="div">
-                        <div className="row">
-                          <div
-                            className="col l12 s12 pb-2"
-                            id="content"
-                          >
-                            <div className="df pb-2">
-                              <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                              Solution
-                            </div>
-                            <div>{solution?.content}</div>
+                  <>
+                    <Typography component="div" >
+                      <div className="row">
+                        <div
+                          className="col l12 s12 pb-2"
+                          id="content"
+                        >
+                          <div className="df pb-2">
+                            <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                            Motif de désapprobation
                           </div>
-
-                          <div
-                            className="col l12 s12 pb-2"
-                            id="content"
-                          >
-                            <div className="df pb-2">
-                              <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                              Commentaire
-                            </div>
-                            <div>{solution?.commentaire}</div>
-                          </div>
-
-                          {
-                            solution.satisfactionMeasureDto ? 
-                              solution.satisfactionMeasureDto.commentaire !== null ? 
-
-                              <div
-                                className="col l12 s12 pb-2"
-                                id="content"
-                              >
-                                <div className="df pb-2">
-                                  <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
-                                  Commentaire du client
-                                </div>
-                                <div>{solution.satisfactionMeasureDto.commentaire}</div>
-                              </div> : ""
-
-                            : ""
-                          }
+                          <div>{solution.motifDesaprobation !== null ? solution.motifDesaprobation : ""}</div>
                         </div>
-                       
-                      </Typography>
-                      {approbation}
-                      {mesure}
-    
-                    </TimelineContent>
-                  </TimelineItem>
-          
-                </Timeline>
-            
-              </>
-          
+                      </div>
+                      <div>
+                        <span className="chip2" style={{ backgroundColor: fond }}>
+                          <span className="hero">
+                            Désapprouvée par {solution.unApprouver.firstAndLastName} le {formatDate(solution.unApprouvedAt)}
+                          </span>
+                        </span>
+                      </div>
+                    </Typography>
+                  </>
+              } else if (solution?.status === "UNAPPROVED" && solution?.motifDesaprobation === null) {
+                approbation =
+                  <>
+                    <span className="chip2" style={{ backgroundColor: fond }}>
+                      <span className="hero">
+                        En attente d'approbation
+                      </span>
+                    </span>
+                  </>
+              }
+
+              let enregistrement =
+                <>
+
+                  <Timeline
+
+                  >
+                    <TimelineItem >
+                      <TimelineOppositeContent
+                        sx={{ m: 'auto 0', flex: "0" }}
+                        variant="body2"
+                        color="text.secondary"
+                      >
+                      </TimelineOppositeContent>
+                      <TimelineSeparator>
+                        <TimelineConnector />
+                        <TimelineDot style={{ fontSize: "25px" }}>
+                          <Avatar sx={{ width: 32, height: 32, backgroundColor: fond }}>{index = index + 1}</Avatar>
+                        </TimelineDot>
+                        <TimelineConnector />
+                      </TimelineSeparator>
+                      <TimelineContent sx={{ py: '12px', px: 2 }}>
+
+                        <Typography variant="h6" component="span">
+                          {solution?.author?.firstAndLastName} - <span style={{ fontSize: "12px" }}>{solution !== null && solution?.createdAt !== null && solution?.createdAt !== undefined ? formatDate(solution?.createdAt) : ""}</span>
+                        </Typography>
+
+                        <Typography className="pb-2" component="div">
+                          <div className="row">
+                            <div
+                              className="col l12 s12 pb-2"
+                              id="content"
+                            >
+                              <div className="df pb-2">
+                                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                Solution
+                              </div>
+                              <div>{solution?.content}</div>
+                            </div>
+
+                            <div
+                              className="col l12 s12 pb-2"
+                              id="content"
+                            >
+                              <div className="df pb-2">
+                                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                Commentaire
+                              </div>
+                              <div>{solution?.commentaire}</div>
+                            </div>
+
+                            {
+                              solution.satisfactionMeasureDto ?
+                                solution.satisfactionMeasureDto.commentaire !== null ?
+
+                                  <div
+                                    className="col l12 s12 pb-2"
+                                    id="content"
+                                  >
+                                    <div className="df pb-2">
+                                      <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
+                                      Commentaire du client
+                                    </div>
+                                    <div>{solution.satisfactionMeasureDto.commentaire}</div>
+                                  </div> : ""
+
+                                : ""
+                            }
+                          </div>
+
+                        </Typography>
+                        {approbation}
+                        {mesure}
+
+                      </TimelineContent>
+                    </TimelineItem>
+
+                  </Timeline>
+
+                </>
+
               return (
                 <>
-              
+
                   {enregistrement}
-                
+
                 </>
               );
-    
+
             })}
           </div>
         </>);
@@ -2243,10 +2247,9 @@ const TraiterReclamation = (props) => {
     } else {
       details = "Aucune donnée";
     }
-  } else if (props.solution?.length === 0) 
-      {
-      details = "Cette réclamation est en attente de traitement";
-    
+  } else if (props.solution?.length === 0) {
+    details = "Cette réclamation est en attente de traitement";
+
   }
 
   const historique = (
@@ -2259,7 +2262,7 @@ const TraiterReclamation = (props) => {
             </summary>
             <div className="row">
               <div className="col s12 df pb-2">
-               
+
                 <span
                   className="chip indigo lighten-5"
                   style={{ cursor: "pointer" }}
@@ -2275,7 +2278,7 @@ const TraiterReclamation = (props) => {
                 <div className="row">{details}</div>
               </div>
             </div>
-            
+
           </details>
         </div>
       </div>
@@ -2396,20 +2399,20 @@ const TraiterReclamation = (props) => {
     e.preventDefault();
     // console.log("traitementclaim", props);
     if (handleValidation()) {
-    let claim = {};
-    claim["claimId"] = props.id;
-    claim["treatorId"] = user.id;
-    claim["solution"] = props.solution;
-    claim["commentaire"] = props.comment;
-    claim["existingId"] = props.solutionExistant;
-    claim["isExisting"] = props.solutionExistant !== "" ? true : false;
+      let claim = {};
+      claim["claimId"] = props.id;
+      claim["treatorId"] = user.id;
+      claim["solution"] = props.solution;
+      claim["commentaire"] = props.comment;
+      claim["existingId"] = props.solutionExistant;
+      claim["isExisting"] = props.solutionExistant !== "" ? true : false;
 
-    // console.log("traitementclaim", claim);
-    props.etat2Changed(true);
-    treatClaimApi(claim, props).then(() => {
-      handleCancel(e);
-      handleClose();
-    });
+      // console.log("traitementclaim", claim);
+      props.etat2Changed(true);
+      treatClaimApi(claim, props).then(() => {
+        handleCancel(e);
+        handleClose();
+      });
     } else {
     }
     props.claimHandleErrors(errors);
@@ -2518,11 +2521,11 @@ const TraiterReclamation = (props) => {
   let treatForm
   let solutionsListe = [];
   switch (props.status) {
-    
+
     case "SAVED":
       let solutions = props.selectedItem?.objet?.existingSolutions;
 
-       solutionsListe = solutions?.map((solution, index) => {
+      solutionsListe = solutions?.map((solution, index) => {
         let words = String(solution.content).split(" ");
         let thirtyWords = "";
         let taille = words.length;
@@ -2549,12 +2552,11 @@ const TraiterReclamation = (props) => {
       });
       // console.log("solutionsLISTE", solutionsListe);
 
-      if (hbt.includes("H6") || addR === "PILOTE")
-      {
+      if (hbt.includes("H6") || addR === "PILOTE") {
         if ((props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
-        user.firstAndLastName === props.created_by &&
-        props.transmitted === "true") {
-          affectForm="Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
+          user.firstAndLastName === props.created_by &&
+          props.transmitted === "true") {
+          affectForm = "Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
         } else {
           affectForm = (
             <>
@@ -2565,7 +2567,7 @@ const TraiterReclamation = (props) => {
                       <summary className="text-details">
                         Affectation de la réclamation
                       </summary>
-    
+
                       <div className="col s12 input-field">
                         <Select
                           options={agentsMailOptions}
@@ -2605,30 +2607,30 @@ const TraiterReclamation = (props) => {
                         />
                       </div>
                       <div className="col s12 display-flex justify-content-end mt-3">
-  
+
                         {
                           //  (actif !== undefined && actif)  ?
-                            <LoadingButton
-                              onClick={(e) => {
-                                e.preventDefault();
-                                if (handleValidationForAssign()) {
-                                  //setShowSelectPrintItem(true);
-                                  handleAssign(e);
-                                }
-                                props.claimHandleErrors(errors);
-                              }}
-                              className="waves-effect waves-effect-b waves-light btn-small"
-                              loading={props.etat}
-                              loadingPosition="end"
-                              endIcon={<SaveIcon />}
-                              variant="contained"
-                              sx={{
-                                backgroundColor: "#1e2188",
-                                textTransform: "initial",
-                              }}
+                          <LoadingButton
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (handleValidationForAssign()) {
+                                //setShowSelectPrintItem(true);
+                                handleAssign(e);
+                              }
+                              props.claimHandleErrors(errors);
+                            }}
+                            className="waves-effect waves-effect-b waves-light btn-small"
+                            loading={props.etat}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{
+                              backgroundColor: "#1e2188",
+                              textTransform: "initial",
+                            }}
                           >
                             <span>Affecter</span>
-                            </LoadingButton>
+                          </LoadingButton>
                           // :
                           // <div className="card-alert card red lighten-5">
                           //   <div className="card-content red-text">
@@ -2638,8 +2640,8 @@ const TraiterReclamation = (props) => {
                           //   </div>
                           // </div>
                         }
-                       
-                      
+
+
                       </div>
                     </details>
                   </div>
@@ -2648,19 +2650,19 @@ const TraiterReclamation = (props) => {
             </>
           );
         }
-      
-      }else{
-        affectForm=""
+
+      } else {
+        affectForm = ""
       }
-     
-      if (hbt.includes("H2","H3","H4") && ((props.created_by === user.firstAndLastName && props.transmitted === "false") || (props.transmittedTo === user.firstAndLastName && props.transmitted === "true" && addR==="MOLDUE")) )  {
+
+      if (hbt.includes("H2", "H3", "H4") && ((props.created_by === user.firstAndLastName && props.transmitted === "false") || (props.transmittedTo === user.firstAndLastName && props.transmitted === "true" && addR === "MOLDUE"))) {
         treatForm = (
           <>
-            
+
             {/* {solutionsListe} */}
             {props.authorize ? (
               <>
-                {solutionsListe !== undefined && solutionsListe.length !==0 ? 
+                {solutionsListe !== undefined && solutionsListe.length !== 0 ?
                   <div className="row">
                     <div className="col l12">
                       <details>
@@ -2671,9 +2673,9 @@ const TraiterReclamation = (props) => {
                       </details>
                     </div>
                   </div>
-                :""}
-                
-             
+                  : ""}
+
+
                 <form id="claimHandleForm">
                   <div className="row mb-2">
                     <div className="col s12">
@@ -2727,26 +2729,26 @@ const TraiterReclamation = (props) => {
                             </div>
                           </small>
                         </div>
-                       
+
                       </details>
                     </div>
                     <div className="col s12 display-flex justify-content-end mt-3 ">
                       {
                         //  (actif !== undefined && actif)  ?
-                          <LoadingButton
-                            onClick={handleSolve}
-                            className="waves-effect waves-effect-b waves-light btn-small"
-                            loading={props.etat2}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{
-                              backgroundColor: "#1e2188",
-                              textTransform: "initial",
-                            }}
-                          >
-                            <span>Résoudre</span>
-                          </LoadingButton>
+                        <LoadingButton
+                          onClick={handleSolve}
+                          className="waves-effect waves-effect-b waves-light btn-small"
+                          loading={props.etat2}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "#1e2188",
+                            textTransform: "initial",
+                          }}
+                        >
+                          <span>Résoudre</span>
+                        </LoadingButton>
                         // :
                         // <div className="card-alert card red lighten-5">
                         //   <div className="card-content red-text">
@@ -2757,12 +2759,12 @@ const TraiterReclamation = (props) => {
                         // </div>
 
                       }
-                      
+
                     </div>
                   </div>
                 </form>
-                
-               
+
+
               </>
             ) : (
               <div className="row">
@@ -2785,11 +2787,11 @@ const TraiterReclamation = (props) => {
             )}
           </>
         );
-      }else{
-        treatForm=""
+      } else {
+        treatForm = ""
       }
 
-      
+
 
       statusElt = (
         <span className="toTreatBgColor chip  z-depth-1">
@@ -2806,22 +2808,22 @@ const TraiterReclamation = (props) => {
       );
       let tmp;
       let afForm;
-      let personAffect = 
-      <>
-       {/* details affectation */}
-       <div className="row">
-        <div className="col s12 pb-2">
-            Réclamation affectée à{" "}
-            <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-            {props.assigned_by} le {formatDate(props.assignedAt)}
+      let personAffect =
+        <>
+          {/* details affectation */}
+          <div className="row">
+            <div className="col s12 pb-2">
+              Réclamation affectée à{" "}
+              <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
+              {props.assigned_by} le {formatDate(props.assignedAt)}
+            </div>
           </div>
-        </div>
-      </>
+        </>
 
 
-        let solutions1 = props.selectedItem?.objet?.existingSolutions;
+      let solutions1 = props.selectedItem?.objet?.existingSolutions;
 
-        solutionsListe = solutions1?.map((solution, index) => {
+      solutionsListe = solutions1?.map((solution, index) => {
         let words = String(solution.content).split(" ");
         let thirtyWords = "";
         let taille = words.length;
@@ -2845,99 +2847,99 @@ const TraiterReclamation = (props) => {
           content: solution.content,
           compteur: solution.compteur,
         };
-        });
-     
+      });
 
-       //ils peuvent reaffecter les réclamations en cas d'erreur ou d'indisponibilité
-      
-        afForm= (
-          <>
-           <div className="row mb-4">
-              <form id="claimAssignForm">
-                <div className="row">
-                  <div className="col s12">
-                    <details>
-                      <summary className="text-details">
-                        Réaffectation de la réclamation
-                      </summary>
 
-                      <div className="col s12 input-field">
-                        <Select
-                          options={agentsMailOptions}
-                          className="react-select-container mt-4"
-                          classNamePrefix="react-select"
-                          style={styles}
-                          placeholder="Sélectionner l'agent"
-                          onChange={(e) => {
-                            setReacfect(e.value);
-                            setAffectEmail(e.email);
-                          }}
-                        />
-                        <label htmlFor="gender" className={"active"}>
-                          Affectée à
-                          <span>
-                            (<span className="red-text darken-2 ">*</span>)
-                          </span>
-                        </label>
-                        <small className="errorTxt4">
-                          <div id="cpassword-error" className="error">
-                            {props.errors !== undefined
-                              ? props.errors.handled_by
-                              : ""}
-                          </div>
-                        </small>
-                      </div>
-                      <div className="col s12 input-field mb-2">
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              onChange={(e) => {
-                                handleAnonymat();
-                              }}
-                            />
+      //ils peuvent reaffecter les réclamations en cas d'erreur ou d'indisponibilité
+
+      afForm = (
+        <>
+          <div className="row mb-4">
+            <form id="claimAssignForm">
+              <div className="row">
+                <div className="col s12">
+                  <details>
+                    <summary className="text-details">
+                      Réaffectation de la réclamation
+                    </summary>
+
+                    <div className="col s12 input-field">
+                      <Select
+                        options={agentsMailOptions}
+                        className="react-select-container mt-4"
+                        classNamePrefix="react-select"
+                        style={styles}
+                        placeholder="Sélectionner l'agent"
+                        onChange={(e) => {
+                          setReacfect(e.value);
+                          setAffectEmail(e.email);
+                        }}
+                      />
+                      <label htmlFor="gender" className={"active"}>
+                        Affectée à
+                        <span>
+                          (<span className="red-text darken-2 ">*</span>)
+                        </span>
+                      </label>
+                      <small className="errorTxt4">
+                        <div id="cpassword-error" className="error">
+                          {props.errors !== undefined
+                            ? props.errors.handled_by
+                            : ""}
+                        </div>
+                      </small>
+                    </div>
+                    <div className="col s12 input-field mb-2">
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            onChange={(e) => {
+                              handleAnonymat();
+                            }}
+                          />
+                        }
+                        label="Cacher l'identité du plaignant ? "
+                      />
+                    </div>
+                    <div className="col s12 display-flex justify-content-end mt-3">
+
+
+                      <LoadingButton
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (handleValidationForReAssign()) {
+                            //setShowSelectPrintItem(true);
+                            handleReAssign(e);
                           }
-                          label="Cacher l'identité du plaignant ? "
-                        />
-                      </div>
-                      <div className="col s12 display-flex justify-content-end mt-3">
+                          props.claimHandleErrors(errors);
+                        }}
+                        className="waves-effect waves-effect-b waves-light btn-small"
+                        loading={props.etat}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{
+                          backgroundColor: "#1e2188",
+                          textTransform: "initial",
+                        }}
+                      >
+                        <span>Affecter</span>
+                      </LoadingButton>
 
-                     
-                            <LoadingButton
-                              onClick={(e) => {
-                                e.preventDefault();
-                                if (handleValidationForReAssign()) {
-                                  //setShowSelectPrintItem(true);
-                                  handleReAssign(e);
-                                }
-                                props.claimHandleErrors(errors);
-                              }}
-                              className="waves-effect waves-effect-b waves-light btn-small"
-                              loading={props.etat}
-                              loadingPosition="end"
-                              endIcon={<SaveIcon />}
-                              variant="contained"
-                              sx={{
-                                backgroundColor: "#1e2188",
-                                textTransform: "initial",
-                              }}
-                          >
-                            <span>Affecter</span>
-                            </LoadingButton>
-                         
-                        
-                        
-                      
-                      </div>
-                    </details>
-                  </div>
+
+
+
+                    </div>
+                  </details>
                 </div>
-              </form>
-            </div>
-          </>
-        );
-       
+              </div>
+            </form>
+          </div>
+        </>
+      );
 
-      if(props.solution?.length === 0){
+
+      if (props.solution?.length === 0) {
 
         if (props.handled_by === user.firstAndLastName) {
           tmp = (
@@ -2945,7 +2947,7 @@ const TraiterReclamation = (props) => {
               {/* resolution */}
               {props.authorize ? (
                 <>
-                  {solutionsListe !== undefined && solutionsListe.length !==0 ? 
+                  {solutionsListe !== undefined && solutionsListe.length !== 0 ?
                     <div className="row">
                       <div className="col l12">
                         <details>
@@ -2956,7 +2958,7 @@ const TraiterReclamation = (props) => {
                         </details>
                       </div>
                     </div>
-                  :""}
+                    : ""}
                   <form id="claimHandleAgainForm">
                     <div className="row">
                       <div className="col s12">
@@ -3013,20 +3015,20 @@ const TraiterReclamation = (props) => {
                           <div className="col s12 display-flex justify-content-end mt-3">
                             {
                               //  (actif !== undefined && actif)  ?
-                                <LoadingButton
-                                  onClick={handleReSolve}
-                                  className="waves-effect waves-effect-b waves-light btn-small"
-                                  loading={props.etat2}
-                                  loadingPosition="end"
-                                  endIcon={<SaveIcon />}
-                                  variant="contained"
-                                  sx={{
-                                    backgroundColor: "#1e2188",
-                                    textTransform: "initial",
-                                  }}
-                                >
-                                  <span>Traiter</span>
-                                </LoadingButton>
+                              <LoadingButton
+                                onClick={handleReSolve}
+                                className="waves-effect waves-effect-b waves-light btn-small"
+                                loading={props.etat2}
+                                loadingPosition="end"
+                                endIcon={<SaveIcon />}
+                                variant="contained"
+                                sx={{
+                                  backgroundColor: "#1e2188",
+                                  textTransform: "initial",
+                                }}
+                              >
+                                <span>Traiter</span>
+                              </LoadingButton>
                               // :
                               // <div className="card-alert card red lighten-5">
                               //   <div className="card-content red-text">
@@ -3035,10 +3037,10 @@ const TraiterReclamation = (props) => {
                               //       </ul>
                               //   </div>
                               // </div>
-    
-    
+
+
                             }
-                          
+
                           </div>
                         </details>
                       </div>
@@ -3073,7 +3075,7 @@ const TraiterReclamation = (props) => {
                 {personAffect}
                 {afForm}
                 {tmp}
-               
+
               </>
             );
           } else {
@@ -3081,11 +3083,11 @@ const TraiterReclamation = (props) => {
               <>
                 {personAffect}
                 {tmp}
-               
+
               </>
             );
           }
-         
+
         } else {
           if (hbt.includes("H14") || addR !== "MOLDUE") {
             tmp = (
@@ -3097,9 +3099,9 @@ const TraiterReclamation = (props) => {
                 </div>
               </div>
             )
-            
-          }else{
-            tmp=""
+
+          } else {
+            tmp = ""
           }
 
           if (hbt.includes("H6") || addR === "PILOTE") {
@@ -3107,17 +3109,17 @@ const TraiterReclamation = (props) => {
               <>
                 {afForm}
                 {tmp}
-                
+
               </>
             );
           } else {
             treatForm = <>{tmp}</>;
           }
 
-          
+
         }
-      }else{
-       
+      } else {
+
         // console.log("props.handle_by",props.handled_by)
         if (props.handled_by === user.firstAndLastName) {
           treatForm = (
@@ -3153,7 +3155,7 @@ const TraiterReclamation = (props) => {
                   </details>
                 </div>
               </div>
-    
+
               {/* retraitement */}
               {props.authorize ? (
                 <form id="claimHandleAgainForm">
@@ -3163,7 +3165,7 @@ const TraiterReclamation = (props) => {
                         <summary className="text-details">
                           Retraitement de la réclamation
                         </summary>
-    
+
                         <div className="col s12 input-field">
                           <textarea
                             id="solution"
@@ -3214,24 +3216,24 @@ const TraiterReclamation = (props) => {
                             </div>
                           </small>
                         </div>
-    
+
                         <div className="col s12 display-flex justify-content-end mt-3">
                           {
                             // (actif !== undefined && actif)  ?
-                              <LoadingButton
-                                onClick={handleReSolve}
-                                className="waves-effect waves-effect-b waves-light btn-small"
-                                loading={props.etat2}
-                                loadingPosition="end"
-                                endIcon={<SaveIcon />}
-                                variant="contained"
-                                sx={{
-                                  backgroundColor: "#1e2188",
-                                  textTransform: "initial",
-                                }}
-                              >
-                                <span>Retraiter</span>
-                              </LoadingButton>
+                            <LoadingButton
+                              onClick={handleReSolve}
+                              className="waves-effect waves-effect-b waves-light btn-small"
+                              loading={props.etat2}
+                              loadingPosition="end"
+                              endIcon={<SaveIcon />}
+                              variant="contained"
+                              sx={{
+                                backgroundColor: "#1e2188",
+                                textTransform: "initial",
+                              }}
+                            >
+                              <span>Retraiter</span>
+                            </LoadingButton>
                             // :
 
                             // <div className="card-alert card red lighten-5">
@@ -3244,7 +3246,7 @@ const TraiterReclamation = (props) => {
 
 
                           }
-                        
+
                         </div>
                       </details>
                     </div>
@@ -3271,11 +3273,11 @@ const TraiterReclamation = (props) => {
               )}
             </>
           );
-        } 
+        }
       }
-      
 
-    
+
+
       break;
     case "TO_APPROUVED":
       statusElt = (
@@ -3374,34 +3376,34 @@ const TraiterReclamation = (props) => {
                 <div className="col s12 display-flex justify-content-end mt-3">
                   {
                     //  (actif !== undefined && actif)  ?
-                      <>
-                        <LoadingButton
-                          onClick={handleDisapprove}
-                          className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                          loading={props.etat}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{ textTransform: "initial" }}
-                        >
-                          <span>Désapprouver</span>
-                        </LoadingButton>
+                    <>
+                      <LoadingButton
+                        onClick={handleDisapprove}
+                        className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                        loading={props.etat}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{ textTransform: "initial" }}
+                      >
+                        <span>Désapprouver</span>
+                      </LoadingButton>
 
-                        <LoadingButton
-                          onClick={handleApprove}
-                          className="waves-effect waves-effect-b waves-light btn-small"
-                          loading={props.etat2}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{
-                            backgroundColor: "#1e2188",
-                            textTransform: "initial",
-                          }}
-                        >
-                          <span>Approuver</span>
-                        </LoadingButton>
-                      </>
+                      <LoadingButton
+                        onClick={handleApprove}
+                        className="waves-effect waves-effect-b waves-light btn-small"
+                        loading={props.etat2}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{
+                          backgroundColor: "#1e2188",
+                          textTransform: "initial",
+                        }}
+                      >
+                        <span>Approuver</span>
+                      </LoadingButton>
+                    </>
                     // :
                     // <div className="card-alert card red lighten-5">
                     //   <div className="card-content red-text">
@@ -3411,7 +3413,7 @@ const TraiterReclamation = (props) => {
                     //   </div>
                     // </div>
                   }
-                 
+
                 </div>
               </details>
             </div>
@@ -3466,7 +3468,7 @@ const TraiterReclamation = (props) => {
                 </details>
               </div>
             </div>
-  
+
             {/* retraitement */}
             {props.authorize ? (
               <form id="claimHandleAgainForm">
@@ -3476,7 +3478,7 @@ const TraiterReclamation = (props) => {
                       <summary className="text-details">
                         Retraitement de la réclamation
                       </summary>
-  
+
                       <div className="col s12 input-field">
                         <textarea
                           id="solution"
@@ -3527,24 +3529,24 @@ const TraiterReclamation = (props) => {
                           </div>
                         </small>
                       </div>
-  
+
                       <div className="col s12 display-flex justify-content-end mt-3">
                         {
                           //  (actif !== undefined && actif)  ?
-                            <LoadingButton
-                              onClick={handleReSolve}
-                              className="waves-effect waves-effect-b waves-light btn-small"
-                              loading={props.etat2}
-                              loadingPosition="end"
-                              endIcon={<SaveIcon />}
-                              variant="contained"
-                              sx={{
-                                backgroundColor: "#1e2188",
-                                textTransform: "initial",
-                              }}
-                            >
-                              <span>Retraiter</span>
-                            </LoadingButton>
+                          <LoadingButton
+                            onClick={handleReSolve}
+                            className="waves-effect waves-effect-b waves-light btn-small"
+                            loading={props.etat2}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{
+                              backgroundColor: "#1e2188",
+                              textTransform: "initial",
+                            }}
+                          >
+                            <span>Retraiter</span>
+                          </LoadingButton>
                           // :
 
                           // <div className="card-alert card red lighten-5">
@@ -3557,7 +3559,7 @@ const TraiterReclamation = (props) => {
 
 
                         }
-                       
+
                       </div>
                     </details>
                   </div>
@@ -3616,16 +3618,15 @@ const TraiterReclamation = (props) => {
             </>
           )
         } else {
-          treatForm =""
+          treatForm = ""
         }
-        
+
       }
-     
+
       break;
     case "UNSATISFIED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE")
-      {
+      if (hbt.includes("H6") || addR === "PILOTE") {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -3677,28 +3678,28 @@ const TraiterReclamation = (props) => {
                     <div className="col s12 display-flex justify-content-end mt-3">
 
                       {
-                          // (actif !== undefined && actif)  ?
-                          <LoadingButton
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (handleValidationForAssign()) {
-                                //setShowSelectPrintItem(true);
-                                handleAssign(e);
-                              }
-                              props.claimHandleErrors(errors);
-                            }}
-                            className="waves-effect waves-effect-b waves-light btn-small"
-                            loading={props.etat}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{
-                              backgroundColor: "#1e2188",
-                              textTransform: "initial",
-                            }}
+                        // (actif !== undefined && actif)  ?
+                        <LoadingButton
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (handleValidationForAssign()) {
+                              //setShowSelectPrintItem(true);
+                              handleAssign(e);
+                            }
+                            props.claimHandleErrors(errors);
+                          }}
+                          className="waves-effect waves-effect-b waves-light btn-small"
+                          loading={props.etat}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "#1e2188",
+                            textTransform: "initial",
+                          }}
                         >
                           <span>Affecter</span>
-                          </LoadingButton>
+                        </LoadingButton>
                         // :
                         // <div className="card-alert card red lighten-5">
                         //   <div className="card-content red-text">
@@ -3708,8 +3709,8 @@ const TraiterReclamation = (props) => {
                         //   </div>
                         // </div>
                       }
-                      
-                    
+
+
                     </div>
                   </details>
                 </div>
@@ -3717,11 +3718,11 @@ const TraiterReclamation = (props) => {
             </form>
           </>
         );
-      
-      }else{
-        affectForm=""
+
+      } else {
+        affectForm = ""
       }
-      
+
       statusElt = (
         <span className="chip unSatisfiedBgColor lighten-5 mb-4">
           <span className="">Non Satisfait</span>
@@ -3730,114 +3731,7 @@ const TraiterReclamation = (props) => {
       break;
     case "PARTIAL_SATISFIED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE")
-       {
-         affectForm = (
-           <>
-             <form id="claimAssignForm">
-               <div className="row">
-                 <div className="col s12">
-                   <details>
-                     <summary className="text-details">
-                       Affectation de la réclamation
-                     </summary>
- 
-                     <div className="col s12 input-field">
-                       <Select
-                         options={agentsMailOptions}
-                         className="react-select-container mt-4"
-                         classNamePrefix="react-select"
-                         style={styles}
-                         placeholder="Sélectionner l'agent"
-                         onChange={(e) => {
-                           props.handledByChanged(e.value);
-                           setAffectEmail(e.email);
-                         }}
-                       />
-                       <label htmlFor="gender" className={"active"}>
-                         Affectée à
-                         <span>
-                           (<span className="red-text darken-2 ">*</span>)
-                         </span>
-                       </label>
-                       <small className="errorTxt4">
-                         <div id="cpassword-error" className="error">
-                           {props.errors !== undefined
-                             ? props.errors.handled_by
-                             : ""}
-                         </div>
-                       </small>
-                     </div>
-                     <div className="col s12 input-field mb-2">
-                       <FormControlLabel
-                         control={
-                           <Checkbox
-                             onChange={(e) => {
-                               handleAnonymat();
-                             }}
-                           />
-                         }
-                         label="Cacher l'identité du plaignant ? "
-                       />
-                     </div>
-                     <div className="col s12 display-flex justify-content-end mt-3">
- 
-                       {
-                          //  (actif !== undefined && actif)  ?
-                           <LoadingButton
-                             onClick={(e) => {
-                               e.preventDefault();
-                               if (handleValidationForAssign()) {
-                                 //setShowSelectPrintItem(true);
-                                 handleAssign(e);
-                               }
-                               props.claimHandleErrors(errors);
-                             }}
-                             className="waves-effect waves-effect-b waves-light btn-small"
-                             loading={props.etat}
-                             loadingPosition="end"
-                             endIcon={<SaveIcon />}
-                             variant="contained"
-                             sx={{
-                               backgroundColor: "#1e2188",
-                               textTransform: "initial",
-                             }}
-                         >
-                           <span>Affecter</span>
-                           </LoadingButton>
-                        //  :
-                        //  <div className="card-alert card red lighten-5">
-                        //    <div className="card-content red-text">
-                        //        <ul>
-                        //            Veuillez activer une licence.
-                        //        </ul>
-                        //    </div>
-                        //  </div>
-                       }
-                       
-                     
-                     </div>
-                   </details>
-                 </div>
-               </div>
-             </form>
-           </>
-         );
-       
-      }else{
-         affectForm=""
-      }
-       
-      statusElt = (
-        <span className="chip partialBgColor lighten-5 mb-4">
-          <span className="">Partiellement Satisfait</span>
-        </span>
-      );
-      break;
-    case "CLASSED":
-      //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE")
-      {
+      if (hbt.includes("H6") || addR === "PILOTE") {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -3889,28 +3783,133 @@ const TraiterReclamation = (props) => {
                     <div className="col s12 display-flex justify-content-end mt-3">
 
                       {
-                          // (actif !== undefined && actif)  ?
-                          <LoadingButton
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (handleValidationForAssign()) {
-                                //setShowSelectPrintItem(true);
-                                handleAssign(e);
-                              }
-                              props.claimHandleErrors(errors);
-                            }}
-                            className="waves-effect waves-effect-b waves-light btn-small"
-                            loading={props.etat}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{
-                              backgroundColor: "#1e2188",
-                              textTransform: "initial",
-                            }}
+                        //  (actif !== undefined && actif)  ?
+                        <LoadingButton
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (handleValidationForAssign()) {
+                              //setShowSelectPrintItem(true);
+                              handleAssign(e);
+                            }
+                            props.claimHandleErrors(errors);
+                          }}
+                          className="waves-effect waves-effect-b waves-light btn-small"
+                          loading={props.etat}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "#1e2188",
+                            textTransform: "initial",
+                          }}
                         >
                           <span>Affecter</span>
-                          </LoadingButton>
+                        </LoadingButton>
+                        //  :
+                        //  <div className="card-alert card red lighten-5">
+                        //    <div className="card-content red-text">
+                        //        <ul>
+                        //            Veuillez activer une licence.
+                        //        </ul>
+                        //    </div>
+                        //  </div>
+                      }
+
+
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </form>
+          </>
+        );
+
+      } else {
+        affectForm = ""
+      }
+
+      statusElt = (
+        <span className="chip partialBgColor lighten-5 mb-4">
+          <span className="">Partiellement Satisfait</span>
+        </span>
+      );
+      break;
+    case "CLASSED":
+      //ils peuvent affecter les réclamations non satisfaites
+      if (hbt.includes("H6") || addR === "PILOTE") {
+        affectForm = (
+          <>
+            <form id="claimAssignForm">
+              <div className="row">
+                <div className="col s12">
+                  <details>
+                    <summary className="text-details">
+                      Affectation de la réclamation
+                    </summary>
+
+                    <div className="col s12 input-field">
+                      <Select
+                        options={agentsMailOptions}
+                        className="react-select-container mt-4"
+                        classNamePrefix="react-select"
+                        style={styles}
+                        placeholder="Sélectionner l'agent"
+                        onChange={(e) => {
+                          props.handledByChanged(e.value);
+                          setAffectEmail(e.email);
+                        }}
+                      />
+                      <label htmlFor="gender" className={"active"}>
+                        Affectée à
+                        <span>
+                          (<span className="red-text darken-2 ">*</span>)
+                        </span>
+                      </label>
+                      <small className="errorTxt4">
+                        <div id="cpassword-error" className="error">
+                          {props.errors !== undefined
+                            ? props.errors.handled_by
+                            : ""}
+                        </div>
+                      </small>
+                    </div>
+                    <div className="col s12 input-field mb-2">
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            onChange={(e) => {
+                              handleAnonymat();
+                            }}
+                          />
+                        }
+                        label="Cacher l'identité du plaignant ? "
+                      />
+                    </div>
+                    <div className="col s12 display-flex justify-content-end mt-3">
+
+                      {
+                        // (actif !== undefined && actif)  ?
+                        <LoadingButton
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (handleValidationForAssign()) {
+                              //setShowSelectPrintItem(true);
+                              handleAssign(e);
+                            }
+                            props.claimHandleErrors(errors);
+                          }}
+                          className="waves-effect waves-effect-b waves-light btn-small"
+                          loading={props.etat}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "#1e2188",
+                            textTransform: "initial",
+                          }}
+                        >
+                          <span>Affecter</span>
+                        </LoadingButton>
                         // :
                         // <div className="card-alert card red lighten-5">
                         //   <div className="card-content red-text">
@@ -3920,8 +3919,8 @@ const TraiterReclamation = (props) => {
                         //   </div>
                         // </div>
                       }
-                      
-                    
+
+
                     </div>
                   </details>
                 </div>
@@ -3929,20 +3928,20 @@ const TraiterReclamation = (props) => {
             </form>
           </>
         );
-      
-      }else{
-        affectForm=""
+
+      } else {
+        affectForm = ""
       }
-       
-        statusElt = (
-          <span className="chip classedBgColor lighten-5">
-            <span className="">Classée</span>
-          </span>
-        );
-        break;
+
+      statusElt = (
+        <span className="chip classedBgColor lighten-5">
+          <span className="">Classée</span>
+        </span>
+      );
+      break;
     default:
-    statusElt = "";
-    break;
+      statusElt = "";
+      break;
   }
 
   let attachmentList;
@@ -4113,13 +4112,13 @@ const TraiterReclamation = (props) => {
       case "DESAPPROUVED":
         statusElt = "Désapprouvée";
         break;
-        case "CLASSED":
+      case "CLASSED":
         statusElt = "Classée";
         break;
-        case "UNSATISFIED":
+      case "UNSATISFIED":
         statusElt = "Non Satisfait";
         break;
-        case "PARTIAL_SATISFIED":
+      case "PARTIAL_SATISFIED":
         statusElt = "Partiellement Satisfait";
         break;
       default:
@@ -4206,7 +4205,7 @@ const TraiterReclamation = (props) => {
                       ""
                     ))
                 }
-              
+
               </div>
             </div>
           </div>
@@ -4221,13 +4220,13 @@ const TraiterReclamation = (props) => {
 
   let transmettre = "";
   let btnS = "";
-  
+
   if (
     (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
     ((user.firstAndLastName === props.created_by &&
-    props.transmitted ==="false") || 
-    (user.firstAndLastName === props.transmittedTo &&
-      props.transmitted ==="true" && addR==="MOLDUE") ) &&
+      props.transmitted === "false") ||
+      (user.firstAndLastName === props.transmittedTo &&
+        props.transmitted === "true" && addR === "MOLDUE")) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -4249,11 +4248,11 @@ const TraiterReclamation = (props) => {
     transmettre = "";
   }
   // console.log("props;transmitttedTo",props.transmittedTo);
-  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by ) || (props.transmitted !== "false" && user.firstAndLastName === props.transmittedTo && props.status === "SAVED" && addR==="MOLDUE") ){
+  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by) || (props.transmitted !== "false" && user.firstAndLastName === props.transmittedTo && props.status === "SAVED" && addR === "MOLDUE")) {
     // console.log("lol","azert")
     if (props.session === "" && props.session.status !== "OPEN") {
-      btnS = 
-      // (actif !== undefined && actif) ?
+      btnS =
+        // (actif !== undefined && actif) ?
         <>
           <LoadingButton
             onClick={(e) => registerUser(e)}
@@ -4267,19 +4266,19 @@ const TraiterReclamation = (props) => {
             <span>Ouvrir une session</span>
           </LoadingButton>
         </>
-        // :
-        // <div className="card-alert card red lighten-5">
-        //   <div className="card-content red-text">
-        //       <ul>
-        //           Veuillez activer une licence.
-        //       </ul>
-        //   </div>
-        // </div>
+      // :
+      // <div className="card-alert card red lighten-5">
+      //   <div className="card-content red-text">
+      //       <ul>
+      //           Veuillez activer une licence.
+      //       </ul>
+      //   </div>
+      // </div>
 
-      
-    } else if (props.session !== "" && props.session.status === "OPEN" ) {
-      btnS = 
-      // (actif !== undefined && actif) ?
+
+    } else if (props.session !== "" && props.session.status === "OPEN") {
+      btnS =
+        // (actif !== undefined && actif) ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -4293,17 +4292,17 @@ const TraiterReclamation = (props) => {
             <span>Rejoindre la session</span>
           </LoadingButton>
         </>
-        // :
-        // <div className="card-alert card red lighten-5">
-        //   <div className="card-content red-text">
-        //       <ul>
-        //           Veuillez activer une licence.
-        //       </ul>
-        //   </div>
-        // </div>
+      // :
+      // <div className="card-alert card red lighten-5">
+      //   <div className="card-content red-text">
+      //       <ul>
+      //           Veuillez activer une licence.
+      //       </ul>
+      //   </div>
+      // </div>
     } else if (props.session !== "" && props.session.status === "CLOSED") {
-      btnS =  
-      // (actif !== undefined && actif) ?
+      btnS =
+        // (actif !== undefined && actif) ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -4317,32 +4316,32 @@ const TraiterReclamation = (props) => {
             <span>Voir la discussion</span>
           </LoadingButton>
         </>
-        // :
-        // <div className="card-alert card red lighten-5">
-        //   <div className="card-content red-text">
-        //       <ul>
-        //           Veuillez activer une licence.
-        //       </ul>
-        //   </div>
-        // </div>
+      // :
+      // <div className="card-alert card red lighten-5">
+      //   <div className="card-content red-text">
+      //       <ul>
+      //           Veuillez activer une licence.
+      //       </ul>
+      //   </div>
+      // </div>
     } else {
       // console.log("lol1","azert")
       btnS = "";
     }
   }
 
-   // Sélectionnez tous les éléments avec la classe spécifiée
-   const elements = document.querySelectorAll('.MuiDialog-root');
+  // Sélectionnez tous les éléments avec la classe spécifiée
+  const elements = document.querySelectorAll('.MuiDialog-root');
 
-   // Parcourez la liste d'éléments
-   elements.forEach(element => {
-       // Vérifiez si l'élément n'a pas l'attribut aria-hidden="true"
-       if (element.hasAttribute('aria-hidden') || element.getAttribute('aria-hidden') === 'true') {
-           // Masquez l'élément en définissant son style sur "none"
-           element.style.display = 'none';
-       }
-   });
-   
+  // Parcourez la liste d'éléments
+  elements.forEach(element => {
+    // Vérifiez si l'élément n'a pas l'attribut aria-hidden="true"
+    if (element.hasAttribute('aria-hidden') || element.getAttribute('aria-hidden') === 'true') {
+      // Masquez l'élément en définissant son style sur "none"
+      element.style.display = 'none';
+    }
+  });
+
 
   return (
     <div id="main">
@@ -4384,7 +4383,7 @@ const TraiterReclamation = (props) => {
                         }}
                       >
                         <Toolbar>
-                        { props?.match?.params?.code==="all" ? 
+                          {props?.match?.params?.code === "all" ?
                             <IconButton
                               edge="start"
                               color="inherit"
@@ -4392,17 +4391,17 @@ const TraiterReclamation = (props) => {
                               aria-label="close"
                             >
                               <CloseIcon />
-                            </IconButton> 
-                          : 
+                            </IconButton>
+                            :
                             <IconButton
                               edge="start"
                               color="inherit"
                               // onClick={handleClose}
                               aria-label="close"
                             >
-                              <NavLink to="/alertes/reclamations"><div className="card-content"><CloseIcon/></div></NavLink>
-                            </IconButton> 
-                        }
+                              <NavLink to="/alertes/reclamations"><div className="card-content"><CloseIcon /></div></NavLink>
+                            </IconButton>
+                          }
                           <Typography
                             sx={{ ml: 2, flex: 1 }}
                             variant="h6"
@@ -4437,7 +4436,7 @@ const TraiterReclamation = (props) => {
                                   </div>
 
                                   <div className="row">
-                                    
+
                                     <div
                                       className="col l6 s12 df pb-2"
                                       id="code"
@@ -4539,7 +4538,7 @@ const TraiterReclamation = (props) => {
                           <div className="card-panel pb-5">
                             <div className="row" id="ententeFiche">
                               <div className="row">
-                                
+
                                 <h5
                                   className="col l6 m6 s12 card-title"
                                 >
@@ -4548,15 +4547,15 @@ const TraiterReclamation = (props) => {
 
                                 {
                                   transmettre === "" || btnS === "" ?
-                                  <div className="col l6 m6 s12 df justify-content-end">
-                                    {transmettre}
-                                    {btnS}
-                                  </div>
-                                  :
-                                  <div className="col l6 m6 s12 df justify-content-between">
-                                    {transmettre}
-                                    {btnS}
-                                  </div>
+                                    <div className="col l6 m6 s12 df justify-content-end">
+                                      {transmettre}
+                                      {btnS}
+                                    </div>
+                                    :
+                                    <div className="col l6 m6 s12 df justify-content-between">
+                                      {transmettre}
+                                      {btnS}
+                                    </div>
                                 }
                               </div>
                               <div className="col s12 input-field">

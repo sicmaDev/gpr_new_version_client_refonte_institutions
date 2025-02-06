@@ -209,7 +209,7 @@ const TraiterDenonciation = (props) => {
   //#darrell
   const [usersCGR, setUsersCGR] = React.useState([]);
   const [reafect, setReacfect] = useState(false);
-  
+
   //vérification if user is in guest
   let showJoinBtn = false;
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
@@ -933,10 +933,10 @@ const TraiterDenonciation = (props) => {
 
     if (
       (props.solutionExistant === "") && (
-      props.solution === "" ||
-      props.solution === undefined ||
-      props.solution === null || props.solution.length ===0)
-      
+        props.solution === "" ||
+        props.solution === undefined ||
+        props.solution === null || props.solution.length === 0)
+
     ) {
       isValid = false;
       errors["solution"] = "Champ incorrect";
@@ -960,7 +960,7 @@ const TraiterDenonciation = (props) => {
       (props.solutionExistant === "") && (
         props.new_solution === "" ||
         props.new_solution === undefined ||
-        props.new_solution === null || props.new_solution.length ===0)
+        props.new_solution === null || props.new_solution.length === 0)
     ) {
       isValid = false;
       errors["new_solution"] = "Champ incorrect";
@@ -1007,8 +1007,8 @@ const TraiterDenonciation = (props) => {
 
 
         let codi;
-        if (claim.session !==null && claim.session !=="") {
-          if (claim.status==="AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+        if (claim.session !== null && claim.session !== "") {
+          if (claim.status === "AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
             codi = (
               <>
                 <div className="df">
@@ -1031,10 +1031,10 @@ const TraiterDenonciation = (props) => {
 
             );
           }
-         
-          
-        }else{
-          if (claim.status==="AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+
+
+        } else {
+          if (claim.status === "AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
             codi = (
               <>
                 <div className="df">
@@ -1990,7 +1990,11 @@ const TraiterDenonciation = (props) => {
                         <div>
                           <span className="chip2" style={{ backgroundColor: fond }}>
                             <span className="hero">
-                              Client {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                              Client {degre} : mesurée
+                              {solution.satisfactionMeasureDto.measurer
+                                ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
+                                : " depuis le site web "}
+                              le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
                             </span>
                           </span>
                         </div>
@@ -2386,9 +2390,9 @@ const TraiterDenonciation = (props) => {
       });
       // console.log("solutionsLISTE", solutionsListe);
       if ((props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
-          user.firstAndLastName === props.created_by &&
-          props.transmitted === "true") {
-         affectForm="Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
+        user.firstAndLastName === props.created_by &&
+        props.transmitted === "true") {
+        affectForm = "Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
       }
 
       if (hbt.includes("H6") || addR === "PILOTE") {
@@ -2397,97 +2401,97 @@ const TraiterDenonciation = (props) => {
         //   props.transmitted === "true") {
         //  affectForm="Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
         // } else {
-          affectForm = (
-            <>
-              <form id="claimAssignForm">
-                <div className="row">
-                  <div className="col s12">
-                    <details>
-                      <summary className="text-details">
-                        Affectation de la dénonciation
-                      </summary>
+        affectForm = (
+          <>
+            <form id="claimAssignForm">
+              <div className="row">
+                <div className="col s12">
+                  <details>
+                    <summary className="text-details">
+                      Affectation de la dénonciation
+                    </summary>
 
-                      <div className="col s12 input-field">
-                        <Select
-                          options={agentsMailOptions}
-                          className="react-select-container mt-4"
-                          classNamePrefix="react-select"
-                          style={styles}
-                          placeholder="Sélectionner l'agent"
-                          onChange={(e) => {
-                            props.handledByChanged(e.value);
-                            setAffectEmail(e.email);
-                          }}
-                        />
-                        <label htmlFor="gender" className={"active"}>
-                          Affectée à
-                          <span>
-                            (<span className="red-text darken-2 ">*</span>)
-                          </span>
-                        </label>
-                        <small className="errorTxt4">
-                          <div id="cpassword-error" className="error">
-                            {props.errors !== undefined
-                              ? props.errors.handled_by
-                              : ""}
-                          </div>
-                        </small>
-                      </div>
+                    <div className="col s12 input-field">
+                      <Select
+                        options={agentsMailOptions}
+                        className="react-select-container mt-4"
+                        classNamePrefix="react-select"
+                        style={styles}
+                        placeholder="Sélectionner l'agent"
+                        onChange={(e) => {
+                          props.handledByChanged(e.value);
+                          setAffectEmail(e.email);
+                        }}
+                      />
+                      <label htmlFor="gender" className={"active"}>
+                        Affectée à
+                        <span>
+                          (<span className="red-text darken-2 ">*</span>)
+                        </span>
+                      </label>
+                      <small className="errorTxt4">
+                        <div id="cpassword-error" className="error">
+                          {props.errors !== undefined
+                            ? props.errors.handled_by
+                            : ""}
+                        </div>
+                      </small>
+                    </div>
 
-                      
-                          <div className="col s12 display-flex justify-content-end mt-3">
-                            {
-                                // (actif !== undefined && actif)  ?
-                                <LoadingButton
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    if (handleValidationForAssign()) {
-                                      //setShowSelectPrintItem(true);
-                                      handleAssign(e);
-                                    }
-                                    props.claimHandleErrors(errors);
-                                  }}
-                                  className="waves-effect waves-effect-b waves-light btn-small"
-                                  loading={props.etat}
-                                  loadingPosition="end"
-                                  endIcon={<SaveIcon />}
-                                  variant="contained"
-                                  sx={{
-                                    backgroundColor: "#1e2188",
-                                    textTransform: "initial",
-                                  }}
-                                >
-                                  <span>Affecter</span>
-                                </LoadingButton>
-                              // :
-                              // <div className="card-alert card red lighten-5">
-                              //   <div className="card-content red-text">
-                              //       <ul>
-                              //           Veuillez activer une licence.
-                              //       </ul>
-                              //   </div>
-                              // </div>
+
+                    <div className="col s12 display-flex justify-content-end mt-3">
+                      {
+                        // (actif !== undefined && actif)  ?
+                        <LoadingButton
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (handleValidationForAssign()) {
+                              //setShowSelectPrintItem(true);
+                              handleAssign(e);
                             }
-                          
-                          </div>
-                        
+                            props.claimHandleErrors(errors);
+                          }}
+                          className="waves-effect waves-effect-b waves-light btn-small"
+                          loading={props.etat}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "#1e2188",
+                            textTransform: "initial",
+                          }}
+                        >
+                          <span>Affecter</span>
+                        </LoadingButton>
+                        // :
+                        // <div className="card-alert card red lighten-5">
+                        //   <div className="card-content red-text">
+                        //       <ul>
+                        //           Veuillez activer une licence.
+                        //       </ul>
+                        //   </div>
+                        // </div>
+                      }
+
+                    </div>
 
 
 
 
 
-                    </details>
-                  </div>
+
+                  </details>
                 </div>
-              </form>
-            </>
-          );
+              </div>
+            </form>
+          </>
+        );
         // }
       } else {
         affectForm = ""
       }
 
-      if (hbt.includes("H2", "H3", "H4") &&(( props.created_by === user.firstAndLastName && props.transmitted === "false") || (props.transmittedTo === user.firstAndLastName && props.transmitted === "true" && addR==="MOLDUE"))) {
+      if (hbt.includes("H2", "H3", "H4") && ((props.created_by === user.firstAndLastName && props.transmitted === "false") || (props.transmittedTo === user.firstAndLastName && props.transmitted === "true" && addR === "MOLDUE"))) {
         treatForm = (
           <>
 
@@ -2566,21 +2570,21 @@ const TraiterDenonciation = (props) => {
                     </div>
                     <div className="col s12 display-flex justify-content-end">
                       {
-                          // (actif !== undefined && actif)  ?
-                          <LoadingButton
-                            onClick={handleSolve}
-                            className="waves-effect waves-effect-b waves-light btn-small"
-                            loading={props.etat2}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{
-                              backgroundColor: "#1e2188",
-                              textTransform: "initial",
-                            }}
-                          >
-                            <span>Résoudre</span>
-                          </LoadingButton>
+                        // (actif !== undefined && actif)  ?
+                        <LoadingButton
+                          onClick={handleSolve}
+                          className="waves-effect waves-effect-b waves-light btn-small"
+                          loading={props.etat2}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "#1e2188",
+                            textTransform: "initial",
+                          }}
+                        >
+                          <span>Résoudre</span>
+                        </LoadingButton>
                         //  :
                         //   <div className="card-alert card red lighten-5">
                         //       <div className="card-content red-text">
@@ -2641,49 +2645,49 @@ const TraiterDenonciation = (props) => {
 
       let tmp;
       let afForm;
-      let personAffect = 
-      <>
-       {/* details affectation */}
-       <div className="row">
-        <div className="col s12 pb-2">
-            Dénonciation affectée à{" "}
-            <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-            {props.assigned_by} le {formatDate(props.assignedAt)}
+      let personAffect =
+        <>
+          {/* details affectation */}
+          <div className="row">
+            <div className="col s12 pb-2">
+              Dénonciation affectée à{" "}
+              <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
+              {props.assigned_by} le {formatDate(props.assignedAt)}
+            </div>
           </div>
-        </div>
-      </>
+        </>
 
       let solutions1 = props.selectedItem?.objet?.existingSolutions;
 
       solutionsListe = solutions1?.map((solution, index) => {
-      let words = String(solution.content).split(" ");
-      let thirtyWords = "";
-      let taille = words.length;
-      if (taille < 30) {
-        thirtyWords = solution.content;
-      } else {
-        for (let i = 0; i < 50; i++) {
-          const o = words[i];
-          thirtyWords = thirtyWords + o + " ";
+        let words = String(solution.content).split(" ");
+        let thirtyWords = "";
+        let taille = words.length;
+        if (taille < 30) {
+          thirtyWords = solution.content;
+        } else {
+          for (let i = 0; i < 50; i++) {
+            const o = words[i];
+            thirtyWords = thirtyWords + o + " ";
+          }
+          thirtyWords =
+            thirtyWords + "......... (Déroulez pour voir la solution complète)";
         }
-        thirtyWords =
-          thirtyWords + "......... (Déroulez pour voir la solution complète)";
-      }
 
-      return {
-        props: props,
-        index: index,
-        id: solution.id,
-        taille: taille,
-        title: thirtyWords,
-        content: solution.content,
-        compteur: solution.compteur,
-      };
+        return {
+          props: props,
+          index: index,
+          id: solution.id,
+          taille: taille,
+          title: thirtyWords,
+          content: solution.content,
+          compteur: solution.compteur,
+        };
       });
 
       //ils peuvent reaffecter les Dénonciations en cas d'erreur ou d'indisponibilité
-    
-      afForm= (
+
+      afForm = (
         <>
           <div className="row mb-4">
             <form id="claimAssignForm">
@@ -2720,35 +2724,35 @@ const TraiterDenonciation = (props) => {
                         </div>
                       </small>
                     </div>
-                   
+
                     <div className="col s12 display-flex justify-content-end mt-3">
 
-                    
-                          <LoadingButton
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (handleValidationForReAssign()) {
-                                //setShowSelectPrintItem(true);
-                                handleReAssign(e);
-                              }
-                              props.claimHandleErrors(errors);
-                            }}
-                            className="waves-effect waves-effect-b waves-light btn-small"
-                            loading={props.etat}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{
-                              backgroundColor: "#1e2188",
-                              textTransform: "initial",
-                            }}
-                        >
-                          <span>Affecter</span>
-                          </LoadingButton>
-                        
-                      
-                      
-                    
+
+                      <LoadingButton
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (handleValidationForReAssign()) {
+                            //setShowSelectPrintItem(true);
+                            handleReAssign(e);
+                          }
+                          props.claimHandleErrors(errors);
+                        }}
+                        className="waves-effect waves-effect-b waves-light btn-small"
+                        loading={props.etat}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{
+                          backgroundColor: "#1e2188",
+                          textTransform: "initial",
+                        }}
+                      >
+                        <span>Affecter</span>
+                      </LoadingButton>
+
+
+
+
                     </div>
                   </details>
                 </div>
@@ -2765,7 +2769,7 @@ const TraiterDenonciation = (props) => {
             {/* resolution */}
             {props.authorize ? (
               <>
-                {solutionsListe !== undefined && solutionsListe.length !==0 ? 
+                {solutionsListe !== undefined && solutionsListe.length !== 0 ?
                   <div className="row">
                     <div className="col l12">
                       <details>
@@ -2776,7 +2780,7 @@ const TraiterDenonciation = (props) => {
                       </details>
                     </div>
                   </div>
-                :""}
+                  : ""}
                 <form id="claimHandleAgainForm">
                   <div className="row">
                     <div className="col s12">
@@ -2833,20 +2837,20 @@ const TraiterDenonciation = (props) => {
                         <div className="col s12 display-flex justify-content-end mt-3">
                           {
                             //  (actif !== undefined && actif)  ?
-                              <LoadingButton
-                                onClick={handleSolve}
-                                className="waves-effect waves-effect-b waves-light btn-small"
-                                loading={props.etat2}
-                                loadingPosition="end"
-                                endIcon={<SaveIcon />}
-                                variant="contained"
-                                sx={{
-                                  backgroundColor: "#1e2188",
-                                  textTransform: "initial",
-                                }}
-                              >
-                                <span>Traiter</span>
-                              </LoadingButton>
+                            <LoadingButton
+                              onClick={handleSolve}
+                              className="waves-effect waves-effect-b waves-light btn-small"
+                              loading={props.etat2}
+                              loadingPosition="end"
+                              endIcon={<SaveIcon />}
+                              variant="contained"
+                              sx={{
+                                backgroundColor: "#1e2188",
+                                textTransform: "initial",
+                              }}
+                            >
+                              <span>Traiter</span>
+                            </LoadingButton>
                             // :
                             // <div className="card-alert card red lighten-5">
                             //   <div className="card-content red-text">
@@ -2855,10 +2859,10 @@ const TraiterDenonciation = (props) => {
                             //       </ul>
                             //   </div>
                             // </div>
-  
-  
+
+
                           }
-                        
+
                         </div>
                       </details>
                     </div>
@@ -2893,7 +2897,7 @@ const TraiterDenonciation = (props) => {
               {personAffect}
               {afForm}
               {tmp}
-              
+
             </>
           );
         } else {
@@ -2901,11 +2905,11 @@ const TraiterDenonciation = (props) => {
             <>
               {personAffect}
               {tmp}
-              
+
             </>
           );
         }
-        
+
       } else {
         if (hbt.includes("H14") || addR !== "MOLDUE") {
           tmp = (
@@ -2917,9 +2921,9 @@ const TraiterDenonciation = (props) => {
               </div>
             </div>
           )
-          
-        }else{
-          tmp=""
+
+        } else {
+          tmp = ""
         }
 
         if (hbt.includes("H6") || addR === "PILOTE") {
@@ -2927,17 +2931,17 @@ const TraiterDenonciation = (props) => {
             <>
               {afForm}
               {tmp}
-              
+
             </>
           );
         } else {
           treatForm = <>{tmp}</>;
         }
 
-        
+
       }
 
-      
+
       break;
     case "TO_APPROUVED":
       statusElt = (
@@ -3055,23 +3059,23 @@ const TraiterDenonciation = (props) => {
                         loadingPosition="end"
                         endIcon={<SaveIcon />}
                         variant="contained"
-                        sx={{textTransform:"initial" }}
+                        sx={{ textTransform: "initial" }}
                       >
-                          <span>Désapprouver</span>
-                        </LoadingButton>
+                        <span>Désapprouver</span>
+                      </LoadingButton>
 
-                        <LoadingButton
-                          onClick={
-                            handleApprove
-                          }
-                          className="waves-effect waves-effect-b waves-light btn-small"
-                          loading={props.etat2}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-                        >
-                          <span>Approuver</span>
+                      <LoadingButton
+                        onClick={
+                          handleApprove
+                        }
+                        className="waves-effect waves-effect-b waves-light btn-small"
+                        loading={props.etat2}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                      >
+                        <span>Approuver</span>
                       </LoadingButton>
                     </>
                     // :
@@ -3204,20 +3208,20 @@ const TraiterDenonciation = (props) => {
                       <div className="col s12 display-flex justify-content-end mt-3">
                         {
                           //  (actif !== undefined && actif)  ?
-                            <LoadingButton
-                              onClick={handleReSolve}
-                              className="waves-effect waves-effect-b waves-light btn-small"
-                              loading={props.etat2}
-                              loadingPosition="end"
-                              endIcon={<SaveIcon />}
-                              variant="contained"
-                              sx={{
-                                backgroundColor: "#1e2188",
-                                textTransform: "initial",
-                              }}
-                            >
-                              <span>Retraiter</span>
-                            </LoadingButton>
+                          <LoadingButton
+                            onClick={handleReSolve}
+                            className="waves-effect waves-effect-b waves-light btn-small"
+                            loading={props.etat2}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{
+                              backgroundColor: "#1e2188",
+                              textTransform: "initial",
+                            }}
+                          >
+                            <span>Retraiter</span>
+                          </LoadingButton>
                           // :
                           // <div className="card-alert card red lighten-5">
                           //   <div className="card-content red-text">
@@ -3387,9 +3391,9 @@ const TraiterDenonciation = (props) => {
   if (
     (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
     ((user.firstAndLastName === props.created_by &&
-    props.transmitted ==="false") || 
-    (user.firstAndLastName === props.transmittedTo &&
-      props.transmitted ==="true" && addR==="MOLDUE") ) &&
+      props.transmitted === "false") ||
+      (user.firstAndLastName === props.transmittedTo &&
+        props.transmitted === "true" && addR === "MOLDUE")) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -3410,12 +3414,12 @@ const TraiterDenonciation = (props) => {
   } else {
     transmettre = "";
   }
-  
-  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by ) || (props.transmitted !== "false" && user.firstAndLastName === props.transmittedTo && props.status === "SAVED" && addR==="MOLDUE") ){
-  
+
+  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by) || (props.transmitted !== "false" && user.firstAndLastName === props.transmittedTo && props.status === "SAVED" && addR === "MOLDUE")) {
+
     if (props.session === "" && props.session.status !== "OPEN") {
-      btnS = 
-      //  (actif !== undefined && actif)  ?
+      btnS =
+        //  (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => registerUser(e)}
@@ -3437,10 +3441,10 @@ const TraiterDenonciation = (props) => {
       //         </ul>
       //     </div>
       //   </div>
-      
-    } else if (props.session !== "" && props.session.status === "OPEN" ) {
-      btnS = 
-      //  (actif !== undefined && actif)  ?
+
+    } else if (props.session !== "" && props.session.status === "OPEN") {
+      btnS =
+        //  (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -3462,10 +3466,10 @@ const TraiterDenonciation = (props) => {
       //       </ul>
       //   </div>
       // </div>
-      
+
     } else if (props.session !== "" && props.session.status === "CLOSED") {
-      btnS = 
-      //  (actif !== undefined && actif)  ?
+      btnS =
+        //  (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
@@ -3487,7 +3491,7 @@ const TraiterDenonciation = (props) => {
       //       </ul>
       //   </div>
       // </div>
-      
+
     } else {
       btnS = "";
     }

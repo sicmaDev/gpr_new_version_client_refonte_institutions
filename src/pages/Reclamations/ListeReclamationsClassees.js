@@ -662,7 +662,11 @@ const ListeReclamationsClassees = (props) => {
                       <div>
                         <span className="chip2" style={{ backgroundColor: fond }}>
                           <span className="hero">
-                            Client {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                            Client {degre} : mesurée
+                            {solution.satisfactionMeasureDto.measurer
+                              ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
+                              : " depuis le site web "}
+                            le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
                           </span>
                         </span>
                       </div>

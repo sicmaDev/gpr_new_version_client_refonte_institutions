@@ -10,6 +10,7 @@ const initialState = {
     language: "",
     dossierimf: "",
     code: "",
+    codeClient: "",
     recorded_at: "",
     collect: "",
     subject: "",
@@ -32,7 +33,7 @@ const initialState = {
     selectedItemFiles: [],
     selectedItemAudio: [],
 
-    showSelectPrintItem : false
+    showSelectPrintItem: false
 };
 const ListeSuggestionsReducer = (state = initialState, action) => {
     switch (action.type) {
@@ -91,6 +92,11 @@ const ListeSuggestionsReducer = (state = initialState, action) => {
                 ...state,
                 code: action.payload,
             };
+        case 'SUGGESTION_LIST_CODECLIENT_CHANGED':
+            return {
+                ...state,
+                codeClient: action.payload,
+            };
         case 'SUGGESTION_LIST_RECORDED_AT_CHANGED':
             return {
                 ...state,
@@ -136,7 +142,7 @@ const ListeSuggestionsReducer = (state = initialState, action) => {
                 ...state,
                 status: action.payload,
             };
-       
+
         case 'SUGGESTION_LIST_CREATED_BY_CHANGED':
             return {
                 ...state,
@@ -147,7 +153,7 @@ const ListeSuggestionsReducer = (state = initialState, action) => {
                 ...state,
                 created_at: action.payload,
             };
-        
+
         case 'SUGGESTION_LIST_HANDLED_BY_CHANGED':
             return {
                 ...state,
@@ -158,7 +164,7 @@ const ListeSuggestionsReducer = (state = initialState, action) => {
                 ...state,
                 handled_at: action.payload,
             };
-       
+
         case 'SUGGESTION_LIST_RESOLVED_BY_CHANGED':
             return {
                 ...state,
@@ -197,13 +203,13 @@ const ListeSuggestionsReducer = (state = initialState, action) => {
         case 'SUGGESTION_LIST_SELECTED_ITEM_AUDIO_CHANGED':
             return {
                 ...state,
-                selectedItemAudio:  action.payload,
+                selectedItemAudio: action.payload,
             };
-            
+
         case 'SUGGESTION_LIST_SHOW_SELECT_PRINT_ITEMS':
-            return{
+            return {
                 ...state,
-                showSelectPrintItem:!state.showSelectPrintItem
+                showSelectPrintItem: !state.showSelectPrintItem
             }
         case 'SUGGESTION_LIST_CREW_CHANGED':
             return {
