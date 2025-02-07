@@ -5,6 +5,7 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import WarningIcon from '@mui/icons-material/Warning';
 import {
   addressChanged,
   agentsChanged,
@@ -451,6 +452,23 @@ const ListeReclamations = (props) => {
           minute: "numeric",
         }).format(new Date(claim.createdAt));
         return createdAt;
+      },
+    },
+    {
+      key: "alertFormated",
+      text: "Alerte dans",
+      className: "created_at",
+      align: "left",
+      sortable: true,
+      cell: (claim, index) => {
+        let temps
+        if (claim.retardDay > 0 ) {
+          temps = claim.declenchedDate
+        } else {
+          temps =<div className="card-content red-text"><WarningIcon/></div>
+        }
+        return temps;
+        
       },
     },
   ];

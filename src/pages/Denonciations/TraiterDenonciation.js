@@ -116,6 +116,8 @@ import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { licenseInfo } from "../../apis/LoginApi";
 import { Redirect } from 'react-router-dom';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
+import WarningIcon from '@mui/icons-material/Warning';
+
 const styles = {
   control: (base) => ({
     ...base,
@@ -1168,6 +1170,23 @@ const TraiterDenonciation = (props) => {
           minute: "numeric",
         }).format(new Date(claim.createdAt));
         return createdAt;
+      },
+    },
+    {
+      key: "alertFormated",
+      text: "Alerte dans",
+      className: "created_at",
+      align: "left",
+      sortable: true,
+      cell: (claim, index) => {
+        let temps
+        if (claim.retardDay > 0 ) {
+          temps = claim.declenchedDate
+        } else {
+          temps =<div className="card-content red-text"><WarningIcon/></div>
+        }
+        return temps;
+        
       },
     },
   ];
