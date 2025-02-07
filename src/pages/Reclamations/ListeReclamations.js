@@ -17,6 +17,7 @@ import {
   assignedByChanged,
   claimListErrors,
   codeChanged,
+  codeClientChanged,
   commentChanged,
   contentChanged,
   createdAtChanged,
@@ -490,6 +491,7 @@ const ListeReclamations = (props) => {
     props.dossierimfChanged("");
     props.subjectChanged("");
     props.codeChanged("");
+    props.codeClientChanged("");
     props.recordedAtChanged("");
     props.collectChanged("");
     props.crewChanged("");
@@ -524,7 +526,8 @@ const ListeReclamations = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
     clearComponentState();
-    // console.log("datarowC",data)
+    // console.log("datarowC", data)
+    // console.log(data.codeClient);
     if (mode === 1) {
       props.lastnameChanged(
         data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -538,6 +541,7 @@ const ListeReclamations = (props) => {
       props.languageChanged(data.language.libelle ? data.language.libelle : "");
       props.dossierimfChanged(data.folderCode ? data.folderCode : "");
       props.codeChanged(data.code ? data.code : "");
+      props.codeClientChanged(data.codeClient ? data.codeClient : "");
       props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
       props.collectChanged(
         data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
@@ -591,6 +595,7 @@ const ListeReclamations = (props) => {
         );
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
         props.codeChanged(data.code ? data.code : "");
+        props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(
           data.receiptDateTime ? data.receiptDateTime : ""
         );
@@ -639,7 +644,7 @@ const ListeReclamations = (props) => {
         props.genderChanged(data.gender ? data.gender : "");
         props.crewChanged(data.crew ? data.crew : "");
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
-        props.codeChanged(data.code ? data.code : "");
+        props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(
           data.receiptDateTime ? data.receiptDateTime : ""
         );
@@ -933,6 +938,7 @@ const ListeReclamations = (props) => {
   ];
   const [selectOption, setSelectOption] = useState([
     "Code",
+    "Code Client",
     "Client",
     "Status",
     "Enregistrer le",
@@ -1464,6 +1470,7 @@ const ListeReclamations = (props) => {
   }
 
   const printRecu = (e) => {
+    // console.log(props.codeClient);
     e.preventDefault();
 
     let image = '<img src="' + INSTITUTION_LOGO + '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
@@ -1515,7 +1522,7 @@ const ListeReclamations = (props) => {
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Adresse :</b></div><div class="col l9" style="font-size:18px;">${props.selectedItem.address}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Enregistré le :</b></div><div class="col l9" style="font-size:18px;">${datee}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Enregistré par :</b></div><div class="col l9" style="font-size:18px;">${addByTemp}</div></div>
-      <div class="row" style="margin-bottom:15px;"><div class="col l12"><span style="font-size:18px;"><b>Code:</b> ${props.selectedItem.code}</span></div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l12"><span style="font-size:18px;"><b>Code:</b> ${props.selectedItem.codeClient}</span></div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l4"><b style="font-size:18px;">Date de réception de la réclamation :</b></div><div class="col l8" style="font-size:18px;">${props.selectedItem.receiptDateTime}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Objet de plainte :</b></div><div class="col l9" style="font-size:18px;">${objetTemp}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Produit concerné :</b></div><div class="col l9" style="font-size:18px;">${produitTemp}</div></div>
@@ -1969,6 +1976,7 @@ const ListeReclamations = (props) => {
                           colourOptions[1],
                           colourOptions[2],
                           colourOptions[3],
+                          colourOptions[4],
                         ]}
                         isMulti
                         name="colors"
@@ -2241,6 +2249,7 @@ const ListeReclamations = (props) => {
                                     <LanguageIcon sx={{ mr: 2 }} />{" "}
                                     {props.language}
                                   </div>
+
                                   {
                                     (dimf =
                                       props.dossierimf !== "" ? (
@@ -2481,6 +2490,7 @@ const mapStateToProps = (state) => {
     language: state.claim_list.language,
     dossierimf: state.claim_list.dossierimf,
     code: state.claim_list.code,
+    codeClient: state.claim_list.codeClient,
     recorded_at: state.claim_list.recorded_at,
     collect: state.claim_list.collect,
     subject: state.claim_list.subject,
@@ -2554,6 +2564,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     codeChanged: (code) => {
       dispatch(codeChanged(code));
+    },
+    codeClientChanged: (codeClient) => {
+      dispatch(codeClientChanged(codeClient));
     },
     recordedAtChanged: (recordedAt) => {
       dispatch(recordedAtChanged(recordedAt));

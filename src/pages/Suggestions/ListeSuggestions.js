@@ -8,6 +8,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import {
   addressChanged,
   codeChanged,
+  codeClientChanged,
   contentChanged,
   createdAtChanged,
   firstnameChanged,
@@ -342,6 +343,7 @@ const ListeSuggestions = (props) => {
     props.languageChanged("");
     props.dossierimfChanged("");
     props.codeChanged("");
+    props.codeClientChanged("");
     props.recordedAtChanged("");
     props.collectChanged("");
     props.crewChanged("");
@@ -377,6 +379,7 @@ const ListeSuggestions = (props) => {
       props.dossierimfChanged(data.folderCode ? data.folderCode : "");
       props.crewChanged(data.crew ? data.crew : "");
       props.codeChanged(data.code ? data.code : "");
+      props.codeClientChanged(data.codeClient ? data.codeClient : "");
       props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
       props.collectChanged(data.canal.libelle ? data.canal.libelle : "");
       props.productChanged(data.produit ? data.produit.libelle : "");
@@ -403,6 +406,7 @@ const ListeSuggestions = (props) => {
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
         props.crewChanged(data.crew ? data.crew : "");
         props.codeChanged(data.code ? data.code : "");
+        props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
         props.collectChanged(data.canal.libelle ? data.canal.libelle : "");
         props.productChanged(data.produit ? data.produit.libelle : "");
@@ -427,6 +431,7 @@ const ListeSuggestions = (props) => {
         props.crewChanged(data.crew ? data.crew : "");
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
         props.codeChanged(data.code ? data.code : "");
+        props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
         props.contentChanged(data.content ? data.content : "");
         props.statusChanged(data.status ? data.status : "");
@@ -517,7 +522,7 @@ const ListeSuggestions = (props) => {
 
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
   let colourOptions = [
-    { value: "Code", label: "Code" },
+    { value: "CodeClient", label: "CodeClient" },
     { value: "Client", label: "Client" },
     { value: "Status", label: "Status" },
     { value: "Enregistrer le", label: "Enregistrer le" },
@@ -774,7 +779,7 @@ const ListeSuggestions = (props) => {
     `;
     const code = `
       <div class="row" style="margin-bottom: 15px;">
-        <div class="col l12"><span style="font-size: 18px;"><b>Code:</b> ${props.selectedItem.code}</span></div>
+        <div class="col l12"><span style="font-size: 18px;"><b>CodeClient:</b> ${props.selectedItem.codeClient}</span></div>
       </div>
     `;
     const datereception = `
@@ -1384,6 +1389,7 @@ const mapStateToProps = (state) => {
     language: state.suggestion_list.language,
     dossierimf: state.suggestion_list.dossierimf,
     code: state.suggestion_list.code,
+    codeClient: state.suggestion_list.codeClient,
     recorded_at: state.suggestion_list.recorded_at,
     collect: state.suggestion_list.collect,
     product: state.suggestion_list.product,
@@ -1445,6 +1451,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     codeChanged: (code) => {
       dispatch(codeChanged(code));
+    },
+    codeClientChanged: (codeClient) => {
+      dispatch(codeClientChanged(codeClient));
     },
     recordedAtChanged: (recordedAt) => {
       dispatch(recordedAtChanged(recordedAt));

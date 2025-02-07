@@ -92,7 +92,7 @@ const ListeSuggestionsReducer = (state = initialState, action) => {
                 ...state,
                 code: action.payload,
             };
-        case 'SUGGESTION_LIST_CODECLIENT_CHANGED':
+        case 'SUGGESTION_LIST_CODE_CLIENT_CHANGED':
             return {
                 ...state,
                 codeClient: action.payload,

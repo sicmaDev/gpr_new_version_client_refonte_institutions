@@ -76,7 +76,7 @@ export const codeChanged = (code) => {
 };
 export const codeClientChanged = (codeClient) => {
     return {
-        type: 'SUGGESTION_LIST_CODE_CHANGED',
+        type: 'SUGGESTION_LIST_CODE_CLIENT_CHANGED',
         payload: codeClient,
         info: 'This action is used to ...'
     }

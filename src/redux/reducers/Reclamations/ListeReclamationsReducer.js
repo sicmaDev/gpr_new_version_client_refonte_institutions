@@ -10,6 +10,7 @@ const initialState = {
     language: "",
     dossierimf: "",
     code: "",
+    codeClient: "azerrty",
     recorded_at: "",
     collect: "",
     subject: "",
@@ -44,7 +45,7 @@ const initialState = {
     selectedFiles: [],
     selectedItemFiles: [],
     selectedItemAudio: [],
-    showSelectPrintItem : false
+    showSelectPrintItem: false
 };
 const ListeReclamationsReducer = (state = initialState, action) => {
     switch (action.type) {
@@ -102,6 +103,11 @@ const ListeReclamationsReducer = (state = initialState, action) => {
             return {
                 ...state,
                 code: action.payload,
+            };
+        case 'CLAIM_LIST_CODE_CLIENT_CHANGED':
+            return {
+                ...state,
+                codeClient: action.payload,
             };
         case 'CLAIM_LIST_RECORDED_AT_CHANGED':
             return {
@@ -257,20 +263,20 @@ const ListeReclamationsReducer = (state = initialState, action) => {
                 ...state,
                 selectedItemFiles: action.payload,
             };
-            case "CLAIM_LIST_SELECTED_ITEM_AUDIO_CHANGED":
-                return {
-                  ...state,
-                  selectedItemAudio: action.payload,
-                };
+        case "CLAIM_LIST_SELECTED_ITEM_AUDIO_CHANGED":
+            return {
+                ...state,
+                selectedItemAudio: action.payload,
+            };
         case 'CLAIM_LIST_EXTERNAL_REMEDIES_CHANGED':
             return {
                 ...state,
                 external_remedies: action.payload,
             };
         case 'CLAIM_LIST_SHOW_SELECT_PRINT_ITEMS':
-            return{
+            return {
                 ...state,
-                showSelectPrintItem:!state.showSelectPrintItem
+                showSelectPrintItem: !state.showSelectPrintItem
             }
         case 'CLAIM_LIST_CREW_CHANGED':
             return {

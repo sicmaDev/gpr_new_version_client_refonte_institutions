@@ -17,6 +17,7 @@ import {
   assignedByChanged,
   claimListErrors,
   codeChanged,
+  codeClientChanged,
   commentChanged,
   contentChanged,
   createdAtChanged,
@@ -447,6 +448,7 @@ const ListeDenonciations = (props) => {
   const clearComponentState = () => {
     props.subjectChanged("");
     props.codeChanged("");
+    props.codeClientChanged("");
     props.recordedAtChanged("");
     props.collectChanged("");
     props.productChanged("");
@@ -479,6 +481,7 @@ const ListeDenonciations = (props) => {
 
     if (mode === 1) {
       props.codeChanged(data.code ? data.code : "");
+      props.codeClientChanged(data.codeClient ? data.codeClient : "");
       props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
       props.collectChanged(data.collectionChannel.libelle ? data.collectionChannel.libelle : "");
       props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
@@ -506,6 +509,7 @@ const ListeDenonciations = (props) => {
         // console.log("dataofflineDen2",data)
 
         props.codeChanged(data.code ? data.code : "");
+        props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
         props.collectChanged(data.collectionChannel.libelle ? data.collectionChannel.libelle : "");
         props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
@@ -533,6 +537,7 @@ const ListeDenonciations = (props) => {
         // console.log("dataofflineDen",data)
         // props.idChanged(data.id ? data.id : "")
         props.codeChanged(data.code ? data.code : "");
+        props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
         props.contentChanged(data.content ? data.content : "");
         props.statusChanged(data.status ? data.status : "");
@@ -1156,10 +1161,10 @@ const ListeDenonciations = (props) => {
           <div class="col l9" style="font-size: 20px;">${addByTemp}</div>
         </div>
       `,
-      code: `
+      codeClient: `
         <div class="row" style="margin-bottom: 20px;">
           <div class="col l12">
-            <span style="font-size: 18px;"><b>Code:</b> ${props.selectedItem.code}</span>
+            <span style="font-size: 18px;"><b>CodeClient:</b> ${props.selectedItem.codeClient}</span>
           </div>
         </div>
       `,
@@ -1192,7 +1197,7 @@ const ListeDenonciations = (props) => {
     // Assemblage du contenu
     const toStri = `
       ${entete}
-      ${sections.code}
+      ${sections.codeClient}
       ${sections.objet}
       ${sections.product}
       ${sections.datereception}
@@ -1834,6 +1839,7 @@ const mapStateToProps = (state) => {
     isLoading: state.claim_list.isLoading,
     id: state.claim_list.id,
     code: state.claim_list.code,
+    codeClient: state.claim_list.codeClient,
     recorded_at: state.claim_list.recorded_at,
     collect: state.claim_list.collect,
     subject: state.claim_list.subject,
@@ -1884,6 +1890,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     codeChanged: (code) => {
       dispatch(codeChanged(code));
+    },
+    codeClientChanged: (codeClient) => {
+      dispatch(codeClientChanged(codeClient));
     },
     recordedAtChanged: (recordedAt) => {
       dispatch(recordedAtChanged(recordedAt));
