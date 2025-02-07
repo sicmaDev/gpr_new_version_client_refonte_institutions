@@ -155,7 +155,7 @@ import MoveUpIcon from '@mui/icons-material/MoveUp';
 import ForumIcon from '@mui/icons-material/Forum';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { licenseInfo } from "../../apis/LoginApi";
-
+import WarningIcon from '@mui/icons-material/Warning';
 
 
 const styles = {
@@ -1224,6 +1224,23 @@ const TraiterReclamation = (props) => {
           minute: "numeric",
         }).format(new Date(claim.createdAt));
         return createdAt;
+      },
+    },
+    {
+      key: "alertFormated",
+      text: "Alerte dans",
+      className: "created_at",
+      align: "left",
+      sortable: true,
+      cell: (claim, index) => {
+        let temps
+        if (claim.retardDay > 0 ) {
+          temps = claim.declenchedDate
+        } else {
+          temps =<div className="card-content red-text"><WarningIcon/></div>
+        }
+        return temps;
+        
       },
     },
   ];

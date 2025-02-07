@@ -96,6 +96,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { licenseInfo } from "../../apis/LoginApi";
 import axios from "axios";
 import { HOST } from "../../Utils/globals";
+import WarningIcon from '@mui/icons-material/Warning';
 
 const styles = {
   control: (base) => ({
@@ -357,6 +358,23 @@ const MesurerReclamation = (props) => {
           minute: "numeric",
         }).format(new Date(claim.createdAt));
         return createdAt;
+      },
+    },
+    {
+      key: "alertFormated",
+      text: "Alerte dans",
+      className: "created_at",
+      align: "left",
+      sortable: true,
+      cell: (claim, index) => {
+        let temps
+        if (claim.retardDay > 0 ) {
+          temps = claim.declenchedDate
+        } else {
+          temps =<div className="card-content red-text"><WarningIcon/></div>
+        }
+        return temps;
+        
       },
     },
   ];
