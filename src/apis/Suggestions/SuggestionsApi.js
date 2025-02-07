@@ -108,6 +108,7 @@ export const addSuggestionApi = async (data, props) => {
             props.etat2Changed(false)
             if (response.data.status) {
                 notify("Bravo - Suggestion ajoutée", "success");
+                listeByStatut(props, "TEMP_SAVED")
             } else {
                 notify("Erreur - Veuillez réessayer!", "error");
             }
