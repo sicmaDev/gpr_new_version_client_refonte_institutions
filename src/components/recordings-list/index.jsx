@@ -1,12 +1,22 @@
-import React, { Component }  from 'react';
+import React, { Component, useEffect }  from 'react';
 import useRecordingsList from "../../hooks/use-recordings-list";
 import DeleteIcon from '@mui/icons-material/Delete';
 import ErrorIcon from '@mui/icons-material/Error';
 import "./styles.css";
 import { Fab } from '@mui/material';
 
-export default function RecordingsList({ audio }) {
+export default function RecordingsList({ audio,persistAll=0 }) {
   const { recordings, deleteAudio } = useRecordingsList(audio);
+
+ 
+  useEffect(()=>{
+    if(persistAll>0){
+      recordings.forEach((re)=>{
+        deleteAudio(re.key)
+      })
+    }
+  },[persistAll])
+
 
   return (
     <div className="recordings-container">

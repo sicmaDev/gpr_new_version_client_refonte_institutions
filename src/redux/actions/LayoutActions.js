@@ -10,6 +10,13 @@ export const install = () =>{
         info: 'This action is used to install app initial settings'
     }
 };
+export const isAuth = (data) =>{
+    return {
+        type: 'SET_AUTHENTICATED',
+        info: 'This action is used to authenticate user',
+        payload:data,
+    }
+};
 export const authenticate = () =>{
     return {
         type: 'AUTHENTICATED',

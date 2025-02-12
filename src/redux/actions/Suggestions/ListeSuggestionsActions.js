@@ -74,6 +74,13 @@ export const codeChanged = (code) => {
         info: 'This action is used to ...'
     }
 };
+export const codeClientChanged = (codeClient) => {
+    return {
+        type: 'SUGGESTION_LIST_CODE_CLIENT_CHANGED',
+        payload: codeClient,
+        info: 'This action is used to ...'
+    }
+};
 export const recordedAtChanged = (recordedAt) => {
     return {
         type: 'SUGGESTION_LIST_RECORDED_AT_CHANGED',
@@ -122,28 +129,28 @@ export const reset = () => {
         info: 'This action is used to ...'
     }
 };
-export const itemsChanged = (items) =>{
+export const itemsChanged = (items) => {
     return {
         type: 'SUGGESTION_LIST_ITEMS_CHANGED',
         payload: items,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemChanged = (selectedItem) =>{
+export const selectedItemChanged = (selectedItem) => {
     return {
         type: 'SUGGESTION_LIST_SELECTED_ITEM_CHANGED',
         payload: selectedItem,
         info: 'This action is used to ...'
     }
 };
-export const solutionChanged = (solution) =>{
+export const solutionChanged = (solution) => {
     return {
         type: 'SUGGESTION_LIST_SOLUTION_CHANGED',
         payload: solution,
         info: 'This action is used to ...'
     }
 };
-export const statusChanged = (status) =>{
+export const statusChanged = (status) => {
     return {
         type: 'SUGGESTION_LIST_STATUS_CHANGED',
         payload: status,
@@ -192,31 +199,38 @@ export const resolvedByChanged = (resolvedBy) => {
         info: 'This action is used to ...'
     }
 };
-export const selectedFilesReset = (selectedFiles) =>{
+export const selectedFilesReset = (selectedFiles) => {
     return {
         type: 'SUGGESTION_LIST_SELECTED_FILES_RESET',
         payload: selectedFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemFilesChanged = (selectedItemFiles) =>{
+export const selectedItemFilesChanged = (selectedItemFiles) => {
     return {
         type: 'SUGGESTION_LIST_SELECTED_ITEM_FILES_CHANGED',
         payload: selectedItemFiles,
         info: 'This action is used to ...'
     }
 };
-export const showSelectPrintItemChanged = (show) =>{
-    return{
-        type:'SUGGESTION_LIST_SHOW_SELECT_PRINT_ITEMS',
-     
-        info:'This action is used to select item where users would export'
+export const selectedItemAudioChanged = (selectedItemAudio) => {
+    return {
+        type: 'SUGGESTION_LIST_SELECTED_ITEM_AUDIO_CHANGED',
+        payload: selectedItemAudio,
+        info: 'This action is used to ...'
+    }
+};
+export const showSelectPrintItemChanged = (show) => {
+    return {
+        type: 'SUGGESTION_LIST_SHOW_SELECT_PRINT_ITEMS',
+
+        info: 'This action is used to select item where users would export'
     }
 }
 export const crewChanged = (crew) => {
     return {
         type: 'SUGGESTION_LIST_CREW_CHANGED',
-        payload:crew,
+        payload: crew,
         info: 'This action is used to ...'
     }
 };
@@ -224,7 +238,7 @@ export const crewChanged = (crew) => {
 export const commentChanged = (comment) => {
     return {
         type: 'SUGGESTION_LIST_COMMENT_CHANGED',
-        payload:comment,
+        payload: comment,
         info: 'This action is used to ...'
     }
 };

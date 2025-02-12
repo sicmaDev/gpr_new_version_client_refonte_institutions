@@ -4,6 +4,10 @@ import { loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionSt
 import { HOST } from "../../Utils/globals";
 
 // GET
+const GET_SETTING_ALL = HOST + "api/v1/config/service_point/list"
+
+const GET_SETTING_DISABLED_API = HOST + "api/v1/config/service_point/disabled"
+// GET
 const GET_SETTING_API = HOST + "api/v1/config/service_point/list/false"
 // ADD
 const ADD_SETTING_API = HOST + "api/v1/config/service_point/add"
@@ -38,7 +42,46 @@ export let liste = async (props) => {
            
         });
 }
+export let all = async (props) => {
 
+    const config = {
+        method: 'GET',
+        url: GET_SETTING_ALL,
+        headers: {
+            
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    await axios(config)
+        .then(function (response) {
+            //console.log("reponse", response.data)
+            if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
+              
+                saveItemToSessionStorage(JSON.stringify(response.data.content), "app-ps")
+                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-ps")
+                props.itemsChanged(response.data.content);
+            }
+
+        })
+        .catch(function (error) {
+           
+        });
+}
+
+export let disabled = async (props,id,isDisabled) => {
+
+    const config = {
+        method: 'DELETE',
+        url: `${GET_SETTING_DISABLED_API}/${id}/${isDisabled}`,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    return axios(config)
+        
+}
 export const ajout = async (data, props) => {
 
     const config = {
@@ -60,7 +103,7 @@ export const ajout = async (data, props) => {
             props.etatChanged(false)
             notify("Bravo - Point de service ajouté", "success");
            
-           liste(props)
+           all(props)
 
         })
         .catch(function (error) {
@@ -91,7 +134,7 @@ export const modification = async (data, props) => {
             props.etat2Changed(false)
             notify("Bravo - Point de service modifié", "success");
            
-            liste(props)
+            all(props)
 
         })
         .catch(function (error) {
@@ -123,7 +166,7 @@ export const suppression = async (props) => {
            
             notify("Bravo - Point de service supprimé", "success");
            
-           liste(props)
+           all(props)
 
         })
         .catch(function (error) {

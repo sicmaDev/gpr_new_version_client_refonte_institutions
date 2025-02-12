@@ -241,6 +241,14 @@ export const selectedFilesChanged = (selectedFiles) =>{
         info: 'This action is used to ...'
     }
 };
+export const selectedItemAudioChanged = (selectedItemAudio) =>{
+    // console.log('SUGGESTION_RECORD_SELECTED_ITEM_AUDIO_CHANGED', selectedItemAudio)
+    return {
+        type: 'SUGGESTION_RECORD_SELECTED_ITEM_AUDIO_CHANGED',
+        payload: selectedItemAudio,
+        info: 'This action is used to ...'
+    }
+};
 export const selectedFilesReset = (selectedFiles) =>{
     return {
         type: 'SUGGESTION_RECORD_SELECTED_FILES_RESET',

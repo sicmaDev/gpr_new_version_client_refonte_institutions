@@ -102,6 +102,10 @@ import { v4 as uuid } from "uuid";
 import PhoneInput from "react-phone-number-input";
 import { licenseInfo } from "../../apis/LoginApi";
 import { INSTITUTION_PAYS_CODE } from "../../Utils/globals";
+import moment from "moment"
+import { downloadFilesApi } from "../../apis/WhatsappApi";
+import { reset } from "../../redux/actions/WhatsappActions";
+import { CancelOutlined } from "@mui/icons-material";
 
 
 
@@ -134,7 +138,9 @@ const EnregistrerReclamation = (props) => {
     loadItemFromLocalStorage("app-mode") !== undefined
       ? JSON.parse(loadItemFromLocalStorage("app-mode"))
       : undefined;
-      
+
+  let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -150,10 +156,10 @@ const EnregistrerReclamation = (props) => {
   useEffect(() => {
     if (mode === 1) {
       props.itemsChanged([])
-      listeByStatut(props, "TEMP_SAVED").then((r) => {});
+      listeByStatut(props, "TEMP_SAVED").then((r) => { });
     } else {
       props.itemsChanged([])
-      listeByStatutOffline(props, "TEMP_SAVED").then((r) => {});
+      listeByStatutOffline(props, "TEMP_SAVED").then((r) => { });
     }
 
     window
@@ -181,17 +187,17 @@ const EnregistrerReclamation = (props) => {
     // });
     // initDatePicker(props, 'recorded_at')
   }, []);
-  
+
 
   const [actif, setActif] = useState();
-  
+
   const licenseControl = async () => {
     try {
       let resultat = await licenseInfo();
       // console.log("resultat", resultat);
-      
+
       setActif(resultat.actif)
-      
+
     } catch (error) {
       console.error("Une erreur s'est produite :", error);
     }
@@ -206,7 +212,7 @@ const EnregistrerReclamation = (props) => {
   }, []);
 
 
- 
+
 
   //Handling the form
   let languages;
@@ -242,16 +248,107 @@ const EnregistrerReclamation = (props) => {
   // let underSubjectOptions;
   let productOptions;
 
+  // whatsapp
+
+  useEffect(() => {
+
+    if (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) {
+      clearComponentState();
+      props.contentChanged(transformConversation(props.whatsappSelectMessage))
+      props.phoneChanged(props.whatsappCurrentInbox.phone)
+    }
+  }, [""])
+
+  const transformConversation = (conversations = []) => {
+    var result = ""
+    const convert = conversations.sort((a, b) => {
+      return parseInt(a.date) - parseInt(b.date)
+    })
+
+    convert.forEach((msg) => {
+      if (msg.type === "chat") {
+
+        result += ` [${moment(parseInt(msg.date)).format("DD/MM/Y H:mm:ss")}]` + (msg.message_id.startsWith("false") ? " Plaignant: " : " GPR WHATSAPP: ") + " " + msg.content + " \n";
+      }
+    })
+    return result;
+  }
+
+  let whatsappAttachmentList;
+  // console.log("props.selectedItemFiles", props.selectedItemFiles);
+  if (props.whatsappSelectMessage.length > 0) {
+    const preuves = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat")) ?? []
+    let whatsappAttachmentListChild = preuves.map((msg) => {
+      let icon = guessExtension({ name: msg.type });
+      return (
+        <div className="col xl12 l12 m12 s12" key={msg.id}>
+          <div className="card box-shadow-none mb-1 app-file-info">
+            <div className="card-content">
+              <div className="row">
+                <div className="col xl1 l1 s1 m1">
+                  <div className="app-file-content-logo">
+                    <div className="fonticon hide">
+                      <i className="material-icons ">more_vert</i>
+                    </div>
+                    <img
+                      className="recent-file"
+                      src={icon}
+                      height="38"
+                      width="30"
+                      alt=""
+                    />
+                  </div>
+                </div>
+                <div className="col xl11 l11 s11 m11">
+                  <div className="app-file-recent-details">
+                    <div className="app-file-name font-weight-700 truncate">
+                      {msg.content}
+                    </div>
+                    <div className="app-file-size">
+
+                    </div>
+                    <div className="app-file-last-access">
+                      <span
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          // downloadFillesApi(attachment.id, attachment.name);
+                          downloadFilesApi(msg.content)
+                        }}
+                      >
+                        Télécharger
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    });
+    whatsappAttachmentList = preuves.length ? (
+      <div className="col s12 app-file-content grey lighten-4">
+        <span className="app-file-label">Pieces joints(Whatsapp) </span>
+        <div className="row app-file-recent-access mb-3">
+          {whatsappAttachmentListChild}
+        </div>
+      </div>
+    ):<></>;
+  } else {
+  }
+
+
   // //variable to show box of sms
   const [showSmsBox, setShowSmsBox] = useState(false);
   const [showAudioBox, setAudioBox] = useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
   const [underSubjectOptions, setUnderSubjectOptions] = useState([]);
+  const [clearAudio, setClearAudio] = useState(0)
+  useEffect(() => { }, [showAudioPlayer, currentAudio])
 
-  useEffect(() => {}, [showAudioPlayer, currentAudio])
 
-                                              
   const smsDefault =
     "CHER (E) BENEFICIAIRE, VOTRE RECLAMATION A BIEN ETE PRISE EN COMPTE.NOTRE EQUIPE DEDIEE S'EN OCCUPE ET VOUS CONTACTERA BIENTOT. MERCI DE CONTRIBUER A L'AMELIORATION DE NOS SERVICES.";
   const [smsToSend, setSmsToSend] = useState(smsDefault);
@@ -283,7 +380,7 @@ const EnregistrerReclamation = (props) => {
     subjectOptions = [];
   }
 
-  
+
 
   if (products !== undefined) {
     productOptions = products.map((product) => {
@@ -297,6 +394,7 @@ const EnregistrerReclamation = (props) => {
   let agencyOptions;
   let directionOptions;
   let guichetOptions;
+  units = units.filter((un) => !un.deleted)
   let unitsGroupByType =
     units !== undefined ? groupBy(units, "type") : undefined;
   //
@@ -360,9 +458,9 @@ const EnregistrerReclamation = (props) => {
     if (underSubjects !== undefined) {
       underSubjects.filter((underSubject) => {
         // console.log("underSubject.categorie.id",underSubject.categorie.id)
-        if (e.value === underSubject.categorie.id ) {
+        if (e.value === underSubject.categorie.id) {
           tmps.push({ label: underSubject.libelle, value: underSubject.id });
-        } 
+        }
       });
       setUnderSubjectOptions(tmps)
       // console.log("tmps",tmps)
@@ -371,7 +469,7 @@ const EnregistrerReclamation = (props) => {
     }
 
   };
-  
+
   const handleChange3 = (e) => {
     props.collectChanged(e.value);
     props.collectLibelleChanged(e.label);
@@ -408,8 +506,8 @@ const EnregistrerReclamation = (props) => {
     props.selectedItemChanged({});
     props.selectedItemFilesChanged([]);
     props.selectedItemAudioChanged([]);
-    audio = [];
-    
+    setClearAudio(clearAudio + 1);
+
   };
 
   const handleCancel = (e) => {
@@ -508,7 +606,7 @@ const EnregistrerReclamation = (props) => {
         props.content === undefined ||
         props.content === null) &&
       audio === null &&
-      (props.selectedItemAudio === null || (props.selectedItemAudio !== null && props.selectedItemAudio.length == 0))
+      (props.selectedItemAudio === null || (props.selectedItemAudio !== null && props.selectedItemAudio.length === 0))
     ) {
       isValid = false;
       errors["content"] = "Champ incorrect";
@@ -539,6 +637,9 @@ const EnregistrerReclamation = (props) => {
       claim["clientFirstAndLastName"] = props.lastname;
       claim["gender"] = props.gender;
       claim["address"] = props.address;
+      claim["fromWhatsapp"] = (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false;
+      claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(({type})=>(type !== "chat"))
+      claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null
       claim["phone"] = cleanPhoneNumber(props.phone);
       claim["collectionChannelId"] = props.collect;
       claim["servicePointId"] = props.unit;
@@ -567,6 +668,7 @@ const EnregistrerReclamation = (props) => {
       for (let index = 0; index < files.length; index++) {
         formData.append("files", files[index]);
       }
+     
 
       // console.log("claimenregistrer",formData);
       // HERE
@@ -584,10 +686,12 @@ const EnregistrerReclamation = (props) => {
       if (mode === 1) {
         addClaimApi(formData, props).then(() => {
           handleCancel(e);
+          props.resetWhatsapp()
         });
       } else {
         addClaimApiOffline(claim, props).then(() => {
           handleCancel(e);
+          props.resetWhatsapp()
         });
       }
     } else {
@@ -603,6 +707,9 @@ const EnregistrerReclamation = (props) => {
     claim["address"] = props.address;
     claim["phone"] = cleanPhoneNumber(props.phone);
     claim["collectionChannelId"] = props.collect;
+    claim["fromWhatsapp"] = (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false;
+    claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat"))
+    claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null
     claim["servicePointId"] = props.unit;
     claim["productId"] = props.product;
     claim["objetId"] = props.underSubject;
@@ -645,67 +752,10 @@ const EnregistrerReclamation = (props) => {
 
   if (!settingComplete.length) {
     if (isEmpty(props.selectedItem)) {
-      formButtons = 
-      (actif !== undefined && actif)  ?
-          <>
-            <LoadingButton
-              className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-              onClick={handleSave}
-              loading={props.etat}
-              loadingPosition="end"
-              endIcon={<SaveIcon />}
-              variant="contained"
-              sx={{ textTransform: "initial" }}
-            >
-              <span>Sauvegarder</span>
-            </LoadingButton>
-
-            <LoadingButton
-              onClick={(e) => {
-                e.preventDefault();
-                if (handleValidation()) {
-                  if (mode === 1) {
-                    setShowSmsBox(true);
-                    setOpen(true);
-                  } else {
-                    handleSubmit(e)
-                  }
-                  
-                }
-                props.claimRecordErrors(errors);
-              }}
-              className="waves-effect waves-effect-b waves-light btn-small"
-              loading={props.etat2}
-              loadingPosition="end"
-              endIcon={<SaveIcon />}
-              variant="contained"
-              sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-            >
-              <span>Enregistrer</span>
-            </LoadingButton>
-          </>
-        :
-        <div className="card-alert card red lighten-5">
-          <div className="card-content red-text">
-              <ul>
-                  Veuillez activer une licence.
-              </ul>
-          </div>
-        </div>
-      
-    } else {
-      formButtons = 
-      (actif !== undefined && actif)  ?
+      formButtons =
+        // (actif !== undefined && actif)  ?
         <>
-          <button
-            type="button"
-            onClick={(e) => handleCancel(e)}
-            className="waves-effect waves-effect-b waves-light red-text white lighten-4 btn-small mr-1"
-          >
-            Annuler
-          </button>
-
-          <LoadingButton
+          {props.whatsappSelectMessage.length === 0 ? <LoadingButton
             className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
             onClick={handleSave}
             loading={props.etat}
@@ -716,19 +766,28 @@ const EnregistrerReclamation = (props) => {
           >
             <span>Sauvegarder</span>
           </LoadingButton>
-
+            : <LoadingButton
+              className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+              onClick={() => { props.resetWhatsapp(); clearComponentState(); }}
+              loading={props.etat}
+              loadingPosition="end"
+              endIcon={<CancelOutlined />}
+              variant="contained"
+              sx={{ textTransform: "initial" }}
+            >
+              <span>Annuler</span>
+            </LoadingButton>}
           <LoadingButton
             onClick={(e) => {
               e.preventDefault();
               if (handleValidation()) {
-                // console.log("mode",mode)
                 if (mode === 1) {
                   setShowSmsBox(true);
                   setOpen(true);
                 } else {
-                  handleSubmit()
+                  handleSubmit(e)
                 }
-                
+
               }
               props.claimRecordErrors(errors);
             }}
@@ -742,15 +801,73 @@ const EnregistrerReclamation = (props) => {
             <span>Enregistrer</span>
           </LoadingButton>
         </>
-      :
-      <div className="card-alert card red lighten-5">
-          <div className="card-content red-text">
-              <ul>
-                  Veuillez activer une licence.
-              </ul>
-          </div>
-      </div>
-      
+      // :
+      // <div className="card-alert card red lighten-5">
+      //   <div className="card-content red-text">
+      //       <ul>
+      //           Veuillez activer une licence.
+      //       </ul>
+      //   </div>
+      // </div>
+
+    } else {
+      formButtons =
+        // (actif !== undefined && actif)  ?
+        <>
+          <button
+            type="button"
+            onClick={(e) => handleCancel(e)}
+            className="waves-effect waves-effect-b waves-light red-text white lighten-4 btn-small mr-1"
+          >
+            Annuler
+          </button>
+          {props.whatsappSelectMessage.length === 0 ?
+            <LoadingButton
+              className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+              onClick={handleSave}
+              loading={props.etat}
+              loadingPosition="end"
+              endIcon={<SaveIcon />}
+              variant="contained"
+              sx={{ textTransform: "initial" }}
+            >
+              <span>Sauvegarder</span>
+            </LoadingButton> : ""}
+
+          <LoadingButton
+            onClick={(e) => {
+              e.preventDefault();
+              if (handleValidation()) {
+                // console.log("mode",mode)
+                if (mode === 1) {
+                  setShowSmsBox(true);
+                  setOpen(true);
+                } else {
+                  handleSubmit()
+                }
+
+              }
+              props.claimRecordErrors(errors);
+            }}
+            className="waves-effect waves-effect-b waves-light btn-small"
+            loading={props.etat2}
+            loadingPosition="end"
+            endIcon={<SaveIcon />}
+            variant="contained"
+            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+          >
+            <span>Enregistrer</span>
+          </LoadingButton>
+        </>
+      // :
+      // <div className="card-alert card red lighten-5">
+      //     <div className="card-content red-text">
+      //         <ul>
+      //             Veuillez activer une licence.
+      //         </ul>
+      //     </div>
+      // </div>
+
     }
   } else {
     let output = settingComplete.map((message) => {
@@ -824,6 +941,8 @@ const EnregistrerReclamation = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     clearComponentState();
+    props.resetWhatsapp();
+
     if (mode === 1) {
       props.idChanged(data.id ? data.id : "");
       props.lastnameChanged(
@@ -914,43 +1033,43 @@ const EnregistrerReclamation = (props) => {
 
         let description = data.languageId
           ? JSON.parse(loadItemFromSessionStorage("app-langues")).filter(
-              (e) => {
-                return e.id === data.languageId;
-              }
-            )
+            (e) => {
+              return e.id === data.languageId;
+            }
+          )
           : "";
         let description1 = data.collectionChannelId
           ? JSON.parse(loadItemFromSessionStorage("app-supports")).filter(
-              (e) => {
-                return e.id === data.collectionChannelId;
-              }
-            )
+            (e) => {
+              return e.id === data.collectionChannelId;
+            }
+          )
           : "";
-          // console.log("description2",JSON.parse(loadItemFromSessionStorage("app-objets")))
+        // console.log("description2",JSON.parse(loadItemFromSessionStorage("app-objets")))
         let description2 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
             // console.log("description2",e.categorie.id === data.objetId)
-              return e.id === data.objetId;
-            })
+            return e.id === data.objetId;
+          })
           : "";
-          
-         
+
+
         let description5 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-              return e.id === data.objetId;
-            })
+            return e.id === data.objetId;
+          })
           : "";
         let description3 = data.productId
           ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
-              (e) => {
-                return e.id === data.productId;
-              }
-            )
+            (e) => {
+              return e.id === data.productId;
+            }
+          )
           : "";
         let description4 = data.servicePointId
           ? JSON.parse(loadItemFromSessionStorage("app-ps")).filter((e) => {
-              return e.id === data.servicePointId;
-            })
+            return e.id === data.servicePointId;
+          })
           : "";
 
         props.languageChanged(data.languageId ? description[0].id : "");
@@ -1014,31 +1133,31 @@ const EnregistrerReclamation = (props) => {
   };
 
   let jfichiers;
-  if (mode ===1) {
-      jfichiers = 
+  if (mode === 1) {
+    jfichiers =
       <>
-          <div className="col l12 m12 s12 file-field input-field">
-              <div className="btn btn-small file-small brand-blue">
-                  <span>Joindre des fichiers</span>
-                  <input type="file" multiple
-                          onChange={(e) => handleFile(e)}
-                          accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
-                  />
-              </div>                                     
-                                                          
-              <div className="file-path-wrapper">
-                  <input className="file-path validate" type="text"
-                          value={props.selectedFiles}/>
-              </div>
-              <small className="errorTxt4">
-                  <div id="cpassword-error"
-                      className="error">{props.errors.selectedFiles}</div>
-              </small>
+        <div className="col l12 m12 s12 file-field input-field">
+          <div className="btn btn-small file-small brand-blue">
+            <span>Joindre des fichiers</span>
+            <input type="file" multiple
+              onChange={(e) => handleFile(e)}
+              accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
+            />
           </div>
-          
+
+          <div className="file-path-wrapper">
+            <input className="file-path validate" type="text"
+              value={props.selectedFiles} />
+          </div>
+          <small className="errorTxt4">
+            <div id="cpassword-error"
+              className="error">{props.errors.selectedFiles}</div>
+          </small>
+        </div>
+
       </>
   } else {
-      jfichiers = ""
+    jfichiers = ""
   }
 
   let attachmentList;
@@ -1108,10 +1227,10 @@ const EnregistrerReclamation = (props) => {
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
     let audioListChild = props.selectedItemAudio.map((attachment) => {
-   
+
       return (
         <div className="col xl12 l12 m12 s12" key={attachment.id}>
-         
+
           <div className="card box-shadow-none mb-1 ">
             <div className="card-content">
               <div className="row">
@@ -1126,27 +1245,27 @@ const EnregistrerReclamation = (props) => {
                       ) / 100}{" "}
                       Ko
                     </div>
-                    <div className="app-file-last-access" id={"audio-"+attachment.id}>
+                    <div className="app-file-last-access" id={"audio-" + attachment.id}>
                       <a
-                         style={{ cursor: "pointer" }}
-                         onClick={(e) => {
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
                           downloadAudioApi(attachment.id, attachment.name).then(
                             (data) => {
                               // console.log(data);
-                              
+
                               let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
                               let aud = new Audio(window.URL.createObjectURL(blobAudio));
                               setCurrentAudio(window.URL.createObjectURL(blobAudio))
-                              setAudioPlayer("audio-"+attachment.id)
+                              setAudioPlayer("audio-" + attachment.id)
                             }
                           )
-                         }}
-                      >{showAudioPlayer === "audio-"+attachment.id && ("")} {showAudioPlayer !=="audio-"+attachment.id && ("Afficher")}</a>
-                       
-                      {showAudioPlayer === "audio-"+attachment.id  && (<audio controls autoPlay onEnded={(e) => {setAudioPlayer("")}}>
-                        <source src= {currentAudio} type="audio/ogg"  />
+                        }}
+                      >{showAudioPlayer === "audio-" + attachment.id && ("")} {showAudioPlayer !== "audio-" + attachment.id && ("Afficher")}</a>
+
+                      {showAudioPlayer === "audio-" + attachment.id && (<audio controls autoPlay onEnded={(e) => { setAudioPlayer("") }}>
+                        <source src={currentAudio} type="audio/ogg" />
                         Votre navigateur ne prend pas en charge l'élément audio.
-                      </audio>) }
+                      </audio>)}
                     </div>
                   </div>
                 </div>
@@ -1249,13 +1368,13 @@ const EnregistrerReclamation = (props) => {
           >
             <MicIcon />
           </Fab>
-        </div> 
+        </div>
       </>
     )
   } else {
     formAudio = ""
   }
- 
+
 
   return (
     //  'Enregistrer réclamation'
@@ -1298,34 +1417,34 @@ const EnregistrerReclamation = (props) => {
 
               <div className="row">
                 {/* <div className="col s12  justify-content-end mt-3"> */}
-                  <>
-                    <div className="col l6 m12 s12 mt-4">
-                      <form onSubmit={handleSubmit}>
-                        <button
-                          type="submit"
-                          className="btn waves-effect waves-light mr-1 btn-small red-text red lighten-4 ml-1 mr-3"
-                          style={{ width:"100%" }}
-                        >
-                          Enregistrer Uniquement
-                        </button>
-                      </form>
-                    </div>
-
-                    <div className="col l6 m12 s12 mt-4">
-                      <a
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setShowSmsBox(false);
-                          sendSms(e);
-                        }}
-                        className="waves-effect waves-effect-b waves-light btn-small"
-                        style={{ width:"100%" }}
+                <>
+                  <div className="col l6 m12 s12 mt-4">
+                    <form onSubmit={handleSubmit}>
+                      <button
+                        type="submit"
+                        className="btn waves-effect waves-light mr-1 btn-small red-text red lighten-4 ml-1 mr-3"
+                        style={{ width: "100%" }}
                       >
-                        Enregistrer et Notifier
-                      </a>
-                    </div>
-                   
-                  </>
+                        Enregistrer Uniquement
+                      </button>
+                    </form>
+                  </div>
+
+                  <div className="col l6 m12 s12 mt-4">
+                    <span
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowSmsBox(false);
+                        sendSms(e);
+                      }}
+                      className="waves-effect waves-effect-b waves-light btn-small"
+                      style={{ width: "100%" }}
+                    >
+                      Enregistrer et Notifier
+                    </span>
+                  </div>
+
+                </>
                 {/* </div> */}
               </div>
             </DialogContent>
@@ -1481,12 +1600,12 @@ const EnregistrerReclamation = (props) => {
                               <PhoneInput
                                 international
                                 countryCallingCodeEditable={false}
-                                defaultCountry={INSTITUTION_PAYS_CODE}
+                                defaultCountry={appInstitution !== undefined ? appInstitution.paysCode : "BJ"}
                                 value={props.phone}
                                 onChange={(e) =>
                                   props.phoneChanged(e)
                                 }
-                                />
+                              />
                               {/* <input
                                 type="tel"
                                 placeholder=""
@@ -1525,13 +1644,13 @@ const EnregistrerReclamation = (props) => {
                                 value={
                                   props.gender
                                     ? {
-                                        label: props.gender,
-                                        value: props.gender,
-                                      }
+                                      label: props.gender,
+                                      value: props.gender,
+                                    }
                                     : {
-                                        label: "Sélectionner le genre",
-                                        value: "",
-                                      }
+                                      label: "Sélectionner le genre",
+                                      value: "",
+                                    }
                                 }
                                 options={genderOptions}
                                 className="react-select-container mt-4"
@@ -1561,9 +1680,9 @@ const EnregistrerReclamation = (props) => {
                                 value={
                                   props.language
                                     ? {
-                                        label: props.languageLibelle,
-                                        value: props.language,
-                                      }
+                                      label: props.languageLibelle,
+                                      value: props.language,
+                                    }
                                     : "Sélectionner la langue"
                                 }
                                 options={languageOptions}
@@ -1615,7 +1734,7 @@ const EnregistrerReclamation = (props) => {
                                 </div>
                               </small>
                             </div>
-                           
+
                           </div>
                         </div>
                         <br />
@@ -1689,9 +1808,9 @@ const EnregistrerReclamation = (props) => {
                                 value={
                                   props.collect
                                     ? {
-                                        label: props.collectLibelle,
-                                        value: props.collect,
-                                      }
+                                      label: props.collectLibelle,
+                                      value: props.collect,
+                                    }
                                     : "Sélectionner la modalité de dépôt"
                                 }
                                 options={collectOptions}
@@ -1730,9 +1849,9 @@ const EnregistrerReclamation = (props) => {
                                 value={
                                   props.subject
                                     ? {
-                                        label: props.subjectLibelle,
-                                        value: props.subject,
-                                      }
+                                      label: props.subjectLibelle,
+                                      value: props.subject,
+                                    }
                                     : "Sélectionner la catégorie de l'objet"
                                 }
                                 options={subjectOptions}
@@ -1764,9 +1883,9 @@ const EnregistrerReclamation = (props) => {
                                 value={
                                   props.underSubject
                                     ? {
-                                        label: props.underSubjectLibelle,
-                                        value: props.underSubject,
-                                      }
+                                      label: props.underSubjectLibelle,
+                                      value: props.underSubject,
+                                    }
                                     : "Sélectionner le motif de réclamation"
                                 }
                                 options={underSubjectOptions}
@@ -1798,9 +1917,9 @@ const EnregistrerReclamation = (props) => {
                                 value={
                                   props.product
                                     ? {
-                                        label: props.productLibelle,
-                                        value: props.product,
-                                      }
+                                      label: props.productLibelle,
+                                      value: props.product,
+                                    }
                                     : "Sélectionner le produit"
                                 }
                                 options={productOptions}
@@ -1830,9 +1949,9 @@ const EnregistrerReclamation = (props) => {
                                 value={
                                   props.unit
                                     ? {
-                                        label: props.unitLibelle,
-                                        value: props.unit,
-                                      }
+                                      label: props.unitLibelle,
+                                      value: props.unit,
+                                    }
                                     : "Sélectionner le point de service"
                                 }
                                 options={unitOptions}
@@ -1876,7 +1995,7 @@ const EnregistrerReclamation = (props) => {
                                 </Fab>
                               </div>  */}
                               {formAudio}
-                              
+
                               <textarea
                                 id="content"
                                 name="content"
@@ -1905,12 +2024,13 @@ const EnregistrerReclamation = (props) => {
                               </small>
                             </div>
                             <div className="col l12 m12 s12 mb-3">
-                               <RecordingsList audio={audio} /> 
-                              
+                              <RecordingsList audio={audio} persistAll={clearAudio} />
+
                             </div>
                             <div className="row">{audioList}</div>
                             {jfichiers}
                             <div className="row">{attachmentList}</div>
+                            <div className="row">{whatsappAttachmentList}</div>
                           </div>
                         </div>
 
@@ -1933,6 +2053,11 @@ const EnregistrerReclamation = (props) => {
 
 const mapStateToProps = (state) => {
   return {
+    whatsappInboxs: state.whatsapp.inboxs,
+    whatsappMessages: state.whatsapp.messages,
+    whatsappCurrentInbox: state.whatsapp.currentInbox,
+    whatsappSelectMessage: state.whatsapp.selectMessage,
+
     isLoading: state.claim_record.isLoading,
     id: state.claim_record.id,
     firstname: state.claim_record.firstname,
@@ -2068,6 +2193,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     etat2Changed: (etat2) => {
       dispatch(etat2Changed(etat2));
+    },
+    resetWhatsapp: () => {
+      dispatch(reset())
     },
   };
 };

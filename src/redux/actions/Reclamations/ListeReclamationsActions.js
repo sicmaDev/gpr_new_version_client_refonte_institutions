@@ -74,6 +74,13 @@ export const codeChanged = (code) => {
         info: 'This action is used to ...'
     }
 };
+export const codeClientChanged = (codeClient) => {
+    return {
+        type: 'CLAIM_LIST_CODE_CLIENT_CHANGED',
+        payload: codeClient,
+        info: 'This action is used to ...'
+    }
+};
 export const recordedAtChanged = (recordedAt) => {
     return {
         type: 'CLAIM_LIST_RECORDED_AT_CHANGED',
@@ -129,49 +136,49 @@ export const reset = () => {
         info: 'This action is used to ...'
     }
 };
-export const itemsChanged = (items) =>{
+export const itemsChanged = (items) => {
     return {
         type: 'CLAIM_LIST_ITEMS_CHANGED',
         payload: items,
         info: 'This action is used to ...'
     }
 };
-export const agentsChanged = (agents) =>{
+export const agentsChanged = (agents) => {
     return {
         type: 'CLAIM_LIST_AGENTS_CHANGED',
         payload: agents,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemChanged = (selectedItem) =>{
+export const selectedItemChanged = (selectedItem) => {
     return {
         type: 'CLAIM_LIST_SELECTED_ITEM_CHANGED',
         payload: selectedItem,
         info: 'This action is used to ...'
     }
 };
-export const solutionChanged = (solution) =>{
+export const solutionChanged = (solution) => {
     return {
         type: 'CLAIM_LIST_SOLUTION_CHANGED',
         payload: solution,
         info: 'This action is used to ...'
     }
 };
-export const commentChanged = (comment) =>{
+export const commentChanged = (comment) => {
     return {
         type: 'CLAIM_LIST_COMMENT_CHANGED',
         payload: comment,
         info: 'This action is used to ...'
     }
 };
-export const statusChanged = (status) =>{
+export const statusChanged = (status) => {
     return {
         type: 'CLAIM_LIST_STATUS_CHANGED',
         payload: status,
         info: 'This action is used to ...'
     }
 };
-export const motifChanged = (motif) =>{
+export const motifChanged = (motif) => {
     return {
         type: 'CLAIM_LIST_MOTIF_CHANGED',
         payload: motif,
@@ -276,35 +283,35 @@ export const appraisalChanged = (appraisal) => {
         info: 'This action is used to ...'
     }
 };
-export const selectedFilesReset = (selectedFiles) =>{
+export const selectedFilesReset = (selectedFiles) => {
     return {
         type: 'CLAIM_LIST_SELECTED_FILES_RESET',
         payload: selectedFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemFilesChanged = (selectedItemFiles) =>{
+export const selectedItemFilesChanged = (selectedItemFiles) => {
     return {
         type: 'CLAIM_LIST_SELECTED_ITEM_FILES_CHANGED',
         payload: selectedItemFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemAudioChanged = (selectedItemAudio) =>{
+export const selectedItemAudioChanged = (selectedItemAudio) => {
     return {
         type: 'CLAIM_LIST_SELECTED_ITEM_AUDIO_CHANGED',
         payload: selectedItemAudio,
         info: 'This action is used to ...'
     }
 };
-export const showSelectPrintItemChanged = (show) =>{
-    return{
-        type:'CLAIM_LIST_SHOW_SELECT_PRINT_ITEMS',
-     
-        info:'This action is used to select item where users would export'
+export const showSelectPrintItemChanged = (show) => {
+    return {
+        type: 'CLAIM_LIST_SHOW_SELECT_PRINT_ITEMS',
+
+        info: 'This action is used to select item where users would export'
     }
 }
-export const externalRemediesChanged = (externalRemedies) =>{
+export const externalRemediesChanged = (externalRemedies) => {
     return {
         type: 'CLAIM_LIST_EXTERNAL_REMEDIES_CHANGED',
         payload: externalRemedies,
@@ -314,14 +321,14 @@ export const externalRemediesChanged = (externalRemedies) =>{
 export const crewChanged = (crew) => {
     return {
         type: 'CLAIM_LIST_CREW_CHANGED',
-        payload:crew,
+        payload: crew,
         info: 'This action is used to ...'
     }
 };
 export const sessionChanged = (session) => {
     return {
         type: 'CLAIM_LIST_SESSION_CHANGED',
-        payload:session,
+        payload: session,
         info: 'This action is used to ...'
     }
 };

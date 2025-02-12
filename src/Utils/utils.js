@@ -37,6 +37,7 @@ export const saveItemToSessionStorage = (item, field) => {
     } catch (e) {
     }
 }
+
 export const loadItemFromSessionStorage = (field) => {
     try {
        
@@ -93,15 +94,17 @@ export const today = (items)=>{
     return new Intl.DateTimeFormat("fr-FR", {year: "numeric", month: "2-digit", day: "2-digit"}).format(new Date(Date.now()));
 }
 export const groupBy = (array, key) => {
-    // Return the end result
+    // Vérifier si `array` est bien un tableau
+    if (!Array.isArray(array)) {
+        return {}; // retourner un objet vide si ce n'est pas un tableau
+    }
+
+    // Retourner le résultat final
     return array.reduce((result, currentValue) => {
-        // If an array already present for key, push it to the array. Else create an array and push the object
-        (result[currentValue[key]] = result[currentValue[key]] || []).push(
-            currentValue
-        );
-        // Return the current iteration `result` value, this will be taken as next iteration `result` value and accumulate
-        return result;
-    }, {}); // empty object is the initial value for result object
+        // Si un tableau est déjà présent pour la clé, on ajoute l'élément, sinon on crée un nouveau tableau
+        (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
+        return result; // Accumuler le résultat à chaque itération
+    }, {}); // L'objet vide est la valeur initiale du résultat
 };
 export const hexToRgb = (hex) => {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
@@ -219,16 +222,22 @@ export const guessExtension = (attachment) => {
     if (attachment.name.split(".")[1]=== "xlsx" || attachment.name.split(".")[1] === "xls") {
         icon = excelIcon
     }
-    if (attachment.name.split(".")[1] === "docx" || attachment.name.split(".")[1] === "doc" || attachment.name.split(".")[1] === "rtf") {
+    if (attachment.name.split(".")[1] === "docx" || attachment.name.split(".")[1] === "doc" || attachment.name.split(".")[1] === "rtf" || attachment.name === "document") {
         icon = wordIcon
     }
     if (attachment.name.split(".")[1] === "jpg" || attachment.name.split(".")[1] === "png" || attachment.name.split(".")[1] === "jpeg") {
         icon = imageIcon
     }
+    if (attachment.name === "image" || attachment.name === "sticker" || attachment.name.split(".")[1] === "jpeg") {
+        icon = imageIcon
+    }
     if (attachment.name.split(".")[1] === "mp3" || attachment.name.split(".")[1] === "ogg" || attachment.name.split(".")[1] === "wav") {
         icon = audioIcon
     }
-    if (attachment.name.split(".")[1] === "mp4") {
+    if (attachment.name === "audio" || attachment.name === "ptt") {
+        icon = audioIcon
+    }
+    if (attachment.name.split(".")[1] === "mp4" || attachment.name === "video") {
         icon = videoIcon
     }
     return icon;
@@ -245,6 +254,37 @@ export const formatDate = (date) => {
     return (createdAt)
 }
 
+
+export const convertToCsv = (objArray)=> {
+    var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+    var str = '';
+
+    for (var i = 0; i < array.length; i++) {
+        var line = '';
+        for (var index in array[i]) {
+            if (line !== '') line += ','
+
+            line += array[i][index];
+        }
+
+        str += line + '\r\n';
+    }
+
+    return str;
+}
+export const generateString  = (count)=>{
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < count) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      counter += 1;
+    }
+    return result;
+
+}
+
 export const selectableYears = (startYear)=>{
     let currentYear = new Date().getFullYear(), years = [];
     startYear = startYear || 1980;
@@ -252,6 +292,9 @@ export const selectableYears = (startYear)=>{
         years.push(startYear++);
     }
     return years.reverse();
+}
+export const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export const normalizeStats = (value) => {

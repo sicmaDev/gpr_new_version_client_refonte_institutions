@@ -1,0 +1,31 @@
+{
+  "translation": {
+    "gCopyright": "Copyright ©2024 SICMa & Associés. Todos los derechos reservados",
+    "gUser": "Usuario",
+    "gUsers": "Usuarios",
+    "gNext": "Siguiente",
+    "gInstitution": "Instituciones",
+    "gInstitutions": "Institución",
+    "gAgence": "Agencia",
+    "gAgences": "Agencias",
+    "gAdmin": "Director",
+    "gAdmins": "Directores",
+
+    "landingHeadTitle": "GPR WEB es un software de gestión de reclamaciones diseñado por SICMa & Associés para ayudar a las instituciones microfinancieras y otras organizaciones a gestionar mejor sus reclamaciones.",
+    "landingHeadSubtitle": "Desde el momento en que se registra la reclamación del cliente, hasta su tramitación y cierre. Sencillo, seguro y fiable. Una herramienta de análisis y toma de decisiones basada en la presentación de tablas, estadísticas e informes resumidos. GPR le ayuda a desarrollar estrategias claras.",
+    "landingBtnAuth": "Inicio de sesión",
+    "landingBtnSign": "Crear una cuenta",
+    "landingBtnMore": "Seguir leyendo",
+    "landingPrstTitle": "Una empresa de consultoría en inversiones y gestión de organizaciones",
+    "landingPrstBtn": "Descargar la presentación rápida",
+
+    "signAdminAccount": "Cuenta de administrador",
+    "signHaveAccount": "¿Ya tiene una cuenta?",
+
+    "loginEmail":"Dirección de correo electrónico",
+    "loginPassword":"Contraseña",
+    "loginAutentificate":"Autenticar",
+    "loginTextSingn":"Quiere utilizar GPR en su institución",
+    "loginButtonRegisterBusiness":"Registra tu negocio"
+  }
+}

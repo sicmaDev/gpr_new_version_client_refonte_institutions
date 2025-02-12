@@ -2,7 +2,7 @@ import axios from "axios";
 import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { notify } from "../../Utils/alert";
 import { HOST } from "../../Utils/globals";
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
 
 //console.log("HOST DENUNCIATION: " + HOST)
 const ADD_TEMP_DENUNCIATION_API = HOST + "api/v1/denunciation/save_temp"
@@ -18,6 +18,8 @@ const LIST_DENUNCIATION_API_TO_ASSURE_SATISFACTION = HOST + "api/v1/denunciation
 const FILES_DENUNCIATION_API = HOST + "api/v1/denunciation/getFilesBy/%s"
 const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const TRANSMISSION_DENUNCIATION_API = HOST + "api/v1/denunciation/transmit_to"
+const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
+const AUDIOS_DENUNCIATION_API = HOST + "api/v1/claim/getAudiosBy/%s"
 
 
 
@@ -34,7 +36,7 @@ export const listeTousStatuts = async (props) => {
     };
     await axios(config)
         .then(function (response) {
-           
+
             // console.log("response.data.content",response.data.content)
             props.itemsChanged(response.data.content)
             return response.data.content
@@ -43,11 +45,11 @@ export const listeTousStatuts = async (props) => {
             return error;
         });
 }
+export const getDenunAudioApi = async (data, props) => {
 
-export const listeByStatut = async (props,state) => {
     const config = {
         method: 'get',
-        url: LIST_DENUNCIATION_API_BY_STATE.replace("state",state),
+        url: AUDIOS_DENUNCIATION_API.replace("%s", data),
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
@@ -56,7 +58,30 @@ export const listeByStatut = async (props,state) => {
     };
     await axios(config)
         .then(function (response) {
-           
+
+            // notify("Bravo - Mesure de satisfaction effectuée", "success");
+            // console.log("response data content",response.data)
+            props.selectedItemAudioChanged(response.data)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreur",error)
+        });
+}
+
+export const listeByStatut = async (props, state) => {
+    const config = {
+        method: 'get',
+        url: LIST_DENUNCIATION_API_BY_STATE.replace("state", state),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    await axios(config)
+        .then(function (response) {
+
             // console.log("response",response.data.content)
             props.itemsChanged(response.data.content)
 
@@ -79,7 +104,7 @@ export const listeTreat = async (props) => {
     };
     await axios(config)
         .then(function (response) {
-           
+
             // console.log("responsetreat",response.data.content)
             props.itemsChanged(response.data.content)
 
@@ -102,7 +127,7 @@ export const listeAssurance = async (props) => {
     };
     await axios(config)
         .then(function (response) {
-           
+
             // console.log("responseassure",response.data.content)
             props.itemsChanged(response.data.content)
 
@@ -128,10 +153,13 @@ export const addTempDenunciationApi = async (data, props) => {
     };
     await axios(config)
         .then(function (response) {
-
-            notify("Bravo - Dénonciation sauvegardée", "success");
-            listeByStatut(props,"TEMP_SAVED")
             props.etatChanged(false)
+            if (response.data.status) {
+                notify("Bravo - Dénonciation sauvegardée", "success");
+                listeByStatut(props, "TEMP_SAVED")
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
         })
         .catch(function (error) {
             props.etatChanged(false)
@@ -154,8 +182,13 @@ export const addDenunciationApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
-            notify("Bravo - Dénonciation ajoutée", "success");
-            listeByStatut(props,"TEMP_SAVED")
+            if (response.data.status) {
+                notify("Bravo - Dénonciation ajoutée", "success");
+                listeByStatut(props, "TEMP_SAVED")
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etat2Changed(false)
@@ -163,6 +196,52 @@ export const addDenunciationApi = async (data, props) => {
             // console.log("erreur",error)
         });
 }
+export const downloadAudioApi = async (data, filename) => {
+
+    const config = {
+        method: 'get',
+        url: AUDIOS_DOWNLOAD_API.replace("%s", data),
+        responseType: 'blob',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token'),
+
+        },
+
+    };
+    try {
+        const response = await axios(config);
+        // console.log("response audio ", response.data);
+        return response.data;
+    } catch (error) {
+        notify("Erreur - Veuillez réessayer!", "error");
+        // console.log("erreur",error)
+    }
+    // await axios(config)
+    //     .then(function (response) {
+
+    //         notify("Bravo - Téléchargement du fichier effectué", "success");
+    //         console.log("response data content",response.data)
+    //         // Créez un objet URL à partir de la réponse
+    //         const url = window.URL.createObjectURL(new Blob([response.data]));
+
+    //         // Créez un lien invisible et déclenchez le téléchargement
+    //         const link = document.createElement('a');
+    //         link.href = url;
+    //         link.setAttribute('download', filename); // Remplacez 'nom_du_fichier.ext' par le nom du fichier
+    //         document.body.appendChild(link);
+    //         link.click();
+
+    //         // Libérez l'URL de l'objet lorsque le téléchargement est terminé
+    //         window.URL.revokeObjectURL(url);
+    //     })
+    //     .catch(function (error) {
+    //         notify("Erreur - Veuillez réessayer!", "error");
+    //         console.log("erreur",error)
+    //     });
+}
+
 
 export const affectDenunciationApi = async (data, props) => {
 
@@ -179,8 +258,13 @@ export const affectDenunciationApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etatChanged(false)
-            notify("Bravo - Dénonciation affectée", "success");
-           listeTreat(props)
+            if (response.data.status) {
+                notify("Bravo - Dénonciation affectée", "success");
+                listeTreat(props)
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etatChanged(false)
@@ -204,18 +288,23 @@ export const treatDenunciationApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
-            notify("Bravo - Dénonciation traitée", "success");
-            if (data.type) {
-                if (data.type==="assurance") {
-                    listeAssurance(props);
-                } else if(data.type==="classee") {
-                    listeByStatut(props,"CLASSED");
+            if (response.data.status) {
+                notify("Bravo - Dénonciation traitée", "success");
+                if (data.type) {
+                    if (data.type === "assurance") {
+                        listeAssurance(props);
+                    } else if (data.type === "classee") {
+                        listeByStatut(props, "CLASSED");
+                    }
+
+                } else {
+                    listeTreat(props)
                 }
-                
             } else {
-                listeTreat(props)
+                notify("Erreur - Veuillez réessayer!", "error");
             }
-            
+
+
         })
         .catch(function (error) {
             props.etat2Changed(false)
@@ -239,8 +328,13 @@ export const approveDenunciationSolutionApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
-            notify("Bravo - Solution approuvée", "success");
-            listeTreat(props)
+            if (response.data.status) {
+                notify("Bravo - Solution approuvée", "success");
+                listeTreat(props)
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etat2Changed(false)
@@ -264,8 +358,13 @@ export const unapproveDenunciationSolutionApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etatChanged(false)
-            notify("Bravo - Solution désapprouvée", "success");
-            listeTreat(props)
+            if (response.data.status) {
+                notify("Bravo - Solution désapprouvée", "success");
+                listeTreat(props)
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etatChanged(false)
@@ -290,12 +389,17 @@ export const transmissionDenunciationApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etat3Changed(false)
-            notify("Bravo - Dénonciation transmise au pilote", "success");
-            listeTreat(props)
+            if (response.data.status) {
+                notify("Bravo - Dénonciation transmise avec succès", "success");
+                listeTreat(props)
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
+
         })
         .catch(function (error) {
             props.etat3Changed(false)
-            if (error.response.data.content !=="") {
+            if (error.response.data.content !== "") {
                 notify(error.response.data.content.message, "error");
             } else {
                 notify("Erreur - Veuillez réessayer!", "error");
@@ -338,9 +442,9 @@ export const downloadFillesApi = async (data, filename) => {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
             'Authorization': "Bearer " + loadItemFromSessionStorage('token'),
-            
+
         },
-    
+
     };
     await axios(config)
         .then(function (response) {
@@ -367,55 +471,55 @@ export const downloadFillesApi = async (data, filename) => {
 }
 
 //offline
-export const listeByStatutOffline = async (props,state) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))): [];
-    let densTemp = dens.filter((e) => {return e.status == state})
+export const listeByStatutOffline = async (props, state) => {
+    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))) : [];
+    let densTemp = dens.filter((e) => { return e.status == state })
 
     // console.log(densTemp)
     props.itemsChanged(densTemp)
-    
+
     return densTemp
-      
+
 }
 
 export const listeTousStatutsOffline = async (props) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))): [];
-    let densGlobal = dens.filter((e) => {return e.status !== "TEMP_SAVED"})
+    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))) : [];
+    let densGlobal = dens.filter((e) => { return e.status !== "TEMP_SAVED" })
 
     props.itemsChanged(densGlobal)
-    
+
     return densGlobal;
-   
+
 }
 
 export const addTempDenunciationApiOffline = async (data, props) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))): [];
+    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))) : [];
 
     //date
     let datetmp = new Date();
-    let jour = (datetmp.getDate()) < 10 ? "0"+(datetmp.getDate()) : datetmp.getDate()
-    let mois = (datetmp.getMonth() + 1) < 10 ? "0"+(datetmp.getMonth() + 1) : datetmp.getMonth() + 1
-    let heures = (datetmp.getHours() ) < 10 ? "0"+(datetmp.getHours()) : datetmp.getHours()
-    let minutes = (datetmp.getMinutes() ) < 10 ? "0"+(datetmp.getMinutes()) : datetmp.getMinutes()
-    let secondes = (datetmp.getSeconds() ) < 10 ? "0"+(datetmp.getSeconds()) :datetmp.getSeconds()
-    let created_at = datetmp.getFullYear()+ "-" + mois + "-" + jour + "T" + heures + ":" + minutes + ":" + secondes
+    let jour = (datetmp.getDate()) < 10 ? "0" + (datetmp.getDate()) : datetmp.getDate()
+    let mois = (datetmp.getMonth() + 1) < 10 ? "0" + (datetmp.getMonth() + 1) : datetmp.getMonth() + 1
+    let heures = (datetmp.getHours()) < 10 ? "0" + (datetmp.getHours()) : datetmp.getHours()
+    let minutes = (datetmp.getMinutes()) < 10 ? "0" + (datetmp.getMinutes()) : datetmp.getMinutes()
+    let secondes = (datetmp.getSeconds()) < 10 ? "0" + (datetmp.getSeconds()) : datetmp.getSeconds()
+    let created_at = datetmp.getFullYear() + "-" + mois + "-" + jour + "T" + heures + ":" + minutes + ":" + secondes
     // console.log("datee",created_at)
 
     //données
-    data["status"]="TEMP_SAVED"
-    data["createdAt"]= created_at
+    data["status"] = "TEMP_SAVED"
+    data["createdAt"] = created_at
 
     if (data["code"] === "") {
         //code
-        let code = "den" + uuidv4().substring(0, 5)+'-'+(JSON.parse(loadItemFromSessionStorage('app-user'))).servicePointDto.uuid +'-'+(JSON.parse(loadItemFromSessionStorage('app-user')).code)
+        let code = "den" + uuidv4().substring(0, 5) + '-' + (JSON.parse(loadItemFromSessionStorage('app-user'))).servicePointDto.uuid + '-' + (JSON.parse(loadItemFromSessionStorage('app-user')).code)
         // console.log("codeeee",code)
-        data["code"]= code
+        data["code"] = code
 
         dens.push(data);
-        saveItemToLocalStorage(JSON.stringify(dens),"dens-TS")
+        saveItemToLocalStorage(JSON.stringify(dens), "dens-TS")
     } else {
-        let densTemp = dens.filter((e) => {return e.code !== data["code"] })
-        let densF = dens.filter((e) => {return e.code === data["code"] })
+        let densTemp = dens.filter((e) => { return e.code !== data["code"] })
+        let densF = dens.filter((e) => { return e.code === data["code"] })
         data["id"] = densF[0].id
 
         // console.log("densTemp1",densTemp)
@@ -423,60 +527,60 @@ export const addTempDenunciationApiOffline = async (data, props) => {
         // console.log("data",data)
         // console.log("densTemp3",dens)
         densTemp.push(data);
-        saveItemToLocalStorage(JSON.stringify(densTemp),"dens-TS")
+        saveItemToLocalStorage(JSON.stringify(densTemp), "dens-TS")
     }
-    
+
 
 
 
     // dens.push(data);
     // saveItemToLocalStorage(JSON.stringify(dens),"dens-TS")
-    listeByStatutOffline(props,"TEMP_SAVED")
+    listeByStatutOffline(props, "TEMP_SAVED")
     props.etatChanged(false)
 
     notify("Bravo - Dénonciation sauvegardée", "success")
-  
+
 }
 
 export const addDenunciationApiOffline = async (data, props) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))): [];
+    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))) : [];
 
     //date
     let datetmp = new Date();
-    let jour = (datetmp.getDate()) < 10 ? "0"+(datetmp.getDate()) : datetmp.getDate()
-    let mois = (datetmp.getMonth() + 1) < 10 ? "0"+(datetmp.getMonth() + 1) : datetmp.getMonth() + 1
-    let heures = (datetmp.getHours() ) < 10 ? "0"+(datetmp.getHours()) : datetmp.getHours()
-    let minutes = (datetmp.getMinutes() ) < 10 ? "0"+(datetmp.getMinutes()) : datetmp.getMinutes()
-    let secondes = (datetmp.getSeconds() ) < 10 ? "0"+(datetmp.getSeconds()) :datetmp.getSeconds()
-    let created_at = datetmp.getFullYear()+ "-" + mois + "-" + jour + "T" + heures + ":" + minutes + ":" + secondes
+    let jour = (datetmp.getDate()) < 10 ? "0" + (datetmp.getDate()) : datetmp.getDate()
+    let mois = (datetmp.getMonth() + 1) < 10 ? "0" + (datetmp.getMonth() + 1) : datetmp.getMonth() + 1
+    let heures = (datetmp.getHours()) < 10 ? "0" + (datetmp.getHours()) : datetmp.getHours()
+    let minutes = (datetmp.getMinutes()) < 10 ? "0" + (datetmp.getMinutes()) : datetmp.getMinutes()
+    let secondes = (datetmp.getSeconds()) < 10 ? "0" + (datetmp.getSeconds()) : datetmp.getSeconds()
+    let created_at = datetmp.getFullYear() + "-" + mois + "-" + jour + "T" + heures + ":" + minutes + ":" + secondes
     // console.log("datee",created_at)
 
     //code
-    let code = "den" + uuidv4().substring(0, 5)+'-'+(JSON.parse(loadItemFromSessionStorage('app-user'))).servicePointDto.uuid +'-'+(JSON.parse(loadItemFromSessionStorage('app-user')).code)
+    let code = "den" + uuidv4().substring(0, 5) + '-' + (JSON.parse(loadItemFromSessionStorage('app-user'))).servicePointDto.uuid + '-' + (JSON.parse(loadItemFromSessionStorage('app-user')).code)
     // console.log("codeeee",code)
-    
+
 
     //données
-    data["status"]="SAVED"
-    data["createdAt"]= created_at
-   
+    data["status"] = "SAVED"
+    data["createdAt"] = created_at
+
 
     if (data["code"] === "") {
-        data["code"]= code
+        data["code"] = code
         // console.log("dataasave",data)
         dens.push(data);
-        saveItemToLocalStorage(JSON.stringify(dens),"dens-TS")
-    }else{
-        let densTemp = dens.filter((e) => {return e.code !== data["code"] })
-        let densF = dens.filter((e) => {return e.code === data["code"] })
+        saveItemToLocalStorage(JSON.stringify(dens), "dens-TS")
+    } else {
+        let densTemp = dens.filter((e) => { return e.code !== data["code"] })
+        let densF = dens.filter((e) => { return e.code === data["code"] })
         data["id"] = densF[0].id
         densTemp.push(data);
-        saveItemToLocalStorage(JSON.stringify(densTemp),"dens-TS")
-       
+        saveItemToLocalStorage(JSON.stringify(densTemp), "dens-TS")
+
     }
 
-   
-    listeByStatutOffline(props,"TEMP_SAVED")
+
+    listeByStatutOffline(props, "TEMP_SAVED")
     props.etat2Changed(false)
 
     notify("Bravo - Dénonciation enregistrée", "success")

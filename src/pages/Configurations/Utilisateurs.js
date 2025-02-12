@@ -18,7 +18,7 @@ import {cleanPhoneNumber, isValidMdp, isValidPhone, loadItemFromSessionStorage, 
 // import {useOnScreen} from "../../utils/custom_hooks";
 import {modalify} from "../../Utils/modal";
 import { connect } from "react-redux";
-import { ajout, liste, modification, suppression } from "../../apis/Configurations/UtilisateursApi";
+import { ajout, all, disabled, liste, modification, suppression } from "../../apis/Configurations/UtilisateursApi";
 // import IntlTelInput from 'react-intl-tel-input';
 // import 'react-intl-tel-input/dist/main.css';
 import excel from '../../assets/images/excel.svg'
@@ -32,6 +32,9 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import { licenseInfo } from "../../apis/LoginApi";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { Chip } from "@mui/material";
+import { Block, TaskAlt } from "@mui/icons-material";
+import { notify } from "../../Utils/alert";
 
 
 const styles = {
@@ -66,7 +69,7 @@ const Utilisateurs = (props) => {
     let users = loadItemFromLocalStorage("app-users") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-users")) : undefined;
     let nba = users !== undefined ? users.length : 0;
     useEffect(() => {
-        liste(props).then((r) => {});
+        all(props).then((r) => {});
       
         window.$('.tooltipped').tooltip();
         //cleanup
@@ -93,6 +96,27 @@ const Utilisateurs = (props) => {
   
       fetchData();
     }, []);
+
+    const handleDisable = (e,id,isDisabled=true) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        disabled(props,id,isDisabled).then(function (response) {
+            notify(`Bravo - Le compte de l'utilisateur a été ${isDisabled ? "désactivé" :"activé"} avec succes`,"success")
+            all(props).then((r) => { });
+            handleCancel(e)
+
+        })
+        .catch(function (error) {
+            notify(`Erreur - Le compte de l'utilisateur n'a pas été ${isDisabled ? "désactivé" :"activé"}`,"error")
+        });
+
+    }
+    const handleDisabledModal = (e,spId) => {
+        e.stopPropagation();
+    
+        modalify("Confirmation", "Voulez-vous vraiment désactivé ce compte ?", "confirm", (e)=>{handleDisable(e,spId)})
+    }
 
     let code;
     let columns = [
@@ -142,7 +166,7 @@ const Utilisateurs = (props) => {
             cell: (user, index) => {
                 let additionalRole =""
                 if(user.additionalRole !==undefined){
-                    if(user.additionalRole==="DE") additionalRole = "Directeur Exécutif";
+                    if(user.additionalRole==="DE") additionalRole = "Directeur";
                     if(user.additionalRole==="PILOTE") additionalRole ="Pilote";
                 }
                 return additionalRole
@@ -164,6 +188,9 @@ const Utilisateurs = (props) => {
             align: "left",
             sortable: true,
             cell: (user, index) => {
+                if (user.deleted) {
+                    return <div style={{ display: "flex", alignItems: "center" }}><Block color="darkred" fontSize="10px" /><div><i style={{color:"lightgray"}}>{user.code}</i><br /><i className="truncate" style={{color:"lightgray"}}>{user.firstAndLastName}</i></div></div>
+                }
                 return (<><span>{user.code}</span><br /><span className="truncate">{user.firstAndLastName}</span> <br /></>)
             }
         },
@@ -176,8 +203,12 @@ const Utilisateurs = (props) => {
             cell: (user, index) => {
                 let additionalRole =""
                 if(user.additionalRole !==undefined){
-                    if(user.additionalRole==="DE") additionalRole = "Directeur Exécutif";
+                    if(user.additionalRole==="DE") additionalRole = "Directeur";
                     if(user.additionalRole==="PILOTE") additionalRole ="Pilote";
+                }
+                if (user.deleted) {
+                    return (<><i style={{color:"lightgray"}}>{user.posteDto.libelle}</i><br /><i style={{color:"lightgray"}} className="truncate">{user.servicePointDto.libelle}</i> <br /><i style={{color:"lightgray"}}>{additionalRole}</i></>)
+                
                 }
                 return (<><span>{user.posteDto.libelle}</span><br /><span className="truncate">{user.servicePointDto.libelle}</span> <br /><span>{additionalRole}</span></>)
             }
@@ -189,6 +220,9 @@ const Utilisateurs = (props) => {
             align: "left",
             sortable: true,
             cell: (user, index) => {
+                if (user.deleted) {
+                    return ( <><i className="truncate" style={{color:"lightgray"}}>{user.email}</i> <br /> <i className="truncate" style={{color:"lightgray"}}>{user.tel}</i></>)
+                }
                 return ( <><span className="truncate">{user.email}</span> <br /> <span className="truncate">{user.tel}</span></>)
             }
         },
@@ -205,7 +239,26 @@ const Utilisateurs = (props) => {
                     month: "long",
                     day: "2-digit"
                 }).format(new Date(user.createdAt));
+                if (user.deleted) {
+                    return <i style={{color:"lightgray"}}>{createdAt}</i>
+                }
                 return (createdAt);
+            }
+        },
+        {
+            key: "action",
+            text: "Actions",
+            className: "action",
+            align: "left",
+            cell: (user) => {
+                if (user.deleted) {
+                    return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e,user.id,false)} icon={<TaskAlt />}  />
+                }else{
+                    return  <Chip label="Désactiver ?"  onClick={(e) => handleDisabledModal(e,user.id)} icon={<Block  />} variant="outlined" />
+                   
+                }
+             
+
             }
         },
     ];
@@ -241,13 +294,37 @@ const Utilisateurs = (props) => {
     let roleOptions
     if (props.additionalRole !== undefined) {
         roleOptions = [
-            {"label": "Directeur Exécutif", "value": "DE" },
+            {"label": "Directeur", "value": "DE" },
             {"label": "Pilote", "value": "PILOTE" },
             {"label": "Aucun", "value": "MOLDUE" },
         ]
 
     } else {
         roleOptions = ""
+    }
+
+    const [ca, setCa] = useState(false);
+    const [caOptions, setCaOptions] = useState([
+        {"label": "Sélectionnez votre réponse", "value": "" },
+        {"label": "Non", "value": false },
+        {"label": "Oui", "value": true },
+    ]);
+    // if (props.director !== undefined) {
+    //     caOptions = [
+    //         {"label": "Sélectionnez votre réponse", "value": "" },
+    //         {"label": "Non", "value": 0 },
+    //         {"label": "Oui", "value": 1 },
+    //     ]
+
+    // } else {
+    //     caOptions = ""
+    // }
+
+    const handleChange12 = (obj) => {
+        setCa(obj.value)
+        // props.unitLibelleChanged(obj.label)
+
+        // console.log(props.unit)
     }
 
 
@@ -307,7 +384,8 @@ const Utilisateurs = (props) => {
         data["servicePointId"] = props.unit;
         data["additionalRole"] = props.additionalRole;
         data["password"] = props.pass;
-       
+        data["ra"] = ca;
+    //    console.log("ca",ca)
        
         if(handleValidation() && handleMdp()){
             props.etatChanged(true)
@@ -331,6 +409,7 @@ const Utilisateurs = (props) => {
         props.passwordChanged("")
         props.passwordAgainChanged("")
         props.selectedItemChanged({})
+        setCa(false);
     }
     const handleCancel = (e) => {
         e.preventDefault()
@@ -339,6 +418,7 @@ const Utilisateurs = (props) => {
     const handleEdit = (e) => {
         e.preventDefault()
         let data = {}
+        // console.log('props', props)
         data["id"] = props.id;
         data["firstAndLastName"] = props.name;
         data["posteId"] = props.poste;
@@ -347,10 +427,10 @@ const Utilisateurs = (props) => {
         data["tel"] = props.phone;
         data["additionalRole"] = props.additionalRole;
         data["password"] = props.pass;
-
+        data["ra"] = ca;
        
         if (handleValidation()) {
-            props.etat2Changed(true)
+            props.etatChanged(true)
             if((props.pass==="" || props.pass===undefined || props.pass===null)){
                 modification (data, props).then(() => {
                     handleCancel(e)
@@ -385,6 +465,24 @@ const Utilisateurs = (props) => {
         })
 
         props.userErrors(errors)
+    }
+
+    const generateCode = () => {
+        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const number = "0123456789"
+        const speciaux = "@_%+-";
+        let retVal = ""
+        for (var i = 0, n = charset.length; i < 8; ++i) {
+            retVal += charset.charAt(Math.floor(Math.random() * n));
+        }
+        retVal = retVal.replaceAll(retVal[6], number[Math.floor(Math.random() * 8)])
+        retVal = retVal.replaceAll(retVal[7], speciaux[Math.floor(Math.random() * 5)])
+
+        props.passwordAgainChanged(retVal);
+        props.passwordChanged(retVal);
+        setShowPassword(true);
+
+
     }
     const rowClickedHandler = (event, data, rowIndex) => {
         props.idChanged(data.id?data.id:"")
@@ -467,7 +565,7 @@ const Utilisateurs = (props) => {
     let buttons = props.selectedItem.id!== undefined ?
     (<>
         <LoadingButton
-            className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+            className="btn  waves-light btn-small mr-1 red-text red lighten-4"
             onClick={(e) => handleModal(e)}
             loading={props.etat3}
             loadingPosition="end"
@@ -479,7 +577,7 @@ const Utilisateurs = (props) => {
         </LoadingButton>
 
         <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
+            className="btn waves-light mr-1 btn-small red-text white lighten-4"
             onClick={(e) => handleCancel(e)}
             loading={props.etat2}
             loadingPosition="end"
@@ -491,7 +589,7 @@ const Utilisateurs = (props) => {
         </LoadingButton>
 
         <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
+            className="btn  waves-light mr-1 btn-small"
             onClick={(e) => handleEditModal(e)}
             loading={props.etat}
             loadingPosition="end"
@@ -595,9 +693,10 @@ const Utilisateurs = (props) => {
                                                 data-error=".errorTxt5" value={props.pass}
                                                 onChange={(e) => props.passwordChanged(e.target.value)}/> 
                                             <label htmlFor="usnewpswd" className={"active"}>Mot de passe
-                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Le mot de passe doit contenir au moins un chiffre et un symbol">
-                                                <HelpIcon/>
-                                            </a>
+                                                <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Le mot de passe doit contenir au moins un chiffre et un symbol">
+                                                    <HelpIcon/>
+                                                </a>
+                                                <span style={{ color: "#007bff", cursor: "pointer", margin: "0px 15px" }} onClick={generateCode}>Générer un mot de passe</span>
                                             </label>
                                             <small className="errorTxt4">
                                                 <div id="cpassword-error" className="error">{props.errors.pass}</div>
@@ -703,13 +802,39 @@ const Utilisateurs = (props) => {
                                         classNamePrefix="react-select"
                                         style={styles}
                                         placeholder="Sélectionnez le role"
+                                        options={caOptions}
+                                       
+                                        value={ca}
+                                        onChange={handleChange12}
+                                    />
+                                    <label htmlFor="usrole" className={"active"}>Est-il le gérant du point de service ?&nbsp;
+                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
+                                           data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
+                                            <HelpIcon/>
+                                        </a>
+                                    </label>
+                                    <small className="errorTxt4">
+                                        <div id="cpassword-error" className="error">
+                                            {/* {props.errors.additionalRole} */}
+                                        </div>
+                                    </small>
+                                </div>
+
+                                <div className="col s12 input-field">
+
+                                    <Select
+                                        id={"usrole"}
+                                        className='react-select-container mt-4'
+                                        classNamePrefix="react-select"
+                                        style={styles}
+                                        placeholder="Sélectionnez le role"
                                         options={roleOptions}
                                         value={roleValue}
                                         onChange={(e) => props.additionalRoleChanged(e.value)}
                                     />
-                                    <label htmlFor="usrole" className={"active"}>Role Spécifique&nbsp;
+                                    <label htmlFor="usrole" className={"active"}>Privilège Spécifique&nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                           data-tooltip="L'un des rôles spécifiques qui accorde certains privilèges">
+                                        data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
                                             <HelpIcon/>
                                         </a>
                                     </label>
@@ -739,7 +864,7 @@ const Utilisateurs = (props) => {
                                         <h4 className="card-title">Liste des Utilisateurs&nbsp;</h4>
                                     </div>
                                     <div className="col l6 m6 s12" style={{ textAlign:"end" }}>
-                                        <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0)}} />
+                                        <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0,["Actions"])}} />
                                         <img src={excel} alt="" style={{ cursor:"pointer" }} onClick={(e) => {table2XLSX("Liste_des_utilisateurs" + today().replaceAll("/", ""),"app-users")}} />
                                     </div>
                                 </div>

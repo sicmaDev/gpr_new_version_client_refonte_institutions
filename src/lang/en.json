@@ -1,0 +1,32 @@
+{
+  "translation": {
+    "gCopyright": "Copyright ©2024 SICMa & Associés. All rights reserved",
+    "gUser":"User",
+    "gUsers":"Users",
+    "gNext":"Next",
+    "gInstitution":"Institution",
+    "gInstitutions":"Institutions",
+    "gAgence":"Agency",
+    "gAgences":"Agencies",
+    "gAdmin":"Administrator",
+    "gAdmins":"Administrators",
+
+    "landingHeadTitle": "GPR WEB is a Complaints Management software designed by SICMa & Associés to help microfinance institutions and other organizations better manage their complaints.",
+    "landingHeadSubtitle": "From the moment the customer's complaint is registered, through to its processing and closure. Simple, secure and reliable! An analysis and decision-making tool based on the presentation of tables, statistics and summary reports. GPR helps you develop clear strategies.",
+    "landingBtnAuth": "Login",
+    "landingBtnSign": "Create an account",
+    "landingBtnMore": "Read more",
+    "landingPrstTitle": "An Investment and Organization Management Consulting Firm",
+    "landingPrstBtn": "Download the quick presentation",
+
+    "signAdminAccount":"Admin account",
+    "signHaveAccount":"Do you already have an account?",
+    "login":"Log in",
+    "loginEmail":"Email Address",
+    "loginPassword":"Password",
+    "loginAutentificate":"Authenticate",
+    "loginTextSingn":"You want to use GPR in your institution",
+    "loginButtonRegisterBusiness":"Register your business"
+
+  }
+}

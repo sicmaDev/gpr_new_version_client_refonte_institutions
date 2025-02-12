@@ -5,6 +5,7 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import WarningIcon from '@mui/icons-material/Warning';
 import {
   addressChanged,
   agentsChanged,
@@ -17,6 +18,7 @@ import {
   assignedByChanged,
   claimListErrors,
   codeChanged,
+  codeClientChanged,
   commentChanged,
   contentChanged,
   createdAtChanged,
@@ -157,13 +159,14 @@ const ListeReclamations = (props) => {
   const [impression, setImpression] = React.useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
+  const [fond, setFond] = useState("");
 
-  let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))): undefined;
+  let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
   let hbt = (user.posteDto.habilitations).split(',');
   let addR = (user.additionalRole);
 
 
-  useEffect(() => {}, [showAudioPlayer, currentAudio]);
+  useEffect(() => { }, [showAudioPlayer, currentAudio]);
 
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
@@ -200,15 +203,34 @@ const ListeReclamations = (props) => {
     return Math.floor(Math.random() * max);
   }
 
+
+
   useEffect(() => {
     if (mode === 1) {
       props.itemsChanged([])
-      listeTousStatuts(props).then((r) => {});
+      listeTousStatuts(props).then((r) => { });
     } else {
       props.itemsChanged([])
-      listeTousStatutsOffline(props).then((r) => {});
+      listeTousStatutsOffline(props).then((r) => { });
     }
-
+    //couleurs
+    let couleurs = [
+      "#333300",
+      "#00cc00",
+      "#99003d",
+      "#3333ff",
+      "#666666",
+      "#253858",
+      "#00875A",
+      "#36B37E",
+      "#FFC400",
+      "#FF8B00",
+      "#FF5630",
+      "#5243AA",
+      "#0052CC",
+      "#00B8D9",
+    ];
+    setFond(couleurs[getRandomInt(couleurs.length)]);
     window
       .$(".buttons-excel")
       .html('<span><i class="fa fa-file-excel"></i></span>');
@@ -238,6 +260,13 @@ const ListeReclamations = (props) => {
       sortable: true,
     },
     {
+      key: "codeClient",
+      text: "Code client",
+      className: "codeClient",
+      align: "left",
+      sortable: true,
+    },
+    {
       key: "clientFirstAndLastName",
       text: "Client",
       className: "client",
@@ -246,7 +275,7 @@ const ListeReclamations = (props) => {
     },
     {
       key: "statusStr",
-      text: "Status",
+      text: "Statut",
       className: "status",
       align: "left",
       sortable: true,
@@ -354,7 +383,7 @@ const ListeReclamations = (props) => {
         if (mode === 1) {
           cmp = claim.objet.risqueLevel
         } else {
-          if (claim.id !=="") {
+          if (claim.id !== "") {
             cmp = claim.objet.risqueLevel
           } else {
             let idO = objets.filter((e) => {
@@ -364,27 +393,27 @@ const ListeReclamations = (props) => {
             })
             cmp = (idO[0]).risqueLevel
           }
-          
+
         }
         switch (cmp) {
           case "MINEUR":
             if (claim.transmitted) {
               graviteElt = (
-              <>
-                <div className="df">
-                  <span className="green-text text-bold mr-2">Mineur</span>
-                  <div className="card-content red-text ml-4"><MoveUpIcon/></div>
-                </div>
-                
-              </>
-                
+                <>
+                  <div className="df">
+                    <span className="green-text text-bold mr-2">Mineur</span>
+                    <div className="card-content red-text ml-4"><MoveUpIcon /></div>
+                  </div>
+
+                </>
+
               );
-            }else{
+            } else {
               graviteElt = (
                 <span className="green-text text-bold">Mineur</span>
               );
             }
-           
+
             break;
           case "MOYEN":
             graviteElt = (
@@ -398,7 +427,7 @@ const ListeReclamations = (props) => {
             );
             break;
           default:
-           graviteElt = (
+            graviteElt = (
               <span className="chip indigo lighten-5">
                 <span className="indigo-text">Nan</span>
               </span>
@@ -423,6 +452,23 @@ const ListeReclamations = (props) => {
           minute: "numeric",
         }).format(new Date(claim.createdAt));
         return createdAt;
+      },
+    },
+    {
+      key: "alertFormated",
+      text: "Alerte dans",
+      className: "created_at",
+      align: "left",
+      sortable: true,
+      cell: (claim, index) => {
+        let temps
+        if (claim.retardDay > 0) {
+          temps = claim.declenchedDate
+        } else {
+          temps = <div className="card-content red-text"><WarningIcon /></div>
+        }
+        return temps;
+
       },
     },
   ];
@@ -463,6 +509,7 @@ const ListeReclamations = (props) => {
     props.dossierimfChanged("");
     props.subjectChanged("");
     props.codeChanged("");
+    props.codeClientChanged("");
     props.recordedAtChanged("");
     props.collectChanged("");
     props.crewChanged("");
@@ -497,7 +544,8 @@ const ListeReclamations = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
     clearComponentState();
-    // console.log("datarowC",data)
+    // console.log("datarowC", data)
+    // console.log(data.codeClient);
     if (mode === 1) {
       props.lastnameChanged(
         data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -511,6 +559,7 @@ const ListeReclamations = (props) => {
       props.languageChanged(data.language.libelle ? data.language.libelle : "");
       props.dossierimfChanged(data.folderCode ? data.folderCode : "");
       props.codeChanged(data.code ? data.code : "");
+      props.codeClientChanged(data.codeClient ? data.codeClient : "");
       props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
       props.collectChanged(
         data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
@@ -545,7 +594,7 @@ const ListeReclamations = (props) => {
       );
       props.sessionChanged(data.session !== null ? data.session : "");
       props.selectedItemChanged(data);
-     
+
       getFillesApi(data.id, props);
       getClaimAudioApi(data.id, props);
     } else {
@@ -564,6 +613,7 @@ const ListeReclamations = (props) => {
         );
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
         props.codeChanged(data.code ? data.code : "");
+        props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(
           data.receiptDateTime ? data.receiptDateTime : ""
         );
@@ -612,7 +662,7 @@ const ListeReclamations = (props) => {
         props.genderChanged(data.gender ? data.gender : "");
         props.crewChanged(data.crew ? data.crew : "");
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
-        props.codeChanged(data.code ? data.code : "");
+        props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(
           data.receiptDateTime ? data.receiptDateTime : ""
         );
@@ -620,46 +670,46 @@ const ListeReclamations = (props) => {
         props.statusChanged(data.status ? data.status : "");
         let description = data.languageId
           ? JSON.parse(loadItemFromSessionStorage("app-langues")).filter(
-              (e) => {
-                return e.id === data.languageId;
-              }
-            )
+            (e) => {
+              return e.id === data.languageId;
+            }
+          )
           : "";
         let description1 = data.collectionChannelId
           ? JSON.parse(loadItemFromSessionStorage("app-supports")).filter(
-              (e) => {
-                return e.id === data.collectionChannelId;
-              }
-            )
+            (e) => {
+              return e.id === data.collectionChannelId;
+            }
+          )
           : "";
         let description2 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-              return e.id === data.objetId;
-            })
+            return e.id === data.objetId;
+          })
           : "";
 
         let description6 = data.objetId
-        ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
+          ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
             return e.id === data.objetId;
           })
-        : "";
+          : "";
 
         let description3 = data.productId
           ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
-              (e) => {
-                return e.id === data.productId;
-              }
-            )
+            (e) => {
+              return e.id === data.productId;
+            }
+          )
           : "";
         let description4 = data.servicePointId
           ? JSON.parse(loadItemFromSessionStorage("app-ps")).filter((e) => {
-              return e.id === data.servicePointId;
-            })
+            return e.id === data.servicePointId;
+          })
           : "";
         let description5 = data.collectorId
           ? JSON.parse(loadItemFromSessionStorage("app-users")).filter((e) => {
-              return e.id === data.collectorId;
-            })
+            return e.id === data.collectorId;
+          })
           : "";
 
         props.languageChanged(data.languageId ? description[0].libelle : "");
@@ -906,6 +956,7 @@ const ListeReclamations = (props) => {
   ];
   const [selectOption, setSelectOption] = useState([
     "Code",
+    "Code Client",
     "Client",
     "Status",
     "Enregistrer le",
@@ -920,12 +971,12 @@ const ListeReclamations = (props) => {
       let solutions =
         interne === false
           ? Array.from(
-              props.solution.filter((e) => {
-                return (
-                  e.status === "APPROVED" && e.satisfactionMeasureDto !== null
-                );
-              })
-            )
+            props.solution.filter((e) => {
+              return (
+                e.status === "APPROVED" && e.satisfactionMeasureDto !== null
+              );
+            })
+          )
           : Array.from(props.solution);
       if (props.solution.length !== 0) {
         type =
@@ -933,23 +984,8 @@ const ListeReclamations = (props) => {
             ? " Détails du traitement - Interactions avec le client"
             : " Détails du traitement - En interne";
       }
-      let couleurs = [
-        "#333300",
-        "#00cc00",
-        "#99003d",
-        "#3333ff",
-        "#666666",
-        "#253858",
-        "#00875A",
-        "#36B37E",
-        "#FFC400",
-        "#FF8B00",
-        "#FF5630",
-        "#5243AA",
-        "#0052CC",
-        "#00B8D9",
-      ];
-  
+
+
       if (solutions.length !== 0) {
         details = (
           <>
@@ -978,11 +1014,11 @@ const ListeReclamations = (props) => {
             </div>
             <div className="col s12">
               <h6 className="card-title">{type}</h6>
-  
+
               {/* let solutions =  */}
               {Array.from(solutions).map((solution) => {
-                let fond = couleurs[getRandomInt(couleurs.length)];
-  
+                // let fond = couleurs[getRandomInt(couleurs.length)];
+
                 let mesure = "";
                 if (
                   solution.status === "APPROVED" &&
@@ -992,10 +1028,10 @@ const ListeReclamations = (props) => {
                     solution.satisfactionMeasureDto.status === "SATISFIED"
                       ? "Satisfait"
                       : solution.satisfactionMeasureDto.status === "UNSATISFIED"
-                      ? "Non satisfait"
-                      : solution.satisfactionMeasureDto.status === "PARTIAL"
-                      ? "Partiellement satisfait"
-                      : "";
+                        ? "Non satisfait"
+                        : solution.satisfactionMeasureDto.status === "PARTIAL"
+                          ? "Partiellement satisfait"
+                          : "";
                   mesure = (
                     <>
                       <Typography component="div">
@@ -1005,12 +1041,11 @@ const ListeReclamations = (props) => {
                             style={{ backgroundColor: fond }}
                           >
                             <span className="hero">
-                              Client {degre} : mesurée par{" "}
-                              {
-                                solution.satisfactionMeasureDto.measurer
-                                  .firstAndLastName
-                              }{" "}
-                              le{" "}
+                              Client {degre} : mesurée {" "}
+                              {solution.satisfactionMeasureDto.measurer
+                                ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
+                                : " depuis le site web "}
+                              le {" "}
                               {formatDate(
                                 solution.satisfactionMeasureDto.measureDateTime
                               )}
@@ -1034,7 +1069,7 @@ const ListeReclamations = (props) => {
                     </>
                   );
                 }
-  
+
                 let approbation = "";
                 if (
                   solution.status === "UNAPPROVED" &&
@@ -1056,7 +1091,7 @@ const ListeReclamations = (props) => {
                             </div>
                           </div>
                         </div>
-  
+
                         <div>
                           <span
                             className="chip2"
@@ -1086,7 +1121,7 @@ const ListeReclamations = (props) => {
                     </>
                   );
                 }
-  
+
                 let enregistrement = (
                   <>
                     <Timeline>
@@ -1118,7 +1153,7 @@ const ListeReclamations = (props) => {
                               {formatDate(solution.createdAt)}
                             </span>
                           </Typography>
-  
+
                           <Typography className="pb-2" component="div">
                             <div className="row">
                               <div className="col l12 s12 pb-2" id="content">
@@ -1127,7 +1162,7 @@ const ListeReclamations = (props) => {
                                 </div>
                                 <div>{solution.content}</div>
                               </div>
-  
+
                               <div className="col l12 s12 pb-2" id="content">
                                 <div className="df pb-2">
                                   <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
@@ -1136,21 +1171,21 @@ const ListeReclamations = (props) => {
                                 <div>{solution.commentaire}</div>
                               </div>
                               {
-                                solution.satisfactionMeasureDto ? 
-                                  solution.satisfactionMeasureDto.commentaire !== null ? 
+                                solution.satisfactionMeasureDto ?
+                                  solution.satisfactionMeasureDto.commentaire !== null && solution.satisfactionMeasureDto.commentaire !== "" ?
 
-                                  <div
-                                    className="col l12 s12 pb-2"
-                                    id="content"
-                                  >
-                                    <div className="df pb-2">
-                                      <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
-                                      Commentaire du client
-                                    </div>
-                                    <div>{solution.satisfactionMeasureDto.commentaire}</div>
-                                  </div> : ""
+                                    <div
+                                      className="col l12 s12 pb-2"
+                                      id="content"
+                                    >
+                                      <div className="df pb-2">
+                                        <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
+                                        Commentaire du client
+                                      </div>
+                                      <div>{solution.satisfactionMeasureDto.commentaire}</div>
+                                    </div> : ""
 
-                                : ""
+                                  : ""
                               }
                             </div>
                           </Typography>
@@ -1161,7 +1196,7 @@ const ListeReclamations = (props) => {
                     </Timeline>
                   </>
                 );
-  
+
                 return <>{enregistrement}</>;
               })}
             </div>
@@ -1169,8 +1204,8 @@ const ListeReclamations = (props) => {
         );
       } else {
         details =
-        <>
-          <div className="row">
+          <>
+            <div className="row">
               <div className="col s12 df pb-2">
                 <span
                   className="chip indigo lighten-5"
@@ -1196,7 +1231,7 @@ const ListeReclamations = (props) => {
             <div className="mt-2">
               Aucune donnée
             </div>
-        </> 
+          </>
       }
     } else if (props.solution.length === 0) {
       let affectation = "";
@@ -1207,7 +1242,7 @@ const ListeReclamations = (props) => {
               <div>
                 Réclamation affectée à{" "}
                 <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-                {props.assigned_by} le {formatDate(props.assigned_at)}
+                {props.assigned_by}  le  {formatDate(props.assigned_at)}
               </div>
             </Typography>
           </>
@@ -1217,46 +1252,46 @@ const ListeReclamations = (props) => {
         details = "Cette réclamation est en attente de traitement";
       }
     }
-  } else{
+  } else {
     // console.log(props.solution.length)
     //il n'a pas H14
     if (props.solution.length !== 0) {
       //LA RECLAMATION A AU MOINS UNE SOLUTION
-      details = 
-      <>
-        <div className="row pb-5 mt-4">
-          <div
-            className="col l12 s12 pb-3"
-            id="content"
-          >
-            <div className="df pb-2">
-              <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-              Solution
-            </div>
-            <div>
-            {props.solution[0] !== undefined
+      details =
+        <>
+          <div className="row pb-5 mt-4">
+            <div
+              className="col l12 s12 pb-3"
+              id="content"
+            >
+              <div className="df pb-2">
+                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                Solution
+              </div>
+              <div>
+                {props.solution[0] !== undefined
                   ? props.solution[0].content
                   : ""}
+              </div>
             </div>
-          </div>
 
-          <div
-            className="col l12 s12 pb-2"
-            id="content"
-          >
-            <div className="df pb-2">
-              <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-              Commentaire
-            </div>
-            <div>
-            {props.solution[0] !== undefined
+            <div
+              className="col l12 s12 pb-2"
+              id="content"
+            >
+              <div className="df pb-2">
+                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                Commentaire
+              </div>
+              <div>
+                {props.solution[0] !== undefined
                   ? props.solution[0].commentaire
                   : ""}
+              </div>
             </div>
           </div>
-        </div>
-      </>
-    }else if (props.solution.length === 0) {
+        </>
+    } else if (props.solution.length === 0) {
       //LA RECLAMATION N'A PAS DE SOLUTION
       let affectation = "";
       if (props.status === "AFFECTED") {
@@ -1278,7 +1313,7 @@ const ListeReclamations = (props) => {
     }
   }
 
- 
+
 
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
@@ -1451,174 +1486,239 @@ const ListeReclamations = (props) => {
   } else {
     recoursList = "";
   }
+
   const printRecu = (e) => {
+    // console.log(props.codeClient);
     e.preventDefault();
-    let image =
-      '<img src="' +
-      INSTITUTION_LOGO +
-      '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
-    let entete =
-      '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
-    entete +=
-      '<div className="col l2 s3 m3" style="margin-bottom:20px!important">' +
-      image +
-      "</div>";
-    entete +=
-      '<div className="col l8 s7 m7"><b>' +
-      INSTITUTION_NAME +
-      "</b><br /><i><span>Numéro Agrément: </span>" +
-      INSTITUTION_AGREMENT +
-      "</i><br /><i><span>Addrese: </span>" +
-      INSTITUTION_ADDRESS +
-      "</i><br /><i><span>Tel: </span>" +
-      INSTITUTION_TEL +
-      "</i><br /><i><span>Email: </span>" +
-      INSTITUTION_EMAIL +
-      "</i></div></div>";
 
-    let description2 = props.selectedItem.objetId
-      ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-          return e.id === props.selectedItem.objetId;
-        })
-      : "";
-    let description3 = props.selectedItem.productId
-      ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter((e) => {
-          return e.id === props.selectedItem.productId;
-        })
-      : "";
-    let description5 = props.selectedItem.collectorId
-      ? JSON.parse(loadItemFromSessionStorage("app-users")).filter((e) => {
-          return e.id === props.selectedItem.collectorId;
-        })
-      : "";
+    let image = '<img src="' + INSTITUTION_LOGO + '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+    let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
+    entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">' + image + '</div>';
+    entete += '<div className="col l8 s7 m7"><b>' + INSTITUTION_NAME + '</b><br /><i><span>Numéro Agrément: </span>' + INSTITUTION_AGREMENT + '</i><br /><i><span>Addrese: </span>' + INSTITUTION_ADDRESS + '</i><br /><i><span>Tel: </span>' + INSTITUTION_TEL + '</i><br /><i><span>Email: </span>' + INSTITUTION_EMAIL + '</i></div></div>';
 
-    //  console.log('props', props)
-    let statusElt;
-    switch (props.selectedItem.status) {
-      case "SAVED":
-        statusElt = "Enregistrée";
-        break;
-      case "TEMP_SAVED":
-        statusElt = "Sauvegardée";
-        break;
-      case "AFFECTED":
-        statusElt = "Affectée";
-        break;
-      case "TO_APPROUVED":
-        statusElt = "A approuver";
-        break;
-      case "DESAPPROUVED":
-        statusElt = "Désapprouvée";
-        break;
-      case "TREAT":
-        statusElt = "Traitée";
-        break;
-      case "SATISFIED":
-        statusElt = "Satisfait";
-        break;
-      case "UNSATISFIED":
-        statusElt = "Non satisfait";
-        break;
-      case "PARTIAL_SATISFIED":
-        statusElt = "Partiellement satisfait";
-        break;
-      case "LITIGATION":
-        statusElt = "Contentieux";
-        break;
-      case "CLASSED":
-        statusElt = "Classée";
-        break;
 
-      default:
-        statusElt = "";
-        break;
-    }
-    let datee =
-      props.selectedItem.createdAt !== null
-        ? formatDate(props.selectedItem.createdAt)
-        : "";
 
-    let telTemp =
-      mode === 1
-        ? props.selectedItem.tel
-        : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.tel
-        : props.selectedItem.phone;
-    let addByTemp =
-      mode === 1
-        ? props.selectedItem.collector.firstAndLastName
-        : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.collector.firstAndLastName
-        : description5[0].firstAndLastName;
-    let objetTemp =
-      mode === 1
-        ? props.selectedItem.objet.libelle
-        : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.objet.libelle
-        : description2[0].libelle;
-    let produitTemp =
-      mode === 1
-        ? props.selectedItem.product.libelle
-        : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.product.libelle
-        : description3[0].libelle;
+    // Calcul des descriptions
+    const description2 = props.selectedItem.objetId
+      ? JSON.parse(loadItemFromSessionStorage("app-objets")).find(e => e.id === props.selectedItem.objetId)
+      : {};
+    const description3 = props.selectedItem.productId
+      ? JSON.parse(loadItemFromSessionStorage("app-produits")).find(e => e.id === props.selectedItem.productId)
+      : {};
+    const description5 = props.selectedItem.collectorId
+      ? JSON.parse(loadItemFromSessionStorage("app-users")).find(e => e.id === props.selectedItem.collectorId)
+      : {};
 
-    const name =
-      '<div class="row"><div class="col l3"><b style="font-size:20px"> Nom du reclamant :</b></div><div class="col l9" style="font-size:20px">' +
-      props.selectedItem.clientFirstAndLastName +
-      "</div></div><br/><br/><br/>";
-    const telephone =
-      '<div class="row"><div class="col l3"><b style="font-size:20px"> Téléphone :</b></div><div class="col l9" style="font-size:20px">' +
-      telTemp +
-      "</div></div><br/><br/><br/>";
-    const address =
-      '<div class="row"><div class="col l3"><b style="font-size:20px"> Adresse :</b></div><div class="col l9" style="font-size:20px">' +
-      props.selectedItem.address +
-      "</div></div><br/><br/><br/>";
-    const enregistrerle =
-      '<div class="row"><div class="col l3"><b style="font-size:20px"> Enregistrer le  :</b></div><div class="col l9" style="font-size:20px">' +
-      datee +
-      "</div><br/><br/><br/>";
-    const enregistrerpar =
-      '<div class="row"><div class="col l3"><b style="font-size:20px"> Enregistrer par  :</b></div><div class="col l9" style="font-size:20px">' +
-      addByTemp +
-      "</div></div><br/><br/><br/>";
-    const code =
-      '<div class="row"><div class="col l12"><span style="font-size:18px;"><b>Code:</b> ' +
-      props.selectedItem.code +
-      " </span></div></div><br/><br/><br/>";
-    const datereception =
-      '<div class="row"><div class="col l4"><b style="font-size:20px"> Date de reception de la réclamation :</b></div><div class="col l8" style="font-size:20px">' +
-      props.selectedItem.receiptDateTime +
-      "</div></div><br/><br/><br/>";
-    const objet =
-      '<div class="row"><div class="col l"><b style="font-size:20px"> Objet de plainte   :</b></div><div class="col l9" style="font-size:20px">' +
-      objetTemp +
-      "</div></div><br/><br/><br/>";
-    const product =
-      '<div class="row"><div class="col l3"><b style="font-size:20px"> Produit concerné  :</b></div><div class="col l9" style="font-size:20px">' +
-      produitTemp +
-      "</div></div><br/><br/><br/>";
-    const statut =
-      '<div class="row"><div class="col l3"><b style="font-size:20px"> Statut  :</b></div><div class="col l9" style="font-size:20px">' +
-      statusElt +
-      "</div></div><br/><br/><br/>";
+    // Statut
+    const statusMap = {
+      SAVED: "Enregistrée",
+      TEMP_SAVED: "Sauvegardée",
+      AFFECTED: "Affectée",
+      TO_APPROUVED: "À approuver",
+      DESAPPROUVED: "Désapprouvée",
+      TREAT: "Traitée",
+      SATISFIED: "Satisfait",
+      UNSATISFIED: "Non satisfait",
+      PARTIAL_SATISFIED: "Partiellement satisfait",
+      LITIGATION: "Contentieux",
+      CLASSED: "Classée",
+    };
+    const statusElt = statusMap[props.selectedItem.status] || "";
 
-    const toStri =
-      entete +
-      code +
-      name +
-      telephone +
-      address +
-      objet +
-      product +
-      datereception +
-      enregistrerpar +
-      enregistrerle +
-      statut;
-    //  const name ='<label  className="active"> Nom & Prénoms:</label>'+props.selectedItem.recorded_by.firstname+" "+props.selectedItem.recorded_by.lastname
-    handlePrintAvance(toStri);
+    // Variables formatées
+    const datee = props.selectedItem.createdAt ? formatDate(props.selectedItem.createdAt) : "";
+    const telTemp = mode === 1 ? props.selectedItem.tel : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.tel : props.selectedItem.phone;
+    const addByTemp = mode === 1 ? props.selectedItem.collector.firstAndLastName : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.collector.firstAndLastName : description5.firstAndLastName;
+    const objetTemp = mode === 1 ? props.selectedItem.objet.libelle : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.objet.libelle : description2.libelle;
+    const produitTemp = mode === 1 ? props.selectedItem.product.libelle : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.product.libelle : description3.libelle;
+
+    // Contenu du reçu avec marges inférieures ajustées
+    const content = `
+      ${entete}
+      <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Nom du réclamant :</b></div><div class="col l9" style="font-size:18px;">${props.selectedItem.clientFirstAndLastName}</div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Téléphone :</b></div><div class="col l9" style="font-size:18px;">${telTemp}</div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Adresse :</b></div><div class="col l9" style="font-size:18px;">${props.selectedItem.address}</div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Enregistré le :</b></div><div class="col l9" style="font-size:18px;">${datee}</div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Enregistré par :</b></div><div class="col l9" style="font-size:18px;">${addByTemp}</div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l12"><span style="font-size:18px;"><b>Code:</b> ${props.selectedItem.codeClient}</span></div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l4"><b style="font-size:18px;">Date de réception de la réclamation :</b></div><div class="col l8" style="font-size:18px;">${props.selectedItem.receiptDateTime}</div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Objet de plainte :</b></div><div class="col l9" style="font-size:18px;">${objetTemp}</div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Produit concerné :</b></div><div class="col l9" style="font-size:18px;">${produitTemp}</div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Statut :</b></div><div class="col l9" style="font-size:18px;">${statusElt}</div></div>
+    `;
+
+    handlePrintAvance(content);
   };
+
+
+  // const printRecu = (e) => {
+  //   e.preventDefault();
+  //   let image =
+  //     '<img src="' +
+  //     INSTITUTION_LOGO +
+  //     '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+  //   let entete =
+  //     '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
+  //   entete +=
+  //     '<div className="col l2 s3 m3" style="margin-bottom:20px!important">' +
+  //     image +
+  //     "</div>";
+  //   entete +=
+  //     '<div className="col l8 s7 m7"><b>' +
+  //     INSTITUTION_NAME +
+  //     "</b><br /><i><span>Numéro Agrément: </span>" +
+  //     INSTITUTION_AGREMENT +
+  //     "</i><br /><i><span>Addrese: </span>" +
+  //     INSTITUTION_ADDRESS +
+  //     "</i><br /><i><span>Tel: </span>" +
+  //     INSTITUTION_TEL +
+  //     "</i><br /><i><span>Email: </span>" +
+  //     INSTITUTION_EMAIL +
+  //     "</i></div></div>";
+
+  //   let description2 = props.selectedItem.objetId
+  //     ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
+  //         return e.id === props.selectedItem.objetId;
+  //       })
+  //     : "";
+  //   let description3 = props.selectedItem.productId
+  //     ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter((e) => {
+  //         return e.id === props.selectedItem.productId;
+  //       })
+  //     : "";
+  //   let description5 = props.selectedItem.collectorId
+  //     ? JSON.parse(loadItemFromSessionStorage("app-users")).filter((e) => {
+  //         return e.id === props.selectedItem.collectorId;
+  //       })
+  //     : "";
+
+  //   //  console.log('props', props)
+  //   let statusElt;
+  //   switch (props.selectedItem.status) {
+  //     case "SAVED":
+  //       statusElt = "Enregistrée";
+  //       break;
+  //     case "TEMP_SAVED":
+  //       statusElt = "Sauvegardée";
+  //       break;
+  //     case "AFFECTED":
+  //       statusElt = "Affectée";
+  //       break;
+  //     case "TO_APPROUVED":
+  //       statusElt = "A approuver";
+  //       break;
+  //     case "DESAPPROUVED":
+  //       statusElt = "Désapprouvée";
+  //       break;
+  //     case "TREAT":
+  //       statusElt = "Traitée";
+  //       break;
+  //     case "SATISFIED":
+  //       statusElt = "Satisfait";
+  //       break;
+  //     case "UNSATISFIED":
+  //       statusElt = "Non satisfait";
+  //       break;
+  //     case "PARTIAL_SATISFIED":
+  //       statusElt = "Partiellement satisfait";
+  //       break;
+  //     case "LITIGATION":
+  //       statusElt = "Contentieux";
+  //       break;
+  //     case "CLASSED":
+  //       statusElt = "Classée";
+  //       break;
+
+  //     default:
+  //       statusElt = "";
+  //       break;
+  //   }
+  //   let datee =
+  //     props.selectedItem.createdAt !== null
+  //       ? formatDate(props.selectedItem.createdAt)
+  //       : "";
+
+  //   let telTemp =
+  //     mode === 1
+  //       ? props.selectedItem.tel
+  //       : props.selectedItem.id && props.selectedItem.collectionChannel
+  //       ? props.selectedItem.tel
+  //       : props.selectedItem.phone;
+  //   let addByTemp =
+  //     mode === 1
+  //       ? props.selectedItem.collector.firstAndLastName
+  //       : props.selectedItem.id && props.selectedItem.collectionChannel
+  //       ? props.selectedItem.collector.firstAndLastName
+  //       : description5[0].firstAndLastName;
+  //   let objetTemp =
+  //     mode === 1
+  //       ? props.selectedItem.objet.libelle
+  //       : props.selectedItem.id && props.selectedItem.collectionChannel
+  //       ? props.selectedItem.objet.libelle
+  //       : description2[0].libelle;
+  //   let produitTemp =
+  //     mode === 1
+  //       ? props.selectedItem.product.libelle
+  //       : props.selectedItem.id && props.selectedItem.collectionChannel
+  //       ? props.selectedItem.product.libelle
+  //       : description3[0].libelle;
+
+  //   const name =
+  //     '<div class="row"><div class="col l3"><b style="font-size:20px"> Nom du reclamant :</b></div><div class="col l9" style="font-size:20px">' +
+  //     props.selectedItem.clientFirstAndLastName +
+  //     "</div></div><br/><br/><br/>";
+  //   const telephone =
+  //     '<div class="row"><div class="col l3"><b style="font-size:20px"> Téléphone :</b></div><div class="col l9" style="font-size:20px">' +
+  //     telTemp +
+  //     "</div></div><br/><br/><br/>";
+  //   const address =
+  //     '<div class="row"><div class="col l3"><b style="font-size:20px"> Adresse :</b></div><div class="col l9" style="font-size:20px">' +
+  //     props.selectedItem.address +
+  //     "</div></div><br/><br/><br/>";
+  //   const enregistrerle =
+  //     '<div class="row"><div class="col l3"><b style="font-size:20px"> Enregistrer le  :</b></div><div class="col l9" style="font-size:20px">' +
+  //     datee +
+  //     "</div><br/><br/><br/>";
+  //   const enregistrerpar =
+  //     '<div class="row"><div class="col l3"><b style="font-size:20px"> Enregistrer par  :</b></div><div class="col l9" style="font-size:20px">' +
+  //     addByTemp +
+  //     "</div></div><br/><br/><br/>";
+  //   const code =
+  //     '<div class="row"><div class="col l12"><span style="font-size:18px;"><b>Code:</b> ' +
+  //     props.selectedItem.code +
+  //     " </span></div></div><br/><br/><br/>";
+  //   const datereception =
+  //     '<div class="row"><div class="col l4"><b style="font-size:20px"> Date de reception de la réclamation :</b></div><div class="col l8" style="font-size:20px">' +
+  //     props.selectedItem.receiptDateTime +
+  //     "</div></div><br/><br/><br/>";
+  //   const objet =
+  //     '<div class="row"><div class="col l"><b style="font-size:20px"> Objet de plainte   :</b></div><div class="col l9" style="font-size:20px">' +
+  //     objetTemp +
+  //     "</div></div><br/><br/><br/>";
+  //   const product =
+  //     '<div class="row"><div class="col l3"><b style="font-size:20px"> Produit concerné  :</b></div><div class="col l9" style="font-size:20px">' +
+  //     produitTemp +
+  //     "</div></div><br/><br/><br/>";
+  //   const statut =
+  //     '<div class="row"><div class="col l3"><b style="font-size:20px"> Statut  :</b></div><div class="col l9" style="font-size:20px">' +
+  //     statusElt +
+  //     "</div></div><br/><br/><br/>";
+
+  //   const toStri =
+  //     entete +
+  //     code +
+  //     name +
+  //     telephone +
+  //     address +
+  //     objet +
+  //     product +
+  //     datereception +
+  //     enregistrerpar +
+  //     enregistrerle +
+  //     statut;
+  //   //  const name ='<label  className="active"> Nom & Prénoms:</label>'+props.selectedItem.recorded_by.firstname+" "+props.selectedItem.recorded_by.lastname
+  //   handlePrintAvance(toStri);
+  // };
 
   let content = [];
   content = props.items;
@@ -1673,7 +1773,7 @@ const ListeReclamations = (props) => {
     if (mode === 1) {
       cmp = element.objet?.risqueLevel
     } else {
-      if (element.id !=="") {
+      if (element.id !== "") {
         cmp = element.objet.risqueLevel
       } else {
         let idO = objets.filter((e) => {
@@ -1683,7 +1783,7 @@ const ListeReclamations = (props) => {
         })
         cmp = (idO[0]).risqueLevel
       }
-      
+
     }
     switch (cmp) {
       case "MINEUR":
@@ -1710,7 +1810,7 @@ const ListeReclamations = (props) => {
         );
         break;
     }
-    
+
     element.risqueLevel = graviteElt;
 
     //date createdAt
@@ -1729,64 +1829,64 @@ const ListeReclamations = (props) => {
   const prepareToPrint = async (type = "pdf") => {
     // console.log("mes données", props.session);
     let entete = "<h1>PV de Session</h1>"
-    let codeRec = "Réclamation : "+props.code;
+    let codeRec = "Réclamation : " + props.code;
     let participantsTab
     let guestsTab
     let votesTab
     let messagesTab
-    let participants 
-    let votes 
-    let messages 
-    
+    let participants
+    let votes
+    let messages
+
     //tableaux
-    participantsTab = (props?.session?.members).length !== 0 ? (props?.session?.members).map((e) => { return e.firstAndLastName}) : []
-    guestsTab = (props?.session?.guests).length !== 0 ? (props?.session?.guests).map((e) => { return e.firstAndLastName}) : []
-    votesTab = (props?.session?.messages).length !== 0 ? (props?.session?.messages).filter((e) => { if(e.vote === true){return e} }) : []
-    messagesTab = (props?.session?.messages).length !== 0 ? (props?.session?.messages).filter((e) => { if(e.vote === false){return e} }) : []
-   
+    participantsTab = (props?.session?.members).length !== 0 ? (props?.session?.members).map((e) => { return e.firstAndLastName }) : []
+    guestsTab = (props?.session?.guests).length !== 0 ? (props?.session?.guests).map((e) => { return e.firstAndLastName }) : []
+    votesTab = (props?.session?.messages).length !== 0 ? (props?.session?.messages).filter((e) => { if (e.vote === true) { return e } }) : []
+    messagesTab = (props?.session?.messages).length !== 0 ? (props?.session?.messages).filter((e) => { if (e.vote === false) { return e } }) : []
+
     // console.log("votesTab",votesTab)
     //participants et invités
     participants = "<div style='margin-top:75px!important'><h2>Participants</h2></div>";
     participants += "<ul>";
-    participantsTab.map((e)=>{ participants +=  "<li>"+e+"</li>"})
-    guestsTab.map((e)=>{ participants +=  "<li>"+e+"  (invité)  </li>"})
-    participants +="</ul>";
+    participantsTab.map((e) => { participants += "<li>" + e + "</li>" })
+    guestsTab.map((e) => { participants += "<li>" + e + "  (invité)  </li>" })
+    participants += "</ul>";
 
     //votes
- 
+
     votes = "<div style='margin-bottom:50px!important;'><h2>Votes</h2></div>"
-  
-    votesTab.map((e)=>{ 
+
+    votesTab.map((e) => {
       votes += "<table width='960' border='1'>"
-      votes += "<tr style='padding:80px!important;'><td style='margin:80px!important;'>Contenu</td><td>"+e.voteDto?.contenu+"</td></tr> "
-      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Commentaire</td><td>"+e.voteDto?.commentaire+"</td></tr>"
-      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Initié par</td><td>"+e.voteDto?.author?.firstAndLastName+"</td></tr>"
-      
+      votes += "<tr style='padding:80px!important;'><td style='margin:80px!important;'>Contenu</td><td>" + e.voteDto?.contenu + "</td></tr> "
+      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Commentaire</td><td>" + e.voteDto?.commentaire + "</td></tr>"
+      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Initié par</td><td>" + e.voteDto?.author?.firstAndLastName + "</td></tr>"
+
       votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Pour</td><td><ul>"
-      let votesPour = (e.voteDto?.userVote).length !== 0 ? (e.voteDto?.userVote).filter((vote) => { if(vote.voteType === "POUR"){return vote} }) : []
-      votesPour.map((k) => { votes += "<li>"+k?.author?.firstAndLastName+"</li>"})
+      let votesPour = (e.voteDto?.userVote).length !== 0 ? (e.voteDto?.userVote).filter((vote) => { if (vote.voteType === "POUR") { return vote } }) : []
+      votesPour.map((k) => { votes += "<li>" + k?.author?.firstAndLastName + "</li>" })
       votes += "</ul></td></tr>"
 
       votes += "<tr style='padding:80px!important;'><td>Contre</td><td><ul>"
-      let votesContre = (e.voteDto?.userVote).length !== 0 ? (e.voteDto?.userVote).filter((vote) => { if(vote.voteType === "CONTRE"){return vote} }) : []
-      votesContre.map((l) => { votes += "<li>"+l?.author?.firstAndLastName+"</li>"})
+      let votesContre = (e.voteDto?.userVote).length !== 0 ? (e.voteDto?.userVote).filter((vote) => { if (vote.voteType === "CONTRE") { return vote } }) : []
+      votesContre.map((l) => { votes += "<li>" + l?.author?.firstAndLastName + "</li>" })
       votes += "</ul></td></tr>"
 
       let decision = (e.voteDto?.choosed) === false ? "Solution non retenu" : "Solution retenu"
-      
-      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Décision</td><td style='padding:80px!important;'>"+decision+"</td></tr>"
+
+      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Décision</td><td style='padding:80px!important;'>" + decision + "</td></tr>"
       votes += "</table><br/><br /><br/><br /><br/><br />"
     })
-  
+
 
     //messages
     messages = "<div style='margin-bottom:50px!important;'><h2>Messages</h2></div>"
-    messagesTab.map((e)=>{ messages +=  "<div>"+e.content+" | "+e.createdAt+" | "+e.sender?.firstAndLastName+"</div><br/>"})
+    messagesTab.map((e) => { messages += "<div>" + e.content + " | " + e.createdAt + " | " + e.sender?.firstAndLastName + "</div><br/>" })
 
 
-   
-    let data = 
-      entete+
+
+    let data =
+      entete +
       "<br/><br />" +
       codeRec +
       "<br/><br />" +
@@ -1797,7 +1897,7 @@ const ListeReclamations = (props) => {
       messages +
       "<br/><br />" +
       '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>';
-   
+
     let results = data;
 
     return results;
@@ -1838,7 +1938,7 @@ const ListeReclamations = (props) => {
 
     // sleep(15000)
     // Specify file name
-    let filename = "PV_"+props.code +"_"+ today().replaceAll("/", "") + ".doc";
+    let filename = "PV_" + props.code + "_" + today().replaceAll("/", "") + ".doc";
 
     // Create download link element
     let downloadLink = document.createElement("a");
@@ -1894,6 +1994,7 @@ const ListeReclamations = (props) => {
                           colourOptions[1],
                           colourOptions[2],
                           colourOptions[3],
+                          colourOptions[4],
                         ]}
                         isMulti
                         name="colors"
@@ -1979,7 +2080,7 @@ const ListeReclamations = (props) => {
                         onClick={(e) => {
                           table2XLS2X(
                             "Liste_des_réclamations" +
-                              today().replaceAll("/", ""),
+                            today().replaceAll("/", ""),
                             "brke",
                             selectOption,
                             props.items
@@ -2017,26 +2118,47 @@ const ListeReclamations = (props) => {
                           className="col l6 m6 s12"
                           style={{ textAlign: "end" }}
                         >
-                          <img
-                            src={pdf}
-                            alt=""
-                            style={{ marginRight: "15px", cursor: "pointer" }}
-                            onClick={(e) => {
-                              handleImpression();
-                              // props.showSelectPrintItemChanged(true);
-                              setChangeButtonPrint(true);
-                            }}
-                          />
-                          <img
-                            src={excel}
-                            alt=""
-                            style={{ cursor: "pointer" }}
-                            onClick={(e) => {
-                              handleImpression();
-                              // props.showSelectPrintItemChanged(true);
-                              setChangeButtonPrint(false);
-                            }}
-                          />
+                          {hbt.includes("H7") ? (
+                            <img
+                              src={pdf}
+                              alt=""
+                              style={{ marginRight: "15px", cursor: "pointer" }}
+                              onClick={(e) => {
+                                // Vérifie si hbt inclut "H8" avant d'exécuter handleImpression
+                                if (hbt.includes("H8")) {
+                                  handleImpression();
+                                  setChangeButtonPrint(true);
+                                } else {
+                                  handlePrint2(config, selectOption, props.items);
+                                }
+                              }}
+                            />
+                          ) : ""}
+
+                          {hbt.includes("H9") ? (
+                            <img
+                              src={excel}
+                              alt=""
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                if (hbt.includes("H10")) {
+                                  handleImpression();
+                                  setChangeButtonPrint(false);
+                                } else {
+                                  table2XLS2X(
+                                    "Liste_des_réclamations" +
+                                    today().replaceAll("/", ""),
+                                    "brke",
+                                    selectOption,
+                                    props.items
+                                  );
+                                }
+
+                              }}
+                            />
+                          ) : ""}
+
+
                         </div>
                       </div>
                       <div className="col s12">
@@ -2145,6 +2267,7 @@ const ListeReclamations = (props) => {
                                     <LanguageIcon sx={{ mr: 2 }} />{" "}
                                     {props.language}
                                   </div>
+
                                   {
                                     (dimf =
                                       props.dossierimf !== "" ? (
@@ -2164,7 +2287,7 @@ const ListeReclamations = (props) => {
                                         ""
                                       ))
                                   }
-                                 
+
                                 </div>
                               </div>
                             </div>
@@ -2238,7 +2361,7 @@ const ListeReclamations = (props) => {
                                     (
                                       props.created_at_online !== "" ? (
                                         <>
-                                           <div
+                                          <div
                                             className="col l6 s12 df pb-2"
                                             id="content"
                                           >
@@ -2248,7 +2371,7 @@ const ListeReclamations = (props) => {
                                         </>
                                       ) : (
                                         <>
-                                           <div
+                                          <div
                                             className="col l6 s12 df pb-2"
                                             id="content"
                                           >
@@ -2320,36 +2443,36 @@ const ListeReclamations = (props) => {
                                 Détails du traitement
 
                                 {
-                                  (props.session !=="")  && (addR === "PILOTE" || addR === "DE") ? 
-                                    
+                                  (props.session !== "") && (addR === "PILOTE" || addR === "DE") ?
+
                                     <LoadingButton
-                                    onClick={(e) => {
-                                      if (mode === 1) {
-                                        printToWord()
-                                      } else {
-                                          notify("Passez en mode Online pour télécharger le PV de la session ","info")
-                                      }
-                                        
-                                    }}
-                                   
+                                      onClick={(e) => {
+                                        if (mode === 1) {
+                                          printToWord()
+                                        } else {
+                                          notify("Passez en mode Online pour télécharger le PV de la session ", "info")
+                                        }
+
+                                      }}
+
                                       className="waves-effect waves-effect-b waves-light btn-small"
                                       loading={props.etat3}
                                       loadingPosition="end"
                                       endIcon={<SaveIcon />}
                                       variant="contained"
-                                      sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+                                      sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
                                     >
                                       <span>Générer le PV de la session</span>
                                     </LoadingButton>
-                                  :""
+                                    : ""
                                 }
-                                
-                               
+
+
                               </h5>
                             </div>
                           </div>
 
-                          
+
 
                           <div className="row">
                             <div className="col s12 m12">
@@ -2385,6 +2508,7 @@ const mapStateToProps = (state) => {
     language: state.claim_list.language,
     dossierimf: state.claim_list.dossierimf,
     code: state.claim_list.code,
+    codeClient: state.claim_list.codeClient,
     recorded_at: state.claim_list.recorded_at,
     collect: state.claim_list.collect,
     subject: state.claim_list.subject,
@@ -2458,6 +2582,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     codeChanged: (code) => {
       dispatch(codeChanged(code));
+    },
+    codeClientChanged: (codeClient) => {
+      dispatch(codeClientChanged(codeClient));
     },
     recordedAtChanged: (recordedAt) => {
       dispatch(recordedAtChanged(recordedAt));

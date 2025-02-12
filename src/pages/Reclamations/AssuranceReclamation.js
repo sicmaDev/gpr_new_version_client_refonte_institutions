@@ -116,7 +116,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const AssuranceReclamation = (props) => {
-  let user =loadItemFromSessionStorage("app-user") !== undefined? JSON.parse(loadItemFromSessionStorage("app-user")): undefined;
+  let user = loadItemFromSessionStorage("app-user") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-user")) : undefined;
   let hbt = user.posteDto.habilitations.split(",");
 
   const [open, setOpen] = React.useState(false);
@@ -124,7 +124,7 @@ const AssuranceReclamation = (props) => {
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
 
-  useEffect(() => {}, [showAudioPlayer, currentAudio])
+  useEffect(() => { }, [showAudioPlayer, currentAudio])
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -137,8 +137,8 @@ const AssuranceReclamation = (props) => {
 
   useEffect(() => {
     props.itemsChanged([])
-    listeAssurance(props).then((r) => {});
-    
+    listeAssurance(props).then((r) => { });
+
     window
       .$(".buttons-excel")
       .html('<span><i class="fa fa-file-excel"></i></span>');
@@ -173,10 +173,10 @@ const AssuranceReclamation = (props) => {
     recourOptions = [];
   }
 
-  
+
   const [recour, setRecours] = useState([]);
   const [interne, setInterne] = React.useState(false);
-   
+
   const handleClassify = (e) => {
     e.preventDefault();
     let user =
@@ -245,9 +245,9 @@ const AssuranceReclamation = (props) => {
         graviteElt = "";
         break;
     }
-   
+
     element.risqueLevel = graviteElt;
-    
+
     //date createdAt
     let createdAt = new Intl.DateTimeFormat("fr-FR", {
       year: "numeric",
@@ -277,7 +277,7 @@ const AssuranceReclamation = (props) => {
     },
     {
       key: "statusStr",
-      text: "Status",
+      text: "Statut",
       className: "status",
       align: "left",
       sortable: true,
@@ -338,7 +338,7 @@ const AssuranceReclamation = (props) => {
             );
             break;
           default:
-           graviteElt = (
+            graviteElt = (
               <span className="chip indigo lighten-5">
                 <span className="indigo-text">Nan</span>
               </span>
@@ -404,21 +404,21 @@ const AssuranceReclamation = (props) => {
       case "MINEUR":
         if (hbt.includes("H2")) {
           props.authorizeChanged(true)
-        }else{
+        } else {
           props.authorizeChanged(false)
         }
         break;
       case "MOYEN":
         if (hbt.includes("H3")) {
           props.authorizeChanged(true)
-        }else{
+        } else {
           props.authorizeChanged(false)
         }
         break;
       case "GRAVE":
         if (hbt.includes("H4")) {
           props.authorizeChanged(true)
-        }else{
+        } else {
           props.authorizeChanged(false)
         }
         break;
@@ -617,10 +617,10 @@ const AssuranceReclamation = (props) => {
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
     let audioListChild = props.selectedItemAudio.map((attachment) => {
-   
+
       return (
         <div className="col xl12 l12 m12 s12" key={attachment.id}>
-         
+
           <div className="card box-shadow-none mb-1 ">
             <div className="card-content">
               <div className="row">
@@ -635,27 +635,27 @@ const AssuranceReclamation = (props) => {
                       ) / 100}{" "}
                       Ko
                     </div>
-                    <div className="app-file-last-access" id={"audio-"+attachment.id}>
+                    <div className="app-file-last-access" id={"audio-" + attachment.id}>
                       <a
-                         style={{ cursor: "pointer" }}
-                         onClick={(e) => {
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
                           downloadAudioApi(attachment.id, attachment.name).then(
                             (data) => {
                               // console.log(data);
-                              
+
                               let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
                               let aud = new Audio(window.URL.createObjectURL(blobAudio));
                               setCurrentAudio(window.URL.createObjectURL(blobAudio))
-                              setAudioPlayer("audio-"+attachment.id)
+                              setAudioPlayer("audio-" + attachment.id)
                             }
                           )
-                         }}
-                      >{showAudioPlayer === "audio-"+attachment.id && ("")} {showAudioPlayer !=="audio-"+attachment.id && ("Afficher")}</a>
-                       
-                      {showAudioPlayer === "audio-"+attachment.id  && (<audio controls autoPlay onEnded={(e) => {setAudioPlayer("")}}>
-                        <source src= {currentAudio} type="audio/ogg"  />
+                        }}
+                      >{showAudioPlayer === "audio-" + attachment.id && ("")} {showAudioPlayer !== "audio-" + attachment.id && ("Afficher")}</a>
+
+                      {showAudioPlayer === "audio-" + attachment.id && (<audio controls autoPlay onEnded={(e) => { setAudioPlayer("") }}>
+                        <source src={currentAudio} type="audio/ogg" />
                         Votre navigateur ne prend pas en charge l'élément audio.
-                      </audio>) }
+                      </audio>)}
                     </div>
                   </div>
                 </div>
@@ -730,179 +730,183 @@ const AssuranceReclamation = (props) => {
     let solutions =
       interne === false
         ? Array.from(
-            props.solution.filter((e) => {
-              return (
-                e.status === "APPROVED" && e.satisfactionMeasureDto !== null
-              );
-            })
-          )
+          props.solution.filter((e) => {
+            return (
+              e.status === "APPROVED" && e.satisfactionMeasureDto !== null
+            );
+          })
+        )
         : Array.from(props.solution);
-    
-    let couleurs = ["#333300","#00cc00","#99003d","#3333ff","#666666","#253858","#00875A","#36B37","#FFC400","#FF8B00","#FF5630","#5243AA","#0052CC","#00B8D9",];
+
+    let couleurs = ["#333300", "#00cc00", "#99003d", "#3333ff", "#666666", "#253858", "#00875A", "#36B37", "#FFC400", "#FF8B00", "#FF5630", "#5243AA", "#0052CC", "#00B8D9",];
 
     if (solutions.length !== 0) {
       details = (
         <>
           <div className="col s12">
-            
+
             {/* let solutions =  */}
             {Array.from(solutions).map((solution) => {
               let fond = couleurs[getRandomInt(couleurs.length)];
-              
+
               let mesure = "";
               if (solution.status === "APPROVED" && solution.satisfactionMeasureDto !== null) {
-                let degre = solution.satisfactionMeasureDto.status === "SATISFIED" ? "Satisfait" : solution.satisfactionMeasureDto.status === "UNSATISFIED" ? "Non satisfait" : solution.satisfactionMeasureDto.status === "PARTIAL" ? "Partiellement satisfait":"";
-                mesure = 
-                <>
-                  <Typography component="div" >
-                    <div>
-                      <span className="chip2" style={{ backgroundColor:fond }}>
-                        <span className="hero">
-                          Client {degre} : mesurée par {solution.satisfactionMeasureDto.measurer.firstAndLastName} le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
-                        </span>
-                      </span>
-                    </div>
-                  </Typography>
-                </>
-              }else if(solution.status === "APPROVED" && solution.satisfactionMeasureDto === null){
+                let degre = solution.satisfactionMeasureDto.status === "SATISFIED" ? "Satisfait" : solution.satisfactionMeasureDto.status === "UNSATISFIED" ? "Non satisfait" : solution.satisfactionMeasureDto.status === "PARTIAL" ? "Partiellement satisfait" : "";
                 mesure =
-                <>
-                  <span className="chip2" style={{ backgroundColor:fond }}>
-                    <span className="hero">
-                      En attente de mesure de satisfaction
+                  <>
+                    <Typography component="div" >
+                      <div>
+                        <span className="chip2" style={{ backgroundColor: fond }}>
+                          <span className="hero">
+                            Client {degre} : mesurée
+                            {solution.satisfactionMeasureDto.measurer
+                              ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
+                              : " depuis le site web "}
+                            le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                          </span>
+                        </span>
+                      </div>
+                    </Typography>
+                  </>
+              } else if (solution.status === "APPROVED" && solution.satisfactionMeasureDto === null) {
+                mesure =
+                  <>
+                    <span className="chip2" style={{ backgroundColor: fond }}>
+                      <span className="hero">
+                        En attente de mesure de satisfaction
+                      </span>
                     </span>
-                  </span>
-                </> 
+                  </>
               }
 
               let approbation = "";
               if (solution.status === "UNAPPROVED" && solution.motifDesaprobation !== null) {
-              
-                approbation = 
-                <>
-                  <Typography component="div" >
-                    <div className="row">
-                      <div
-                        className="col l12 s12 pb-2"
-                        id="content"
-                      >
-                        <div className="df pb-2">
-                          <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                          Motif de désapprobation
-                        </div>
-                        <div>{solution.motifDesaprobation !== null ? solution.motifDesaprobation:""}</div>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="chip2" style={{ backgroundColor:fond }}>
-                        <span className="hero">
-                          Désapprouvée par {solution.unApprouver.firstAndLastName} le {formatDate(solution.unApprouvedAt)}
-                        </span>
-                      </span>
-                    </div>
-                  </Typography>
-                </>
-              }else if(solution.status === "UNAPPROVED" && solution.motifDesaprobation === null){
+
                 approbation =
-                <>
-                  <span className="chip2" style={{ backgroundColor:fond }}>
-                    <span className="hero">
-                      En attente d'approbation
-                    </span>
-                  </span>
-                </> 
-              }
-    
-              let enregistrement =  
-              <>
-            
-                <Timeline
-                  
-                >
-                  <TimelineItem >
-                    <TimelineOppositeContent
-                      sx={{ m: 'auto 0',flex:"0" }}
-                      variant="body2"
-                      color="text.secondary"
-                    >
-                    </TimelineOppositeContent>
-                    <TimelineSeparator>
-                      <TimelineConnector />
-                      <TimelineDot style={{ fontSize:"25px" }}>
-                        <Avatar sx={{ width: 32, height: 32,backgroundColor:fond }}>{ index=index+1}</Avatar>
-                      </TimelineDot>
-                      <TimelineConnector />
-                    </TimelineSeparator>
-                    <TimelineContent sx={{ py: '12px', px: 2 }}>
-    
-                      <Typography variant="h6" component="span">
-                        {solution.author.firstAndLastName} - <span style={{ fontSize:"12px" }}>{formatDate(solution.createdAt)}</span> 
-                      </Typography>
-    
-                      <Typography className="pb-2" component="div">
-                        <div className="row">
-                          <div
-                            className="col l12 s12 pb-2"
-                            id="content"
-                          >
-                            <div className="df pb-2">
-                              <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                              Solution
-                            </div>
-                            <div>{solution.content}</div>
+                  <>
+                    <Typography component="div" >
+                      <div className="row">
+                        <div
+                          className="col l12 s12 pb-2"
+                          id="content"
+                        >
+                          <div className="df pb-2">
+                            <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                            Motif de désapprobation
                           </div>
-
-                          <div
-                            className="col l12 s12 pb-2"
-                            id="content"
-                          >
-                            <div className="df pb-2">
-                              <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                              Commentaire
-                            </div>
-                            <div>{solution.commentaire}</div>
-                          </div>
-
-                          
-                          {
-                            solution.satisfactionMeasureDto ? 
-                              solution.satisfactionMeasureDto.commentaire !== null ? 
-
-                              <div
-                                className="col l12 s12 pb-2"
-                                id="content"
-                              >
-                                <div className="df pb-2">
-                                  <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
-                                  Commentaire du client
-                                </div>
-                                <div>{solution.satisfactionMeasureDto.commentaire}</div>
-                              </div> : ""
-
-                            : ""
-                          }
-
+                          <div>{solution.motifDesaprobation !== null ? solution.motifDesaprobation : ""}</div>
                         </div>
-                       
-                      </Typography>
-                      {approbation}
-                      {mesure}
-    
-                    </TimelineContent>
-                  </TimelineItem>
-          
-                </Timeline>
-            
-              </>
-          
+                      </div>
+                      <div>
+                        <span className="chip2" style={{ backgroundColor: fond }}>
+                          <span className="hero">
+                            Désapprouvée par {solution.unApprouver.firstAndLastName} le {formatDate(solution.unApprouvedAt)}
+                          </span>
+                        </span>
+                      </div>
+                    </Typography>
+                  </>
+              } else if (solution.status === "UNAPPROVED" && solution.motifDesaprobation === null) {
+                approbation =
+                  <>
+                    <span className="chip2" style={{ backgroundColor: fond }}>
+                      <span className="hero">
+                        En attente d'approbation
+                      </span>
+                    </span>
+                  </>
+              }
+
+              let enregistrement =
+                <>
+
+                  <Timeline
+
+                  >
+                    <TimelineItem >
+                      <TimelineOppositeContent
+                        sx={{ m: 'auto 0', flex: "0" }}
+                        variant="body2"
+                        color="text.secondary"
+                      >
+                      </TimelineOppositeContent>
+                      <TimelineSeparator>
+                        <TimelineConnector />
+                        <TimelineDot style={{ fontSize: "25px" }}>
+                          <Avatar sx={{ width: 32, height: 32, backgroundColor: fond }}>{index = index + 1}</Avatar>
+                        </TimelineDot>
+                        <TimelineConnector />
+                      </TimelineSeparator>
+                      <TimelineContent sx={{ py: '12px', px: 2 }}>
+
+                        <Typography variant="h6" component="span">
+                          {solution.author.firstAndLastName} - <span style={{ fontSize: "12px" }}>{formatDate(solution.createdAt)}</span>
+                        </Typography>
+
+                        <Typography className="pb-2" component="div">
+                          <div className="row">
+                            <div
+                              className="col l12 s12 pb-2"
+                              id="content"
+                            >
+                              <div className="df pb-2">
+                                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                Solution
+                              </div>
+                              <div>{solution.content}</div>
+                            </div>
+
+                            <div
+                              className="col l12 s12 pb-2"
+                              id="content"
+                            >
+                              <div className="df pb-2">
+                                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                Commentaire
+                              </div>
+                              <div>{solution.commentaire}</div>
+                            </div>
+
+
+                            {
+                              solution.satisfactionMeasureDto ?
+                                solution.satisfactionMeasureDto.commentaire !== null ?
+
+                                  <div
+                                    className="col l12 s12 pb-2"
+                                    id="content"
+                                  >
+                                    <div className="df pb-2">
+                                      <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
+                                      Commentaire du client
+                                    </div>
+                                    <div>{solution.satisfactionMeasureDto.commentaire}</div>
+                                  </div> : ""
+
+                                : ""
+                            }
+
+                          </div>
+
+                        </Typography>
+                        {approbation}
+                        {mesure}
+
+                      </TimelineContent>
+                    </TimelineItem>
+
+                  </Timeline>
+
+                </>
+
               return (
                 <>
-              
+
                   {enregistrement}
-                
+
                 </>
               );
-    
+
             })}
           </div>
         </>);
@@ -939,7 +943,7 @@ const AssuranceReclamation = (props) => {
             </summary>
             <div className="row">
               <div className="col s12 df pb-2">
-               
+
                 <span
                   className="chip indigo lighten-5"
                   style={{ cursor: "pointer" }}
@@ -955,7 +959,7 @@ const AssuranceReclamation = (props) => {
                 <div className="row">{details}</div>
               </div>
             </div>
-            
+
           </details>
         </div>
       </div>
@@ -1101,7 +1105,7 @@ const AssuranceReclamation = (props) => {
                                           ""
                                         ))
                                     }
-                                  
+
                                   </div>
                                 </div>
                               </div>
@@ -1218,7 +1222,7 @@ const AssuranceReclamation = (props) => {
                                   style={{ justifyContent: "space-between" }}
                                 >
                                   Assurer la satisfaction
-                                  
+
                                   <LoadingButton
                                     onClick={(e) => handleModal(e)}
                                     className="waves-effect waves-effect-b waves-light btn-small"
@@ -1226,9 +1230,9 @@ const AssuranceReclamation = (props) => {
                                     loadingPosition="end"
                                     endIcon={<SaveIcon />}
                                     variant="contained"
-                                    sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+                                    sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
                                   >
-                                      <span>Classer</span>
+                                    <span>Classer</span>
                                   </LoadingButton>
                                 </h5>
                               </div>
@@ -1374,7 +1378,7 @@ const AssuranceReclamation = (props) => {
                             )} */}
                             <form
                               id="claimRecoursForm"
-                            
+
                             >
                               <div className="row">
                                 <div className="col s12">
@@ -1428,9 +1432,9 @@ const AssuranceReclamation = (props) => {
                                         loadingPosition="end"
                                         endIcon={<SaveIcon />}
                                         variant="contained"
-                                        sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+                                        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
                                       >
-                                          <span>Enregistrer</span>
+                                        <span>Enregistrer</span>
                                       </LoadingButton>
                                     </div>
                                   </details>

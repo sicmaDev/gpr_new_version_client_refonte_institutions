@@ -41,8 +41,17 @@ import {
 } from "../../redux/actions/Reclamations/MesureReclamationActions";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
-import { formatDate, guessExtension, loadItemFromSessionStorage } from "../../Utils/utils";
-import http from "../../apis/http-common";
+// import partiel_icon from "../../assets/images/mesure/partial.svg"
+// import satisfaire_icon from "../../assets/images/mesure/satisfied3.svg"
+// import unsatisfaire_icon from "../../assets/images/mesure/unsatisfied2.svg"
+import partiel_icon from "../../assets/images/mesure/emo2.svg";
+import satisfaire_icon from "../../assets/images/mesure/emo3.svg";
+import unsatisfaire_icon from "../../assets/images/mesure/emo1.svg";
+import {
+  formatDate,
+  guessExtension,
+  loadItemFromSessionStorage,
+} from "../../Utils/utils";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -83,11 +92,11 @@ import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { TransitionProps } from "@mui/material/transitions";
 import { LoadingButton } from "@mui/lab";
-import SaveIcon from '@mui/icons-material/Save';
+import SaveIcon from "@mui/icons-material/Save";
 import { licenseInfo } from "../../apis/LoginApi";
 import axios from "axios";
 import { HOST } from "../../Utils/globals";
-
+import WarningIcon from '@mui/icons-material/Warning';
 
 const styles = {
   control: (base) => ({
@@ -101,114 +110,126 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-
-
 const MesurerReclamation = (props) => {
-    let dimf,crew;
+  let dimf, crew;
 
-    const [open, setOpen] = React.useState(false);
-    const [showAudioPlayer, setAudioPlayer] = useState("");
-    const [currentAudio, setCurrentAudio] = useState("");
-  
-    useEffect(() => {}, [showAudioPlayer, currentAudio])
+  const [open, setOpen] = React.useState(false);
+  const [showAudioPlayer, setAudioPlayer] = useState("");
+  const [currentAudio, setCurrentAudio] = useState("");
 
-const handleClickOpen = () => {
-  setOpen(true);
-};
+  useEffect(() => {}, [showAudioPlayer, currentAudio]);
 
-const handleClose = () => {
-  setOpen(false);
-};
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
       ? JSON.parse(loadItemFromSessionStorage("app-user"))
       : undefined;
-    let hbt = (user.posteDto.habilitations).split(',');
-    let addR = (user.additionalRole);
+  let hbt = user.posteDto.habilitations.split(",");
+  let addR = user.additionalRole;
 
+  let alreadyCall = false;
+  useEffect(() => {
+    //  console.log("params",props.match.params)
+    //  console.log("params 2",props.id)
+    if (props.match.params.code !== "all" && alreadyCall === false) {
+      alreadyCall = true;
+      async function details() {
+        let cc = await axios({
+          method: "get",
+          url: HOST + "api/v1/claim/" + props.match.params.code + "/details",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + loadItemFromSessionStorage("token"),
+          },
+        });
+        if (cc.status >= 200 && cc.status <= 299) {
+          // await listeTreat(props);
+          let data = cc.data.content;
+          // console.log("tmp", data);
 
-    let alreadyCall = false;
-    useEffect(() => {
-      //  console.log("params",props.match.params)
-      //  console.log("params 2",props.id)
-      if(props.match.params.code !== "all" && alreadyCall === false){
-        alreadyCall = true;
-        async function details() {
-          let cc = await axios({
-            method: "get",
-            url: HOST + "api/v1/claim/" + props.match.params.code + "/details",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + loadItemFromSessionStorage("token"),
-            },
-          });
-          if(cc.status >= 200 && cc.status <= 299) {
-            // await listeTreat(props);
-            let data = cc.data.content;
-            // console.log("tmp", data);
-           
-            clearComponentState();
-            
-            props.idChanged(data.id ? data.id : "");
-            props.lastnameChanged(
-              data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
-            );
-            props.firstnameChanged(
-              data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
-            );
-            props.addressChanged(data.address ? data.address : "");
-            props.phoneChanged(data.tel ? data.tel : "");
-            props.genderChanged(data.gender ? data.gender : "");
-            props.languageChanged(data.language.libelle ? data.language.libelle : "");
-            props.dossierimfChanged(data.folderCode ? data.folderCode : "");
-            props.codeChanged(data.code ? data.code : "");
-            props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
-            props.collectChanged(data.collectionChannel.libelle ? data.collectionChannel.libelle : "");
-            props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
-            props.underSubjectChanged(data.objet.categorie.libelle ? data.objet.categorie.libelle : "");
-            props.productChanged(data.product.libelle ? data.product.libelle : "");
-            props.unitChanged(data.servicePoint.libelle ? data.servicePoint.libelle : "");
-            props.contentChanged(data.content ? data.content : "");
-            props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
-            props.solutionIdChanged(data.solutionDtos[0] !== undefined ? data.solutionDtos[0].id : "");
-            props.createdByChanged(data.collector.firstAndLastName ? data.collector.firstAndLastName : "");
-            // props.commentChanged(data.comment ? data.comment : "");
-            props.statusChanged(data.status ? data.status : "");
-            props.selectedItemChanged(data);
-            // console.log("soluion",props.solutionId)
-            //fetch attachments for selected claim
-            // http.get("/files/list/claim/" + data.code).then((response) => {
-            //   props.selectedItemFilesChanged(response.data);
-            // });
-        
-            getFillesApi(data.id, props);
-            getClaimAudioApi(data.id, props);
+          clearComponentState();
 
-            handleClickOpen();
-            // if (props.id) {
-             
-            // } 
-            // setOpen((prev) => {
-            //   return false;
-            // });
-          };
+          props.idChanged(data.id ? data.id : "");
+          props.lastnameChanged(
+            data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
+          );
+          props.firstnameChanged(
+            data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
+          );
+          props.addressChanged(data.address ? data.address : "");
+          props.phoneChanged(data.tel ? data.tel : "");
+          props.genderChanged(data.gender ? data.gender : "");
+          props.languageChanged(
+            data.language.libelle ? data.language.libelle : ""
+          );
+          props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+          props.codeChanged(data.code ? data.code : "");
+          props.recordedAtChanged(
+            data.receiptDateTime ? data.receiptDateTime : ""
+          );
+          props.collectChanged(
+            data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
+          );
+          props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
+          props.underSubjectChanged(
+            data.objet.categorie.libelle ? data.objet.categorie.libelle : ""
+          );
+          props.productChanged(
+            data.product.libelle ? data.product.libelle : ""
+          );
+          props.unitChanged(
+            data.servicePoint.libelle ? data.servicePoint.libelle : ""
+          );
+          props.contentChanged(data.content ? data.content : "");
+          props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
+          props.solutionIdChanged(
+            data.solutionDtos[0] !== undefined ? data.solutionDtos[0].id : ""
+          );
+          props.createdByChanged(
+            data.collector.firstAndLastName
+              ? data.collector.firstAndLastName
+              : ""
+          );
+          // props.commentChanged(data.comment ? data.comment : "");
+          props.statusChanged(data.status ? data.status : "");
+          props.selectedItemChanged(data);
+          // console.log("soluion",props.solutionId)
+          //fetch attachments for selected claim
+          // http.get("/files/list/claim/" + data.code).then((response) => {
+          //   props.selectedItemFilesChanged(response.data);
+          // });
+
+          getFillesApi(data.id, props);
+          getClaimAudioApi(data.id, props);
+
+          handleClickOpen();
+          // if (props.id) {
+
+          // }
+          // setOpen((prev) => {
+          //   return false;
+          // });
         }
-      
-        details();
-       
       }
-    }, []);
+
+      details();
+    }
+  }, []);
 
   useEffect(() => {
     if (props.match.params.code === "all") {
-      props.itemsChanged([])
+      props.itemsChanged([]);
       listeByStatut(props, "TREAT").then((r) => {});
     } else {
-     
     }
-   
 
     window
       .$(".buttons-excel")
@@ -231,13 +252,12 @@ const handleClose = () => {
   }, []);
 
   const [actif, setActif] = useState();
-  
+
   const licenseControl = async () => {
     try {
       let resultat = await licenseInfo();
       // console.log("resultat", resultat);
-      setActif(resultat.actif)
-      
+      setActif(resultat.actif);
     } catch (error) {
       console.error("Une erreur s'est produite :", error);
     }
@@ -251,9 +271,7 @@ const handleClose = () => {
     fetchData();
   }, []);
 
-
   let statusElt;
-
 
   let columns = [
     {
@@ -272,7 +290,7 @@ const handleClose = () => {
     },
     {
       key: "statusStr",
-      text: "Status",
+      text: "Statut",
       className: "status",
       align: "left",
       sortable: true,
@@ -304,15 +322,10 @@ const handleClose = () => {
         let graviteElt;
         switch (claim.objet.risqueLevel) {
           case "MINEUR":
-            graviteElt = (
-              <span className="green-text text-bold">Mineur</span>
-            );
+            graviteElt = <span className="green-text text-bold">Mineur</span>;
             break;
           case "MOYEN":
-            graviteElt = (
-              <span className="orange-text text-bold">Moyen</span>
-
-            );
+            graviteElt = <span className="orange-text text-bold">Moyen</span>;
             break;
           case "GRAVE":
             graviteElt = (
@@ -320,7 +333,7 @@ const handleClose = () => {
             );
             break;
           default:
-           graviteElt = (
+            graviteElt = (
               <span className="chip indigo lighten-5">
                 <span className="indigo-text">Nan</span>
               </span>
@@ -342,9 +355,26 @@ const handleClose = () => {
           month: "long",
           day: "2-digit",
           hour: "numeric",
-      minute: "numeric",
+          minute: "numeric",
         }).format(new Date(claim.createdAt));
         return createdAt;
+      },
+    },
+    {
+      key: "alertFormated",
+      text: "Alerte dans",
+      className: "created_at",
+      align: "left",
+      sortable: true,
+      cell: (claim, index) => {
+        let temps
+        if (claim.retardDay > 0 ) {
+          temps = claim.declenchedDate
+        } else {
+          temps =<div className="card-content red-text"><WarningIcon/></div>
+        }
+        return temps;
+        
       },
     },
   ];
@@ -392,16 +422,26 @@ const handleClose = () => {
     props.dossierimfChanged(data.folderCode ? data.folderCode : "");
     props.codeChanged(data.code ? data.code : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
-    props.collectChanged(data.collectionChannel.libelle ? data.collectionChannel.libelle : "");
+    props.collectChanged(
+      data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
+    );
     props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
-    props.underSubjectChanged(data.objet.categorie.libelle ? data.objet.categorie.libelle : "");
+    props.underSubjectChanged(
+      data.objet.categorie.libelle ? data.objet.categorie.libelle : ""
+    );
     props.productChanged(data.product.libelle ? data.product.libelle : "");
-    props.unitChanged(data.servicePoint.libelle ? data.servicePoint.libelle : "");
+    props.unitChanged(
+      data.servicePoint.libelle ? data.servicePoint.libelle : ""
+    );
     props.contentChanged(data.content ? data.content : "");
     props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
-    props.solutionIdChanged(data.solutionDtos[0] !== undefined ? data.solutionDtos[0].id : "");
+    props.solutionIdChanged(
+      data.solutionDtos[0] !== undefined ? data.solutionDtos[0].id : ""
+    );
     props.createdAtChanged(data.createdAt ? data.createdAt : "");
-    props.createdByChanged(data.collector.firstAndLastName ? data.collector.firstAndLastName : "");
+    props.createdByChanged(
+      data.collector.firstAndLastName ? data.collector.firstAndLastName : ""
+    );
     // props.commentChanged(data.comment ? data.comment : "");
     props.statusChanged(data.status ? data.status : "");
     props.selectedItemChanged(data);
@@ -414,7 +454,6 @@ const handleClose = () => {
     getFillesApi(data.id, props);
     getClaimAudioApi(data.id, props);
   };
-
 
   let appraisalOptions = [
     { value: "SATISFIED", label: "Satisfait" },
@@ -448,8 +487,8 @@ const handleClose = () => {
     props.selectedFilesReset([]);
     props.selectedItemFilesChanged([]);
     props.selectedItemAudioChanged([]);
-    setCurrentAudio("")
-    setAudioPlayer("")
+    setCurrentAudio("");
+    setAudioPlayer("");
 
     props.motifChanged("");
   };
@@ -467,13 +506,12 @@ const handleClose = () => {
       props.appraisal === null
     ) {
       isValid = false;
-      errors["appraisal"] = "Champ incorrect";
+      errors["appraisal"] = "Prenez une décision en fonction de la satisfaction du client";
     }
 
     if (
-      (props.appraisal === "PARTIAL" ||
-      props.appraisal === "UNSATISFIED") && 
-      props.commenta === "" ||
+      ((props.appraisal === "PARTIAL" || props.appraisal === "UNSATISFIED") &&
+        props.commenta === "") ||
       props.commenta === undefined ||
       props.commenta === null
     ) {
@@ -493,7 +531,7 @@ const handleClose = () => {
       claim["commentaire"] = props.commenta;
       claim["measurerId"] = user.id;
       // console.log("claimmesure", claim);
-      props.etatChanged(true)
+      props.etatChanged(true);
       mesurerClaimSolutionApi(claim, props).then(() => {
         handleCancel(e);
         handleClose();
@@ -526,7 +564,7 @@ const handleClose = () => {
       claim["unApprouverId"] = user.id;
       claim["motifDesaprobation"] = props.motif;
       //  console.log("desaprobation",claim)
-      props.etat2Changed(true)
+      props.etat2Changed(true);
       unapproveClaimSolutionApi(claim, props).then(() => {
         handleCancel(e);
         handleClose();
@@ -601,10 +639,8 @@ const handleClose = () => {
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
     let audioListChild = props.selectedItemAudio.map((attachment) => {
-   
       return (
         <div className="col xl12 l12 m12 s12" key={attachment.id}>
-         
           <div className="card box-shadow-none mb-1 ">
             <div className="card-content">
               <div className="row">
@@ -619,27 +655,49 @@ const handleClose = () => {
                       ) / 100}{" "}
                       Ko
                     </div>
-                    <div className="app-file-last-access" id={"audio-"+attachment.id}>
+                    <div
+                      className="app-file-last-access"
+                      id={"audio-" + attachment.id}
+                    >
                       <a
-                         style={{ cursor: "pointer" }}
-                         onClick={(e) => {
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
                           downloadAudioApi(attachment.id, attachment.name).then(
                             (data) => {
                               // console.log(data);
-                              
-                              let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
-                              let aud = new Audio(window.URL.createObjectURL(blobAudio));
-                              setCurrentAudio(window.URL.createObjectURL(blobAudio))
-                              setAudioPlayer("audio-"+attachment.id)
+
+                              let blobAudio = new Blob([data], {
+                                type: "audio/ogg; codecs=opus",
+                              });
+                              let aud = new Audio(
+                                window.URL.createObjectURL(blobAudio)
+                              );
+                              setCurrentAudio(
+                                window.URL.createObjectURL(blobAudio)
+                              );
+                              setAudioPlayer("audio-" + attachment.id);
                             }
-                          )
-                         }}
-                      >{showAudioPlayer === "audio-"+attachment.id && ("")} {showAudioPlayer !=="audio-"+attachment.id && ("Afficher")}</a>
-                       
-                      {showAudioPlayer === "audio-"+attachment.id  && (<audio controls autoPlay onEnded={(e) => {setAudioPlayer("")}}>
-                        <source src= {currentAudio} type="audio/ogg"  />
-                        Votre navigateur ne prend pas en charge l'élément audio.
-                      </audio>) }
+                          );
+                        }}
+                      >
+                        {showAudioPlayer === "audio-" + attachment.id && ""}{" "}
+                        {showAudioPlayer !== "audio-" + attachment.id &&
+                          "Afficher"}
+                      </a>
+
+                      {showAudioPlayer === "audio-" + attachment.id && (
+                        <audio
+                          controls
+                          autoPlay
+                          onEnded={(e) => {
+                            setAudioPlayer("");
+                          }}
+                        >
+                          <source src={currentAudio} type="audio/ogg" />
+                          Votre navigateur ne prend pas en charge l'élément
+                          audio.
+                        </audio>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -656,122 +714,209 @@ const handleClose = () => {
     );
   }
 
-  let mesureForm ="";
+  let mesureForm = "";
   if (hbt.includes("H5") || addR === "PILOTE") {
-    mesureForm = 
-    <>
-      <form
-        id="claimAppraiseForm"
-        
-      >
-        <div className="row">
-          <div className="col s12">
-            <details open>
-              <summary className="text-details">
-                Mesure de la satisfaction
-              </summary>
+    mesureForm = (
+      <>
+        <form id="claimAppraiseForm">
+          <div className="row">
+            <div className="col s12">
+              <details open>
+                <summary className="text-details">
+                  Mesure de la satisfaction
+                </summary>
 
-              <div className="col s12 input-field">
-                <Select
+                <div className="col s12 input-field">
+                  {/* <Select
                   options={appraisalOptions}
                   className="react-select-container mt-4"
                   classNamePrefix="react-select"
                   style={styles}
                   placeholder="Sélectionner la satisfaction du client"
-                  onChange={(e) =>
+                  onChange={(e) =>{
                     props.appraisalChanged(e.value)
                   }
-                />
-                <label
-                  htmlFor="gender"
-                  className={"active"}
-                >
-                  Le client est il satisfait?
-                  <span>
-                    (
-                    <span className="red-text darken-2 ">
-                      *
-                    </span>
-                    )
-                  </span>
-                </label>
-                <small className="errorTxt4">
+                  }
+                /> */}
                   <div
-                    id="cpassword-error"
-                    className="error"
+                    style={{
+                      display: "flex",
+                      flex: "1 auto",
+                      justifyContent: "center",
+                    }}
                   >
-                    {props.errors !== undefined
-                      ? props.errors.appraisal
-                      : ""}
+                    <div
+                      onClick={(e) => {
+                        props.appraisalChanged("SATISFIED");
+                      }}
+                      style={{
+                        padding: "17px 25px",
+                        margin: "4px",
+                        borderRadius: "10px",
+                        backgroundColor:
+                          props.appraisal === "SATISFIED"
+                            ? "rgb(150 253 150)"
+                            : "white",
+                        color:
+                          props.appraisal === "SATISFIED"
+                            ? "darkgreen"
+                            : "#005500",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        boxShadow: " rgba(0, 0, 0, 0.16) 0px 1px 4px",
+                      }}
+                    >
+                      <img
+                        src={satisfaire_icon}
+                        style={{ width: "35px" }}
+                        alt=""
+                      />
+                      <h7>
+                        <b>Satisfait</b>
+                      </h7>
+                    </div>
+                    <div
+                      onClick={(e) => {
+                        props.appraisalChanged("PARTIAL");
+                      }}
+                      style={{
+                        padding: "17px 5px",
+                        margin: "4px",
+                        borderRadius: "10px",
+                        backgroundColor:
+                          props.appraisal === "PARTIAL" ? "#ff8100" : "white",
+                        color:
+                          props.appraisal === "PARTIAL" ? "white" : "#ff8100",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        boxShadow: " rgba(0, 0, 0, 0.16) 0px 1px 4px",
+                      }}
+                    >
+                      <img
+                        src={partiel_icon}
+                        style={{ width: "35px" }}
+                        alt=""
+                      />
+                      <b>Partiellement</b>
+                      <b> Satisfait</b>
+                    </div>
+                    <div
+                      onClick={(e) => {
+                        props.appraisalChanged("UNSATISFIED");
+                      }}
+                      style={{
+                        padding: "17px 25px",
+                        margin: "4px",
+                        borderRadius: "10px",
+                        backgroundColor:
+                          props.appraisal === "UNSATISFIED"
+                            ? "#eda6a6"
+                            : "white",
+                        color: "darkred",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        boxShadow: " rgba(0, 0, 0, 0.16) 0px 1px 4px",
+                      }}
+                    >
+                      <img
+                        src={unsatisfaire_icon}
+                        style={{ width: "35px" }}
+                        alt=""
+                      />
+                      <h7>
+                        <b>Non</b>{" "}
+                      </h7>
+                      <h7>
+                        <b>Satisfait</b>{" "}
+                      </h7>
+                    </div>
                   </div>
-                </small>
-              </div>
+                  <label htmlFor="gender" className={"active"}>
+                    Le client est il satisfait?
+                    <span>
+                      (<span className="red-text darken-2 ">*</span>)
+                    </span>
+                  </label>
+                  <small className="errorTxt4">
+                    <div id="cpassword-error" className="error">
+                      {props.errors !== undefined ? props.errors.appraisal : ""}
+                    </div>
+                  </small>
+                </div>
 
-              <div className="col s12 input-field">
-                <textarea
-                  id="commenta"
-                  name="commenta"
-                  placeholder=""
-                  className="materialize-textarea textarea-size"
-                  value={props.commenta}
-                  onChange={(e) => props.commentaChanged(e.target.value)}
-                ></textarea>
-                <label htmlFor="content" className={"active"}>
-                  Commentaire par rapport à la mesure de satisfaction
-                </label>
-                <small className="errorTxt4">
-                  <div id="cpassword-error" className="error">
-                    {props.errors !== undefined ? props.errors.commenta : ""}
-                  </div>
-                </small>
-              </div>
+                <div className="col s12 input-field">
+                  <textarea
+                    id="commenta"
+                    name="commenta"
+                    placeholder=""
+                    className="materialize-textarea textarea-size"
+                    value={props.commenta}
+                    onChange={(e) => props.commentaChanged(e.target.value)}
+                  ></textarea>
+                  <label htmlFor="content" className={"active"}>
+                    Commentaire par rapport à la mesure de satisfaction
+                  </label>
+                  <small className="errorTxt4">
+                    <div id="cpassword-error" className="error">
+                      {props.errors !== undefined ? props.errors.commenta : ""}
+                    </div>
+                  </small>
+                </div>
 
-              <div className="col s12 display-flex justify-content-end mt-3">
-                {
-                   (actif !== undefined && actif)  ?
-                   <LoadingButton
-                      onClick={
-                        handleAppraise
-                      }
+                <div className="col s12 display-flex justify-content-end mt-3">
+                  {/* {actif !== undefined && actif ? ( */}
+                    <LoadingButton
+                      onClick={handleAppraise}
                       className="waves-effect waves-effect-b waves-light btn-small"
                       loading={props.etat}
                       loadingPosition="end"
                       endIcon={<SaveIcon />}
                       variant="contained"
-                      sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+                      sx={{
+                        backgroundColor: "#1e2188",
+                        textTransform: "initial",
+                      }}
                     >
-                        <span>Mesurer</span>
+                      <span>Mesurer</span>
                     </LoadingButton>
-                  :
-                  <div className="card-alert card red lighten-5">
-                    <div className="card-content red-text">
-                        <ul>
-                            Veuillez activer une licence.
-                        </ul>
-                    </div>
-                  </div>
-                }
-                
-               
-              </div>
-            </details>
+                  {/* // ) 
+                  // : (
+                  //   <div className="card-alert card red lighten-5">
+                  //     <div className="card-content red-text">
+                  //       <ul>Veuillez activer une licence.</ul>
+                  //     </div>
+                  //   </div>
+                  // )
+                  // } */}
+                </div>
+              </details>
+            </div>
           </div>
-        </div>
-      </form>
-    </>
+        </form>
+      </>
+    );
   } else {
-    mesureForm ="";
-  } 
+    mesureForm = "";
+  }
 
-  let deForm ="";
+  let deForm = "";
   if (addR === "DE") {
-    deForm = 
-    <>
-      <div className="row">
+    deForm = (
+      <>
+        <div className="row">
           <div className="col s12">
             <details>
               <summary className="text-details pb-5">
-                Vous n'êtes pas d'accord avec la solution proposée ? 
+                Vous n'êtes pas d'accord avec la solution proposée ?
               </summary>
 
               <div className="col s12 input-field">
@@ -793,43 +938,36 @@ const handleClose = () => {
                 </small>
               </div>
               <div className="col s12 display-flex justify-content-end mt-3">
-                {
-                   (actif !== undefined && actif)  ?
-                    <>
-                      <LoadingButton
-                        onClick={
-                          handleDisapprove
-                        }
-                        className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                        loading={props.etat2}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{textTransform:"initial" }}
-                      >
-                          <span>Désapprouver</span>
-                      </LoadingButton>
-
-                    </>
-                  :
+                {actif !== undefined && actif ? (
+                  <>
+                    <LoadingButton
+                      onClick={handleDisapprove}
+                      className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                      loading={props.etat2}
+                      loadingPosition="end"
+                      endIcon={<SaveIcon />}
+                      variant="contained"
+                      sx={{ textTransform: "initial" }}
+                    >
+                      <span>Désapprouver</span>
+                    </LoadingButton>
+                  </>
+                ) : (
                   <div className="card-alert card red lighten-5">
                     <div className="card-content red-text">
-                        <ul>
-                            Veuillez activer une licence.
-                        </ul>
+                      <ul>Veuillez activer une licence.</ul>
                     </div>
                   </div>
-                }
-              
+                )}
               </div>
             </details>
           </div>
-      </div>
-    </>
+        </div>
+      </>
+    );
   } else {
-    deForm ="";
-  } 
-  
+    deForm = "";
+  }
 
   let content = [];
   content = props.items;
@@ -868,9 +1006,9 @@ const handleClose = () => {
         graviteElt = "";
         break;
     }
-   
+
     element.risqueLevel = graviteElt;
-    
+
     //date createdAt
     let createdAt = new Intl.DateTimeFormat("fr-FR", {
       year: "numeric",
@@ -881,7 +1019,7 @@ const handleClose = () => {
     }).format(new Date(element.createdAt));
     element.createdAtFormated = createdAt;
   });
-  console.log("props created at",props.created_at)
+  // console.log("props created at", props.created_at);
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
 
   return (
@@ -926,7 +1064,7 @@ const handleClose = () => {
                         }}
                       >
                         <Toolbar>
-                        { props?.match?.params?.code==="all" ? 
+                          {props?.match?.params?.code === "all" ? (
                             <IconButton
                               edge="start"
                               color="inherit"
@@ -934,17 +1072,21 @@ const handleClose = () => {
                               aria-label="close"
                             >
                               <CloseIcon />
-                            </IconButton> 
-                          : 
+                            </IconButton>
+                          ) : (
                             <IconButton
                               edge="start"
                               color="inherit"
                               // onClick={handleClose}
                               aria-label="close"
                             >
-                              <NavLink to="/alertes/reclamations"><div className="card-content text-white"><CloseIcon/></div></NavLink>
-                            </IconButton> 
-                        }
+                              <NavLink to="/alertes/reclamations">
+                                <div className="card-content text-white">
+                                  <CloseIcon />
+                                </div>
+                              </NavLink>
+                            </IconButton>
+                          )}
                           <Typography
                             sx={{ ml: 2, flex: 1 }}
                             variant="h6"
@@ -1032,7 +1174,6 @@ const handleClose = () => {
                                           ""
                                         ))
                                     }
-                                   
                                   </div>
                                 </div>
                               </div>
@@ -1130,9 +1271,6 @@ const handleClose = () => {
                                         {attachmentList}
                                       </div>
                                     </div>
-
-                                   
-
                                   </div>
                                 </div>
                               </div>
@@ -1148,53 +1286,44 @@ const handleClose = () => {
                               <div className="col s12">
                                 <h5 className="card-title">
                                   Mesurer la satisfaction
-                                
                                 </h5>
                               </div>
                             </div>
 
                             <div className="row pb-5">
-                              <div
-                                className="col l12 s12 pb-3"
-                                id="content"
-                              >
+                              <div className="col l12 s12 pb-3" id="content">
                                 <div className="df pb-2">
                                   <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
                                   Solution
                                 </div>
                                 <div>
-                                {props.solution[0] !== undefined
-                                      ? props.solution[0].content
-                                      : ""}
+                                  {props.solution[0] !== undefined
+                                    ? props.solution[0].content
+                                    : ""}
                                 </div>
                               </div>
 
-                              <div
-                                className="col l12 s12 pb-2"
-                                id="content"
-                              >
+                              <div className="col l12 s12 pb-2" id="content">
                                 <div className="df pb-2">
                                   <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
                                   Commentaire
                                 </div>
                                 <div>
-                                {props.solution[0] !== undefined
-                                      ? props.solution[0].commentaire
-                                      : ""}
+                                  {props.solution[0] !== undefined
+                                    ? props.solution[0].commentaire
+                                    : ""}
                                 </div>
                               </div>
                             </div>
-                           
+
                             {mesureForm}
                             {deForm}
-                          
                           </div>
                         </div>
                       </div>
                     </Dialog>
                   </div>
                 </div>
-                
               </div>
             </section>
           </div>
@@ -1355,7 +1484,7 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(selectedItemFilesChanged(selectedItemFiles));
     },
     selectedItemAudioChanged: (selectedItemAudio) => {
-      dispatch(selectedItemAudioChanged(selectedItemAudio))
+      dispatch(selectedItemAudioChanged(selectedItemAudio));
     },
     authorizeChanged: (selectedItemFiles) => {
       dispatch(authorizeChanged(selectedItemFiles));

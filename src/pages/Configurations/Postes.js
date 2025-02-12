@@ -90,6 +90,11 @@ const colourStyles = {
   
 const Postes = (props) => {
    
+    const [deleteIsLoading,setDeleteIsLoading] = useState(false);
+    const [createIsLoading,setCreateIsLoading] = useState(false);
+    const [updateIsLoading,setUpdateIsLoading] = useState(false);
+
+
     const [cadre, setCadre] = useState([]);
     const [h1, setH1] = useState("");
     const [h2, setH2] = useState("");
@@ -260,7 +265,7 @@ const Postes = (props) => {
         // console.log("hab",cadre.toString())
         e.preventDefault()
         if (handleValidation()) {
-           
+            setCreateIsLoading(true)
             let item = {}
             item["libelle"] = props.libelle;
             item["description"] = props.description;
@@ -269,6 +274,8 @@ const Postes = (props) => {
             props.etatChanged(true)
             ajout(item, props).then(() => {
                 handleCancel(e)
+            }).finally(()=>{
+                setCreateIsLoading(false)
             })
             clearComponentState()
         } else {
@@ -292,7 +299,7 @@ const Postes = (props) => {
     const handleEdit = (e) => {
         e.preventDefault()
         if (handleValidation()) {
-           
+            setUpdateIsLoading(true)
             //Create updated version of selected item
             
             let tab = Array.isArray(props.habilitations) ? (props.habilitations).map(x => x.value) : ""
@@ -307,6 +314,8 @@ const Postes = (props) => {
             props.etat2Changed(true)
             modification (item, props).then(() => {
                 handleCancel(e)
+            }).finally(()=>{
+                setUpdateIsLoading(false)
             })
             clearComponentState()
         }
@@ -326,8 +335,11 @@ const Postes = (props) => {
         e.preventDefault()
         
         props.etat3Changed(true)
+        setDeleteIsLoading(true)
         suppression(props).then(() => {
             handleCancel(e)
+        }).finally(()=>{
+            setDeleteIsLoading(false)
         })
         clearComponentState()
         props.posteErrors(errors)
@@ -362,7 +374,7 @@ const Postes = (props) => {
         <LoadingButton
             className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
             onClick={(e) => handleModal(e)}
-            loading={props.etat3}
+            loading={deleteIsLoading}
             loadingPosition="end"
             endIcon={<DeleteIcon />}
             variant="contained"
@@ -386,7 +398,7 @@ const Postes = (props) => {
         <LoadingButton
             className="btn waves-effect waves-light mr-1 btn-small"
             onClick={(e) => handleEditModal(e)}
-            loading={props.etat}
+            loading={updateIsLoading}
             loadingPosition="end"
             endIcon={<SaveIcon />}
             variant="contained"
@@ -401,7 +413,7 @@ const Postes = (props) => {
         <LoadingButton
             className="btn waves-effect waves-light mr-1 btn-small"
             onClick={(e) => handleSubmit(e)}
-            loading={props.etat}
+            loading={createIsLoading}
             loadingPosition="end"
             endIcon={<SaveIcon />}
             variant="contained"

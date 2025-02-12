@@ -329,6 +329,13 @@ export const transmittedChanged = (transmitted) =>{
         info: 'This action is used to ...'
     }
 };
+export const transmittedToChanged = (transmittedTo) =>{
+    return {
+        type: 'CLAIM_HANDLE_TRANSMITTED_TO_CHANGED',
+        payload: transmittedTo,
+        info: 'This action is used to ...'
+    }
+};
 export const sessionChanged = (session) =>{
     return {
         type: 'CLAIM_HANDLE_SESSION_CHANGED',

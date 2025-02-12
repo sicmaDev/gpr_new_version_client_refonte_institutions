@@ -43,6 +43,10 @@ import Institution from '../pages/Configurations/Institution';
 import Email from '../pages/Configurations/Email';
 import Sms from '../pages/Configurations/Sms';
 import Bot from '../pages/Configurations/Bot';
+import Log from '../pages/Configurations/Log';
+import Exportation from '../pages/Configurations/Exportation';
+import ApiKey from '../pages/Configurations/ApiKey';
+import Whatsapp from '../pages/Whatsapp';
 
 
 export default function Contenu() { 
@@ -112,6 +116,9 @@ export default function Contenu() {
                     <Route path="/configurations/email" component={Email} />
                     <Route path="/configurations/sms" component={Sms} />
                     <Route path="/configurations/bot" component={Bot} />
+                    <Route path="/configurations/apikey" component={ApiKey} />
+                    <Route path="/configurations/logs" component={Log} />
+                    <Route path="/configurations/exportations" component={Exportation} />
                     <Route path="/ressources/documents" component={Documents} />
                     <Route path="/ressources/faq" component={Faq} />
                     <Route path="/configurations/notifications" component={Notifications} />
@@ -137,6 +144,10 @@ export default function Contenu() {
                     <Route path="/suggestions/enregistrement" component={EnregistrerSuggestion} />
                     <Route path="/suggestions/traitement" component={TraiterSuggestion} />
                     <Route path="/suggestions/liste" component={ListeSuggestions} />
+
+
+                    {/* whatsapp */}
+                    <Route path="/whatsapp/liste" component={Whatsapp} />
 
                     {/* alertes */}
                     <Route path="/alertes/reclamations" component={ReclamationsAlertes} />

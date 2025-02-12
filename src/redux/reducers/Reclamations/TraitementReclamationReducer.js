@@ -47,6 +47,7 @@ const initialState = {
     selectedItemAudio: [],
     anonymat: "",
     transmitted: "",
+    transmittedTo: "",
     session: [],
     solutionExistant: "",
 };
@@ -296,6 +297,13 @@ const TraitementReclamationReducer = (state = initialState, action) => {
                 ...state,
                 transmitted: action.payload,
             };
+
+        case 'CLAIM_HANDLE_TRANSMITTED_TO_CHANGED':
+            return {
+                ...state,
+                transmittedTo: action.payload,
+            };
+
         case 'CLAIM_HANDLE_SESSION_CHANGED':
             return {
                 ...state,
