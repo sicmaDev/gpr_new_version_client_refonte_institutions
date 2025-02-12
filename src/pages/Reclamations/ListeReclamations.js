@@ -462,13 +462,13 @@ const ListeReclamations = (props) => {
       sortable: true,
       cell: (claim, index) => {
         let temps
-        if (claim.retardDay > 0 ) {
+        if (claim.retardDay > 0) {
           temps = claim.declenchedDate
         } else {
-          temps =<div className="card-content red-text"><WarningIcon/></div>
+          temps = <div className="card-content red-text"><WarningIcon /></div>
         }
         return temps;
-        
+
       },
     },
   ];
@@ -1045,7 +1045,7 @@ const ListeReclamations = (props) => {
                               {solution.satisfactionMeasureDto.measurer
                                 ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
                                 : " depuis le site web "}
-                              le{" "}
+                              le {" "}
                               {formatDate(
                                 solution.satisfactionMeasureDto.measureDateTime
                               )}
@@ -1242,7 +1242,7 @@ const ListeReclamations = (props) => {
               <div>
                 Réclamation affectée à{" "}
                 <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-                {props.assigned_by} le {formatDate(props.assigned_at)}
+                {props.assigned_by}  le  {formatDate(props.assigned_at)}
               </div>
             </Typography>
           </>
