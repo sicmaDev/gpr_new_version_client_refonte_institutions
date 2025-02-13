@@ -146,9 +146,9 @@ const Global = (props) => {
 
   useEffect(() => {
     if (localStorage.getItem("app-institution")) {
-      
+
       const instu = JSON.parse(
-        typeof JSON.parse(localStorage.getItem("app-institution")) =="object" ?localStorage.getItem("app-institution") :JSON.parse(localStorage.getItem("app-institution"))
+        typeof JSON.parse(localStorage.getItem("app-institution")) == "object" ? localStorage.getItem("app-institution") : JSON.parse(localStorage.getItem("app-institution"))
       );
       setLogoInstitution(instu.logo);
       setInstitution(instu.denomination ?? "");
@@ -162,7 +162,7 @@ const Global = (props) => {
   // useEffect(() => {
   //   reportApiFiltres(props, filtres, setDataRaport);
   // }, [filtres]);
-  
+
 
   const handleClose = (e) => {
     setOpen(false);
@@ -230,9 +230,9 @@ const Global = (props) => {
       : undefined;
 
   const ps =
-  loadItemFromSessionStorage("app-ps") !== undefined
-    ? JSON.parse(loadItemFromSessionStorage("app-ps"))
-    : undefined;
+    loadItemFromSessionStorage("app-ps") !== undefined
+      ? JSON.parse(loadItemFromSessionStorage("app-ps"))
+      : undefined;
   // console.log("ps",ps.length)
   if (products !== undefined) {
     products.map((product) => {
@@ -285,7 +285,7 @@ const Global = (props) => {
   const denunByGravitePieChartRef = useRef(null);
   const denunByGraviteBarChartRef = useRef(null);
   const claimBySatisfactionPieChartRef = useRef(null);
-  
+
   const [reload, setReload] = useState(true);
   const [dataRaport, setDataRaport] = useState(null);
 
@@ -293,11 +293,11 @@ const Global = (props) => {
   useEffect(() => {
     if (reload) {
       setReload(false);
-      reportApi(props, setDataRaport).then((r) => {});
+      reportApi(props, setDataRaport).then((r) => { });
     }
   }, [reload]);
 
-  
+
   //Global state
 
   const [rdsPieGlobal, setRdsPieGlobal] = useState({
@@ -346,7 +346,7 @@ const Global = (props) => {
     labels: [],
     datasets: [],
   });
-  
+
   const [denunBarDelaiByMonthByAgence, setDenunBarDelaiByMonthByAgence] = useState({
     labels: [],
     datasets: [],
@@ -495,8 +495,8 @@ const Global = (props) => {
 
   // console.log("taille ps:",rdsBarModaliteGlobal?.datasets[0]?.data?.length)
   // const nba = unit.length === 0 ? ((ps.length)*100)+"px" : ((unit.length)*100)+"px" ;
-  let nba = ((rdsBarModaliteGlobal?.datasets[0]?.data?.length)*100);
-  nba = (parseInt(nba) < 600) ? 600+"px" : parseInt(nba)+"px";
+  let nba = ((rdsBarModaliteGlobal?.datasets[0]?.data?.length) * 100);
+  nba = (parseInt(nba) < 600) ? 600 + "px" : parseInt(nba) + "px";
   // console.log("nba : ",nba)
 
   const delaiFunction = (data) => {
@@ -621,7 +621,7 @@ const Global = (props) => {
                 oldreport.global["repartitionClaimDenunSuggest"]["datas"] ?? [],
               backgroundColor:
                 oldreport.global["repartitionClaimDenunSuggest"][
-                  "backgroundColors"
+                "backgroundColors"
                 ] ?? [],
             },
           ],
@@ -680,37 +680,37 @@ const Global = (props) => {
         // console.log("nbreClaimTreatInDelaiOrNotByMonth = ",oldreport.claimReport)
         setRdsBarDelaiGlobal(
           // delaiFunction(
-            oldreport.claimReport["nbreClaimTreatInDelaiOrNotByMonth"] ?? []
+          oldreport.claimReport["nbreClaimTreatInDelaiOrNotByMonth"] ?? []
           // )
         );
 
         setDenunBarDelaiByMonth(
           // delaiFunction(
-            oldreport.claimReport["nbreDenunTreatInDelaiOrNotByMonth"] ?? []
+          oldreport.claimReport["nbreDenunTreatInDelaiOrNotByMonth"] ?? []
           // )
         );
 
         setRdsBarDelaiClaimByMonthByAgence(
           // delaiFunction(
-            oldreport.claimReport["nbreClaimTreatInDelaiOrNotByMonthByAgence"] ?? []
+          oldreport.claimReport["nbreClaimTreatInDelaiOrNotByMonthByAgence"] ?? []
           // )
         );
 
         setDenunBarDelaiByMonthByAgence(
           // delaiFunction(
-            oldreport.claimReport["nbreDenunTreatInDelaiOrNotByMonthByAgence"] ?? []
+          oldreport.claimReport["nbreDenunTreatInDelaiOrNotByMonthByAgence"] ?? []
           // )
         );
 
         setTauxMensuelClaimByMonth(
           // delaiFunction(
-            oldreport.claimReport["tauxClaimSatisfactionByMonth"] ?? []
+          oldreport.claimReport["tauxClaimSatisfactionByMonth"] ?? []
           // )
         );
 
         setTauxMensuelClaimByMonthByAgence(
           // delaiFunction(
-            oldreport.claimReport["tauxClaimSatisfactionByMonthByAgence"] ?? []
+          oldreport.claimReport["tauxClaimSatisfactionByMonthByAgence"] ?? []
           // )
         );
 
@@ -728,7 +728,7 @@ const Global = (props) => {
               data: oldreport.claimReport["nbreClaimPerAgence"]["datas"] ?? [],
               backgroundColor:
                 oldreport.claimReport["nbreClaimPerAgence"][
-                  "backgroundColors"
+                "backgroundColors"
                 ] ?? [],
             },
           ],
@@ -749,7 +749,7 @@ const Global = (props) => {
                 [],
               backgroundColor:
                 oldreport.claimReport["repartitionClaimPerGender"][
-                  "backgroundColors"
+                "backgroundColors"
                 ] ?? [],
               hoverOffset: 4,
             },
@@ -764,11 +764,11 @@ const Global = (props) => {
             {
               data:
                 oldreport.claimReport["repartitionClaimPerObjRisque"][
-                  "datas"
+                "datas"
                 ] ?? [],
               backgroundColor:
                 oldreport.claimReport["repartitionClaimPerObjRisque"][
-                  "backgroundColors"
+                "backgroundColors"
                 ] ?? [],
               hoverOffset: 4,
             },
@@ -782,11 +782,11 @@ const Global = (props) => {
             {
               data:
                 oldreport.claimReport["repartitionClaimBySatisfaction"][
-                  "datas"
+                "datas"
                 ] ?? [],
               backgroundColor:
                 oldreport.claimReport["repartitionClaimBySatisfaction"][
-                  "backgroundColors"
+                "backgroundColors"
                 ] ?? [],
               hoverOffset: 4,
             },
@@ -795,7 +795,7 @@ const Global = (props) => {
         setRdsChartStatisClaim(
           oldreport.claimReport["evolutionSatisfactionByThisYear"]
         );
-        
+
 
         //Suggestion
         setRdsPieAgenceSugge(
@@ -814,7 +814,7 @@ const Global = (props) => {
                 [],
               backgroundColor:
                 oldreport.suggestionReport["nbreSuggestPerAgence"][
-                  "backgroundColors"
+                "backgroundColors"
                 ] ?? [],
             },
           ],
@@ -827,17 +827,17 @@ const Global = (props) => {
         setRdsPieGenreSugge({
           labels:
             oldreport.suggestionReport["repartitionSuggestPerGender"][
-              "labels"
+            "labels"
             ] ?? [],
           datasets: [
             {
               data:
                 oldreport.suggestionReport["repartitionSuggestPerGender"][
-                  "datas"
+                "datas"
                 ] ?? [],
               backgroundColor:
                 oldreport.suggestionReport["repartitionSuggestPerGender"][
-                  "backgroundColors"
+                "backgroundColors"
                 ] ?? [],
               hoverOffset: 4,
             },
@@ -862,7 +862,7 @@ const Global = (props) => {
               data: oldreport.denunReport["nbreDenunPerAgence"]["datas"] ?? [],
               backgroundColor:
                 oldreport.denunReport["nbreDenunPerAgence"][
-                  "backgroundColors"
+                "backgroundColors"
                 ] ?? [],
             },
           ],
@@ -875,11 +875,11 @@ const Global = (props) => {
             {
               data:
                 oldreport.denunReport["repartitionDenunPerObjRisque"][
-                  "datas"
+                "datas"
                 ] ?? [],
               backgroundColor:
                 oldreport.denunReport["repartitionDenunPerObjRisque"][
-                  "backgroundColors"
+                "backgroundColors"
                 ] ?? [],
             },
           ],
@@ -903,7 +903,7 @@ const Global = (props) => {
   //       let dataAgences = data[lb]["data"] ?? [];
   //       let totalAgences = data[lb]["totals"] == "0" ? 1 : data[lb]["totals"];
   //       // console.log("totalAgences",totalAgences);
-        
+
   //       let purcentageCal = 100 / parseInt(totalAgences);
 
   //       dataAgences.forEach((agence) => {
@@ -1021,22 +1021,22 @@ const Global = (props) => {
       labels: [],
       datasets: [],
     };
-  
+
     // console.log("data new version : ", data);
-  
+
     if (data) {
       const datasetsKey = [];
       result.labels = Object.keys(data);
       result.labels.forEach((lb) => {
         let dataAgences = data[lb]["data"] ?? [];
         let totalAgences = data[lb]["totals"] == "0" ? 1 : data[lb]["totals"];
-        
+
         let purcentageCal = 100 / parseInt(totalAgences);
-  
+
         dataAgences.forEach((agence) => {
           let dataPerc = ((parseFloat(agence.nbre) / totalAgences) * 100).toFixed(2);
           // console.log("totalClaimsAgence - " + lb, dataPerc);
-  
+
           if (datasetsKey.includes(agence.name)) {
             const resultdata = [];
             result.datasets.forEach((d) => {
@@ -1064,9 +1064,9 @@ const Global = (props) => {
           }
         });
       });
-  
+
       let newDatasets = result.datasets;
-  
+
       const otherPush = {
         label: "Autres",
         data: [],
@@ -1074,9 +1074,9 @@ const Global = (props) => {
         stack: "Stack 0",
         isInit: false,
       };
-      
+
       let resultDatasets = [];
-  
+
       newDatasets.forEach((dd, i) => {
         if (i > 9) {
           otherPush.isInit = true;
@@ -1103,17 +1103,17 @@ const Global = (props) => {
           resultDatasets.push(dd);
         }
       });
-  
+
       if (otherPush.isInit) {
         resultDatasets.push(otherPush);
       }
       result.datasets = resultDatasets;
     }
-  
+
     // console.log("result result = ", result);
     return result;
   };
-  
+
 
   const oldReportTreatment = (info, limit = 10) => {
     let result = {
@@ -1188,7 +1188,7 @@ const Global = (props) => {
     props.denunReportChanged([]);
     props.sugReportChanged([]);
   };
- 
+
   const genereReport = (e) => {
     e.preventDefault();
     cleanForm2(e);
@@ -1197,13 +1197,13 @@ const Global = (props) => {
       plainteType.forEach((type) => {
         plainteType.includes("claim")
           ? setClaimShow(true)
-          : setClaimShow(false);setGlobalShow(false);
+          : setClaimShow(false); setGlobalShow(false);
         plainteType.includes("denunciation")
           ? setDenunciationShow(true)
-          : setDenunciationShow(false);setGlobalShow(false);
+          : setDenunciationShow(false); setGlobalShow(false);
         plainteType.includes("suggestion")
           ? setSuggestionShow(true)
-          : setSuggestionShow(false);setGlobalShow(false);
+          : setSuggestionShow(false); setGlobalShow(false);
       });
     } else {
       setDenunciationShow(true);
@@ -1238,7 +1238,7 @@ const Global = (props) => {
     // console.log("filtres",filtres);
     handleClose(e);
     // setDataRaport(null);
-    reportApiFiltres(props, filtres, setDataRaport).then((r) => {});
+    reportApiFiltres(props, filtres, setDataRaport).then((r) => { });
     // console.log('Data after API call:', dataRaport);
   };
 
@@ -1265,51 +1265,51 @@ const Global = (props) => {
               {
                 <>
                   <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        A traiter
-                      </span>
-                    </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Affectée
-                      </span>
-                    </td>
-                   
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Désapprouvée
-                      </span>
-                    </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Traitée
-                      </span>
-                    </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Satisfait
-                      </span>
-                    </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Partiellement satisfait
-                      </span>
-                    </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Non satisfait
-                      </span>
-                    </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Contentieux
-                      </span>
-                    </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Classée
-                      </span>
-                    </td>
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      A traiter
+                    </span>
+                  </td>
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      Affectée
+                    </span>
+                  </td>
+
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      Désapprouvée
+                    </span>
+                  </td>
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      Traitée
+                    </span>
+                  </td>
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      Satisfait
+                    </span>
+                  </td>
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      Partiellement satisfait
+                    </span>
+                  </td>
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      Non satisfait
+                    </span>
+                  </td>
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      Contentieux
+                    </span>
+                  </td>
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      Classée
+                    </span>
+                  </td>
                 </>
               }
             </tr>
@@ -1398,7 +1398,7 @@ const Global = (props) => {
         >
           <span style={{ fontSize: "18px", color: "#015182" }}>
             <b>{props.sugReport?.basicStats?.total} </b>
-           Suggestions(s)
+            Suggestions(s)
           </span>
 
           <table
@@ -1408,18 +1408,18 @@ const Global = (props) => {
             <tr>
               {
                 <>
-                    <td className="center">
-                      <span style={{ fontWeight: "bold" }}> A traiter</span>
-                    </td>
+                  <td className="center">
+                    <span style={{ fontWeight: "bold" }}> A traiter</span>
+                  </td>
 
-                    <td className="center">
-                      <span style={{ fontWeight: "bold" }}>Pris en Compte</span>
-                    </td>
-                    <td className="center">
-                      <span style={{ fontWeight: "bold" }}>
-                        Non Pris en Compte
-                      </span>
-                    </td>
+                  <td className="center">
+                    <span style={{ fontWeight: "bold" }}>Pris en Compte</span>
+                  </td>
+                  <td className="center">
+                    <span style={{ fontWeight: "bold" }}>
+                      Non Pris en Compte
+                    </span>
+                  </td>
                 </>
               }
             </tr>
@@ -1476,22 +1476,22 @@ const Global = (props) => {
             <tr>
               {
                 <>
-                 <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        A traiter
-                      </span>
-                    </td>
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Affectée
-                      </span>
-                    </td>
-                  
-                    <td className="center">
-                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                        Traitée
-                      </span>
-                    </td>
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      A traiter
+                    </span>
+                  </td>
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      Affectée
+                    </span>
+                  </td>
+
+                  <td className="center">
+                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                      Traitée
+                    </span>
+                  </td>
                 </>
               }
             </tr>
@@ -1576,7 +1576,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-            
+
               <div
                 className="total-transaction-container "
                 style={{ flex: "1 auto" }}
@@ -1652,58 +1652,58 @@ const Global = (props) => {
           <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
-              // style={{
-              //   height: "600px",
-              //   maxHeight: "600px",
-              //   display: "flex",
-              //   flexDirection: "column",
-              //   padding: "10px",
-              // }}
+            // style={{
+            //   height: "600px",
+            //   maxHeight: "600px",
+            //   display: "flex",
+            //   flexDirection: "column",
+            //   padding: "10px",
+            // }}
             >
-            
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
-                <Bar
-                  redraw={true}
-                  ref={globalByCanalBarChartRef}
-                  data={rdsBarModaliteGlobal}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des RSD par modalité de dépôt et par agence (%)",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    indexAxis: "y",
-                    responsive: true,
-                    scales: {
-                      x: {
-                        stacked: true,
-                        ticks: {
-                          callback: function (value) {
-                            return value + "%";
-                          },
+
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
+                  <Bar
+                    redraw={true}
+                    ref={globalByCanalBarChartRef}
+                    data={rdsBarModaliteGlobal}
+                    options={{
+                      plugins: {
+                        title: {
+                          display: true,
+                          text: "Répartition des RSD par modalité de dépôt et par agence (%)",
+                          position: "top",
                         },
-                        min: 0,
-                        max: 100,
-                        offset: false,
-                       
+                        legend: {
+                          position: "bottom",
+                        },
+                      },
+                      indexAxis: "y",
+                      responsive: true,
+                      scales: {
+                        x: {
+                          stacked: true,
+                          ticks: {
+                            callback: function (value) {
+                              return value + "%";
+                            },
+                          },
+                          min: 0,
+                          max: 100,
+                          offset: false,
+
+                        },
+
+                        // y: {
+                        //   stacked: false,
+                        //   max: 100,
+
+                        // },
                       },
 
-                      // y: {
-                      //   stacked: false,
-                      //   max: 100,
-                        
-                      // },
-                    },
-                    
-                    maintainAspectRatio: false,
-                  }}
-                />
+                      maintainAspectRatio: false,
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -1730,7 +1730,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-            
+
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -1770,8 +1770,8 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={globalByObjetBarChartRef}
@@ -1805,10 +1805,10 @@ const Global = (props) => {
                     }}
                   />
 
-                  
+
                 </div>
               </div>
-              
+
             </div>
           </div>
         </div>
@@ -1858,9 +1858,9 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <div style={{flex: "1 auto", overflowX: "scroll",height:"100%", width:"100%"}}>
-                <div class="chart-container" style={{height:"100%", position: "relative",  width:nba}}>
-               
+              <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
+                <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
+
                   <Bar
                     redraw={true}
                     ref={evolutionByAgenceByAnneeBarChartRef}
@@ -1920,7 +1920,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-            
+
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -1958,10 +1958,10 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-             
-             <div style={{flex: "1 auto", overflowX: "scroll",height:"100%", width:"100%"}}>
-                <div class="chart-container" style={{height:"100%", position: "relative",  width:nba}}>
-              
+
+              <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
+                <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
+
                   <Bar
                     redraw={true}
                     ref={claimByAgenceBarChartRef}
@@ -1971,7 +1971,7 @@ const Global = (props) => {
                         title: {
                           display: true,
                           text: "Nombre de réclamations par Agence",
-                          position:"top"
+                          position: "top"
                         },
                         labels: {
                           render: "value",
@@ -1992,7 +1992,7 @@ const Global = (props) => {
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
     </>
@@ -2049,10 +2049,10 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-             
-             <div style={{flex: "1 auto", overflowX: "scroll",height:"100%", width:"100%"}}>
-                <div class="chart-container" style={{height:"100%", position: "relative",  width:nba}}>
-              
+
+              <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
+                <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
+
                   <Bar
                     redraw={true}
                     ref={denunByAgenceBarChartRef}
@@ -2139,10 +2139,10 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              
-              <div style={{flex: "1 auto", overflowX: "scroll",height:"100%", width:"100%"}}>
-                <div class="chart-container" style={{height:"100%", position: "relative",  width:nba}}>
-              
+
+              <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
+                <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
+
                   <Bar
                     redraw={true}
                     ref={sugByAgenceBarChartRef}
@@ -2194,7 +2194,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-             
+
               <div
                 className="total-transaction-container "
                 style={{ flex: "1 auto" }}
@@ -2233,9 +2233,9 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-            
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={claimByCanalBarChartRef}
@@ -2275,7 +2275,7 @@ const Global = (props) => {
               </div>
             </div>
           </div>
-         
+
         </div>
       </div>
     </>
@@ -2295,7 +2295,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-             
+
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2332,9 +2332,9 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-           
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={denunByCanalBarChartRef}
@@ -2376,7 +2376,7 @@ const Global = (props) => {
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
     </>
@@ -2396,7 +2396,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-            
+
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2434,9 +2434,9 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-            
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={sugByCanalBarChartRef}
@@ -2479,7 +2479,7 @@ const Global = (props) => {
               </div>
             </div>
           </div>
-         
+
         </div>
       </div>
 
@@ -2539,8 +2539,8 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={claimByObjetBarChartRef}
@@ -2582,7 +2582,7 @@ const Global = (props) => {
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
 
@@ -2640,10 +2640,10 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-           
 
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={denunByObjetBarChartRef}
@@ -2683,7 +2683,7 @@ const Global = (props) => {
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
     </>
@@ -2704,7 +2704,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-            
+
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2742,9 +2742,9 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-            
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={claimByGenderBarChartRef}
@@ -2785,7 +2785,7 @@ const Global = (props) => {
               </div>
             </div>
           </div>
-         
+
         </div>
       </div>
     </>
@@ -2806,7 +2806,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-           
+
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2844,9 +2844,9 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-            
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={sugByGenderBarChartRef}
@@ -2886,14 +2886,14 @@ const Global = (props) => {
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
 
       <div className="divider mt-3 mb-3"></div>
     </>
   );
- 
+
   const claimByGraviteChart = (
     <>
       <div className="invoice-product-details">
@@ -2909,7 +2909,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-           
+
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2947,9 +2947,9 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-            
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={claimByGraviteBarChartRef}
@@ -2990,7 +2990,7 @@ const Global = (props) => {
             </div>
           </div>
         </div>
-        
+
       </div>
     </>
   );
@@ -3009,7 +3009,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-           
+
               <div className="total-transaction-container" style={{ flex: 1 }}>
                 <Pie
                   redraw={true}
@@ -3048,9 +3048,9 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-         
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={denunByGraviteBarChartRef}
@@ -3090,7 +3090,7 @@ const Global = (props) => {
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
     </>
@@ -3111,7 +3111,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-             
+
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3140,7 +3140,7 @@ const Global = (props) => {
             </div>
           </div>
 
-          
+
           <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
@@ -3153,8 +3153,8 @@ const Global = (props) => {
               }}
             >
 
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={tauxMensuelClaimByMonthByAgenceBarChartRef}
@@ -3189,12 +3189,12 @@ const Global = (props) => {
                       responsive: true,
                       maintainAspectRatio: false,
                     }}
-                   
+
                   />
                 </div>
               </div>
-           
-            
+
+
             </div>
           </div>
 
@@ -3209,35 +3209,35 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-           
+
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                  <Bar
-                    redraw={true}
-                    ref={tauxMensuelClaimByMonthBarChartRef}
-                    data={tauxMensuelClaimByMonth}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Taux de satisfaction mensuel des Réclamations (%))",
-                          position: "top",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
+                <Bar
+                  redraw={true}
+                  ref={tauxMensuelClaimByMonthBarChartRef}
+                  data={tauxMensuelClaimByMonth}
+                  options={{
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: "Taux de satisfaction mensuel des Réclamations (%))",
+                        position: "top",
                       },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                      legend: {
+                        position: "bottom",
+                      },
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                  }}
+                />
               </div>
             </div>
           </div>
-         
-         
+
+
         </div>
       </div>
 
@@ -3250,42 +3250,42 @@ const Global = (props) => {
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
           <div className="col s12 m12 l12 animate fadeRight center-align">
+            <div
+              className="card"
+              style={{
+                height: "600px",
+                maxHeight: "600px",
+                display: "flex",
+                flexDirection: "column",
+                padding: "10px",
+              }}
+            >
+
               <div
-                className="card"
-                style={{
-                  height: "600px",
-                  maxHeight: "600px",
-                  display: "flex",
-                  flexDirection: "column",
-                  padding: "10px",
-                }}
+                className="total-transaction-container"
+                style={{ flex: "1 auto" }}
               >
-            
-                <div
-                  className="total-transaction-container"
-                  style={{ flex: "1 auto" }}
-                >
-                    <Bar
-                      redraw={true}
-                      ref={resolutionClaimDelaiByMonthBarChartRef}
-                      data={rdsBarDelaiGlobal}
-                      options={{
-                        plugins: {
-                          title: {
-                            display: true,
-                            text: "Respect du délai de résolution des Réclamations par mois (%))",
-                            position: "top",
-                          },
-                          legend: {
-                            position: "bottom",
-                          },
-                        },
-                        responsive: true,
-                        maintainAspectRatio: false,
-                      }}
-                    />
-                </div>
+                <Bar
+                  redraw={true}
+                  ref={resolutionClaimDelaiByMonthBarChartRef}
+                  data={rdsBarDelaiGlobal}
+                  options={{
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: "Respect du délai de résolution des Réclamations par mois (%))",
+                        position: "top",
+                      },
+                      legend: {
+                        position: "bottom",
+                      },
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                  }}
+                />
               </div>
+            </div>
           </div>
 
           <div className="col s12 m12 l12 animate fadeRight center-align">
@@ -3300,8 +3300,8 @@ const Global = (props) => {
               }}
             >
 
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={resolutionClaimDelaiByMonthByAgenceBarChartRef}
@@ -3336,16 +3336,16 @@ const Global = (props) => {
                       responsive: true,
                       maintainAspectRatio: false,
                     }}
-                   
+
                   />
                 </div>
               </div>
-           
-            
+
+
             </div>
           </div>
 
-         
+
         </div>
       </div>
     </>
@@ -3356,42 +3356,42 @@ const Global = (props) => {
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
           <div className="col s12 m12 l12 animate fadeRight center-align">
+            <div
+              className="card"
+              style={{
+                height: "600px",
+                maxHeight: "600px",
+                display: "flex",
+                flexDirection: "column",
+                padding: "10px",
+              }}
+            >
+
               <div
-                className="card"
-                style={{
-                  height: "600px",
-                  maxHeight: "600px",
-                  display: "flex",
-                  flexDirection: "column",
-                  padding: "10px",
-                }}
+                className="total-transaction-container"
+                style={{ flex: "1 auto" }}
               >
-            
-                <div
-                  className="total-transaction-container"
-                  style={{ flex: "1 auto" }}
-                >
-                    <Bar
-                      redraw={true}
-                      ref={resolutionDenunDelaiByMonthBarChartRef}
-                      data={denunBarDelaiByMonth}
-                      options={{
-                        plugins: {
-                          title: {
-                            display: true,
-                            text: "Respect du délai de résolution des Dénonciations par mois (%))",
-                            position: "top",
-                          },
-                          legend: {
-                            position: "bottom",
-                          },
-                        },
-                        responsive: true,
-                        maintainAspectRatio: false,
-                      }}
-                    />
-                </div>
+                <Bar
+                  redraw={true}
+                  ref={resolutionDenunDelaiByMonthBarChartRef}
+                  data={denunBarDelaiByMonth}
+                  options={{
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: "Respect du délai de résolution des Dénonciations par mois (%))",
+                        position: "top",
+                      },
+                      legend: {
+                        position: "bottom",
+                      },
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                  }}
+                />
               </div>
+            </div>
           </div>
 
           <div className="col s12 m12 l12 animate fadeRight center-align">
@@ -3406,8 +3406,8 @@ const Global = (props) => {
               }}
             >
 
-              <div className="scrollContainer" style={{ flex: "1 auto",height: "600px",overflowY: "auto" }}>
-                <div style={{ height: nba,width: "100%",position: "relative"}}>
+              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
                     redraw={true}
                     ref={resolutionDenunDelaiByMonthByAgenceBarChartRef}
@@ -3442,16 +3442,16 @@ const Global = (props) => {
                       responsive: true,
                       maintainAspectRatio: false,
                     }}
-                   
+
                   />
                 </div>
               </div>
-           
-            
+
+
             </div>
           </div>
 
-         
+
         </div>
       </div>
     </>
@@ -3618,6 +3618,7 @@ const Global = (props) => {
       document.getElementById("gauge-chart5")
     );
     let src;
+    console.log(resolutionPieChartRef?.current);
     if (resolutionPieChartRef !== null) {
       var imgSource = resolutionPieChartRef?.current.captureAsImage();
 
@@ -3660,14 +3661,14 @@ const Global = (props) => {
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
       resolutionClaimDelaiByMonthBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>";
-    
+
     const resolutionClaimDelaiByMonthByAgenceBarChartRefData =
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
       resolutionClaimDelaiByMonthByAgenceBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>";
-    
-    
-      const evolutionByAgenceByAnneeBarChartRefData =
+
+
+    const evolutionByAgenceByAnneeBarChartRefData =
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
       evolutionByAgenceByAnneeBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>";
@@ -3720,8 +3721,8 @@ const Global = (props) => {
       "<img src='" +
       tauxMensuelClaimByMonthByAgenceBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    
-      const tauxMensuelClaimByMonthBarChartRefData =
+
+    const tauxMensuelClaimByMonthBarChartRefData =
       "<img src='" +
       tauxMensuelClaimByMonthBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
@@ -3750,20 +3751,20 @@ const Global = (props) => {
       "<img src='" +
       denunByObjetBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    
-    
+
+
     const resolutionDenunDelaiByMonthBarChartRefData =
       "<img src='" +
       resolutionDenunDelaiByMonthBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    
+
     const resolutionDenunDelaiByMonthByAgenceBarChartRefData =
       "<img src='" +
       resolutionDenunDelaiByMonthByAgenceBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    
-    
-      const denunByGravitePieChartRefData =
+
+
+    const denunByGravitePieChartRefData =
       "<img src='" +
       denunByGravitePieChartRef.current.toBase64Image() +
       "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
@@ -3920,7 +3921,7 @@ const Global = (props) => {
   const prepareReportTablesToXLSX = () => {
     let name = today().replaceAll("/", "")
     let filename = `Statistiques_GPR_${name}.xlsx`;
-   
+
     // table2XLSX(filename, "", 0);
     const dataPrepare = [];
 
@@ -3934,7 +3935,7 @@ const Global = (props) => {
       name: institution,
       adresse,
       agrement,
-      copyright:"Copyright SICMA et ASSOCIES",
+      copyright: "Copyright SICMA et ASSOCIES",
       rows: [
         {
           name: "Rapport Général (RDS)",
@@ -3948,7 +3949,7 @@ const Global = (props) => {
             // { value: "Taux de satistaction", sheetLink: "'Info général'" },
             // { value: "Taux de satistaction par agence", sheetLink: "'Info général'" },
           ],
-          color:"#002060"
+          color: "#002060"
         },
         {
           name: "Rapports Réclamations",
@@ -3962,7 +3963,7 @@ const Global = (props) => {
             // { value: "Respect délai", sheetLink: "''" },
             // { value: "Niveaux de satisfaction", sheetLink: "" },
           ],
-          color:"#c00000"
+          color: "#c00000"
         },
         {
           name: "Rapports Dénonciations",
@@ -3976,7 +3977,7 @@ const Global = (props) => {
             // { value: "Respect délai", sheetLink: "" },
             // { value: "Niveaux de satisfaction", sheetLink: "" },
           ],
-          color:"#e97132"
+          color: "#e97132"
         },
         {
           name: "Rapports Suggestions",
@@ -3986,7 +3987,7 @@ const Global = (props) => {
             // { value: "Repartition par objet", sheetLink: "" },
             { value: "Repartition par genre", sheetLink: "'Suggestions par genre'" }
           ],
-          color:"#4ea72e"
+          color: "#4ea72e"
         },
       ],
     });
@@ -3994,48 +3995,48 @@ const Global = (props) => {
     //Global
     //1er Sheet 
     dataPrepare.push({
-      sheetName:"Repartiton RDS",
-      sheetColor:"#002060",
-      doubleCharts:false,
-      chartInfo:[{type:"Pie",title:"Répartition des réclamations, dénonciations, suggestions",tablePosition:0}],
-      tables:[{title:"",data:rdsPieGlobal}],
+      sheetName: "Repartiton RDS",
+      sheetColor: "#002060",
+      doubleCharts: false,
+      chartInfo: [{ type: "Pie", title: "Répartition des réclamations, dénonciations, suggestions", tablePosition: 0 }],
+      tables: [{ title: "", data: rdsPieGlobal }],
     })
 
     //2em Sheet
     dataPrepare.push({
-      sheetName:"Evolution annuel des RDS",
-      sheetColor:"#002060",
-      doubleCharts:false,
-      chartInfo:[{type:"Bar",title:"Glissement annuel",tablePosition:0}],
-      tables:[{title:"",data:rdsBarGlobal}],
+      sheetName: "Evolution annuel des RDS",
+      sheetColor: "#002060",
+      doubleCharts: false,
+      chartInfo: [{ type: "Bar", title: "Glissement annuel", tablePosition: 0 }],
+      tables: [{ title: "", data: rdsBarGlobal }],
     })
 
 
     //3em Sheet
     dataPrepare.push({
-      sheetName:"Modalité de dépôt",
-      sheetColor:"#002060",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)",tablePosition:0},{type:"Chart",title:"Répartition des RSD par modalité de dépôt et par  agences en %",tablePosition:2}],
-      tables:[{title:"",data:rdsPieModaliteGlobal},{title:"Nombre de RDS par agence",data:dataRaport.newVersionStat["GeneralPerAgence"]["RSDModalite"] ?? []},{title:"Répartition des RSD par modalité de dépôt par agence",data:rdsBarModaliteGlobal}],
+      sheetName: "Modalité de dépôt",
+      sheetColor: "#002060",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des RSD par modalité de dépôt et par  agences en %", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieModaliteGlobal }, { title: "Nombre de RDS par agence", data: dataRaport.newVersionStat["GeneralPerAgence"]["RSDModalite"] ?? [] }, { title: "Répartition des RSD par modalité de dépôt par agence", data: rdsBarModaliteGlobal }],
     })
 
     //4em Sheet
     dataPrepare.push({
-      sheetName:"Repartition RDS par objet",
-      sheetColor:"#002060",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des réclamations, dénonciations, suggestions par objet (10 plus importants, le reste dans autres)",tablePosition:0},{type:"Chart",title:"Répartition des Réclamations et Dénonciations par objets par agence",tablePosition:2}],
-      tables:[{title:"",data:rdsPieObjetGlobal},{title:"Nombre de RDS par agence",data:dataRaport.newVersionStat["GeneralPerAgence"]["RSDObjet"] ?? []},{title:"Répartition des RSD par objet par agence",data:rdsBarObjetGlobal}],
+      sheetName: "Repartition RDS par objet",
+      sheetColor: "#002060",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des réclamations, dénonciations, suggestions par objet (10 plus importants, le reste dans autres)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations et Dénonciations par objets par agence", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieObjetGlobal }, { title: "Nombre de RDS par agence", data: dataRaport.newVersionStat["GeneralPerAgence"]["RSDObjet"] ?? [] }, { title: "Répartition des RSD par objet par agence", data: rdsBarObjetGlobal }],
     })
 
     //5em Sheet
     dataPrepare.push({
-      sheetName:"Respect délai",
-      sheetColor:"#002060",
-      doubleCharts:true,
-      chartInfo:[{type:"Bar",title:"Délai de résolution des RDS par mois (en %)",tablePosition:1}],
-      tables:[{title:"",data:rdsBarDelaiGlobal}],
+      sheetName: "Respect délai",
+      sheetColor: "#002060",
+      doubleCharts: true,
+      chartInfo: [{ type: "Bar", title: "Délai de résolution des RDS par mois (en %)", tablePosition: 1 }],
+      tables: [{ title: "", data: rdsBarDelaiGlobal }],
     })
     //End Global
 
@@ -4043,63 +4044,63 @@ const Global = (props) => {
 
     //6e Sheet
     dataPrepare.push({
-      sheetName:"Status des réclamations",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Bar",title:"Réclamations classées par statuts de traitement",tablePosition:1}],
-      tables:[{title:"",data:dataRaport.claimReport["basicStats"]}],
+      sheetName: "Status des réclamations",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Bar", title: "Réclamations classées par statuts de traitement", tablePosition: 1 }],
+      tables: [{ title: "", data: dataRaport.claimReport["basicStats"] }],
     })
 
     //7em Sheet
     dataPrepare.push({
-      sheetName:"Répart.Réclamation par modalité",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des réclamations par modalité de dépôt (%)",tablePosition:0},{type:"Chart",title:"Répartition des Réclamations par modalité de dépôt et par  agences en % ",tablePosition:2}],
-      tables:[{title:"",data:rdsPieModaliteClaim},{title:"Nombre de Réclamations par agence",data:dataRaport.newVersionStat["AgencePerModalite"]["claims"] ?? []},{title:"Répartition des Réclamations par modalité de dépôt par agence",data:rdsBarModaliteClaim}],
+      sheetName: "Répart.Réclamation par modalité",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des réclamations par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par modalité de dépôt et par  agences en % ", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieModaliteClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerModalite"]["claims"] ?? [] }, { title: "Répartition des Réclamations par modalité de dépôt par agence", data: rdsBarModaliteClaim }],
     })
     //8em Sheet
     dataPrepare.push({
-      sheetName:"Répart.Réclamation par objet",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des réclamations par objet",tablePosition:0},{type:"Chart",title:"Répartition des Réclamations par objet et par  agences en % ",tablePosition:2}],
-      tables:[{title:"",data:rdsPieObjetClaim},{title:"Nombre de Réclamations par agence",data:dataRaport.newVersionStat["AgencePerObjet"]["claims"] ?? []},{title:"Répartition des Réclamations par objet par agence",data:rdsBarObjetClaim}],
+      sheetName: "Répart.Réclamation par objet",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des réclamations par objet", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par objet et par  agences en % ", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieObjetClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerObjet"]["claims"] ?? [] }, { title: "Répartition des Réclamations par objet par agence", data: rdsBarObjetClaim }],
     })
 
     //9em Sheet
     dataPrepare.push({
-      sheetName:"Réclamation par genre",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des réclamations par genre (%)",tablePosition:0},{type:"Chart",title:"Répartition des Réclamations par genre et par agences en %  ",tablePosition:2}],
-      tables:[{title:"",data:rdsPieGenreClaim},{title:"Nombre de Réclamations par agence",data:dataRaport.newVersionStat["AgencePerGenre"]["claims"] ?? []},{title:"Répartition des Réclamations par genre par agence",data:rdsBarGenreClaim}],
+      sheetName: "Réclamation par genre",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des réclamations par genre (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par genre et par agences en %  ", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieGenreClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerGenre"]["claims"] ?? [] }, { title: "Répartition des Réclamations par genre par agence", data: rdsBarGenreClaim }],
     })
 
     //10em Sheet
     dataPrepare.push({
-      sheetName:"Répart.Réclamation par gravité",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des réclamations par gravité de dépôt (%)",tablePosition:0},{type:"Chart",title:"Répartition des Réclamations par gravité et par agences en %",tablePosition:2}],
-      tables:[{title:"",data:rdsPieGravityClaim},{title:"Nombre de Réclamations par agence",data:dataRaport.newVersionStat["AgencePerGravity"]["claims"] ?? []},{title:"Répartition des Réclamations par gravité par agence",data:rdsBarGravityClaim}],
+      sheetName: "Répart.Réclamation par gravité",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des réclamations par gravité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par gravité et par agences en %", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieGravityClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerGravity"]["claims"] ?? [] }, { title: "Répartition des Réclamations par gravité par agence", data: rdsBarGravityClaim }],
     })
 
     //11em Sheet
     dataPrepare.push({
-      sheetName:"Répart.Satisfaction_Réclamants",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des niveaux de satisfactions par traitement de réclamations (%)",tablePosition:0},{type:"Chart",title:"Répartition des niveaux de satisfactions du traitement des réclamations et par agences en %",tablePosition:2}],
-      tables:[{title:"",data:rdsPieStatisClaim},{title:"Nombre du niveau de satisfaction obtenus par traitement et par agence",data:dataRaport.newVersionStat["AgencePerMesure"]["claims"] ?? []},{title:"Répartition des niveaux de satisfaction des réclamants par agence",data:rdsBarStatisClaim}],
+      sheetName: "Répart.Satisfaction_Réclamants",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des niveaux de satisfactions par traitement de réclamations (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des niveaux de satisfactions du traitement des réclamations et par agences en %", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieStatisClaim }, { title: "Nombre du niveau de satisfaction obtenus par traitement et par agence", data: dataRaport.newVersionStat["AgencePerMesure"]["claims"] ?? [] }, { title: "Répartition des niveaux de satisfaction des réclamants par agence", data: rdsBarStatisClaim }],
     })
     //12em Sheet
     dataPrepare.push({
-      sheetName:"Evolution Annuelle Satisfaction",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Bar",title:"Evolution annuelle de la satisfaction des réclamants",tablePosition:0},],
-      tables:[{title:"",data:rdsChartStatisClaim}],
+      sheetName: "Evolution Annuelle Satisfaction",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Bar", title: "Evolution annuelle de la satisfaction des réclamants", tablePosition: 0 },],
+      tables: [{ title: "", data: rdsChartStatisClaim }],
     })
 
     //End Claims
@@ -4108,39 +4109,39 @@ const Global = (props) => {
 
     //13e Sheet
     dataPrepare.push({
-      sheetName:"Status des Dénonciations",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Bar",title:"Dénonciations classées par statuts de traitement",tablePosition:1}],
-      tables:[{title:"",data:dataRaport.denunReport["basicStats"]}],
+      sheetName: "Status des Dénonciations",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Bar", title: "Dénonciations classées par statuts de traitement", tablePosition: 1 }],
+      tables: [{ title: "", data: dataRaport.denunReport["basicStats"] }],
     })
 
-     //14em Sheet
-     dataPrepare.push({
-      sheetName:"Répart.Dénonciation_Modalité",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des dénonciations par modalité de dépôt (%)",tablePosition:0},{type:"Chart",title:"Répartition des Dénonciations par modalité de dépôt et par agences en % ",tablePosition:2}],
-      tables:[{title:"",data:rdsPieModaliteDenun},{title:"Nombre de Dénonciation par agence",data:dataRaport.newVersionStat["AgencePerModalite"]["denonciations"] ?? []},{title:"Répartition des Dénonciations par modalité de dépôt par agence",data:rdsBarModaliteDenun}],
+    //14em Sheet
+    dataPrepare.push({
+      sheetName: "Répart.Dénonciation_Modalité",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des dénonciations par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Dénonciations par modalité de dépôt et par agences en % ", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieModaliteDenun }, { title: "Nombre de Dénonciation par agence", data: dataRaport.newVersionStat["AgencePerModalite"]["denonciations"] ?? [] }, { title: "Répartition des Dénonciations par modalité de dépôt par agence", data: rdsBarModaliteDenun }],
     })
 
     //15em Sheet
     dataPrepare.push({
-      sheetName:"Répart.Dénonciation_Objet",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des dénonciations par objet",tablePosition:0},{type:"Chart",title:"Répartition des Dénonciations par objet et par agences en %",tablePosition:2}],
-      tables:[{title:"",data:rdsPieObjetDenun},{title:"Nombre de Dénonciations par agence",data:dataRaport.newVersionStat["AgencePerObjet"]["denonciations"] ?? []},{title:"Répartition des Dénonciations par objet par agence",data:rdsBarObjetDenun}],
+      sheetName: "Répart.Dénonciation_Objet",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des dénonciations par objet", tablePosition: 0 }, { type: "Chart", title: "Répartition des Dénonciations par objet et par agences en %", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieObjetDenun }, { title: "Nombre de Dénonciations par agence", data: dataRaport.newVersionStat["AgencePerObjet"]["denonciations"] ?? [] }, { title: "Répartition des Dénonciations par objet par agence", data: rdsBarObjetDenun }],
     })
 
 
     //16em Sheet
     dataPrepare.push({
-      sheetName:"Répart.Dénonciation par gravité",
-      sheetColor:"#c00000",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des dénonciations par gravité de dépôt (%)",tablePosition:0},{type:"Chart",title:"Répartition des Dénonciations par gravité et par agences en %",tablePosition:2}],
-      tables:[{title:"",data:rdsPieGravityDenun},{title:"Nombre de Dénonciations par agence",data:dataRaport.newVersionStat["AgencePerGravity"]["denonciations"] ?? []},{title:"Répartition des Dénonciation par gravité par agence",data:rdsBarGravityDenun}],
+      sheetName: "Répart.Dénonciation par gravité",
+      sheetColor: "#c00000",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des dénonciations par gravité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Dénonciations par gravité et par agences en %", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieGravityDenun }, { title: "Nombre de Dénonciations par agence", data: dataRaport.newVersionStat["AgencePerGravity"]["denonciations"] ?? [] }, { title: "Répartition des Dénonciation par gravité par agence", data: rdsBarGravityDenun }],
     })
 
     //End Denonciations
@@ -4149,20 +4150,20 @@ const Global = (props) => {
 
     //17e Sheets
     dataPrepare.push({
-      sheetName:"Status des Suggestions",
-      sheetColor:"#4ea72e",
-      doubleCharts:true,
-      chartInfo:[{type:"Bar",title:"Suggestions classées par statuts de traitement",tablePosition:1}],
-      tables:[{title:"",data:dataRaport.suggestionReport["basicStats"]}],
+      sheetName: "Status des Suggestions",
+      sheetColor: "#4ea72e",
+      doubleCharts: true,
+      chartInfo: [{ type: "Bar", title: "Suggestions classées par statuts de traitement", tablePosition: 1 }],
+      tables: [{ title: "", data: dataRaport.suggestionReport["basicStats"] }],
     })
 
     //18em Sheet
     dataPrepare.push({
-      sheetName:"Répart.Suggestions par modalité",
-      sheetColor:"#4ea72e",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des suggestions par modalité de dépôt (%)",tablePosition:0},{type:"Chart",title:"Répartition des suggestions par modalité de dépôt et par agences en % ",tablePosition:2}],
-      tables:[{title:"",data:rdsPieModaliteSugge},{title:"Nombre de Suggestion par agence",data:dataRaport.newVersionStat["AgencePerModalite"]["suggestions"] ?? []},{title:"Répartition des suggestions par modalité de dépôt par agence",data:rdsBarModaliteSugge}],
+      sheetName: "Répart.Suggestions par modalité",
+      sheetColor: "#4ea72e",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des suggestions par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des suggestions par modalité de dépôt et par agences en % ", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieModaliteSugge }, { title: "Nombre de Suggestion par agence", data: dataRaport.newVersionStat["AgencePerModalite"]["suggestions"] ?? [] }, { title: "Répartition des suggestions par modalité de dépôt par agence", data: rdsBarModaliteSugge }],
     })
 
     //19em Sheet
@@ -4176,21 +4177,21 @@ const Global = (props) => {
 
     //19em Sheet
     dataPrepare.push({
-      sheetName:"Suggestions par genre",
-      sheetColor:"#4ea72e",
-      doubleCharts:true,
-      chartInfo:[{type:"Pie",title:"Répartition des suggestions par genre (%)",tablePosition:0},{type:"Chart",title:"Répartition des Suggestions par genre et par agences en %  ",tablePosition:2}],
-      tables:[{title:"",data:rdsPieGenreSugge},{title:"Nombre de Suggestions par agence",data:dataRaport.newVersionStat["AgencePerGenre"]["suggestions"] ?? []},{title:"Répartition des Suggestions par genre par agence",data:rdsBarGenreSugge}],
+      sheetName: "Suggestions par genre",
+      sheetColor: "#4ea72e",
+      doubleCharts: true,
+      chartInfo: [{ type: "Pie", title: "Répartition des suggestions par genre (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Suggestions par genre et par agences en %  ", tablePosition: 2 }],
+      tables: [{ title: "", data: rdsPieGenreSugge }, { title: "Nombre de Suggestions par agence", data: dataRaport.newVersionStat["AgencePerGenre"]["suggestions"] ?? [] }, { title: "Répartition des Suggestions par genre par agence", data: rdsBarGenreSugge }],
     })
 
     const generateName = generateString(10)
 
     dataPrepare.push(generateName)
-   
+
 
 
     if (dataPrepare.length) {
-      reportNewVersionExport(filename,generateName, dataPrepare);
+      reportNewVersionExport(filename, generateName, dataPrepare);
     } else {
       notify("Imspossible d'exporter,Ressayez", "error");
     }
@@ -4451,13 +4452,13 @@ const Global = (props) => {
                         }}
                       />
                       <label htmlFor="idEtatPlainte" className={"active"}>
-                      Enregistrer par
+                        Enregistrer par
                       </label>
                     </div>
                     {/*Dates row*/}
                     <div className="row">
                       <div className="col l12 s12 m12 text-center">
-                      Reçu entre:
+                        Reçu entre:
                       </div>
                       {/*Date start*/}
                       <div className="col s12 m12 l6 input-field">
@@ -4473,7 +4474,7 @@ const Global = (props) => {
                           locale="fr"
                         />
                         <label htmlFor="idStartDate" className={"active"}>
-                        Date de debut 
+                          Date de debut
                         </label>
                       </div>
                       {/*Date end*/}
@@ -4491,7 +4492,7 @@ const Global = (props) => {
                           locale="fr"
                         />
                         <label htmlFor="idEndDate" className={"active"}>
-                        Date de fin
+                          Date de fin
                         </label>
                       </div>
                     </div>
@@ -4532,7 +4533,7 @@ const Global = (props) => {
                   </a>
                 </div>
                 <div className="col l6 m6 s12 mt-4">
-                  <a 
+                  <a
                     className="btn waves-effect waves-effect-b waves-light display-flex align-items-center justify-content-center mt-1"
                     onClick={(e) => {
                       genereReport(e);
@@ -4714,7 +4715,7 @@ const Global = (props) => {
                 >
                   <div className="col s12 l12 m12 center">
                     <span style={{ color: "#015182", fontSize: "25px" }}>
-                    Rapport de la gestion des plaintes ou réclamations
+                      Rapport de la gestion des plaintes ou réclamations
                     </span>
                   </div>
                 </div>
@@ -4724,12 +4725,12 @@ const Global = (props) => {
                   id="critereRapport"
                 >
                   <div className="col l12">
-                 
+
                     <ul style={{ paddingLeft: "15px" }}>
-                     
+
                       <li>
                         <b>
-                         Générer par: {userAuth.firstAndLastName}
+                          Générer par: {userAuth.firstAndLastName}
                         </b>
                       </li>
                     </ul>
@@ -5029,7 +5030,7 @@ const Global = (props) => {
                     ) : (
                       <div className="row mt-1 mb-3 center">
                         <span style={{ fontSize: "20px", fontWeight: "bold" }}>
-                        Aucune réclamation ne correspond aux critères de tri
+                          Aucune réclamation ne correspond aux critères de tri
                         </span>
                       </div>
                     )}
@@ -5047,7 +5048,7 @@ const Global = (props) => {
                             fontWeight: "bold",
                           }}
                         >
-                         Dénonciations
+                          Dénonciations
                         </span>
                         <br />
                       </div>
@@ -5060,7 +5061,7 @@ const Global = (props) => {
                     </div>
                     {props.denunReport.length != 0 ? (
                       <>
-                       <div className="row">
+                        <div className="row">
                           <div className="col l12 mb-4" id="toeDenun">
                             <span
                               className="mt-2"
@@ -5158,7 +5159,7 @@ const Global = (props) => {
                     ) : (
                       <div className="row mt-1 mb-3 center">
                         <span style={{ fontSize: "20px", fontWeight: "bold" }}>
-                        Aucune denonciation ne correspond aux critères de tri
+                          Aucune denonciation ne correspond aux critères de tri
                         </span>
                       </div>
                     )}
@@ -5262,7 +5263,7 @@ const Global = (props) => {
                     ) : (
                       <div className="row mt-1 mb-3 center">
                         <span style={{ fontSize: "20px", fontWeight: "bold" }}>
-                        Aucune suggestion ne correspond aux critères de tri
+                          Aucune suggestion ne correspond aux critères de tri
                         </span>
                       </div>
                     )}
@@ -5371,7 +5372,7 @@ const mapDispatchToProps = (dispatch) => {
     claimReportChanged: (claimReport) => {
       dispatch(claimReportChanged(claimReport));
     },
-  
+
     denunReportChanged: (denunReport) => {
       dispatch(denunReportChanged(denunReport));
     },
@@ -5381,8 +5382,8 @@ const mapDispatchToProps = (dispatch) => {
     statChanged: (stat) => {
       dispatch(statChanged(stat));
     },
-    
-   
+
+
     // basicStatChanged: (basicStat) => {
     //   dispatch(basicStatChanged(basicStat));
     // },

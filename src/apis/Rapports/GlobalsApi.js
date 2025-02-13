@@ -54,7 +54,7 @@ export const reportApi = async (props, setData) => {
             // console.log('report error', error);
             setData(null)
             notify("Une erreur s'est produtie", "error");
-            console.log("erreurREPORT",error)
+            console.log("erreurREPORT", error)
         });
 }
 
@@ -99,8 +99,8 @@ export const reportApiFiltres = async (props, body, setData) => {
                 //         newData: response.data
                 //     };
                 // });
-                
-                  
+
+
 
 
                 KTApp.unblockPage();
@@ -124,28 +124,28 @@ export const reportNewVersionExport = async (filename, generateName, body) => {
         message: 'En cours...'
     });
 
-   
+
     axios.post(REPORT_NEW_VERSION_API, body, { responseType: "blob" })
         .then(async function (response) {
-           
+
             // console.log("response data content",response.data)
             // Créez un objet URL à partir de la réponse
-            
+
             const url = window.URL.createObjectURL(new Blob([response.data]));
             await deleteFileAfterDownload(generateName)
 
-           
 
-             // Créez un lien invisible et déclenchez le téléchargement
-             const link = document.createElement('a');
-             link.href = url;
-             link.setAttribute('download', filename); // Remplacez 'nom_du_fichier.ext' par le nom du fichier
-             document.body.appendChild(link);
-             link.click();
- 
-             // Libérez l'URL de l'objet lorsque le téléchargement est terminé
-             window.URL.revokeObjectURL(url);
-             link.remove();
+
+            // Créez un lien invisible et déclenchez le téléchargement
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename); // Remplacez 'nom_du_fichier.ext' par le nom du fichier
+            document.body.appendChild(link);
+            link.click();
+
+            // Libérez l'URL de l'objet lorsque le téléchargement est terminé
+            window.URL.revokeObjectURL(url);
+            link.remove();
             KTApp.unblockPage();
 
 
@@ -153,7 +153,7 @@ export const reportNewVersionExport = async (filename, generateName, body) => {
         })
         .catch(function (error) {
             KTApp.unblockPage();
-            notify("Erreur,une erreur s'est produite","error")
+            notify("Erreur,une erreur s'est produite", "error")
 
             // console.log("erreurREPORTfiltres",error)
         });
@@ -171,17 +171,17 @@ export const deleteFileAfterDownload = async (generateName) => {
     axios.get(`${REPORT_DELETE_API}/${generateName}`)
         .then(function (response) {
             // console.log("Fichier supprimer")
-            
+
             KTApp.unblockPage();
-            
-            
-            
+
+
+
         })
         .catch(function (error) {
             // console.log(`Fichier no delete ${error}`)
             KTApp.unblockPage();
-            
-        }).finally(()=>{
+
+        }).finally(() => {
             notify("Bravo - Téléchargement du fichier effectué", "success");
         });
 }
