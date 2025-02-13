@@ -2419,7 +2419,7 @@ const TraiterReclamation = (props) => {
       let claim = {};
       claim["claimId"] = props.id;
       claim["treatorId"] = user.id;
-      claim["solution"] = props.solution && typeof props.solution === "string" ? props.solution : "";
+      claim["solution"] = props.solution;
       claim["commentaire"] = props.comment;
       claim["existingId"] = props.solutionExistant;
       claim["isExisting"] = props.solutionExistant !== "" ? true : false;
