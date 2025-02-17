@@ -153,7 +153,7 @@ const ApiKey = (props) => {
         }
     }
     const rowClickedHandler = (event, data, rowIndex) => {
-        console.log('data', data)
+        // console.log('data', data)
     }
 
     const [actif, setActif] = useState();
@@ -165,7 +165,7 @@ const ApiKey = (props) => {
             setActif(resultat.actif)
 
         } catch (error) {
-            console.error("Une erreur s'est produite :", error);
+            // console.error("Une erreur s'est produite :", error);
         }
     };
 
@@ -219,7 +219,7 @@ const ApiKey = (props) => {
     }
     const getApiKeys = () => {
         apiKeyTokens().then(({ data }) => {
-            console.log('data', data.content)
+            // console.log('data', data.content)
             setApiKeyList(data.content);
 
         }).catch((err) => {

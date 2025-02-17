@@ -37,7 +37,7 @@ export const exportConfigs = async (type,filename) => {
 
         })
         .catch(function (error) {
-            console.log('error', error)
+            // console.log('error', error)
             notify("Erreur,une erreure s'est produite", "error")
 
             // console.log("erreurREPORTfiltres",error)
