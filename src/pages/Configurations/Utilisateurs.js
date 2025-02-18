@@ -85,7 +85,7 @@ const Utilisateurs = (props) => {
         setMax(resultat.maxPoste)
         
       } catch (error) {
-        console.error("Une erreur s'est produite :", error);
+        // console.error("Une erreur s'est produite :", error);
       }
     };
   

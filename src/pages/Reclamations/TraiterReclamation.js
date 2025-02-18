@@ -493,7 +493,7 @@ const TraiterReclamation = (props) => {
       setActif(resultat.actif)
 
     } catch (error) {
-      console.error("Une erreur s'est produite :", error);
+      // console.error("Une erreur s'est produite :", error);
     }
   };
 
@@ -978,7 +978,7 @@ const TraiterReclamation = (props) => {
       isValid = false;
       errors["comment"] = "Champ incorrect";
     }
-    console.log("isValid", isValid);
+    // console.log("isValid", isValid);
     return isValid;
   };
 

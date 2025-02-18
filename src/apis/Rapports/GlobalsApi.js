@@ -54,7 +54,7 @@ export const reportApi = async (props, setData) => {
             // console.log('report error', error);
             setData(null)
             notify("Une erreur s'est produtie", "error");
-            console.log("erreurREPORT", error)
+            // console.log("erreurREPORT", error)
         });
 }
 

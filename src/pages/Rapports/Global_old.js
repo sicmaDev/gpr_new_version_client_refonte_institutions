@@ -3843,8 +3843,8 @@ const Global = (props) => {
       var imgSource = resolutionPieChartRef?.current.captureAsImage();
 
       if (resolutionPieChartRef?.current) {
-        console.error("suc0:", "broo");
-        console.error("suc1:", resolutionPieChartRef?.current.captureAsImage());
+        // console.error("suc0:", "broo");
+        // console.error("suc1:", resolutionPieChartRef?.current.captureAsImage());
         src = await resolutionPieChartRef?.current.captureAsImage();
       }
     }

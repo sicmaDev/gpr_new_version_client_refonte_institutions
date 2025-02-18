@@ -20,7 +20,7 @@ export const licenseControl = async () => {
         
         return resultat.actif;
     } catch (error) {
-        console.error("Une erreur s'est produite :", error);
+        // console.error("Une erreur s'est produite :", error);
     }
     // let resultat = await licenseInfo();
     // console.log("actiffff",resultat)
