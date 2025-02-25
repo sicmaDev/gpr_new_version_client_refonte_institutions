@@ -3618,7 +3618,7 @@ const Global = (props) => {
       document.getElementById("gauge-chart5")
     );
     let src;
-    console.log(resolutionPieChartRef?.current);
+    // console.log(resolutionPieChartRef?.current);
     if (resolutionPieChartRef !== null) {
       var imgSource = resolutionPieChartRef?.current.captureAsImage();
 

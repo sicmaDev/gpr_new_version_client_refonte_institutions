@@ -31,7 +31,7 @@ function Template2(props) {
                 if (localStorage.getItem("token")) {
                     props.setUser()
                     props.setLocked()
-                    localStorage.clear()
+                    // localStorage.clear()
                     localStorage.setItem("isLocked", true)
                 }
 
@@ -45,13 +45,13 @@ function Template2(props) {
     // const {isIdeal} = useReactInactivity({minute:0.5})
     return (
 
-            <Suspense fallback="loading">
-                    <HashRouter>
-                    {props.isLocked ? (<Lockscreen />) :
-                    ( <Haut />)}
-                    </HashRouter>
-                </Suspense>
-    
+        <Suspense fallback="loading">
+            <HashRouter>
+                {props.isLocked ? (<Lockscreen />) :
+                    (<Haut />)}
+            </HashRouter>
+        </Suspense>
+
     );
 
 }

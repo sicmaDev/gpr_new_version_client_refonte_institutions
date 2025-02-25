@@ -112,7 +112,7 @@ const Email = (props) => {
         setActif(resultat.actif)
         
       } catch (error) {
-        console.error("Une erreur s'est produite :", error);
+        // console.error("Une erreur s'est produite :", error);
       }
     };
   

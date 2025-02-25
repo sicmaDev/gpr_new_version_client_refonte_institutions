@@ -125,7 +125,7 @@ export const Haut = (props) => {
       }
     
     } catch (error) {
-      console.error("Une erreur s'est produite :", error);
+      // console.error("Une erreur s'est produite :", error);
     }
   };
 
