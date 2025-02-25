@@ -31,7 +31,7 @@ function Template2(props) {
                 if (localStorage.getItem("token")) {
                     props.setUser()
                     props.setLocked()
-                    localStorage.clear()
+                    // localStorage.clear()
                     localStorage.setItem("isLocked", true)
                 }
 
