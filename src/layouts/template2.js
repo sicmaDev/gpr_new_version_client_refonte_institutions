@@ -20,28 +20,28 @@ function Template2(props) {
 
 
 
-    // useEffect(() => {
-    //     const resetTimeout = () => {
-    //         props.setLastActivity(Date.now())
-    //     }
-    //     window.addEventListener("mousemove", resetTimeout)
+    useEffect(() => {
+        const resetTimeout = () => {
+            props.setLastActivity(Date.now())
+        }
+        window.addEventListener("mousemove", resetTimeout)
 
-    //     const interval = setInterval(() => {
-    //         if (Date.now() - props.lastActivity > LOCKSCREEN_TIMEOUT) {
-    //             if (localStorage.getItem("token")) {
-    //                 props.setUser()
-    //                 props.setLocked()
-    //                 localStorage.clear()
-    //                 localStorage.setItem("isLocked", true)
-    //             }
+        const interval = setInterval(() => {
+            if (Date.now() - props.lastActivity > LOCKSCREEN_TIMEOUT) {
+                if (localStorage.getItem("token")) {
+                    props.setUser()
+                    props.setLocked()
+                    localStorage.clear()
+                    localStorage.setItem("isLocked", true)
+                }
 
-    //         }
-    //     }, 10000)
-    //     return () => {
-    //         window.removeEventListener("mousemove", resetTimeout)
-    //         clearInterval(interval)
-    //     }
-    // }, [props, props.lastActivity])
+            }
+        }, 10000)
+        return () => {
+            window.removeEventListener("mousemove", resetTimeout)
+            clearInterval(interval)
+        }
+    }, [props, props.lastActivity])
     // const {isIdeal} = useReactInactivity({minute:0.5})
     return (
 
