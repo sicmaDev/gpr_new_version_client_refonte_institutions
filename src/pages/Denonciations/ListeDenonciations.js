@@ -426,13 +426,13 @@ const ListeDenonciations = (props) => {
       sortable: true,
       cell: (claim, index) => {
         let temps
-        if (claim.retardDay > 0 ) {
+        if (claim.retardDay > 0) {
           temps = claim.declenchedDate
         } else {
-          temps =<div className="card-content red-text"><WarningIcon/></div>
+          temps = <div className="card-content red-text"><WarningIcon /></div>
         }
         return temps;
-        
+
       },
     },
   ];
@@ -1182,7 +1182,7 @@ const ListeDenonciations = (props) => {
       codeClient: `
         <div class="row" style="margin-bottom: 20px;">
           <div class="col l12">
-            <span style="font-size: 18px;"><b>CodeClient:</b> ${props.selectedItem.codeClient}</span>
+            <span style="font-size: 18px;"><b>Code:</b> ${props.selectedItem.codeClient}</span>
           </div>
         </div>
       `,

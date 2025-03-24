@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
+import DatePicker from "react-datepicker";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -160,6 +161,9 @@ const ListeReclamations = (props) => {
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
   const [fond, setFond] = useState("");
+
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
   let hbt = (user.posteDto.habilitations).split(',');
@@ -1984,6 +1988,46 @@ const ListeReclamations = (props) => {
                     </div>
                   </div>
                 </DialogContentText>
+                <div className="row">
+                  <div className="col l12 s12 m12 text-center">
+                    Reçu entre:
+                  </div>
+                  {/*Date start*/}
+                  <div className="col s12 m12 l6 input-field">
+                    <DatePicker
+                      id="idStartDate"
+                      name="startDate"
+                      className="mt-4"
+                      selected={startDate}
+                      onChange={(date) => {
+                        setStartDate(date);
+                      }}
+                      dateFormat="dd/MM/yyyy"
+                      locale="fr"
+                    />
+                    <label htmlFor="idStartDate" className={"active"}>
+                      Date de debut
+                    </label>
+                  </div>
+                  {/*Date end*/}
+
+                  <div className="col s12 m12 l6 input-field">
+                    <DatePicker
+                      id="idEndDate"
+                      name="endDate"
+                      className="mt-4"
+                      selected={endDate}
+                      onChange={(date) => {
+                        setEndDate(date);
+                      }}
+                      dateFormat="dd/MM/yyyy"
+                      locale="fr"
+                    />
+                    <label htmlFor="idEndDate" className={"active"}>
+                      Date de fin
+                    </label>
+                  </div>
+                </div>
 
                 <div className="row mt-5">
                   <div className="row">
