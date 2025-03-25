@@ -24,26 +24,26 @@ export const table2XLSX = (filename, style = "", avance = 0) => {
   let exportData = tableToExport.getExportData();
   // console.log("exportData","ok");
   // console.log("exportData",exportData);
-  
-  let mimeType, merges, xlsxData, extension, rtl, sheetname, xlsxDenunciation, xlsxSuggestion, xlsxClaim,xlsxDenunciationData, xlsxSuggestionData, xlsxClaimData
+
+  let mimeType, merges, xlsxData, extension, rtl, sheetname, xlsxDenunciation, xlsxSuggestion, xlsxClaim, xlsxDenunciationData, xlsxSuggestionData, xlsxClaimData
   if (avance === 0) {
     let separator = [[{ v: '', t: '' }, { v: ' ', t: '' }],]
 
     xlsxClaim = exportData.stats_claim !== undefined ? exportData.stats_claim.xlsx : []; // Replace with the kind of file you want from the exportData
     xlsxDenunciation = exportData.stats_denunciation !== undefined ? exportData.stats_denunciation.xlsx : []; // Replace with the kind of file you want from the exportData
     xlsxSuggestion = exportData.stats_suggestion !== undefined ? exportData.stats_suggestion.xlsx : []; // Replace with the kind of file you want from the exportData
-      
-    xlsxClaimData = [[{ v: ' Réclamations ', t: '' }, { v: ' ', t: '' }],].concat(xlsxClaim.length !==0 ? xlsxClaim.data : "")
-    xlsxDenunciationData = [[{ v: ' Dénonciations ', t: '' }, { v: ' ', t: '' }],].concat(xlsxDenunciation.length !==0 ? xlsxDenunciation.data :"")
-    xlsxSuggestionData = [[{ v: ' Suggestions ', t: '' }, { v: ' ', t: '' }],].concat(xlsxSuggestion.length !==0 ? xlsxSuggestion.data : "")
-      
-    
+
+    xlsxClaimData = [[{ v: ' Réclamations ', t: '' }, { v: ' ', t: '' }],].concat(xlsxClaim.length !== 0 ? xlsxClaim.data : "")
+    xlsxDenunciationData = [[{ v: ' Dénonciations ', t: '' }, { v: ' ', t: '' }],].concat(xlsxDenunciation.length !== 0 ? xlsxDenunciation.data : "")
+    xlsxSuggestionData = [[{ v: ' Suggestions ', t: '' }, { v: ' ', t: '' }],].concat(xlsxSuggestion.length !== 0 ? xlsxSuggestion.data : "")
+
+
     let xlsxListData =
       exportData["as-react-datatable"] !== undefined
         ? exportData["as-react-datatable"].xlsx
         : []; // Replace with the kind of file you want from the exportData
 
-     xlsxData =
+    xlsxData =
       exportData["as-react-datatable"] === undefined
         ? xlsxClaimData.concat(separator).concat(xlsxDenunciationData).concat(separator).concat(xlsxSuggestionData)
         : xlsxListData.data;
@@ -71,7 +71,7 @@ export const table2XLSX = (filename, style = "", avance = 0) => {
       exportData["as-react-datatable"] === undefined
         ? xlsxClaim.sheetname
         : xlsxListData.sheetname;
-  } else if(avance === 1) {
+  } else if (avance === 1) {
     let separator = [[{ v: '', t: '' }, { v: ' ', t: '' }],]
 
     //Dénonciation
@@ -107,25 +107,25 @@ export const table2XLSX = (filename, style = "", avance = 0) => {
     //Fin réclamation
 
     xlsxData = [].concat(xlsxClaimData).concat(xlsxDenunciationData).concat(xlsxSuggestionData)
-    mimeType ="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    merges =[]
+    mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    merges = []
     extension = ".xlsx";
 
     rtl = options.RTL;
     sheetname = options.sheetname;
-  }else if(avance === 2){
+  } else if (avance === 2) {
     let separator = [[{ v: '', t: '' }, { v: ' ', t: '' }],]
 
     //Réclamation
     let xlsxHeadClaimEx = exportData.headClaimEx !== undefined ? exportData.headClaimEx.xlsx.data : []
     let xlsxBodyClaimEx = exportData.bodyClaimEx !== undefined ? exportData.bodyClaimEx.xlsx.data : []
-   
+
     xlsxClaimData = [[{ v: 'Réclamations', t: '' }, { v: ' ', t: '' }],].concat(xlsxHeadClaimEx).concat(separator).concat(xlsxBodyClaimEx)
     //Fin réclamation
 
     xlsxData = [].concat(xlsxClaimData)
-    mimeType ="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    merges =[]
+    mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    merges = []
     extension = ".xlsx";
 
     rtl = options.RTL;
@@ -188,6 +188,86 @@ export const table2XLS2X = (filename, style = "", columns, records) => {
   //tableToExport.exportmultisheet(xlsxData, mimeType, xlsxClaimData.filename, ["Reclamations", "Denonciations", "Suggestions"], xlsxClaimData.fileExtension, {}, [])
 };
 
+const parseDate = (dateString) => {
+  if (!dateString) return null;
+
+  // Séparer la date et l'heure
+  const [datePart] = dateString.split(" ");
+
+  // Séparer le jour, le mois et l'année
+  const [day, month, year] = datePart.split("-");
+
+  // Reformer la date au format YYYY-MM-DD
+  return `${year}-${month}-${day}`;
+};
+
+const resetTime = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0); // Réinitialiser l'heure à 00:00:00
+  return d;
+};
+
+const formatDate = (dateString) => {
+  // Séparer la date et l'heure
+  return dateString.split('T')[0]; // Garde seulement 'YYYY-MM-DD'
+};
+
+
+export const table2XLS2XF = (filename, style = "", columns, records, startDate, endDate) => {
+  let options = {
+    headers: true, // (Boolean), display table headers (th or td elements) in the <thead>, (default: true)
+    footers: true, // (Boolean), display table footers (th or td elements) in the <tfoot>, (default: false)
+    formats: ["xlsx"], // (String[]), filetype(s) for the export, (default: ['xlsx', 'csv', 'txt'])
+    filename: filename, // (id, String), filename for the downloaded file, (default: 'id')
+    bootstrap: false, // (Boolean), style buttons using bootstrap, (default: true)
+    exportButtons: false, // (Boolean), automatically generate the built-in export buttons for each of the specified formats (default: true)
+    position: "bottom", // (top, bottom), position of the caption element relative to table, (default: 'bottom')
+    ignoreRows: null, // (Number, Number[]), row indices to exclude from the exported file(s) (default: null)
+    ignoreCols: null, // (Number, Number[]), column indices to exclude from the exported file(s) (default: null)
+    trimWhitespace: true, // (Boolean), remove all leading/trailing newlines, spaces, and tabs from cell text in the exported file(s) (default: false)
+    RTL: false, // (Boolean), set direction of the worksheet to right-to-left (default: false)
+    sheetname: "Sheet 1", // (id, String), sheet name for the exported spreadsheet, (default: 'id')
+  };
+
+  const filteredRecords = records.filter(record => {
+    const recordDate = resetTime(new Date(parseDate(record.receiptDateTime)));
+    return recordDate >= resetTime(new Date(startDate)) && recordDate <= resetTime(new Date(endDate));
+  });
+  // console.log("filteredRecords", filteredRecords)
+  if (filteredRecords.length === 0) {
+    alert("Aucune donnée trouvée pour la période spécifiée.");
+    return;
+  }
+
+  document.getElementById("tab_exl").innerHTML = getExportHtml2(
+    columns,
+    filteredRecords,
+    "brke"
+  );
+  // console.log(document.getElementsByClassName(style));
+  let tableToExport = new TableExport(
+    document.getElementsByClassName(style),
+    options
+  );
+  /* convert export data to a file for download */
+  let exportData = tableToExport.getExportData();
+  // console.log(exportData);
+
+  let xlsxListData = exportData[Object.keys(exportData)[0]].xlsx;
+
+  //tableToExport.export2file(xlsxData, mimeType, filename, extension)
+  tableToExport.export2file(
+    xlsxListData.data,
+    xlsxListData.mimeType,
+    filename,
+    xlsxListData.fileExtension,
+    [],
+    xlsxListData.RTL,
+    xlsxListData.sheetname
+  );
+  //tableToExport.exportmultisheet(xlsxData, mimeType, xlsxClaimData.filename, ["Reclamations", "Denonciations", "Suggestions"], xlsxClaimData.fileExtension, {}, [])
+};
+
 export const table3XLS2X = (filename, style = "", columns, records) => {
   let options = {
     headers: true, // (Boolean), display table headers (th or td elements) in the <thead>, (default: true)
@@ -206,6 +286,60 @@ export const table3XLS2X = (filename, style = "", columns, records) => {
   document.getElementById("tab_exl").innerHTML = getExportHtml3(
     columns,
     records,
+    "brke"
+  );
+  // console.log(document.getElementsByClassName(style));
+  let tableToExport = new TableExport(
+    document.getElementsByClassName(style),
+    options
+  );
+  /* convert export data to a file for download */
+  let exportData = tableToExport.getExportData();
+  // console.log(exportData);
+
+  let xlsxListData = exportData[Object.keys(exportData)[0]].xlsx;
+
+  //tableToExport.export2file(xlsxData, mimeType, filename, extension)
+  tableToExport.export2file(
+    xlsxListData.data,
+    xlsxListData.mimeType,
+    filename,
+    xlsxListData.fileExtension,
+    [],
+    xlsxListData.RTL,
+    xlsxListData.sheetname
+  );
+  //tableToExport.exportmultisheet(xlsxData, mimeType, xlsxClaimData.filename, ["Reclamations", "Denonciations", "Suggestions"], xlsxClaimData.fileExtension, {}, [])
+};
+
+export const table3XLS2XF = (filename, style = "", columns, records, startDate, endDate) => {
+  let options = {
+    headers: true, // (Boolean), display table headers (th or td elements) in the <thead>, (default: true)
+    footers: true, // (Boolean), display table footers (th or td elements) in the <tfoot>, (default: false)
+    formats: ["xlsx"], // (String[]), filetype(s) for the export, (default: ['xlsx', 'csv', 'txt'])
+    filename: filename, // (id, String), filename for the downloaded file, (default: 'id')
+    bootstrap: false, // (Boolean), style buttons using bootstrap, (default: true)
+    exportButtons: false, // (Boolean), automatically generate the built-in export buttons for each of the specified formats (default: true)
+    position: "bottom", // (top, bottom), position of the caption element relative to table, (default: 'bottom')
+    ignoreRows: null, // (Number, Number[]), row indices to exclude from the exported file(s) (default: null)
+    ignoreCols: null, // (Number, Number[]), column indices to exclude from the exported file(s) (default: null)
+    trimWhitespace: true, // (Boolean), remove all leading/trailing newlines, spaces, and tabs from cell text in the exported file(s) (default: false)
+    RTL: false, // (Boolean), set direction of the worksheet to right-to-left (default: false)
+    sheetname: "Sheet 1", // (id, String), sheet name for the exported spreadsheet, (default: 'id')
+  };
+
+  const filteredRecords = records.filter(record => {
+    const recordDate = resetTime(new Date(formatDate(record.receiptDateTime)));
+    return recordDate >= resetTime(new Date(startDate)) && recordDate <= resetTime(new Date(endDate));
+  });
+  // console.log("filteredRecords", filteredRecords)
+  if (filteredRecords.length === 0) {
+    alert("Aucune donnée trouvée pour la période spécifiée.");
+    return;
+  }
+  document.getElementById("tab_exl").innerHTML = getExportHtml3(
+    columns,
+    filteredRecords,
     "brke"
   );
   // console.log(document.getElementsByClassName(style));

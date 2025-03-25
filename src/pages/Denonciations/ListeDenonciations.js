@@ -6,6 +6,7 @@ import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import WarningIcon from '@mui/icons-material/Warning';
+import DatePicker from "react-datepicker";
 import {
   addressChanged,
   agentsChanged,
@@ -61,9 +62,9 @@ import { connect } from "react-redux";
 // import { loadItemFromSessionStorage, today } from "../../utils/utils";
 // import { v4 as uuidv4 } from "uuid";
 // import { formatDate, guessExtension } from "../../utils";
-import { handlePrint, handlePrint2, handlePrintAvance } from "../../Utils/tables";
+import { handlePrint, handlePrint2, handlePrint22, handlePrintAvance } from "../../Utils/tables";
 
-import { table2XLSX, table2XLS2X } from "../../Utils/tabletoexcel";
+import { table2XLSX, table2XLS2X, table2XLS2XF } from "../../Utils/tabletoexcel";
 
 import Dialog from '@mui/material/Dialog';
 import AppBar from '@mui/material/AppBar';
@@ -98,7 +99,7 @@ import TimelineDot from '@mui/lab/TimelineDot';
 import excel from '../../assets/images/excel.svg'
 import pdf from '../../assets/images/pdf.svg'
 import timelineOppositeContentClasses from '@mui/lab/TimelineOppositeContent';
-import { formatDate, guessExtension, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from "../../Utils/utils";
+import { formatDate, formatDate2, guessExtension, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import { Avatar, DialogContent, DialogContentText } from "@mui/material";
 import GavelIcon from '@mui/icons-material/Gavel';
 import StopIcon from '@mui/icons-material/Stop';
@@ -135,6 +136,10 @@ const ListeDenonciations = (props) => {
 
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
+
+
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
@@ -677,6 +682,7 @@ const ListeDenonciations = (props) => {
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
   let colourOptions = [
     { value: "Code", label: "Code" },
+    { value: "Code Client", label: "Code Client" },
     { value: "Status", label: "Status" },
     { value: "Enregistrer le", label: "Enregistrer le" },
     { value: "Enregistrer par", label: "Enregistrer par" },
@@ -689,6 +695,7 @@ const ListeDenonciations = (props) => {
   ];
   const [selectOption, setSelectOption] = useState([
     "Code",
+    "Code Client",
     "Status",
     "Enregistrer le",
     "Enregistrer par",
@@ -1475,6 +1482,46 @@ const ListeDenonciations = (props) => {
                     </div>
                   </div>
                 </DialogContentText>
+                <div className="row">
+                  <div className="col l12 s12 m12 text-center">
+                    Reçu entre:
+                  </div>
+                  {/*Date start*/}
+                  <div className="col s12 m12 l6 input-field">
+                    <DatePicker
+                      id="idStartDate"
+                      name="startDate"
+                      className="mt-4"
+                      selected={startDate}
+                      onChange={(date) => {
+                        setStartDate(date);
+                      }}
+                      dateFormat="dd/MM/yyyy"
+                      locale="fr"
+                    />
+                    <label htmlFor="idStartDate" className={"active"}>
+                      Date de debut
+                    </label>
+                  </div>
+                  {/*Date end*/}
+
+                  <div className="col s12 m12 l6 input-field">
+                    <DatePicker
+                      id="idEndDate"
+                      name="endDate"
+                      className="mt-4"
+                      selected={endDate}
+                      onChange={(date) => {
+                        setEndDate(date);
+                      }}
+                      dateFormat="dd/MM/yyyy"
+                      locale="fr"
+                    />
+                    <label htmlFor="idEndDate" className={"active"}>
+                      Date de fin
+                    </label>
+                  </div>
+                </div>
 
                 <div className="row mt-5" >
 
@@ -1561,8 +1608,12 @@ const ListeDenonciations = (props) => {
                     {changeButtonPrint ? (
                       <a
                         onClick={(e) => {
-                          // console.log("props.items",props.items)
-                          handlePrint2(config, selectOption, props.items);
+                          if (startDate && endDate) {
+                            handlePrint22(config, selectOption, props.items, formatDate2(startDate), formatDate2(endDate));
+                          } else {
+                            // Sinon, utiliser handlePrint2 sans filtre
+                            handlePrint2(config, selectOption, props.items);
+                          }
                         }}
                         className="btn indigo lighten-5 indigo-text waves-effect waves-effect-b waves-light"
                       >
@@ -1571,12 +1622,26 @@ const ListeDenonciations = (props) => {
                     ) : (
                       <a
                         onClick={(e) => {
-                          table2XLS2X(
-                            "Liste_des_dénonciations" + today().replaceAll("/", ""),
-                            "brke",
-                            selectOption,
-                            props.items
-                          );
+                          if (startDate && endDate) {
+                            table2XLS2XF(
+                              "Liste_des_dénonciations" +
+                              today().replaceAll("/", ""),
+                              "brke",
+                              selectOption,
+                              props.items,
+                              formatDate2(startDate),
+                              formatDate2(endDate)
+                            );
+                          } else {
+                            // Sinon, utiliser handlePrint2 sans filtre
+                            table2XLS2X(
+                              "Liste_des_dénonciations" +
+                              today().replaceAll("/", ""),
+                              "brke",
+                              selectOption,
+                              props.items
+                            );
+                          }
                         }}
                         className="btn green lighten-5 green-text waves-effect waves-effect-b waves-light"
                       >

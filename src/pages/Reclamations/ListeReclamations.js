@@ -74,10 +74,11 @@ import { connect } from "react-redux";
 import {
   handlePrint,
   handlePrint2,
+  handlePrint22,
   handlePrintAvance,
 } from "../../Utils/tables";
 
-import { table2XLSX, table2XLS2X } from "../../Utils/tabletoexcel";
+import { table2XLSX, table2XLS2X, table2XLS2XF } from "../../Utils/tabletoexcel";
 // import { useLocation } from "react-router-dom";
 
 import Button from "@mui/material/Button";
@@ -116,6 +117,7 @@ import pdf from "../../assets/images/pdf.svg";
 import timelineOppositeContentClasses from "@mui/lab/TimelineOppositeContent";
 import {
   formatDate,
+  formatDate2,
   guessExtension,
   loadItemFromLocalStorage,
   loadItemFromSessionStorage,
@@ -946,6 +948,7 @@ const ListeReclamations = (props) => {
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
   let colourOptions = [
     { value: "Code", label: "Code" },
+    { value: "Code Client", label: "Code Client" },
     { value: "Client", label: "Client" },
     { value: "Status", label: "Status" },
     { value: "Enregistrer le", label: "Enregistrer le" },
@@ -2112,23 +2115,50 @@ const ListeReclamations = (props) => {
                     {changeButtonPrint ? (
                       <a
                         onClick={(e) => {
-                          // console.log("props.items", props.items);
-                          handlePrint2(config, selectOption, props.items);
+                          if (startDate && endDate) {
+                            handlePrint22(config, selectOption, props.items, formatDate2(startDate), formatDate2(endDate));
+                          } else {
+                            // Sinon, utiliser handlePrint2 sans filtre
+                            handlePrint2(config, selectOption, props.items);
+                          }
                         }}
+
                         className="btn indigo lighten-5 indigo-text waves-effect waves-effect-b waves-light"
                       >
                         <span className="text-nowrap">Imprimer</span>
                       </a>
                     ) : (
                       <a
+                        // onClick={(e) => {
+                        //   table2XLS2X(
+                        //     "Liste_des_réclamations" +
+                        //     today().replaceAll("/", ""),
+                        //     "brke",
+                        //     selectOption,
+                        //     props.items
+                        //   );
+                        // }}
                         onClick={(e) => {
-                          table2XLS2X(
-                            "Liste_des_réclamations" +
-                            today().replaceAll("/", ""),
-                            "brke",
-                            selectOption,
-                            props.items
-                          );
+                          if (startDate && endDate) {
+                            table2XLS2XF(
+                              "Liste_des_réclamations" +
+                              today().replaceAll("/", ""),
+                              "brke",
+                              selectOption,
+                              props.items,
+                              formatDate2(startDate),
+                              formatDate2(endDate)
+                            );
+                          } else {
+                            // Sinon, utiliser handlePrint2 sans filtre
+                            table2XLS2X(
+                              "Liste_des_réclamations" +
+                              today().replaceAll("/", ""),
+                              "brke",
+                              selectOption,
+                              props.items
+                            );
+                          }
                         }}
                         className="btn green lighten-5 green-text waves-effect waves-effect-b waves-light"
                       >

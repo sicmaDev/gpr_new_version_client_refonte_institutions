@@ -2,9 +2,9 @@ import React from "react";
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from "./utils";
 import { v4 as uuidv4 } from "uuid";
 import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from "./globals";
-let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))): undefined;
+let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
 
-export const getExportHtml = (columns, records,without=[]) => {
+export const getExportHtml = (columns, records, without = []) => {
   try {
     // console.log(columns);
     // console.log(records);
@@ -14,7 +14,7 @@ export const getExportHtml = (columns, records,without=[]) => {
     columns.map((column) => {
       // console.log('column.text', column.text)
       // console.log('without', without)
-      if(without.includes(column.text)){
+      if (without.includes(column.text)) {
         return (tableHtml += "");
       }
       return (tableHtml += "<td>" + column.text + "</td>");
@@ -105,8 +105,8 @@ export const getExportHtml = (columns, records,without=[]) => {
             record.base === 1 || record.base === "1" ? "Oui" : "Non";
           return (tableHtml += "<td>" + baseValue + "</td>");
         }
-        if(without.includes(column.text)){
-          return (tableHtml +="")
+        if (without.includes(column.text)) {
+          return (tableHtml += "")
         }
         return (tableHtml += "<td>" + record[columns[index].key] + "</td>");
       });
@@ -118,8 +118,8 @@ export const getExportHtml = (columns, records,without=[]) => {
     tableHtml += "<tfoot>";
     tableHtml += "<tr style='font-weight: bold'>";
     columns.map((column) => {
-      if(without.includes(column.text)){
-        return (tableHtml +="")
+      if (without.includes(column.text)) {
+        return (tableHtml += "")
       }
       return (tableHtml += "<td>" + column.text + "</td>");
     });
@@ -128,7 +128,7 @@ export const getExportHtml = (columns, records,without=[]) => {
     tableHtml += "</table>";
 
     return tableHtml;
-  } catch (e) {}
+  } catch (e) { }
 };
 const resetColumns = (columns, hook) => {
   console.debug(columns);
@@ -138,7 +138,7 @@ const resetColumns = (columns, hook) => {
   console.debug(columns);
 };
 
-export const handlePrint = (config, columns, records, hook,without=[]) => {
+export const handlePrint = (config, columns, records, hook, without = []) => {
   if (hook === 1) {
     columns.splice(1, 0, {
       key: "subject",
@@ -150,7 +150,7 @@ export const handlePrint = (config, columns, records, hook,without=[]) => {
   }
 
   try {
-  } catch (e) {}
+  } catch (e) { }
   const childWindow = window.open("", "modal");
   let style = "<style>";
   style = style + "table {width: 100%;font: 17px Calibri;}";
@@ -158,20 +158,20 @@ export const handlePrint = (config, columns, records, hook,without=[]) => {
     style + "table, th, td {border: solid 1px #DDD; border-collapse: collapse;";
   style = style + "padding: 2px 3px;text-align:left;}";
   style = style + "</style>";
-  let tableHTML = getExportHtml(columns, records,without);
+  let tableHTML = getExportHtml(columns, records, without);
   childWindow.document.write(style);
   childWindow.document.write(
     '<h2 style="display:inline-block">' +
-      config.filename +
-      ' &nbsp;<h6 style="display:none"><a href="javascript:void" onclick="javascript:print();if(hook===1){\n' +
-      '        columns.splice(1,1);}window.close()">Imprimer</a></h6></h2>'
+    config.filename +
+    ' &nbsp;<h6 style="display:none"><a href="javascript:void" onclick="javascript:print();if(hook===1){\n' +
+    '        columns.splice(1,1);}window.close()">Imprimer</a></h6></h2>'
   );
   childWindow.document.write(
     tableHTML +
-      // "<br/>Imprimé avec GPR" +
-      // "<br/>Outil développé par SICMa & Associés" +
-      // '<br/>Email: info@sicmagroup.com'+
-        '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
+    // "<br/>Imprimé avec GPR" +
+    // "<br/>Outil développé par SICMa & Associés" +
+    // '<br/>Email: info@sicmagroup.com'+
+    '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
   );
   resetColumns(columns, hook);
 };
@@ -224,7 +224,7 @@ export const getExportHtmlStatsTable = (columns, records) => {
     tableHtml += "</table>";
 
     return tableHtml;
-  } catch (e) {}
+  } catch (e) { }
 };
 export const getExportHtmlUser = (columns, records) => {
   try {
@@ -293,7 +293,7 @@ export const getExportHtmlUser = (columns, records) => {
     tableHtml += "</table>";
 
     return tableHtml;
-  } catch (e) {}
+  } catch (e) { }
 };
 export const handlePrintUser = (config, columns, records) => {
   try {
@@ -309,15 +309,15 @@ export const handlePrintUser = (config, columns, records) => {
     childWindow.document.write(style);
     childWindow.document.write(
       '<h2 style="display:inline-block">' +
-        config.filename +
-        ' &nbsp;<h6 style="display:none"><a href="javascript:void" onclick="javascript:print();window.close()">Imprimer</a></h6></h2>'
+      config.filename +
+      ' &nbsp;<h6 style="display:none"><a href="javascript:void" onclick="javascript:print();window.close()">Imprimer</a></h6></h2>'
     );
     childWindow.document.write(
       tableHTML +
-        // "<br/>Imprimé avec GPR" +
-        // "<br/>Outil développé par SICMa & Associés" +
-        // '<br/>Email: info@sicmagroup.com'+
-        '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
+      // "<br/>Imprimé avec GPR" +
+      // "<br/>Outil développé par SICMa & Associés" +
+      // '<br/>Email: info@sicmagroup.com'+
+      '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
     );
     // childWindow.document.write('<br/>Imprimé avec GPR')
     // childWindow.document.write('<br/>Outil développé par SICMa & Associés')
@@ -325,7 +325,7 @@ export const handlePrintUser = (config, columns, records) => {
     // childWindow.document.write('<script type="text/javascript">\n' +
     //     '      setTimeout(function() { window.print();window.close(); },500)\n' +
     //     ' </script>')
-  } catch (e) {}
+  } catch (e) { }
 };
 
 function ready(callback) {
@@ -352,10 +352,10 @@ export const handlePrint2 = (config, columns, records, hook) => {
     });
   }
 
-  let image = '<img src="'+INSTITUTION_LOGO+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+  let image = '<img src="' + INSTITUTION_LOGO + '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
   let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
-  entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">'+image+'</div>';
-  entete += '<div className="col l8 s7 m7"><b>'+INSTITUTION_NAME+'</b><br /><i><span>Numéro Agrément: </span>'+INSTITUTION_AGREMENT+'</i><br /><i><span>Addrese: </span>'+INSTITUTION_ADDRESS+'</i><br /><i><span>Tel: </span>'+INSTITUTION_TEL+'</i><br /><i><span>Email: </span>'+INSTITUTION_EMAIL+'</i></div></div>';
+  entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">' + image + '</div>';
+  entete += '<div className="col l8 s7 m7"><b>' + INSTITUTION_NAME + '</b><br /><i><span>Numéro Agrément: </span>' + INSTITUTION_AGREMENT + '</i><br /><i><span>Addrese: </span>' + INSTITUTION_ADDRESS + '</i><br /><i><span>Tel: </span>' + INSTITUTION_TEL + '</i><br /><i><span>Email: </span>' + INSTITUTION_EMAIL + '</i></div></div>';
 
 
   const childWindow = window.open("", "modal");
@@ -367,27 +367,122 @@ export const handlePrint2 = (config, columns, records, hook) => {
   style = style + "</style>";
   let tableHTML = getExportHtml2(columns, records, hook);
   childWindow.document.write(style);
-  childWindow.document.write(entete+
-    '<h2 style="display:inline-block">'+
-      config.filename +
-      ' &nbsp;<h6 style="display:none"><a href="javascript:void" onclick="javascript:print();if(hook===1){\n' +
-      '        columns.splice(1,1);}window.close()">Imprimer</a></h6></h2>'
+  childWindow.document.write(entete +
+    '<h2 style="display:inline-block">' +
+    config.filename +
+    ' &nbsp;<h6 style="display:none"><a href="javascript:void" onclick="javascript:print();if(hook===1){\n' +
+    '        columns.splice(1,1);}window.close()">Imprimer</a></h6></h2>'
   );
 
- 
+
   childWindow.document.write(
-    tableHTML 
+    tableHTML
     +
-      // "<br/>Imprimé avec GPR" +
-      // "<br/>Outil développé par SICMa & Associés" +
-      // '<br/>Email: info@sicmagroup.com
-      '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
+    // "<br/>Imprimé avec GPR" +
+    // "<br/>Outil développé par SICMa & Associés" +
+    // '<br/>Email: info@sicmagroup.com
+    '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
   );
   resetColumns(columns, hook);
 };
+
+const parseDate = (dateString) => {
+  if (!dateString) return null;
+
+  // Séparer la date et l'heure
+  const [datePart] = dateString.split(" ");
+
+  // Séparer le jour, le mois et l'année
+  const [day, month, year] = datePart.split("-");
+
+  // Reformer la date au format YYYY-MM-DD
+  return `${year}-${month}-${day}`;
+};
+const formatDate = (dateString) => {
+  // Séparer la date et l'heure
+  return dateString.split('T')[0]; // Garde seulement 'YYYY-MM-DD'
+};
+
+
+const resetTime = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0); // Réinitialiser l'heure à 00:00:00
+  return d;
+};
+
+export const handlePrint22 = (config, columns, records, startDate, endDate, hook) => {
+
+  const filteredRecords = records.filter(record => {
+    const recordDate = resetTime(new Date(parseDate(record.receiptDateTime)));
+    return recordDate >= resetTime(new Date(startDate)) && recordDate <= resetTime(new Date(endDate));
+  });
+  // console.log("filteredRecords", filteredRecords)
+  if (filteredRecords.length === 0) {
+    alert("Aucune donnée trouvée pour la période spécifiée.");
+    return;
+  }
+
+
+  if (hook === 1) {
+    columns.splice(1, 0, {
+      key: "subject",
+      text: "Objet",
+      className: "subject",
+      align: "left",
+      sortable: true,
+    });
+  }
+
+  let image = `<img src="${INSTITUTION_LOGO}" alt="logo" style="width:200px;height:90px;" class="report-logo"/>`;
+  let entete = `<div class="row" id="enteteRapport" style="margin-bottom:50px!important;">
+                  <div class="col l2 s3 m3" style="margin-bottom:20px!important;">${image}</div>
+                  <div class="col l8 s7 m7">
+                    <b>${INSTITUTION_NAME}</b><br />
+                    <i><span>Numéro Agrément: </span>${INSTITUTION_AGREMENT}</i><br />
+                    <i><span>Adresse: </span>${INSTITUTION_ADDRESS}</i><br />
+                    <i><span>Tel: </span>${INSTITUTION_TEL}</i><br />
+                    <i><span>Email: </span>${INSTITUTION_EMAIL}</i>
+                  </div>
+                </div>`;
+
+
+  const childWindow = window.open("", "modal");
+
+  let style = `<style>
+                  table { width: 100%; font: 17px Calibri; }
+                  table, th, td { border: solid 1px #DDD; border-collapse: collapse; padding: 2px 3px; text-align: left; }
+               </style>`;
+
+  let tableHTML = getExportHtml2(columns, filteredRecords, hook);
+
+  childWindow.document.write(style);
+  childWindow.document.write(entete + `
+    <h2 style="display:inline-block;">
+      ${config.filename} (Période : ${startDate} à ${endDate})
+      <h6 style="display:none;">
+        <a href="javascript:void(0)" onclick="print(); if(${hook} === 1){ columns.splice(1,1); } window.close();">Imprimer</a>
+      </h6>
+    </h2>
+  `);
+
+  childWindow.document.write(
+    tableHTML +
+    "<br/>Imprimé avec GPR" +
+    "<br/>Outil développé par SICMa & Associés" +
+    "<br/>Email: info@sicmagroup.com" +
+    `<script type="text/javascript">
+       setTimeout(function() { window.print(); window.close(); }, 1000);
+     </script>`
+  );
+
+  // 10. ✅ Réinitialiser les colonnes après impression
+  resetColumns(columns, hook);
+};
+
+
 export const getExportHtml2 = (columns, records, id = "") => {
   try {
-    //  console.log(columns);
+    // console.log(columns);
     // console.log("recorsd",records);
     let tableHtml = "<table class='" + id + "'>";
     tableHtml += "<thead>";
@@ -419,7 +514,7 @@ export const getExportHtml2 = (columns, records, id = "") => {
               statusElt = "A approuver"
               break;
             case "DESAPPROUVED":
-              statusElt ="Désapprouvée"
+              statusElt = "Désapprouvée"
               break;
             case "TREAT":
               statusElt = "Traitée"
@@ -439,7 +534,7 @@ export const getExportHtml2 = (columns, records, id = "") => {
             case "CLASSED":
               statusElt = "Classée"
               break;
-          
+
             default:
               statusElt = ""
               break;
@@ -451,8 +546,8 @@ export const getExportHtml2 = (columns, records, id = "") => {
             year: "numeric",
             month: "long",
             day: "2-digit",
-            hour:"numeric",
-            minute:"numeric"
+            hour: "numeric",
+            minute: "numeric"
           }).format(new Date(record.createdAt));
           return (tableHtml += "<td>" + createdAt + "</td>");
         }
@@ -461,53 +556,57 @@ export const getExportHtml2 = (columns, records, id = "") => {
             "<td>" + record.clientFirstAndLastName + "</td>");
         }
         if (column === "Telephone") {
-          let telephone = record.id ?  record.tel === null ? "-" : record.tel : record.phone;
-            return (tableHtml += "<td>" + telephone + "</td>");
+          let telephone = record.id ? record.tel === null ? "-" : record.tel : record.phone;
+          return (tableHtml += "<td>" + telephone + "</td>");
         }
-       
+        if (column === "Code Client") {
+          let codeClient = record.id ? record.codeClient === null ? "-" : record.codeClient : record.codeClient;
+          return (tableHtml += "<td>" + codeClient + "</td>");
+        }
+
         if (column === "Code") {
           return (tableHtml += "<td>" + record.code + "</td>");
         }
         if (column === "Traiter par") {
-          let name = (record.id && record.collectionChannel) ? 
+          let name = (record.id && record.collectionChannel) ?
             record.treatBy === null
               ? "-"
               : record.treatBy.firstAndLastName : "-";
           return (tableHtml += "<td>" + name + "</td>");
         }
         if (column == "Solution") {
-          let solution = (record.id && record.collectionChannel) ? (record.solutionDtos).length ===0 ? "-" : (record.solutionDtos)[0].content : "-";
+          let solution = (record.id && record.collectionChannel) ? (record.solutionDtos).length === 0 ? "-" : (record.solutionDtos)[0].content : "-";
           return (tableHtml += "<td>" + solution + "</td>");
         }
         if (column == "Moyens de collecte") {
-          let description1 = record.collectionChannelId ? (JSON.parse(loadItemFromSessionStorage('app-supports'))).filter((e) => {return e.id === record.collectionChannelId}) : ""
-          let scTemp = mode ===1 ? record.collectionChannel.libelle : (record.id && record.collectionChannel) ? record.collectionChannel.libelle : description1[0].libelle;
-   
+          let description1 = record.collectionChannelId ? (JSON.parse(loadItemFromSessionStorage('app-supports'))).filter((e) => { return e.id === record.collectionChannelId }) : ""
+          let scTemp = mode === 1 ? record.collectionChannel.libelle : (record.id && record.collectionChannel) ? record.collectionChannel.libelle : description1[0].libelle;
+
           return (tableHtml += "<td>" + scTemp + "</td>");
         }
         if (column == "Point de service") {
-          let description4 = record.servicePointId ? (JSON.parse(loadItemFromSessionStorage('app-ps'))).filter((e) => {return e.id === record.servicePointId}) : ""
-          let psTemp = mode ===1 ? record.servicePoint.libelle : (record.id && record.collectionChannel) ? record.servicePoint.libelle : description4[0].libelle;
-   
+          let description4 = record.servicePointId ? (JSON.parse(loadItemFromSessionStorage('app-ps'))).filter((e) => { return e.id === record.servicePointId }) : ""
+          let psTemp = mode === 1 ? record.servicePoint.libelle : (record.id && record.collectionChannel) ? record.servicePoint.libelle : description4[0].libelle;
+
           return (tableHtml += "<td>" + psTemp + "</td>");
         }
         if (column == "Produit") {
-          let description3 = record.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => {return e.id === record.productId}) : ""
-          let produitTemp = mode ===1 ? record.product.libelle : (record.id && record.collectionChannel) ? record.product.libelle : description3[0].libelle;
-   
+          let description3 = record.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => { return e.id === record.productId }) : ""
+          let produitTemp = mode === 1 ? record.product.libelle : (record.id && record.collectionChannel) ? record.product.libelle : description3[0].libelle;
+
           return (tableHtml += "<td>" + produitTemp + "</td>");
         }
         if (column == "Objet") {
-          let description2 = record.objetId ? (JSON.parse(loadItemFromSessionStorage('app-objets'))).filter((e) => {return e.id === record.objetId}) : ""
-          let objetTemp = mode ===1 ? record.objet.libelle : (record.id && record.collectionChannel) ? record.objet.libelle : description2[0].libelle;
+          let description2 = record.objetId ? (JSON.parse(loadItemFromSessionStorage('app-objets'))).filter((e) => { return e.id === record.objetId }) : ""
+          let objetTemp = mode === 1 ? record.objet.libelle : (record.id && record.collectionChannel) ? record.objet.libelle : description2[0].libelle;
           return (tableHtml += "<td>" + objetTemp + "</td>");
         }
         if (column == "Enregistrer par") {
-          let description5 = record.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => {return e.id === record.collectorId}) : ""
-          let addByTemp = mode ===1 ? record.collector.firstAndLastName : (record.id && record.collectionChannel) ? record.collector.firstAndLastName : description5[0].firstAndLastName;
+          let description5 = record.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => { return e.id === record.collectorId }) : ""
+          let addByTemp = mode === 1 ? record.collector.firstAndLastName : (record.id && record.collectionChannel) ? record.collector.firstAndLastName : description5[0].firstAndLastName;
           return (tableHtml +=
             "<td>" +
-              addByTemp +
+            addByTemp +
             "</td>");
         }
       });
@@ -526,27 +625,27 @@ export const getExportHtml2 = (columns, records, id = "") => {
     tableHtml += "</table>";
 
     return tableHtml;
-  } catch (e) {}
+  } catch (e) { }
 };
 
 
 export const handlePrintAvance = (dom) => {
-  
+
   const childWindow = window.open("", "modal");
- 
+
   childWindow.document.write(
-    dom +'<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
+    dom + '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
   );
 };
 
 export const handlePrint3 = (config, columns, records) => {
 
-  let image = '<img src="'+INSTITUTION_LOGO+'" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+  let image = '<img src="' + INSTITUTION_LOGO + '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
   let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
-  entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">'+image+'</div>';
-  entete += '<div className="col l8 s7 m7"><b>'+INSTITUTION_NAME+'</b><br /><i><span>Numéro Agrément: </span>'+INSTITUTION_AGREMENT+'</i><br /><i><span>Addrese: </span>'+INSTITUTION_ADDRESS+'</i><br /><i><span>Tel: </span>'+INSTITUTION_TEL+'</i><br /><i><span>Email: </span>'+INSTITUTION_EMAIL+'</i></div></div>';
+  entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">' + image + '</div>';
+  entete += '<div className="col l8 s7 m7"><b>' + INSTITUTION_NAME + '</b><br /><i><span>Numéro Agrément: </span>' + INSTITUTION_AGREMENT + '</i><br /><i><span>Addrese: </span>' + INSTITUTION_ADDRESS + '</i><br /><i><span>Tel: </span>' + INSTITUTION_TEL + '</i><br /><i><span>Email: </span>' + INSTITUTION_EMAIL + '</i></div></div>';
 
- 
+
   const childWindow = window.open("", "modal");
   let style = "<style>";
   style = style + "table {width: 100%;font: 17px Calibri;}";
@@ -556,19 +655,62 @@ export const handlePrint3 = (config, columns, records) => {
   style = style + "</style>";
   let tableHTML = getExportHtml3(columns, records);
   childWindow.document.write(style);
-  childWindow.document.write(entete+
+  childWindow.document.write(entete +
     '<h2 style="display:inline-block">' +
-      config.filename +
-      ' &nbsp;<h6 style="display:none"><a href="javascript:void" onclick="javascript:print();if(hook===1){\n' +
-      '        columns.splice(1,1);}window.close()">Imprimer</a></h6></h2>'
+    config.filename +
+    ' &nbsp;<h6 style="display:none"><a href="javascript:void" onclick="javascript:print();if(hook===1){\n' +
+    '        columns.splice(1,1);}window.close()">Imprimer</a></h6></h2>'
   );
   childWindow.document.write(
-    tableHTML 
+    tableHTML
     +
-      // "<br/>Imprimé avec GPR" +
-      // "<br/>Outil développé par SICMa & Associés" +
-      // '<br/>Email: info@sicmagroup.com
-      '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
+    // "<br/>Imprimé avec GPR" +
+    // "<br/>Outil développé par SICMa & Associés" +
+    // '<br/>Email: info@sicmagroup.com
+    '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
+  );
+  resetColumns(columns);
+};
+
+export const handlePrint33 = (config, columns, records, startDate, endDate,) => {
+
+  let image = '<img src="' + INSTITUTION_LOGO + '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+  let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
+  entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">' + image + '</div>';
+  entete += '<div className="col l8 s7 m7"><b>' + INSTITUTION_NAME + '</b><br /><i><span>Numéro Agrément: </span>' + INSTITUTION_AGREMENT + '</i><br /><i><span>Addrese: </span>' + INSTITUTION_ADDRESS + '</i><br /><i><span>Tel: </span>' + INSTITUTION_TEL + '</i><br /><i><span>Email: </span>' + INSTITUTION_EMAIL + '</i></div></div>';
+
+  const filteredRecords = records.filter(record => {
+    const recordDate = resetTime(new Date(formatDate(record.receiptDateTime)));
+    return recordDate >= resetTime(new Date(startDate)) && recordDate <= resetTime(new Date(endDate));
+  });
+  // console.log("filteredRecords", records)
+  if (filteredRecords.length === 0) {
+    alert("Aucune donnée trouvée pour la période spécifiée.");
+    return;
+  }
+
+  const childWindow = window.open("", "modal");
+  let style = "<style>";
+  style = style + "table {width: 100%;font: 17px Calibri;}";
+  style =
+    style + "table, th, td {border: solid 1px #DDD; border-collapse: collapse;";
+  style = style + "padding: 2px 3px;text-align:left;}";
+  style = style + "</style>";
+  let tableHTML = getExportHtml3(columns, filteredRecords);
+  childWindow.document.write(style);
+  childWindow.document.write(entete +
+    '<h2 style="display:inline-block">' +
+    config.filename +
+    ' &nbsp;<h6 style="display:none"><a href="javascript:void" onclick="javascript:print();if(hook===1){\n' +
+    '        columns.splice(1,1);}window.close()">Imprimer</a></h6></h2>'
+  );
+  childWindow.document.write(
+    tableHTML
+    +
+    // "<br/>Imprimé avec GPR" +
+    // "<br/>Outil développé par SICMa & Associés" +
+    // '<br/>Email: info@sicmagroup.com
+    '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
   );
   resetColumns(columns);
 };
@@ -613,8 +755,8 @@ export const getExportHtml3 = (columns, records, id = "") => {
             year: "numeric",
             month: "long",
             day: "2-digit",
-            hour:"numeric",
-            minute:"numeric"
+            hour: "numeric",
+            minute: "numeric"
           }).format(new Date(record.createdAt));
           return (tableHtml += "<td>" + createdAt + "</td>");
         }
@@ -624,23 +766,28 @@ export const getExportHtml3 = (columns, records, id = "") => {
             "<td>" + nom + "</td>");
         }
         if (column === "Telephone") {
-          let telephone = record.id ?  record.tel === null ? "-" : record.tel : record.phone;
-            return (tableHtml += "<td>" + telephone + "</td>");
+          let telephone = record.id ? record.tel === null ? "-" : record.tel : record.phone;
+          return (tableHtml += "<td>" + telephone + "</td>");
         }
-      
+
+        if (column === "Code Client") {
+          let codeClient = record.id ? record.codeClient === null ? "-" : record.codeClient : record.codeClient;
+          return (tableHtml += "<td>" + codeClient + "</td>");
+        }
+
         if (column === "Code") {
-          let code =  record.code === "" ? "<i>-</i>" : record.code;
+          let code = record.code === "" ? "<i>-</i>" : record.code;
           return (tableHtml += "<td>" + code + "</td>");
         }
         if (column === "Traiter par") {
           let name;
-            
+
           if (record.status === "TREAT") {
-            name = (record.id && record.canal) ?  record.traiteur === null ? "-" : record.traiteur.firstAndLastName : "-";
+            name = (record.id && record.canal) ? record.traiteur === null ? "-" : record.traiteur.firstAndLastName : "-";
           } else {
-            name="-"
+            name = "-"
           }
-              
+
           return (tableHtml += "<td>" + name + "</td>");
         }
         if (column == "Decision") {
@@ -649,34 +796,34 @@ export const getExportHtml3 = (columns, records, id = "") => {
             // console.log("azert",record)
             decision = record.accepted === true ? "Pris en compte" : "Non pris en compte";
           } else {
-            decision="-"
+            decision = "-"
           }
-          
+
           return (tableHtml += "<td>" + decision + "</td>");
         }
         if (column == "Moyens de collecte") {
-          let description1 = record.collectionChannelId ? (JSON.parse(loadItemFromSessionStorage('app-supports'))).filter((e) => {return e.id === record.collectionChannelId}) : ""
-          let canal = mode ===1 ? (record.canal === null  ? "<i>-</i>" : record.canal.libelle) : (record.id && record.canal) ? (record.canal === null  ? "<i>-</i>" : record.canal.libelle) :  description1[0].libelle  ;
-          
+          let description1 = record.collectionChannelId ? (JSON.parse(loadItemFromSessionStorage('app-supports'))).filter((e) => { return e.id === record.collectionChannelId }) : ""
+          let canal = mode === 1 ? (record.canal === null ? "<i>-</i>" : record.canal.libelle) : (record.id && record.canal) ? (record.canal === null ? "<i>-</i>" : record.canal.libelle) : description1[0].libelle;
+
           return (tableHtml += "<td>" + canal + "</td>");
         }
         if (column == "Point de service") {
-          let description4 = record.servicePointId ? (JSON.parse(loadItemFromSessionStorage('app-ps'))).filter((e) => {return e.id === record.servicePointId}) : ""
-          
-          let ps = mode ===1 ? (record.serviceIndexe === null  ? "<i>-</i>" : record.serviceIndexe.libelle) : (record.id && record.canal) ? (record.serviceIndexe === null  ? "<i>-</i>" : record.serviceIndexe.libelle) : (description4 !=="") ? description4[0].libelle : ""  ;
-          
+          let description4 = record.servicePointId ? (JSON.parse(loadItemFromSessionStorage('app-ps'))).filter((e) => { return e.id === record.servicePointId }) : ""
+
+          let ps = mode === 1 ? (record.serviceIndexe === null ? "<i>-</i>" : record.serviceIndexe.libelle) : (record.id && record.canal) ? (record.serviceIndexe === null ? "<i>-</i>" : record.serviceIndexe.libelle) : (description4 !== "") ? description4[0].libelle : "";
+
           return (tableHtml += "<td>" + ps + "</td>");
         }
         if (column == "Produit") {
-          let description3 = record.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => {return e.id === record.productId}) : ""
-          
-          let produit = mode ===1 ? (record.produit === null  ? "<i>-</i>" : record.produit.libelle) : (record.id && record.canal) ? (record.produit === null  ? "<i>-</i>" : record.produit.libelle) : (description3 !=="") ? description3[0].libelle : ""  ;
-          
+          let description3 = record.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => { return e.id === record.productId }) : ""
+
+          let produit = mode === 1 ? (record.produit === null ? "<i>-</i>" : record.produit.libelle) : (record.id && record.canal) ? (record.produit === null ? "<i>-</i>" : record.produit.libelle) : (description3 !== "") ? description3[0].libelle : "";
+
           return (tableHtml += "<td>" + produit + "</td>");
         }
         if (column == "Enregistrer par") {
-          let description5 = record.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => {return e.id === record.collectorId}) : ""
-          let addByTemp = mode ===1 ? record.collecteur.firstAndLastName : (record.id && record.canal) ? record.collecteur.firstAndLastName : description5[0].firstAndLastName;
+          let description5 = record.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => { return e.id === record.collectorId }) : ""
+          let addByTemp = mode === 1 ? record.collecteur.firstAndLastName : (record.id && record.canal) ? record.collecteur.firstAndLastName : description5[0].firstAndLastName;
           return (tableHtml +=
             "<td>" +
             addByTemp +
@@ -698,5 +845,5 @@ export const getExportHtml3 = (columns, records, id = "") => {
     tableHtml += "</table>";
 
     return tableHtml;
-  } catch (e) {}
+  } catch (e) { }
 };
