@@ -2955,9 +2955,7 @@ const TraiterReclamation = (props) => {
         </>
       );
 
-
       if (props.solution?.length === 0) {
-
         if (props.handled_by === user.firstAndLastName) {
           tmp = (
             <div className="row">
@@ -3124,9 +3122,8 @@ const TraiterReclamation = (props) => {
           if (hbt.includes("H6") || addR === "PILOTE") {
             treatForm = (
               <>
-                {afForm}
                 {tmp}
-
+                {afForm}
               </>
             );
           } else {
@@ -3136,7 +3133,6 @@ const TraiterReclamation = (props) => {
 
         }
       } else {
-
         // console.log("props.handle_by",props.handled_by)
         if (props.handled_by === user.firstAndLastName) {
           treatForm = (
@@ -3290,6 +3286,40 @@ const TraiterReclamation = (props) => {
               )}
             </>
           );
+        }else{
+          if (hbt.includes("H6") || addR === "PILOTE") {
+            treatForm = (
+              <>
+                {personAffect}
+                {/* historique */}
+                <div className="row">
+                  <div className="col s12">
+                    <details>
+                      <summary className="text-details">
+                        Historique de la réclamation
+                      </summary>
+                      <div className="row">
+                        <div className="col s12 df pb-2">
+                          <span
+                            className="chip indigo lighten-5"
+                            style={{ cursor: "pointer", height: "auto" }}
+                          >
+                            <span className="indigo-text">Traitement en interne</span>
+                          </span>
+                        </div>
+                      </div>
+                      <div className="row">
+                        <div className="col s12 m12">
+                          <div className="row">{details}</div>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+
+              </>
+            );
+          }
         }
       }
 
