@@ -75,6 +75,7 @@ export const listeByStatut = async (props, state) => {
             return response.data.content
         })
         .catch(function (error) {
+            // console.log("responseerror",error)
             return error;
         });
 }
@@ -190,7 +191,7 @@ export const addTempClaimApi = async (data, props) => {
     };
     await axios(config)
         .then(function (response) {
-            console.log("reponseaan", response)
+            // console.log("reponseaan", response)
             props.etatChanged(false)
             if (response.data.status) {
                 notify("Bravo - Réclamation sauvegardée", "success");

@@ -29,23 +29,24 @@ export const reportApi = async (props, setData) => {
     };
     axios(config)
         .then(function (response) {
-            // console.log("responsealertREPORT",response.data)
-            if (response.data.status && response.data.status === false) {
+        //    console.log("responsealertREPORT",response)
+            if (!response.data.status) {
                 notify("Votre licence n'est pas active.", "error");
                 setData(null)
+                KTApp.unblockPage();
             } else {
-                props.globalTrendChanged(response.data.global)
-                props.claimReportChanged(response.data.claimReport)
-                props.denunReportChanged(response.data.denunReport)
-                props.sugReportChanged(response.data.suggestionReport)
-                props.statChanged(response.data.statistic)
+                props.globalTrendChanged(response.data.content.global)
+                props.claimReportChanged(response.data.content.claimReport)
+                props.denunReportChanged(response.data.content.denunReport)
+                props.sugReportChanged(response.data.content.suggestionReport)
+                props.statChanged(response.data.content.statistic)
 
                 KTApp.unblockPage();
-                setData(response.data)
+                setData(response.data.content)
                 notify("Bravo - Rapport généré", "success");
 
             }
-            return response.data;
+            return response.data.content;
 
             // console.log('report ans',response.data)
         })
@@ -54,7 +55,7 @@ export const reportApi = async (props, setData) => {
             // console.log('report error', error);
             setData(null)
             notify("Une erreur s'est produtie", "error");
-            console.log("erreurREPORT", error)
+            // console.log("erreurREPORT", error)
         });
 }
 

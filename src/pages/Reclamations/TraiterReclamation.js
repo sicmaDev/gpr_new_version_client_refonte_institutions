@@ -493,7 +493,7 @@ const TraiterReclamation = (props) => {
       setActif(resultat.actif)
 
     } catch (error) {
-      console.error("Une erreur s'est produite :", error);
+      // console.error("Une erreur s'est produite :", error);
     }
   };
 
@@ -978,7 +978,7 @@ const TraiterReclamation = (props) => {
       isValid = false;
       errors["comment"] = "Champ incorrect";
     }
-    console.log("isValid", isValid);
+    // console.log("isValid", isValid);
     return isValid;
   };
 
@@ -2706,8 +2706,8 @@ const TraiterReclamation = (props) => {
                             name="solution"
                             placeholder=""
                             className="materialize-textarea textarea-size"
-                            value={props.solution}
-                            onChange={(e) => props.solutionChanged(e.target.value)}
+                            value={props.new_solution}
+                            onChange={(e) => props.newSolutionChanged(e.target.value)}
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
                             Solution
@@ -2718,7 +2718,7 @@ const TraiterReclamation = (props) => {
                           <small className="errorTxt4">
                             <div id="cpassword-error" className="error">
                               {props.errors !== undefined
-                                ? props.errors.solution
+                                ? props.errors.new_solution
                                 : ""}
                             </div>
                           </small>
@@ -2729,8 +2729,8 @@ const TraiterReclamation = (props) => {
                             name="comment"
                             placeholder=""
                             className="materialize-textarea textarea-size"
-                            value={props.comment}
-                            onChange={(e) => props.commentChanged(e.target.value)}
+                            value={props.new_comment}
+                            onChange={(e) => props.newCommentChanged(e.target.value)}
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
                             Commentaires/Observations
@@ -2741,7 +2741,7 @@ const TraiterReclamation = (props) => {
                           <small className="errorTxt4">
                             <div id="cpassword-error" className="error">
                               {props.errors !== undefined
-                                ? props.errors.comment
+                                ? props.errors.new_comment
                                 : ""}
                             </div>
                           </small>
@@ -2753,7 +2753,7 @@ const TraiterReclamation = (props) => {
                       {
                         //  (actif !== undefined && actif)  ?
                         <LoadingButton
-                          onClick={handleSolve}
+                          onClick={handleReSolve}
                           className="waves-effect waves-effect-b waves-light btn-small"
                           loading={props.etat2}
                           loadingPosition="end"
@@ -2955,9 +2955,7 @@ const TraiterReclamation = (props) => {
         </>
       );
 
-
       if (props.solution?.length === 0) {
-
         if (props.handled_by === user.firstAndLastName) {
           tmp = (
             <div className="row">
@@ -3124,9 +3122,8 @@ const TraiterReclamation = (props) => {
           if (hbt.includes("H6") || addR === "PILOTE") {
             treatForm = (
               <>
-                {afForm}
                 {tmp}
-
+                {afForm}
               </>
             );
           } else {
@@ -3136,7 +3133,6 @@ const TraiterReclamation = (props) => {
 
         }
       } else {
-
         // console.log("props.handle_by",props.handled_by)
         if (props.handled_by === user.firstAndLastName) {
           treatForm = (
@@ -3290,6 +3286,40 @@ const TraiterReclamation = (props) => {
               )}
             </>
           );
+        }else{
+          if (hbt.includes("H6") || addR === "PILOTE") {
+            treatForm = (
+              <>
+                {personAffect}
+                {/* historique */}
+                <div className="row">
+                  <div className="col s12">
+                    <details>
+                      <summary className="text-details">
+                        Historique de la réclamation
+                      </summary>
+                      <div className="row">
+                        <div className="col s12 df pb-2">
+                          <span
+                            className="chip indigo lighten-5"
+                            style={{ cursor: "pointer", height: "auto" }}
+                          >
+                            <span className="indigo-text">Traitement en interne</span>
+                          </span>
+                        </div>
+                      </div>
+                      <div className="row">
+                        <div className="col s12 m12">
+                          <div className="row">{details}</div>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+
+              </>
+            );
+          }
         }
       }
 

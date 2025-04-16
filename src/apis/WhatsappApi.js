@@ -58,7 +58,7 @@ export const downloadFilesApi = async (data) => {
             const link = document.createElement('a');
             link.href = url;
             let filename = data.split("\\")
-            console.log('data', filename)
+            //console.log('data', filename)
             filename = filename[filename.length-1]
             link.setAttribute('download',filename); 
             document.body.appendChild(link);

@@ -23,7 +23,8 @@ function hostEval(){
 }
 function reportHost(){
     // return "http://127.0.0.1:5000/"
-    return "https://gpr-rapport-excel-python-script.onrender.com/"
+    // return "https://gpr-rapport-excel-python-script.onrender.com/"
+    return "https://api.rapport.gprserver.com:8081/"
 }
 
 export const LOCKSCREEN_TIMEOUT = 300000; //5min
