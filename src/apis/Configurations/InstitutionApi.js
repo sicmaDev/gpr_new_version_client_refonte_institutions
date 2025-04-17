@@ -70,20 +70,31 @@ export const createLicense = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            // console.log("responsegpradmin",response.data.data);
-            let resultat = response.data.data;
+            console.log("responsegpradmin",response);
+            let resultat = response.data.license;
 
             let finResultat = {
                 "createdAt" : resultat.createdAt,
                 "serial" : resultat.serial,
-                "company" : resultat.clients[0].company,
-                "activationRequest" : resultat.clients[0].activationRequest,
+                "company" : resultat.denomination,
+                "activationRequest" : resultat.activation_request,
                 "id" : resultat.id,
-                "fullname" : resultat.clients[0].fullname,
-                "email" : resultat.clients[0].email,
+                "fullname" : resultat.denomination,
+                "email" : resultat.email,
                 "updatedAt" : resultat.updatedAt
 
             }
+            // let finResultat = {
+            //     "createdAt" : resultat.createdAt,
+            //     "serial" : resultat.serial,
+            //     "company" : resultat.clients[0].company,
+            //     "activationRequest" : resultat.clients[0].activationRequest,
+            //     "id" : resultat.id,
+            //     "fullname" : resultat.clients[0].fullname,
+            //     "email" : resultat.clients[0].email,
+            //     "updatedAt" : resultat.updatedAt
+
+            // }
 
             createLicenseFile(JSON.stringify(finResultat));
             // saveItemToSessionStorage(JSON.stringify(response.data.content), "app-institution")
@@ -105,7 +116,7 @@ export const createLicense = async (data, props) => {
 
 export const createLicenseFile = async (data) => {
     //console.log("createFile1")
-    //console.log("resultat1",data)
+    console.log("resultat1file",data)
     const config = {
         method: 'post',
         url: CREATE_FILE_API,

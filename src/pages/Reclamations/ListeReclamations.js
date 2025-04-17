@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
+import DatePicker from "react-datepicker";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -73,10 +74,11 @@ import { connect } from "react-redux";
 import {
   handlePrint,
   handlePrint2,
+  handlePrint22,
   handlePrintAvance,
 } from "../../Utils/tables";
 
-import { table2XLSX, table2XLS2X } from "../../Utils/tabletoexcel";
+import { table2XLSX, table2XLS2X, table2XLS2XF } from "../../Utils/tabletoexcel";
 // import { useLocation } from "react-router-dom";
 
 import Button from "@mui/material/Button";
@@ -115,6 +117,7 @@ import pdf from "../../assets/images/pdf.svg";
 import timelineOppositeContentClasses from "@mui/lab/TimelineOppositeContent";
 import {
   formatDate,
+  formatDate2,
   guessExtension,
   loadItemFromLocalStorage,
   loadItemFromSessionStorage,
@@ -160,6 +163,9 @@ const ListeReclamations = (props) => {
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
   const [fond, setFond] = useState("");
+
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
   let hbt = (user.posteDto.habilitations).split(',');
@@ -942,6 +948,7 @@ const ListeReclamations = (props) => {
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
   let colourOptions = [
     { value: "Code", label: "Code" },
+    { value: "Code Client", label: "Code Client" },
     { value: "Client", label: "Client" },
     { value: "Status", label: "Status" },
     { value: "Enregistrer le", label: "Enregistrer le" },
@@ -1984,6 +1991,46 @@ const ListeReclamations = (props) => {
                     </div>
                   </div>
                 </DialogContentText>
+                <div className="row">
+                  <div className="col l12 s12 m12 text-center">
+                    Reçu entre:
+                  </div>
+                  {/*Date start*/}
+                  <div className="col s12 m12 l6 input-field">
+                    <DatePicker
+                      id="idStartDate"
+                      name="startDate"
+                      className="mt-4"
+                      selected={startDate}
+                      onChange={(date) => {
+                        setStartDate(date);
+                      }}
+                      dateFormat="dd/MM/yyyy"
+                      locale="fr"
+                    />
+                    <label htmlFor="idStartDate" className={"active"}>
+                      Date de debut
+                    </label>
+                  </div>
+                  {/*Date end*/}
+
+                  <div className="col s12 m12 l6 input-field">
+                    <DatePicker
+                      id="idEndDate"
+                      name="endDate"
+                      className="mt-4"
+                      selected={endDate}
+                      onChange={(date) => {
+                        setEndDate(date);
+                      }}
+                      dateFormat="dd/MM/yyyy"
+                      locale="fr"
+                    />
+                    <label htmlFor="idEndDate" className={"active"}>
+                      Date de fin
+                    </label>
+                  </div>
+                </div>
 
                 <div className="row mt-5">
                   <div className="row">
@@ -2068,23 +2115,50 @@ const ListeReclamations = (props) => {
                     {changeButtonPrint ? (
                       <a
                         onClick={(e) => {
-                          // console.log("props.items", props.items);
-                          handlePrint2(config, selectOption, props.items);
+                          if (startDate && endDate) {
+                            handlePrint22(config, selectOption, props.items, formatDate2(startDate), formatDate2(endDate));
+                          } else {
+                            // Sinon, utiliser handlePrint2 sans filtre
+                            handlePrint2(config, selectOption, props.items);
+                          }
                         }}
+
                         className="btn indigo lighten-5 indigo-text waves-effect waves-effect-b waves-light"
                       >
                         <span className="text-nowrap">Imprimer</span>
                       </a>
                     ) : (
                       <a
+                        // onClick={(e) => {
+                        //   table2XLS2X(
+                        //     "Liste_des_réclamations" +
+                        //     today().replaceAll("/", ""),
+                        //     "brke",
+                        //     selectOption,
+                        //     props.items
+                        //   );
+                        // }}
                         onClick={(e) => {
-                          table2XLS2X(
-                            "Liste_des_réclamations" +
-                            today().replaceAll("/", ""),
-                            "brke",
-                            selectOption,
-                            props.items
-                          );
+                          if (startDate && endDate) {
+                            table2XLS2XF(
+                              "Liste_des_réclamations" +
+                              today().replaceAll("/", ""),
+                              "brke",
+                              selectOption,
+                              props.items,
+                              formatDate2(startDate),
+                              formatDate2(endDate)
+                            );
+                          } else {
+                            // Sinon, utiliser handlePrint2 sans filtre
+                            table2XLS2X(
+                              "Liste_des_réclamations" +
+                              today().replaceAll("/", ""),
+                              "brke",
+                              selectOption,
+                              props.items
+                            );
+                          }
                         }}
                         className="btn green lighten-5 green-text waves-effect waves-effect-b waves-light"
                       >

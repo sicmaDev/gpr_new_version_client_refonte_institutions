@@ -542,7 +542,7 @@ const Global = (props) => {
   };
 
   useEffect(() => {
-    //console.log("dataReport",dataRaport);
+    console.log("dataReport",dataRaport);
     if (dataRaport) {
       const newreport = dataRaport.newVersionStat;
       const oldreport = dataRaport;
@@ -611,14 +611,14 @@ const Global = (props) => {
           )
         );
       }
-      if (oldreport) {
+      if (oldreport !==undefined) {
         setRdsPieGlobal({
           labels:
-            oldreport.global["repartitionClaimDenunSuggest"]["labels"] ?? [],
+            oldreport?.global["repartitionClaimDenunSuggest"]["labels"] ?? [],
           datasets: [
             {
               data:
-                oldreport.global["repartitionClaimDenunSuggest"]["datas"] ?? [],
+                oldreport?.global["repartitionClaimDenunSuggest"]["datas"] ?? [],
               backgroundColor:
                 oldreport.global["repartitionClaimDenunSuggest"][
                 "backgroundColors"
@@ -629,17 +629,17 @@ const Global = (props) => {
 
         setRdsBarGlobal({
           labels:
-            oldreport.global["evolutionClaimDenunSuggestByYear"]["labels"] ??
+            oldreport?.global["evolutionClaimDenunSuggestByYear"]["labels"] ??
             [],
 
           datasets:
-            oldreport.global["evolutionClaimDenunSuggestByYear"]["data"],
+            oldreport?.global["evolutionClaimDenunSuggestByYear"]["data"],
         });
         // console.log("oldreport.global = ", oldreport.global["evolutionObjByYearAndAgence"])
         // setRdsBarAgenceGlobal(oldreport.global["evolutionObjByYearAndAgence"]);
 
         // Imaginons que `evolutionObjByYearAndAgence` a une structure similaire
-        let evolutionData = oldreport.global["evolutionObjByYearAndAgence"];
+        let evolutionData = oldreport?.global["evolutionObjByYearAndAgence"];
 
         // Créer un tableau de paires [label, data] pour les trier
         let combined = evolutionData.labels.map((label, index) => {
@@ -670,85 +670,85 @@ const Global = (props) => {
 
         setRdsPieModaliteGlobal(
           oldReportTreatment(
-            oldreport.global["repartitionClaimDenuSuggestPerCanal"]
+            oldreport?.global["repartitionClaimDenuSuggestPerCanal"]
           )
         );
         setRdsPieObjetGlobal(
-          oldReportTreatment(oldreport.global["repartitionObjectByObj"])
+          oldReportTreatment(oldreport?.global["repartitionObjectByObj"])
         );
 
         // console.log("nbreClaimTreatInDelaiOrNotByMonth = ",oldreport.claimReport)
         setRdsBarDelaiGlobal(
           // delaiFunction(
-          oldreport.claimReport["nbreClaimTreatInDelaiOrNotByMonth"] ?? []
+          oldreport?.claimReport["nbreClaimTreatInDelaiOrNotByMonth"] ?? []
           // )
         );
 
         setDenunBarDelaiByMonth(
           // delaiFunction(
-          oldreport.claimReport["nbreDenunTreatInDelaiOrNotByMonth"] ?? []
+          oldreport?.claimReport["nbreDenunTreatInDelaiOrNotByMonth"] ?? []
           // )
         );
 
         setRdsBarDelaiClaimByMonthByAgence(
           // delaiFunction(
-          oldreport.claimReport["nbreClaimTreatInDelaiOrNotByMonthByAgence"] ?? []
+          oldreport?.claimReport["nbreClaimTreatInDelaiOrNotByMonthByAgence"] ?? []
           // )
         );
 
         setDenunBarDelaiByMonthByAgence(
           // delaiFunction(
-          oldreport.claimReport["nbreDenunTreatInDelaiOrNotByMonthByAgence"] ?? []
+          oldreport?.claimReport["nbreDenunTreatInDelaiOrNotByMonthByAgence"] ?? []
           // )
         );
 
         setTauxMensuelClaimByMonth(
           // delaiFunction(
-          oldreport.claimReport["tauxClaimSatisfactionByMonth"] ?? []
+          oldreport?.claimReport["tauxClaimSatisfactionByMonth"] ?? []
           // )
         );
 
         setTauxMensuelClaimByMonthByAgence(
           // delaiFunction(
-          oldreport.claimReport["tauxClaimSatisfactionByMonthByAgence"] ?? []
+          oldreport?.claimReport["tauxClaimSatisfactionByMonthByAgence"] ?? []
           // )
         );
 
         //Claim
 
         setRdsPieAgenceClaim(
-          oldReportTreatment(oldreport.claimReport["repartitionClaimPerAgence"])
+          oldReportTreatment(oldreport?.claimReport["repartitionClaimPerAgence"])
         );
         // reclamations par agences
         setRdsBarAgenceClaim({
-          labels: oldreport.claimReport["nbreClaimPerAgence"]["labels"] ?? [],
+          labels: oldreport?.claimReport["nbreClaimPerAgence"]["labels"] ?? [],
           datasets: [
             {
               label: "Réclamations",
-              data: oldreport.claimReport["nbreClaimPerAgence"]["datas"] ?? [],
+              data: oldreport?.claimReport["nbreClaimPerAgence"]["datas"] ?? [],
               backgroundColor:
-                oldreport.claimReport["nbreClaimPerAgence"][
+                oldreport?.claimReport["nbreClaimPerAgence"][
                 "backgroundColors"
                 ] ?? [],
             },
           ],
         });
         setRdsPieObjetClaim(
-          oldReportTreatment(oldreport.claimReport["repartitionClaimPerObjet"])
+          oldReportTreatment(oldreport?.claimReport["repartitionClaimPerObjet"])
         );
         setRdsPieModaliteClaim(
-          oldReportTreatment(oldreport.claimReport["repartitionClaimPerCanal"])
+          oldReportTreatment(oldreport?.claimReport["repartitionClaimPerCanal"])
         );
         setRdsPieGenreClaim({
           labels:
-            oldreport.claimReport["repartitionClaimPerGender"]["labels"] ?? [],
+            oldreport?.claimReport["repartitionClaimPerGender"]["labels"] ?? [],
           datasets: [
             {
               data:
-                oldreport.claimReport["repartitionClaimPerGender"]["datas"] ??
+                oldreport?.claimReport["repartitionClaimPerGender"]["datas"] ??
                 [],
               backgroundColor:
-                oldreport.claimReport["repartitionClaimPerGender"][
+                oldreport?.claimReport["repartitionClaimPerGender"][
                 "backgroundColors"
                 ] ?? [],
               hoverOffset: 4,
@@ -758,16 +758,16 @@ const Global = (props) => {
 
         setRdsPieGravityClaim({
           labels:
-            oldreport.claimReport["repartitionClaimPerObjRisque"]["labels"] ??
+            oldreport?.claimReport["repartitionClaimPerObjRisque"]["labels"] ??
             [],
           datasets: [
             {
               data:
-                oldreport.claimReport["repartitionClaimPerObjRisque"][
+                oldreport?.claimReport["repartitionClaimPerObjRisque"][
                 "datas"
                 ] ?? [],
               backgroundColor:
-                oldreport.claimReport["repartitionClaimPerObjRisque"][
+                oldreport?.claimReport["repartitionClaimPerObjRisque"][
                 "backgroundColors"
                 ] ?? [],
               hoverOffset: 4,
@@ -776,16 +776,16 @@ const Global = (props) => {
         });
         setRdsPieStatisClaim({
           labels:
-            oldreport.claimReport["repartitionClaimBySatisfaction"]["labels"] ??
+            oldreport?.claimReport["repartitionClaimBySatisfaction"]["labels"] ??
             [],
           datasets: [
             {
               data:
-                oldreport.claimReport["repartitionClaimBySatisfaction"][
+                oldreport?.claimReport["repartitionClaimBySatisfaction"][
                 "datas"
                 ] ?? [],
               backgroundColor:
-                oldreport.claimReport["repartitionClaimBySatisfaction"][
+                oldreport?.claimReport["repartitionClaimBySatisfaction"][
                 "backgroundColors"
                 ] ?? [],
               hoverOffset: 4,
@@ -793,27 +793,27 @@ const Global = (props) => {
           ],
         });
         setRdsChartStatisClaim(
-          oldreport.claimReport["evolutionSatisfactionByThisYear"]
+          oldreport?.claimReport["evolutionSatisfactionByThisYear"]
         );
 
 
         //Suggestion
         setRdsPieAgenceSugge(
           oldReportTreatment(
-            oldreport.suggestionReport["repartitionSuggestPerAgence"]
+            oldreport?.suggestionReport["repartitionSuggestPerAgence"]
           )
         );
         setRdsBarAgenceSugge({
           labels:
-            oldreport.suggestionReport["nbreSuggestPerAgence"]["labels"] ?? [],
+            oldreport?.suggestionReport["nbreSuggestPerAgence"]["labels"] ?? [],
           datasets: [
             {
               label: "Suggestions",
               data:
-                oldreport.suggestionReport["nbreSuggestPerAgence"]["datas"] ??
+                oldreport?.suggestionReport["nbreSuggestPerAgence"]["datas"] ??
                 [],
               backgroundColor:
-                oldreport.suggestionReport["nbreSuggestPerAgence"][
+                oldreport?.suggestionReport["nbreSuggestPerAgence"][
                 "backgroundColors"
                 ] ?? [],
             },
@@ -821,22 +821,22 @@ const Global = (props) => {
         });
         setRdsPieModaliteSugge(
           oldReportTreatment(
-            oldreport.suggestionReport["repartitionSuggestPerCanal"]
+            oldreport?.suggestionReport["repartitionSuggestPerCanal"]
           )
         );
         setRdsPieGenreSugge({
           labels:
-            oldreport.suggestionReport["repartitionSuggestPerGender"][
+            oldreport?.suggestionReport["repartitionSuggestPerGender"][
             "labels"
             ] ?? [],
           datasets: [
             {
               data:
-                oldreport.suggestionReport["repartitionSuggestPerGender"][
+                oldreport?.suggestionReport["repartitionSuggestPerGender"][
                 "datas"
                 ] ?? [],
               backgroundColor:
-                oldreport.suggestionReport["repartitionSuggestPerGender"][
+                oldreport?.suggestionReport["repartitionSuggestPerGender"][
                 "backgroundColors"
                 ] ?? [],
               hoverOffset: 4,
@@ -846,22 +846,22 @@ const Global = (props) => {
 
         //Denonciation
         setRdsPieAgenceDenun(
-          oldReportTreatment(oldreport.denunReport["repartitionDenunPerAgence"])
+          oldReportTreatment(oldreport?.denunReport["repartitionDenunPerAgence"])
         );
         setRdsPieModaliteDenun(
-          oldReportTreatment(oldreport.denunReport["repartitionDenunPerCanal"])
+          oldReportTreatment(oldreport?.denunReport["repartitionDenunPerCanal"])
         );
         setRdsPieObjetDenun(
-          oldReportTreatment(oldreport.denunReport["repartitionDenunPerObjet"])
+          oldReportTreatment(oldreport?.denunReport["repartitionDenunPerObjet"])
         );
         setRdsBarAgenceDenun({
-          labels: oldreport.denunReport["nbreDenunPerAgence"]["labels"] ?? [],
+          labels: oldreport?.denunReport["nbreDenunPerAgence"]["labels"] ?? [],
           datasets: [
             {
               label: "Dénonciations",
-              data: oldreport.denunReport["nbreDenunPerAgence"]["datas"] ?? [],
+              data: oldreport?.denunReport["nbreDenunPerAgence"]["datas"] ?? [],
               backgroundColor:
-                oldreport.denunReport["nbreDenunPerAgence"][
+                oldreport?.denunReport["nbreDenunPerAgence"][
                 "backgroundColors"
                 ] ?? [],
             },
@@ -869,16 +869,16 @@ const Global = (props) => {
         });
         setRdsPieGravityDenun({
           labels:
-            oldreport.denunReport["repartitionDenunPerObjRisque"]["labels"] ??
+            oldreport?.denunReport["repartitionDenunPerObjRisque"]["labels"] ??
             [],
           datasets: [
             {
               data:
-                oldreport.denunReport["repartitionDenunPerObjRisque"][
+                oldreport?.denunReport["repartitionDenunPerObjRisque"][
                 "datas"
                 ] ?? [],
               backgroundColor:
-                oldreport.denunReport["repartitionDenunPerObjRisque"][
+                oldreport?.denunReport["repartitionDenunPerObjRisque"][
                 "backgroundColors"
                 ] ?? [],
             },
@@ -1545,7 +1545,7 @@ const Global = (props) => {
             >
               <div style={{ flex: "1 auto" }}>
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={globalPieChartRef}
                   data={rdsPieGlobal}
                   options={{
@@ -1582,7 +1582,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Bar
-                  redraw={true}
+                  // redraw={true}
                   ref={globalLineChartRef}
                   data={rdsBarGlobal}
                   options={{
@@ -1628,7 +1628,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={globalByCanalPieChartRef}
                   data={rdsPieModaliteGlobal}
                   options={{
@@ -1664,7 +1664,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={globalByCanalBarChartRef}
                     data={rdsBarModaliteGlobal}
                     options={{
@@ -1736,7 +1736,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={globalByObjetPieChartRef}
                   // options={globalPieChartOptions}
                   data={rdsPieObjetGlobal}
@@ -1773,7 +1773,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={globalByObjetBarChartRef}
                     data={rdsBarObjetGlobal}
                     options={{
@@ -1862,7 +1862,7 @@ const Global = (props) => {
                 <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
 
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={evolutionByAgenceByAnneeBarChartRef}
                     data={rdsBarAgenceGlobal}
                     options={{
@@ -1926,7 +1926,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={claimByAgencePieChartRef}
                   data={rdsPieAgenceClaim}
                   options={{
@@ -1963,7 +1963,7 @@ const Global = (props) => {
                 <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
 
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={claimByAgenceBarChartRef}
                     data={rdsBarAgenceClaim}
                     options={{
@@ -2017,7 +2017,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={denunByAgencePieChartRef}
                   // options={claimByAgencePieChartRef}
                   data={rdsPieAgenceDenun}
@@ -2054,7 +2054,7 @@ const Global = (props) => {
                 <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
 
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={denunByAgenceBarChartRef}
                     data={rdsBarAgenceDenun}
                     options={{
@@ -2107,7 +2107,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={sugByAgencePieChartRef}
                   // options={claimByAgencePieChartRef}
                   data={rdsPieAgenceSugge}
@@ -2144,7 +2144,7 @@ const Global = (props) => {
                 <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
 
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={sugByAgenceBarChartRef}
                     data={rdsBarAgenceSugge}
                     options={{
@@ -2200,7 +2200,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={claimByCanalPieChartRef}
                   // options={claimByAgencePieChartRef}
                   data={rdsPieModaliteClaim}
@@ -2237,7 +2237,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={claimByCanalBarChartRef}
                     data={rdsBarModaliteClaim}
                     options={{
@@ -2301,7 +2301,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={denunByCanalPieChartRef}
                   data={rdsPieModaliteDenun}
                   options={{
@@ -2336,7 +2336,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={denunByCanalBarChartRef}
                     data={rdsBarModaliteDenun}
                     options={{
@@ -2402,7 +2402,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={sugByCanalPieChartRef}
                   // options={claimByAgencePieChartRef}
                   data={rdsPieModaliteSugge}
@@ -2438,7 +2438,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={sugByCanalBarChartRef}
                     data={rdsBarModaliteSugge}
                     options={{
@@ -2507,7 +2507,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={claimByObjetPieChartRef}
                   // options={claimByAgencePieChartRef}
                   data={rdsPieObjetClaim}
@@ -2542,7 +2542,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={claimByObjetBarChartRef}
                     data={rdsBarObjetClaim}
                     options={{
@@ -2608,7 +2608,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={denunByObjetPieChartRef}
                   // options={claimByAgencePieChartRef}
                   data={rdsPieObjetDenun}
@@ -2645,7 +2645,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={denunByObjetBarChartRef}
                     data={rdsBarObjetDenun}
                     options={{
@@ -2710,7 +2710,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={claimByGenderPieChartRef}
                   // options={claimByAgencePieChartRef}
                   data={rdsPieGenreClaim}
@@ -2746,7 +2746,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={claimByGenderBarChartRef}
                     data={rdsBarGenreClaim}
                     options={{
@@ -2812,7 +2812,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={sugByGenderPieChartRef}
                   data={rdsPieGenreSugge}
                   options={{
@@ -2848,7 +2848,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={sugByGenderBarChartRef}
                     data={rdsBarGenreSugge}
                     options={{
@@ -2915,7 +2915,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={claimByGravitePieChartRef}
                   data={rdsPieGravityClaim}
                   options={{
@@ -2951,7 +2951,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={claimByGraviteBarChartRef}
                     data={rdsBarGravityClaim}
                     options={{
@@ -3012,7 +3012,7 @@ const Global = (props) => {
 
               <div className="total-transaction-container" style={{ flex: 1 }}>
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={denunByGravitePieChartRef}
                   // options={claimByAgencePieChartRef}
                   data={rdsPieGravityDenun}
@@ -3052,7 +3052,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={denunByGraviteBarChartRef}
                     data={rdsBarGravityDenun}
                     options={{
@@ -3117,7 +3117,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Pie
-                  redraw={true}
+                  // redraw={true}
                   ref={claimBySatisfactionPieChartRef}
                   // options={claimByAgencePieChartRef}
                   data={rdsPieStatisClaim}
@@ -3156,7 +3156,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={tauxMensuelClaimByMonthByAgenceBarChartRef}
                     data={tauxMensuelClaimByMonthByAgence}
                     options={{
@@ -3215,7 +3215,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Bar
-                  redraw={true}
+                  // redraw={true}
                   ref={tauxMensuelClaimByMonthBarChartRef}
                   data={tauxMensuelClaimByMonth}
                   options={{
@@ -3266,7 +3266,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Bar
-                  redraw={true}
+                  // redraw={true}
                   ref={resolutionClaimDelaiByMonthBarChartRef}
                   data={rdsBarDelaiGlobal}
                   options={{
@@ -3303,7 +3303,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={resolutionClaimDelaiByMonthByAgenceBarChartRef}
                     data={rdsBarDelaiClaimByMonthByAgence}
                     options={{
@@ -3372,7 +3372,7 @@ const Global = (props) => {
                 style={{ flex: "1 auto" }}
               >
                 <Bar
-                  redraw={true}
+                  // redraw={true}
                   ref={resolutionDenunDelaiByMonthBarChartRef}
                   data={denunBarDelaiByMonth}
                   options={{
@@ -3409,7 +3409,7 @@ const Global = (props) => {
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
-                    redraw={true}
+                    // redraw={true}
                     ref={resolutionDenunDelaiByMonthByAgenceBarChartRef}
                     data={denunBarDelaiByMonthByAgence}
                     options={{
@@ -4853,7 +4853,7 @@ const Global = (props) => {
                       {claimShow ? claimDashboard() : ""}
                     </div>
 
-                    {props.claimReport.length !== 0 ? (
+                    {props.claimReport && props.claimReport.length !== 0 ? (
                       <>
                         <div className="row mt-4">
                           <div className="col l12 s12 m12 mb-4">
@@ -5059,7 +5059,7 @@ const Global = (props) => {
                     >
                       {denunciationShow ? denunciationDashboard() : ""}
                     </div>
-                    {props.denunReport.length != 0 ? (
+                    {props.denunReport && props.denunReport.length != 0 ? (
                       <>
                         <div className="row">
                           <div className="col l12 mb-4" id="toeDenun">
@@ -5188,7 +5188,7 @@ const Global = (props) => {
                     >
                       {suggestionShow ? suggestionDashboard() : ""}
                     </div>
-                    {props.sugReport.length !== 0 ? (
+                    {props.sugReport && props.sugReport.length !== 0 ? (
                       <div className="row mt-2 ">
                         <div className="col l12 mb-4">
                           <div className="row" id="tpeSugg">

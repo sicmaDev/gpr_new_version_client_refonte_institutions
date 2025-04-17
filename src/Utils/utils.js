@@ -40,7 +40,7 @@ export const saveItemToSessionStorage = (item, field) => {
 
 export const loadItemFromSessionStorage = (field) => {
     try {
-       
+
         const serializedItem = sessionStorage.getItem(field)
         // console.log("utilsuser",serializedItem)
         if (serializedItem === null) return undefined
@@ -50,7 +50,7 @@ export const loadItemFromSessionStorage = (field) => {
     }
 }
 
-export const  makeBaseAuth = (credentials) => {
+export const makeBaseAuth = (credentials) => {
     var tok = credentials.username + ':' + credentials.password;
     var hash = btoa(tok);
     return "Basic " + hash;
@@ -66,32 +66,32 @@ export const isValidMdp = (mdpValue) => {
     return !!mdpValue.match(cmp);
 }
 export const cleanPhoneNumber = (phoneValue) => {
-    if (phoneValue!=="") {
+    if (phoneValue !== "") {
         return "00" + phoneValue.replace("+", "").replace("-", "").replace("00", "");
     } else {
         return phoneValue
     }
-    
+
 }
 
 export const cleanPhoneNumber2 = (phoneValue) => {
-    if (phoneValue!=="") {
+    if (phoneValue !== "") {
         return phoneValue.replace("00", "+");
     } else {
         return phoneValue
     }
-    
+
 }
 export const cleanPhoneNumber3 = (phoneValue) => {
-    if (phoneValue!=="") {
+    if (phoneValue !== "") {
         return phoneValue.replace("+", "");
     } else {
         return phoneValue
     }
-    
+
 }
-export const today = (items)=>{
-    return new Intl.DateTimeFormat("fr-FR", {year: "numeric", month: "2-digit", day: "2-digit"}).format(new Date(Date.now()));
+export const today = (items) => {
+    return new Intl.DateTimeFormat("fr-FR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now()));
 }
 export const groupBy = (array, key) => {
     // Vérifier si `array` est bien un tableau
@@ -151,7 +151,7 @@ export const isSettingComplete = () => {
     let utilisateurs;
     let supports;
     let produits;
-    try{
+    try {
         postes = JSON.parse(loadItemFromLocalStorage('app-postes'));
         ps = JSON.parse(loadItemFromLocalStorage('app-ps'));
         langues = JSON.parse(loadItemFromLocalStorage('app-langues'));
@@ -162,44 +162,44 @@ export const isSettingComplete = () => {
         produits = JSON.parse(loadItemFromLocalStorage('app-produits'));
     }
     catch (e) {
-        postes=[];
-        ps=[];
-        langues=[];
-        objets=[];
-        recours=[];
-        utilisateurs=[];
-        supports=[];
-        produits=[];
+        postes = [];
+        ps = [];
+        langues = [];
+        objets = [];
+        recours = [];
+        utilisateurs = [];
+        supports = [];
+        produits = [];
     }
-    if (langues.length===0) {
+    if (langues.length === 0) {
         errors.push("Veuillez finaliser le paramétrage des Langues")
     }
-    if (ps.length===0) {
+    if (ps.length === 0) {
         errors.push("Veuillez finaliser le paramétrage des Points de service")
     }
-    if (postes.length===0) {
+    if (postes.length === 0) {
         errors.push("Veuillez finaliser le paramétrage des Postes")
     }
-    if (supports.length===0) {
+    if (supports.length === 0) {
         errors.push("Veuillez finaliser le paramétrage des Supports de collecte")
     }
-    if (objets.length===0) {
+    if (objets.length === 0) {
         errors.push("Veuillez finaliser le paramétrage des Objets")
     }
-    if (produits.length===0) {
+    if (produits.length === 0) {
         errors.push("Veuillez finaliser le paramétrage des Produits et/ou Services")
     }
     return errors
-   
+
 }
 
 export const cleanDate = (dateValue, locale = 'fr-FR') => {
     //console.log("datevalue",dateValue.getHours())
     try {
-        let jour = (dateValue.getDate()) < 10 ? "0"+(dateValue.getDate()) : dateValue.getDate()
-        let month = (dateValue.getMonth() + 1) < 10 ? "0"+(dateValue.getMonth() + 1) : dateValue.getMonth() + 1
-        let hour = (dateValue.getHours() ) < 10 ? "0"+(dateValue.getHours()) : dateValue.getHours()
-        let minutes = (dateValue.getMinutes() ) < 10 ? "0"+(dateValue.getMinutes()) : dateValue.getMinutes()
+        let jour = (dateValue.getDate()) < 10 ? "0" + (dateValue.getDate()) : dateValue.getDate()
+        let month = (dateValue.getMonth() + 1) < 10 ? "0" + (dateValue.getMonth() + 1) : dateValue.getMonth() + 1
+        let hour = (dateValue.getHours()) < 10 ? "0" + (dateValue.getHours()) : dateValue.getHours()
+        let minutes = (dateValue.getMinutes()) < 10 ? "0" + (dateValue.getMinutes()) : dateValue.getMinutes()
         return jour + "-" + month + "-" + dateValue.getFullYear() + " " + hour + ":" + minutes
     } catch (e) {
 
@@ -219,7 +219,7 @@ export const guessExtension = (attachment) => {
     if (attachment.name.split(".")[1] === "csv") {
         icon = excelIcon
     }
-    if (attachment.name.split(".")[1]=== "xlsx" || attachment.name.split(".")[1] === "xls") {
+    if (attachment.name.split(".")[1] === "xlsx" || attachment.name.split(".")[1] === "xls") {
         icon = excelIcon
     }
     if (attachment.name.split(".")[1] === "docx" || attachment.name.split(".")[1] === "doc" || attachment.name.split(".")[1] === "rtf" || attachment.name === "document") {
@@ -254,8 +254,18 @@ export const formatDate = (date) => {
     return (createdAt)
 }
 
+export const formatDate2 = (date) => {
+    if (!date) return null;
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0"); // Mois sur 2 chiffres
+    const day = String(d.getDate()).padStart(2, "0");        // Jour sur 2 chiffres
+    return `${year}-${month}-${day}`; // Format YYYY-MM-DD
+};
 
-export const convertToCsv = (objArray)=> {
+
+
+export const convertToCsv = (objArray) => {
     var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
     var str = '';
 
@@ -272,23 +282,23 @@ export const convertToCsv = (objArray)=> {
 
     return str;
 }
-export const generateString  = (count)=>{
+export const generateString = (count) => {
     let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const charactersLength = characters.length;
     let counter = 0;
     while (counter < count) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-      counter += 1;
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
     }
     return result;
 
 }
 
-export const selectableYears = (startYear)=>{
+export const selectableYears = (startYear) => {
     let currentYear = new Date().getFullYear(), years = [];
     startYear = startYear || 1980;
-    while ( startYear <= currentYear ) {
+    while (startYear <= currentYear) {
         years.push(startYear++);
     }
     return years.reverse();
