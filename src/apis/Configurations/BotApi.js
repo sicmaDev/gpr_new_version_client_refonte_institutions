@@ -5,8 +5,8 @@ import { HOST } from "../../Utils/globals";
 
 // ADD
 const ADD_SETTING_API = HOST + "api/v1/config/setting/others/bot/create"
-const API_BOT_URL = "http://localhost:21465/api/session/start-session"
-const API_BOT_TOKEN_URL = "http://localhost:21465/api/TESTBOT/MYSECRETKEY/generate-token"
+const API_BOT_URL = "https://wppsicma.gprserver.com:8081/api/session/start-session"
+const API_BOT_TOKEN_URL = "https://wppsicma.gprserver.com:8081/api/TESTBOT/MYSECRETKEY/generate-token"
 
 
 const API_API_KEY_LIST = HOST+"api/v1/config/setting/key"

@@ -139,7 +139,6 @@ const Whatsapp = (props) => {
     useEffect(() => {
         getList(props);
         moment.locale("fr")
-
     }, [""])
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -183,7 +182,6 @@ const Whatsapp = (props) => {
         }
 
     }
-
 
     return (
         <>
@@ -260,7 +258,13 @@ const Whatsapp = (props) => {
 
                                 {props.inboxs?.map((inbox) => {
 
-                                    return (<ListItemButton  onClick={() => { props.resetConvert();props.setCurrentInbox(inbox) }} key={inbox.id} sx={{ pl: 1 }} className='lib' selected={inbox.id === props.currentInbox.id}>
+                                    return (<ListItemButton  
+                                                onClick={() => { props.resetConvert();props.setCurrentInbox(inbox) }} 
+                                                key={inbox.id} 
+                                                sx={{ pl: 1 }} 
+                                                className='lib' 
+                                                selected={inbox.id === props?.currentInbox?.id}
+                                                >
 
                                         <ListItemIcon >
                                             <Avatar  ></Avatar>
@@ -287,7 +291,9 @@ const Whatsapp = (props) => {
 
                         {props.inboxs?.map((inbox) => {
 
-                            return (<ListItemButton onClick={() => { props.resetConvert();props.setCurrentInbox(inbox) }} key={inbox.id} sx={{ pl: 1 }} className='lib' selected={inbox.id === props.currentInbox?.id}>
+                            return (<ListItemButton onClick={() => { props.resetConvert();props.setCurrentInbox(inbox) }} key={inbox.id} sx={{ pl: 1 }} className='lib' 
+                            selected={inbox.id === props.currentInbox?.id}
+                            >
 
                                 <ListItemIcon>
                                     <Avatar  ><Person /></Avatar>

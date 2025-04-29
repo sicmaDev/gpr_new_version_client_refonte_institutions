@@ -24,7 +24,7 @@ export const getList =  (props) => {
         .then(function ({ data }) {
             props.isOK("Liste des conversations recuperees")
             props.setInboxs(data?.content ?? [])
-
+            // console.log("roro : ",data);
         })
         .catch(function (error) {
             props.isFail(error)
