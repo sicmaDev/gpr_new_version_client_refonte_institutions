@@ -338,7 +338,9 @@ const Bot = (props) => {
         console.log('data', data)
     }
 
-
+    
+    const [actif, setActif] = useState();
+  
     const licenseControl = async () => {
         try {
             await licenseInfo();

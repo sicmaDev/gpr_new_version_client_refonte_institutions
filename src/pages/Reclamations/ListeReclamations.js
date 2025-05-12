@@ -468,11 +468,16 @@ const ListeReclamations = (props) => {
       sortable: true,
       cell: (claim, index) => {
         let temps
-        if (claim.retardDay > 0) {
-          temps = claim.declenchedDate
+        if (claim.status !== "SATISFIED" && claim.status !== "UNSATISFIED" && claim.status !== "PARTIAL_SATISFIED" && claim.status !== "LITIGATION") {
+          if (claim.retardDay > 0) {
+            temps = claim.declenchedDate
+          } else {
+            temps = <div className="card-content red-text"><WarningIcon /></div>
+          }
         } else {
-          temps = <div className="card-content red-text"><WarningIcon /></div>
+          temps = "-"
         }
+       
         return temps;
 
       },

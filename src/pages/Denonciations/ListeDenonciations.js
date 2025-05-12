@@ -431,10 +431,14 @@ const ListeDenonciations = (props) => {
       sortable: true,
       cell: (claim, index) => {
         let temps
-        if (claim.retardDay > 0) {
-          temps = claim.declenchedDate
+        if (claim.status !== "TREAT") {
+          if (claim.retardDay > 0) {
+            temps = claim.declenchedDate
+          } else {
+            temps = <div className="card-content red-text"><WarningIcon /></div>
+          }
         } else {
-          temps = <div className="card-content red-text"><WarningIcon /></div>
+          temps = "-"
         }
         return temps;
 
