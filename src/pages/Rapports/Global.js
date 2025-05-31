@@ -542,7 +542,7 @@ const Global = (props) => {
   };
 
   useEffect(() => {
-    console.log("dataReport",dataRaport);
+    // console.log("dataReport",dataRaport);
     if (dataRaport) {
       const newreport = dataRaport.newVersionStat;
       const oldreport = dataRaport;

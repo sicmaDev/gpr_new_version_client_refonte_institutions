@@ -70,7 +70,7 @@ export const createLicense = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            console.log("responsegpradmin",response);
+            //console.log("responsegpradmin",response);
             let resultat = response.data.license;
 
             let finResultat = {
@@ -116,7 +116,7 @@ export const createLicense = async (data, props) => {
 
 export const createLicenseFile = async (data) => {
     //console.log("createFile1")
-    console.log("resultat1file",data)
+    // console.log("resultat1file",data)
     const config = {
         method: 'post',
         url: CREATE_FILE_API,
