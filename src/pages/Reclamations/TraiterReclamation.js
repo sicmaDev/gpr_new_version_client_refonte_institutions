@@ -84,6 +84,9 @@ import {
 import Dialog from "@mui/material/Dialog";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
@@ -115,6 +118,7 @@ import TimelineOppositeContent from "@mui/lab/TimelineOppositeContent";
 import TimelineDot from "@mui/lab/TimelineDot";
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 import {
   Avatar,
   Card,
@@ -126,7 +130,8 @@ import {
   Icon,
   LinearProgress,
   Radio,
-  RadioGroup,
+  RadioGroup, 
+  DialogContent
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { HOST } from "../../Utils/globals";
@@ -190,7 +195,17 @@ const TraiterReclamation = (props) => {
   const [expanded, setExpanded] = React.useState(false);
   const [checked, setChecked] = React.useState(false);
   const [usersCGR, setUsersCGR] = React.useState([]);
-
+  const [conversionBoxOpen, setConversionBoxOpen] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [convertionType, setConvertionType] = useState(null);
+  const [confirmationMaessage, setconfirmationMaessage] = useState("");
+  
+  const [openParent, setOpenParent] = useState(false);
+  const [openChild, setOpenChild] = useState(false);
+  const handleOpenParent = () => setOpenParent(true);
+  const handleCloseParent = () => setOpenParent(false);
+  const handleOpenChild = () => setOpenChild(true);
+  const handleCloseChild = () => setOpenChild(false);
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
@@ -233,6 +248,7 @@ const TraiterReclamation = (props) => {
   const [reafect, setReacfect] = useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
+  
   let compteur = 0;
   const handleClickOpen = () => {
     compteur++;
@@ -243,15 +259,90 @@ const TraiterReclamation = (props) => {
   // console.log("param 3", compteur);
   const history = useHistory();
   const handleClose = () => {
+    if (conversionBoxOpen) return;
+    
     setOpen(false);
+    setConversionBoxOpen(false);
     history.push("/reclamations/traitement/all");
     // if(stompClient){
-    //   stompClient.disconnect();
-    //   setUserData({ ...userData, connected: false });
-    //   props.sessionChanged("");
-    // }
-    // clearComponentState();
+      //   stompClient.disconnect();
+      //   setUserData({ ...userData, connected: false });
+      //   props.sessionChanged("");
+      // }
+      // clearComponentState();
+    };
+  const handleConversionBoxClose = () => {
+    if (confirmationOpen) return;
 
+    setConversionBoxOpen(false);
+  };
+
+  const handleOpenDialog = (type) => {
+    setConvertionType(type);
+    setConfirmationOpen(true);
+  };
+  const handleConfirmationClose = () => {
+
+    setConfirmationOpen(false);
+  };
+  const handleSubmitConfirmation = (e) => {
+    // e.preventDefault()
+    // setShowSmsBox(false);
+    // setOpen(false);
+    // const formData = new FormData();
+
+    // let claim = {}
+    // claim["clientFirstAndLastName"] = props.lastname
+    // claim["gender"] = props.gender;
+    // claim["address"] = props.address;
+    // claim["phone"] = cleanPhoneNumber(props.phone);
+    // claim["collectionChannelId"] = props.collect;
+    // claim["servicePointId"] = props.unit;
+    // claim["fromWhatsapp"] = (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false;
+    // claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat"))
+    // claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null
+    // claim["productId"] = props.product;
+    // claim["languageId"] = props.language;
+    // claim["folderCode"] = props.dossierimf;
+    // claim["receiptDateTime"] = props.recorded_at;
+    // claim["collectorId"] = user.id;
+    // claim["content"] = props.content;
+    // claim["code"] = props.code;
+    // claim["id"] = props.id;
+
+    // formData.append("suggestion", JSON.stringify(claim));
+    // for (let index = 0; index < files.length; index++) {
+    //     formData.append("files", files[index]);
+    // }
+
+    // if (audio != null) {
+    //     const audioFile = new File([audio], "sugggestion_record_" + uuid() + ".ogg", {
+    //         type: "audio/ogg; codecs=opus",
+    //     });
+    //     formData.append("audios", audioFile);
+    // }
+
+    // // console.log("claimenregistrer",formData);
+    // //HERE
+    // // console.log("etattttttttttttt",props.etat2)
+    // props.etat2Changed(true)
+    // if (mode === 1) {
+    //     addSuggestionApi(formData, props).then(() => {
+    //         handleCancel(e)
+    //         props.resetWhatsapp()
+    //     })
+
+    // } else {
+    //     addSuggestionApiOffline(claim, props).then(() => {
+    //         handleCancel(e)
+    //         props.resetWhatsapp()
+    //     })
+    // }
+      
+    // props.suggestionsRecordErrors(errors)
+
+    // setConfirmationOpen(false);
+    // setConversionBoxOpen(false);
   };
   const handleAnonymat = () => {
     setAnonymat(!anonymat);
@@ -954,6 +1045,7 @@ const TraiterReclamation = (props) => {
   };
 
   const handleCancel = (e) => {
+    console.log("ClosedBy_2");
     e.preventDefault();
     clearComponentState();
   };
@@ -4205,6 +4297,7 @@ const TraiterReclamation = (props) => {
   });
 
   let infosRec;
+  let btnConversion;
   // console.log("a qui",props.handled_by)
   if (
     (props.handled_by === user.firstAndLastName && props.anonymat !== "true") ||
@@ -4264,6 +4357,32 @@ const TraiterReclamation = (props) => {
     // console.log("anonymedata",props.anonymat)
     infosRec = "";
   }
+
+  if (addR === "PILOTE" && props.status === "SAVED") {
+    btnConversion = (
+      <>
+        <LoadingButton
+          onClick={() => setConversionBoxOpen(true)}
+          className="waves-effect waves-effect-b waves-light btn-small"
+          // loading={props.etat3}
+          loadingPosition="end"
+          endIcon={<AutorenewIcon />}
+          variant="contained"
+          sx={{
+            backgroundColor: "#ef6c00",
+            textTransform: "initial",
+            transition: "background-color 0.3s ease",
+            '&:hover': {
+              backgroundColor: '#fda321',
+            },
+          }}
+        >
+          <span>Convertir</span>
+        </LoadingButton>
+      </>
+    );
+  }
+
 
   let transmettre = "";
   let btnS = "";
@@ -4377,260 +4496,375 @@ const TraiterReclamation = (props) => {
     }
   }
 
-  // Sélectionnez tous les éléments avec la classe spécifiée
+  // Vérifie si le dialog enfant est ouvert (présent et aria-hidden = false)
+  const enfant = document.querySelector('#dialog-enfant');
+  const confirmation = document.querySelector('#dialog-confirmation');
+  const enfantOuvert = enfant && enfant.getAttribute('aria-hidden') !== 'true';
+  const confirmationOuvert = confirmation && confirmation.getAttribute('aria-hidden') !== 'true';
+
+  // Sélectionne tous les dialogs MUI
   const elements = document.querySelectorAll('.MuiDialog-root');
 
-  // Parcourez la liste d'éléments
   elements.forEach(element => {
-    // Vérifiez si l'élément n'a pas l'attribut aria-hidden="true"
-    if (element.hasAttribute('aria-hidden') || element.getAttribute('aria-hidden') === 'true') {
-      // Masquez l'élément en définissant son style sur "none"
+    // Ne jamais modifier l'affichage du dialog enfant lui-même
+    if (['dialog-enfant', 'dialog-confirmation'].includes(element.id)) {
+      return;
+    }
+
+    // Si le dialog est caché par MUI (aria-hidden="true")
+    // ET que l'enfant n'est PAS ouvert → on le masque
+    if (
+      element.hasAttribute('aria-hidden') &&
+      element.getAttribute('aria-hidden') === 'true' &&
+      !enfantOuvert && !confirmationOuvert
+    ) {
       element.style.display = 'none';
+    } else {
+      // Sinon on le laisse visible (au cas où il a été masqué avant)
+      element.style.display = '';
     }
   });
 
 
   return (
-    <div id="main">
-      <div className="row">
-        <div className="col s12">
-          <div className="container">
-            <section className="tabs-vertical mt-1 section">
-              <div className="row">
-                <div className="col l12 s12 pb-5">
-                  <div className="card-panel pb-5">
-                    <div className="row">
-                      <div className="col s12">
-                        <h5 className="card-title">Réclamations à traiter</h5>
-                      </div>
-                      <div className="col s12">
-                        <ReactDatatable
-                          className={"responsive-table"}
-                          config={config}
-                          records={content}
-                          columns={columns}
-                          onRowClicked={rowClickedHandler}
-                        />
+    <>
+      <div id="main">
+        <div className="row">
+          <div className="col s12">
+            <div className="container">
+              <section className="tabs-vertical mt-1 section">
+                <div className="row">
+                  <div className="col l12 s12 pb-5">
+                    <div className="card-panel pb-5">
+                      <div className="row">
+                        <div className="col s12">
+                          <h5 className="card-title">Réclamations à traiter</h5>
+                        </div>
+                        <div className="col s12">
+                          <ReactDatatable
+                            className={"responsive-table"}
+                            config={config}
+                            records={content}
+                            columns={columns}
+                            onRowClicked={rowClickedHandler}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div>
                   <div>
-                    <Dialog
-                      fullScreen
-                      open={open}
-                      onClose={handleClose}
-                      TransitionComponent={Transition}
-                    >
-                      <AppBar
-                        sx={{
-                          position: "relative",
-                          backgroundColor: "#1e2188",
-                        }}
+                    <div>
+                      <Dialog
+                        fullScreen
+                        open={open}
+                        onClose={handleClose}
+                        TransitionComponent={Transition}
+                        id="dialog-parent"
                       >
-                        <Toolbar>
-                          {props?.match?.params?.code === "all" ?
-                            <IconButton
-                              edge="start"
-                              color="inherit"
-                              onClick={handleClose}
-                              aria-label="close"
+                        <AppBar
+                          sx={{
+                            position: "relative",
+                            backgroundColor: "#1e2188",
+                          }}
+                        >
+                          <Toolbar>
+                            {props?.match?.params?.code === "all" ?
+                              <IconButton
+                                edge="start"
+                                color="inherit"
+                                onClick={handleClose}
+                                aria-label="close"
+                              >
+                                <CloseIcon />
+                              </IconButton>
+                              :
+                              <IconButton
+                                edge="start"
+                                color="inherit"
+                                // onClick={handleClose}
+                                aria-label="close"
+                              >
+                                <NavLink to="/alertes/reclamations"><div className="card-content"><CloseIcon /></div></NavLink>
+                              </IconButton>
+                            }
+                            <Typography
+                              sx={{ ml: 2, flex: 1 }}
+                              variant="h6"
+                              component="div"
                             >
-                              <CloseIcon />
-                            </IconButton>
-                            :
-                            <IconButton
-                              edge="start"
-                              color="inherit"
-                              // onClick={handleClose}
-                              aria-label="close"
-                            >
-                              <NavLink to="/alertes/reclamations"><div className="card-content"><CloseIcon /></div></NavLink>
-                            </IconButton>
-                          }
-                          <Typography
-                            sx={{ ml: 2, flex: 1 }}
-                            variant="h6"
-                            component="div"
-                          >
-                            Détails de la réclamation
-                          </Typography>
-                        </Toolbar>
-                      </AppBar>
+                              Détails de la réclamation
+                            </Typography>
+                          </Toolbar>
+                        </AppBar>
 
-                      <div className="row">
-                        {/* first part */}
+                        <div className="row">
+                          {/* first part */}
 
-                        <div className="col l6 s12 pb-5" id="ficheReclamation">
-                          <div className="card-panel pb-5">
-                            <div className="row" id="ententeFiche">
-                              <div className="col s12">
-                                <h5 className="card-title">
-                                  Fiche de la réclamation
-                                </h5>
+                          <div className="col l6 s12 pb-5" id="ficheReclamation">
+                            <div className="card-panel pb-5">
+                              <div className="row df align-items-center" id="ententeFiche">
+                                <div className="col l6 s12">
+                                  <h5 className="card-title">
+                                    Fiche de la réclamation
+                                  </h5>
+                                </div>
+                                <div className="col l6 m6 s12 df justify-content-end">
+                                  {btnConversion}
+                                </div>
                               </div>
-                            </div>
 
-                            {infosRec}
-                            <div className="row">
-                              <div className="col s12 m12">
-                                <div className="row">
-                                  <div className="col s12 pb-2">
-                                    <h6 className="card-title">
-                                      Détails de la réclamation
-                                    </h6>
-                                  </div>
-
+                              {infosRec}
+                              <div className="row">
+                                <div className="col s12 m12">
                                   <div className="row">
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="code"
-                                    >
-                                      <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                    <div className="col s12 pb-2">
+                                      <h6 className="card-title">
+                                        Détails de la réclamation
+                                      </h6>
                                     </div>
 
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="recorded_at"
-                                    >
-                                      <CalendarMonthIcon sx={{ mr: 2 }} /> Date
-                                      de réception : {props.recorded_at}
-                                    </div>
+                                    <div className="row">
 
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="collect"
-                                    >
-                                      <RecyclingIcon sx={{ mr: 2 }} />{" "}
-                                      {props.collect}
-                                    </div>
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="underSubject"
-                                    >
-                                      <DataObjectIcon sx={{ mr: 2 }} />{" "}
-                                      {props.underSubject}
-                                    </div>
-
-                                    <div
-                                      className="col l12 s12 df pb-2"
-                                      id="subject"
-                                    >
-                                      <DataObjectIcon sx={{ mr: 2 }} />{" "}
-                                      {props.subject}
-                                    </div>
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="product"
-                                    >
-                                      <CategoryIcon sx={{ mr: 2 }} />{" "}
-                                      {props.product}
-                                    </div>
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="unit"
-                                    >
-                                      <AddBusinessIcon sx={{ mr: 2 }} />{" "}
-                                      {props.unit}
-                                    </div>
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="content"
-                                    >
-                                      <SupportAgentIcon sx={{ mr: 2 }} />{" "}
-                                      {props.created_by}
-                                    </div>
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="content"
-                                    >
-                                      <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
-                                      {creationDate}
-                                    </div>
-
-                                    <div
-                                      className="col l12 s12 pb-2"
-                                      id="content"
-                                    >
-                                      <div className="df pb-2">
-                                        <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                                        Contenu
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="code"
+                                      >
+                                        <PinIcon sx={{ mr: 2 }} /> {props.code}
                                       </div>
-                                      <div>{props.content}</div>
-                                      <div>{audioList}</div>
-                                      <div className="mt-5">
-                                        {attachmentList}
-                                      </div>
-                                    </div>
 
-                                    {/* {dimf = props.dossierimf !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <FolderSharedIcon sx={{ mr: 2}}/> {props.dossierimf}</div></>:""}
-                                  {crew = props.crew !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <Diversity3Icon sx={{ mr: 2}}/> {props.crew}</div></>:""} */}
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="recorded_at"
+                                      >
+                                        <CalendarMonthIcon sx={{ mr: 2 }} /> Date
+                                        de réception : {props.recorded_at}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="collect"
+                                      >
+                                        <RecyclingIcon sx={{ mr: 2 }} />{" "}
+                                        {props.collect}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="underSubject"
+                                      >
+                                        <DataObjectIcon sx={{ mr: 2 }} />{" "}
+                                        {props.underSubject}
+                                      </div>
+
+                                      <div
+                                        className="col l12 s12 df pb-2"
+                                        id="subject"
+                                      >
+                                        <DataObjectIcon sx={{ mr: 2 }} />{" "}
+                                        {props.subject}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="product"
+                                      >
+                                        <CategoryIcon sx={{ mr: 2 }} />{" "}
+                                        {props.product}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="unit"
+                                      >
+                                        <AddBusinessIcon sx={{ mr: 2 }} />{" "}
+                                        {props.unit}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="content"
+                                      >
+                                        <SupportAgentIcon sx={{ mr: 2 }} />{" "}
+                                        {props.created_by}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="content"
+                                      >
+                                        <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
+                                        {creationDate}
+                                      </div>
+
+                                      <div
+                                        className="col l12 s12 pb-2"
+                                        id="content"
+                                      >
+                                        <div className="df pb-2">
+                                          <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                          Contenu
+                                        </div>
+                                        <div>{props.content}</div>
+                                        <div>{audioList}</div>
+                                        <div className="mt-5">
+                                          {attachmentList}
+                                        </div>
+                                      </div>
+
+                                      {/* {dimf = props.dossierimf !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <FolderSharedIcon sx={{ mr: 2}}/> {props.dossierimf}</div></>:""}
+                                    {crew = props.crew !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <Diversity3Icon sx={{ mr: 2}}/> {props.crew}</div></>:""} */}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* second part */}
+                          {/* second part */}
 
-                        <div className="col l6 s12 pb-5" id="ficheReclamation">
-                          <div className="card-panel pb-5">
-                            <div className="row" id="ententeFiche">
-                              <div className="row">
+                          <div className="col l6 s12 pb-5" id="ficheReclamation">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="ententeFiche">
+                                <div className="row">
 
-                                <h5
-                                  className="col l6 m6 s12 card-title"
-                                >
-                                  Détails du traitement
-                                </h5>
+                                  <h5
+                                    className="col l6 m6 s12 card-title"
+                                  >
+                                    Détails du traitement
+                                  </h5>
 
-                                {
-                                  transmettre === "" || btnS === "" ?
-                                    <div className="col l6 m6 s12 df justify-content-end">
-                                      {transmettre}
-                                      {btnS}
-                                    </div>
-                                    :
-                                    <div className="col l6 m6 s12 df justify-content-between">
-                                      {transmettre}
-                                      {btnS}
-                                    </div>
-                                }
+                                  {
+                                    transmettre === "" || btnS === "" ?
+                                      <div className="col l6 m6 s12 df justify-content-end">
+                                        {transmettre}
+                                        {btnS}
+                                      </div>
+                                      :
+                                      <div className="col l6 m6 s12 df justify-content-between">
+                                        {transmettre}
+                                        {btnS}
+                                      </div>
+                                  }
+                                </div>
+                                <div className="col s12 input-field">
+                                  Etat: &nbsp;{statusElt}
+                                </div>
                               </div>
-                              <div className="col s12 input-field">
-                                Etat: &nbsp;{statusElt}
-                              </div>
+
+
+                              {props.status === "PARTIAL_SATISFIED" || props.status === "UNSATISFIED" || props.status === "CLASSED" ? historique : null}
+
+                              <>
+                                {affectForm}
+                                {treatForm}
+                                {tchat}
+                              </>
                             </div>
-
-
-                            {props.status === "PARTIAL_SATISFIED" || props.status === "UNSATISFIED" || props.status === "CLASSED" ? historique : null}
-
-                            <>
-                              {affectForm}
-                              {treatForm}
-                              {tchat}
-                            </>
                           </div>
                         </div>
-                      </div>
-                    </Dialog>
+                      </Dialog>
+
+                      <Dialog
+                        open={conversionBoxOpen}
+                        onClose={handleConversionBoxClose}
+                        id="dialog-enfant"
+                      >
+                        <DialogTitle>Convertir la réclamation</DialogTitle>
+                        <DialogContent>
+                          <Typography gutterBottom>
+                            Cette conversation doit être convertie en quel type de plainte ?
+                          </Typography>
+
+                          <div className="row mt-5">
+                            <div className="col s6 mb-1">
+                              <Button
+                                fullWidth
+                                variant="contained"
+                                // color="primary"
+                                onClick={() => handleOpenDialog("dénonciation")}
+                                className="waves-effect waves-light btn-small"
+                              >
+                                Dénonciation
+                              </Button>
+                            </div>
+                            <div className="col s6 mb-1">
+                              <Button
+                                fullWidth
+                                variant="contained"
+                                // color="primary"
+                                onClick={() => handleOpenDialog("suggestion")}
+                                className="waves-effect waves-light btn-small"
+                              >
+                                Suggestion
+                              </Button>
+                            </div>
+                          </div>
+                          {/* <div className="mt-4 right-align">
+                            <Button onClick={() => setConversionBoxOpen(false)} color="inherit">
+                              Annuler
+                            </Button>
+                          </div> */}
+                        </DialogContent>
+                      </Dialog>
+
+                      <Dialog
+                        open={confirmationOpen}
+                        onClose={handleConfirmationClose}
+                        id="dialog-confirmation"
+                        sx={{
+                          '& .MuiBackdrop-root': {
+                            background: 'transparent !important',
+                          },
+                        }}
+                      >
+                        <DialogTitle className="modal-title red-text text-darken-2">Confirmer la conversion de la réclamation</DialogTitle>
+                        <DialogContent>
+                          <Typography gutterBottom>
+                            Une fois convertie en <strong>{convertionType}</strong>, cette réclamation ne pourra plus être modifiée ou restaurée.
+                            Souhaitez-vous vraiment continuer ?
+                          </Typography>
+                                                                    
+                          <div className="mt-5">
+                            <div className="df justify-content-between">
+                              <Button onClick={() => setConfirmationOpen(false)} className="col s6" color="inherit">
+                                Annuler
+                              </Button>
+                              <LoadingButton 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  // if (handleValidation()) {
+                                  //   handleSubmitConfirmation(e)
+                                  // }
+                                  // if (mode === 1) {
+                                  //   setShowSmsBox(true);
+                                  //   setOpen(true);
+                                  // } else {
+                                  //   handleSubmitConfirmation(e)
+                                  // }
+                                  // props.suggestionsRecordErrors(errors);
+                                }}
+                                className="col s6" 
+                                variant="contained" 
+                                color="error"
+                                loading={props.etat2}
+                                loadingPosition="end"
+                              >
+                                <span>Confirmer</span>
+                              </LoadingButton>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            </div>
+            <div className="content-overlay"></div>
           </div>
-          <div className="content-overlay"></div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

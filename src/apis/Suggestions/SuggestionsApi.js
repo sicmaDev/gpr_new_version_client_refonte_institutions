@@ -226,7 +226,6 @@ export const listeByStatutOffline = async (props, state) => {
     props.itemsChanged(sugsTemp)
 
     return sugsTemp
-
 }
 
 export const listeTousStatutsOffline = async (props) => {
@@ -338,8 +337,6 @@ export const addSuggestionApiOffline = async (data, props) => {
         // console.log("dataasave",data)
         sugs.push(data);
         saveItemToLocalStorage(JSON.stringify(sugs), "sugs-TS")
-
-
     } else {
         let sugsTemp = sugs.filter((e) => { return e.code !== data["code"] })
         let sugsF = sugs.filter((e) => { return e.code === data["code"] })
@@ -348,7 +345,6 @@ export const addSuggestionApiOffline = async (data, props) => {
         sugsTemp.push(data);
         saveItemToLocalStorage(JSON.stringify(sugsTemp), "sugs-TS")
     }
-
 
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etat2Changed(false)

@@ -129,6 +129,13 @@ const EnregistrerReclamation = (props) => {
   const { recorderState, ...handlers } = useRecorder();
   let { audio } = recorderState;
 
+  // const [openParent, setOpenParent] = useState(false);
+  // const [openChild, setOpenChild] = useState(false);
+  // const handleOpenParent = () => setOpenParent(true);
+  // const handleCloseParent = () => setOpenParent(false);
+  // const handleOpenChild = () => setOpenChild(true);
+  // const handleCloseChild = () => setOpenChild(false);
+
   let settingComplete = isSettingComplete();
   let user =
     loadItemFromSessionStorage("app-user") !== undefined

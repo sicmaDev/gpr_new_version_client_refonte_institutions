@@ -92,7 +92,7 @@ export const listeTreat = async (props) => {
     await axios(config)
         .then(function (response) {
 
-            // console.log("responsetreat",response.data.content)
+            // console.log("responsetreat", response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
