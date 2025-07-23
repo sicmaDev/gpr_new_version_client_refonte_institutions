@@ -64,14 +64,24 @@ import {
   isEmpty,
   loadItemFromLocalStorage,
   loadItemFromSessionStorage,
+  cleanPhoneNumber3,
+  cleanPhoneNumber, 
+  cleanPhoneNumber2, 
+  groupBy, 
+  handleDatePicker,
+  isSettingComplete, 
+  isValidDate, 
+  isValidPhone,
 } from "../../Utils/utils";
 import { connect } from "react-redux";
+import { v4 as uuid } from "uuid";
 import {
   affectClaimApi,
   approveClaimSolutionApi,
   detailsTreat,
   downloadAudioApi,
   downloadFillesApi,
+  downloadFillesApi2,
   getClaimAudioApi,
   getFillesApi,
   listeByStatut,
@@ -80,7 +90,11 @@ import {
   transmissionClaimApi,
   treatClaimApi,
   unapproveClaimSolutionApi,
+  deleteClaimApi,
 } from "../../apis/Reclamations/ReclamationsApi";
+import { addSuggestionApi, addSuggestionApiOffline} from "../../apis/Suggestions/SuggestionsApi";
+import { addDenunciationApi, addDenunciationApiOffline } from "../../apis/Denonciations/DenonciationsApi";
+
 import Dialog from "@mui/material/Dialog";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -161,7 +175,6 @@ import ForumIcon from '@mui/icons-material/Forum';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { licenseInfo } from "../../apis/LoginApi";
 import WarningIcon from '@mui/icons-material/Warning';
-
 
 const styles = {
   control: (base) => ({
@@ -248,6 +261,12 @@ const TraiterReclamation = (props) => {
   const [reafect, setReacfect] = useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
+
+  const [dataRow, setDataRow] = useState([]);
+  const [audioFiles, setAudioFiles] = useState([]);
+  const [fileBlobs, setFileBlobs] = useState([]);
+  const [loadingConversion, setLoadingConversion] = useState(false);
+  let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
   
   let compteur = 0;
   const handleClickOpen = () => {
@@ -285,65 +304,122 @@ const TraiterReclamation = (props) => {
 
     setConfirmationOpen(false);
   };
+
   const handleSubmitConfirmation = (e) => {
-    // e.preventDefault()
-    // setShowSmsBox(false);
-    // setOpen(false);
-    // const formData = new FormData();
+    e.preventDefault()
+    setLoadingConversion(true);
+    
+    console.log("dataRow", dataRow);
+    const formData = new FormData();
+    let claim = {}
 
-    // let claim = {}
-    // claim["clientFirstAndLastName"] = props.lastname
-    // claim["gender"] = props.gender;
-    // claim["address"] = props.address;
-    // claim["phone"] = cleanPhoneNumber(props.phone);
-    // claim["collectionChannelId"] = props.collect;
-    // claim["servicePointId"] = props.unit;
-    // claim["fromWhatsapp"] = (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false;
-    // claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat"))
-    // claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null
-    // claim["productId"] = props.product;
-    // claim["languageId"] = props.language;
-    // claim["folderCode"] = props.dossierimf;
-    // claim["receiptDateTime"] = props.recorded_at;
-    // claim["collectorId"] = user.id;
-    // claim["content"] = props.content;
-    // claim["code"] = props.code;
-    // claim["id"] = props.id;
+    if (convertionType === "suggestion") {
+      claim["clientFirstAndLastName"] = dataRow.clientFirstAndLastName
+      claim["gender"] = dataRow.gender;
+      claim["address"] = dataRow.address;
+      claim["phone"] = dataRow.tel;
+      claim["collectionChannelId"] = dataRow.collectionChannel.id;
+      claim["servicePointId"] = dataRow.servicePoint.id;
+      claim["fromWhatsapp"] = false;
+      claim["filesWhatsapp"] = []
+      claim["inboxWhatsapp"] = null
+      claim["productId"] = dataRow.product.id;
+      claim["languageId"] = dataRow.language.id;
+      claim["folderCode"] = dataRow.folderCode;
+      claim["receiptDateTime"] = dataRow.receiptDateTime;
+      claim["collectorId"] = dataRow.collector.id;
+      claim["content"] = dataRow.content;
+      claim["code"] = "";
+      claim["id"] = "";
+  
+      console.log("claim", claim);
+      console.log("audioFiles", audioFiles);
+      console.log("fileBlobs", fileBlobs);
 
-    // formData.append("suggestion", JSON.stringify(claim));
-    // for (let index = 0; index < files.length; index++) {
-    //     formData.append("files", files[index]);
-    // }
+      formData.append("suggestion", JSON.stringify(claim));
+      if (fileBlobs != null) {
+        fileBlobs.forEach(fileItem => {
+          const file = new File([fileItem.blob], fileItem.name, {type: fileItem.blob.type || 'application/octet-stream'});
+          formData.append('files', file);
+        });
+      }
 
-    // if (audio != null) {
-    //     const audioFile = new File([audio], "sugggestion_record_" + uuid() + ".ogg", {
-    //         type: "audio/ogg; codecs=opus",
-    //     });
-    //     formData.append("audios", audioFile);
-    // }
+      if (audioFiles != null) {
+        audioFiles.forEach(audio => {
+          const file = new File([audio.blob], "sugggestion_record_" + uuid() + ".ogg", {
+            type: "audio/ogg; codecs=opus" });
+          formData.append("audios", file);    
+        });
+      }
+  
+      props.etat2Changed(true)
+      if (mode === 1) {
+        addSuggestionApi(formData, props).then(() => {
+          deleteClaimApi(dataRow.id, props).then(()=> {});
+          history.push("/suggestions/traitement");
+        })
+        .finally(() => {
+          setLoadingConversion(false);
+        });
+      } else {
+        addSuggestionApiOffline(claim, props).then(() => {
+          deleteClaimApi(dataRow.id, props).then(()=> {});
+          history.push("/suggestions/traitement");
+        })
+        .finally(() => {
+          setLoadingConversion(false);
+        });
+      }
+    } else {
+      claim["collectionChannelId"] = dataRow.collectionChannel.id;
+      claim["servicePointId"] = dataRow.servicePoint.id;
+      claim["productId"] = dataRow.product.id;
+      claim["fromWhatsapp"] = false ;
+      claim["filesWhatsapp"] = []
+      claim["inboxWhatsapp"] = null
+      claim["objetId"] = dataRow.objet.categorie.id;
+      claim["receiptDateTime"] = dataRow.receiptDateTime;
+      claim["collectorId"] = user.id;
+      claim["content"] = dataRow.content;
+      claim["code"] = "";
+      claim["id"] = "";
 
-    // // console.log("claimenregistrer",formData);
-    // //HERE
-    // // console.log("etattttttttttttt",props.etat2)
-    // props.etat2Changed(true)
-    // if (mode === 1) {
-    //     addSuggestionApi(formData, props).then(() => {
-    //         handleCancel(e)
-    //         props.resetWhatsapp()
-    //     })
+      formData.append("denun", JSON.stringify(claim));
+      if (fileBlobs != null) {
+        fileBlobs.forEach(fileItem => {
+          const file = new File([fileItem.blob], fileItem.name, {type: fileItem.blob.type || 'application/octet-stream'});
+          formData.append('files', file);
+        });
+      }
 
-    // } else {
-    //     addSuggestionApiOffline(claim, props).then(() => {
-    //         handleCancel(e)
-    //         props.resetWhatsapp()
-    //     })
-    // }
-      
-    // props.suggestionsRecordErrors(errors)
-
-    // setConfirmationOpen(false);
-    // setConversionBoxOpen(false);
+      if (audioFiles != null) {
+        audioFiles.forEach(audio => {
+          const file = new File([audio.blob], "denonciation_record_" + uuid() + ".ogg", {
+            type: "audio/ogg; codecs=opus", });
+          formData.append("audios", file);    
+        });
+      }
+      props.etat2Changed(true)
+      if (mode === 1) {
+        addDenunciationApi(formData, props).then(() => {
+          deleteClaimApi(dataRow.id, props).then(()=> {});
+          history.push("/denonciations/traitement/all");
+        })
+        .finally(() => {
+          setLoadingConversion(false);
+        });
+      } else {
+        addDenunciationApiOffline(claim, props).then(() => {
+          deleteClaimApi(dataRow.id, props).then(()=> {});
+          history.push("/denonciations/traitement/all");
+        })
+        .finally(() => {
+          setLoadingConversion(false);
+        });
+      }
+    }
   };
+
   const handleAnonymat = () => {
     setAnonymat(!anonymat);
   };
@@ -547,7 +623,7 @@ const TraiterReclamation = (props) => {
   }, []);
 
   useEffect(() => {
-    // console.log("params",props.match.params)
+    // console.log("params",props.match.params);
     if (props.match.params.code === "all") {
       props.itemsChanged([])
       listeTreat(props).then((r) => { });
@@ -595,6 +671,44 @@ const TraiterReclamation = (props) => {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (props.selectedItemAudio && props.selectedItemAudio.length > 0) {      
+      Promise.all(
+        props.selectedItemAudio.map(async (attachment) => {
+          const data = await downloadAudioApi(attachment.id, attachment.name);
+          const blob = new Blob([data], { type: "audio/ogg; codecs=opus" });
+          const url = URL.createObjectURL(blob);
+          
+          return {
+            id: attachment.id,
+            name: attachment.name,
+            blob,
+            url,
+          };
+        })
+      ).then(setAudioFiles);
+    }
+  }, [props.selectedItemAudio]);
+
+useEffect(() => {
+  if (props.selectedItemFiles && props.selectedItemFiles.length > 0) {
+    Promise.all(
+      props.selectedItemFiles.map(async (attachment) => {
+        const data = await downloadFillesApi2(attachment.id, attachment.name);
+        const blob = new Blob([data], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+
+        return {
+          id: attachment.id,
+          name: attachment.name,
+          blob,
+          url,
+        };
+      })
+    ).then(setFileBlobs);
+  }
+}, [props.selectedItemFiles]);
 
 
   const maDivRef = useRef(null);
@@ -1045,7 +1159,6 @@ const TraiterReclamation = (props) => {
   };
 
   const handleCancel = (e) => {
-    console.log("ClosedBy_2");
     e.preventDefault();
     clearComponentState();
   };
@@ -1365,7 +1478,8 @@ const TraiterReclamation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    // console.log("session",data);
+    setDataRow(data);
+
     handleClickOpen();
     clearComponentState();
     // console.log("donnees",data)
@@ -4085,6 +4199,7 @@ const TraiterReclamation = (props) => {
 
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
+    // console.log("props.selectedItemFiles", props.selectedItemFiles);
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
@@ -4809,8 +4924,14 @@ const TraiterReclamation = (props) => {
 
                       <Dialog
                         open={confirmationOpen}
-                        onClose={handleConfirmationClose}
+                        onClose={(_, reason) => {
+                          if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+                            handleConfirmationClose();
+                          }
+                        }}
                         id="dialog-confirmation"
+                        disableEscapeKeyDown
+                        disableBackdropClick
                         sx={{
                           '& .MuiBackdrop-root': {
                             background: 'transparent !important',
@@ -4826,27 +4947,18 @@ const TraiterReclamation = (props) => {
                                                                     
                           <div className="mt-5">
                             <div className="df justify-content-between">
-                              <Button onClick={() => setConfirmationOpen(false)} className="col s6" color="inherit">
+                              <Button disabled={loadingConversion} onClick={() => setConfirmationOpen(false)} className="col s6" color="inherit">
                                 Annuler
                               </Button>
                               <LoadingButton 
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  // if (handleValidation()) {
-                                  //   handleSubmitConfirmation(e)
-                                  // }
-                                  // if (mode === 1) {
-                                  //   setShowSmsBox(true);
-                                  //   setOpen(true);
-                                  // } else {
-                                  //   handleSubmitConfirmation(e)
-                                  // }
-                                  // props.suggestionsRecordErrors(errors);
+                                  handleSubmitConfirmation(e)
                                 }}
                                 className="col s6" 
                                 variant="contained" 
                                 color="error"
-                                loading={props.etat2}
+                                loading={loadingConversion}
                                 loadingPosition="end"
                               >
                                 <span>Confirmer</span>

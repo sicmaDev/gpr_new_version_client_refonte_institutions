@@ -26,6 +26,7 @@ const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const AUDIOS_CLAIM_API = HOST + "api/v1/claim/getAudiosBy/%s"
 const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
 const START_SESSION_API = HOST + "api/v1/chat/init"
+const DELETE_CLAIM_API = HOST + "api/v1/claim/delete/{id}"
 
 
 
@@ -91,8 +92,8 @@ export const listeTreat = async (props) => {
     };
     await axios(config)
         .then(function (response) {
-
             // console.log("responsetreat", response.data.content)
+
             props.itemsChanged(response.data.content)
 
             return response.data.content
@@ -100,8 +101,8 @@ export const listeTreat = async (props) => {
         .catch(function (error) {
             // console.log("responsetreaterror",error)
             return error;
-
-        });
+        }
+    );
 }
 
 export const detailsTreat = async (props, code) => {
@@ -555,6 +556,31 @@ export const downloadFillesApi = async (data, filename) => {
         });
 }
 
+export const downloadFillesApi2 = async (data, filename) => {
+
+    const config = {
+        method: 'get',
+        url: FILES_DOWNLOAD_API.replace("%s", data),
+        responseType: 'blob',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token'),
+
+        },
+
+    };
+    await axios(config)
+        .then(function (response) {
+            // notify();
+            console.log("This is ok !!!");
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreur",error)
+        });
+}
+
 export const getClaimAudioApi = async (data, props) => {
 
     const config = {
@@ -741,4 +767,27 @@ export const addClaimApiOffline = async (data, props) => {
     props.etat2Changed(false)
 
     notify("Bravo - Réclamation enregistrée", "success")
+}
+
+export const deleteClaimApi = async (id, props) => {
+    console.log("dataId", id)
+    const config = {
+        method: 'delete',
+        url: DELETE_CLAIM_API.replace("{id}", id),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    };
+    await axios(config)
+        .then(function (response) {
+            // notify("Bravo - Réclamation supprimé", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+    );
 }
