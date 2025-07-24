@@ -557,28 +557,23 @@ export const downloadFillesApi = async (data, filename) => {
 }
 
 export const downloadFillesApi2 = async (data, filename) => {
-
     const config = {
         method: 'get',
         url: FILES_DOWNLOAD_API.replace("%s", data),
         responseType: 'blob',
         headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
+            'Accept': 'application/octet-stream',
             'Authorization': "Bearer " + loadItemFromSessionStorage('token'),
-
         },
-
     };
-    await axios(config)
-        .then(function (response) {
-            // notify();
-            console.log("This is ok !!!");
-        })
-        .catch(function (error) {
-            notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreur",error)
-        });
+
+    try {
+        const response = await axios(config);
+        return response.data;
+    } catch (error) {
+        notify("Erreur - Veuillez réessayer!", "error");
+        return null;
+    }
 }
 
 export const getClaimAudioApi = async (data, props) => {

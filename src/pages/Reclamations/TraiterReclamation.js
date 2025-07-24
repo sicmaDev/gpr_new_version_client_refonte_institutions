@@ -268,6 +268,8 @@ const TraiterReclamation = (props) => {
   const [loadingConversion, setLoadingConversion] = useState(false);
   let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
   
+  console.log("audioFiles", audioFiles);
+  console.log("fileBlobs", fileBlobs);
   let compteur = 0;
   const handleClickOpen = () => {
     compteur++;
@@ -691,25 +693,35 @@ const TraiterReclamation = (props) => {
     }
   }, [props.selectedItemAudio]);
 
-useEffect(() => {
-  if (props.selectedItemFiles && props.selectedItemFiles.length > 0) {
-    Promise.all(
-      props.selectedItemFiles.map(async (attachment) => {
-        const data = await downloadFillesApi2(attachment.id, attachment.name);
-        const blob = new Blob([data], { type: "application/octet-stream" });
-        const url = URL.createObjectURL(blob);
+  useEffect(() => {
+    if (props.selectedItemFiles && props.selectedItemFiles.length > 0) {
+      Promise.all(
+        props.selectedItemFiles.map(async (attachment) => {
+          try {
+            const data = await downloadFillesApi2(attachment.id, attachment.name);
+            if (!data) {
+              console.warn("Blob null pour le fichier", attachment.name);
+              return null;
+            }
 
-        return {
-          id: attachment.id,
-          name: attachment.name,
-          blob,
-          url,
-        };
-      })
-    ).then(setFileBlobs);
-  }
-}, [props.selectedItemFiles]);
+            const url = URL.createObjectURL(data);
 
+            return {
+              id: attachment.id,
+              name: attachment.name,
+              blob: data,
+              url,
+            };
+          } catch (e) {
+            console.error("Erreur téléchargement", e);
+            return null;
+          }
+        })
+      ).then((results) => {
+        setFileBlobs(results.filter(Boolean));
+      });
+    }
+  }, [props.selectedItemFiles]);
 
   const maDivRef = useRef(null);
 
@@ -1478,6 +1490,7 @@ useEffect(() => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
+    // console.log("rowClick", data);
     setDataRow(data);
 
     handleClickOpen();
@@ -4199,7 +4212,7 @@ useEffect(() => {
 
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
-    // console.log("props.selectedItemFiles", props.selectedItemFiles);
+    console.log("props.selectedItemFiles", props.selectedItemFiles);
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
@@ -4265,6 +4278,7 @@ useEffect(() => {
   // console.log("selected audio ", props.selectedItemAudio);
 
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
+    console.log("props.selectedItemAudio", props.selectedItemAudio);
     let audioListChild = props.selectedItemAudio.map((attachment) => {
       return (
         <div className="col xl12 l12 m12 s12" key={attachment.id}>
