@@ -454,7 +454,7 @@ const TraiterDenonciation = (props) => {
       let coco = []
       coco = princ.filter((e) => {
         return (
-          ((e.firstAndLastName).includes(value))
+          (e.firstAndLastName.toLowerCase().includes(value.toLowerCase()))
         );
       })
 
@@ -3419,7 +3419,7 @@ const TraiterDenonciation = (props) => {
       <>
         <LoadingButton
           onClick={(e) => handleModal(e)}
-          className="waves-effect waves-effect-b waves-light btn-small"
+          className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
           loading={props.etat3}
           loadingPosition="end"
           endIcon={<SendIcon />}
@@ -3442,7 +3442,7 @@ const TraiterDenonciation = (props) => {
         <>
           <LoadingButton
             onClick={(e) => registerUser(e)}
-            className="waves-effect waves-effect-b waves-light btn-small"
+            className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
             loading={props.etat4}
             loadingPosition="end"
             endIcon={<ChatIcon />}
@@ -3467,7 +3467,7 @@ const TraiterDenonciation = (props) => {
         <>
           <LoadingButton
             onClick={(e) => connect()}
-            className="waves-effect waves-effect-b waves-light btn-small"
+            className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
             loading={props.etat4}
             loadingPosition="end"
             endIcon={<ChatIcon />}
@@ -3733,21 +3733,19 @@ const TraiterDenonciation = (props) => {
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
                             <div className="row" id="ententeFiche">
-                              <div className="row">
-                                <h5
-                                  className="col l6 m6 s12 card-title"
-                                >
+                              <div className="row df align-items-center">
+                                <h5 className="col l6 m6 s12 m-0 card-title">
                                   Détails du traitement
                                 </h5>
 
                                 {
                                   transmettre === "" || btnS === "" ?
-                                    <div className="col l6 m6 s12 df justify-content-end">
+                                    <div className="col l6 m6 s12 m-0 row">
                                       {transmettre}
                                       {btnS}
                                     </div>
                                     :
-                                    <div className="col l6 m6 s12 df justify-content-between">
+                                    <div className="col l6 m6 s12 m-0 row">
                                       {transmettre}
                                       {btnS}
                                     </div>
