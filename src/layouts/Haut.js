@@ -157,7 +157,7 @@ export const Haut = (props) => {
     e.preventDefault();
     sessionStorage.clear();
     props.authenticate();
-    history.push("/");
+    history.push("/login");
   };
 
 
