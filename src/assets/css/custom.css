@@ -489,3 +489,23 @@ body{
     -webkit-font-feature-settings: 'liga';
     -webkit-font-smoothing: antialiased;
 }
+
+/* Appliqué à un conteneur avec la classe "scroll-container" */
+.scroll-container {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.scroll-container::-webkit-scrollbar {
+  width: 1.5px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background-color: #1f1f1f;
+  border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}

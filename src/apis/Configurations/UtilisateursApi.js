@@ -84,7 +84,7 @@ export let disabled = async (props,id,isDisabled) => {
 }
 
 export const ajout = async (data, props) => {
-
+    
     const config = {
         method: 'post',
         url: ADD_SETTING_API,
@@ -155,6 +155,8 @@ export const modification = async (data, props) => {
 
 export const suppression = async (props) => {
 
+    console.log("props", props);
+    console.log("propsID", props.id);
     const config = {
         method: 'delete',
         url: DELETE_SETTING_API.replace("id",props.id),
@@ -167,18 +169,19 @@ export const suppression = async (props) => {
 
     await axios(config)
         .then(function (response) {
+            console.log("response1", response);
+
             saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
 
-            props.etat3Changed(false)
-           
-            notify("Bravo - Utilisateur supprimé", "success");
-           
+            // props.etat3Changed(false)
+            notify("Bravo - Utilisateur supprimé", "success");    
             all(props)
-
         })
         .catch(function (error) {
-            props.etat3Changed(false)
+            console.log("response2", error);
+
+            // props.etat3Changed(false)
             if (error.response.data.content !=="") {
                 notify(error.response.data.content.message, "error");
             } else {

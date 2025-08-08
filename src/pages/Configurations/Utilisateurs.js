@@ -35,6 +35,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Chip } from "@mui/material";
 import { Block, TaskAlt } from "@mui/icons-material";
 import { notify } from "../../Utils/alert";
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 
 const styles = {
@@ -97,25 +98,35 @@ const Utilisateurs = (props) => {
       fetchData();
     }, []);
 
-    const handleDisable = (e,id,isDisabled=true) => {
+    const handleDisable = (e, user, isDisabled = true, suppression = false) => {
         e.preventDefault();
         e.stopPropagation();
+        const id = user.id;        
 
-        disabled(props,id,isDisabled).then(function (response) {
-            notify(`Bravo - Le compte de l'utilisateur a été ${isDisabled ? "désactivé" :"activé"} avec succes`,"success")
-            all(props).then((r) => { });
-            handleCancel(e)
-
-        })
-        .catch(function (error) {
-            notify(`Erreur - Le compte de l'utilisateur n'a pas été ${isDisabled ? "désactivé" :"activé"}`,"error")
-        });
-
+        if (suppression) {
+            handleDelete(e, user)
+        } else {
+            disabled(props,id,isDisabled).then(function (response) {
+                notify(`Bravo - Le compte de l'utilisateur a été ${isDisabled ? "désactivé" :"activé"} avec succes`,"success")
+                all(props).then((r) => { });
+                handleCancel(e)
+            })
+            .catch(function (error) {
+                notify(`Erreur - Le compte de l'utilisateur n'a pas été ${isDisabled ? "désactivé" :"activé"}`,"error")
+            });
+        }
     }
-    const handleDisabledModal = (e,spId) => {
-        e.stopPropagation();
     
-        modalify("Confirmation", "Voulez-vous vraiment désactivé ce compte ?", "confirm", (e)=>{handleDisable(e,spId)})
+    const handleDisabledModal = (e, sp, suppression = false) => {
+        e.stopPropagation();
+        const spRattached = sp.rattached;
+        const spDeleted = sp.deleted;
+
+        if (!spDeleted) {
+            modalify("Confirmation", "Voulez-vous vraiment désactivé ce compte ?", "confirm", (e) => handleDisable(e, sp))
+        } else if (suppression && spRattached) {
+            modalify("Confirmation", "Voulez-vous vraiment supprimé ce compte ?", "confirm", (e) => handleDisable(e, sp, false, true))
+        }
     }
 
     let code;
@@ -129,7 +140,7 @@ const Utilisateurs = (props) => {
                 return user.code
             }
         },
-        
+
         {
             key: "firstAndLastName",
             text: "Nom et Prénoms",
@@ -139,7 +150,7 @@ const Utilisateurs = (props) => {
                 return user.firstAndLastName
             }
         },
-       
+
         {
             key: "email",
             text: "Email",
@@ -164,10 +175,10 @@ const Utilisateurs = (props) => {
             className: "user-additionnalRole hide",
             TrOnlyClassName: "hide",
             cell: (user, index) => {
-                let additionalRole =""
-                if(user.additionalRole !==undefined){
-                    if(user.additionalRole==="DE") additionalRole = "Directeur";
-                    if(user.additionalRole==="PILOTE") additionalRole ="Pilote";
+                let additionalRole = ""
+                if (user.additionalRole !== undefined) {
+                    if (user.additionalRole === "DE") additionalRole = "Directeur";
+                    if (user.additionalRole === "PILOTE") additionalRole = "Pilote";
                 }
                 return additionalRole
             }
@@ -189,7 +200,7 @@ const Utilisateurs = (props) => {
             sortable: true,
             cell: (user, index) => {
                 if (user.deleted) {
-                    return <div style={{ display: "flex", alignItems: "center" }}><Block color="darkred" fontSize="10px" /><div><i style={{color:"lightgray"}}>{user.code}</i><br /><i className="truncate" style={{color:"lightgray"}}>{user.firstAndLastName}</i></div></div>
+                    return <div style={{ display: "flex", alignItems: "center" }}><Block color="darkred" fontSize="10px" /><div><i style={{ color: "lightgray" }}>{user.code}</i><br /><i className="truncate" style={{ color: "lightgray" }}>{user.firstAndLastName}</i></div></div>
                 }
                 return (<><span>{user.code}</span><br /><span className="truncate">{user.firstAndLastName}</span> <br /></>)
             }
@@ -201,14 +212,14 @@ const Utilisateurs = (props) => {
             align: "left",
             sortable: true,
             cell: (user, index) => {
-                let additionalRole =""
-                if(user.additionalRole !==undefined){
-                    if(user.additionalRole==="DE") additionalRole = "Directeur";
-                    if(user.additionalRole==="PILOTE") additionalRole ="Pilote";
+                let additionalRole = ""
+                if (user.additionalRole !== undefined) {
+                    if (user.additionalRole === "DE") additionalRole = "Directeur";
+                    if (user.additionalRole === "PILOTE") additionalRole = "Pilote";
                 }
                 if (user.deleted) {
-                    return (<><i style={{color:"lightgray"}}>{user.posteDto.libelle}</i><br /><i style={{color:"lightgray"}} className="truncate">{user.servicePointDto.libelle}</i> <br /><i style={{color:"lightgray"}}>{additionalRole}</i></>)
-                
+                    return (<><i style={{ color: "lightgray" }}>{user.posteDto.libelle}</i><br /><i style={{ color: "lightgray" }} className="truncate">{user.servicePointDto.libelle}</i> <br /><i style={{ color: "lightgray" }}>{additionalRole}</i></>)
+
                 }
                 return (<><span>{user.posteDto.libelle}</span><br /><span className="truncate">{user.servicePointDto.libelle}</span> <br /><span>{additionalRole}</span></>)
             }
@@ -221,9 +232,9 @@ const Utilisateurs = (props) => {
             sortable: true,
             cell: (user, index) => {
                 if (user.deleted) {
-                    return ( <><i className="truncate" style={{color:"lightgray"}}>{user.email}</i> <br /> <i className="truncate" style={{color:"lightgray"}}>{user.tel}</i></>)
+                    return (<><i className="truncate" style={{ color: "lightgray" }}>{user.email}</i> <br /> <i className="truncate" style={{ color: "lightgray" }}>{user.tel}</i></>)
                 }
-                return ( <><span className="truncate">{user.email}</span> <br /> <span className="truncate">{user.tel}</span></>)
+                return (<><span className="truncate">{user.email}</span> <br /> <span className="truncate">{user.tel}</span></>)
             }
         },
 
@@ -240,7 +251,7 @@ const Utilisateurs = (props) => {
                     day: "2-digit"
                 }).format(new Date(user.createdAt));
                 if (user.deleted) {
-                    return <i style={{color:"lightgray"}}>{createdAt}</i>
+                    return <i style={{ color: "lightgray" }}>{createdAt}</i>
                 }
                 return (createdAt);
             }
@@ -250,14 +261,27 @@ const Utilisateurs = (props) => {
             text: "Actions",
             className: "action",
             align: "left",
-            cell: (user) => {
+            cell: (user, index) => {
                 if (user.deleted) {
-                    return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e,user.id,false)} icon={<TaskAlt />}  />
-                }else{
-                    return  <Chip label="Désactiver ?"  onClick={(e) => handleDisabledModal(e,user.id)} icon={<Block  />} variant="outlined" />
-                   
+                    if (user.rattached) {
+                        return (
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                <Chip label="Activer ?" color="warning" style={{ maxWidth: "max-content", backgroundColor: "#2f4f4f", marginBottom: "6px" }} onClick={(e) => { handleDisable(e, user, false) }} icon={<TaskAlt />} />
+                                <Chip label="Supprimer ?" color="error" style={{ maxWidth: "max-content" }} onClick={(e) => handleDisabledModal(e, user, true)} icon={<DeleteOutlineIcon />} />
+                            </div>
+                        );
+                    } else {
+                        return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e, user, false)} icon={<TaskAlt />} />
+                    }
+                } else {
+                    return <Chip label="Désactiver ?" onClick={(e) => handleDisabledModal(e, user)} icon={<Block />} variant="outlined" />
                 }
-             
+                // return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e, user.id, false)} icon={<TaskAlt />} />
+                // } else {
+                //     return <Chip label="Désactiver ?" onClick={(e) => handleDisabledModal(e, user.id)} icon={<Block />} variant="outlined" />
+
+                // }
+
 
             }
         },
@@ -456,11 +480,26 @@ const Utilisateurs = (props) => {
         e.preventDefault()
         modalify("Confirmation", "Confirmez vous la modification de cet élément?", "confirm", handleEdit)
     }
-    const handleDelete = (e) => {
+    const handleDelete = (e, user = null) => {
         e.preventDefault()
-        
-        props.etat3Changed(true)
-        suppression(props).then(() => {
+        let data = {}
+
+        if (user !== null) {
+            data["id"] = user.id;
+            data["firstAndLastName"] = user.firstAndLastName;
+            data["posteId"] = user.posteDto.id;
+            data["servicePointId"] = user.servicePointDto.id;
+            data["email"] = user.email;
+            data["tel"] = user.tel;
+            data["additionalRole"] = user.additionalRole;
+            data["password"] = user.pass;
+        } else {
+            data = props;
+        }
+
+        console.log("data", data)
+        // props.etat3Changed(true)
+        suppression(data, props).then(() => {
             handleCancel(e)
         })
 
@@ -861,22 +900,22 @@ const Utilisateurs = (props) => {
                             <div className="card-content">
                                 <div className="row">
                                     <div className="col l6 m6 s12">
-                                        <h4 className="card-title">Liste des Utilisateurs&nbsp;</h4>
+                                        <h4 className="card-title">{"Liste des Utilisateurs"}&nbsp;</h4>
                                     </div>
-                                    <div className="col l6 m6 s12" style={{ textAlign:"end" }}>
-                                        <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0,["Actions"])}} />
-                                        <img src={excel} alt="" style={{ cursor:"pointer" }} onClick={(e) => {table2XLSX("Liste_des_utilisateurs" + today().replaceAll("/", ""),"app-users")}} />
+                                    <div className="col l6 m6 s12" style={{ textAlign: "end" }}>
+                                        <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }} onClick={(e) => { handlePrint(config, columns, props.items, 0) }} />
+                                        <img src={excel} alt="" style={{ cursor: "pointer" }} onClick={(e) => { table2XLSX("Liste_des_utilisateurs" + today().replaceAll("/", ""), "app-users") }} />
                                     </div>
                                 </div>
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className = {"responsive-table table-xlsx app-users"}
+                                            className={"responsive-table table-xlsx app-users"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
                                             onRowClicked={rowClickedHandler}
-                                            onChange = {tableChangeHandler}
+                                            onChange={tableChangeHandler}
                                         />
                                     </div>
                                 </div>
