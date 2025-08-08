@@ -153,13 +153,14 @@ export const modification = async (data, props) => {
 
 }
 
-export const suppression = async (props) => {
+export const suppression = async (data, props) => {
 
     console.log("props", props);
     console.log("propsID", props.id);
+    console.log("dataID", data.id);
     const config = {
         method: 'delete',
-        url: DELETE_SETTING_API.replace("id",props.id),
+        url: DELETE_SETTING_API.replace("id", data.id),
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
@@ -174,14 +175,14 @@ export const suppression = async (props) => {
             saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
 
-            // props.etat3Changed(false)
+            props.etat3Changed(false)
             notify("Bravo - Utilisateur supprimé", "success");    
             all(props)
         })
         .catch(function (error) {
             console.log("response2", error);
 
-            // props.etat3Changed(false)
+            props.etat3Changed(false)
             if (error.response.data.content !=="") {
                 notify(error.response.data.content.message, "error");
             } else {

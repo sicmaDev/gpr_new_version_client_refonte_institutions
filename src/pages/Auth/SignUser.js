@@ -4,7 +4,7 @@ import logo from "../../assets/images/logo_gpr.jpg";
 import signUpPhoto from "../../assets/images/signup_photo.png";
 import LoadingButton from "@mui/lab/LoadingButton";
 import LoginIcon from "@mui/icons-material/Login";
-import { NavLink } from "react-router-dom";
+import { NavLink, useHistory } from "react-router-dom";
 import { Box, Button, Modal, Typography, fabClasses, Grid, FormControl, IconButton, Input, MenuItem, Select, ListSubheader } from "@mui/material";
 import { EastOutlined, WestOutlined, ArrowBackIos, Visibility, VisibilityOff } from "@mui/icons-material";
 import ReactDatatable from "@ashvin27/react-datatable";
@@ -42,6 +42,7 @@ const styles = {
 const SignCompteUser = (props) => {
     const [showPassword, setShowPassword] = useState(false);
     const [showPassword1, setShowPassword1] = useState(false);
+    const navigate = useHistory();
 
     const toggleShowPassword = () => {
         setShowPassword(!showPassword);
@@ -188,20 +189,17 @@ const SignCompteUser = (props) => {
                     console.log("data", data);
                     if (data.response.status === true) {
                         localStorage.setItem("afterInscription", true);
-                        localStorage.setItem("isUserLinkedToOrganization", true);
 
                         notify("Bravo, vous avez été ajouté avec success", "success");
-                        // navigate.push("/login");
+                        navigate.push("/login");
                     } else {
                         localStorage.removeItem("afterInscription");
-                        localStorage.removeItem("isUserLinkedToOrganization");
                         notify("Erreur, Les identifiants sont incorrectes", "error");
                     }
                 })
                 .catch((error) => {
                     console.log("Erreur HTTP : ", error);
                     localStorage.removeItem("afterInscription");
-                    localStorage.removeItem("isUserLinkedToOrganization");
                     const response = error.response;
                     if (response?.data) {
                         console.log("Erreur logique ou validation : ", response.data);

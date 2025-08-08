@@ -498,8 +498,9 @@ const Utilisateurs = (props) => {
         }
 
         console.log("data", data)
-        // props.etat3Changed(true)
+        props.etat3Changed(true)
         suppression(data, props).then(() => {
+            all(props)
             handleCancel(e)
         })
 

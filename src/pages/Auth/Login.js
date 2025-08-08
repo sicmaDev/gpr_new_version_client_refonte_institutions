@@ -16,6 +16,9 @@ import {
 } from "../../Utils/utils";
 import logo from "../../assets/images/logo_gpr.jpg";
 import loginPhoto from "../../assets/images/login_photo.png";
+import bravo from "../../assets/images/bravo.jpg";
+import closeImg from "../../assets/images/close.svg";
+import successNew from "../../assets/images/success2.jpg";
 import LoadingButton from "@mui/lab/LoadingButton";
 import LoginIcon from "@mui/icons-material/Login";
 import { NavLink } from "react-router-dom";
@@ -31,6 +34,8 @@ const Login = (props) => {
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
   };
+
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
 
   const clearComponentState = () => {
     props.emailChanged("");
@@ -68,6 +73,19 @@ const Login = (props) => {
       );
     }
   };
+
+  useEffect(() => {
+    const after = localStorage.getItem("afterInscription");
+    if (after) {
+      localStorage.removeItem("afterInscription");
+      setShowWelcomeMessage(true);
+    }
+
+    return () => {
+      localStorage.removeItem("afterInscription");
+      clearComponentState();
+    };
+  }, [""]);
 
   useEffect(() => {
     // vérifier si le serveur est démarré
@@ -115,6 +133,90 @@ const Login = (props) => {
 
   return (
     <>
+      {showWelcomeMessage ? (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "#000000ac",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 99,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "10px",
+              boxShadow: "1px 1px 10px black",
+              padding: "20px 15px",
+              fontSize: "15px",
+              maxWidth: "400px",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              textAlign: "center",
+              backgroundImage: `url(${successNew})`,
+              backgroundSize: "cover",
+              color: "black",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <img
+                src={closeImg}
+                alt="bravo"
+                style={{ width: "30px", cursor: "pointer" }}
+                onClick={(e) => {
+                  setShowWelcomeMessage(false);
+                  localStorage.removeItem("afterInscription");
+                }}
+              />
+            </div>
+            <img
+              src={bravo}
+              className="mb-2"
+              alt="bravo"
+              style={{ width: "200px" }}
+            />
+            <div
+              style={{ fontSize: "25px", fontWeight: 900, margin: "5px 0px" }}
+            >
+              {"Bienvenue sur GPR"}
+            </div>
+            <p>                            
+              Bravo, Votre inscription s'est bien passée. Votre compte est en cours de validation.
+            </p>
+
+            <p>{"Cliquez sur \" D'accord \" pour continuer !"}</p>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <div
+                style={{
+                  width: "fit-content",
+                  backgroundColor: "#005081",
+                  padding: "15px 30px",
+                  borderRadius: "50px",
+                  color: "white",
+                  margin: "10px 0px",
+                  cursor: "pointer",
+                }}
+                onClick={(e) => {
+                  setShowWelcomeMessage(false);
+                  localStorage.removeItem("afterInscription");
+                  localStorage.removeItem("CodeInstitution");
+                }}
+              >
+                {"D'accord"}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <></>
+      )}
       <div className="row flex-container">
         <div
           className="col s6 hide-on-med-and-down"
