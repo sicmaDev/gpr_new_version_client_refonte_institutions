@@ -6,6 +6,7 @@ import { HOST } from "../../Utils/globals";
 // ADD
 const ADD_SETTING_API = HOST + "api/v1/config/setting/others/sms/create"
 const TEST_SMS_API = HOST + "api/v1/config/setting/others/sms/test"
+const SEND_SMS_API = HOST + "api/v1/config/setting/others/sms/sendSmsToClient"
 
 
 export const ajout = async (data, props) => {
@@ -55,5 +56,18 @@ export const test =  (data) => {
     return axios(config);
 
 }
+export const send = (data) => {
 
+    const config = {
+        method: 'post',
+        url: SEND_SMS_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
 
+    return axios(config);
+}

@@ -51,6 +51,9 @@ import {
   formatDate,
   guessExtension,
   loadItemFromSessionStorage,
+  loadItemFromLocalStorage, 
+  sleep, 
+  cleanPhoneNumber3,
 } from "../../Utils/utils";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -67,6 +70,7 @@ import {
   mesurerClaimSolutionApi,
   unapproveClaimSolutionApi,
 } from "../../apis/Reclamations/ReclamationsApi";
+import { Button, DialogActions, DialogContent, DialogContentText, DialogTitle, Input } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -92,6 +96,9 @@ import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { TransitionProps } from "@mui/material/transitions";
 import { LoadingButton } from "@mui/lab";
+import { KTApp } from "../../Utils/blockui";
+import { notify } from "../../Utils/alert";
+import { send } from "../../apis/Configurations/SmsApi";
 import SaveIcon from "@mui/icons-material/Save";
 import { licenseInfo } from "../../apis/LoginApi";
 import axios from "axios";
@@ -116,6 +123,7 @@ const MesurerReclamation = (props) => {
   const [open, setOpen] = React.useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {}, [showAudioPlayer, currentAudio]);
 
@@ -270,6 +278,88 @@ const MesurerReclamation = (props) => {
 
     fetchData();
   }, []);
+
+  const [loading, setLoading] = useState(false);
+  const [smsSegments, setSmsSegments] = useState([]);
+  let appSms = loadItemFromLocalStorage("app-sms") !== undefined && (loadItemFromLocalStorage("app-sms").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-sms")) : undefined;
+  
+  const segmentMessage = (message, maxLength = 150) => {
+    const segments = [];
+    let start = 0;
+
+    while (start < message.length) {
+      // Si le reste du texte est plus court que maxLength → on prend tout
+      if (message.length - start <= maxLength) {
+        segments.push(message.slice(start).trim());
+        break;
+      }
+
+      // Chercher le dernier point dans la zone autorisée
+      let end = message.lastIndexOf('.', start + maxLength);
+      if (end === -1 || end < start) {
+        end = message.lastIndexOf(' ', start + maxLength);
+      }
+      if (end === -1 || end < start) {
+        end = start + maxLength;
+      }
+
+      segments.push(message.slice(start, end + 1).trim());
+      start = end + 1; 
+    }
+
+    return segments;
+  };
+
+  const handleShowModalSms = async () => {
+    if (!props.solution[0]) {
+      notify("Aucune solution à envoyer", "error");
+      return;
+    }
+    else {
+      if (props.solution[0].content === "" || props.solution[0].content === undefined) {
+        notify("Aucune solution à envoyer", "error");
+        return;
+      }
+    }
+    
+    const message = props.solution[0].content;
+    const segments = segmentMessage(message, 150);
+
+    setSmsSegments(segments);
+    setShowUploadModal(true);
+  };
+
+  const handleSms = async () => {
+    setShowUploadModal(false);
+
+    if (props.phone) {
+      setLoading(true);
+      KTApp.blockPage({
+        overlayColor: '#000000',
+        type: 'v2',
+        state: 'danger',
+        message: 'En cours...'
+      });
+
+      try {
+        for (const segment of smsSegments) {
+          await send({ phone: cleanPhoneNumber3(props.phone), message: segment });
+          console.log("Segment envoyé :", segment);
+          await sleep(500); // petite pause entre chaque SMS si besoin
+        }
+        notify("Super - SMS envoyé", "success");
+      } catch (err) {
+        console.log(err);
+        notify("Oups - SMS non envoyé", "error");
+      } finally {
+        setLoading(false);
+        KTApp.unblockPage();
+      }
+
+    } else {
+      notify("Les champs sont obligatoires", "error");
+    }
+  };
 
   let statusElt;
 
@@ -1282,13 +1372,102 @@ const MesurerReclamation = (props) => {
 
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
-                            <div className="row" id="ententeFiche">
-                              <div className="col s12">
+                            <div className="row df align-items-center" id="ententeFiche">
+                              <div className="col l6 s12">
                                 <h5 className="card-title">
                                   Mesurer la satisfaction
                                 </h5>
+                              </div>                              
+                              <div className="col l6 m6 s12 df justify-content-end">
+                                <LoadingButton
+                                  // style={{ marginLeft: '400px', marginTop: '-40px' }}
+                                  className="btn waves-light btn-small flex-shrink-0"
+                                  onClick={handleShowModalSms}
+                                  loading={loading}
+                                  loadingPosition="end"
+                                  variant="outlined"
+                                >
+                                  <span>Envoyer SMS</span>
+                                </LoadingButton>
                               </div>
                             </div>
+                            <Dialog open={showUploadModal} onClose={() => setShowUploadModal(false)}>
+                              <DialogTitle>Envoyer la solution au Client</DialogTitle>
+                              <DialogContent>
+                                <div style={{ marginBottom: "15px" }}> 
+                                  <h6 style={{ fontWeight: '1000' }}>Prévisualisation SMS</h6>
+                                    <p>
+                                      Le message sera envoyé en <strong>{smsSegments.length}</strong> SMS.
+                                    </p>
+
+                                    <div
+                                      style={{
+                                        maxHeight: "200px",
+                                        overflowY: "auto",
+                                        marginTop: "10px",
+                                        scrollbarWidth: "thin", // Firefox
+                                        scrollbarColor: "#999 transparent" // Firefox
+                                      }}
+                                      className="custom-scroll"
+                                    >
+                                      {smsSegments.map((seg, index) => (
+                                        <div
+                                          key={index}
+                                          style={{
+                                            border: "1px solid #ccc",
+                                            padding: "8px",
+                                            marginBottom: "5px",
+                                            borderRadius: "4px"
+                                          }}
+                                        >
+                                          <strong>SMS {index + 1} :</strong> {seg}
+                                        </div>
+                                      ))}
+                                    </div>
+                                </div>
+                                <br />                                
+                                <DialogContentText>
+                                  La solution ci-dessous sera envoyée au client par SMS.
+                                </DialogContentText>
+                                <br />
+                                <div className="row">
+                                  {/* Champ Solution */}
+                                  <div className="col s12 input-field">
+                                    <input
+                                      type="text"
+                                      className="trait-style"
+                                      value={props.solution[0]?.content || ""}
+                                      disabled
+                                    />
+                                    <label className="active">Solution proposée</label>
+                                  </div>
+
+                                  {/* Champ Commentaire */}
+                                  <div className="col s12 input-field">
+                                    <input
+                                      type="text"
+                                      className="trait-style"
+                                      value={props.solution[0]?.commentaire || ""}
+                                      disabled
+                                    />
+                                    <label className="active">Commentaire</label>
+                                  </div>
+                                </div>
+                              </DialogContent>
+
+                              <DialogActions>
+                                <Button
+                                  variant="contained"
+                                  color="error"
+                                  onClick={() => setShowUploadModal(false)}
+                                >
+                                  Fermer
+                                </Button>
+                                <Button variant="contained" onClick={handleSms}>
+                                  Envoyer par SMS
+                                </Button>
+                              </DialogActions>
+                            </Dialog>                            
 
                             <div className="row pb-5">
                               <div className="col l12 s12 pb-3" id="content">
