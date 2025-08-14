@@ -359,6 +359,7 @@ const TraiterSuggestion = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
+    // console.log("rowClickedHandler", data);
     handleClickOpen();
 
     clearComponentState();
@@ -735,7 +736,7 @@ const TraiterSuggestion = (props) => {
                                     id="language"
                                   >
                                     <LanguageIcon sx={{ mr: 2 }} />{" "}
-                                    {props.language}
+                                    {props.language !== "" ? props.language : <i>Non défini</i>}
                                   </div>
                                   {
                                     (dimf =

@@ -52,6 +52,7 @@ import {
   transmittedToChanged,
 
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
+import { v4 as uuid } from "uuid";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -75,6 +76,7 @@ import Dialog from "@mui/material/Dialog";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
+import Button from '@mui/material/Button';
 import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 import Slide from "@mui/material/Slide";
@@ -96,9 +98,11 @@ import TimelineConnector from "@mui/lab/TimelineConnector";
 import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineOppositeContent from "@mui/lab/TimelineOppositeContent";
 import TimelineDot from "@mui/lab/TimelineDot";
-import { Avatar, FormControl, FormControlLabel, FormLabel, LinearProgress, Radio, RadioGroup } from "@mui/material";
+import { Avatar, FormControl, FormControlLabel, FormLabel, LinearProgress, Radio, RadioGroup, DialogContent } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
-import { affectDenunciationApi, approveDenunciationSolutionApi, downloadAudioApi, getDenunAudioApi, getFillesApi, listeTreat, transmissionDenunciationApi, treatDenunciationApi, unapproveDenunciationSolutionApi } from "../../apis/Denonciations/DenonciationsApi";
+import { affectDenunciationApi, approveDenunciationSolutionApi, downloadAudioApi, getDenunAudioApi, getFillesApi, listeTreat, transmissionDenunciationApi, treatDenunciationApi, unapproveDenunciationSolutionApi, deleteDenunciationApi, downloadFillesApi, downloadFillesApi2 } from "../../apis/Denonciations/DenonciationsApi";
+import { addSuggestionApi, addSuggestionApiOffline} from "../../apis/Suggestions/SuggestionsApi";
+import DialogTitle from '@mui/material/DialogTitle';
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import { modalify } from "../../Utils/modal";
 import SendIcon from '@mui/icons-material/Send';
@@ -117,6 +121,7 @@ import { licenseInfo } from "../../apis/LoginApi";
 import { Redirect } from 'react-router-dom';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import WarningIcon from '@mui/icons-material/Warning';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 
 const styles = {
   control: (base) => ({
@@ -207,6 +212,15 @@ const TraiterDenonciation = (props) => {
   const [maxDelai, setMaxDelai] = useState(1);
   const [open, setOpen] = React.useState(false);
   const [interne, setInterne] = React.useState(true);
+  const [conversionBoxOpen, setConversionBoxOpen] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [convertionType, setConvertionType] = useState(null);
+
+  const [dataRow, setDataRow] = useState([]);
+  const [audioFiles, setAudioFiles] = useState([]);
+  const [fileBlobs, setFileBlobs] = useState([]);
+  const [loadingConversion, setLoadingConversion] = useState(false);
+  let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
 
   //#darrell
   const [usersCGR, setUsersCGR] = React.useState([]);
@@ -296,8 +310,91 @@ const TraiterDenonciation = (props) => {
   const history = useHistory();
   const handleClose = () => {
     setOpen(false);
+    setConversionBoxOpen(false);
     history.push("/denonciations/traitement/all");
   };
+  const handleConversionBoxClose = () => {
+    if (confirmationOpen) return;
+
+    setConversionBoxOpen(false);
+  };
+
+  const handleOpenDialog = (type) => {
+    setConvertionType(type);
+    setConfirmationOpen(true);
+  };
+  const handleConfirmationClose = () => {
+
+    setConfirmationOpen(false);
+  };
+
+  const handleSubmitConfirmation = (e) => {
+    e.preventDefault()
+    setLoadingConversion(true);
+    
+    console.log("dataRow", dataRow);
+    const formData = new FormData();
+    let claim = {}
+
+    claim["clientFirstAndLastName"] = dataRow.clientFirstAndLastName ?? null;
+    claim["gender"] = dataRow.gender ?? null;
+    claim["address"] = dataRow.address ?? null;
+    claim["phone"] = dataRow.tel ?? null;
+    claim["collectionChannelId"] = dataRow.collectionChannel.id ?? null;
+    claim["servicePointId"] = dataRow.servicePoint.id ?? null;
+    claim["fromWhatsapp"] = false;
+    claim["filesWhatsapp"] = []
+    claim["inboxWhatsapp"] = null
+    claim["productId"] = dataRow.product.id;
+    // claim["languageId"] = null;
+    claim["languageId"] = 1; // Default to Langue National
+    claim["folderCode"] = dataRow.folderCode;
+    claim["receiptDateTime"] = dataRow.receiptDateTime;
+    claim["collectorId"] = dataRow.collector.id;
+    claim["content"] = dataRow.content;
+    claim["code"] = "";
+    claim["id"] = "";
+
+    console.log("claim", claim);
+    console.log("audioFiles", audioFiles);
+    console.log("fileBlobs", fileBlobs);
+
+    formData.append("suggestion", JSON.stringify(claim));
+    if (fileBlobs != null) {
+      fileBlobs.forEach(fileItem => {
+        const file = new File([fileItem.blob], fileItem.name, {type: fileItem.blob.type || 'application/octet-stream'});
+        formData.append('files', file);
+      });
+    }
+
+    if (audioFiles != null) {
+      audioFiles.forEach(audio => {
+        const file = new File([audio.blob], "sugggestion_record_" + uuid() + ".ogg", {
+          type: "audio/ogg; codecs=opus" });
+        formData.append("audios", file);    
+      });
+    }
+
+    props.etat2Changed(true)
+    if (mode === 1) {
+      addSuggestionApi(formData, props).then(() => {
+        deleteDenunciationApi(dataRow.id, props).then(() => {});
+        history.push("/suggestions/traitement");
+      })
+      .finally(() => {
+        setLoadingConversion(false);
+      });
+    } else {
+      addSuggestionApiOffline(claim, props).then(() => {
+        deleteDenunciationApi(dataRow.id, props).then(() => {});
+        history.push("/suggestions/traitement");
+      })
+      .finally(() => {
+        setLoadingConversion(false);
+      });
+    }
+  }
+  
   const handleFerme = () => {
     // console.log("je suis dans ferme")
     return <Redirect to="/alertes/denonciations" />
@@ -436,6 +533,56 @@ const TraiterDenonciation = (props) => {
       .addClass("highlight display dataTable dtr-inline");
     window.$("#as-react-datatable tr").addClass("cursor-pointer");
   }, [props.match.params.code]);
+
+  
+  useEffect(() => {
+    if (props.selectedItemAudio && props.selectedItemAudio.length > 0) {      
+      Promise.all(
+        props.selectedItemAudio.map(async (attachment) => {
+          const data = await downloadAudioApi(attachment.id, attachment.name);
+          const blob = new Blob([data], { type: "audio/ogg; codecs=opus" });
+          const url = URL.createObjectURL(blob);
+          
+          return {
+            id: attachment.id,
+            name: attachment.name,
+            blob,
+            url,
+          };
+        })
+      ).then(setAudioFiles);
+    }
+  }, [props.selectedItemAudio]);
+  
+  useEffect(() => {
+    if (props.selectedItemFiles && props.selectedItemFiles.length > 0) {
+      Promise.all(
+        props.selectedItemFiles.map(async (attachment) => {
+          try {
+            const data = await downloadFillesApi2(attachment.id, attachment.name);
+            if (!data) {
+              console.warn("Blob null pour le fichier", attachment.name);
+              return null;
+            }
+
+            const url = URL.createObjectURL(data);
+
+            return {
+              id: attachment.id,
+              name: attachment.name,
+              blob: data,
+              url,
+            };
+          } catch (e) {
+            console.error("Erreur téléchargement", e);
+            return null;
+          }
+        })
+      ).then((results) => {
+        setFileBlobs(results.filter(Boolean));
+      });
+    }
+  }, [props.selectedItemFiles]);
 
   const invitation = (event) => {
 
@@ -1219,6 +1366,8 @@ const TraiterDenonciation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
+    setDataRow(data);
+
     handleClickOpen();
     clearComponentState();
 
@@ -3403,6 +3552,31 @@ const TraiterDenonciation = (props) => {
     element.createdAtFormated = createdAt;
   });
 
+  let btnConversion;
+  if (addR === "PILOTE" && props.status === "SAVED") {
+    btnConversion = (
+      <>
+        <LoadingButton
+          onClick={() => setConfirmationOpen(true)}
+          className="waves-effect waves-effect-b waves-light btn-small"
+          // loading={props.etat3}
+          loadingPosition="end"
+          endIcon={<AutorenewIcon />}
+          variant="contained"
+          sx={{
+            backgroundColor: "#ef6c00",
+            textTransform: "initial",
+            transition: "background-color 0.3s ease",
+            '&:hover': {
+              backgroundColor: '#fda321',
+            },
+          }}
+        >
+          <span>Convertir</span>
+        </LoadingButton>
+      </>
+    );
+  }
 
   let transmettre = "";
   let btnS = "";
@@ -3516,16 +3690,32 @@ const TraiterDenonciation = (props) => {
     }
   }
 
+  // Vérifie si le dialog enfant est ouvert (présent et aria-hidden = false)
+  const enfant = document.querySelector('#dialog-enfant');
+  const confirmation = document.querySelector('#dialog-confirmation');
+  const enfantOuvert = enfant && enfant.getAttribute('aria-hidden') !== 'true';
+  const confirmationOuvert = confirmation && confirmation.getAttribute('aria-hidden') !== 'true';
 
-  // Sélectionnez tous les éléments avec la classe spécifiée
+  // Sélectionne tous les dialogs MUI
   const elements = document.querySelectorAll('.MuiDialog-root');
 
-  // Parcourez la liste d'éléments
   elements.forEach(element => {
-    // Vérifiez si l'élément n'a pas l'attribut aria-hidden="true"
-    if (element.hasAttribute('aria-hidden') || element.getAttribute('aria-hidden') === 'true') {
-      // Masquez l'élément en définissant son style sur "none"
+    // Ne jamais modifier l'affichage du dialog enfant lui-même
+    if (['dialog-enfant', 'dialog-confirmation'].includes(element.id)) {
+      return;
+    }
+
+    // Si le dialog est caché par MUI (aria-hidden="true")
+    // ET que l'enfant n'est PAS ouvert → on le masque
+    if (
+      element.hasAttribute('aria-hidden') &&
+      element.getAttribute('aria-hidden') === 'true' &&
+      !enfantOuvert && !confirmationOuvert
+    ) {
       element.style.display = 'none';
+    } else {
+      // Sinon on le laisse visible (au cas où il a été masqué avant)
+      element.style.display = '';
     }
   });
 
@@ -3614,11 +3804,14 @@ const TraiterDenonciation = (props) => {
 
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
-                            <div className="row" id="ententeFiche">
-                              <div className="col s12">
+                            <div className="row df align-items-center" id="ententeFiche">
+                              <div className="col l6 s12">
                                 <h5 className="card-title">
                                   Fiche de la dénonciation
                                 </h5>
+                              </div>
+                              <div className="col l6 m6 s12 df justify-content-end">
+                                {btnConversion}
                               </div>
                             </div>
                             <div className="row">
@@ -3764,6 +3957,52 @@ const TraiterDenonciation = (props) => {
                           </div>
                         </div>
                       </div>
+                    </Dialog>
+
+                    <Dialog
+                      open={confirmationOpen}
+                      onClose={(_, reason) => {
+                        if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+                          handleConfirmationClose();
+                        }
+                      }}
+                      id="dialog-confirmation"
+                      disableEscapeKeyDown
+                      disableBackdropClick
+                      sx={{
+                        '& .MuiBackdrop-root': {
+                          background: 'transparent !important',
+                        },
+                      }}
+                    >
+                      <DialogTitle className="modal-title red-text text-darken-2">Confirmer la conversion de la dénoncation</DialogTitle>
+                      <DialogContent>
+                        <Typography gutterBottom>
+                          Une fois convertie en <strong>{"suggestion"}</strong>, cette dénonciation ne pourra plus être modifiée ou restaurée.
+                          Souhaitez-vous vraiment continuer ?
+                        </Typography>
+                                                                  
+                        <div className="mt-5">
+                          <div className="df justify-content-between">
+                            <Button disabled={loadingConversion} onClick={() => setConfirmationOpen(false)} className="col s6" color="inherit">
+                              Annuler
+                            </Button>
+                            <LoadingButton 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleSubmitConfirmation(e)
+                              }}
+                              className="col s6" 
+                              variant="contained" 
+                              color="error"
+                              loading={loadingConversion}
+                              loadingPosition="end"
+                            >
+                              <span>Confirmer</span>
+                            </LoadingButton>
+                          </div>
+                        </div>
+                      </DialogContent>
                     </Dialog>
                   </div>
                 </div>

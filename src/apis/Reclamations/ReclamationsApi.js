@@ -619,7 +619,7 @@ export const downloadAudioApi = async (data, filename) => {
         // console.log("response audio ", response.data);
         return response.data;
     } catch (error) {
-        notify("Erreur - Veuillez réessayer!", "error");
+        notify("Erreur - Veuillez réessayer! Erreur - Veuillez réessayer!", "error");
         // console.log("erreur",error)
     }
     // await axios(config)
