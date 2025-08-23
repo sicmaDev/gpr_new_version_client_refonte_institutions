@@ -141,7 +141,7 @@ const Bceao = (props) => {
       <table
         width="960"
         border="1"
-        className="striped responsive-table bordered table-xlsx"
+        className="striped responsive-table bordered table-xlsx no-hover"
         style={{ minWidth: "100% !important" }}
         id="headClaimEx">
 
@@ -223,7 +223,7 @@ const Bceao = (props) => {
       <table
         width="960"
         border="1"
-        className="striped responsive-table bordered table-xlsx"
+        className="striped responsive-table bordered table-xlsx no-hover"
         style={{ minWidth: "100% !important" }}
         id="bodyClaimEx">
         <thead>

@@ -19,6 +19,11 @@ code {
   transition: background-color 0.2s ease-in-out;
 }
 
+.responsive-table.no-hover tbody tr:hover {
+  background-color: transparent !important;
+  cursor: default !important;
+}
+
 /* Scrollbar fine pour Chrome, Edge, Safari */
 .custom-scroll::-webkit-scrollbar {
   width: 6px;
