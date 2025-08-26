@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Select from "react-select";
 import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
@@ -36,6 +36,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import { Block, BlockOutlined, PersonOff, TaskAlt } from "@mui/icons-material";
 import { notify } from "../../Utils/alert";
 import { Chip } from "@mui/material";
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 
 const emitter = new ee();
 const styles = {
@@ -58,7 +59,9 @@ const PointsServices = (props) => {
         return clearComponentState();
     }, []);
 
+    const topRef = useRef(null); 
 
+    useAutoScroll(topRef, [props.selectedItem.id], "top");
 
     let columns = [
         {
@@ -119,10 +122,10 @@ const PointsServices = (props) => {
                         <>
                             <div style={{ display: "flex", gap: "5px" }}>
                                 <Tooltip title="Activer">
-                                    <IconButton onClick={(e) => handleDisable(e, sp.id, false)} color="primary"><TaskAlt /></IconButton>
+                                    <IconButton onClick={(e) => handleDisable(e, sp.id, false)} color="default"><TaskAlt sx={{ color: 'black' }} /></IconButton>
                                 </Tooltip>
                                 <Tooltip title="Modifier">
-                                    <IconButton onClick={handleEditClick(sp)} color="default"><EditIcon sx={{ color: 'black' }} /></IconButton>
+                                    <IconButton onClick={handleEditClick(sp)} color="primary"><EditIcon /></IconButton>
                                 </Tooltip>
                                 <Tooltip title="Supprimer">
                                     <IconButton onClick={(e) => handleModal(e, sp)} color="error"><DeleteIcon /></IconButton>
@@ -138,7 +141,7 @@ const PointsServices = (props) => {
                                     <IconButton onClick={(e) => handleDisabledModal(e, sp.id)} color="default"><Block /></IconButton>
                                 </Tooltip>
                                 <Tooltip title="Modifier">
-                                    <IconButton onClick={handleEditClick(sp)} color="default"><EditIcon sx={{ color: 'black' }} /></IconButton>
+                                    <IconButton onClick={handleEditClick(sp)} color="primary"><EditIcon /></IconButton>
                                 </Tooltip>
                                 <Tooltip title="Supprimer">
                                     <IconButton onClick={(e) => handleModal(e, sp)} color="error"><DeleteIcon /></IconButton>
@@ -350,18 +353,6 @@ const PointsServices = (props) => {
 
         (<>
             <LoadingButton
-                className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                onClick={(e) => handleModal(e)}
-                loading={props.etat3}
-                loadingPosition="end"
-                endIcon={<DeleteIcon />}
-                variant="contained"
-                sx={{ textTransform: "initial" }}
-            >
-                <span>Supprimer</span>
-            </LoadingButton>
-
-            <LoadingButton
                 className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
                 onClick={(e) => handleCancel(e)}
                 // loading={props.etat2}
@@ -404,8 +395,8 @@ const PointsServices = (props) => {
 
     return (
         <>
-            <div className="card-panel">
-                <form className="paaswordvalidate" >
+            <div className="card-panel"  ref={topRef}>
+                <form className="paaswordvalidate">
                     <div className="row">
                         <div className="col s12">
                             <h6 className="card-title">{titleText} un point de service</h6>
