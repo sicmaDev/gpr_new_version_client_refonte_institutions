@@ -6,6 +6,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
+import EditIcon from "@mui/icons-material/Edit";
+import { Tooltip, IconButton } from "@mui/material";
 import {
     descriptionChanged,
     idChanged,
@@ -113,12 +115,38 @@ const PointsServices = (props) => {
             align: "left",
             cell: (sp) => {
                 if (sp.deleted) {
-                    return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e, sp.id, false)} icon={<TaskAlt />} />
+                    return (
+                        <>
+                            <div style={{ display: "flex", gap: "5px" }}>
+                                <Tooltip title="Activer">
+                                    <IconButton onClick={(e) => handleDisable(e, sp.id, false)} color="primary"><TaskAlt /></IconButton>
+                                </Tooltip>
+                                <Tooltip title="Modifier">
+                                    <IconButton onClick={handleEditClick(sp)} color="default"><EditIcon sx={{ color: 'black' }} /></IconButton>
+                                </Tooltip>
+                                <Tooltip title="Supprimer">
+                                    <IconButton onClick={(e) => handleModal(e, sp)} color="error"><DeleteIcon /></IconButton>
+                                </Tooltip>
+                            </div>
+                        </>
+                    )
                 } else {
-                    return <Chip label="Désactiver ?" onClick={(e) => handleDisabledModal(e, sp.id)} icon={<Block />} variant="outlined" />
-
+                    return (
+                        <>
+                            <div style={{ display: "flex", gap: "5px" }}>
+                                <Tooltip title="Desactiver">
+                                    <IconButton onClick={(e) => handleDisabledModal(e, sp.id)} color="default"><Block /></IconButton>
+                                </Tooltip>
+                                <Tooltip title="Modifier">
+                                    <IconButton onClick={handleEditClick(sp)} color="default"><EditIcon sx={{ color: 'black' }} /></IconButton>
+                                </Tooltip>
+                                <Tooltip title="Supprimer">
+                                    <IconButton onClick={(e) => handleModal(e, sp)} color="error"><DeleteIcon /></IconButton>
+                                </Tooltip>
+                            </div>
+                        </>
+                    )
                 }
-
             }
         },
     ];
@@ -268,20 +296,20 @@ const PointsServices = (props) => {
 
         modalify("Confirmation", "Voulez-vous vraiment désactivé ce point de service ?", "confirm", (e) => { handleDisable(e, spId) })
     }
-    const handleModal = (e) => {
+    const handleModal = (e, sp) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la suppression de cet élément ?", "confirm", handleDelete)
+        modalify("Confirmation", "Confirmez vous la suppression de cet élément ?", "confirm", (e) => handleDelete(e, sp))
     }
     const handleEditModal = (e) => {
         e.preventDefault()
         modalify("Confirmation", "Confirmez vous la modification de cet élément ?", "confirm", handleEdit)
     }
-    const handleDelete = (e) => {
+    const handleDelete = (e, sp) => {
         e.preventDefault()
 
         props.etat3Changed(true)
-        suppression(props).then(() => {
-            handleCancel(e)
+        suppression(props, sp).then(() => {
+            handleCancel(e) 
         })
 
         props.psErrors(errors)
@@ -302,6 +330,10 @@ const PointsServices = (props) => {
             });
 
     }
+    const handleEditClick = (sp) => (e) => {
+        rowClickedHandler(e, sp, null)
+    }
+
     const rowClickedHandler = (event, data, rowIndex) => {
         props.idChanged(data.id ? data.id : "")
         props.typeChanged(data.type ? data.type : "")
@@ -483,11 +515,11 @@ const PointsServices = (props) => {
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className={"responsive-table table-xlsx app-ps"}
+                                            className={"responsive-table table-xlsx app-ps no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
-                                            onRowClicked={rowClickedHandler}
+                                            // onRowClicked={rowClickedHandler}
                                             onChange={tableChangeHandler}
                                         />
                                     </div>
