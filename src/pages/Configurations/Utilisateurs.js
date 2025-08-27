@@ -6,6 +6,9 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import EditIcon from "@mui/icons-material/Edit";
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { Tooltip, IconButton } from "@mui/material";
 import {
     userErrors, additionalRoleChanged,emailChanged,
     nameChanged,codeChanged,
@@ -36,6 +39,7 @@ import { Chip } from "@mui/material";
 import { Block, TaskAlt } from "@mui/icons-material";
 import { notify } from "../../Utils/alert";
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 
 
 const styles = {
@@ -53,6 +57,9 @@ const Utilisateurs = (props) => {
     const toggleShowPassword = () => {
         setShowPassword(!showPassword);
     };
+
+    const topRef = useRef(null); 
+    useAutoScroll(topRef, [props.selectedItem.id], "top");
 
     const toggleShowPassword1 = () => {
         setShowPassword1(!showPassword1);
@@ -265,24 +272,54 @@ const Utilisateurs = (props) => {
                 if (user.deleted) {
                     if (user.rattached) {
                         return (
-                            <div style={{ display: "flex", flexDirection: "column" }}>
-                                <Chip label="Activer ?" color="warning" style={{ maxWidth: "max-content", backgroundColor: "#2f4f4f", marginBottom: "6px" }} onClick={(e) => { handleDisable(e, user, false) }} icon={<TaskAlt />} />
-                                <Chip label="Supprimer ?" color="error" style={{ maxWidth: "max-content" }} onClick={(e) => handleDisabledModal(e, user, true)} icon={<DeleteOutlineIcon />} />
-                            </div>
+                            <>
+                                <div style={{ display: "flex", gap: "5px" }}>
+                                    <Tooltip title="Activer l'affilier">
+                                        <IconButton onClick={(e) => { handleDisable(e, user, false) }} color="default"><CheckCircleIcon  sx={{ color: 'black' }} /></IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Modifier l'affilier">
+                                        <IconButton onClick={handleEditClick(user)} color="primary"><EditIcon /></IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Supprimer l'affilier">
+                                        <IconButton onClick={(e) => handleDisabledModal(e, user, true)} color="error"><DeleteIcon /></IconButton>
+                                    </Tooltip>
+                                </div>
+                            </>
                         );
                     } else {
-                        return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e, user, false)} icon={<TaskAlt />} />
+                        return (
+                            <>
+                                <div style={{ display: "flex", gap: "5px" }}>
+                                    <Tooltip title="Activer">
+                                        <IconButton onClick={(e) => handleDisable(e, user, false)} color="default"><TaskAlt sx={{ color: 'black' }} /></IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Modifier">
+                                        <IconButton onClick={handleEditClick(user)} color="primary"><EditIcon /></IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Supprimer">
+                                        <IconButton onClick={(e) => handleModal(e, user)} color="error"><DeleteIcon /></IconButton>
+                                    </Tooltip>
+                                </div>
+                            </>
+                        )
                     }
                 } else {
-                    return <Chip label="Désactiver ?" onClick={(e) => handleDisabledModal(e, user)} icon={<Block />} variant="outlined" />
+                    return (
+                        <>
+                            <div style={{ display: "flex", gap: "5px" }}>
+                                <Tooltip title="Desactiver">
+                                    <IconButton onClick={(e) => handleDisabledModal(e, user)} color="default"><Block /></IconButton>
+                                </Tooltip>
+                                <Tooltip title="Modifier">
+                                    <IconButton onClick={handleEditClick(user)} color="primary"><EditIcon /></IconButton>
+                                </Tooltip>
+                                <Tooltip title="Supprimer">
+                                    <IconButton onClick={(e) => handleModal(e, user)} color="error"><DeleteIcon /></IconButton>
+                                </Tooltip>
+                            </div>
+                        </>
+                    ) 
                 }
-                // return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e, user.id, false)} icon={<TaskAlt />} />
-                // } else {
-                //     return <Chip label="Désactiver ?" onClick={(e) => handleDisabledModal(e, user.id)} icon={<Block />} variant="outlined" />
-
-                // }
-
-
             }
         },
     ];
@@ -472,9 +509,9 @@ const Utilisateurs = (props) => {
         }
         props.userErrors(errors)
     }
-    const handleModal = (e) => {
+    const handleModal = (e, user) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", handleDelete)
+        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", (e) => handleDelete(e, user))
     }
     const handleEditModal = (e) => {
         e.preventDefault()
@@ -524,6 +561,10 @@ const Utilisateurs = (props) => {
 
 
     }
+    const handleEditClick = (sp) => (e) => {
+        rowClickedHandler(e, sp, null)
+    }
+
     const rowClickedHandler = (event, data, rowIndex) => {
         props.idChanged(data.id?data.id:"")
         props.codeChanged(data.code?data.code:"")
@@ -605,18 +646,6 @@ const Utilisateurs = (props) => {
     let buttons = props.selectedItem.id!== undefined ?
     (<>
         <LoadingButton
-            className="btn  waves-light btn-small mr-1 red-text red lighten-4"
-            onClick={(e) => handleModal(e)}
-            loading={props.etat3}
-            loadingPosition="end"
-            endIcon={<DeleteIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Supprimer</span>
-        </LoadingButton>
-
-        <LoadingButton
             className="btn waves-light mr-1 btn-small red-text white lighten-4"
             onClick={(e) => handleCancel(e)}
             loading={props.etat2}
@@ -681,9 +710,7 @@ const Utilisateurs = (props) => {
     };
     return (
         <>
-            {/* <div ref={ref} className="card-panel"> */}
-            <div className="card-panel">
-
+            <div className="card-panel" ref={topRef}>
                 <form id="accountForm" >
                     <div className="row">
                         <div className="col s12"><h6 className="card-title">{titleText} un utilisateur</h6></div>
@@ -911,11 +938,11 @@ const Utilisateurs = (props) => {
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className={"responsive-table table-xlsx app-users"}
+                                            className={"responsive-table table-xlsx app-users no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
-                                            onRowClicked={rowClickedHandler}
+                                            // onRowClicked={rowClickedHandler}
                                             onChange={tableChangeHandler}
                                         />
                                     </div>

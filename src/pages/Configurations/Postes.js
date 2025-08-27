@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import ReactDatatable from '@ashvin27/react-datatable';
 import Select, { StylesConfig } from 'react-select'
 import chroma from 'chroma-js';
@@ -7,6 +7,8 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import EditIcon from "@mui/icons-material/Edit";
+import { Tooltip, IconButton } from "@mui/material";
 import {
     descriptionChanged, idChanged,
     itemsChanged, posteErrors,
@@ -32,6 +34,7 @@ import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 
 const colourStyles = {
     control: (styles) => ({ ...styles, backgroundColor: 'white' }),
@@ -123,6 +126,10 @@ const Postes = (props) => {
         }
         //setCadre(e)
     }
+    
+    const topRef = useRef(null); 
+    useAutoScroll(topRef, [props.selectedItem.id], "top");
+
     useEffect(() => {
        if (props.habilitations) {
             let tab = Array.isArray(props.habilitations) ? (props.habilitations).map(x => x.value) : ""
@@ -216,6 +223,27 @@ const Postes = (props) => {
             className: "habilitations",
             align: "left",
             sortable: true
+        },
+        {
+            key: "action",
+            text: "Actions",
+            className: "action",
+            align: "left",
+            sortable: true,
+            cell: (sp) => {
+                return (
+                    <>
+                        <div style={{ display: "flex", gap: "5px" }}>
+                            <Tooltip title="Modifier">
+                                <IconButton onClick={handleEditClick(sp)} color="primary"><EditIcon /></IconButton>
+                            </Tooltip>
+                            <Tooltip title="Supprimer">
+                                <IconButton onClick={(e) => handleModal(e, sp)} color="error"><DeleteIcon /></IconButton>
+                            </Tooltip>
+                        </div>
+                    </>
+                )
+            }
         },
     ];
 
@@ -323,20 +351,20 @@ const Postes = (props) => {
         }
         props.posteErrors(errors)
     }
-    const handleModal = (e) => {
+    const handleModal = (e, sp) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", handleDelete)
+        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", (e) => handleDelete(e, sp))
     }
     const handleEditModal = (e) => {
         e.preventDefault()
         modalify("Confirmation", "Confirmez vous la modification de cet élément?", "confirm", handleEdit)
     }
-    const handleDelete = (e) => {
+    const handleDelete = (e, sp) => {
         e.preventDefault()
         
         props.etat3Changed(true)
         setDeleteIsLoading(true)
-        suppression(props).then(() => {
+        suppression(props, sp).then(() => {
             handleCancel(e)
         }).finally(()=>{
             setDeleteIsLoading(false)
@@ -344,6 +372,10 @@ const Postes = (props) => {
         clearComponentState()
         props.posteErrors(errors)
     }
+    const handleEditClick = (sp) => (e) => {
+        rowClickedHandler(e, sp, null)
+    }
+
     const rowClickedHandler = (event, data, rowIndex) => {
        
         let tab  = []
@@ -367,22 +399,10 @@ const Postes = (props) => {
     const  tableChangeHandler = data => {
     }
    
-    let titleText = props.selectedItem.id!== undefined ? "Modifier ou Supprimer" : "Ajouter";
+    let titleText = props.selectedItem.id !== undefined ? "Modifier ou Supprimer" : "Ajouter";
    
-    let buttons = props.selectedItem.id!== undefined ?
+    let buttons = props.selectedItem.id !== undefined ?
     (<>
-        <LoadingButton
-            className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-            onClick={(e) => handleModal(e)}
-            loading={deleteIsLoading}
-            loadingPosition="end"
-            endIcon={<DeleteIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Supprimer</span>
-        </LoadingButton>
-
         <LoadingButton
             className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
             onClick={(e) => handleCancel(e)}
@@ -425,7 +445,7 @@ const Postes = (props) => {
     )
     return (
         <>
-            <div className="card-panel">
+            <div className="card-panel" ref={topRef}>
                 <form className="paaswordvalidate" >
                     <div className="row">
                         <div className="col s12">
@@ -535,11 +555,11 @@ const Postes = (props) => {
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className = {"responsive-table table-xlsx app-postes"}
+                                            className = {"responsive-table table-xlsx app-postes no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
-                                            onRowClicked={rowClickedHandler}
+                                            // onRowClicked={rowClickedHandler}
                                             onChange={tableChangeHandler}
                                         />
                                     </div>

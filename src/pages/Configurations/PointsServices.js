@@ -60,7 +60,6 @@ const PointsServices = (props) => {
     }, []);
 
     const topRef = useRef(null); 
-
     useAutoScroll(topRef, [props.selectedItem.id], "top");
 
     let columns = [
@@ -116,6 +115,7 @@ const PointsServices = (props) => {
             text: "Actions",
             className: "action",
             align: "left",
+            sortable: true,
             cell: (sp) => {
                 if (sp.deleted) {
                     return (
@@ -395,7 +395,7 @@ const PointsServices = (props) => {
 
     return (
         <>
-            <div className="card-panel"  ref={topRef}>
+            <div className="card-panel" ref={topRef}>
                 <form className="paaswordvalidate">
                     <div className="row">
                         <div className="col s12">
