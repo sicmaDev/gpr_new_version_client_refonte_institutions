@@ -9,6 +9,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import EditIcon from "@mui/icons-material/Edit";
 import { Tooltip, IconButton } from "@mui/material";
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
 import {
     descriptionChanged, idChanged,
     itemsChanged, posteErrors,
@@ -166,6 +168,23 @@ const Postes = (props) => {
        }
     }, [cadre,props.habilitations]);
    
+    const habilitationDescriptions = {
+        H1: "Enregistrer une réclamation, suggestion, dénonciation",
+        H2: "Traitement d'une réclamation, dénonciation à risque mineur",
+        H3: "Traitement d'une réclamation, dénonciation à risque moyen",
+        H4: "Traitement d'une réclamation, dénonciation à risque élevé",
+        H5: "Mesurer la satisfaction d'une réclamation",
+        H6: "Affecter le traitement d'une réclamation, dénonciation à un utilisateur",
+        H7: "Imprimer la liste des réclamations, suggestions, dénonciations",
+        H8: "Imprimer la liste des réclamations, suggestions, dénonciation avec le choix des critères",
+        H9: "Exporter la liste des réclamations, suggestions, dénonciations",
+        H10: "Exporter la liste avec le choix des critères",
+        H11: "Générer des rapports et statistiques",
+        H12: "Configurer l'outil de gestion de plainte ou réclamation",
+        H13: "Consulter les Alerte de retard de traitement",
+        H14: "Consulter toutes les informations"
+    };
+
     useEffect(() => {
        
         setH1 (<Typography > <span style={{ fontWeight:"bold",color:"#00B8D9" }}>H1</span>  : Enregistrement</Typography>) 
@@ -202,6 +221,25 @@ const Postes = (props) => {
         return clearComponentState();
     }, []);
 
+    const getHabilitationColor = (hab) => {
+        switch(hab) {
+            case "H1": return "#00B8D9";
+            case "H2": return "#0052CC";
+            case "H3": return "#5243AA";
+            case "H4": return "#FF5630";
+            case "H5": return "#FF8B00";
+            case "H6": return "#FFC400";
+            case "H7": return "#36B37E";
+            case "H8": return "#00875A";
+            case "H9": return "#253858";
+            case "H10": return "#666666";
+            case "H11": return "#3333ff";
+            case "H12": return "#99003d";
+            case "H13": return "#00cc00";
+            case "H14": return "#333300";
+            default: return "#ff0000";
+        }
+    };
     let columns = [
         {
             key: "libelle",
@@ -222,7 +260,29 @@ const Postes = (props) => {
             text: "Habilitations",
             className: "habilitations",
             align: "left",
-            sortable: true
+            sortable: true,
+            cell: (sp) => {
+                let habs = sp.habilitations ? sp.habilitations.split(",") : [];
+
+                return (
+                    <Stack direction="row" spacing={0.25} flexWrap="wrap" sx={{ width: 'max-content' }}>
+                        {habs.map((h, i) => (
+                            <Chip
+                                key={i}
+                                label={h.trim()}
+                                color="primary"
+                                sx={{
+                                    backgroundColor: getHabilitationColor(h.trim()), color: 'white',
+                                    // borderColor: getHabilitationColor(h.trim()),
+                                    // color: getHabilitationColor(h.trim()),
+                                }}
+                                // variant="outlined"
+                                size="small"
+                            />
+                        ))}
+                    </Stack>
+                );
+            },
         },
         {
             key: "action",
@@ -442,7 +502,8 @@ const Postes = (props) => {
             <span>Ajouter</span>
         </LoadingButton>
        
-    )
+    );
+
     return (
         <>
             <div className="card-panel" ref={topRef}>
@@ -493,17 +554,34 @@ const Postes = (props) => {
                                     <Select
                                         classNamePrefix="react-select"
                                         className='react-select-container mt-4'
-                                        // defaultInputValue="H1"
-                                        // defaultValue={[colourOptions[0],colourOptions[1]]}
                                         closeMenuOnSelect={false}
                                         isMulti
                                         options={colourOptions}
                                         styles={colourStyles}
                                         placeholder="Sélectionner les habilitations"
-                                        value={props.habilitations ? props.habilitations  : (cadre.length==0 ? [colourOptions[0], colourOptions[1]]  : colourOptions.filter(obj => cadre.includes(obj.value)))} // set selected values
+                                        value={
+                                            props.habilitations
+                                            ? props.habilitations
+                                            : (cadre.length == 0
+                                                ? [colourOptions[0], colourOptions[1]]
+                                                : colourOptions.filter(obj => cadre.includes(obj.value)))
+                                        }
                                         onChange={handleChange}
-                                    />
-                                    
+                                        formatOptionLabel={(option, { context }) => {
+                                            if (context === "menu") {
+                                            return (
+                                                <div>
+                                                <div>{option.label}</div>
+                                                <div style={{ fontSize: '0.8em', color: '#555' }}>
+                                                    {habilitationDescriptions[option.value]}
+                                                </div>
+                                                </div>
+                                            )
+                                            }
+                                            // contexte = "value" → badges sélectionnés
+                                            return option.label
+                                        }}
+                                    />                                
                                     <label htmlFor="ulevel" className="active mb-4" style={{top:'-18%'}}>Habilitations&nbsp;</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.errors.habilitations}</div>

@@ -274,13 +274,10 @@ const Utilisateurs = (props) => {
                         return (
                             <>
                                 <div style={{ display: "flex", gap: "5px" }}>
-                                    <Tooltip title="Activer l'affilier">
-                                        <IconButton onClick={(e) => { handleDisable(e, user, false) }} color="default"><CheckCircleIcon  sx={{ color: 'black' }} /></IconButton>
+                                    <Tooltip title="Approuver">
+                                        <IconButton onClick={(e) => { handleDisable(e, user, false) }} color="default"><CheckCircleIcon  sx={{ color: '#66bb6a' }} /></IconButton>
                                     </Tooltip>
-                                    <Tooltip title="Modifier l'affilier">
-                                        <IconButton onClick={handleEditClick(user)} color="primary"><EditIcon /></IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Supprimer l'affilier">
+                                    <Tooltip title="Rejeter">
                                         <IconButton onClick={(e) => handleDisabledModal(e, user, true)} color="error"><DeleteIcon /></IconButton>
                                     </Tooltip>
                                 </div>

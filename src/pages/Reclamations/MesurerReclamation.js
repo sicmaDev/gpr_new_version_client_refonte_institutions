@@ -1397,7 +1397,7 @@ const MesurerReclamation = (props) => {
                                 <div style={{ marginBottom: "15px" }}> 
                                   <h6 style={{ fontWeight: '1000' }}>Prévisualisation SMS</h6>
                                     <p>
-                                      Le message sera envoyé en <strong>{smsSegments.length}</strong> SMS.
+                                      Le message sera envoyé en <strong>{smsSegments.length}</strong> SM en raison de la limite de caractères imposée par le fournisseur.
                                     </p>
 
                                     <div
@@ -1427,21 +1427,14 @@ const MesurerReclamation = (props) => {
                                 </div>
                                 <br />                                
                                 <DialogContentText>
-                                  La solution ci-dessous sera envoyée au client par SMS.
+                                  La solution ci-dessus sera envoyée au client par SMS.
+                                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ whiteSpace: 'pre-wrap' }}>{"Nom client : " + props.lastname || ""}</span>
+                                    <span style={{ whiteSpace: 'pre-wrap' }}>{"Téléphone : " + props.phone || ""}</span>
+                                  </div>
                                 </DialogContentText>
                                 <br />
                                 <div className="row">
-                                  {/* Champ Solution */}
-                                  <div className="col s12 input-field">
-                                    <input
-                                      type="text"
-                                      className="trait-style"
-                                      value={props.solution[0]?.content || ""}
-                                      disabled
-                                    />
-                                    <label className="active">Solution proposée</label>
-                                  </div>
-
                                   {/* Champ Commentaire */}
                                   <div className="col s12 input-field">
                                     <input
