@@ -629,6 +629,12 @@ const TraiterDenonciation = (props) => {
     // console.log("valeur",value)
   }
 
+  const memberIds = props?.session?.members?.map(m => m.id) || [];
+  const guestIds = guests?.map(g => g.id) || [];
+  const availableToInvite = usersCGR.filter(
+    (user) => !memberIds.includes(user.id) && !guestIds.includes(user.id)
+  );
+
   const handleInvitation = (e, idi) => {
     var chatMessage = {
       userId: idi,
@@ -1479,13 +1485,15 @@ const TraiterDenonciation = (props) => {
                 <ul class="list">
                   <label className="text-xl mb-2" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>A Inviter</label>
 
-                  {usersCGR.map((member) => (
+                  {availableToInvite.map((member) => (
                     <>
                       <li class="clearfix" key={member.id} style={{ display: "flex", verticalAlign: "center" }}>
                         <Avatar sx={{ width: 40, height: 40, backgroundColor: "#1E2188" }}>{member.firstAndLastName[0]}</Avatar>
 
                         <div class="about" style={{ marginTop: "0px" }}>
-                          <div class="name">{member.firstAndLastName}</div>
+                          <div class="name nameToInvite">
+                            <span>{member.firstAndLastName}</span>
+                          </div>
                           <div class="" style={{ fontSize: "10px" }}>
                             {member.posteDto.libelle}
                           </div>
@@ -1521,8 +1529,8 @@ const TraiterDenonciation = (props) => {
                       </Avatar>
 
                       <div className="about" style={{ marginTop: "9.5px" }}>
-                        <div className="name text-bold">
-                          {member.firstAndLastName}
+                        <div className="name nameToInvite text-bold">
+                          <span>{member.firstAndLastName}</span>
                         </div>
                         {/* <div className="status">
                             <i className="fa fa-circle online"></i> online
@@ -1545,8 +1553,8 @@ const TraiterDenonciation = (props) => {
                         </Avatar>
 
                         <div className="about" style={{ marginTop: "9.5px" }}>
-                          <div className="name text-bold">
-                            {guest?.firstAndLastName}
+                          <div className="name nameToInvite text-bold">
+                            <span>{guest?.firstAndLastName}</span>
                           </div>
                           {/* <div className="status">
                               <i className="fa fa-circle online"></i> online
