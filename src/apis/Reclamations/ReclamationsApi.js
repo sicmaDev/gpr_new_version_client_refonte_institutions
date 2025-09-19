@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 //console.log("HOST CLAIM: " + HOST)
 const ADD_TEMP_CLAIM_API = HOST + "api/v1/claim/save_temp"
 const ADD_CLAIM_API = HOST + "api/v1/claim/add"
+const EXTRA_CLAIM_API = HOST + "api/v1/claim/add/extra"
 const AFFECT_CLAIM_API = HOST + "api/v1/claim/affectTreatment"
 const TREAT_CLAIM_API = HOST + "api/v1/claim/treatClaim"
 const APPROVE_CLAIM_SOLUTION_API = HOST + "api/v1/claim/approuvedSolution"
@@ -209,6 +210,22 @@ export const addClaimApi = async (data, props) => {
             notify("Erreur - Veuillez réessayer!", "error");
             // console.log("rsponse1 ERREUR", error)
         });
+}
+
+export const addExtraClaimApi = async (data) => {
+
+    const config = {
+        method: 'post',
+        url: EXTRA_CLAIM_API,
+        data,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    
+    return axios(config)
 }
 
 export const affectClaimApi = async (data, props) => {
@@ -511,10 +528,11 @@ export const getFillesApi = async (data, props) => {
             // notify("Bravo - Mesure de satisfaction effectuée", "success");
             // console.log("response data content",response.data.content)
             props.selectedItemFilesChanged(response.data.content)
+            // notify("Succès - Chargement des fichiers réussi !!?!", "success");
         })
         .catch(function (error) {
             notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreur",error)
+            console.log("erreur",error);
         });
 }
 
@@ -591,7 +609,7 @@ export const getClaimAudioApi = async (data, props) => {
         .then(function (response) {
 
             // notify("Bravo - Mesure de satisfaction effectuée", "success");
-            // console.log("response data content",response.data)
+            console.log("response data content",response.data)
             props.selectedItemAudioChanged(response.data)
         })
         .catch(function (error) {

@@ -72,10 +72,12 @@ import {
   isSettingComplete, 
   isValidDate, 
   isValidPhone,
+  today,
 } from "../../Utils/utils";
 import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
 import {
+  addExtraClaimApi,
   affectClaimApi,
   approveClaimSolutionApi,
   detailsTreat,
@@ -145,8 +147,19 @@ import {
   LinearProgress,
   Radio,
   RadioGroup, 
-  DialogContent
+  DialogContent,
+  Box,
+  CardContent,
+  Grid,
+  Tooltip,
+  DialogContentText,
+  List,
+  ListItemButton,
+  ListItemText,
 } from "@mui/material";
+import { FileDownload, History, Info, Pause, PlayArrow, Star, VolumeUp } from "@mui/icons-material";
+import RecorderControls from "../../components/recorder-controls";
+import useRecorder from "../../hooks/useRecorder";
 import { LoadingButton } from "@mui/lab";
 import { HOST } from "../../Utils/globals";
 import axios from "axios";
@@ -262,9 +275,12 @@ const TraiterReclamation = (props) => {
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
 
+  const [currentData, setCurrentData] = useState(null);
   const [dataRow, setDataRow] = useState([]);
   const [audioFiles, setAudioFiles] = useState([]);
   const [fileBlobs, setFileBlobs] = useState([]);
+  const [audioListForm, setAudioListForm] = useState([])
+  const [audioListUrlForm, setAudioListUrlForm] = useState([])
   const [loadingConversion, setLoadingConversion] = useState(false);
   let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
   
@@ -277,6 +293,14 @@ const TraiterReclamation = (props) => {
     setOpen(!open);
 
   };
+  const [currentAudioId, setCurrentAudioId] = useState("");
+  const audioRef = useRef(null);
+  const [filesForm, setFiles] = useState([])
+  const [showExtraContent, setShowExtraContent] = useState(false)
+  const [extraContent, setExtraContent] = useState("")
+  const [extraFileLoading, setExtraFileLoading] = useState(false)
+  const [claim_id, setClaimId] = useState(null)
+  
   // console.log("param 3", compteur);
   const history = useHistory();
   const handleClose = () => {
@@ -473,6 +497,20 @@ const TraiterReclamation = (props) => {
   useEffect(() => {
     // setGuests(props?.session?.guests)
   }, [props?.session?.guests]);
+  
+  const { recorderState, ...handlers } = useRecorder();
+  let { audio } = recorderState;
+
+  const [open2, setOpen2] = useState(false);
+  const [showAudioBox, setAudioBox] = useState(false);
+  
+  useEffect(() => {
+    if (audio) {
+      setAudioListForm([...audioListForm, audio])
+      setAudioListUrlForm([...audioListUrlForm, URL.createObjectURL(audio)])
+
+    }
+  }, [audio]);
 
   let alreadyCall = false;
   useEffect(() => {
@@ -1621,6 +1659,7 @@ const TraiterReclamation = (props) => {
 
 
     props.selectedItemChanged(data);
+    setCurrentData(data);
 
     getFillesApi(data.id, props);
     getClaimAudioApi(data.id, props);
@@ -4221,150 +4260,372 @@ const TraiterReclamation = (props) => {
       break;
   }
 
+  // let attachmentList;
+  // if (props.selectedItemFiles.length > 0) {
+  //   console.log("props.selectedItemFiles", props.selectedItemFiles);
+  //   let attachmentListChild = props.selectedItemFiles.map((attachment) => {
+  //     let icon = guessExtension(attachment);
+  //     return (
+  //       <div className="col xl12 l12 m12 s12" key={attachment.id}>
+  //         <div className="card box-shadow-none mb-1 app-file-info">
+  //           <div className="card-content">
+  //             <div className="row">
+  //               <div className="col xl1 l1 s1 m1">
+  //                 <div className="app-file-content-logo">
+  //                   <div className="fonticon hide">
+  //                     <i className="material-icons ">more_vert</i>
+  //                   </div>
+  //                   <img
+  //                     className="recent-file"
+  //                     src={icon}
+  //                     height="38"
+  //                     width="30"
+  //                     alt=""
+  //                   />
+  //                 </div>
+  //               </div>
+  //               <div className="col xl11 l11 s11 m11">
+  //                 <div className="app-file-recent-details">
+  //                   <div className="app-file-name font-weight-700 truncate">
+  //                     {attachment.name}
+  //                   </div>
+  //                   <div className="app-file-size">
+  //                     {Math.round(
+  //                       (attachment.size / 1024 + Number.EPSILON) * 100
+  //                     ) / 100}{" "}
+  //                     Ko
+  //                   </div>
+  //                   <div className="app-file-last-access">
+  //                     <a
+  //                       style={{ cursor: "pointer" }}
+  //                       onClick={(e) => {
+  //                         downloadFillesApi(attachment.id, attachment.name);
+  //                       }}
+  //                     >
+  //                       Télécharger
+  //                     </a>
+  //                   </div>
+  //                 </div>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     );
+  //   });
+  //   attachmentList = (
+  //     <div className="col s12 app-file-content grey lighten-4">
+  //       <span className="app-file-label">Fichiers joints</span>
+  //       <div className="row app-file-recent-access mb-3">
+  //         {attachmentListChild}
+  //       </div>
+  //     </div>
+  //   );
+  // } else {
+  // }
+
+  // let audioList;
+  // // console.log("selected audio ", props.selectedItemAudio);
+
+  // if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
+  //   console.log("props.selectedItemAudio", props.selectedItemAudio);
+  //   let audioListChild = props.selectedItemAudio.map((attachment) => {
+  //     return (
+  //       <div className="col xl12 l12 m12 s12" key={attachment.id}>
+  //         <div className="card box-shadow-none mb-1 ">
+  //           <div className="card-content">
+  //             <div className="row">
+  //               <div className="col xl11 l11 s11 m11">
+  //                 <div className="app-file-recent-details">
+  //                   <div className="app-file-name font-weight-700 truncate">
+  //                     {attachment.name}
+  //                   </div>
+  //                   <div className="app-file-size">
+  //                     {Math.round(
+  //                       (attachment.size / 1024 + Number.EPSILON) * 100
+  //                     ) / 100}{" "}
+  //                     Ko
+  //                   </div>
+  //                   <div
+  //                     className="app-file-last-access"
+  //                     id={"audio-" + attachment.id}
+  //                   >
+  //                     <a
+  //                       style={{ cursor: "pointer" }}
+  //                       onClick={(e) => {
+  //                         downloadAudioApi(attachment.id, attachment.name).then(
+  //                           (data) => {
+  //                             // console.log(data);
+
+  //                             let blobAudio = new Blob([data], {
+  //                               type: "audio/ogg; codecs=opus",
+  //                             });
+  //                             let aud = new Audio(
+  //                               window.URL.createObjectURL(blobAudio)
+  //                             );
+  //                             setCurrentAudio(
+  //                               window.URL.createObjectURL(blobAudio)
+  //                             );
+  //                             setAudioPlayer("audio-" + attachment.id);
+  //                           }
+  //                         );
+  //                       }}
+  //                     >
+  //                       {showAudioPlayer === "audio-" + attachment.id && ""}{" "}
+  //                       {showAudioPlayer !== "audio-" + attachment.id &&
+  //                         "Afficher"}
+  //                     </a>
+
+  //                     {showAudioPlayer === "audio-" + attachment.id && (
+  //                       <audio
+  //                         controls
+  //                         autoPlay
+  //                         onEnded={(e) => {
+  //                           setAudioPlayer("");
+  //                         }}
+  //                       >
+  //                         <source src={currentAudio} type="audio/ogg" />
+  //                         Votre navigateur ne prend pas en charge l'élément
+  //                         audio.
+  //                       </audio>
+  //                     )}
+  //                   </div>
+  //                 </div>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     );
+  //   });
+  //   audioList = ( 
+  //     <div className="col s12 app-file-content">
+  //       <div className="row app-file-recent-access mb-3">{audioListChild}</div>
+  //     </div>
+  //   );
+  // }
+
+  
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
-    console.log("props.selectedItemFiles", props.selectedItemFiles);
+
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-          <div className="card box-shadow-none mb-1 app-file-info">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl1 l1 s1 m1">
-                  <div className="app-file-content-logo">
-                    <div className="fonticon hide">
-                      <i className="material-icons ">more_vert</i>
-                    </div>
-                    <img
-                      className="recent-file"
-                      src={icon}
-                      height="38"
-                      width="30"
-                      alt=""
-                    />
-                  </div>
-                </div>
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div className="app-file-last-access">
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadFillesApi(attachment.id, attachment.name);
-                        }}
-                      >
-                        Télécharger
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Grid item xs={4} key={attachment.id}>
+          <Card sx={{
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: 2,
+            p: 2,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            transition: 'transform 0.3s',
+            '&:hover': {
+              transform: 'translateY(-3px)'
+            },
+            height: '100%'
+          }}>
+            <Box sx={{
+              backgroundColor: 'grey.100',
+              borderRadius: '6px',
+              padding: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: '12px',
+              minWidth: '56px'
+            }}>
+              <img
+                src={icon}
+                height="28"
+                width="22"
+                alt=""
+                style={{ objectFit: 'contain' }}
+              />
+            </Box>
+
+            <CardContent sx={{ flex: 1, minWidth: 0, py: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography
+                  variant="body1"
+                  component="div"
+                  sx={{
+                    fontWeight: 'bold',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                    mb: 0.5
+                  }}
+                >
+                  {attachment.name}
+                </Typography>
+                {attachment._extra && (
+                  <Tooltip title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${attachment.extra?.createdAt}`}>
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round((attachment.size / 1024) * 100) / 100} {"Ko"}
+              </Typography>
+            </CardContent >
+
+            <FileDownload
+              sx={{
+                fontSize: '18px',
+                color: 'primary.main',
+                ml: 1,
+                '&:hover': {
+                  color: 'primary.dark',
+                  cursor: 'pointer'
+                }
+              }}
+              onClick={() => downloadFillesApi(attachment.id, attachment.name)}
+            />
+          </Card >
+        </Grid >
       );
     });
+
     attachmentList = (
-      <div className="col s12 app-file-content grey lighten-4">
-        <span className="app-file-label">Fichiers joints</span>
-        <div className="row app-file-recent-access mb-3">
-          {attachmentListChild}
-        </div>
-      </div>
+      <Grid container spacing={3} size={12}>
+        {attachmentListChild}
+      </Grid>
+
     );
   } else {
+    attachmentList = (<Grid container spacing={3} size={12}>
+      <Grid item>
+
+        Ce dossier ne contient pas de fichiers jointe
+
+      </Grid>
+    </Grid>)
   }
 
-  let audioList;
-  // console.log("selected audio ", props.selectedItemAudio);
 
+  const handlePlay = (audioId, audioName) => {
+    if (currentAudioId === audioId) {
+      audioRef.current.pause();
+      setCurrentAudioId(null);
+    } else {
+      setCurrentAudioId(audioId);
+      downloadAudioApi(audioId, audioName).then(
+        (data) => {
+
+          let blobAudio = new Blob([data], {
+            type: "audio/ogg; codecs=opus",
+          });
+
+          setCurrentAudio(
+            window.URL.createObjectURL(blobAudio)
+          );
+          setTimeout(() => audioRef.current.play(), 2000);
+          // setAudioPlayer("audio-" + attachment.id);
+        }
+      );
+    }
+  };
+
+  let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
     console.log("props.selectedItemAudio", props.selectedItemAudio);
-    let audioListChild = props.selectedItemAudio.map((attachment) => {
+    let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-          <div className="card box-shadow-none mb-1 ">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div
-                      className="app-file-last-access"
-                      id={"audio-" + attachment.id}
-                    >
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadAudioApi(attachment.id, attachment.name).then(
-                            (data) => {
-                              // console.log(data);
 
-                              let blobAudio = new Blob([data], {
-                                type: "audio/ogg; codecs=opus",
-                              });
-                              let aud = new Audio(
-                                window.URL.createObjectURL(blobAudio)
-                              );
-                              setCurrentAudio(
-                                window.URL.createObjectURL(blobAudio)
-                              );
-                              setAudioPlayer("audio-" + attachment.id);
-                            }
-                          );
-                        }}
-                      >
-                        {showAudioPlayer === "audio-" + attachment.id && ""}{" "}
-                        {showAudioPlayer !== "audio-" + attachment.id &&
-                          "Afficher"}
-                      </a>
+        <Grid item xs={12} sm={6} md={4} key={audioItem.id}>
+          <Card sx={{
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: 2,
+            p: 1.5,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            height: '100%'
+          }}>
+            <Box sx={{
+              bgcolor: 'primary.light',
+              borderRadius: '6px',
+              p: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mr: 2,
+              minWidth: '48px',
+              height: '48px'
+            }}>
+              <VolumeUp sx={{ color: 'primary.contrastText', fontSize: '28px' }} />
+            </Box>
 
-                      {showAudioPlayer === "audio-" + attachment.id && (
-                        <audio
-                          controls
-                          autoPlay
-                          onEnded={(e) => {
-                            setAudioPlayer("");
-                          }}
-                        >
-                          <source src={currentAudio} type="audio/ogg" />
-                          Votre navigateur ne prend pas en charge l'élément
-                          audio.
-                        </audio>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+            <CardContent sx={{ flex: 1, minWidth: 0, p: '8px !important' }}>
+              <Box sx={{
+
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 500,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    mb: 0.5
+                  }}
+                >
+                  {audioItem.name}
+                </Typography>
+                {audioItem._extra && (
+                  <Tooltip title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${audioItem.extra?.createdAt}`}>
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round(
+                  (audioItem.size / 1024 + Number.EPSILON) * 100
+                ) / 100}{" "}
+                {"Ko"} • {audioItem.duration}
+              </Typography>
+            </CardContent>
+
+            <Box sx={{ display: 'flex' }}>
+              <IconButton
+                onClick={() => handlePlay(audioItem.id, audioItem.name)}
+                sx={{ color: currentAudioId === audioItem.id ? 'primary.main' : 'text.secondary' }}
+              >
+                {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
+              </IconButton>
+
+
+            </Box>
+          </Card>
+        </Grid>
+
       );
     });
     audioList = (
-      <div className="col s12 app-file-content">
-        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
-      </div>
+      <Grid spacing={3} container size={12}>
+
+        {audioListChild}
+
+      </Grid>
+
     );
+  } else {
+    audioList = (<Grid container spacing={3} size={12}>
+      <Grid item>
+        Ce dossier ne contient pas de fichiers audio
+      </Grid>
+    </Grid>)
   }
+
   const [showSelectPrintItem, setShowSelectPrintItem] = useState(false);
   const [emailSender, setEmailSender] = useState([]);
   const [affectEmail, setAffectEmail] = useState("");
@@ -4664,11 +4925,280 @@ const TraiterReclamation = (props) => {
       element.style.display = '';
     }
   });
+  
+
+  const handleFileSubmit = (e, isFile = true) => {
+    e.preventDefault();
+    setExtraFileLoading(true)
+
+    console.log('filesForm__1 >> ', filesForm);
+    const formData = new FormData();
+    formData.append("claim_id", props.id);
+
+    if (isFile) {
+      for (let index = 0; index < filesForm.length; index++) {
+        formData.append("files", filesForm[index]);
+      }
+    } else if (audioListForm.length) {
+      for (let index = 0; index < audioListForm.length; index++) {
+        const audioFile = new File([audioListForm[index]], "claim_extra_record_" + today().replaceAll("/", "") + ".ogg", {
+          type: "audio/ogg; codecs=opus",
+        });
+        formData.append("audios", audioFile);
+      }
+    }
+
+    console.log('filesForm__2 >> ', filesForm);
+    addExtraClaimApi(formData).then((res) => {
+      console.log('res >> ', res)
+      if (isFile) {
+        getFillesApi(currentData?.id, props);
+        setFiles([])
+        notify("Piece jointe ajoutée  ", "success")
+      } else {
+        getClaimAudioApi(currentData?.id, props)
+        setOpen2(false)
+        setAudioBox(false)
+        setAudioListForm([])
+        setAudioListUrlForm([])
+        notify("Audio ajoutée ", "success")
+      }
+    }).catch((err) => {
+      console.log('err add extra >> ', err)
+      notify("Une erreur s'est produite ", "error")
+    }).then(() => {
+      setExtraFileLoading(false)
+    })
+  };
+
+  const handleContentSubmit = (e) => {
+    e.preventDefault();
+    setExtraFileLoading(true)
+    const formData = new FormData();
+    formData.append("claim_id", props.id);
+    formData.append("contenu", extraContent);
+
+    addExtraClaimApi(formData).then((res) => {
+      console.log('res >> ', res)
+
+      notify("Contenue jointe ajoutée  ", "success")
+      setShowExtraContent(false)
+      setExtraContent('')
+
+    }).catch((err) => {
+      console.log('err add extra >> ', err)
+      notify("Une erreur s'est produite ", "error")
+    }).then(() => {
+      setExtraFileLoading(false)
+    })
+  };
 
 
   return (
     <>
-      <div id="main">
+      <div id="main">           
+        {showExtraContent && (
+          <div>
+
+            <Dialog open={showExtraContent} fullWidth={true}
+              maxWidth='md' onClose={(e) => { setShowExtraContent(false) }}>
+              <DialogTitle>Ajouter un contenu</DialogTitle>
+              <DialogContent>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  value={extraContent}
+                  onChange={(e) =>{e.stopPropagation();e.preventDefault(); setExtraContent(e.target.value)}}
+                  placeholder="Saisissez le contenu..."
+                />
+              </DialogContent>
+              {(extraContent && extraContent?.trim() !== "") ? <DialogActions>
+                <LoadingButton onClick={(e) => {
+                  setExtraContent("")
+                  setShowExtraContent(false)
+                }}
+
+                  className="waves-effect waves-effect-b waves-light btn-small"
+
+                  loadingPosition="end"
+                  loading={extraFileLoading}
+                  endIcon={<CloseIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary" >Annuler</LoadingButton>
+                <LoadingButton onClick={(e) => {
+                  handleContentSubmit(e)
+                }}
+
+                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                  loading={extraFileLoading}
+                  loadingPosition="end"
+                  endIcon={<SaveIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#1e2188", textTransform: "initial" }} color="primary">Enregistrer</LoadingButton>
+
+              </DialogActions> : <></>}
+            </Dialog>
+
+          </div>
+        )}
+        {filesForm.length ? (
+          <div>
+            <Dialog open={filesForm.length ? true : false} fullWidth={true}
+              maxWidth='sm' onClose={(e) => { setFiles([]) }}>
+              <DialogContent>
+                <DialogContentText>
+                  <div className="col l12 s12 pb-2" id="content">
+                    <div className="df sb pb-2">
+                      <b>Ajout de fichier</b>
+                      <CloseIcon
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      />
+                    </div>
+                  </div>
+                </DialogContentText>
+
+                <div className="col l12 m12 s12 file-field input-field">
+
+                  <List component="div" role="group">
+                    {filesForm.map((file, i) => {
+                      return (
+                        <ListItemButton key={i} divider >
+                          <ListItemText primary={file.name} secondary={(Math.round((file.size / 1024) * 100) / 100) + ' ' + ("Ko")} />
+                        </ListItemButton>
+                      )
+                    })}
+                  </List>
+                  <div style={{ display: 'flex', alignItems: 'center', }} htmlFor="ile" onClick={(e) => setFiles([])} >
+                    <LoadingButton
+                      onClick={(e) => {
+                        handleFileSubmit(e)
+                      }}
+
+                      className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                      loading={extraFileLoading}
+                      loadingPosition="end"
+                      endIcon={<SaveIcon />}
+                      variant="contained"
+                      sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                    >
+                      <span>Enregistrer</span>
+                    </LoadingButton>
+
+                    <LoadingButton
+                      onClick={(e) => {
+                        setFiles([])
+                      }}
+
+                      className="waves-effect waves-effect-b waves-light btn-small"
+                      loading={extraFileLoading}
+                      loadingPosition="end"
+                      endIcon={<CloseIcon />}
+                      variant="contained"
+                      sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                    >
+                      <span>Annuler</span>
+                    </LoadingButton>
+
+                  </div>
+
+
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        ) : <></>}
+        {showAudioBox && (
+          <div>
+            <Dialog
+              open={open2}
+              onClose={() => { setOpen2(false) }}
+              style={{ padding: "16px" }}
+            >
+              <DialogTitle
+                align="center"
+                color={"#1E2188"}
+                fontSize={"23px"}
+                fontWeight={"bold"}
+              >
+                {("Enregistreur vocal Réclamations")}
+              </DialogTitle>
+              <DialogContent>
+
+                <DialogContentText
+                  align="center"
+                  fontSize={"14px"}
+                  textAlign={"center"}
+                >
+                  {("Cliquez sur le bouton ci-dessous et parler dans le micro de votre téléphone, ou branchez un casque ou des écouteurs")}
+                </DialogContentText>
+
+                <section className="voice-recorder">
+                  <div className="recorder-container">
+                    {audioListUrlForm.map((url, i) => {
+
+                      return <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, pt: 2 }}>
+                        <audio src={url} controls sx={{ flex: '1', mr: 2, width: "100%" }} />
+                        <CloseIcon color="red" onClick={() => {
+                          setAudioListForm(() => { return audioListForm.filter((va, ind) => ind !== i) })
+                          setAudioListUrlForm(() => { return audioListUrlForm.filter((va, inde) => inde !== i) })
+                        }} />
+
+                      </Box>
+                    })}
+                    <RecorderControls
+                      recorderState={recorderState}
+                      handlers={handlers}
+                      closeAction={() => { }}
+                    />
+                  </div>
+                </section>
+              </DialogContent>
+              {audioListUrlForm.length ? <DialogActions>
+                <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
+                  <LoadingButton
+                    onClick={(e) => {
+                      handleFileSubmit(e, false)
+                    }}
+
+                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                    loading={extraFileLoading}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                  >
+                    <span>Enregistrer</span>
+                  </LoadingButton>
+
+                  <LoadingButton
+                    onClick={(e) => {
+                      setAudioListForm([])
+                      setAudioListUrlForm([])
+                      setAudioBox(false)
+                      setOpen2(false)
+                    }}
+
+                    className="waves-effect waves-effect-b waves-light btn-small"
+
+                    loadingPosition="end"
+                    // loading={extraFileLoading}
+                    endIcon={<CloseIcon />}
+                    variant="contained"
+                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                  >
+                    <span>Annuler</span>
+                  </LoadingButton>
+                </Box>
+              </DialogActions> : <></>}
+            </Dialog>
+          </div>
+        )}
+        <audio ref={audioRef} src={currentAudio} hidden />
+
         <div className="row">
           <div className="col s12">
             <div className="container">
@@ -4845,10 +5375,10 @@ const TraiterReclamation = (props) => {
                                           Contenu
                                         </div>
                                         <div>{props.content}</div>
-                                        <div>{audioList}</div>
+                                        {/* <div>{audioList}</div>
                                         <div className="mt-5">
                                           {attachmentList}
-                                        </div>
+                                        </div> */}
                                       </div>
 
                                       {/* {dimf = props.dossierimf !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <FolderSharedIcon sx={{ mr: 2}}/> {props.dossierimf}</div></>:""}
@@ -4897,6 +5427,71 @@ const TraiterReclamation = (props) => {
                                 {tchat}
                               </>
                             </div>
+                          </div>
+
+                          {/* file part */}
+                          <div className="col l12 s12 pb-5">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-2">
+                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: 'bold',
+                                        mb: 1,
+                                        mr: 1
+                                      }}
+                                    >  Fichiers
+
+                                    </Typography>
+                                    <label htmlFor="ile" className="btn btn-primary" >
+                                      Ajouter un fichier
+                                      <input type="file" id="ile" multiple sx={{ display: 'none' }}
+                                        onChange={(e) => { setFiles([...e.target.files]) }}
+                                        style={{ display: 'none' }}
+                                        accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
+                                      /></label>
+                                  </Box>
+                                </div>
+                                <div className="col s12">
+                                  {attachmentList}
+                                </div>
+                              </div></div>
+                          </div>
+
+                          {/* Audio part */}
+                          <div className="col l12 s12 pb-5">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-3">
+                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: 'bold',
+                                        mb: 1,
+                                        mr: 1
+                                      }}
+                                    >  Audios
+
+                                    </Typography>
+                                    <label htmlFor="audio" onClick={() => {
+                                      setAudioBox(true)
+                                      setOpen2(true)
+                                    }} className="btn btn-primary" >
+                                      Ajouter un audio
+                                    </label>
+                                  </Box>
+                                </div>
+                                <div className="col s12">
+                                  {audioList}
+                                </div>
+                              </div></div>
                           </div>
                         </div>
                       </Dialog>
