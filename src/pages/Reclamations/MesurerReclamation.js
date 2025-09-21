@@ -241,6 +241,8 @@ const MesurerReclamation = (props) => {
           // props.commentChanged(data.comment ? data.comment : "");
           props.statusChanged(data.status ? data.status : "");
           props.selectedItemChanged(data);
+          setCurrentData(data);
+          
           // console.log("soluion",props.solutionId)
           //fetch attachments for selected claim
           // http.get("/files/list/claim/" + data.code).then((response) => {

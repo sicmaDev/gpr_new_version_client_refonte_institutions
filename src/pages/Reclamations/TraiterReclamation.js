@@ -644,6 +644,7 @@ const TraiterReclamation = (props) => {
           );
 
           props.selectedItemChanged(data);
+          setCurrentData(data);
 
           getFillesApi(data.id, props);
           getClaimAudioApi(data.id, props);

@@ -691,6 +691,7 @@ const ListeReclamations = (props) => {
         );
         props.sessionChanged(data.session !== null ? data.session : "");
         props.selectedItemChanged(data);
+        setCurrentData(data);
         getFillesApi(data.id, props);
         getClaimAudioApi(data.id, props);
       } else {

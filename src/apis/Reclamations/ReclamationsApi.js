@@ -213,7 +213,7 @@ export const addClaimApi = async (data, props) => {
 }
 
 export const addExtraClaimApi = async (data) => {
-
+    console.log("dataextra",data)
     const config = {
         method: 'post',
         url: EXTRA_CLAIM_API,
