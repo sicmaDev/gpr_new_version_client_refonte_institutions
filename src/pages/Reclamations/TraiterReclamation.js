@@ -46,11 +46,16 @@ import {
   transmittedChanged,
   selectedItemAudioChanged,
   solutionExistantChanged,
+  handledCustomMessageChanged,
+  handledShowModalChanged,
+  handledMessageChanged,
+  handledDelaiChanged,
   etat3Changed,
   etat4Changed,
   sessionChanged,
   underSubjectChanged,
   transmittedToChanged,
+  setReaffect
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -188,6 +193,7 @@ import ForumIcon from '@mui/icons-material/Forum';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { licenseInfo } from "../../apis/LoginApi";
 import WarningIcon from '@mui/icons-material/Warning';
+import EmailDialog from "./widgets/EmailDialog";
 
 const styles = {
   control: (base) => ({
@@ -598,6 +604,7 @@ const TraiterReclamation = (props) => {
             default:
               break;
           }
+          setMaxDelai(data.objet?.processingTime ? data.objet.processingTime : 45)
           props.idChanged(data.id ? data.id : "");
           props.lastnameChanged(
             data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -1206,7 +1213,12 @@ const TraiterReclamation = (props) => {
     props.selectedFilesReset([]);
     props.selectedItemFilesChanged([]);
     props.selectedItemAudioChanged([]);
+    props.handledMessageChanged("")
+    props.handledDelaiChanged(1)
+    props.handledCustomMessageChanged(false)
+    props.handledShowModalChanged(false);
     props.sessionChanged("");
+    props.setReaffect(null);
     setShowSelectPrintItem(false);
     setCurrentAudio("");
     setAudioPlayer("");
@@ -1538,7 +1550,7 @@ const TraiterReclamation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    // console.log("rowClick", data);
+    console.log("rowClick", data);
     setDataRow(data);
 
     handleClickOpen();
@@ -1606,6 +1618,7 @@ const TraiterReclamation = (props) => {
       default:
         break;
     }
+    setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45)
     props.idChanged(data.id ? data.id : "");
     props.lastnameChanged(
       data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -2618,19 +2631,31 @@ const TraiterReclamation = (props) => {
       isValid = false;
       errors["handled_by"] = "Champ incorrect";
     }
+    if (props.handled_delai <= 0 || props.handled_delai > maxDelai) {
+          isValid = false;
+          errors["handled_delai"] = `Le delai doit etre compris entre ${1} à ${maxDelai}`;
+    }
 
     return isValid;
   };
   const handleValidationForReAssign = () => {
+    console.log("reaffect", props);
     let isValid = true;
 
     if (
-      reafect === "" ||
-      reafect === undefined ||
-      reafect === null
+      
+      props.reaffect === "" ||
+      props.reaffect === undefined ||
+      props.reaffect === null
     ) {
       isValid = false;
       errors["handled_by"] = "Champ incorrect";
+    }
+    if (
+      props.handled_delai <= 0 || props.handled_delai > maxDelai
+    ) {
+      isValid = false;
+      errors["handled_delai"] = `Le delai doit etre compris entre ${1} à ${maxDelai}`;
     }
 
     return isValid;
@@ -2645,6 +2670,8 @@ const TraiterReclamation = (props) => {
       claim["affectToId"] = props.handled_by;
       claim["affectorId"] = user.id;
       claim["affectedAnonymous"] = anonymat;
+      claim["message"] = props.handled_message;
+      claim["delai"] = props.handled_delai;
 
       // console.log("anonymaty", anonymat);
 
@@ -2658,18 +2685,40 @@ const TraiterReclamation = (props) => {
     }
     props.claimHandleErrors(errors);
   };
+
+  const prepareBeforeAssign = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    props.handledShowModalChanged(true)
+  };
+
+  const handleAssignOrReassign = (e)=>{
+    console.log("reaffect", props);
+
+    if(props.reaffect){
+      handleReAssign(e)
+    }else{
+      handleAssign(e)
+    }
+  }
+
   const handleReAssign = (e) => {
     e.preventDefault();
     if (handleValidationForReAssign()) {
       let claim = {};
+      // let reafect = dataRow.treatmentAffectedTo.id;
       // console.log(props.code);
 
       claim["claimId"] = props.id;
-      claim["affectToId"] = reafect;
+      claim["affectToId"] = props.reaffect;
       claim["affectorId"] = user.id;
       claim["affectedAnonymous"] = anonymat;
+      claim["message"] = props.handled_message;
+      claim["delai"] = props.handled_delai;
 
       // console.log("anonymaty", anonymat);
+      console.log("claim", claim);
 
       //console.log("props.handled_by",claim);
       props.etatChanged(true);
@@ -2902,7 +2951,8 @@ const TraiterReclamation = (props) => {
                               e.preventDefault();
                               if (handleValidationForAssign()) {
                                 //setShowSelectPrintItem(true);
-                                handleAssign(e);
+                                prepareBeforeAssign(e);
+                              //handleAssign(e);
                               }
                               props.claimHandleErrors(errors);
                             }}
@@ -3157,8 +3207,8 @@ const TraiterReclamation = (props) => {
                         classNamePrefix="react-select"
                         style={styles}
                         placeholder="Sélectionner l'agent"
-                        onChange={(e) => {
-                          setReacfect(e.value);
+                        onChange={(e) => {                          
+                          props.setReaffect(e.value);
                           setAffectEmail(e.email);
                         }}
                       />
@@ -3196,7 +3246,8 @@ const TraiterReclamation = (props) => {
                           e.preventDefault();
                           if (handleValidationForReAssign()) {
                             //setShowSelectPrintItem(true);
-                            handleReAssign(e);
+                            prepareBeforeAssign(e)
+                            // handleReAssign(e);
                           }
                           props.claimHandleErrors(errors);
                         }}
@@ -4001,7 +4052,8 @@ const TraiterReclamation = (props) => {
                             e.preventDefault();
                             if (handleValidationForAssign()) {
                               //setShowSelectPrintItem(true);
-                              handleAssign(e);
+                              prepareBeforeAssign(e);
+                              //handleAssign(e);
                             }
                             props.claimHandleErrors(errors);
                           }}
@@ -4106,7 +4158,8 @@ const TraiterReclamation = (props) => {
                             e.preventDefault();
                             if (handleValidationForAssign()) {
                               //setShowSelectPrintItem(true);
-                              handleAssign(e);
+                              prepareBeforeAssign(e);
+                              //handleAssign(e);
                             }
                             props.claimHandleErrors(errors);
                           }}
@@ -4211,7 +4264,8 @@ const TraiterReclamation = (props) => {
                             e.preventDefault();
                             if (handleValidationForAssign()) {
                               //setShowSelectPrintItem(true);
-                              handleAssign(e);
+                              prepareBeforeAssign(e);
+                              //handleAssign(e);
                             }
                             props.claimHandleErrors(errors);
                           }}
@@ -5585,6 +5639,8 @@ const TraiterReclamation = (props) => {
                           </div>
                         </DialogContent>
                       </Dialog>
+                      <EmailDialog handleSubmit={handleAssignOrReassign} maxDelai={maxDelai} />
+                      
                     </div>
                   </div>
                 </div>
@@ -5650,6 +5706,9 @@ const mapStateToProps = (state) => {
     transmittedTo: state.claim_handle.transmittedTo,
     session: state.claim_handle.session,
     solutionExistant: state.claim_handle.solutionExistant,
+    reaffect:state.claim_handle.reaffect,
+    handled_message:state.claim_handle.handled_message,
+    handled_delai:state.claim_handle.handled_delai,
   };
 };
 
@@ -5724,6 +5783,19 @@ const mapDispatchToProps = (dispatch) => {
     solutionIdChanged: (solutionId) => {
       dispatch(solutionIdChanged(solutionId));
     },
+     handledShowModalChanged: (isShow) => {
+      dispatch(handledShowModalChanged(isShow));
+    },
+     handledMessageChanged: (message) => {
+      dispatch(handledMessageChanged(message));
+    },
+     handledDelaiChanged: (delai) => {
+      dispatch(handledDelaiChanged(delai));
+    },
+    handledCustomMessageChanged:(close)=>{
+      dispatch(handledCustomMessageChanged(close))
+    },
+
     commentChanged: (comment) => {
       dispatch(commentChanged(comment));
     },
@@ -5798,6 +5870,10 @@ const mapDispatchToProps = (dispatch) => {
     },
     solutionExistantChanged: (solutionExistant) => {
       dispatch(solutionExistantChanged(solutionExistant));
+    },
+    
+    setReaffect: (reaffect) => {
+      dispatch(setReaffect(reaffect));
     },
   };
 };

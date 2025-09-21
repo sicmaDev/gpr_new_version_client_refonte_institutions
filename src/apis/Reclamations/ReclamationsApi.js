@@ -247,14 +247,14 @@ export const affectClaimApi = async (data, props) => {
                 notify("Bravo - Réclamation affectée", "success");
                 listeTreat(props)
             } else {
-                notify("Erreur - Veuillez réessayer!", "error");
+                notify("Erreur - Veuillez réessayer", "error");
             }
 
         })
         .catch(function (error) {
             props.etatChanged(false)
             notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreur",error)
+            console.log("erreur",error);
         });
 }
 

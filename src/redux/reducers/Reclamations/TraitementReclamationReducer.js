@@ -314,6 +314,31 @@ const TraitementReclamationReducer = (state = initialState, action) => {
                 ...state,
                 solutionExistant: action.payload,
             };
+        case 'CLAIM_HANDLE_HANDLED_SHOW_MODAL_CHANGED':
+            return {
+                ...state,
+                handled_show_modal: action.payload,
+            };
+        case 'CLAIM_HANDLE_HANDLED_MESSAGE_CHANGED':
+            return {
+                ...state,
+                handled_message: action.payload,
+            };
+        case 'CLAIM_HANDLE_HANDLED_CUSTOM_MESSAGE_CHANGED':
+            return {
+                ...state,
+                handled_custom_message: action.payload,
+            };
+        case 'CLAIM_HANDLE_HANDLED_DELAI_CHANGED':
+            return {
+                ...state,
+                handled_delai: action.payload,
+            };
+        case 'CLAIM_HANDLE_HANDLED_REAFFECT_CHANGED':
+            return {
+                ...state,
+                reaffect: action.payload,
+            };
         default:
             return state
     }
