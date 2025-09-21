@@ -35,6 +35,7 @@ import SmsReducer from "./reducers/Configurations/SmsReducer";
 import BotReducer from "./reducers/Configurations/BotReducer";
 import LockscreenReducer from "./reducers/LockscreenReducer";
 import WhatsappReducer from "./reducers/WhatsappReducer";
+import HistoriqueReclamationReducer from "./reducers/Reclamations/HistoriqueReclamationReducer";
 
 
 const reducer = combineReducers({
@@ -51,6 +52,7 @@ const reducer = combineReducers({
     recoursExternes:RecoursExternesReducer,
     user:UtilisateursReducer,
     claim_record:EnregistrementReclamationReducer,
+    claim_historique:HistoriqueReclamationReducer,
     claim_list: ListeReclamationsReducer,
     claim_handle: TraitementReclamationReducer,
     claim_appraise: MesurerReclamationReducer,

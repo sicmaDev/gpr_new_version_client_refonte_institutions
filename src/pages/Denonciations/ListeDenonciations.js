@@ -115,6 +115,8 @@ import MoveUpIcon from '@mui/icons-material/MoveUp';
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { notify } from "../../Utils/alert";
+import { showModalChanged } from "../../redux/actions/Reclamations/HistoriqueReclamationActions";
+import HistoriqueAffectation from "../../components/HistoriqueAffectation";
 
 const styles = {
   control: (base) => ({
@@ -665,8 +667,15 @@ const ListeDenonciations = (props) => {
         <>
           <h5>
             <PrintIcon sx={{ mr: 2, verticalAlign: "middle" }} onClick={(e) => { printRecu(e) }} style={{ cursor: "pointer" }} />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip affectedBgColor">
-              <span className="">Affectée</span>
+              <span className="">{("Affectée")}</span>
             </span>
           </h5>
         </>
@@ -678,8 +687,15 @@ const ListeDenonciations = (props) => {
         <>
           <h5>
             <PrintIcon sx={{ mr: 2, verticalAlign: "middle" }} onClick={(e) => { printRecu(e) }} style={{ cursor: "pointer" }} />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip toApprouvedBgColor">
-              <span className="">A approuver</span>
+              <span className="">{("A appouver")}</span>
             </span>
           </h5>
         </>
@@ -691,8 +707,15 @@ const ListeDenonciations = (props) => {
         <>
           <h5>
             <PrintIcon sx={{ mr: 2, verticalAlign: "middle" }} onClick={(e) => { printRecu(e) }} style={{ cursor: "pointer" }} />
-            <span className="chip unApprouvedBgColor">
-              <span className="">Désapprouvée</span>
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
+            <span className="chip treatBgColor">
+              <span className="">{("Traitée")}</span>
             </span>
           </h5>
         </>
@@ -1806,7 +1829,9 @@ const ListeDenonciations = (props) => {
 
   return (
     // "Liste Dénonciations"
-    <div id="main">           
+    <div id="main">   
+      <HistoriqueAffectation claimId={claim_id} />
+
       {showExtraContent && (
         <div>
 
@@ -2676,6 +2701,9 @@ const mapDispatchToProps = (dispatch) => {
     sessionChanged: (session) => {
       dispatch(sessionChanged(session));
     },
+    showModalHistoriqueChanged: (showModal) => {
+      dispatch(showModalChanged(showModal))
+    }
   };
 };
 

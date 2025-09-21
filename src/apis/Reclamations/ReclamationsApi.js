@@ -18,6 +18,7 @@ const ADD_RECOURS_API = HOST + "api/v1/claim/litigate"
 const LIST_ALL_CLAIM_API = HOST + "api/v1/claim/list"
 const LIST_CLAIM_API_TO_TREAT = HOST + "api/v1/claim/listTreat"
 const LIST_CLAIM_DETAILS_API_TO_TREAT = HOST + "api/v1/claim/params/details"
+const LIST_CLAIM_HISTORIQUE_API = HOST + "api/v1/historique-affectation/list/%s"
 const LIST_CLAIM_API_BY_STATE = HOST + "api/v1/claim/list/state"
 const LIST_CLAIM_API_TO_ASSURE_SATISFACTION = HOST + "api/v1/claim/listAssuranceSatisfaction"
 const CLASSIFY_CLAIM_API = HOST + "api/v1/claim/classedClaim"
@@ -124,6 +125,35 @@ export const detailsTreat = async (props, code) => {
         .catch(function (error) {
             // console.log("detailerror",error)
             return error;
+
+        });
+}
+
+export const getClaimHistorique = async (props, claimId) => {
+    const config = {
+        method: 'get',
+        url: LIST_CLAIM_HISTORIQUE_API.replace("%s",claimId),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    props.isLoadingChanged(true)
+    props.itemsChanged([])
+    axios(config)
+        .then(({ data }) => {
+            console.log('data<>', data.content)
+            props.isSuccessChanged(true)
+            props.messageChanged('Liste des historiques success')
+            props.itemsChanged(data.content)
+        })
+        .catch((error) => {
+            props.isSuccessChanged(false)
+            props.messageChanged(`Erreur: ${error}`)
+
+        }).finally(() => {
+            props.isLoadingChanged(false)
 
         });
 }
@@ -249,7 +279,6 @@ export const affectClaimApi = async (data, props) => {
             } else {
                 notify("Erreur - Veuillez réessayer", "error");
             }
-
         })
         .catch(function (error) {
             props.etatChanged(false)

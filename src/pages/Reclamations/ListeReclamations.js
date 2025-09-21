@@ -145,6 +145,8 @@ import MoveUpIcon from '@mui/icons-material/MoveUp';
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { notify } from "../../Utils/alert";
+import { showModalChanged } from "../../redux/actions/Reclamations/HistoriqueReclamationActions";
+import HistoriqueAffectation from "../../components/HistoriqueAffectation";
 
 const styles = {
   control: (base) => ({
@@ -584,6 +586,8 @@ const ListeReclamations = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
     clearComponentState();
+    setClaimId(data.id)
+
     // console.log("datarowC", data)
     // console.log(data.codeClient);
     if (mode === 1) {
@@ -824,8 +828,15 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip affectedBgColor">
-              <span className="">Affectée</span>
+              <span className="">{("Affectée")}</span>
             </span>
           </h5>
         </>
@@ -842,8 +853,15 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip toApprouvedBgColor">
-              <span className="">A approuver</span>
+              <span className="">{("A appouver")}</span>
             </span>
           </h5>
         </>
@@ -860,8 +878,15 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip unApprouvedBgColor">
-              <span className="">Désapprouvée</span>
+              <span className="">{("Désapprouvée")}</span>
             </span>
           </h5>
         </>
@@ -878,8 +903,15 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip treatBgColor">
-              <span className="">Traitée</span>
+              <span className="">{("Traitée")}</span>
             </span>
           </h5>
         </>
@@ -896,8 +928,16 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip satisfiedBgColor">
-              <span className="">Satisfait</span>
+              <span className="">{("Satisfait")}</span>
             </span>
           </h5>
         </>
@@ -914,8 +954,16 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip unSatisfiedBgColor">
-              <span className="">Non satisfait</span>
+              <span className="">{("Non Satisfait")}</span>
             </span>
           </h5>
         </>
@@ -932,8 +980,16 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip partialBgColor">
-              <span className="">Partiellement satisfait</span>
+              <span className="">{("Partiellement Satisfait")}</span>
             </span>
           </h5>
         </>
@@ -950,8 +1006,16 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip litigationBgColor">
-              <span className="">Contentieux</span>
+              <span className="">{("Contentieux")}</span>
             </span>
           </h5>
         </>
@@ -968,8 +1032,15 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true)
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip classedBgColor">
-              <span className="">Classée</span>
+              <span className="">{("Classée")}</span>
             </span>
           </h5>
         </>
@@ -2229,7 +2300,7 @@ const ListeReclamations = (props) => {
 
     console.log('filesForm__1 >> ', filesForm);
     const formData = new FormData();
-    formData.append("claim_id", props.id);
+    formData.append("claim_id", claim_id);
 
     if (isFile) {
       for (let index = 0; index < filesForm.length; index++) {
@@ -2271,7 +2342,7 @@ const ListeReclamations = (props) => {
     e.preventDefault();
     setExtraFileLoading(true)
     const formData = new FormData();
-    formData.append("claim_id", props.id);
+    formData.append("claim_id", claim_id);
     formData.append("contenu", extraContent);
 
     addExtraClaimApi(formData).then((res) => {
@@ -2292,7 +2363,8 @@ const ListeReclamations = (props) => {
   return (
     // "Liste Réclamations"
     <div id="main">
-      {/* {props.showSelectPrintItem && ( */}           
+      {/* {props.showSelectPrintItem && ( */} 
+      <HistoriqueAffectation claimId={claim_id} />                                 
       {showExtraContent && (
         <div>
 
@@ -3352,6 +3424,9 @@ const mapDispatchToProps = (dispatch) => {
     crewChanged: (crew) => {
       dispatch(crewChanged(crew));
     },
+    showModalHistoriqueChanged: (showModal) => {
+      dispatch(showModalChanged(showModal))
+    }
   };
 };
 
