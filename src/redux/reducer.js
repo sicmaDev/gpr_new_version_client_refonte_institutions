@@ -35,6 +35,7 @@ import SmsReducer from "./reducers/Configurations/SmsReducer";
 import BotReducer from "./reducers/Configurations/BotReducer";
 import LockscreenReducer from "./reducers/LockscreenReducer";
 import WhatsappReducer from "./reducers/WhatsappReducer";
+import RapportsTemplate from "./reducers/Rapports/TemplateReducer";
 import HistoriqueReclamationReducer from "./reducers/Reclamations/HistoriqueReclamationReducer";
 
 
@@ -75,9 +76,8 @@ const reducer = combineReducers({
     sms : SmsReducer,
     gprbot : BotReducer,
     lockscreen:LockscreenReducer,
-    whatsapp:WhatsappReducer
-    
-
+    whatsapp:WhatsappReducer,
+    templates:RapportsTemplate
 });
   
 export default reducer;

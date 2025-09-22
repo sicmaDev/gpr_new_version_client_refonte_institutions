@@ -9,6 +9,7 @@ import FILTER_IMG from "../../assets/images/reports/filter2.svg";
 import "react-datepicker/dist/react-datepicker.css";
 import { mdColors } from "../../Utils/colors";
 import { Link, NavLink } from "react-router-dom";
+import CloseIcon from '@mui/icons-material/Close';
 import {
   cleanDate,
   generateString,
@@ -38,6 +39,7 @@ import {
   reportApi,
   reportApiFiltres,
   reportNewVersionExport,
+  reportTemplateApi,
 } from "../../apis/Rapports/GlobalsApi";
 import {
   basicStatChanged,
@@ -66,6 +68,7 @@ import {
   unitChanged,
   yearChanged,
 } from "../../redux/actions/Rapports/GlobalActions";
+import tmpActions from "../../redux/actions/Rapports/TemplateActions";
 import { connect } from "react-redux";
 import CheckIcon from "@mui/icons-material/Check";
 // import PrintIcon from "@mui/icons-material/Print";
@@ -95,6 +98,7 @@ import html2canvas from "html2canvas";
 import { MyGaugeChart } from "../../Utils/MyGaugeChart";
 import { XAxis } from "recharts";
 import { notify } from "../../Utils/alert";
+import ReportTemplate from "./ReportTemplate";
 
 Chart.register(ChartDataLabels);
 Chart.register(...registerables);
@@ -1451,6 +1455,20 @@ const Global = (props) => {
     );
     return dableReturn;
   };
+
+  const restoreSection = (sectionKey) => {
+    props.setTemplateData({
+      ...props.templateData, [sectionKey]: Object.fromEntries(
+        Object.keys(props.templateData[sectionKey]).map(key => [key, true])
+      )
+    })
+  };
+
+  const hasFalseInSection = (sectionKey) => {
+
+    return Object.values(props.templateData?.[sectionKey] ?? {}).includes(false);
+  }
+
   const denunciationDashboard = () => {
     let dableReturn = (
       <div className="col l12 s12 m12 mt-2 mb-2">
@@ -1543,6 +1561,8 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalPieChartRef: false } }) }} /> : <></>}</div>
               <div style={{ flex: "1 auto" }}>
                 <Pie
                   // redraw={true}
@@ -1576,7 +1596,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalLineChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container "
                 style={{ flex: "1 auto" }}
@@ -1623,6 +1643,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -1661,6 +1682,7 @@ const Global = (props) => {
             // }}
             >
 
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -1731,6 +1753,7 @@ const Global = (props) => {
               }}
             >
 
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -1770,6 +1793,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -1833,6 +1857,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, resolutionPieChartRef: false } }) }} /> : <></>}</div>
               <h8 className="mb-4">Taux de résolution des plaintes</h8>
               <div
                 className="total-transaction-container"
@@ -1858,6 +1883,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, evolutionByAgenceByAnneeBarChartRef: false } }) }} /> : <></>}</div>
               <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
                 <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
 
@@ -1920,7 +1946,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByAgencePieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -1958,7 +1984,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByAgenceBarChartRef: false } }) }} /> : <></>}</div>
               <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
                 <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
 
@@ -2012,6 +2038,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByAgencePieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2049,7 +2076,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByAgenceBarChartRef: false } }) }} /> : <></>}</div>
               <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
                 <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
 
@@ -2102,6 +2129,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByAgencePieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2194,7 +2222,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByCanalPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container "
                 style={{ flex: "1 auto" }}
@@ -2233,7 +2261,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByCanalBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -2295,7 +2323,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByCanalPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2332,7 +2360,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByCanalBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -2396,7 +2424,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2434,7 +2462,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -2502,6 +2530,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container "
                 style={{ flex: "1 auto" }}
@@ -2539,6 +2568,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -2603,6 +2633,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2640,8 +2671,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -2704,7 +2734,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2742,7 +2772,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -2806,7 +2836,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2844,7 +2874,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -2909,7 +2939,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGravitePieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -2947,7 +2977,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGraviteBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -3009,7 +3039,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGravitePieChartRef: false } }) }} /> : <></>}</div>
               <div className="total-transaction-container" style={{ flex: 1 }}>
                 <Pie
                   // redraw={true}
@@ -3048,7 +3078,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGraviteBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -3111,7 +3141,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimBySatisfactionPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3152,7 +3182,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -3209,7 +3239,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthBarChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3260,7 +3290,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthBarChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
@@ -3299,7 +3329,7 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
               <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
                 <div style={{ height: nba, width: "100%", position: "relative" }}>
                   <Bar
@@ -4649,6 +4679,7 @@ const Global = (props) => {
               </Tooltip>
             </div>
           </div>
+          <ReportTemplate />
 
           <div className="col l12 s12 m12">
             <div className="container">
@@ -4811,6 +4842,12 @@ const Global = (props) => {
                 {globalShow && (
                   <>
                     <div className="row">
+                      <div className="col l12">
+                        {(hasFalseInSection("global") && props.tmpState.showForm) ? <div style={{ color: "darkred" }} onClick={(e) => { restoreSection("global") }} >Restaurer les stats globales</div> : <></>}
+
+                      </div>
+                    </div>
+                    <div className="row">
                       <div className="col l12">{reportGlobalChart}</div>
                     </div>
 
@@ -4832,6 +4869,12 @@ const Global = (props) => {
 
                 {claimShow && (
                   <>
+                    <div className="row">
+                      <div className="col l12">
+                        {(hasFalseInSection("claim") && props.tmpState.showForm) ? <div style={{ color: "darkred" }} onClick={(e) => { restoreSection("claim") }} >Restaurer les stats des réclamations</div> : <></>}
+
+                      </div>
+                    </div>
                     <div className="row mt-2" id="titleClaim">
                       <div className="col l12 center">
                         <span
@@ -5039,6 +5082,12 @@ const Global = (props) => {
 
                 {denunciationShow && (
                   <>
+                    <div className="row">
+                      <div className="col l12">
+                        {(hasFalseInSection("denun") && props.tmpState.showForm) ? <div style={{ color: "darkred" }} onClick={(e) => { restoreSection("denun") }} >Restaurer les stats des dénonciations</div> : <></>}
+
+                      </div>
+                    </div>
                     <div className="row mt-4">
                       <div className="col l12 center">
                         <span
@@ -5168,6 +5217,12 @@ const Global = (props) => {
 
                 {suggestionShow && (
                   <>
+                    <div className="row">
+                      <div className="col l12">
+                        {(hasFalseInSection("suggest") && props.tmpState.showForm) ? <div style={{ color: "darkred" }} onClick={(e) => { restoreSection("suggest") }} >Restaurer les stats des suggestions</div> : <></>}
+
+                      </div>
+                    </div>
                     <div className="row mt-4">
                       <div className="col l12 center">
                         <span
@@ -5306,12 +5361,20 @@ const mapStateToProps = (state) => {
     denunReport: state.report.denunReport,
     sugReport: state.report.sugReport,
     stat: state.report.stat,
+    tmpState: state.templates,
+    templateData: state.templates.current_valeurs,
     // basicStat: state.report.basicStat,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    setTmpState: (data) => {
+      dispatch(tmpActions.stateChanged(data));
+    },
+    setTemplateData: (data) => {
+      dispatch(tmpActions.currentChanged(data));
+    },
     reportErrorsChanged: (errors) => {
       dispatch(reportErrorsChanged(errors));
     },
