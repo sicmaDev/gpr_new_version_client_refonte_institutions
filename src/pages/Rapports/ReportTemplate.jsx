@@ -68,6 +68,8 @@ const ReportTemplate = (props) => {
   }, []);
 
   const handleSubmit = (isCreate = false) => {
+    console.log("dataTemplate", props.tmpState);
+
     if(!props.tmpState.form.title || props.tmpState.form.title === ""){
         notify("le nom du template est obligatoire","error")
         return 

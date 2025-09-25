@@ -1455,7 +1455,7 @@ const Global = (props) => {
     );
     return dableReturn;
   };
-
+  
   const restoreSection = (sectionKey) => {
     props.setTemplateData({
       ...props.templateData, [sectionKey]: Object.fromEntries(
@@ -1550,7 +1550,7 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          {props.templateData?.global.globalPieChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1560,8 +1560,7 @@ const Global = (props) => {
                 flexDirection: "column",
                 padding: "10px",
               }}
-            >
-              
+            >              
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalPieChartRef: false } }) }} /> : <></>}</div>
               <div style={{ flex: "1 auto" }}>
                 <Pie
@@ -1584,8 +1583,8 @@ const Global = (props) => {
                 />
               </div>
             </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          </div> : <></>}
+          {props.templateData?.global.globalLineChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">        
             <div
               className="card"
               style={{
@@ -1622,7 +1621,7 @@ const Global = (props) => {
                 />
               </div>
             </div>
-          </div>
+          </div> : <></>}
         </div>
       </div>
     </>
@@ -1632,7 +1631,7 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l12 animate fadeRight center-align">
+          {props.templateData?.global.globalByCanalPieChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1669,8 +1668,8 @@ const Global = (props) => {
                 />
               </div>
             </div>
-          </div>
-          <div className="col s12 m12 l12 animate fadeRight center-align">
+          </div> : <></>}
+          {props.templateData?.global.globalByCanalBarChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
             // style={{
@@ -1729,7 +1728,7 @@ const Global = (props) => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> : <></>}
         </div>
       </div>
 
@@ -1741,7 +1740,7 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l12 animate fadeRight center-align">
+          {props.templateData?.global.globalByObjetPieChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1781,8 +1780,8 @@ const Global = (props) => {
                 />
               </div>
             </div>
-          </div>
-          <div className="col s12 m12 l12 animate fadeRight center-align">
+          </div> : <></>}
+          {props.templateData?.global.globalByObjetBarChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1834,7 +1833,7 @@ const Global = (props) => {
               </div>
 
             </div>
-          </div>
+          </div> : <></>}
         </div>
       </div>
 
@@ -1846,84 +1845,88 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m4 l3 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, resolutionPieChartRef: false } }) }} /> : <></>}</div>
-              <h8 className="mb-4">Taux de résolution des plaintes</h8>
+          {props.templateData?.global.resolutionPieChartRef ?
+            <div className="col s12 m4 l3 animate fadeRight center-align">
               <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
               >
-                <MyGaugeChart
-                  global_trend={parseFloat(props.global_trend?.tauxResolution)}
-                  colors={["#EA4228", "#F5CD19", "#5BE12C"]}
-                  ref={resolutionPieChartRef}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m12 l12">
-            <div
-              className="card"
-              style={{
-                height: "500px",
-                maxHeight: "500x",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, evolutionByAgenceByAnneeBarChartRef: false } }) }} /> : <></>}</div>
-              <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
-                <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
-
-                  <Bar
-                    // redraw={true}
-                    ref={evolutionByAgenceByAnneeBarChartRef}
-                    data={rdsBarAgenceGlobal}
-                    options={{
-                      plugins: {
-                        title: {
-                          text: "Evolution annuelle des réclamations, dénonciations, suggestions par agence",
-                          position: "top",
-                          display: true,
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-
-                      scales: {
-                        x: {
-                          ticks: {
-                            callback: function (value) {
-                              let text = this.getLabelForValue(value);
-                              if (text.length > 6) {
-                                text = text.substring(0, 5) + "...";
-                              }
-                              return text;
-                            },
-                          },
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, resolutionPieChartRef: false } }) }} /> : <></>}</div>
+                <h8 className="mb-4">Taux de résolution des plaintes</h8>
+                <div
+                  className="total-transaction-container"
+                  style={{ flex: "1 auto" }}
+                >
+                  <MyGaugeChart
+                    global_trend={parseFloat(props.global_trend?.tauxResolution)}
+                    colors={["#EA4228", "#F5CD19", "#5BE12C"]}
+                    ref={resolutionPieChartRef}
                   />
                 </div>
               </div>
-            </div>
-          </div>
+            </div> : <></>
+          }
+
+          {props.templateData?.global.evolutionByAgenceByAnneeBarChartRef ?
+            <div className="col s12 m12 l12">
+              <div
+                className="card"
+                style={{
+                  height: "500px",
+                  maxHeight: "500x",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, evolutionByAgenceByAnneeBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="customGraphScroll" style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
+                  <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
+
+                    <Bar
+                      // redraw={true}
+                      ref={evolutionByAgenceByAnneeBarChartRef}
+                      data={rdsBarAgenceGlobal}
+                      options={{
+                        plugins: {
+                          title: {
+                            text: "Evolution annuelle des réclamations, dénonciations, suggestions par agence",
+                            position: "top",
+                            display: true,
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+
+                        scales: {
+                          x: {
+                            ticks: {
+                              callback: function (value) {
+                                let text = this.getLabelForValue(value);
+                                if (text.length > 6) {
+                                  text = text.substring(0, 5) + "...";
+                                }
+                                return text;
+                              },
+                            },
+                          },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div> : <></>
+          }
         </div>
       </div>
 
@@ -1935,7 +1938,7 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          {props.templateData?.claim.claimByAgencePieChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1972,8 +1975,8 @@ const Global = (props) => {
                 />
               </div>
             </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          </div> : <></>}
+          {props.templateData?.claim.claimByAgenceBarChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1985,7 +1988,7 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-              <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
+              <div className="customGraphScroll" style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
                 <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
 
                   <Bar
@@ -2017,8 +2020,7 @@ const Global = (props) => {
                 </div>
               </div>
             </div>
-          </div>
-
+          </div> : <></>}
         </div>
       </div>
     </>
@@ -2027,7 +2029,7 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          {props.templateData?.denun.denunByAgencePieChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -2064,8 +2066,8 @@ const Global = (props) => {
                 />
               </div>
             </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          </div> : <></>}
+          {props.templateData?.denun.denunByAgenceBarChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -2077,7 +2079,7 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-              <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
+              <div className="customGraphScroll" style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
                 <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
 
                   <Bar
@@ -2109,7 +2111,7 @@ const Global = (props) => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> : <></>}
         </div>
       </div>
     </>
@@ -2118,7 +2120,7 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          {props.templateData?.suggest.sugByAgencePieChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -2155,51 +2157,54 @@ const Global = (props) => {
                 />
               </div>
             </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
+          </div> : <></>}
+          {props.templateData?.suggest.sugByAgenceBarChartRef ?
+            <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByAgenceBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="customGraphScroll" style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
+                  <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
 
-              <div style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
-                <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
-
-                  <Bar
-                    // redraw={true}
-                    ref={sugByAgenceBarChartRef}
-                    data={rdsBarAgenceSugge}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Nombre de suggestions par Agence",
-                        },
-                        labels: {
-                          render: "value",
-                          position: "outside",
-                          fontColor: function (data) {
-                            return "black";
+                    <Bar
+                      // redraw={true}
+                      ref={sugByAgenceBarChartRef}
+                      data={rdsBarAgenceSugge}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Nombre de suggestions par Agence",
+                          },
+                          labels: {
+                            render: "value",
+                            position: "outside",
+                            fontColor: function (data) {
+                              return "black";
+                            },
+                          },
+                          legend: {
+                            position: "bottom",
                           },
                         },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </div> : <></>}
         </div>
       </div>
 
@@ -2211,7 +2216,7 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          {props.templateData?.claim.claimByCanalPieChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -2249,8 +2254,8 @@ const Global = (props) => {
                 />
               </div>
             </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          </div> : <></>}
+          {props.templateData?.claim.claimByCanalBarChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -2302,8 +2307,7 @@ const Global = (props) => {
                 </div>
               </div>
             </div>
-          </div>
-
+          </div> : <></>}
         </div>
       </div>
     </>
@@ -2312,7 +2316,7 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          {props.templateData?.denun.denunByCanalPieChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -2348,8 +2352,8 @@ const Global = (props) => {
                 />
               </div>
             </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          </div> : <></>}
+          {props.templateData?.denun.denunByCanalBarChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -2403,8 +2407,7 @@ const Global = (props) => {
                 </div>
               </div>
             </div>
-          </div>
-
+          </div> : <></>}
         </div>
       </div>
     </>
@@ -2413,101 +2416,104 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalPieChartRef: false } }) }} /> : <></>}</div>
+          {props.templateData?.suggest.sugByCanalPieChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
               <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={sugByCanalPieChartRef}
-                  // options={claimByAgencePieChartRef}
-                  data={rdsPieModaliteSugge}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: " Répartition des modalités de dépôt des suggestions (%)",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalPieChartRef: false } }) }} /> : <></>}</div>
+                <div
+                  className="total-transaction-container"
+                  style={{ flex: "1 auto" }}
+                >
+                  <Pie
                     // redraw={true}
-                    ref={sugByCanalBarChartRef}
-                    data={rdsBarModaliteSugge}
+                    ref={sugByCanalPieChartRef}
+                    // options={claimByAgencePieChartRef}
+                    data={rdsPieModaliteSugge}
                     options={{
                       plugins: {
                         title: {
                           display: true,
-                          text: "Répartition des suggestions par modalité de dépôt et par agence (%)",
-                          position: "top",
+                          text: " Répartition des modalités de dépôt des suggestions (%)",
                         },
                         legend: {
                           position: "bottom",
                         },
                       },
                       responsive: true,
-                      indexAxis: "y",
                       maintainAspectRatio: false,
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                            max: 100,
-                            offset: false,
-                          },
-                          max: 100,
-                          offset: false,
-                          beginAtZero: true,
-                        },
-                        y: {
-                          stacked: true,
-                        },
-                      },
                     }}
                   />
                 </div>
               </div>
             </div>
-          </div>
-
+          </div> : <></>}          
+          {props.templateData?.suggest.sugByCanalBarChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                  <div style={{ height: nba, width: "100%", position: "relative" }}>
+                    <Bar
+                      // redraw={true}
+                      ref={sugByCanalBarChartRef}
+                      data={rdsBarModaliteSugge}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des suggestions par modalité de dépôt et par agence (%)",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        responsive: true,
+                        indexAxis: "y",
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: {
+                            stacked: true,
+                            ticks: {
+                              callback: function (value) {
+                                return value + "%";
+                              },
+                              max: 100,
+                              offset: false,
+                            },
+                            max: 100,
+                            offset: false,
+                            beginAtZero: true,
+                          },
+                          y: {
+                            stacked: true,
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> : <></>}
         </div>
       </div>
 
@@ -2519,100 +2525,105 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "500px",
-                maxHeight: "500px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetPieChartRef: false } }) }} /> : <></>}</div>
+          
+          {props.templateData?.claim.claimByObjetPieChartRef ? <div>
+            <div className="col s12 m12 l12 animate fadeRight center-align">
               <div
-                className="total-transaction-container "
-                style={{ flex: "1 auto" }}
+                className="card"
+                style={{
+                  height: "500px",
+                  maxHeight: "500px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={claimByObjetPieChartRef}
-                  // options={claimByAgencePieChartRef}
-                  data={rdsPieObjetClaim}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des objets des réclamations (%)",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "500px",
-                maxHeight: "500px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetPieChartRef: false } }) }} /> : <></>}</div>
+                <div
+                  className="total-transaction-container "
+                  style={{ flex: "1 auto" }}
+                >
+                  <Pie
                     // redraw={true}
-                    ref={claimByObjetBarChartRef}
-                    data={rdsBarObjetClaim}
+                    ref={claimByObjetPieChartRef}
+                    // options={claimByAgencePieChartRef}
+                    data={rdsPieObjetClaim}
                     options={{
                       plugins: {
                         title: {
                           display: true,
-                          text: "Répartition des réclamations par objet par agence (%)",
-                          position: "top",
+                          text: "Répartition des objets des réclamations (%)",
                         },
                         legend: {
                           position: "bottom",
                         },
                       },
-                      indexAxis: "y",
                       responsive: true,
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                          },
-                          max: 100,
-                          offset: false,
-                          min: 0,
-                          beginAtZero: true,
-                        },
-                        y: {
-                          stacked: true,
-                        },
-                      },
                       maintainAspectRatio: false,
                     }}
                   />
                 </div>
               </div>
             </div>
-          </div>
-
+          </div> : <></>}
+          
+          {props.templateData?.claim.claimByObjetBarChartRef ? <div>
+            <div className="col s12 m12 l12 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "500px",
+                  maxHeight: "500px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                  <div style={{ height: nba, width: "100%", position: "relative" }}>
+                    <Bar
+                      // redraw={true}
+                      ref={claimByObjetBarChartRef}
+                      data={rdsBarObjetClaim}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des réclamations par objet par agence (%)",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        indexAxis: "y",
+                        responsive: true,
+                        scales: {
+                          x: {
+                            stacked: true,
+                            ticks: {
+                              callback: function (value) {
+                                return value + "%";
+                              },
+                            },
+                            max: 100,
+                            offset: false,
+                            min: 0,
+                            beginAtZero: true,
+                          },
+                          y: {
+                            stacked: true,
+                          },
+                        },
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> : <></>}
         </div>
       </div>
 
@@ -2622,98 +2633,101 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "500px",
-                maxHeight: "500px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetPieChartRef: false } }) }} /> : <></>}</div>
+          {props.templateData?.denun.denunByObjetPieChartRef ? <div>
+            <div className="col s12 m12 l12 animate fadeRight center-align">
               <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
+                className="card"
+                style={{
+                  height: "500px",
+                  maxHeight: "500px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={denunByObjetPieChartRef}
-                  // options={claimByAgencePieChartRef}
-                  data={rdsPieObjetDenun}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: " Répartition des objets des dénonciations (%)",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "500px",
-                maxHeight: "500px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetPieChartRef: false } }) }} /> : <></>}</div>
+                <div
+                  className="total-transaction-container"
+                  style={{ flex: "1 auto" }}
+                >
+                  <Pie
                     // redraw={true}
-                    ref={denunByObjetBarChartRef}
-                    data={rdsBarObjetDenun}
+                    ref={denunByObjetPieChartRef}
+                    // options={claimByAgencePieChartRef}
+                    data={rdsPieObjetDenun}
                     options={{
                       plugins: {
                         title: {
                           display: true,
-                          text: "Répartition des dénonciations par objet par agence (%)",
-                          position: "top",
+                          text: " Répartition des objets des dénonciations (%)",
                         },
                         legend: {
                           position: "bottom",
                         },
                       },
                       responsive: true,
-                      indexAxis: "y",
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                          },
-                          max: 100,
-                          offset: false,
-                        },
-                        y: {
-                          stacked: true,
-                        },
-                      },
                       maintainAspectRatio: false,
                     }}
                   />
                 </div>
               </div>
             </div>
-          </div>
-
+          </div> : <></>}
+          {props.templateData?.denun.denunByObjetBarChartRef ? <div>
+            <div className="col s12 m12 l12 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "500px",
+                  maxHeight: "500px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                  <div style={{ height: nba, width: "100%", position: "relative" }}>
+                    <Bar
+                      // redraw={true}
+                      ref={denunByObjetBarChartRef}
+                      data={rdsBarObjetDenun}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des dénonciations par objet par agence (%)",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        responsive: true,
+                        indexAxis: "y",
+                        scales: {
+                          x: {
+                            stacked: true,
+                            ticks: {
+                              callback: function (value) {
+                                return value + "%";
+                              },
+                            },
+                            max: 100,
+                            offset: false,
+                          },
+                          y: {
+                            stacked: true,
+                          },
+                        },
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> : <></>}
         </div>
       </div>
     </>
@@ -2723,99 +2737,102 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderPieChartRef: false } }) }} /> : <></>}</div>
+          {props.templateData?.claim.claimByGenderPieChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
               <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={claimByGenderPieChartRef}
-                  // options={claimByAgencePieChartRef}
-                  data={rdsPieGenreClaim}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des réclamations par genre (%)",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderPieChartRef: false } }) }} /> : <></>}</div>
+                <div
+                  className="total-transaction-container"
+                  style={{ flex: "1 auto" }}
+                >
+                  <Pie
                     // redraw={true}
-                    ref={claimByGenderBarChartRef}
-                    data={rdsBarGenreClaim}
+                    ref={claimByGenderPieChartRef}
+                    // options={claimByAgencePieChartRef}
+                    data={rdsPieGenreClaim}
                     options={{
                       plugins: {
                         title: {
                           display: true,
-                          text: "Répartition des réclamations par genre par agence (%)",
-                          position: "top",
+                          text: "Répartition des réclamations par genre (%)",
                         },
                         legend: {
                           position: "bottom",
                         },
                       },
-                      indexAxis: "y",
                       responsive: true,
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                          },
-                          max: 100,
-                          offset: false,
-                        },
-                        y: {
-                          stacked: true,
-                        },
-                      },
-
                       maintainAspectRatio: false,
                     }}
                   />
                 </div>
               </div>
             </div>
-          </div>
+          </div> : <></>}    
+          {props.templateData?.claim.claimByGenderBarChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                  <div style={{ height: nba, width: "100%", position: "relative" }}>
+                    <Bar
+                      // redraw={true}
+                      ref={claimByGenderBarChartRef}
+                      data={rdsBarGenreClaim}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des réclamations par genre par agence (%)",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        indexAxis: "y",
+                        responsive: true,
+                        scales: {
+                          x: {
+                            stacked: true,
+                            ticks: {
+                              callback: function (value) {
+                                return value + "%";
+                              },
+                            },
+                            max: 100,
+                            offset: false,
+                          },
+                          y: {
+                            stacked: true,
+                          },
+                        },
 
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> : <></>}                          
         </div>
       </div>
     </>
@@ -2825,67 +2842,32 @@ const Global = (props) => {
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderPieChartRef: false } }) }} /> : <></>}</div>
+          {props.templateData?.suggest.sugByGenderPieChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
               <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={sugByGenderPieChartRef}
-                  data={rdsPieGenreSugge}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des suggestions par genre (%)",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderPieChartRef: false } }) }} /> : <></>}</div>
+                <div
+                  className="total-transaction-container"
+                  style={{ flex: "1 auto" }}
+                >
+                  <Pie
                     // redraw={true}
-                    ref={sugByGenderBarChartRef}
-                    data={rdsBarGenreSugge}
+                    ref={sugByGenderPieChartRef}
+                    data={rdsPieGenreSugge}
                     options={{
                       plugins: {
                         title: {
                           display: true,
-                          text: "Répartition des suggestions par genre par agence (%)",
+                          text: "Répartition des suggestions par genre (%)",
                           position: "top",
                         },
                         legend: {
@@ -2893,30 +2875,68 @@ const Global = (props) => {
                         },
                       },
                       responsive: true,
-                      indexAxis: "y",
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                          },
-                          max: 100,
-                          offset: false,
-                        },
-                        y: {
-                          stacked: true,
-                        },
-                      },
                       maintainAspectRatio: false,
                     }}
                   />
                 </div>
               </div>
             </div>
-          </div>
-
+          </div> : <></>}     
+          {props.templateData?.suggest.sugByGenderBarChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                  <div style={{ height: nba, width: "100%", position: "relative" }}>
+                    <Bar
+                      // redraw={true}
+                      ref={sugByGenderBarChartRef}
+                      data={rdsBarGenreSugge}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des suggestions par genre par agence (%)",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        responsive: true,
+                        indexAxis: "y",
+                        scales: {
+                          x: {
+                            stacked: true,
+                            ticks: {
+                              callback: function (value) {
+                                return value + "%";
+                              },
+                            },
+                            max: 100,
+                            offset: false,
+                          },
+                          y: {
+                            stacked: true,
+                          },
+                        },
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> : <></>}    
         </div>
       </div>
 
@@ -2927,68 +2947,33 @@ const Global = (props) => {
   const claimByGraviteChart = (
     <>
       <div className="invoice-product-details">
-        <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGravitePieChartRef: false } }) }} /> : <></>}</div>
+        <div className="row vertical-modern-dashboard">     
+          {props.templateData?.claim.claimByGravitePieChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
               <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={claimByGravitePieChartRef}
-                  data={rdsPieGravityClaim}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des réclamations par niveau de gravité (%)",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGraviteBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGravitePieChartRef: false } }) }} /> : <></>}</div>
+                <div
+                  className="total-transaction-container"
+                  style={{ flex: "1 auto" }}
+                >
+                  <Pie
                     // redraw={true}
-                    ref={claimByGraviteBarChartRef}
-                    data={rdsBarGravityClaim}
+                    ref={claimByGravitePieChartRef}
+                    data={rdsPieGravityClaim}
                     options={{
                       plugins: {
                         title: {
                           display: true,
-                          text: "Répartition des réclamations par gravité de dépôt par agence (%)",
+                          text: "Répartition des réclamations par niveau de gravité (%)",
                           position: "top",
                         },
                         legend: {
@@ -2996,131 +2981,170 @@ const Global = (props) => {
                         },
                       },
                       responsive: true,
-                      indexAxis: "y",
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                          },
-                          max: 100,
-                          offset: false,
-                        },
-                        y: {
-                          stacked: true,
-                        },
-                      },
                       maintainAspectRatio: false,
                     }}
                   />
                 </div>
               </div>
             </div>
-          </div>
+          </div> : <></>}      
+          {props.templateData?.claim.claimByGraviteBarChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGraviteBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                  <div style={{ height: nba, width: "100%", position: "relative" }}>
+                    <Bar
+                      // redraw={true}
+                      ref={claimByGraviteBarChartRef}
+                      data={rdsBarGravityClaim}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des réclamations par gravité de dépôt par agence (%)",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        responsive: true,
+                        indexAxis: "y",
+                        scales: {
+                          x: {
+                            stacked: true,
+                            ticks: {
+                              callback: function (value) {
+                                return value + "%";
+                              },
+                            },
+                            max: 100,
+                            offset: false,
+                          },
+                          y: {
+                            stacked: true,
+                          },
+                        },
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+          </div> : <></>} 
         </div>
-
       </div>
     </>
   );
   const denunByGraviteChart = (
     <>
       <div className="invoice-product-details">
-        <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGravitePieChartRef: false } }) }} /> : <></>}</div>
-              <div className="total-transaction-container" style={{ flex: 1 }}>
-                <Pie
-                  // redraw={true}
-                  ref={denunByGravitePieChartRef}
-                  // options={claimByAgencePieChartRef}
-                  data={rdsPieGravityDenun}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des dénonciations par niveau de gravité (%)",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGraviteBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
+        <div className="row vertical-modern-dashboard">     
+          {props.templateData?.denun.denunByGravitePieChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGravitePieChartRef: false } }) }} /> : <></>}</div>
+                <div className="total-transaction-container" style={{ flex: 1 }}>
+                  <Pie
                     // redraw={true}
-                    ref={denunByGraviteBarChartRef}
-                    data={rdsBarGravityDenun}
+                    ref={denunByGravitePieChartRef}
+                    // options={claimByAgencePieChartRef}
+                    data={rdsPieGravityDenun}
                     options={{
                       plugins: {
                         title: {
                           display: true,
-                          text: "Répartition des dénonciations par gravité de dépôt par agence (%)",
+                          text: "Répartition des dénonciations par niveau de gravité (%)",
+                          position: "top",
+                        },
+                        legend: {
                           position: "top",
                         },
                         legend: {
                           position: "bottom",
                         },
                       },
-                      indexAxis: "y",
                       responsive: true,
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                          },
-                          max: 100,
-                          offset: false,
-                        },
-                        y: {
-                          stacked: true,
-                        },
-                      },
                       maintainAspectRatio: false,
                     }}
                   />
                 </div>
               </div>
             </div>
-          </div>
-
+          </div> : <></>}      
+          {props.templateData?.denun.denunByGraviteBarChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGraviteBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                  <div style={{ height: nba, width: "100%", position: "relative" }}>
+                    <Bar
+                      // redraw={true}
+                      ref={denunByGraviteBarChartRef}
+                      data={rdsBarGravityDenun}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des dénonciations par gravité de dépôt par agence (%)",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        indexAxis: "y",
+                        responsive: true,
+                        scales: {
+                          x: {
+                            stacked: true,
+                            ticks: {
+                              callback: function (value) {
+                                return value + "%";
+                              },
+                            },
+                            max: 100,
+                            offset: false,
+                          },
+                          y: {
+                            stacked: true,
+                          },
+                        },
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> : <></>}
         </div>
       </div>
     </>
@@ -3129,145 +3153,146 @@ const Global = (props) => {
   const claimBySatisfactionChart = (
     <>
       <div className="invoice-product-details">
-        <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimBySatisfactionPieChartRef: false } }) }} /> : <></>}</div>
+        <div className="row vertical-modern-dashboard">     
+          {props.templateData?.claim.claimBySatisfactionPieChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
               <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={claimBySatisfactionPieChartRef}
-                  // options={claimByAgencePieChartRef}
-                  data={rdsPieStatisClaim}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition de la satisfaction des réclamants (%)",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-
-          <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimBySatisfactionPieChartRef: false } }) }} /> : <></>}</div>
+                <div
+                  className="total-transaction-container"
+                  style={{ flex: "1 auto" }}
+                >
+                  <Pie
                     // redraw={true}
-                    ref={tauxMensuelClaimByMonthByAgenceBarChartRef}
-                    data={tauxMensuelClaimByMonthByAgence}
+                    ref={claimBySatisfactionPieChartRef}
+                    // options={claimByAgencePieChartRef}
+                    data={rdsPieStatisClaim}
                     options={{
                       plugins: {
                         title: {
                           display: true,
-                          text: "Taux de satisfaction des Réclamations par agence (%))",
+                          text: "Répartition de la satisfaction des réclamants (%)",
                           position: "top",
                         },
                         legend: {
                           position: "bottom",
                         },
                       },
-                      indexAxis: "y",
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
+                      responsive: true,
+                      maintainAspectRatio: false,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div> : <></>}     
+          {props.templateData?.claim.tauxMensuelClaimByMonthByAgenceBarChartRef ? <div>
+            <div className="col s12 m12 l6 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                  <div style={{ height: nba, width: "100%", position: "relative" }}>
+                    <Bar
+                      // redraw={true}
+                      ref={tauxMensuelClaimByMonthByAgenceBarChartRef}
+                      data={tauxMensuelClaimByMonthByAgence}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Taux de satisfaction des Réclamations par agence (%))",
+                            position: "top",
                           },
-                          max: 100,
-                          offset: false,
+                          legend: {
+                            position: "bottom",
+                          },
                         },
-                        y: {
-                          stacked: true,
+                        indexAxis: "y",
+                        scales: {
+                          x: {
+                            stacked: true,
+                            ticks: {
+                              callback: function (value) {
+                                return value + "%";
+                              },
+                            },
+                            max: 100,
+                            offset: false,
+                          },
+                          y: {
+                            stacked: true,
+                          },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+
+                    />
+                  </div>
+                </div>
+
+
+              </div>
+            </div>
+          </div> : <></>}     
+          {props.templateData?.claim.tauxMensuelClaimByMonthBarChartRef ? <div>
+            <div className="col s12 m12 l12 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthBarChartRef: false } }) }} /> : <></>}</div>
+                <div
+                  className="total-transaction-container"
+                  style={{ flex: "1 auto" }}
+                >
+                  <Bar
+                    // redraw={true}
+                    ref={tauxMensuelClaimByMonthBarChartRef}
+                    data={tauxMensuelClaimByMonth}
+                    options={{
+                      plugins: {
+                        title: {
+                          display: true,
+                          text: "Taux de satisfaction mensuel des Réclamations (%))",
+                          position: "top",
+                        },
+                        legend: {
+                          position: "bottom",
                         },
                       },
                       responsive: true,
                       maintainAspectRatio: false,
                     }}
-
                   />
                 </div>
               </div>
-
-
             </div>
-          </div>
-
-          <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthBarChartRef: false } }) }} /> : <></>}</div>
-              <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
-              >
-                <Bar
-                  // redraw={true}
-                  ref={tauxMensuelClaimByMonthBarChartRef}
-                  data={tauxMensuelClaimByMonth}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Taux de satisfaction mensuel des Réclamations (%))",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-
+          </div> : <></>}
         </div>
       </div>
 
@@ -3278,104 +3303,105 @@ const Global = (props) => {
   const claimDelaiResolutionChart = (
     <>
       <div className="invoice-product-details">
-        <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthBarChartRef: false } }) }} /> : <></>}</div>
+        <div className="row vertical-modern-dashboard">     
+          {props.templateData?.claim.resolutionClaimDelaiByMonthBarChartRef ? <div>
+            <div className="col s12 m12 l12 animate fadeRight center-align">
               <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
               >
-                <Bar
-                  // redraw={true}
-                  ref={resolutionClaimDelaiByMonthBarChartRef}
-                  data={rdsBarDelaiGlobal}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Respect du délai de résolution des Réclamations par mois (%))",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthBarChartRef: false } }) }} /> : <></>}</div>
+                <div
+                  className="total-transaction-container"
+                  style={{ flex: "1 auto" }}
+                >
                   <Bar
                     // redraw={true}
-                    ref={resolutionClaimDelaiByMonthByAgenceBarChartRef}
-                    data={rdsBarDelaiClaimByMonthByAgence}
+                    ref={resolutionClaimDelaiByMonthBarChartRef}
+                    data={rdsBarDelaiGlobal}
                     options={{
                       plugins: {
                         title: {
                           display: true,
-                          text: "Respect du délai de résolution des Réclamations par agence (%))",
+                          text: "Respect du délai de résolution des Réclamations par mois (%))",
                           position: "top",
                         },
                         legend: {
                           position: "bottom",
                         },
                       },
-                      indexAxis: "y",
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                          },
-                          max: 100,
-                          offset: false,
-                        },
-                        y: {
-                          stacked: true,
-                        },
-                      },
                       responsive: true,
                       maintainAspectRatio: false,
                     }}
-
                   />
                 </div>
               </div>
-
-
             </div>
-          </div>
+          </div> : <></>}     
+          {props.templateData?.claim.resolutionClaimDelaiByMonthByAgenceBarChartRef ? <div>
+            <div className="col s12 m12 l12 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                  <div style={{ height: nba, width: "100%", position: "relative" }}>
+                    <Bar
+                      // redraw={true}
+                      ref={resolutionClaimDelaiByMonthByAgenceBarChartRef}
+                      data={rdsBarDelaiClaimByMonthByAgence}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Respect du délai de résolution des Réclamations par agence (%))",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        indexAxis: "y",
+                        scales: {
+                          x: {
+                            stacked: true,
+                            ticks: {
+                              callback: function (value) {
+                                return value + "%";
+                              },
+                            },
+                            max: 100,
+                            offset: false,
+                          },
+                          y: {
+                            stacked: true,
+                          },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+
+                    />
+                  </div>
+                </div>
 
 
+              </div>
+            </div>
+          </div> : <></>}
         </div>
       </div>
     </>
@@ -3384,104 +3410,105 @@ const Global = (props) => {
   const denunDelaiResolutionChart = (
     <>
       <div className="invoice-product-details">
-        <div className="row vertical-modern-dashboard">
-          <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-
+        <div className="row vertical-modern-dashboard">     
+          {props.templateData?.denun.resolutionDenunDelaiByMonthBarChartRef ? <div>
+            <div className="col s12 m12 l12 animate fadeRight center-align">
               <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
               >
-                <Bar
-                  // redraw={true}
-                  ref={resolutionDenunDelaiByMonthBarChartRef}
-                  data={denunBarDelaiByMonth}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Respect du délai de résolution des Dénonciations par mois (%))",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >
-
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, resolutionDenunDelaiByMonthBarChartRef: false } }) }} /> : <></>}</div>
+                <div
+                  className="total-transaction-container"
+                  style={{ flex: "1 auto" }}
+                >
                   <Bar
                     // redraw={true}
-                    ref={resolutionDenunDelaiByMonthByAgenceBarChartRef}
-                    data={denunBarDelaiByMonthByAgence}
+                    ref={resolutionDenunDelaiByMonthBarChartRef}
+                    data={denunBarDelaiByMonth}
                     options={{
                       plugins: {
                         title: {
                           display: true,
-                          text: "Respect du délai de résolution des Dénonciations par agence (%))",
+                          text: "Respect du délai de résolution des Dénonciations par mois (%))",
                           position: "top",
                         },
                         legend: {
                           position: "bottom",
                         },
                       },
-                      indexAxis: "y",
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                          },
-                          max: 100,
-                          offset: false,
-                        },
-                        y: {
-                          stacked: true,
-                        },
-                      },
                       responsive: true,
                       maintainAspectRatio: false,
                     }}
-
                   />
                 </div>
               </div>
-
-
             </div>
-          </div>
+          </div> : <></>}     
+          {props.templateData?.denun.resolutionDenunDelaiByMonthByAgenceBarChartRef ? <div>
+            <div className="col s12 m12 l12 animate fadeRight center-align">
+              <div
+                className="card"
+                style={{
+                  height: "600px",
+                  maxHeight: "600px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "10px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, resolutionDenunDelaiByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
+                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+                  <div style={{ height: nba, width: "100%", position: "relative" }}>
+                    <Bar
+                      // redraw={true}
+                      ref={resolutionDenunDelaiByMonthByAgenceBarChartRef}
+                      data={denunBarDelaiByMonthByAgence}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Respect du délai de résolution des Dénonciations par agence (%))",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        indexAxis: "y",
+                        scales: {
+                          x: {
+                            stacked: true,
+                            ticks: {
+                              callback: function (value) {
+                                return value + "%";
+                              },
+                            },
+                            max: 100,
+                            offset: false,
+                          },
+                          y: {
+                            stacked: true,
+                          },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+
+                    />
+                  </div>
+                </div>
 
 
+              </div>
+            </div>
+          </div> : <></>}
         </div>
       </div>
     </>
@@ -3659,38 +3686,38 @@ const Global = (props) => {
       }
     }
 
-    const globalPieChartRefData =
+    const globalPieChartRefData = props.templateData?.global.globalPieChartRef ?
       "<div class=' col s12 m12 l6 center-align' style='width:100%'><img src='" +
       globalPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important'  /></div>";
-    const globalLineChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important'  /></div>" : "";
+    const globalLineChartRefData = props.templateData?.global.globalLineChartRef ?
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
       globalLineChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important'  /></div>";
-    const globalByCanalPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important'  /></div>" : "";
+    const globalByCanalPieChartRefData = props.templateData?.global.globalByCanalPieChartRef ?
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
       globalByCanalPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' /></div>";
-    const globalByCanalBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' /></div>" : "";
+    const globalByCanalBarChartRefData = props.templateData?.global.globalByCanalBarChartRef ?
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
       globalByCanalBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>";
-    const globalByObjetPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>" : "";
+    const globalByObjetPieChartRefData = props.templateData?.global.globalByObjetPieChartRef ?
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
       globalByObjetPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' /></div>";
-    const globalByObjetBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' /></div>" : "";
+    const globalByObjetBarChartRefData = props.templateData?.global.globalByObjetBarChartRef ?
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
       globalByObjetBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>";
-    const resolutionPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>" : "";
+    const resolutionPieChartRefData = props.templateData?.global.resolutionPieChartRef ?
       "<div class=' col s12 m12 l12 ' style='width:100%'><center style='margin-bottom:60px!important'>Taux de résolution des plaintes</center> <img src='" +
       src +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' /></div>";
-    const resolutionClaimDelaiByMonthBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' /></div>" : "";
+    const resolutionClaimDelaiByMonthBarChartRefData = props.templateData?.claim.resolutionClaimDelaiByMonthBarChartRef ?
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
       resolutionClaimDelaiByMonthBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>";
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>" : "";
 
     const resolutionClaimDelaiByMonthByAgenceBarChartRefData =
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
@@ -3703,130 +3730,130 @@ const Global = (props) => {
       evolutionByAgenceByAnneeBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>";
 
-    const claimByAgencePieChartRefData =
+    const claimByAgencePieChartRefData = props.templateData?.claim.claimByAgencePieChartRef ?
       "<img src='" +
       claimByAgencePieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const claimByAgenceBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const claimByAgenceBarChartRefData = props.templateData?.claim.claimByAgenceBarChartRef ?
       "<img src='" +
       claimByAgenceBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    const claimByGenderPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
+    const claimByGenderPieChartRefData = props.templateData?.claim.claimByGenderPieChartRef ?
       "<img src='" +
       claimByGenderPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const claimByGenderBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const claimByGenderBarChartRefData = props.templateData?.claim.claimByGenderBarChartRef ?
       "<img src='" +
       claimByGenderBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    const claimByCanalPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
+    const claimByCanalPieChartRefData = props.templateData?.claim.claimByCanalPieChartRef ?
       "<img src='" +
       claimByCanalPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const claimByCanalBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const claimByCanalBarChartRefData = props.templateData?.claim.claimByCanalBarChartRef ?
       "<img src='" +
       claimByCanalBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    const claimByObjetPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
+    const claimByObjetPieChartRefData = props.templateData?.claim.claimByObjetPieChartRef ?
       "<img src='" +
       claimByObjetPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const claimByObjetBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const claimByObjetBarChartRefData = props.templateData?.claim.claimByObjetBarChartRef ?
       "<img src='" +
       claimByObjetBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    const claimByGravitePieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
+    const claimByGravitePieChartRefData = props.templateData?.claim.claimByGravitePieChartRef ?
       "<img src='" +
       claimByGravitePieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const claimByGraviteBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const claimByGraviteBarChartRefData = props.templateData?.claim.claimByGraviteBarChartRef ?
       "<img src='" +
       claimByGraviteBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    const claimBySatisfactionPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
+    const claimBySatisfactionPieChartRefData = props.templateData?.claim.claimBySatisfactionPieChartRef ?
       "<img src='" +
       claimBySatisfactionPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
     const tauxMensuelClaimByMonthByAgenceBarChartRefData =
       "<img src='" +
       tauxMensuelClaimByMonthByAgenceBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
 
-    const tauxMensuelClaimByMonthBarChartRefData =
+    const tauxMensuelClaimByMonthBarChartRefData = props.templateData?.claim.tauxMensuelClaimByMonthBarChartRef ?
       "<img src='" +
       tauxMensuelClaimByMonthBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
 
-    const denunByAgencePieChartRefData =
+    const denunByAgencePieChartRefData = props.templateData?.denun.denunByAgencePieChartRef ?
       "<img src='" +
       denunByAgencePieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const denunByAgenceBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const denunByAgenceBarChartRefData = props.templateData?.denun.denunByAgenceBarChartRef ?
       "<img src='" +
       denunByAgenceBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    const denunByCanalPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
+    const denunByCanalPieChartRefData = props.templateData?.denun.denunByCanalPieChartRef ?
       "<img src='" +
       denunByCanalPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const denunByCanalBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const denunByCanalBarChartRefData = props.templateData?.denun.denunByCanalBarChartRef ?
       "<img src='" +
       denunByCanalBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    const denunByObjetPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
+    const denunByObjetPieChartRefData = props.templateData?.denun.denunByObjetPieChartRef ?
       "<img src='" +
       denunByObjetPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const denunByObjetBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const denunByObjetBarChartRefData = props.templateData?.denun.denunByObjetBarChartRef ?
       "<img src='" +
       denunByObjetBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
 
 
-    const resolutionDenunDelaiByMonthBarChartRefData =
+    const resolutionDenunDelaiByMonthBarChartRefData = props.templateData?.denun.resolutionDenunDelaiByMonthBarChartRef ?
       "<img src='" +
       resolutionDenunDelaiByMonthBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
 
-    const resolutionDenunDelaiByMonthByAgenceBarChartRefData =
+    const resolutionDenunDelaiByMonthByAgenceBarChartRefData = props.templateData?.denun.resolutionDenunDelaiByMonthByAgenceBarChartRef ?
       "<img src='" +
       resolutionDenunDelaiByMonthByAgenceBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
 
 
-    const denunByGravitePieChartRefData =
+    const denunByGravitePieChartRefData = props.templateData?.denun.denunByGravitePieChartRef ?
       "<img src='" +
       denunByGravitePieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const denunByGraviteBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const denunByGraviteBarChartRefData = props.templateData?.denun.denunByGraviteBarChartRef ?
       "<img src='" +
       denunByGraviteBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
 
-    const sugByAgencePieChartRefData =
+    const sugByAgencePieChartRefData = props.templateData?.suggest.sugByAgencePieChartRef ?
       "<img src='" +
       sugByAgencePieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const sugByAgenceBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const sugByAgenceBarChartRefData = props.templateData?.suggest.sugByAgenceBarChartRef ?
       "<img src='" +
       sugByAgenceBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    const sugByGenderPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
+    const sugByGenderPieChartRefData = props.templateData?.suggest.sugByGenderPieChartRef ?
       "<img src='" +
       sugByGenderPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const sugByGenderBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const sugByGenderBarChartRefData = props.templateData?.suggest.sugByGenderBarChartRef ?
       "<img src='" +
       sugByGenderBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
-    const sugByCanalPieChartRefData =
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
+    const sugByCanalPieChartRefData = props.templateData?.suggest.sugByCanalPieChartRef ?
       "<img src='" +
       sugByCanalPieChartRef.current.toBase64Image() +
-      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />";
-    const sugByCanalBarChartRefData =
+      "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
+    const sugByCanalBarChartRefData = props.templateData?.suggest.sugByCanalBarChartRef ?
       "<img src='" +
       sugByCanalBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
 
     //tableaux
     let statClaimTable = document.querySelector("#statClaimTable").innerHTML;
