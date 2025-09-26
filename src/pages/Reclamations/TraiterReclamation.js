@@ -46,11 +46,16 @@ import {
   transmittedChanged,
   selectedItemAudioChanged,
   solutionExistantChanged,
+  handledCustomMessageChanged,
+  handledShowModalChanged,
+  handledMessageChanged,
+  handledDelaiChanged,
   etat3Changed,
   etat4Changed,
   sessionChanged,
   underSubjectChanged,
   transmittedToChanged,
+  setReaffect
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -64,14 +69,26 @@ import {
   isEmpty,
   loadItemFromLocalStorage,
   loadItemFromSessionStorage,
+  cleanPhoneNumber3,
+  cleanPhoneNumber, 
+  cleanPhoneNumber2, 
+  groupBy, 
+  handleDatePicker,
+  isSettingComplete, 
+  isValidDate, 
+  isValidPhone,
+  today,
 } from "../../Utils/utils";
 import { connect } from "react-redux";
+import { v4 as uuid } from "uuid";
 import {
+  addExtraClaimApi,
   affectClaimApi,
   approveClaimSolutionApi,
   detailsTreat,
   downloadAudioApi,
   downloadFillesApi,
+  downloadFillesApi2,
   getClaimAudioApi,
   getFillesApi,
   listeByStatut,
@@ -80,10 +97,17 @@ import {
   transmissionClaimApi,
   treatClaimApi,
   unapproveClaimSolutionApi,
+  deleteClaimApi,
 } from "../../apis/Reclamations/ReclamationsApi";
+import { addSuggestionApi, addSuggestionApiOffline} from "../../apis/Suggestions/SuggestionsApi";
+import { addDenunciationApi, addDenunciationApiOffline } from "../../apis/Denonciations/DenonciationsApi";
+
 import Dialog from "@mui/material/Dialog";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
@@ -115,6 +139,7 @@ import TimelineOppositeContent from "@mui/lab/TimelineOppositeContent";
 import TimelineDot from "@mui/lab/TimelineDot";
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 import {
   Avatar,
   Card,
@@ -126,8 +151,20 @@ import {
   Icon,
   LinearProgress,
   Radio,
-  RadioGroup,
+  RadioGroup, 
+  DialogContent,
+  Box,
+  CardContent,
+  Grid,
+  Tooltip,
+  DialogContentText,
+  List,
+  ListItemButton,
+  ListItemText,
 } from "@mui/material";
+import { FileDownload, History, Info, Pause, PlayArrow, Star, VolumeUp } from "@mui/icons-material";
+import RecorderControls from "../../components/recorder-controls";
+import useRecorder from "../../hooks/useRecorder";
 import { LoadingButton } from "@mui/lab";
 import { HOST } from "../../Utils/globals";
 import axios from "axios";
@@ -156,7 +193,7 @@ import ForumIcon from '@mui/icons-material/Forum';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { licenseInfo } from "../../apis/LoginApi";
 import WarningIcon from '@mui/icons-material/Warning';
-
+import EmailDialog from "./widgets/EmailDialog";
 
 const styles = {
   control: (base) => ({
@@ -190,7 +227,17 @@ const TraiterReclamation = (props) => {
   const [expanded, setExpanded] = React.useState(false);
   const [checked, setChecked] = React.useState(false);
   const [usersCGR, setUsersCGR] = React.useState([]);
-
+  const [conversionBoxOpen, setConversionBoxOpen] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [convertionType, setConvertionType] = useState(null);
+  const [confirmationMaessage, setconfirmationMaessage] = useState("");
+  
+  const [openParent, setOpenParent] = useState(false);
+  const [openChild, setOpenChild] = useState(false);
+  const handleOpenParent = () => setOpenParent(true);
+  const handleCloseParent = () => setOpenParent(false);
+  const handleOpenChild = () => setOpenChild(true);
+  const handleCloseChild = () => setOpenChild(false);
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
@@ -233,6 +280,18 @@ const TraiterReclamation = (props) => {
   const [reafect, setReacfect] = useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
+
+  const [currentData, setCurrentData] = useState(null);
+  const [dataRow, setDataRow] = useState([]);
+  const [audioFiles, setAudioFiles] = useState([]);
+  const [fileBlobs, setFileBlobs] = useState([]);
+  const [audioListForm, setAudioListForm] = useState([])
+  const [audioListUrlForm, setAudioListUrlForm] = useState([])
+  const [loadingConversion, setLoadingConversion] = useState(false);
+  let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
+  
+  console.log("audioFiles", audioFiles);
+  console.log("fileBlobs", fileBlobs);
   let compteur = 0;
   const handleClickOpen = () => {
     compteur++;
@@ -240,19 +299,159 @@ const TraiterReclamation = (props) => {
     setOpen(!open);
 
   };
+  const [currentAudioId, setCurrentAudioId] = useState("");
+  const audioRef = useRef(null);
+  const [filesForm, setFiles] = useState([])
+  const [showExtraContent, setShowExtraContent] = useState(false)
+  const [extraContent, setExtraContent] = useState("")
+  const [extraFileLoading, setExtraFileLoading] = useState(false)
+  const [claim_id, setClaimId] = useState(null)
+  
   // console.log("param 3", compteur);
   const history = useHistory();
   const handleClose = () => {
+    if (conversionBoxOpen) return;
+    
     setOpen(false);
+    setConversionBoxOpen(false);
     history.push("/reclamations/traitement/all");
     // if(stompClient){
-    //   stompClient.disconnect();
-    //   setUserData({ ...userData, connected: false });
-    //   props.sessionChanged("");
-    // }
-    // clearComponentState();
+      //   stompClient.disconnect();
+      //   setUserData({ ...userData, connected: false });
+      //   props.sessionChanged("");
+      // }
+      // clearComponentState();
+    };
+  const handleConversionBoxClose = () => {
+    if (confirmationOpen) return;
 
+    setConversionBoxOpen(false);
   };
+
+  const handleOpenDialog = (type) => {
+    setConvertionType(type);
+    setConfirmationOpen(true);
+  };
+  const handleConfirmationClose = () => {
+
+    setConfirmationOpen(false);
+  };
+
+  const handleSubmitConfirmation = (e) => {
+    e.preventDefault()
+    setLoadingConversion(true);
+    
+    console.log("dataRow", dataRow);
+    const formData = new FormData();
+    let claim = {}
+
+    if (convertionType === "suggestion") {
+      claim["clientFirstAndLastName"] = dataRow.clientFirstAndLastName
+      claim["gender"] = dataRow.gender;
+      claim["address"] = dataRow.address;
+      claim["phone"] = dataRow.tel;
+      claim["collectionChannelId"] = dataRow.collectionChannel.id;
+      claim["servicePointId"] = dataRow.servicePoint.id;
+      claim["fromWhatsapp"] = false;
+      claim["filesWhatsapp"] = []
+      claim["inboxWhatsapp"] = null
+      claim["productId"] = dataRow.product.id;
+      claim["languageId"] = dataRow.language.id;
+      claim["folderCode"] = dataRow.folderCode;
+      claim["receiptDateTime"] = dataRow.receiptDateTime;
+      claim["collectorId"] = dataRow.collector.id;
+      claim["content"] = dataRow.content;
+      claim["code"] = "";
+      claim["id"] = "";
+  
+      console.log("claim", claim);
+      console.log("audioFiles", audioFiles);
+      console.log("fileBlobs", fileBlobs);
+
+      formData.append("suggestion", JSON.stringify(claim));
+      if (fileBlobs != null) {
+        fileBlobs.forEach(fileItem => {
+          const file = new File([fileItem.blob], fileItem.name, {type: fileItem.blob.type || 'application/octet-stream'});
+          formData.append('files', file);
+        });
+      }
+
+      if (audioFiles != null) {
+        audioFiles.forEach(audio => {
+          const file = new File([audio.blob], "sugggestion_record_" + uuid() + ".ogg", {
+            type: "audio/ogg; codecs=opus" });
+          formData.append("audios", file);    
+        });
+      }
+  
+      props.etat2Changed(true)
+      if (mode === 1) {
+        addSuggestionApi(formData, props).then(() => {
+          deleteClaimApi(dataRow.id, props).then(()=> {});
+          history.push("/suggestions/traitement");
+        })
+        .finally(() => {
+          setLoadingConversion(false);
+        });
+      } else {
+        addSuggestionApiOffline(claim, props).then(() => {
+          deleteClaimApi(dataRow.id, props).then(()=> {});
+          history.push("/suggestions/traitement");
+        })
+        .finally(() => {
+          setLoadingConversion(false);
+        });
+      }
+    } else {
+      claim["collectionChannelId"] = dataRow.collectionChannel.id;
+      claim["servicePointId"] = dataRow.servicePoint.id;
+      claim["productId"] = dataRow.product.id;
+      claim["fromWhatsapp"] = false ;
+      claim["filesWhatsapp"] = []
+      claim["inboxWhatsapp"] = null
+      claim["objetId"] = dataRow.objet.categorie.id;
+      claim["receiptDateTime"] = dataRow.receiptDateTime;
+      claim["collectorId"] = user.id;
+      claim["content"] = dataRow.content;
+      claim["code"] = "";
+      claim["id"] = "";
+
+      formData.append("denun", JSON.stringify(claim));
+      if (fileBlobs != null) {
+        fileBlobs.forEach(fileItem => {
+          const file = new File([fileItem.blob], fileItem.name, {type: fileItem.blob.type || 'application/octet-stream'});
+          formData.append('files', file);
+        });
+      }
+
+      if (audioFiles != null) {
+        audioFiles.forEach(audio => {
+          const file = new File([audio.blob], "denonciation_record_" + uuid() + ".ogg", {
+            type: "audio/ogg; codecs=opus", });
+          formData.append("audios", file);    
+        });
+      }
+      props.etat2Changed(true)
+      if (mode === 1) {
+        addDenunciationApi(formData, props).then(() => {
+          deleteClaimApi(dataRow.id, props).then(()=> {});
+          history.push("/denonciations/traitement/all");
+        })
+        .finally(() => {
+          setLoadingConversion(false);
+        });
+      } else {
+        addDenunciationApiOffline(claim, props).then(() => {
+          deleteClaimApi(dataRow.id, props).then(()=> {});
+          history.push("/denonciations/traitement/all");
+        })
+        .finally(() => {
+          setLoadingConversion(false);
+        });
+      }
+    }
+  };
+
   const handleAnonymat = () => {
     setAnonymat(!anonymat);
   };
@@ -304,6 +503,20 @@ const TraiterReclamation = (props) => {
   useEffect(() => {
     // setGuests(props?.session?.guests)
   }, [props?.session?.guests]);
+  
+  const { recorderState, ...handlers } = useRecorder();
+  let { audio } = recorderState;
+
+  const [open2, setOpen2] = useState(false);
+  const [showAudioBox, setAudioBox] = useState(false);
+  
+  useEffect(() => {
+    if (audio) {
+      setAudioListForm([...audioListForm, audio])
+      setAudioListUrlForm([...audioListUrlForm, URL.createObjectURL(audio)])
+
+    }
+  }, [audio]);
 
   let alreadyCall = false;
   useEffect(() => {
@@ -391,6 +604,7 @@ const TraiterReclamation = (props) => {
             default:
               break;
           }
+          setMaxDelai(data.objet?.processingTime ? data.objet.processingTime : 45)
           props.idChanged(data.id ? data.id : "");
           props.lastnameChanged(
             data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -437,6 +651,7 @@ const TraiterReclamation = (props) => {
           );
 
           props.selectedItemChanged(data);
+          setCurrentData(data);
 
           getFillesApi(data.id, props);
           getClaimAudioApi(data.id, props);
@@ -456,7 +671,7 @@ const TraiterReclamation = (props) => {
   }, []);
 
   useEffect(() => {
-    // console.log("params",props.match.params)
+    // console.log("params",props.match.params);
     if (props.match.params.code === "all") {
       props.itemsChanged([])
       listeTreat(props).then((r) => { });
@@ -505,11 +720,58 @@ const TraiterReclamation = (props) => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (props.selectedItemAudio && props.selectedItemAudio.length > 0) {      
+      Promise.all(
+        props.selectedItemAudio.map(async (attachment) => {
+          const data = await downloadAudioApi(attachment.id, attachment.name);
+          const blob = new Blob([data], { type: "audio/ogg; codecs=opus" });
+          const url = URL.createObjectURL(blob);
+          
+          return {
+            id: attachment.id,
+            name: attachment.name,
+            blob,
+            url,
+          };
+        })
+      ).then(setAudioFiles);
+    }
+  }, [props.selectedItemAudio]);
+
+  useEffect(() => {
+    if (props.selectedItemFiles && props.selectedItemFiles.length > 0) {
+      Promise.all(
+        props.selectedItemFiles.map(async (attachment) => {
+          try {
+            const data = await downloadFillesApi2(attachment.id, attachment.name);
+            if (!data) {
+              console.warn("Blob null pour le fichier", attachment.name);
+              return null;
+            }
+
+            const url = URL.createObjectURL(data);
+
+            return {
+              id: attachment.id,
+              name: attachment.name,
+              blob: data,
+              url,
+            };
+          } catch (e) {
+            console.error("Erreur téléchargement", e);
+            return null;
+          }
+        })
+      ).then((results) => {
+        setFileBlobs(results.filter(Boolean));
+      });
+    }
+  }, [props.selectedItemFiles]);
 
   const maDivRef = useRef(null);
 
   const invitation = (event) => {
-
     let ids = (props?.session?.guests)?.map((e) => {
       return e.id;
     })
@@ -527,7 +789,7 @@ const TraiterReclamation = (props) => {
       let coco = []
       coco = princ.filter((e) => {
         return (
-          ((e.firstAndLastName).includes(value))
+          (e.firstAndLastName.toLowerCase().includes(value.toLowerCase()))
         );
       })
 
@@ -555,6 +817,15 @@ const TraiterReclamation = (props) => {
     // console.log("valeur",value)
   }
 
+  const memberIds = props?.session?.members?.map(m => m.id) || [];
+  const guestIds = guests?.map(g => g.id) || [];
+  const availableToInvite = usersCGR.filter(
+    (user) => !memberIds.includes(user.id) && !guestIds.includes(user.id)
+  );
+
+  // console.log("availableToInvite", availableToInvite); 
+  // console.log("usersCGR", usersCGR); 
+
   const handleInvitation = (e, idi) => {
     var chatMessage = {
       userId: idi,
@@ -563,6 +834,7 @@ const TraiterReclamation = (props) => {
     };
 
     // console.log("codeconnected42", idi);
+    // console.log("props.code", props.code);
     stompClient.send(
       "/api/v1/session/join/guest/" + props.code + "",
       {},
@@ -941,7 +1213,12 @@ const TraiterReclamation = (props) => {
     props.selectedFilesReset([]);
     props.selectedItemFilesChanged([]);
     props.selectedItemAudioChanged([]);
+    props.handledMessageChanged("")
+    props.handledDelaiChanged(1)
+    props.handledCustomMessageChanged(false)
+    props.handledShowModalChanged(false);
     props.sessionChanged("");
+    props.setReaffect(null);
     setShowSelectPrintItem(false);
     setCurrentAudio("");
     setAudioPlayer("");
@@ -1273,7 +1550,9 @@ const TraiterReclamation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    // console.log("session",data);
+    console.log("rowClick", data);
+    setDataRow(data);
+
     handleClickOpen();
     clearComponentState();
     // console.log("donnees",data)
@@ -1339,6 +1618,7 @@ const TraiterReclamation = (props) => {
       default:
         break;
     }
+    setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45)
     props.idChanged(data.id ? data.id : "");
     props.lastnameChanged(
       data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -1393,6 +1673,7 @@ const TraiterReclamation = (props) => {
 
 
     props.selectedItemChanged(data);
+    setCurrentData(data);
 
     getFillesApi(data.id, props);
     getClaimAudioApi(data.id, props);
@@ -1416,13 +1697,15 @@ const TraiterReclamation = (props) => {
                 <ul class="list">
                   <label className="text-xl mb-2" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>A Inviter</label>
 
-                  {usersCGR.map((member) => (
-                    <>
-                      <li class="clearfix" key={member.id} style={{ display: "flex", verticalAlign: "center" }}>
+                  {availableToInvite.map((member) => (
+                    <>                      
+                        <li class="clearfix" key={member.id} style={{ display: "flex", verticalAlign: "center" }}>
                         <Avatar sx={{ width: 40, height: 40, backgroundColor: "#1E2188" }}>{member.firstAndLastName[0]}</Avatar>
 
                         <div class="about" style={{ marginTop: "0px" }}>
-                          <div class="name">{member.firstAndLastName}</div>
+                          <div class="name nameToInvite">
+                            <span>{member.firstAndLastName}</span>
+                          </div>
                           <div class="" style={{ fontSize: "10px" }}>
                             {member.posteDto.libelle}
                           </div>
@@ -1458,8 +1741,8 @@ const TraiterReclamation = (props) => {
                       </Avatar>
 
                       <div className="about" style={{ marginTop: "9.5px" }}>
-                        <div className="name text-bold">
-                          {member.firstAndLastName}
+                        <div className="name nameToInvite text-bold">
+                          <span>{member.firstAndLastName}</span>
                         </div>
                         {/* <div className="status">
                             <i className="fa fa-circle online"></i> online
@@ -1481,9 +1764,9 @@ const TraiterReclamation = (props) => {
                           {guest !== null && guest.firstAndLastName != null && guest?.firstAndLastName[0]}
                         </Avatar>
 
-                        <div className="about" style={{ marginTop: "9.5px" }}>
-                          <div className="name text-bold">
-                            {guest?.firstAndLastName}
+                        <div className="about" style={{ marginTop: "9.5px" }}> 
+                          <div className="name nameToInvite text-bold">
+                            <span>{guest?.firstAndLastName}</span>
                           </div>
                           {/* <div className="status">
                               <i className="fa fa-circle online"></i> online
@@ -2348,19 +2631,31 @@ const TraiterReclamation = (props) => {
       isValid = false;
       errors["handled_by"] = "Champ incorrect";
     }
+    if (props.handled_delai <= 0 || props.handled_delai > maxDelai) {
+          isValid = false;
+          errors["handled_delai"] = `Le delai doit etre compris entre ${1} à ${maxDelai}`;
+    }
 
     return isValid;
   };
   const handleValidationForReAssign = () => {
+    console.log("reaffect", props);
     let isValid = true;
 
     if (
-      reafect === "" ||
-      reafect === undefined ||
-      reafect === null
+      
+      props.reaffect === "" ||
+      props.reaffect === undefined ||
+      props.reaffect === null
     ) {
       isValid = false;
       errors["handled_by"] = "Champ incorrect";
+    }
+    if (
+      props.handled_delai <= 0 || props.handled_delai > maxDelai
+    ) {
+      isValid = false;
+      errors["handled_delai"] = `Le delai doit etre compris entre ${1} à ${maxDelai}`;
     }
 
     return isValid;
@@ -2375,6 +2670,8 @@ const TraiterReclamation = (props) => {
       claim["affectToId"] = props.handled_by;
       claim["affectorId"] = user.id;
       claim["affectedAnonymous"] = anonymat;
+      claim["message"] = props.handled_message;
+      claim["delai"] = props.handled_delai;
 
       // console.log("anonymaty", anonymat);
 
@@ -2388,18 +2685,40 @@ const TraiterReclamation = (props) => {
     }
     props.claimHandleErrors(errors);
   };
+
+  const prepareBeforeAssign = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    props.handledShowModalChanged(true)
+  };
+
+  const handleAssignOrReassign = (e)=>{
+    console.log("reaffect", props);
+
+    if(props.reaffect){
+      handleReAssign(e)
+    }else{
+      handleAssign(e)
+    }
+  }
+
   const handleReAssign = (e) => {
     e.preventDefault();
     if (handleValidationForReAssign()) {
       let claim = {};
+      // let reafect = dataRow.treatmentAffectedTo.id;
       // console.log(props.code);
 
       claim["claimId"] = props.id;
-      claim["affectToId"] = reafect;
+      claim["affectToId"] = props.reaffect;
       claim["affectorId"] = user.id;
       claim["affectedAnonymous"] = anonymat;
+      claim["message"] = props.handled_message;
+      claim["delai"] = props.handled_delai;
 
       // console.log("anonymaty", anonymat);
+      console.log("claim", claim);
 
       //console.log("props.handled_by",claim);
       props.etatChanged(true);
@@ -2632,7 +2951,8 @@ const TraiterReclamation = (props) => {
                               e.preventDefault();
                               if (handleValidationForAssign()) {
                                 //setShowSelectPrintItem(true);
-                                handleAssign(e);
+                                prepareBeforeAssign(e);
+                              //handleAssign(e);
                               }
                               props.claimHandleErrors(errors);
                             }}
@@ -2887,8 +3207,8 @@ const TraiterReclamation = (props) => {
                         classNamePrefix="react-select"
                         style={styles}
                         placeholder="Sélectionner l'agent"
-                        onChange={(e) => {
-                          setReacfect(e.value);
+                        onChange={(e) => {                          
+                          props.setReaffect(e.value);
                           setAffectEmail(e.email);
                         }}
                       />
@@ -2926,7 +3246,8 @@ const TraiterReclamation = (props) => {
                           e.preventDefault();
                           if (handleValidationForReAssign()) {
                             //setShowSelectPrintItem(true);
-                            handleReAssign(e);
+                            prepareBeforeAssign(e)
+                            // handleReAssign(e);
                           }
                           props.claimHandleErrors(errors);
                         }}
@@ -3731,7 +4052,8 @@ const TraiterReclamation = (props) => {
                             e.preventDefault();
                             if (handleValidationForAssign()) {
                               //setShowSelectPrintItem(true);
-                              handleAssign(e);
+                              prepareBeforeAssign(e);
+                              //handleAssign(e);
                             }
                             props.claimHandleErrors(errors);
                           }}
@@ -3836,7 +4158,8 @@ const TraiterReclamation = (props) => {
                             e.preventDefault();
                             if (handleValidationForAssign()) {
                               //setShowSelectPrintItem(true);
-                              handleAssign(e);
+                              prepareBeforeAssign(e);
+                              //handleAssign(e);
                             }
                             props.claimHandleErrors(errors);
                           }}
@@ -3941,7 +4264,8 @@ const TraiterReclamation = (props) => {
                             e.preventDefault();
                             if (handleValidationForAssign()) {
                               //setShowSelectPrintItem(true);
-                              handleAssign(e);
+                              prepareBeforeAssign(e);
+                              //handleAssign(e);
                             }
                             props.claimHandleErrors(errors);
                           }}
@@ -3991,148 +4315,372 @@ const TraiterReclamation = (props) => {
       break;
   }
 
+  // let attachmentList;
+  // if (props.selectedItemFiles.length > 0) {
+  //   console.log("props.selectedItemFiles", props.selectedItemFiles);
+  //   let attachmentListChild = props.selectedItemFiles.map((attachment) => {
+  //     let icon = guessExtension(attachment);
+  //     return (
+  //       <div className="col xl12 l12 m12 s12" key={attachment.id}>
+  //         <div className="card box-shadow-none mb-1 app-file-info">
+  //           <div className="card-content">
+  //             <div className="row">
+  //               <div className="col xl1 l1 s1 m1">
+  //                 <div className="app-file-content-logo">
+  //                   <div className="fonticon hide">
+  //                     <i className="material-icons ">more_vert</i>
+  //                   </div>
+  //                   <img
+  //                     className="recent-file"
+  //                     src={icon}
+  //                     height="38"
+  //                     width="30"
+  //                     alt=""
+  //                   />
+  //                 </div>
+  //               </div>
+  //               <div className="col xl11 l11 s11 m11">
+  //                 <div className="app-file-recent-details">
+  //                   <div className="app-file-name font-weight-700 truncate">
+  //                     {attachment.name}
+  //                   </div>
+  //                   <div className="app-file-size">
+  //                     {Math.round(
+  //                       (attachment.size / 1024 + Number.EPSILON) * 100
+  //                     ) / 100}{" "}
+  //                     Ko
+  //                   </div>
+  //                   <div className="app-file-last-access">
+  //                     <a
+  //                       style={{ cursor: "pointer" }}
+  //                       onClick={(e) => {
+  //                         downloadFillesApi(attachment.id, attachment.name);
+  //                       }}
+  //                     >
+  //                       Télécharger
+  //                     </a>
+  //                   </div>
+  //                 </div>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     );
+  //   });
+  //   attachmentList = (
+  //     <div className="col s12 app-file-content grey lighten-4">
+  //       <span className="app-file-label">Fichiers joints</span>
+  //       <div className="row app-file-recent-access mb-3">
+  //         {attachmentListChild}
+  //       </div>
+  //     </div>
+  //   );
+  // } else {
+  // }
+
+  // let audioList;
+  // // console.log("selected audio ", props.selectedItemAudio);
+
+  // if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
+  //   console.log("props.selectedItemAudio", props.selectedItemAudio);
+  //   let audioListChild = props.selectedItemAudio.map((attachment) => {
+  //     return (
+  //       <div className="col xl12 l12 m12 s12" key={attachment.id}>
+  //         <div className="card box-shadow-none mb-1 ">
+  //           <div className="card-content">
+  //             <div className="row">
+  //               <div className="col xl11 l11 s11 m11">
+  //                 <div className="app-file-recent-details">
+  //                   <div className="app-file-name font-weight-700 truncate">
+  //                     {attachment.name}
+  //                   </div>
+  //                   <div className="app-file-size">
+  //                     {Math.round(
+  //                       (attachment.size / 1024 + Number.EPSILON) * 100
+  //                     ) / 100}{" "}
+  //                     Ko
+  //                   </div>
+  //                   <div
+  //                     className="app-file-last-access"
+  //                     id={"audio-" + attachment.id}
+  //                   >
+  //                     <a
+  //                       style={{ cursor: "pointer" }}
+  //                       onClick={(e) => {
+  //                         downloadAudioApi(attachment.id, attachment.name).then(
+  //                           (data) => {
+  //                             // console.log(data);
+
+  //                             let blobAudio = new Blob([data], {
+  //                               type: "audio/ogg; codecs=opus",
+  //                             });
+  //                             let aud = new Audio(
+  //                               window.URL.createObjectURL(blobAudio)
+  //                             );
+  //                             setCurrentAudio(
+  //                               window.URL.createObjectURL(blobAudio)
+  //                             );
+  //                             setAudioPlayer("audio-" + attachment.id);
+  //                           }
+  //                         );
+  //                       }}
+  //                     >
+  //                       {showAudioPlayer === "audio-" + attachment.id && ""}{" "}
+  //                       {showAudioPlayer !== "audio-" + attachment.id &&
+  //                         "Afficher"}
+  //                     </a>
+
+  //                     {showAudioPlayer === "audio-" + attachment.id && (
+  //                       <audio
+  //                         controls
+  //                         autoPlay
+  //                         onEnded={(e) => {
+  //                           setAudioPlayer("");
+  //                         }}
+  //                       >
+  //                         <source src={currentAudio} type="audio/ogg" />
+  //                         Votre navigateur ne prend pas en charge l'élément
+  //                         audio.
+  //                       </audio>
+  //                     )}
+  //                   </div>
+  //                 </div>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     );
+  //   });
+  //   audioList = ( 
+  //     <div className="col s12 app-file-content">
+  //       <div className="row app-file-recent-access mb-3">{audioListChild}</div>
+  //     </div>
+  //   );
+  // }
+
+  
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
+
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-          <div className="card box-shadow-none mb-1 app-file-info">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl1 l1 s1 m1">
-                  <div className="app-file-content-logo">
-                    <div className="fonticon hide">
-                      <i className="material-icons ">more_vert</i>
-                    </div>
-                    <img
-                      className="recent-file"
-                      src={icon}
-                      height="38"
-                      width="30"
-                      alt=""
-                    />
-                  </div>
-                </div>
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div className="app-file-last-access">
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadFillesApi(attachment.id, attachment.name);
-                        }}
-                      >
-                        Télécharger
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Grid item xs={4} key={attachment.id}>
+          <Card sx={{
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: 2,
+            p: 2,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            transition: 'transform 0.3s',
+            '&:hover': {
+              transform: 'translateY(-3px)'
+            },
+            height: '100%'
+          }}>
+            <Box sx={{
+              backgroundColor: 'grey.100',
+              borderRadius: '6px',
+              padding: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: '12px',
+              minWidth: '56px'
+            }}>
+              <img
+                src={icon}
+                height="28"
+                width="22"
+                alt=""
+                style={{ objectFit: 'contain' }}
+              />
+            </Box>
+
+            <CardContent sx={{ flex: 1, minWidth: 0, py: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography
+                  variant="body1"
+                  component="div"
+                  sx={{
+                    fontWeight: 'bold',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                    mb: 0.5
+                  }}
+                >
+                  {attachment.name}
+                </Typography>
+                {attachment._extra && (
+                  <Tooltip title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${attachment.extra?.createdAt}`}>
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round((attachment.size / 1024) * 100) / 100} {"Ko"}
+              </Typography>
+            </CardContent >
+
+            <FileDownload
+              sx={{
+                fontSize: '18px',
+                color: 'primary.main',
+                ml: 1,
+                '&:hover': {
+                  color: 'primary.dark',
+                  cursor: 'pointer'
+                }
+              }}
+              onClick={() => downloadFillesApi(attachment.id, attachment.name)}
+            />
+          </Card >
+        </Grid >
       );
     });
+
     attachmentList = (
-      <div className="col s12 app-file-content grey lighten-4">
-        <span className="app-file-label">Fichiers joints</span>
-        <div className="row app-file-recent-access mb-3">
-          {attachmentListChild}
-        </div>
-      </div>
+      <Grid container spacing={3} size={12}>
+        {attachmentListChild}
+      </Grid>
+
     );
   } else {
+    attachmentList = (<Grid container spacing={3} size={12}>
+      <Grid item>
+
+        Ce dossier ne contient pas de fichiers jointe
+
+      </Grid>
+    </Grid>)
   }
 
+
+  const handlePlay = (audioId, audioName) => {
+    if (currentAudioId === audioId) {
+      audioRef.current.pause();
+      setCurrentAudioId(null);
+    } else {
+      setCurrentAudioId(audioId);
+      downloadAudioApi(audioId, audioName).then(
+        (data) => {
+
+          let blobAudio = new Blob([data], {
+            type: "audio/ogg; codecs=opus",
+          });
+
+          setCurrentAudio(
+            window.URL.createObjectURL(blobAudio)
+          );
+          setTimeout(() => audioRef.current.play(), 2000);
+          // setAudioPlayer("audio-" + attachment.id);
+        }
+      );
+    }
+  };
+
   let audioList;
-  // console.log("selected audio ", props.selectedItemAudio);
-
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    let audioListChild = props.selectedItemAudio.map((attachment) => {
+    console.log("props.selectedItemAudio", props.selectedItemAudio);
+    let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-          <div className="card box-shadow-none mb-1 ">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div
-                      className="app-file-last-access"
-                      id={"audio-" + attachment.id}
-                    >
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadAudioApi(attachment.id, attachment.name).then(
-                            (data) => {
-                              // console.log(data);
 
-                              let blobAudio = new Blob([data], {
-                                type: "audio/ogg; codecs=opus",
-                              });
-                              let aud = new Audio(
-                                window.URL.createObjectURL(blobAudio)
-                              );
-                              setCurrentAudio(
-                                window.URL.createObjectURL(blobAudio)
-                              );
-                              setAudioPlayer("audio-" + attachment.id);
-                            }
-                          );
-                        }}
-                      >
-                        {showAudioPlayer === "audio-" + attachment.id && ""}{" "}
-                        {showAudioPlayer !== "audio-" + attachment.id &&
-                          "Afficher"}
-                      </a>
+        <Grid item xs={12} sm={6} md={4} key={audioItem.id}>
+          <Card sx={{
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: 2,
+            p: 1.5,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            height: '100%'
+          }}>
+            <Box sx={{
+              bgcolor: 'primary.light',
+              borderRadius: '6px',
+              p: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mr: 2,
+              minWidth: '48px',
+              height: '48px'
+            }}>
+              <VolumeUp sx={{ color: 'primary.contrastText', fontSize: '28px' }} />
+            </Box>
 
-                      {showAudioPlayer === "audio-" + attachment.id && (
-                        <audio
-                          controls
-                          autoPlay
-                          onEnded={(e) => {
-                            setAudioPlayer("");
-                          }}
-                        >
-                          <source src={currentAudio} type="audio/ogg" />
-                          Votre navigateur ne prend pas en charge l'élément
-                          audio.
-                        </audio>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+            <CardContent sx={{ flex: 1, minWidth: 0, p: '8px !important' }}>
+              <Box sx={{
+
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 500,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    mb: 0.5
+                  }}
+                >
+                  {audioItem.name}
+                </Typography>
+                {audioItem._extra && (
+                  <Tooltip title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${audioItem.extra?.createdAt}`}>
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round(
+                  (audioItem.size / 1024 + Number.EPSILON) * 100
+                ) / 100}{" "}
+                {"Ko"} • {audioItem.duration}
+              </Typography>
+            </CardContent>
+
+            <Box sx={{ display: 'flex' }}>
+              <IconButton
+                onClick={() => handlePlay(audioItem.id, audioItem.name)}
+                sx={{ color: currentAudioId === audioItem.id ? 'primary.main' : 'text.secondary' }}
+              >
+                {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
+              </IconButton>
+
+
+            </Box>
+          </Card>
+        </Grid>
+
       );
     });
     audioList = (
-      <div className="col s12 app-file-content">
-        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
-      </div>
+      <Grid spacing={3} container size={12}>
+
+        {audioListChild}
+
+      </Grid>
+
     );
+  } else {
+    audioList = (<Grid container spacing={3} size={12}>
+      <Grid item>
+        Ce dossier ne contient pas de fichiers audio
+      </Grid>
+    </Grid>)
   }
+
   const [showSelectPrintItem, setShowSelectPrintItem] = useState(false);
   const [emailSender, setEmailSender] = useState([]);
   const [affectEmail, setAffectEmail] = useState("");
@@ -4205,6 +4753,7 @@ const TraiterReclamation = (props) => {
   });
 
   let infosRec;
+  let btnConversion;
   // console.log("a qui",props.handled_by)
   if (
     (props.handled_by === user.firstAndLastName && props.anonymat !== "true") ||
@@ -4265,6 +4814,32 @@ const TraiterReclamation = (props) => {
     infosRec = "";
   }
 
+  if (addR === "PILOTE" && props.status === "SAVED") {
+    btnConversion = (
+      <>
+        <LoadingButton
+          onClick={() => setConversionBoxOpen(true)}
+          className="waves-effect waves-effect-b waves-light btn-small"
+          // loading={props.etat3}
+          loadingPosition="end"
+          endIcon={<AutorenewIcon />}
+          variant="contained"
+          sx={{
+            backgroundColor: "#ef6c00",
+            textTransform: "initial",
+            transition: "background-color 0.3s ease",
+            '&:hover': {
+              backgroundColor: '#fda321',
+            },
+          }}
+        >
+          <span>Convertir</span>
+        </LoadingButton>
+      </>
+    );
+  }
+
+
   let transmettre = "";
   let btnS = "";
 
@@ -4280,7 +4855,7 @@ const TraiterReclamation = (props) => {
       <>
         <LoadingButton
           onClick={(e) => handleModal(e)}
-          className="waves-effect waves-effect-b waves-light btn-small"
+          className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
           loading={props.etat3}
           loadingPosition="end"
           endIcon={<SendIcon />}
@@ -4303,7 +4878,7 @@ const TraiterReclamation = (props) => {
         <>
           <LoadingButton
             onClick={(e) => registerUser(e)}
-            className="waves-effect waves-effect-b waves-light btn-small"
+            className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
             loading={props.etat4}
             loadingPosition="end"
             endIcon={<ChatIcon />}
@@ -4329,7 +4904,7 @@ const TraiterReclamation = (props) => {
         <>
           <LoadingButton
             onClick={(e) => connect()}
-            className="waves-effect waves-effect-b waves-light btn-small"
+            className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
             loading={props.etat4}
             loadingPosition="end"
             endIcon={<ChatIcon />}
@@ -4377,260 +4952,705 @@ const TraiterReclamation = (props) => {
     }
   }
 
-  // Sélectionnez tous les éléments avec la classe spécifiée
+  // Vérifie si le dialog enfant est ouvert (présent et aria-hidden = false)
+  const enfant = document.querySelector('#dialog-enfant');
+  const confirmation = document.querySelector('#dialog-confirmation');
+  const enfantOuvert = enfant && enfant.getAttribute('aria-hidden') !== 'true';
+  const confirmationOuvert = confirmation && confirmation.getAttribute('aria-hidden') !== 'true';
+
+  // Sélectionne tous les dialogs MUI
   const elements = document.querySelectorAll('.MuiDialog-root');
 
-  // Parcourez la liste d'éléments
   elements.forEach(element => {
-    // Vérifiez si l'élément n'a pas l'attribut aria-hidden="true"
-    if (element.hasAttribute('aria-hidden') || element.getAttribute('aria-hidden') === 'true') {
-      // Masquez l'élément en définissant son style sur "none"
+    // Ne jamais modifier l'affichage du dialog enfant lui-même
+    if (['dialog-enfant', 'dialog-confirmation'].includes(element.id)) {
+      return;
+    }
+
+    // Si le dialog est caché par MUI (aria-hidden="true")
+    // ET que l'enfant n'est PAS ouvert → on le masque
+    if (
+      element.hasAttribute('aria-hidden') &&
+      element.getAttribute('aria-hidden') === 'true' &&
+      !enfantOuvert && !confirmationOuvert
+    ) {
       element.style.display = 'none';
+    } else {
+      // Sinon on le laisse visible (au cas où il a été masqué avant)
+      element.style.display = '';
     }
   });
+  
+
+  const handleFileSubmit = (e, isFile = true) => {
+    e.preventDefault();
+    setExtraFileLoading(true)
+
+    console.log('filesForm__1 >> ', filesForm);
+    const formData = new FormData();
+    formData.append("claim_id", props.id);
+
+    if (isFile) {
+      for (let index = 0; index < filesForm.length; index++) {
+        formData.append("files", filesForm[index]);
+      }
+    } else if (audioListForm.length) {
+      for (let index = 0; index < audioListForm.length; index++) {
+        const audioFile = new File([audioListForm[index]], "claim_extra_record_" + today().replaceAll("/", "") + ".ogg", {
+          type: "audio/ogg; codecs=opus",
+        });
+        formData.append("audios", audioFile);
+      }
+    }
+
+    console.log('filesForm__2 >> ', filesForm);
+    addExtraClaimApi(formData).then((res) => {
+      console.log('res >> ', res)
+      if (isFile) {
+        getFillesApi(currentData?.id, props);
+        setFiles([])
+        notify("Piece jointe ajoutée  ", "success")
+      } else {
+        getClaimAudioApi(currentData?.id, props)
+        setOpen2(false)
+        setAudioBox(false)
+        setAudioListForm([])
+        setAudioListUrlForm([])
+        notify("Audio ajoutée ", "success")
+      }
+    }).catch((err) => {
+      console.log('err add extra >> ', err)
+      notify("Une erreur s'est produite ", "error")
+    }).then(() => {
+      setExtraFileLoading(false)
+    })
+  };
+
+  const handleContentSubmit = (e) => {
+    e.preventDefault();
+    setExtraFileLoading(true)
+    const formData = new FormData();
+    formData.append("claim_id", props.id);
+    formData.append("contenu", extraContent);
+
+    addExtraClaimApi(formData).then((res) => {
+      console.log('res >> ', res)
+
+      notify("Contenue jointe ajoutée  ", "success")
+      setShowExtraContent(false)
+      setExtraContent('')
+
+    }).catch((err) => {
+      console.log('err add extra >> ', err)
+      notify("Une erreur s'est produite ", "error")
+    }).then(() => {
+      setExtraFileLoading(false)
+    })
+  };
 
 
   return (
-    <div id="main">
-      <div className="row">
-        <div className="col s12">
-          <div className="container">
-            <section className="tabs-vertical mt-1 section">
-              <div className="row">
-                <div className="col l12 s12 pb-5">
-                  <div className="card-panel pb-5">
-                    <div className="row">
-                      <div className="col s12">
-                        <h5 className="card-title">Réclamations à traiter</h5>
-                      </div>
-                      <div className="col s12">
-                        <ReactDatatable
-                          className={"responsive-table"}
-                          config={config}
-                          records={content}
-                          columns={columns}
-                          onRowClicked={rowClickedHandler}
-                        />
+    <>
+      <div id="main">           
+        {showExtraContent && (
+          <div>
+
+            <Dialog open={showExtraContent} fullWidth={true}
+              maxWidth='md' onClose={(e) => { setShowExtraContent(false) }}>
+              <DialogTitle>Ajouter un contenu</DialogTitle>
+              <DialogContent>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  value={extraContent}
+                  onChange={(e) =>{e.stopPropagation();e.preventDefault(); setExtraContent(e.target.value)}}
+                  placeholder="Saisissez le contenu..."
+                />
+              </DialogContent>
+              {(extraContent && extraContent?.trim() !== "") ? <DialogActions>
+                <LoadingButton onClick={(e) => {
+                  setExtraContent("")
+                  setShowExtraContent(false)
+                }}
+
+                  className="waves-effect waves-effect-b waves-light btn-small"
+
+                  loadingPosition="end"
+                  loading={extraFileLoading}
+                  endIcon={<CloseIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary" >Annuler</LoadingButton>
+                <LoadingButton onClick={(e) => {
+                  handleContentSubmit(e)
+                }}
+
+                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                  loading={extraFileLoading}
+                  loadingPosition="end"
+                  endIcon={<SaveIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#1e2188", textTransform: "initial" }} color="primary">Enregistrer</LoadingButton>
+
+              </DialogActions> : <></>}
+            </Dialog>
+
+          </div>
+        )}
+        {filesForm.length ? (
+          <div>
+            <Dialog open={filesForm.length ? true : false} fullWidth={true}
+              maxWidth='sm' onClose={(e) => { setFiles([]) }}>
+              <DialogContent>
+                <DialogContentText>
+                  <div className="col l12 s12 pb-2" id="content">
+                    <div className="df sb pb-2">
+                      <b>Ajout de fichier</b>
+                      <CloseIcon
+                        style={{ cursor: "pointer" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      />
+                    </div>
+                  </div>
+                </DialogContentText>
+
+                <div className="col l12 m12 s12 file-field input-field">
+
+                  <List component="div" role="group">
+                    {filesForm.map((file, i) => {
+                      return (
+                        <ListItemButton key={i} divider >
+                          <ListItemText primary={file.name} secondary={(Math.round((file.size / 1024) * 100) / 100) + ' ' + ("Ko")} />
+                        </ListItemButton>
+                      )
+                    })}
+                  </List>
+                  <div style={{ display: 'flex', alignItems: 'center', }} htmlFor="ile" onClick={(e) => setFiles([])} >
+                    <LoadingButton
+                      onClick={(e) => {
+                        handleFileSubmit(e)
+                      }}
+
+                      className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                      loading={extraFileLoading}
+                      loadingPosition="end"
+                      endIcon={<SaveIcon />}
+                      variant="contained"
+                      sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                    >
+                      <span>Enregistrer</span>
+                    </LoadingButton>
+
+                    <LoadingButton
+                      onClick={(e) => {
+                        setFiles([])
+                      }}
+
+                      className="waves-effect waves-effect-b waves-light btn-small"
+                      loading={extraFileLoading}
+                      loadingPosition="end"
+                      endIcon={<CloseIcon />}
+                      variant="contained"
+                      sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                    >
+                      <span>Annuler</span>
+                    </LoadingButton>
+
+                  </div>
+
+
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        ) : <></>}
+        {showAudioBox && (
+          <div>
+            <Dialog
+              open={open2}
+              onClose={() => { setOpen2(false) }}
+              style={{ padding: "16px" }}
+            >
+              <DialogTitle
+                align="center"
+                color={"#1E2188"}
+                fontSize={"23px"}
+                fontWeight={"bold"}
+              >
+                {("Enregistreur vocal Réclamations")}
+              </DialogTitle>
+              <DialogContent>
+
+                <DialogContentText
+                  align="center"
+                  fontSize={"14px"}
+                  textAlign={"center"}
+                >
+                  {("Cliquez sur le bouton ci-dessous et parler dans le micro de votre téléphone, ou branchez un casque ou des écouteurs")}
+                </DialogContentText>
+
+                <section className="voice-recorder">
+                  <div className="recorder-container">
+                    {audioListUrlForm.map((url, i) => {
+
+                      return <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, pt: 2 }}>
+                        <audio src={url} controls sx={{ flex: '1', mr: 2, width: "100%" }} />
+                        <CloseIcon color="red" onClick={() => {
+                          setAudioListForm(() => { return audioListForm.filter((va, ind) => ind !== i) })
+                          setAudioListUrlForm(() => { return audioListUrlForm.filter((va, inde) => inde !== i) })
+                        }} />
+
+                      </Box>
+                    })}
+                    <RecorderControls
+                      recorderState={recorderState}
+                      handlers={handlers}
+                      closeAction={() => { }}
+                    />
+                  </div>
+                </section>
+              </DialogContent>
+              {audioListUrlForm.length ? <DialogActions>
+                <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
+                  <LoadingButton
+                    onClick={(e) => {
+                      handleFileSubmit(e, false)
+                    }}
+
+                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                    loading={extraFileLoading}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                  >
+                    <span>Enregistrer</span>
+                  </LoadingButton>
+
+                  <LoadingButton
+                    onClick={(e) => {
+                      setAudioListForm([])
+                      setAudioListUrlForm([])
+                      setAudioBox(false)
+                      setOpen2(false)
+                    }}
+
+                    className="waves-effect waves-effect-b waves-light btn-small"
+
+                    loadingPosition="end"
+                    // loading={extraFileLoading}
+                    endIcon={<CloseIcon />}
+                    variant="contained"
+                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                  >
+                    <span>Annuler</span>
+                  </LoadingButton>
+                </Box>
+              </DialogActions> : <></>}
+            </Dialog>
+          </div>
+        )}
+        <audio ref={audioRef} src={currentAudio} hidden />
+
+        <div className="row">
+          <div className="col s12">
+            <div className="container">
+              <section className="tabs-vertical mt-1 section">
+                <div className="row">
+                  <div className="col l12 s12 pb-5">
+                    <div className="card-panel pb-5">
+                      <div className="row">
+                        <div className="col s12">
+                          <h5 className="card-title">Réclamations à traiter</h5>
+                        </div>
+                        <div className="col s12">
+                          <ReactDatatable
+                            className={"responsive-table"}
+                            config={config}
+                            records={content}
+                            columns={columns}
+                            onRowClicked={rowClickedHandler}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div>
                   <div>
-                    <Dialog
-                      fullScreen
-                      open={open}
-                      onClose={handleClose}
-                      TransitionComponent={Transition}
-                    >
-                      <AppBar
-                        sx={{
-                          position: "relative",
-                          backgroundColor: "#1e2188",
-                        }}
+                    <div>
+                      <Dialog
+                        fullScreen
+                        open={open}
+                        onClose={handleClose}
+                        TransitionComponent={Transition}
+                        id="dialog-parent"
                       >
-                        <Toolbar>
-                          {props?.match?.params?.code === "all" ?
-                            <IconButton
-                              edge="start"
-                              color="inherit"
-                              onClick={handleClose}
-                              aria-label="close"
+                        <AppBar
+                          sx={{
+                            position: "relative",
+                            backgroundColor: "#1e2188",
+                          }}
+                        >
+                          <Toolbar>
+                            {props?.match?.params?.code === "all" ?
+                              <IconButton
+                                edge="start"
+                                color="inherit"
+                                onClick={handleClose}
+                                aria-label="close"
+                              >
+                                <CloseIcon />
+                              </IconButton>
+                              :
+                              <IconButton
+                                edge="start"
+                                color="inherit"
+                                // onClick={handleClose}
+                                aria-label="close"
+                              >
+                                <NavLink to="/alertes/reclamations"><div className="card-content"><CloseIcon /></div></NavLink>
+                              </IconButton>
+                            }
+                            <Typography
+                              sx={{ ml: 2, flex: 1 }}
+                              variant="h6"
+                              component="div"
                             >
-                              <CloseIcon />
-                            </IconButton>
-                            :
-                            <IconButton
-                              edge="start"
-                              color="inherit"
-                              // onClick={handleClose}
-                              aria-label="close"
-                            >
-                              <NavLink to="/alertes/reclamations"><div className="card-content"><CloseIcon /></div></NavLink>
-                            </IconButton>
-                          }
-                          <Typography
-                            sx={{ ml: 2, flex: 1 }}
-                            variant="h6"
-                            component="div"
-                          >
-                            Détails de la réclamation
-                          </Typography>
-                        </Toolbar>
-                      </AppBar>
+                              Détails de la réclamation
+                            </Typography>
+                          </Toolbar>
+                        </AppBar>
 
-                      <div className="row">
-                        {/* first part */}
+                        <div className="row">
+                          {/* first part */}
 
-                        <div className="col l6 s12 pb-5" id="ficheReclamation">
-                          <div className="card-panel pb-5">
-                            <div className="row" id="ententeFiche">
-                              <div className="col s12">
-                                <h5 className="card-title">
-                                  Fiche de la réclamation
-                                </h5>
+                          <div className="col l6 s12 pb-5" id="ficheReclamation">
+                            <div className="card-panel pb-5">
+                              <div className="row df align-items-center" id="ententeFiche">
+                                <div className="col l6 s12">
+                                  <h5 className="card-title">
+                                    Fiche de la réclamation
+                                  </h5>
+                                </div>
+                                <div className="col l6 m6 s12 df justify-content-end">
+                                  {btnConversion}
+                                </div>
                               </div>
-                            </div>
 
-                            {infosRec}
-                            <div className="row">
-                              <div className="col s12 m12">
-                                <div className="row">
-                                  <div className="col s12 pb-2">
-                                    <h6 className="card-title">
-                                      Détails de la réclamation
-                                    </h6>
-                                  </div>
-
+                              {infosRec}
+                              <div className="row">
+                                <div className="col s12 m12">
                                   <div className="row">
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="code"
-                                    >
-                                      <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                    <div className="col s12 pb-2">
+                                      <h6 className="card-title">
+                                        Détails de la réclamation
+                                      </h6>
                                     </div>
 
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="recorded_at"
-                                    >
-                                      <CalendarMonthIcon sx={{ mr: 2 }} /> Date
-                                      de réception : {props.recorded_at}
-                                    </div>
+                                    <div className="row">
 
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="collect"
-                                    >
-                                      <RecyclingIcon sx={{ mr: 2 }} />{" "}
-                                      {props.collect}
-                                    </div>
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="underSubject"
-                                    >
-                                      <DataObjectIcon sx={{ mr: 2 }} />{" "}
-                                      {props.underSubject}
-                                    </div>
-
-                                    <div
-                                      className="col l12 s12 df pb-2"
-                                      id="subject"
-                                    >
-                                      <DataObjectIcon sx={{ mr: 2 }} />{" "}
-                                      {props.subject}
-                                    </div>
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="product"
-                                    >
-                                      <CategoryIcon sx={{ mr: 2 }} />{" "}
-                                      {props.product}
-                                    </div>
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="unit"
-                                    >
-                                      <AddBusinessIcon sx={{ mr: 2 }} />{" "}
-                                      {props.unit}
-                                    </div>
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="content"
-                                    >
-                                      <SupportAgentIcon sx={{ mr: 2 }} />{" "}
-                                      {props.created_by}
-                                    </div>
-
-                                    <div
-                                      className="col l6 s12 df pb-2"
-                                      id="content"
-                                    >
-                                      <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
-                                      {creationDate}
-                                    </div>
-
-                                    <div
-                                      className="col l12 s12 pb-2"
-                                      id="content"
-                                    >
-                                      <div className="df pb-2">
-                                        <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                                        Contenu
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="code"
+                                      >
+                                        <PinIcon sx={{ mr: 2 }} /> {props.code}
                                       </div>
-                                      <div>{props.content}</div>
-                                      <div>{audioList}</div>
-                                      <div className="mt-5">
-                                        {attachmentList}
-                                      </div>
-                                    </div>
 
-                                    {/* {dimf = props.dossierimf !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <FolderSharedIcon sx={{ mr: 2}}/> {props.dossierimf}</div></>:""}
-                                  {crew = props.crew !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <Diversity3Icon sx={{ mr: 2}}/> {props.crew}</div></>:""} */}
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="recorded_at"
+                                      >
+                                        <CalendarMonthIcon sx={{ mr: 2 }} /> Date
+                                        de réception : {props.recorded_at}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="collect"
+                                      >
+                                        <RecyclingIcon sx={{ mr: 2 }} />{" "}
+                                        {props.collect}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="underSubject"
+                                      >
+                                        <DataObjectIcon sx={{ mr: 2 }} />{" "}
+                                        {props.underSubject}
+                                      </div>
+
+                                      <div
+                                        className="col l12 s12 df pb-2"
+                                        id="subject"
+                                      >
+                                        <DataObjectIcon sx={{ mr: 2 }} />{" "}
+                                        {props.subject}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="product"
+                                      >
+                                        <CategoryIcon sx={{ mr: 2 }} />{" "}
+                                        {props.product}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="unit"
+                                      >
+                                        <AddBusinessIcon sx={{ mr: 2 }} />{" "}
+                                        {props.unit}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="content"
+                                      >
+                                        <SupportAgentIcon sx={{ mr: 2 }} />{" "}
+                                        {props.created_by}
+                                      </div>
+
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="content"
+                                      >
+                                        <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
+                                        {creationDate}
+                                      </div>
+
+                                      <div
+                                        className="col l12 s12 pb-2"
+                                        id="content"
+                                      >
+                                        <div className="df pb-2">
+                                          <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                          Contenu
+                                        </div>
+                                        <div>{props.content}</div>
+                                        {/* <div>{audioList}</div>
+                                        <div className="mt-5">
+                                          {attachmentList}
+                                        </div> */}
+                                      </div>
+
+                                      {/* {dimf = props.dossierimf !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <FolderSharedIcon sx={{ mr: 2}}/> {props.dossierimf}</div></>:""}
+                                    {crew = props.crew !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <Diversity3Icon sx={{ mr: 2}}/> {props.crew}</div></>:""} */}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* second part */}
+                          {/* second part */}
 
-                        <div className="col l6 s12 pb-5" id="ficheReclamation">
-                          <div className="card-panel pb-5">
-                            <div className="row" id="ententeFiche">
-                              <div className="row">
+                          <div className="col l6 s12 pb-5" id="ficheReclamation">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="ententeFiche">
+                                <div className="row df align-items-center">
+                                  <h5 className="col l6 m6 s12 m-0 card-title">
+                                    Détails du traitement
+                                  </h5>
 
-                                <h5
-                                  className="col l6 m6 s12 card-title"
-                                >
-                                  Détails du traitement
-                                </h5>
-
-                                {
-                                  transmettre === "" || btnS === "" ?
-                                    <div className="col l6 m6 s12 df justify-content-end">
-                                      {transmettre}
-                                      {btnS}
-                                    </div>
-                                    :
-                                    <div className="col l6 m6 s12 df justify-content-between">
-                                      {transmettre}
-                                      {btnS}
-                                    </div>
-                                }
+                                  {
+                                    transmettre === "" || btnS === "" ?
+                                      <div className="col l6 m6 s12 m-0 row">
+                                        {transmettre}
+                                        {btnS}
+                                      </div>
+                                      :
+                                      <div className="col l6 m6 s12 m-0 row">
+                                        {transmettre}
+                                        {btnS}
+                                      </div>
+                                  }
+                                </div>
+                                <div className="col s12 input-field">
+                                  Etat: &nbsp;{statusElt}
+                                </div>
                               </div>
-                              <div className="col s12 input-field">
-                                Etat: &nbsp;{statusElt}
-                              </div>
+
+
+                              {props.status === "PARTIAL_SATISFIED" || props.status === "UNSATISFIED" || props.status === "CLASSED" ? historique : null}
+
+                              <>
+                                {affectForm}
+                                {treatForm}
+                                {tchat}
+                              </>
                             </div>
+                          </div>
 
+                          {/* file part */}
+                          <div className="col l12 s12 pb-5">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-2">
+                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: 'bold',
+                                        mb: 1,
+                                        mr: 1
+                                      }}
+                                    >  Fichiers
 
-                            {props.status === "PARTIAL_SATISFIED" || props.status === "UNSATISFIED" || props.status === "CLASSED" ? historique : null}
+                                    </Typography>
+                                    <label htmlFor="ile" className="btn btn-primary" >
+                                      Ajouter un fichier
+                                      <input type="file" id="ile" multiple sx={{ display: 'none' }}
+                                        onChange={(e) => { setFiles([...e.target.files]) }}
+                                        style={{ display: 'none' }}
+                                        accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
+                                      /></label>
+                                  </Box>
+                                </div>
+                                <div className="col s12">
+                                  {attachmentList}
+                                </div>
+                              </div></div>
+                          </div>
 
-                            <>
-                              {affectForm}
-                              {treatForm}
-                              {tchat}
-                            </>
+                          {/* Audio part */}
+                          <div className="col l12 s12 pb-5">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-3">
+                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: 'bold',
+                                        mb: 1,
+                                        mr: 1
+                                      }}
+                                    >  Audios
+
+                                    </Typography>
+                                    <label htmlFor="audio" onClick={() => {
+                                      setAudioBox(true)
+                                      setOpen2(true)
+                                    }} className="btn btn-primary" >
+                                      Ajouter un audio
+                                    </label>
+                                  </Box>
+                                </div>
+                                <div className="col s12">
+                                  {audioList}
+                                </div>
+                              </div></div>
                           </div>
                         </div>
-                      </div>
-                    </Dialog>
+                      </Dialog>
+
+                      <Dialog
+                        open={conversionBoxOpen}
+                        onClose={handleConversionBoxClose}
+                        id="dialog-enfant"
+                      >
+                        <DialogTitle>Convertir la réclamation</DialogTitle>
+                        <DialogContent>
+                          <Typography gutterBottom>
+                            Cette conversation doit être convertie en quel type de plainte ?
+                          </Typography>
+
+                          <div className="row mt-5">
+                            <div className="col s6 mb-1">
+                              <Button
+                                fullWidth
+                                variant="contained"
+                                // color="primary"
+                                onClick={() => handleOpenDialog("dénonciation")}
+                                className="waves-effect waves-light btn-small"
+                              >
+                                Dénonciation
+                              </Button>
+                            </div>
+                            <div className="col s6 mb-1">
+                              <Button
+                                fullWidth
+                                variant="contained"
+                                // color="primary"
+                                onClick={() => handleOpenDialog("suggestion")}
+                                className="waves-effect waves-light btn-small"
+                              >
+                                Suggestion
+                              </Button>
+                            </div>
+                          </div>
+                          {/* <div className="mt-4 right-align">
+                            <Button onClick={() => setConversionBoxOpen(false)} color="inherit">
+                              Annuler
+                            </Button>
+                          </div> */}
+                        </DialogContent>
+                      </Dialog>
+
+                      <Dialog
+                        open={confirmationOpen}
+                        onClose={(_, reason) => {
+                          if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+                            handleConfirmationClose();
+                          }
+                        }}
+                        id="dialog-confirmation"
+                        disableEscapeKeyDown
+                        disableBackdropClick
+                        sx={{
+                          '& .MuiBackdrop-root': {
+                            background: 'transparent !important',
+                          },
+                        }}
+                      >
+                        <DialogTitle className="modal-title red-text text-darken-2">Confirmer la conversion de la réclamation</DialogTitle>
+                        <DialogContent>
+                          <Typography gutterBottom>
+                            Une fois convertie en <strong>{convertionType}</strong>, cette réclamation ne pourra plus être modifiée ou restaurée.
+                            Souhaitez-vous vraiment continuer ?
+                          </Typography>
+                                                                    
+                          <div className="mt-5">
+                            <div className="df justify-content-between">
+                              <Button disabled={loadingConversion} onClick={() => setConfirmationOpen(false)} className="col s6" color="inherit">
+                                Annuler
+                              </Button>
+                              <LoadingButton 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleSubmitConfirmation(e)
+                                }}
+                                className="col s6" 
+                                variant="contained" 
+                                color="error"
+                                loading={loadingConversion}
+                                loadingPosition="end"
+                              >
+                                <span>Confirmer</span>
+                              </LoadingButton>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      <EmailDialog handleSubmit={handleAssignOrReassign} maxDelai={maxDelai} />
+                      
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            </div>
+            <div className="content-overlay"></div>
           </div>
-          <div className="content-overlay"></div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -4686,6 +5706,9 @@ const mapStateToProps = (state) => {
     transmittedTo: state.claim_handle.transmittedTo,
     session: state.claim_handle.session,
     solutionExistant: state.claim_handle.solutionExistant,
+    reaffect:state.claim_handle.reaffect,
+    handled_message:state.claim_handle.handled_message,
+    handled_delai:state.claim_handle.handled_delai,
   };
 };
 
@@ -4760,6 +5783,19 @@ const mapDispatchToProps = (dispatch) => {
     solutionIdChanged: (solutionId) => {
       dispatch(solutionIdChanged(solutionId));
     },
+     handledShowModalChanged: (isShow) => {
+      dispatch(handledShowModalChanged(isShow));
+    },
+     handledMessageChanged: (message) => {
+      dispatch(handledMessageChanged(message));
+    },
+     handledDelaiChanged: (delai) => {
+      dispatch(handledDelaiChanged(delai));
+    },
+    handledCustomMessageChanged:(close)=>{
+      dispatch(handledCustomMessageChanged(close))
+    },
+
     commentChanged: (comment) => {
       dispatch(commentChanged(comment));
     },
@@ -4834,6 +5870,10 @@ const mapDispatchToProps = (dispatch) => {
     },
     solutionExistantChanged: (solutionExistant) => {
       dispatch(solutionExistantChanged(solutionExistant));
+    },
+    
+    setReaffect: (reaffect) => {
+      dispatch(setReaffect(reaffect));
     },
   };
 };

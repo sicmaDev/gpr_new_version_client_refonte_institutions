@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import ReactDatatable from '@ashvin27/react-datatable';
 import Select, { StylesConfig } from 'react-select'
 import chroma from 'chroma-js';
@@ -7,6 +7,10 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import EditIcon from "@mui/icons-material/Edit";
+import { Tooltip, IconButton } from "@mui/material";
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
 import {
     descriptionChanged, idChanged,
     itemsChanged, posteErrors,
@@ -32,6 +36,7 @@ import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 
 const colourStyles = {
     control: (styles) => ({ ...styles, backgroundColor: 'white' }),
@@ -123,6 +128,10 @@ const Postes = (props) => {
         }
         //setCadre(e)
     }
+    
+    const topRef = useRef(null); 
+    useAutoScroll(topRef, [props.selectedItem.id], "top");
+
     useEffect(() => {
        if (props.habilitations) {
             let tab = Array.isArray(props.habilitations) ? (props.habilitations).map(x => x.value) : ""
@@ -159,6 +168,23 @@ const Postes = (props) => {
        }
     }, [cadre,props.habilitations]);
    
+    const habilitationDescriptions = {
+        H1: "Enregistrer une réclamation, suggestion, dénonciation",
+        H2: "Traitement d'une réclamation, dénonciation à risque mineur",
+        H3: "Traitement d'une réclamation, dénonciation à risque moyen",
+        H4: "Traitement d'une réclamation, dénonciation à risque élevé",
+        H5: "Mesurer la satisfaction d'une réclamation",
+        H6: "Affecter le traitement d'une réclamation, dénonciation à un utilisateur",
+        H7: "Imprimer la liste des réclamations, suggestions, dénonciations",
+        H8: "Imprimer la liste des réclamations, suggestions, dénonciation avec le choix des critères",
+        H9: "Exporter la liste des réclamations, suggestions, dénonciations",
+        H10: "Exporter la liste avec le choix des critères",
+        H11: "Générer des rapports et statistiques",
+        H12: "Configurer l'outil de gestion de plainte ou réclamation",
+        H13: "Consulter les Alerte de retard de traitement",
+        H14: "Consulter toutes les informations"
+    };
+
     useEffect(() => {
        
         setH1 (<Typography > <span style={{ fontWeight:"bold",color:"#00B8D9" }}>H1</span>  : Enregistrement</Typography>) 
@@ -195,6 +221,25 @@ const Postes = (props) => {
         return clearComponentState();
     }, []);
 
+    const getHabilitationColor = (hab) => {
+        switch(hab) {
+            case "H1": return "#00B8D9";
+            case "H2": return "#0052CC";
+            case "H3": return "#5243AA";
+            case "H4": return "#FF5630";
+            case "H5": return "#FF8B00";
+            case "H6": return "#FFC400";
+            case "H7": return "#36B37E";
+            case "H8": return "#00875A";
+            case "H9": return "#253858";
+            case "H10": return "#666666";
+            case "H11": return "#3333ff";
+            case "H12": return "#99003d";
+            case "H13": return "#00cc00";
+            case "H14": return "#333300";
+            default: return "#ff0000";
+        }
+    };
     let columns = [
         {
             key: "libelle",
@@ -215,7 +260,50 @@ const Postes = (props) => {
             text: "Habilitations",
             className: "habilitations",
             align: "left",
-            sortable: true
+            sortable: true,
+            cell: (sp) => {
+                let habs = sp.habilitations ? sp.habilitations.split(",") : [];
+
+                return (
+                    <Stack direction="row" spacing={0.25} flexWrap="wrap" sx={{ width: 'max-content' }}>
+                        {habs.map((h, i) => (
+                            <Chip
+                                key={i}
+                                label={h.trim()}
+                                color="primary"
+                                sx={{
+                                    backgroundColor: getHabilitationColor(h.trim()), color: 'white',
+                                    // borderColor: getHabilitationColor(h.trim()),
+                                    // color: getHabilitationColor(h.trim()),
+                                }}
+                                // variant="outlined"
+                                size="small"
+                            />
+                        ))}
+                    </Stack>
+                );
+            },
+        },
+        {
+            key: "action",
+            text: "Actions",
+            className: "action",
+            align: "left",
+            sortable: true,
+            cell: (sp) => {
+                return (
+                    <>
+                        <div style={{ display: "flex", gap: "5px" }}>
+                            <Tooltip title="Modifier">
+                                <IconButton onClick={handleEditClick(sp)} color="primary"><EditIcon /></IconButton>
+                            </Tooltip>
+                            <Tooltip title="Supprimer">
+                                <IconButton onClick={(e) => handleModal(e, sp)} color="error"><DeleteIcon /></IconButton>
+                            </Tooltip>
+                        </div>
+                    </>
+                )
+            }
         },
     ];
 
@@ -323,20 +411,20 @@ const Postes = (props) => {
         }
         props.posteErrors(errors)
     }
-    const handleModal = (e) => {
+    const handleModal = (e, sp) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", handleDelete)
+        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", (e) => handleDelete(e, sp))
     }
     const handleEditModal = (e) => {
         e.preventDefault()
         modalify("Confirmation", "Confirmez vous la modification de cet élément?", "confirm", handleEdit)
     }
-    const handleDelete = (e) => {
+    const handleDelete = (e, sp) => {
         e.preventDefault()
         
         props.etat3Changed(true)
         setDeleteIsLoading(true)
-        suppression(props).then(() => {
+        suppression(props, sp).then(() => {
             handleCancel(e)
         }).finally(()=>{
             setDeleteIsLoading(false)
@@ -344,6 +432,10 @@ const Postes = (props) => {
         clearComponentState()
         props.posteErrors(errors)
     }
+    const handleEditClick = (sp) => (e) => {
+        rowClickedHandler(e, sp, null)
+    }
+
     const rowClickedHandler = (event, data, rowIndex) => {
        
         let tab  = []
@@ -367,22 +459,10 @@ const Postes = (props) => {
     const  tableChangeHandler = data => {
     }
    
-    let titleText = props.selectedItem.id!== undefined ? "Modifier ou Supprimer" : "Ajouter";
+    let titleText = props.selectedItem.id !== undefined ? "Modifier ou Supprimer" : "Ajouter";
    
-    let buttons = props.selectedItem.id!== undefined ?
+    let buttons = props.selectedItem.id !== undefined ?
     (<>
-        <LoadingButton
-            className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-            onClick={(e) => handleModal(e)}
-            loading={deleteIsLoading}
-            loadingPosition="end"
-            endIcon={<DeleteIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Supprimer</span>
-        </LoadingButton>
-
         <LoadingButton
             className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
             onClick={(e) => handleCancel(e)}
@@ -422,10 +502,11 @@ const Postes = (props) => {
             <span>Ajouter</span>
         </LoadingButton>
        
-    )
+    );
+
     return (
         <>
-            <div className="card-panel">
+            <div className="card-panel" ref={topRef}>
                 <form className="paaswordvalidate" >
                     <div className="row">
                         <div className="col s12">
@@ -473,17 +554,34 @@ const Postes = (props) => {
                                     <Select
                                         classNamePrefix="react-select"
                                         className='react-select-container mt-4'
-                                        // defaultInputValue="H1"
-                                        // defaultValue={[colourOptions[0],colourOptions[1]]}
                                         closeMenuOnSelect={false}
                                         isMulti
                                         options={colourOptions}
                                         styles={colourStyles}
                                         placeholder="Sélectionner les habilitations"
-                                        value={props.habilitations ? props.habilitations  : (cadre.length==0 ? [colourOptions[0], colourOptions[1]]  : colourOptions.filter(obj => cadre.includes(obj.value)))} // set selected values
+                                        value={
+                                            props.habilitations
+                                            ? props.habilitations
+                                            : (cadre.length == 0
+                                                ? [colourOptions[0], colourOptions[1]]
+                                                : colourOptions.filter(obj => cadre.includes(obj.value)))
+                                        }
                                         onChange={handleChange}
-                                    />
-                                    
+                                        formatOptionLabel={(option, { context }) => {
+                                            if (context === "menu") {
+                                            return (
+                                                <div>
+                                                <div>{option.label}</div>
+                                                <div style={{ fontSize: '0.8em', color: '#555' }}>
+                                                    {habilitationDescriptions[option.value]}
+                                                </div>
+                                                </div>
+                                            )
+                                            }
+                                            // contexte = "value" → badges sélectionnés
+                                            return option.label
+                                        }}
+                                    />                                
                                     <label htmlFor="ulevel" className="active mb-4" style={{top:'-18%'}}>Habilitations&nbsp;</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.errors.habilitations}</div>
@@ -535,11 +633,11 @@ const Postes = (props) => {
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className = {"responsive-table table-xlsx app-postes"}
+                                            className = {"responsive-table table-xlsx app-postes no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
-                                            onRowClicked={rowClickedHandler}
+                                            // onRowClicked={rowClickedHandler}
                                             onChange={tableChangeHandler}
                                         />
                                     </div>

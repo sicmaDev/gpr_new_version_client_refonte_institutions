@@ -330,7 +330,7 @@ const Notifications = (props) => {
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className={"responsive-table table-xlsx"}
+                                            className={"responsive-table table-xlsx no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}

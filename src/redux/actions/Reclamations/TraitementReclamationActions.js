@@ -350,4 +350,39 @@ export const solutionExistantChanged = (solutionExistant) =>{
         info: 'This action is used to ...'
     }
 };
+export const handledShowModalChanged = (handledShowModal) => {
+    return {
+        type: 'CLAIM_HANDLE_HANDLED_SHOW_MODAL_CHANGED',
+        payload: handledShowModal,
+        info: 'This action is used to ...'
+    }
+};
+export const handledMessageChanged = (handledMessage) => {
+    return {
+        type: 'CLAIM_HANDLE_HANDLED_MESSAGE_CHANGED',
+        payload: handledMessage,
+        info: 'This action is used to ...'
+    }
+};
+export const handledDelaiChanged = (handledDelai) => {
+    return {
+        type: 'CLAIM_HANDLE_HANDLED_DELAI_CHANGED',
+        payload: handledDelai,
+        info: 'This action is used to ...'
+    }
+};
+export const handledCustomMessageChanged = (handledCustomMessage) => {
+    return {
+        type: 'CLAIM_HANDLE_HANDLED_CUSTOM_MESSAGE_CHANGED',
+        payload: handledCustomMessage,
+        info: 'This action is used to ...'
+    }
+};
+export const setReaffect = (reaffect) => {
+    return {
+        type: 'CLAIM_HANDLE_HANDLED_REAFFECT_CHANGED',
+        payload: reaffect,
+        info: 'This action is used to ...'
+    }
+};
 

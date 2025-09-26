@@ -1,10 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import EditIcon from "@mui/icons-material/Edit";
+import { Tooltip, IconButton } from "@mui/material";
 import {
     descriptionChanged,
     itemsChanged,
@@ -24,6 +26,7 @@ import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 
 
 
@@ -36,6 +39,10 @@ const Produits = (props) => {
         //cleanup
         return clearComponentState();
     }, []);
+
+    const topRef = useRef(null); 
+    useAutoScroll(topRef, [props.selectedItem.id], "top");
+    
     let columns = [
         {
             key: "libelle",
@@ -57,6 +64,27 @@ const Produits = (props) => {
             className: "description",
             align: "left",
             sortable: true
+        },
+        {
+            key: "action",
+            text: "Actions",
+            className: "action",
+            align: "left",
+            sortable: true,
+            cell: (sp) => {
+                return (
+                    <>
+                        <div style={{ display: "flex", gap: "5px" }}>
+                            <Tooltip title="Modifier">
+                                <IconButton onClick={handleEditClick(sp)} color="primary"><EditIcon /></IconButton>
+                            </Tooltip>
+                            <Tooltip title="Supprimer">
+                                <IconButton onClick={(e) => handleModal(e, sp)} color="error"><DeleteIcon /></IconButton>
+                            </Tooltip>
+                        </div>
+                    </>
+                )
+            }
         },
     ];
     let config = {
@@ -144,25 +172,29 @@ const Produits = (props) => {
         }
         props.produitErrors(errors)
     }
-    const handleModal = (e) => {
+    const handleModal = (e, sp) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", handleDelete)
+        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", (e) => handleDelete(e, sp))
     }
     const handleEditModal = (e) => {
         e.preventDefault()
         modalify("Confirmation", "Confirmez vous la modification de cet élément?", "confirm", handleEdit)
     }
-    const handleDelete = (e) => {
+    const handleDelete = (e, sp) => {
         e.preventDefault()
 
         props.etat3Changed(true)
         // console.log("idlproduit",props)
-        suppression(props).then(() => {
+        suppression(props, sp).then(() => {
             handleCancel(e)
         })
 
         props.produitErrors(errors)
     }
+    const handleEditClick = (sp) => (e) => {
+        rowClickedHandler(e, sp, null)
+    }
+
     const rowClickedHandler = (event, data, rowIndex) => {
         props.idChanged(data.id)
         props.libelleChanged(data.libelle)
@@ -176,18 +208,6 @@ const Produits = (props) => {
 
     let buttons = props.selectedItem.id !== undefined ?
         (<>
-            <LoadingButton
-                className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                onClick={(e) => handleModal(e)}
-                loading={props.etat3}
-                loadingPosition="end"
-                endIcon={<DeleteIcon />}
-                variant="contained"
-                sx={{ textTransform: "initial" }}
-            >
-                <span>Supprimer</span>
-            </LoadingButton>
-
             <LoadingButton
                 className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
                 onClick={(e) => handleCancel(e)}
@@ -233,7 +253,7 @@ const Produits = (props) => {
 
     return (
         <>
-            <div className="card-panel">
+            <div className="card-panel" ref={topRef}>
                 <form className="paaswordvalidate" >
                     <div className="row">
                         <div className="col s12">
@@ -296,11 +316,11 @@ const Produits = (props) => {
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className={"responsive-table table-xlsx app-produits"}
+                                            className={"responsive-table table-xlsx app-produits no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
-                                            onRowClicked={rowClickedHandler}
+                                            // onRowClicked={rowClickedHandler}
                                             onChange={tableChangeHandler}
                                         />
                                     </div>

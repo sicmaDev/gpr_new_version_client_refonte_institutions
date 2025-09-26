@@ -349,7 +349,7 @@ const ApiKey = (props) => {
                 <div className="row">
                     <div className="col s12">
                         <ReactDatatable
-                            className={"responsive-table table-xlsx app-categories"}
+                            className={"responsive-table table-xlsx app-categories no-hover"}
                             config={config}
                             records={apiKeyList}
                             columns={columns}

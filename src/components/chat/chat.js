@@ -66,7 +66,7 @@ const Chat = ({ guestsP, claimCode, oldMessages, members, users, user, showJoinB
       let coco = []
       coco = princ.filter((e) => {
         return (
-          ((e.firstAndLastName).includes(value)) 
+          (e.firstAndLastName.toLowerCase().includes(value.toLowerCase())) 
         );
       })
 
