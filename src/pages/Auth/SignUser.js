@@ -616,12 +616,12 @@ const SignCompteUser = (props) => {
                         fontSize: "14px",
                         }}
                     >
-                        <WestOutlined color="white" />
+                        {/* <WestOutlined color="white" />
                         <NavLink to="/">
-                        <span style={{ color: "white", cursor: "pointer" }}>
-                            {"Retour sur la page d'accueil"}
-                        </span>
-                        </NavLink>
+                            <span style={{ color: "white", cursor: "pointer" }}>
+                                {"Retour sur la page d'accueil"}
+                            </span>
+                        </NavLink> */}
                     </div>
                     <div
                         className=""
