@@ -272,6 +272,11 @@ const TraitementReclamationReducer = (state = initialState, action) => {
                 ...state,
                 etat: action.payload,
             };
+        case 'CLAIM_HANDLE_EXTRAS_CHANGED':
+            return {
+                ...state,
+                extras: action.payload,
+            };
         case 'CLAIM_HANDLE_ETAT2_CHANGED':
             return {
                 ...state,
@@ -328,6 +333,16 @@ const TraitementReclamationReducer = (state = initialState, action) => {
             return {
                 ...state,
                 handled_custom_message: action.payload,
+            };
+        case 'CLAIM_HANDLE_CONVERTED_AT_CHANGED':
+            return {
+                ...state,
+                converted_at: action.payload,
+            };
+        case 'CLAIM_HANDLE_CONVERTED_BY_CHANGED':
+            return {
+                ...state,
+                converted_by: action.payload,
             };
         case 'CLAIM_HANDLE_HANDLED_DELAI_CHANGED':
             return {

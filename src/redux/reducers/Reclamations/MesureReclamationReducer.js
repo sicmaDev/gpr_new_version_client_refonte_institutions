@@ -264,6 +264,11 @@ const MesurerReclamationReducer = (state = initialState, action) => {
                 ...state,
                 etat2: action.payload,
             };
+        case 'CLAIM_APPRAISE_EXTRAS_CHANGED':
+            return {
+                ...state,
+                extras: action.payload,
+            };
         default:
             return state
     }

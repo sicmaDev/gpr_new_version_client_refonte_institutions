@@ -220,6 +220,16 @@ const TraitementSuggestionReducer = (state = initialState, action) => {
                 ...state,
                 etat2: action.payload,
             };
+        case 'SUGGESTION_HANDLE_CONVERTED_AT_CHANGED':
+            return {
+                ...state,
+                converted_at: action.payload,
+            };
+        case 'SUGGESTION_HANDLE_CONVERTED_BY_CHANGED':
+            return {
+                ...state,
+                converted_by: action.payload,
+            };
         default:
             return state
     }

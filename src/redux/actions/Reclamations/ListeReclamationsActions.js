@@ -332,3 +332,24 @@ export const sessionChanged = (session) => {
         info: 'This action is used to ...'
     }
 };
+export const extrasChanged = (extras) => {
+    return {
+        type: 'CLAIM_LIST_EXTRAS_CHANGED',
+        payload: extras,
+        info: 'This action is used to ...'
+    }
+};
+export const convertedAtChanged = (convertedAt) => {
+    return {
+        type: 'CLAIM_HANDLE_CONVERTED_AT_CHANGED',
+        payload: convertedAt,
+        info: 'This action is used to ...'
+    }
+};
+export const convertedByChanged = (convertedBy) => {
+    return {
+        type: 'CLAIM_HANDLE_CONVERTED_BY_CHANGED',
+        payload: convertedBy,
+        info: 'This action is used to ...'
+    }
+};

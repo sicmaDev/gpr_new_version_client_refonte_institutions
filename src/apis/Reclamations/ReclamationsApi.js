@@ -28,6 +28,7 @@ const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const AUDIOS_CLAIM_API = HOST + "api/v1/claim/getAudiosBy/%s"
 const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
 const START_SESSION_API = HOST + "api/v1/chat/init"
+const CONVERT_CLAIM_API = HOST + "api/v1/claim/convert"
 const DELETE_CLAIM_API = HOST + "api/v1/claim/delete/{id}"
 
 
@@ -94,7 +95,7 @@ export const listeTreat = async (props) => {
     };
     await axios(config)
         .then(function (response) {
-            // console.log("responsetreat", response.data.content)
+            console.log("responsetreat", response.data.content)
 
             props.itemsChanged(response.data.content)
 
@@ -666,7 +667,7 @@ export const downloadAudioApi = async (data, filename) => {
         // console.log("response audio ", response.data);
         return response.data;
     } catch (error) {
-        notify("Erreur - Veuillez réessayer! Erreur - Veuillez réessayer!", "error");
+        notify("Erreur - Veuillez réessayer le téléchargement!", "error");
         // console.log("erreur",error)
     }
     // await axios(config)
@@ -825,6 +826,30 @@ export const deleteClaimApi = async (id, props) => {
     await axios(config)
         .then(function (response) {
             // notify("Bravo - Réclamation supprimé", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+    );
+}
+
+export const convertClaimApi = async (data, props) => {
+    console.log("datadata", data)
+    const config = {
+        method: 'post',
+        url: CONVERT_CLAIM_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    await axios(config)
+        .then(function (response) {
+            notify("Bravo - Réclamation convertie avec succès", "success");
             console.log("reponsesessionadd",response.data.content)
         })
         .catch(function (error) {

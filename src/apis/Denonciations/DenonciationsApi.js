@@ -39,7 +39,7 @@ export const listeTousStatuts = async (props) => {
     await axios(config)
         .then(function (response) {
 
-            // console.log("response.data.content",response.data.content)
+            console.log("response.data.content",response.data.content)
             props.itemsChanged(response.data.content)
             return response.data.content
         })
@@ -107,7 +107,7 @@ export const listeTreat = async (props) => {
     await axios(config)
         .then(function (response) {
 
-            // console.log("responsetreat",response.data.content)
+            console.log("responsetreat",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content

@@ -374,6 +374,7 @@ const ListeSuggestions = (props) => {
     handleClickOpen();
     //console.log("external",data.external_remedies);
     clearComponentState();
+    console.log("dataRow", data)
 
     if (mode === 1) {
       props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");

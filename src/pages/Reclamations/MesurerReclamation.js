@@ -27,6 +27,7 @@ import {
   statusChanged,
   subjectChanged,
   unitChanged,
+  extrasChanged,
   collectChanged,
   dossierimfChanged,
   authorizeChanged,
@@ -165,6 +166,52 @@ const MesurerReclamation = (props) => {
 
   const [open2, setOpen2] = useState(false);
   const [showAudioBox, setAudioBox] = useState(false);
+
+    
+  const getStatusLabel = (status) => {
+    var statusElt = status
+    switch (status) {
+      case "SAVED":
+        statusElt = "Enregistrée";
+        break;
+      case "TEMP_SAVED":
+        statusElt = "Sauvegardée";
+        break;
+      case "AFFECTED":
+        statusElt = "Affectée";
+        break;
+      case "TO_APPROUVED":
+        statusElt = "A approuver";
+        break;
+      case "DESAPPROUVED":
+        statusElt = "Désapprouvée";
+        break;
+      case "TREAT":
+        statusElt = "Traitée";
+        break;
+      case "SATISFIED":
+        statusElt = "Satisfait";
+        break;
+      case "UNSATISFIED":
+        statusElt = "Non satisfait";
+        break;
+      case "PARTIAL_SATISFIED":
+        statusElt = "Partiellement satisfait";
+        break;
+      case "LITIGATION":
+        statusElt = "Contentieux";
+        break;
+      case "CLASSED":
+        statusElt = "Classée";
+        break;
+
+      default:
+        statusElt = "";
+        break;
+    }
+
+    return statusElt
+  }
   
   useEffect(() => {
     if (audio) {
@@ -570,6 +617,7 @@ const MesurerReclamation = (props) => {
     props.statusChanged(data.status ? data.status : "");
     props.selectedItemChanged(data);
     setCurrentData(data);
+    props.extrasChanged(data.extras ?? [])
 
     // console.log("soluion",props.solutionId)
     //fetch attachments for selected claim
@@ -845,7 +893,7 @@ const MesurerReclamation = (props) => {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
-        <Grid item xs={4} key={attachment.id}>
+        <Grid item xs={12} sm={6} key={attachment.id}>
           <Card sx={{
             display: 'flex',
             alignItems: 'center',
@@ -925,13 +973,13 @@ const MesurerReclamation = (props) => {
     });
 
     attachmentList = (
-      <Grid container spacing={3} size={12}>
+      <Grid container spacing={2} size={12}>
         {attachmentListChild}
       </Grid>
 
     );
   } else {
-    attachmentList = (<Grid container spacing={3} size={12}>
+    attachmentList = (<Grid container spacing={2} size={12}>
       <Grid item>
 
         Ce dossier ne contient pas de fichiers jointe
@@ -970,7 +1018,7 @@ const MesurerReclamation = (props) => {
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
 
-        <Grid item xs={12} sm={6} md={4} key={audioItem.id}>
+        <Grid item xs={12} sm={6} key={audioItem.id}>
           <Card sx={{
             display: 'flex',
             alignItems: 'center',
@@ -1044,7 +1092,7 @@ const MesurerReclamation = (props) => {
       );
     });
     audioList = (
-      <Grid spacing={3} container size={12}>
+      <Grid spacing={2} container size={12}>
 
         {audioListChild}
 
@@ -1052,7 +1100,7 @@ const MesurerReclamation = (props) => {
 
     );
   } else {
-    audioList = (<Grid container spacing={3} size={12}>
+    audioList = (<Grid container spacing={2} size={12}>
       <Grid item>
         Ce dossier ne contient pas de fichiers audio
       </Grid>
@@ -1874,25 +1922,84 @@ const MesurerReclamation = (props) => {
                                       className="col l12 s12 pb-2"
                                       id="content"
                                     >
-                                      <div className="df pb-2">
-                                        <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                                        Contenu
-                                      </div>
-                                      <div>
-                                        {props.content}
-                                        {/* {audioList}
-                                        {attachmentList} */}
-                                      </div>
-                                    </div>
+                                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <div className="df pb-2">
+
+                                          <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                          {("Contenu")}
+                                        </div>
+                                        <span onClick={(e) => {
+                                          e.preventDefault()
+                                          e.stopPropagation()
+                                          setShowExtraContent(true)
+                                          setExtraContent("")
+                                        }} className="pb-2 ml-3 " style={{ cursor: 'pointer', color: '#1e2188' }}>+ Ajouter du contenu</span>
+                                      </Box>
+
+
+                                      <List component="div" role="group">
+                                        <ListItemButton divider >
+                                          <ListItemText
+                                            primary={props.content}
+                                            secondary={props.created_by + ' le ' + creationDate}
+                                          />
+                                        </ListItemButton>
+
+
+                                        {props.extras?.map((extra) => {
+                                          return extra.contenu ?
+                                            <ListItemButton key={extra.id} divider >
+                                              <ListItemText primary={extra.contenu} secondary={extra.user?.firstAndLastName + ' le ' + formatDate(extra.createdAt)} />
+
+                                              <Tooltip title={'Ce contenu a été ajouté ultérieurement par ' + extra.user?.firstAndLastName + ' le ' + formatDate(extra.createdAt) + '. la plainte etait en etat: ' + getStatusLabel(extra.status)}>
+                                                <Info />
+                                              </Tooltip>
+                                            </ListItemButton>
+                                            : <></>
+                                        })}
+                                      </List>
+                                    </div>  
                                   </div>
                                 </div>
                               </div>
                             </div>
                           </div>
+
+                          {/* file part */}
+                          <div className="">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-2">
+                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: 'bold',
+                                        mb: 1,
+                                        mr: 1
+                                      }}
+                                    >  Fichiers
+
+                                    </Typography>
+                                    <label htmlFor="ile" className="btn btn-primary" >
+                                      Ajouter un fichier
+                                      <input type="file" id="ile" multiple sx={{ display: 'none' }}
+                                        onChange={(e) => { setFiles([...e.target.files]) }}
+                                        style={{ display: 'none' }}
+                                        accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
+                                      /></label>
+                                  </Box>
+                                </div>
+                                <div className="col s12">
+                                  {attachmentList}
+                                </div>
+                              </div></div>
+                          </div>
                         </div>
 
                         {/* second part */}
-
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
                             <div className="row df align-items-center" id="ententeFiche">
@@ -1920,7 +2027,7 @@ const MesurerReclamation = (props) => {
                                 <div style={{ marginBottom: "15px" }}> 
                                   <h6 style={{ fontWeight: '1000' }}>Prévisualisation SMS</h6>
                                     <p>
-                                      Le message sera envoyé en <strong>{smsSegments.length}</strong> SM en raison de la limite de caractères imposée par le fournisseur.
+                                      Le message sera envoyé en <strong>{smsSegments.length}</strong> SMS en raison de la limite de caractères imposée par le fournisseur.
                                     </p>
 
                                     <div
@@ -2014,72 +2121,39 @@ const MesurerReclamation = (props) => {
                             {mesureForm}
                             {deForm}
                           </div>
-                        </div>
 
-                        {/* file part */}
-                        <div className="col l12 s12 pb-5">
-                          <div className="card-panel pb-5">
-                            <div className="row" id="">
-                              <div className="col s12 pb-2">
-                                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <Typography
-                                    gutterBottom
-                                    variant="body1"
-                                    component="div"
-                                    sx={{
-                                      fontWeight: 'bold',
-                                      mb: 1,
-                                      mr: 1
-                                    }}
-                                  >  Fichiers
+                          {/* Audio part */}
+                          <div className="">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-3">
+                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: 'bold',
+                                        mb: 1,
+                                        mr: 1
+                                      }}
+                                    >  Audios
 
-                                  </Typography>
-                                  <label htmlFor="ile" className="btn btn-primary" >
-                                    Ajouter un fichier
-                                    <input type="file" id="ile" multiple sx={{ display: 'none' }}
-                                      onChange={(e) => { setFiles([...e.target.files]) }}
-                                      style={{ display: 'none' }}
-                                      accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
-                                    /></label>
-                                </Box>
-                              </div>
-                              <div className="col s12">
-                                {attachmentList}
-                              </div>
-                            </div></div>
-                        </div>
-
-                        {/* Audio part */}
-                        <div className="col l12 s12 pb-5">
-                          <div className="card-panel pb-5">
-                            <div className="row" id="">
-                              <div className="col s12 pb-3">
-                                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <Typography
-                                    gutterBottom
-                                    variant="body1"
-                                    component="div"
-                                    sx={{
-                                      fontWeight: 'bold',
-                                      mb: 1,
-                                      mr: 1
-                                    }}
-                                  >  Audios
-
-                                  </Typography>
-                                  <label htmlFor="audio" onClick={() => {
-                                    setAudioBox(true)
-                                    setOpen2(true)
-                                  }} className="btn btn-primary" >
-                                    Ajouter un audio
-                                  </label>
-                                </Box>
-                              </div>
-                              <div className="col s12">
-                                {audioList}
-                              </div>
-                            </div></div>
-                        </div>                        
+                                    </Typography>
+                                    <label htmlFor="audio" onClick={() => {
+                                      setAudioBox(true)
+                                      setOpen2(true)
+                                    }} className="btn btn-primary" >
+                                      Ajouter un audio
+                                    </label>
+                                  </Box>
+                                </div>
+                                <div className="col s12">
+                                  {audioList}
+                                </div>
+                              </div></div>
+                          </div> 
+                        </div>                       
                       </div>
                     </Dialog>
                   </div>
@@ -2139,6 +2213,7 @@ const mapStateToProps = (state) => {
     authorize: state.claim_appraise.authorize,
     etat: state.claim_appraise.etat,
     etat2: state.claim_appraise.etat2,
+    extras: state.claim_appraise.extras,
   };
 };
 
@@ -2254,6 +2329,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     etat2Changed: (etat2) => {
       dispatch(etat2Changed(etat2));
+    },
+    extrasChanged: (collect) => {
+      dispatch(extrasChanged(collect));
     },
   };
 };

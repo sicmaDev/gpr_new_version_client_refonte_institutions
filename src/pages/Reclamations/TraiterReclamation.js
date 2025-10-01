@@ -42,6 +42,7 @@ import {
   newCommentChanged,
   etat2Changed,
   etatChanged,
+  extrasChanged,
   anonymatChanged,
   transmittedChanged,
   selectedItemAudioChanged,
@@ -78,7 +79,7 @@ import {
   isValidDate, 
   isValidPhone,
   today,
-} from "../../Utils/utils";
+} from "../../Utils/utils"; 
 import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
 import {
@@ -98,6 +99,7 @@ import {
   treatClaimApi,
   unapproveClaimSolutionApi,
   deleteClaimApi,
+  convertClaimApi,
 } from "../../apis/Reclamations/ReclamationsApi";
 import { addSuggestionApi, addSuggestionApiOffline} from "../../apis/Suggestions/SuggestionsApi";
 import { addDenunciationApi, addDenunciationApiOffline } from "../../apis/Denonciations/DenonciationsApi";
@@ -194,6 +196,7 @@ import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { licenseInfo } from "../../apis/LoginApi";
 import WarningIcon from '@mui/icons-material/Warning';
 import EmailDialog from "./widgets/EmailDialog";
+import { data } from "jquery";
 
 const styles = {
   control: (base) => ({
@@ -363,91 +366,43 @@ const TraiterReclamation = (props) => {
       claim["content"] = dataRow.content;
       claim["code"] = "";
       claim["id"] = "";
-  
-      console.log("claim", claim);
-      console.log("audioFiles", audioFiles);
-      console.log("fileBlobs", fileBlobs);
-
       formData.append("suggestion", JSON.stringify(claim));
-      if (fileBlobs != null) {
-        fileBlobs.forEach(fileItem => {
-          const file = new File([fileItem.blob], fileItem.name, {type: fileItem.blob.type || 'application/octet-stream'});
-          formData.append('files', file);
-        });
-      }
 
-      if (audioFiles != null) {
-        audioFiles.forEach(audio => {
-          const file = new File([audio.blob], "sugggestion_record_" + uuid() + ".ogg", {
-            type: "audio/ogg; codecs=opus" });
-          formData.append("audios", file);    
-        });
-      }
-  
       props.etat2Changed(true)
       if (mode === 1) {
-        addSuggestionApi(formData, props).then(() => {
-          deleteClaimApi(dataRow.id, props).then(()=> {});
-          history.push("/suggestions/traitement");
-        })
-        .finally(() => {
-          setLoadingConversion(false);
+        addSuggestionApi(formData, props).then((response) => {
+          console.log("response<<<<", response)
+          const data = {
+            code: response.data.content.code,
+            claimId: dataRow.id,
+          };
+
+          convertClaimApi(data, props).then(() => {
+            history.push("/suggestions/traitement");
+          })
+          .finally(() => {
+            setLoadingConversion(false);
+          });
         });
       } else {
-        addSuggestionApiOffline(claim, props).then(() => {
-          deleteClaimApi(dataRow.id, props).then(()=> {});
-          history.push("/suggestions/traitement");
-        })
-        .finally(() => {
-          setLoadingConversion(false);
-        });
+        // Offline mode
       }
     } else {
-      claim["collectionChannelId"] = dataRow.collectionChannel.id;
-      claim["servicePointId"] = dataRow.servicePoint.id;
-      claim["productId"] = dataRow.product.id;
-      claim["fromWhatsapp"] = false ;
-      claim["filesWhatsapp"] = []
-      claim["inboxWhatsapp"] = null
-      claim["objetId"] = dataRow.objet.categorie.id;
-      claim["receiptDateTime"] = dataRow.receiptDateTime;
-      claim["collectorId"] = user.id;
-      claim["content"] = dataRow.content;
-      claim["code"] = "";
-      claim["id"] = "";
-
-      formData.append("denun", JSON.stringify(claim));
-      if (fileBlobs != null) {
-        fileBlobs.forEach(fileItem => {
-          const file = new File([fileItem.blob], fileItem.name, {type: fileItem.blob.type || 'application/octet-stream'});
-          formData.append('files', file);
-        });
-      }
-
-      if (audioFiles != null) {
-        audioFiles.forEach(audio => {
-          const file = new File([audio.blob], "denonciation_record_" + uuid() + ".ogg", {
-            type: "audio/ogg; codecs=opus", });
-          formData.append("audios", file);    
-        });
-      }
       props.etat2Changed(true)
       if (mode === 1) {
-        addDenunciationApi(formData, props).then(() => {
-          deleteClaimApi(dataRow.id, props).then(()=> {});
+        const data = {
+          code: dataRow.code,
+          claimId: dataRow.id,
+        };
+
+        convertClaimApi(data, props).then(() => {
           history.push("/denonciations/traitement/all");
         })
         .finally(() => {
           setLoadingConversion(false);
         });
       } else {
-        addDenunciationApiOffline(claim, props).then(() => {
-          deleteClaimApi(dataRow.id, props).then(()=> {});
-          history.push("/denonciations/traitement/all");
-        })
-        .finally(() => {
-          setLoadingConversion(false);
-        });
+        // Offline mode
       }
     }
   };
@@ -719,55 +674,6 @@ const TraiterReclamation = (props) => {
 
     fetchData();
   }, []);
-
-  useEffect(() => {
-    if (props.selectedItemAudio && props.selectedItemAudio.length > 0) {      
-      Promise.all(
-        props.selectedItemAudio.map(async (attachment) => {
-          const data = await downloadAudioApi(attachment.id, attachment.name);
-          const blob = new Blob([data], { type: "audio/ogg; codecs=opus" });
-          const url = URL.createObjectURL(blob);
-          
-          return {
-            id: attachment.id,
-            name: attachment.name,
-            blob,
-            url,
-          };
-        })
-      ).then(setAudioFiles);
-    }
-  }, [props.selectedItemAudio]);
-
-  useEffect(() => {
-    if (props.selectedItemFiles && props.selectedItemFiles.length > 0) {
-      Promise.all(
-        props.selectedItemFiles.map(async (attachment) => {
-          try {
-            const data = await downloadFillesApi2(attachment.id, attachment.name);
-            if (!data) {
-              console.warn("Blob null pour le fichier", attachment.name);
-              return null;
-            }
-
-            const url = URL.createObjectURL(data);
-
-            return {
-              id: attachment.id,
-              name: attachment.name,
-              blob: data,
-              url,
-            };
-          } catch (e) {
-            console.error("Erreur téléchargement", e);
-            return null;
-          }
-        })
-      ).then((results) => {
-        setFileBlobs(results.filter(Boolean));
-      });
-    }
-  }, [props.selectedItemFiles]);
 
   const maDivRef = useRef(null);
 
@@ -1641,6 +1547,8 @@ const TraiterReclamation = (props) => {
     props.objetLevelChanged(
       data.objet.risqueLevel ? data.objet.risqueLevel : ""
     );
+    props.extrasChanged(data.extras ?? [])
+    
     props.productChanged(data.product.libelle ? data.product.libelle : "");
     props.unitChanged(
       data.servicePoint.libelle ? data.servicePoint.libelle : ""
@@ -4315,151 +4223,6 @@ const TraiterReclamation = (props) => {
       break;
   }
 
-  // let attachmentList;
-  // if (props.selectedItemFiles.length > 0) {
-  //   console.log("props.selectedItemFiles", props.selectedItemFiles);
-  //   let attachmentListChild = props.selectedItemFiles.map((attachment) => {
-  //     let icon = guessExtension(attachment);
-  //     return (
-  //       <div className="col xl12 l12 m12 s12" key={attachment.id}>
-  //         <div className="card box-shadow-none mb-1 app-file-info">
-  //           <div className="card-content">
-  //             <div className="row">
-  //               <div className="col xl1 l1 s1 m1">
-  //                 <div className="app-file-content-logo">
-  //                   <div className="fonticon hide">
-  //                     <i className="material-icons ">more_vert</i>
-  //                   </div>
-  //                   <img
-  //                     className="recent-file"
-  //                     src={icon}
-  //                     height="38"
-  //                     width="30"
-  //                     alt=""
-  //                   />
-  //                 </div>
-  //               </div>
-  //               <div className="col xl11 l11 s11 m11">
-  //                 <div className="app-file-recent-details">
-  //                   <div className="app-file-name font-weight-700 truncate">
-  //                     {attachment.name}
-  //                   </div>
-  //                   <div className="app-file-size">
-  //                     {Math.round(
-  //                       (attachment.size / 1024 + Number.EPSILON) * 100
-  //                     ) / 100}{" "}
-  //                     Ko
-  //                   </div>
-  //                   <div className="app-file-last-access">
-  //                     <a
-  //                       style={{ cursor: "pointer" }}
-  //                       onClick={(e) => {
-  //                         downloadFillesApi(attachment.id, attachment.name);
-  //                       }}
-  //                     >
-  //                       Télécharger
-  //                     </a>
-  //                   </div>
-  //                 </div>
-  //               </div>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     );
-  //   });
-  //   attachmentList = (
-  //     <div className="col s12 app-file-content grey lighten-4">
-  //       <span className="app-file-label">Fichiers joints</span>
-  //       <div className="row app-file-recent-access mb-3">
-  //         {attachmentListChild}
-  //       </div>
-  //     </div>
-  //   );
-  // } else {
-  // }
-
-  // let audioList;
-  // // console.log("selected audio ", props.selectedItemAudio);
-
-  // if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-  //   console.log("props.selectedItemAudio", props.selectedItemAudio);
-  //   let audioListChild = props.selectedItemAudio.map((attachment) => {
-  //     return (
-  //       <div className="col xl12 l12 m12 s12" key={attachment.id}>
-  //         <div className="card box-shadow-none mb-1 ">
-  //           <div className="card-content">
-  //             <div className="row">
-  //               <div className="col xl11 l11 s11 m11">
-  //                 <div className="app-file-recent-details">
-  //                   <div className="app-file-name font-weight-700 truncate">
-  //                     {attachment.name}
-  //                   </div>
-  //                   <div className="app-file-size">
-  //                     {Math.round(
-  //                       (attachment.size / 1024 + Number.EPSILON) * 100
-  //                     ) / 100}{" "}
-  //                     Ko
-  //                   </div>
-  //                   <div
-  //                     className="app-file-last-access"
-  //                     id={"audio-" + attachment.id}
-  //                   >
-  //                     <a
-  //                       style={{ cursor: "pointer" }}
-  //                       onClick={(e) => {
-  //                         downloadAudioApi(attachment.id, attachment.name).then(
-  //                           (data) => {
-  //                             // console.log(data);
-
-  //                             let blobAudio = new Blob([data], {
-  //                               type: "audio/ogg; codecs=opus",
-  //                             });
-  //                             let aud = new Audio(
-  //                               window.URL.createObjectURL(blobAudio)
-  //                             );
-  //                             setCurrentAudio(
-  //                               window.URL.createObjectURL(blobAudio)
-  //                             );
-  //                             setAudioPlayer("audio-" + attachment.id);
-  //                           }
-  //                         );
-  //                       }}
-  //                     >
-  //                       {showAudioPlayer === "audio-" + attachment.id && ""}{" "}
-  //                       {showAudioPlayer !== "audio-" + attachment.id &&
-  //                         "Afficher"}
-  //                     </a>
-
-  //                     {showAudioPlayer === "audio-" + attachment.id && (
-  //                       <audio
-  //                         controls
-  //                         autoPlay
-  //                         onEnded={(e) => {
-  //                           setAudioPlayer("");
-  //                         }}
-  //                       >
-  //                         <source src={currentAudio} type="audio/ogg" />
-  //                         Votre navigateur ne prend pas en charge l'élément
-  //                         audio.
-  //                       </audio>
-  //                     )}
-  //                   </div>
-  //                 </div>
-  //               </div>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     );
-  //   });
-  //   audioList = ( 
-  //     <div className="col s12 app-file-content">
-  //       <div className="row app-file-recent-access mb-3">{audioListChild}</div>
-  //     </div>
-  //   );
-  // }
-
   
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
@@ -4467,7 +4230,7 @@ const TraiterReclamation = (props) => {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
-        <Grid item xs={4} key={attachment.id}>
+        <Grid item xs={12} sm={6} key={attachment.id}>
           <Card sx={{
             display: 'flex',
             alignItems: 'center',
@@ -4547,13 +4310,13 @@ const TraiterReclamation = (props) => {
     });
 
     attachmentList = (
-      <Grid container spacing={3} size={12}>
+      <Grid container spacing={2} size={12}>
         {attachmentListChild}
       </Grid>
 
     );
   } else {
-    attachmentList = (<Grid container spacing={3} size={12}>
+    attachmentList = (<Grid container spacing={2} size={12}>
       <Grid item>
 
         Ce dossier ne contient pas de fichiers jointe
@@ -4592,7 +4355,7 @@ const TraiterReclamation = (props) => {
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
 
-        <Grid item xs={12} sm={6} md={4} key={audioItem.id}>
+        <Grid item xs={12} sm={6} key={audioItem.id}>
           <Card sx={{
             display: 'flex',
             alignItems: 'center',
@@ -4666,7 +4429,7 @@ const TraiterReclamation = (props) => {
       );
     });
     audioList = (
-      <Grid spacing={3} container size={12}>
+      <Grid container spacing={2} size={12}>
 
         {audioListChild}
 
@@ -4674,7 +4437,7 @@ const TraiterReclamation = (props) => {
 
     );
   } else {
-    audioList = (<Grid container spacing={3} size={12}>
+    audioList = (<Grid container spacing={2} size={12}>
       <Grid item>
         Ce dossier ne contient pas de fichiers audio
       </Grid>
@@ -4684,6 +4447,52 @@ const TraiterReclamation = (props) => {
   const [showSelectPrintItem, setShowSelectPrintItem] = useState(false);
   const [emailSender, setEmailSender] = useState([]);
   const [affectEmail, setAffectEmail] = useState("");
+
+  
+  const getStatusLabel = (status) => {
+    var statusElt = status
+    switch (status) {
+      case "SAVED":
+        statusElt = "Enregistrée";
+        break;
+      case "TEMP_SAVED":
+        statusElt = "Sauvegardée";
+        break;
+      case "AFFECTED":
+        statusElt = "Affectée";
+        break;
+      case "TO_APPROUVED":
+        statusElt = "A approuver";
+        break;
+      case "DESAPPROUVED":
+        statusElt = "Désapprouvée";
+        break;
+      case "TREAT":
+        statusElt = "Traitée";
+        break;
+      case "SATISFIED":
+        statusElt = "Satisfait";
+        break;
+      case "UNSATISFIED":
+        statusElt = "Non satisfait";
+        break;
+      case "PARTIAL_SATISFIED":
+        statusElt = "Partiellement satisfait";
+        break;
+      case "LITIGATION":
+        statusElt = "Contentieux";
+        break;
+      case "CLASSED":
+        statusElt = "Classée";
+        break;
+
+      default:
+        statusElt = "";
+        break;
+    }
+
+    return statusElt
+  }
 
   let content = props.items;
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
@@ -5425,16 +5234,43 @@ const TraiterReclamation = (props) => {
                                         className="col l12 s12 pb-2"
                                         id="content"
                                       >
-                                        <div className="df pb-2">
-                                          <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                                          Contenu
-                                        </div>
-                                        <div>{props.content}</div>
-                                        {/* <div>{audioList}</div>
-                                        <div className="mt-5">
-                                          {attachmentList}
-                                        </div> */}
-                                      </div>
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                          <div className="df pb-2">
+
+                                            <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                            {("Contenu")}
+                                          </div>
+                                          <span onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            setShowExtraContent(true)
+                                            setExtraContent("")
+                                          }} className="pb-2 ml-3 " style={{ cursor: 'pointer', color: '#1e2188' }}>+ Ajouter du contenu</span>
+                                        </Box>
+
+
+                                        <List component="div" role="group">
+                                          <ListItemButton divider >
+                                            <ListItemText
+                                              primary={props.content}
+                                              secondary={props.created_by + ' le ' + creationDate}
+                                            />
+                                          </ListItemButton>
+
+
+                                          {props.extras?.map((extra) => {
+                                            return extra.contenu ?
+                                              <ListItemButton key={extra.id} divider >
+                                                <ListItemText primary={extra.contenu} secondary={extra.user?.firstAndLastName + ' le ' + formatDate(extra.createdAt)} />
+
+                                                <Tooltip title={'Ce contenu a été ajouté ultérieurement par ' + extra.user?.firstAndLastName + ' le ' + formatDate(extra.createdAt) + '. la plainte etait en etat: ' + getStatusLabel(extra.status)}>
+                                                  <Info />
+                                                </Tooltip>
+                                              </ListItemButton>
+                                              : <></>
+                                          })}
+                                        </List>
+                                      </div>                                      
 
                                       {/* {dimf = props.dossierimf !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <FolderSharedIcon sx={{ mr: 2}}/> {props.dossierimf}</div></>:""}
                                     {crew = props.crew !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <Diversity3Icon sx={{ mr: 2}}/> {props.crew}</div></>:""} */}
@@ -5443,10 +5279,42 @@ const TraiterReclamation = (props) => {
                                 </div>
                               </div>
                             </div>
+                            
+                            {/* file part */}
+                            <div className="">
+                              <div className="card-panel pb-5">
+                                <div className="row" id="">
+                                  <div className="col s12 pb-2">
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <Typography
+                                        gutterBottom
+                                        variant="body1"
+                                        component="div"
+                                        sx={{
+                                          fontWeight: 'bold',
+                                          mb: 1,
+                                          mr: 1
+                                        }}
+                                      >  Fichiers
+
+                                      </Typography>
+                                      <label htmlFor="ile" className="btn btn-primary" >
+                                        Ajouter un fichier
+                                        <input type="file" id="ile" multiple sx={{ display: 'none' }}
+                                          onChange={(e) => { setFiles([...e.target.files]) }}
+                                          style={{ display: 'none' }}
+                                          accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
+                                        /></label>
+                                    </Box>
+                                  </div>
+                                  <div className="col s12">
+                                    {attachmentList}
+                                  </div>
+                                </div></div>
+                            </div>
                           </div>
 
                           {/* second part */}
-
                           <div className="col l6 s12 pb-5" id="ficheReclamation">
                             <div className="card-panel pb-5">
                               <div className="row" id="ententeFiche">
@@ -5482,71 +5350,38 @@ const TraiterReclamation = (props) => {
                                 {tchat}
                               </>
                             </div>
-                          </div>
 
-                          {/* file part */}
-                          <div className="col l12 s12 pb-5">
-                            <div className="card-panel pb-5">
-                              <div className="row" id="">
-                                <div className="col s12 pb-2">
-                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Typography
-                                      gutterBottom
-                                      variant="body1"
-                                      component="div"
-                                      sx={{
-                                        fontWeight: 'bold',
-                                        mb: 1,
-                                        mr: 1
-                                      }}
-                                    >  Fichiers
+                            {/* Audio part */}
+                            <div className="">
+                              <div className="card-panel pb-5">
+                                <div className="row" id="">
+                                  <div className="col s12 pb-3">
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <Typography
+                                        gutterBottom
+                                        variant="body1"
+                                        component="div"
+                                        sx={{
+                                          fontWeight: 'bold',
+                                          mb: 1,
+                                          mr: 1
+                                        }}
+                                      >  Audios
 
-                                    </Typography>
-                                    <label htmlFor="ile" className="btn btn-primary" >
-                                      Ajouter un fichier
-                                      <input type="file" id="ile" multiple sx={{ display: 'none' }}
-                                        onChange={(e) => { setFiles([...e.target.files]) }}
-                                        style={{ display: 'none' }}
-                                        accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
-                                      /></label>
-                                  </Box>
-                                </div>
-                                <div className="col s12">
-                                  {attachmentList}
-                                </div>
-                              </div></div>
-                          </div>
-
-                          {/* Audio part */}
-                          <div className="col l12 s12 pb-5">
-                            <div className="card-panel pb-5">
-                              <div className="row" id="">
-                                <div className="col s12 pb-3">
-                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Typography
-                                      gutterBottom
-                                      variant="body1"
-                                      component="div"
-                                      sx={{
-                                        fontWeight: 'bold',
-                                        mb: 1,
-                                        mr: 1
-                                      }}
-                                    >  Audios
-
-                                    </Typography>
-                                    <label htmlFor="audio" onClick={() => {
-                                      setAudioBox(true)
-                                      setOpen2(true)
-                                    }} className="btn btn-primary" >
-                                      Ajouter un audio
-                                    </label>
-                                  </Box>
-                                </div>
-                                <div className="col s12">
-                                  {audioList}
-                                </div>
-                              </div></div>
+                                      </Typography>
+                                      <label htmlFor="audio" onClick={() => {
+                                        setAudioBox(true)
+                                        setOpen2(true)
+                                      }} className="btn btn-primary" >
+                                        Ajouter un audio
+                                      </label>
+                                    </Box>
+                                  </div>
+                                  <div className="col s12">
+                                    {audioList}
+                                  </div>
+                                </div></div>
+                            </div>
                           </div>
                         </div>
                       </Dialog>
@@ -5672,7 +5507,8 @@ const mapStateToProps = (state) => {
     underSubject: state.claim_handle.underSubject,
     product: state.claim_handle.product,
     unit: state.claim_handle.unit,
-    content: state.claim_handle.content,
+    content: state.claim_handle.content, 
+    extras: state.claim_handle.extras,
     status: state.claim_handle.status,
     motif: state.claim_handle.motif,
     crew: state.claim_handle.crew,
@@ -5752,6 +5588,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     collectChanged: (collect) => {
       dispatch(collectChanged(collect));
+    },
+    extrasChanged: (extra) => {
+      dispatch(extrasChanged(extra));
     },
     subjectChanged: (subject) => {
       dispatch(subjectChanged(subject));

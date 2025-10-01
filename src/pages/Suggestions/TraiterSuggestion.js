@@ -40,6 +40,8 @@ import {
   etat2Changed,
   commentChanged,
   selectedItemAudioChanged,
+  convertedAtChanged,
+  convertedByChanged,
 } from "../../redux/actions/Suggestions/TraitementSuggestionActions";
 import { connect } from "react-redux";
 import {
@@ -55,6 +57,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 import Slide from "@mui/material/Slide";
+import Tooltip from "@mui/material/Tooltip";
 import PersonIcon from "@mui/icons-material/Person";
 import CallIcon from "@mui/icons-material/Call";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -78,6 +81,7 @@ import { LoadingButton } from "@mui/lab";
 import { suggestionListErrors } from "../../redux/actions/Suggestions/TraitementSuggestionActions";
 import { licenseInfo } from "../../apis/LoginApi";
 import { downloadAudioApi } from "../../apis/Denonciations/DenonciationsApi";
+import { WarningAmber } from '@mui/icons-material';
 
 
 const styles = {
@@ -359,7 +363,7 @@ const TraiterSuggestion = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    // console.log("rowClickedHandler", data);
+    console.log("dataRow",data)
     handleClickOpen();
 
     clearComponentState();
@@ -383,6 +387,8 @@ const TraiterSuggestion = (props) => {
     props.selectedItemChanged(data);
     getFillesApi(data.id, props);
     getSuggeAudioApi(data.id, props);
+    props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
+    props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
 
   };
 
@@ -685,11 +691,18 @@ const TraiterSuggestion = (props) => {
                       <div className="col l6 s12 pb-5" id="ficheReclamation">
                         <div className="card-panel pb-5">
                           <div className="row pb-5" id="ententeFiche">
-                            <div className="col l6 s12">
-                              <h5 className="card-title">
-                                Fiche de la suggestion
-                              </h5>
-                            </div>
+                          <div className="col l6 s12" style={{ display: "flex", alignItems: "center" }}>
+                            <h5 className="card-title">
+                              Fiche de la suggestion
+                            </h5>
+
+                            <Tooltip
+                              title={`Converti en suggestion par ${props.convertedBy} le ${props.convertedAt}`}
+                              arrow
+                            >
+                              <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }}  style={{ marginTop: 3 }} />
+                            </Tooltip>
+                          </div>
 
                           </div>
                           <div className="row">
@@ -913,6 +926,8 @@ const mapStateToProps = (state) => {
     showSelectPrintItem: state.suggestion_handle.showSelectPrintItem,
     etat: state.suggestion_handle.etat,
     etat2: state.suggestion_handle.etat2,
+    convertedBy: state.suggestion_handle.converted_by,
+    convertedAt: state.suggestion_handle.converted_at,
   };
 };
 
@@ -1019,6 +1034,12 @@ const mapDispatchToProps = (dispatch) => {
     },
     etat2Changed: (etat2) => {
       dispatch(etat2Changed(etat2));
+    },
+    convertedByChanged: (convertedBy) => {
+      dispatch(convertedByChanged(convertedBy));
+    },
+    convertedAtChanged: (convertedAt) => {
+      dispatch(convertedAtChanged(convertedAt));
     },
   };
 };

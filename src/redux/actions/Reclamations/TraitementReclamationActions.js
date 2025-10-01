@@ -294,6 +294,14 @@ export const etatChanged = (etat) =>{
         info: 'This action is used to ...'
     }
 };
+
+export const extrasChanged = (extras) => {
+    return {
+        type: 'CLAIM_HANDLE_EXTRAS_CHANGED',
+        payload: extras,
+        info: 'This action is used to ...'
+    }
+};
 export const etat2Changed = (etat2) =>{
     return {
         type: 'CLAIM_HANDLE_ETAT2_CHANGED',
@@ -375,6 +383,20 @@ export const handledCustomMessageChanged = (handledCustomMessage) => {
     return {
         type: 'CLAIM_HANDLE_HANDLED_CUSTOM_MESSAGE_CHANGED',
         payload: handledCustomMessage,
+        info: 'This action is used to ...'
+    }
+};
+export const convertedAtChanged = (convertedAt) => {
+    return {
+        type: 'CLAIM_HANDLE_CONVERTED_AT_CHANGED',
+        payload: convertedAt,
+        info: 'This action is used to ...'
+    }
+};
+export const convertedByChanged = (convertedBy) => {
+    return {
+        type: 'CLAIM_HANDLE_CONVERTED_BY_CHANGED',
+        payload: convertedBy,
         info: 'This action is used to ...'
     }
 };

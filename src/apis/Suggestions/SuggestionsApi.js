@@ -103,23 +103,45 @@ export const addSuggestionApi = async (data, props) => {
         },
         data: data
     };
-    await axios(config)
-        .then(function (response) {
-            props.etat2Changed(false)
-            if (response.data.status) {
-                notify("Bravo - Suggestion ajoutée", "success");
-                listeByStatut(props, "TEMP_SAVED")
-            } else {
-                notify("Erreur - Veuillez réessayer!", "error");
-            }
+        // await axios(config)
+        // .then(function (response) {
+        //     console.log("response<<<<", response)
+            
+        //     props.etat2Changed(false)
+        //     if (response.data.status) {
+        //         notify("Bravo - Suggestion ajoutée", "success");
+        //         listeByStatut(props, "TEMP_SAVED")
+        //     } else {
+        //         notify("Erreur - Veuillez réessayer!", "error");
+        //     }
 
-            // listeTousStatuts(props)
-        })
-        .catch(function (error) {
-            props.etat2Changed(false)
-            notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreur", error)
-        });
+        //     // listeTousStatuts(props)
+        // })
+        // .catch(function (error) {
+        //     props.etat2Changed(false)
+        //     notify("Erreur - Veuillez réessayer!", "error");
+        //     // console.log("erreur", error)
+        // });
+    try {
+        const response = await axios(config);
+        console.log("response<<<<", response);
+
+        props.etat2Changed(false);
+
+        if (response.data.status) {
+        notify("Bravo - Suggestion ajoutée", "success");
+        listeByStatut(props, "TEMP_SAVED");
+        } else {
+        notify("Erreur - Veuillez réessayer!", "error");
+        }
+
+        return response; // 🔥 important : on retourne la réponse
+
+    } catch (error) {
+        props.etat2Changed(false);
+        notify("Erreur - Veuillez réessayer!", "error");
+        throw error; // 🔥 on renvoie l'erreur pour pouvoir la gérer
+    }
 }
 
 export const treatSuggestionApi = async (data, props) => {
