@@ -2848,12 +2848,20 @@ const TraiterDenonciation = (props) => {
       let afForm;
       let personAffect =
         <>
-          {/* details affectation */}
           <div className="row">
-            <div className="col s12 pb-2">
+            <div
+              className="col s12 pb-2"
+              style={{
+                background: "#f5f9ff",
+                borderLeft: "4px solid #1976d2",
+                padding: "10px",
+                borderRadius: "6px",
+              }}
+            >
               Dénonciation affectée à{" "}
-              <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-              {props.assigned_by} le {formatDate(props.assignedAt)}
+              <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong> par{" "}
+              <em>{props.assigned_by}</em> le{" "}
+              <span style={{ color: "#555" }}>{formatDate(props.assignedAt)}</span>
             </div>
           </div>
         </>
@@ -3115,13 +3123,24 @@ const TraiterDenonciation = (props) => {
       } else {
         if (hbt.includes("H14") || addR !== "MOLDUE") {
           tmp = (
-            <div className="row">
-              <div className="col s12 pb-2">
-                Dénonciation affectée à{" "}
-                <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-                {props.assigned_by} le {formatDate(props.assignedAt)}
+            <>
+              <div className="row">
+                <div
+                  className="col s12 pb-2"
+                  style={{
+                    background: "#EFF6FF",
+                    borderLeft: "4px solid #1976d2",
+                    padding: "8px",
+                    borderRadius: "4px",
+                  }}
+                >
+                  Dénonciation affectée à{" "}
+                  <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong> par{" "}
+                  <em>{props.assigned_by}</em> le{" "}
+                  <span style={{ color: "#555" }}>{formatDate(props.assignedAt)}</span>
+                </div>
               </div>
-            </div>
+            </>
           )
 
         } else {
