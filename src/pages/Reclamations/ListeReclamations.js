@@ -170,7 +170,7 @@ const ListeReclamations = (props) => {
   const [impression, setImpression] = React.useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
-  const [fond, setFond] = useState("");
+  const [fond_, setFond] = useState("");
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -1148,7 +1148,8 @@ const ListeReclamations = (props) => {
             : " Détails du traitement - En interne";
       }
 
-
+      let couleurs = ["#333300", "#00cc00", "#99003d", "#3333ff", "#666666", "#253858", "#00875A", "#36B37", "#FFC400", "#FF8B00", "#FF5630", "#5243AA", "#0052CC", "#00B8D9",];
+      
       if (solutions.length !== 0) {
         details = (
           <>
@@ -1180,7 +1181,8 @@ const ListeReclamations = (props) => {
 
               {/* let solutions =  */}
               {Array.from(solutions).map((solution) => {
-                // let fond = couleurs[getRandomInt(couleurs.length)];
+                // let fond = couleurs[getRandomInt(couleurs.length)];                
+                let fond = couleurs[index % couleurs.length]; 
 
                 let mesure = "";
                 if (

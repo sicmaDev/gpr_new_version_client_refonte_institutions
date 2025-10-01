@@ -747,7 +747,8 @@ const AssuranceReclamation = (props) => {
 
             {/* let solutions =  */}
             {Array.from(solutions).map((solution) => {
-              let fond = couleurs[getRandomInt(couleurs.length)];
+              // let fond = couleurs[getRandomInt(couleurs.length)];
+              let fond = couleurs[index % couleurs.length];
 
               let mesure = "";
               if (solution.status === "APPROVED" && solution.satisfactionMeasureDto !== null) {

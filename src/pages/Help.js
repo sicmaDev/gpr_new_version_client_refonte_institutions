@@ -75,6 +75,7 @@ const Help = (props) => {
     let documents = docs.map((doc) => {
         let couleurs =["#333300","#00cc00","#99003d","#3333ff","#666666","#253858","#00875A","#36B37E","#FFC400","#FF8B00","#FF5630","#5243AA","#0052CC","#00B8D9"]
         let fond = couleurs[getRandomInt(couleurs.length)];
+        // let fond = couleurs[index % couleurs.length];
         let icon = guessExtension(doc);
         return (
             

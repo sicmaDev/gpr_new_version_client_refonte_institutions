@@ -2292,7 +2292,8 @@ const TraiterReclamation = (props) => {
 
             {/* let solutions =  */}
             {Array.from(solutions).map((solution) => {
-              let fond = couleurs[getRandomInt(couleurs.length)];
+              // let fond = couleurs[getRandomInt(couleurs.length)];
+              let fond = couleurs[index % couleurs.length]; 
 
               let mesure = "";
               if (solution.status === "APPROVED" && solution.satisfactionMeasureDto !== null) {
@@ -2459,7 +2460,6 @@ const TraiterReclamation = (props) => {
     }
   } else if (props.solution?.length === 0) {
     details = "Cette réclamation est en attente de traitement";
-
   }
 
   const historique = (
