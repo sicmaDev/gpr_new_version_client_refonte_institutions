@@ -242,3 +242,17 @@ export const commentChanged = (comment) => {
         info: 'This action is used to ...'
     }
 };
+export const convertedAtChanged = (convertedAt) => {
+    return {
+        type: 'SUGGESTION_LIST_CONVERTED_AT_CHANGED',
+        payload: convertedAt,
+        info: 'This action is used to ...'
+    }
+};
+export const convertedByChanged = (convertedBy) => {
+    return {
+        type: 'SUGGESTION_LIST_CONVERTED_BY_CHANGED',
+        payload: convertedBy,
+        info: 'This action is used to ...'
+    }
+};

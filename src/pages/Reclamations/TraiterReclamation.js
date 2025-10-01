@@ -378,6 +378,7 @@ const TraiterReclamation = (props) => {
           };
 
           convertClaimApi(data, props).then(() => {
+            props.etat2Changed(false);
             history.push("/suggestions/traitement");
           })
           .finally(() => {
@@ -396,6 +397,7 @@ const TraiterReclamation = (props) => {
         };
 
         convertClaimApi(data, props).then(() => {
+          props.etat2Changed(false);
           history.push("/denonciations/traitement/all");
         })
         .finally(() => {

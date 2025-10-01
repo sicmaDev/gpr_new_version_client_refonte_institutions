@@ -216,6 +216,16 @@ const ListeSuggestionsReducer = (state = initialState, action) => {
                 ...state,
                 crew: action.payload,
             };
+        case 'SUGGESTION_LIST_CONVERTED_AT_CHANGED':
+            return {
+                ...state,
+                converted_at: action.payload,
+            };
+        case 'SUGGESTION_LIST_CONVERTED_BY_CHANGED':
+            return {
+                ...state,
+                converted_by: action.payload,
+            };
         default:
             return state
     }

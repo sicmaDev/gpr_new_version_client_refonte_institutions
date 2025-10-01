@@ -40,6 +40,8 @@ import {
   suggestionListErrors,
   commentChanged,
   selectedItemAudioChanged,
+  convertedAtChanged,
+  convertedByChanged,
 } from "../../redux/actions/Suggestions/ListeSuggestionsActions";
 import http from "../../apis/http-common";
 import PrintIcon from "@mui/icons-material/Print";
@@ -87,6 +89,8 @@ import { downloadFillesApi, getFillesApi, getSuggeAudioApi, listeTousStatuts, li
 import GavelIcon from "@mui/icons-material/Gavel";
 import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from "../../Utils/globals";
 import { downloadAudioApi } from "../../apis/Denonciations/DenonciationsApi";
+import { WarningAmber } from '@mui/icons-material';
+import Tooltip from "@mui/material/Tooltip";
 // import { downloadAudioApi, getDenunAudioApi } from "../../apis/Denonciations/DenonciationsApi";
 
 
@@ -134,6 +138,16 @@ const ListeSuggestions = (props) => {
   };
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
+
+  
+  const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
+    <Tooltip
+      title={`Converti en suggestion par ${props.convertedBy} le ${props.convertedAt}`}
+      arrow
+    >
+      <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }}  style={{ marginTop: 3 }} />
+    </Tooltip>
+  );
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
@@ -401,6 +415,8 @@ const ListeSuggestions = (props) => {
       props.selectedItemChanged(data);
       getFillesApi(data.id, props);
       getSuggeAudioApi(data.id, props);
+      props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
+      props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
 
     } else {
       if ((data.id && data.canal)) {
@@ -428,6 +444,9 @@ const ListeSuggestions = (props) => {
         props.selectedItemChanged(data);
         getSuggeAudioApi(data.id, props);
         getFillesApi(data.id, props);
+        
+        props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
+        props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
       } else {
         // props.idChanged(data.id ? data.id : "")
         props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");
@@ -455,6 +474,8 @@ const ListeSuggestions = (props) => {
         props.createdAtChanged(data.createdAt ? data.createdAt : "");
 
         props.selectedItemChanged(data ? data : "");
+        props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
+        props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
         //fetch attachments for selected claim
         // getFillesApi(data.id, props);
       }
@@ -1265,10 +1286,12 @@ const ListeSuggestions = (props) => {
                       <div className="col l6 s12 pb-5" id="ficheReclamation">
                         <div className="card-panel pb-5">
                           <div className="row pb-5" id="ententeFiche">
-                            <div className="col l6 s12">
+                            <div className="col l6 s12" style={{ display: "flex", alignItems: "center" }}>
                               <h5 className="card-title">
                                 Fiche de la suggestion
                               </h5>
+
+                              {warningConvert}
                             </div>
                             <div className="col l6 s12" style={{}}>
                               {statusElt}
@@ -1493,6 +1516,8 @@ const mapStateToProps = (state) => {
     selectedFiles: state.suggestion_list.selectedFiles,
     selectedItemFiles: state.suggestion_list.selectedItemFiles,
     showSelectPrintItem: state.suggestion_list.showSelectPrintItem,
+    convertedBy: state.suggestion_list.converted_by,
+    convertedAt: state.suggestion_list.converted_at,
   };
 };
 
@@ -1596,6 +1621,12 @@ const mapDispatchToProps = (dispatch) => {
     },
     commentChanged: (comment) => {
       dispatch(commentChanged(comment));
+    },
+    convertedByChanged: (convertedBy) => {
+      dispatch(convertedByChanged(convertedBy));
+    },
+    convertedAtChanged: (convertedAt) => {
+      dispatch(convertedAtChanged(convertedAt));
     },
   };
 };

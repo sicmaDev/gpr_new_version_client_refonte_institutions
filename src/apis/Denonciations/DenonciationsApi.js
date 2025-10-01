@@ -20,6 +20,7 @@ const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const TRANSMISSION_DENUNCIATION_API = HOST + "api/v1/denunciation/transmit_to"
 const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
 const AUDIOS_DENUNCIATION_API = HOST + "api/v1/claim/getAudiosBy/%s"
+const CONVERT_DENUNCIATION_API = HOST + "api/v1/denunciation/convert"
 const DELETE_DENUNCIATION_API = HOST + "api/v1/denunciation/delete/{id}"
 
 
@@ -623,6 +624,30 @@ export const deleteDenunciationApi = async (id, props) => {
     await axios(config)
         .then(function (response) {
             // notify("Bravo - Réclamation supprimé", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+    );
+}
+
+export const convertDenunciationApi = async (data, props) => {
+    console.log("datadata", data)
+    const config = {
+        method: 'post',
+        url: CONVERT_DENUNCIATION_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    await axios(config)
+        .then(function (response) {
+            notify("Bravo - Réclamation convertie avec succès", "success");
             console.log("reponsesessionadd",response.data.content)
         })
         .catch(function (error) {

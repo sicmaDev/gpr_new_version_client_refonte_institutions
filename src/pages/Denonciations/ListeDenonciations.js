@@ -221,6 +221,16 @@ const ListeDenonciations = (props) => {
   const [extraFileLoading, setExtraFileLoading] = useState(false)
   const [claim_id, setClaimId] = useState(null)
 
+  
+  const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
+    <Tooltip
+      title={`Converti en dénonciation par ${props.convertedBy} le ${props.convertedAt}`}
+      arrow
+    >
+      <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }}  style={{ marginTop: 3 }} />
+    </Tooltip>
+  );
+
   const handleClose = () => {
     setOpen(false);
     setInterne(false)
@@ -2214,12 +2224,7 @@ const ListeDenonciations = (props) => {
                                 Fiche de la dénonciation
                               </h5>
 
-                              <Tooltip
-                                title={`Converti en dénonciation par ${props.convertedBy} le ${props.convertedAt}`}
-                                arrow
-                              >
-                                <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }}  style={{ marginTop: 3 }} />
-                              </Tooltip>
+                              {warningConvert}                              
                             </div>
                             <div className="col l6 s12" style={{}}>
                               {statusElt}

@@ -113,8 +113,8 @@ import RecorderControls from "../../components/recorder-controls";
 import useRecorder from "../../hooks/useRecorder";
 import { LoadingButton } from "@mui/lab";
 import { addExtraClaimApi } from "../../apis/Reclamations/ReclamationsApi";
-import { getClaimAudioApi } from "../../apis/Reclamations/ReclamationsApi";
-import { affectDenunciationApi, approveDenunciationSolutionApi, downloadAudioApi, getDenunAudioApi, getFillesApi, listeTreat, transmissionDenunciationApi, treatDenunciationApi, unapproveDenunciationSolutionApi, deleteDenunciationApi, downloadFillesApi, downloadFillesApi2 } from "../../apis/Denonciations/DenonciationsApi";
+import { getClaimAudioApi, convertClaimApi } from "../../apis/Reclamations/ReclamationsApi";
+import { affectDenunciationApi, approveDenunciationSolutionApi, downloadAudioApi, getDenunAudioApi, getFillesApi, listeTreat, transmissionDenunciationApi, treatDenunciationApi, unapproveDenunciationSolutionApi, deleteDenunciationApi, downloadFillesApi, convertDenunciationApi, downloadFillesApi2 } from "../../apis/Denonciations/DenonciationsApi";
 import { addSuggestionApi, addSuggestionApiOffline} from "../../apis/Suggestions/SuggestionsApi";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import { modalify } from "../../Utils/modal";
@@ -241,6 +241,15 @@ const TraiterDenonciation = (props) => {
   //#darrell
   const [usersCGR, setUsersCGR] = React.useState([]);
   const [reafect, setReacfect] = useState(false);
+
+  const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
+    <Tooltip
+      title={`Converti en dénonciation par ${props.convertedBy} le ${props.convertedAt}`}
+      arrow
+    >
+      <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }} />
+    </Tooltip>
+  );
 
   const getStatusLabel = (status) => {
     var statusElt = status
@@ -428,43 +437,29 @@ const TraiterDenonciation = (props) => {
     claim["code"] = "";
     claim["id"] = "";
 
-    console.log("claim", claim);
-    console.log("audioFiles", audioFiles);
-    console.log("fileBlobs", fileBlobs);
-
     formData.append("suggestion", JSON.stringify(claim));
-    if (fileBlobs != null) {
-      fileBlobs.forEach(fileItem => {
-        const file = new File([fileItem.blob], fileItem.name, {type: fileItem.blob.type || 'application/octet-stream'});
-        formData.append('files', file);
-      });
-    }
-
-    if (audioFiles != null) {
-      audioFiles.forEach(audio => {
-        const file = new File([audio.blob], "sugggestion_record_" + uuid() + ".ogg", {
-          type: "audio/ogg; codecs=opus" });
-        formData.append("audios", file);    
-      });
-    }
 
     props.etat2Changed(true)
     if (mode === 1) {
-      addSuggestionApi(formData, props).then(() => {
-        deleteDenunciationApi(dataRow.id, props).then(() => {});
-        history.push("/suggestions/traitement");
+      addSuggestionApi(formData, props).then((response) => {
+        const data = {
+          code: response.data.content.code,
+          claimId: dataRow.id,
+        };
+
+        convertDenunciationApi(data, props).then(() => {
+          props.etat2Changed(false);
+          history.push("/suggestions/traitement"); 
+        })
+        .finally(() => {
+          setLoadingConversion(false);
+        });
       })
       .finally(() => {
         setLoadingConversion(false);
       });
     } else {
-      addSuggestionApiOffline(claim, props).then(() => {
-        deleteDenunciationApi(dataRow.id, props).then(() => {});
-        history.push("/suggestions/traitement");
-      })
-      .finally(() => {
-        setLoadingConversion(false);
-      });
+      // Offline mode
     }
   }
   
@@ -622,55 +617,6 @@ const TraiterDenonciation = (props) => {
 
     }
   }, [audio]);
-  
-  useEffect(() => {
-    if (props.selectedItemAudio && props.selectedItemAudio.length > 0) {      
-      Promise.all(
-        props.selectedItemAudio.map(async (attachment) => {
-          const data = await downloadAudioApi(attachment.id, attachment.name);
-          const blob = new Blob([data], { type: "audio/ogg; codecs=opus" });
-          const url = URL.createObjectURL(blob);
-          
-          return {
-            id: attachment.id,
-            name: attachment.name,
-            blob,
-            url,
-          };
-        })
-      ).then(setAudioFiles);
-    }
-  }, [props.selectedItemAudio]);
-  
-  useEffect(() => {
-    if (props.selectedItemFiles && props.selectedItemFiles.length > 0) {
-      Promise.all(
-        props.selectedItemFiles.map(async (attachment) => {
-          try {
-            const data = await downloadFillesApi2(attachment.id, attachment.name);
-            if (!data) {
-              console.warn("Blob null pour le fichier", attachment.name);
-              return null;
-            }
-
-            const url = URL.createObjectURL(data);
-
-            return {
-              id: attachment.id,
-              name: attachment.name,
-              blob: data,
-              url,
-            };
-          } catch (e) {
-            console.error("Erreur téléchargement", e);
-            return null;
-          }
-        })
-      ).then((results) => {
-        setFileBlobs(results.filter(Boolean));
-      });
-    }
-  }, [props.selectedItemFiles]);
 
   const invitation = (event) => {
 
@@ -4335,12 +4281,7 @@ const TraiterDenonciation = (props) => {
                                   Fiche de la dénonciation
                                 </h5>
 
-                                <Tooltip
-                                  title={`Converti en dénonciation par ${props.convertedBy} le ${props.convertedAt}`}
-                                  arrow
-                                >
-                                  <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }} />
-                                </Tooltip>
+                                {warningConvert}
                               </div>
                               <div className="col l6 m6 s12 df justify-content-end">
                                 {btnConversion}

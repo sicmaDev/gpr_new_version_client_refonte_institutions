@@ -438,6 +438,15 @@ const TraiterSuggestion = (props) => {
     props.suggestionHandleErrors(errors);
   };
 
+  const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
+    <Tooltip
+      title={`Converti en suggestion par ${props.convertedBy} le ${props.convertedAt}`}
+      arrow
+    >
+      <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }}  style={{ marginTop: 3 }} />
+    </Tooltip>
+  );
+
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
 
   let details;
@@ -696,12 +705,7 @@ const TraiterSuggestion = (props) => {
                               Fiche de la suggestion
                             </h5>
 
-                            <Tooltip
-                              title={`Converti en suggestion par ${props.convertedBy} le ${props.convertedAt}`}
-                              arrow
-                            >
-                              <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }}  style={{ marginTop: 3 }} />
-                            </Tooltip>
+                            {warningConvert}
                           </div>
 
                           </div>
