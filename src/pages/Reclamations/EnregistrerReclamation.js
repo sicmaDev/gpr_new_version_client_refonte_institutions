@@ -1751,32 +1751,7 @@ const EnregistrerReclamation = (props) => {
                                 Détails de la réclamation
                               </h6>
                             </div>
-                            <div className="col l6 m12 s12 input-field">
-                              <input
-                                id="code"
-                                name="code"
-                                type="text"
-                                placeholder=""
-                                className="validate"
-                                value={props.code}
-                                disabled
-                              />
-                              <label htmlFor="code" className={"active"}>
-                                Code
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.code
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-                            <div className="col l6 m12 s12 input-field">
+                            <div className="col l12 m12 s12 input-field">
                               <DatePicker
                                 // placeholderText="Date et Heure de réception"
                                 withPortal

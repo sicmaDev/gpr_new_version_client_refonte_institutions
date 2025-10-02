@@ -2456,10 +2456,46 @@ const TraiterReclamation = (props) => {
         </>);
 
     } else {
-      details = "Aucune donnée";
+      details = (
+        <>
+          <div className="row pb-4">
+            <div
+              className="col s12 mb-2"
+              style={{
+                background: "#f5f9ff",
+                borderLeft: "4px solid #1976d2",
+                padding: "10px 5px",
+                borderRadius: "6px",
+                display: "flex",
+                alignItems: "center", 
+              }}
+            >
+              Aucune donnée
+            </div>
+          </div> 
+        </>
+      );
     }
   } else if (props.solution?.length === 0) {
-    details = "Cette réclamation est en attente de traitement";
+    details = (
+      <>
+        <div className="row pb-4">
+          <div
+            className="col s12 mb-2"
+            style={{
+              background: "#f5f9ff",
+              borderLeft: "4px solid #1976d2",
+              padding: "10px 5px",
+              borderRadius: "6px",
+              display: "flex",
+              alignItems: "center", 
+            }}
+          >
+            Cette réclamation est en attente de traitement
+          </div>
+        </div> 
+      </>
+    );
   }
 
   const historique = (
@@ -3058,11 +3094,20 @@ const TraiterReclamation = (props) => {
       let personAffect =
         <>
           {/* details affectation */}
-          <div className="row">
-            <div className="col s12 pb-2">
+          <div className="row pb-4">
+            <div
+              className="col s12 mb-2"
+              style={{
+                background: "#EFF6FF",
+                borderLeft: "4px solid #1976d2",
+                padding: "10px 5px",
+                borderRadius: "4px",
+              }}
+            >
               Réclamation affectée à{" "}
-              <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-              {props.assigned_by} le {formatDate(props.assignedAt)}
+              <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong> par{" "}
+              <em>{props.assigned_by}</em> le{" "}
+              <span style={{ color: "#555" }}>{formatDate(props.assignedAt)}</span>
             </div>
           </div>
         </>
@@ -3337,11 +3382,20 @@ const TraiterReclamation = (props) => {
         } else {
           if (hbt.includes("H14") || addR !== "MOLDUE") {
             tmp = (
-              <div className="row">
-                <div className="col s12 pb-2">
+              <div className="row pb-4">
+                <div
+                  className="col s12 mb-2"
+                  style={{
+                    background: "#EFF6FF",
+                    borderLeft: "4px solid #1976d2",
+                    padding: "10px 5px",
+                    borderRadius: "4px",
+                  }}
+                >
                   Réclamation affectée à{" "}
-                  <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-                  {props.assigned_by} le {formatDate(props.assignedAt)}
+                  <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong> par{" "}
+                  <em>{props.assigned_by}</em> le{" "}
+                  <span style={{ color: "#555" }}>{formatDate(props.assignedAt)}</span>
                 </div>
               </div>
             )
@@ -3369,10 +3423,21 @@ const TraiterReclamation = (props) => {
           treatForm = (
             <>
               {/* details affectation */}
-              <div className="col s12 pb-2">
-                Réclamation affectée à{" "}
-                <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-                {props.assigned_by} le {formatDate(props.assignedAt)}
+              <div className="row pb-4">
+                <div
+                  className="col s12 mb-2"
+                  style={{
+                    background: "#EFF6FF",
+                    borderLeft: "4px solid #1976d2",
+                    padding: "10px 5px",
+                    borderRadius: "4px",
+                  }}
+                >
+                  Réclamation affectée à{" "}
+                  <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong> par{" "}
+                  <em>{props.assigned_by}</em> le{" "}
+                  <span style={{ color: "#555" }}>{formatDate(props.assignedAt)}</span>
+                </div>
               </div>
               {/* historique */}
               <div className="row">
@@ -5314,6 +5379,38 @@ const TraiterReclamation = (props) => {
                                   </div>
                                 </div></div>
                             </div>
+                            
+                            {/* Audio part */}
+                            <div className="">
+                              <div className="card-panel pb-5">
+                                <div className="row" id="">
+                                  <div className="col s12 pb-3">
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <Typography
+                                        gutterBottom
+                                        variant="body1"
+                                        component="div"
+                                        sx={{
+                                          fontWeight: 'bold',
+                                          mb: 1,
+                                          mr: 1
+                                        }}
+                                      >  Audios
+
+                                      </Typography>
+                                      <label htmlFor="audio" onClick={() => {
+                                        setAudioBox(true)
+                                        setOpen2(true)
+                                      }} className="btn btn-primary" >
+                                        Ajouter un audio
+                                      </label>
+                                    </Box>
+                                  </div>
+                                  <div className="col s12">
+                                    {audioList}
+                                  </div>
+                                </div></div>
+                            </div>                            
                           </div>
 
                           {/* second part */}
@@ -5351,38 +5448,6 @@ const TraiterReclamation = (props) => {
                                 {treatForm}
                                 {tchat}
                               </>
-                            </div>
-
-                            {/* Audio part */}
-                            <div className="">
-                              <div className="card-panel pb-5">
-                                <div className="row" id="">
-                                  <div className="col s12 pb-3">
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                      <Typography
-                                        gutterBottom
-                                        variant="body1"
-                                        component="div"
-                                        sx={{
-                                          fontWeight: 'bold',
-                                          mb: 1,
-                                          mr: 1
-                                        }}
-                                      >  Audios
-
-                                      </Typography>
-                                      <label htmlFor="audio" onClick={() => {
-                                        setAudioBox(true)
-                                        setOpen2(true)
-                                      }} className="btn btn-primary" >
-                                        Ajouter un audio
-                                      </label>
-                                    </Box>
-                                  </div>
-                                  <div className="col s12">
-                                    {audioList}
-                                  </div>
-                                </div></div>
                             </div>
                           </div>
                         </div>

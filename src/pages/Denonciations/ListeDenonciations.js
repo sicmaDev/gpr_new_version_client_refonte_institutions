@@ -223,12 +223,10 @@ const ListeDenonciations = (props) => {
 
   
   const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
-    <Tooltip
-      title={`Converti en dénonciation par ${props.convertedBy} le ${props.convertedAt}`}
-      arrow
-    >
-      <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }}  style={{ marginTop: 3 }} />
-    </Tooltip>
+    <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
+      <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
+      {`Converti en dénonciation par ${props.convertedBy} le ${formatDate(props.convertedAt)}`}
+    </span>
   );
 
   const handleClose = () => {
@@ -989,7 +987,21 @@ const ListeDenonciations = (props) => {
               </div>
             </div>
             <div className="mt-2">
-              Aucune donnée
+              <div className="row pb-4 ml-2">
+                <div
+                  className="col s12 mb-2"
+                  style={{
+                    background: "#f5f9ff",
+                    borderLeft: "4px solid #1976d2",
+                    padding: "10px 5px",
+                    borderRadius: "6px",
+                    display: "flex",
+                    alignItems: "center", 
+                  }}
+                >
+                  Aucune donnée
+                </div>
+              </div>
             </div>
           </>
       }
@@ -998,20 +1010,47 @@ const ListeDenonciations = (props) => {
       if (props.status === "AFFECTED") {
         affectation =
           <>
-            <Typography component="div" >
-              <div>
-
-                Réclamation affectée à  <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par {props.assigned_by} le {formatDate(props.assigned_at)}
-
+            <div className="row pb-4 ml-2">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#EFF6FF",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "4px",
+                }}
+              >
+                Dénonciation affectée à{" "}
+                <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong> par{" "}
+                <em>{props.assigned_by}</em> le{" "}
+                <span style={{ color: "#555" }}>{formatDate(props.assigned_at)}</span>
               </div>
-            </Typography>
+            </div>
           </>
         details = (
           <>
             {affectation}
           </>);
       } else {
-        details = "Cette dénonciation est en attente de traitement";
+        details = (
+          <>
+            <div className="row pb-4 ml-2">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#f5f9ff",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center", 
+                }}
+              >
+                Cette dénonciation est en attente de traitement
+              </div>
+            </div> 
+          </>
+        );
       }
 
 
@@ -1062,17 +1101,44 @@ const ListeDenonciations = (props) => {
         //MAIS EST AFFECTEE
         affectation = (
           <>
-            <Typography component="div">
-              <div>
-                Réclamation affectée le {formatDate(props.assigned_at)}
+            <div className="row pb-4 ml-2">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#EFF6FF",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "4px",
+                }}
+              >
+                Dénonciation affectée le{" "}
+                <span style={{ color: "#555" }}>{formatDate(props.assigned_at)}</span>
               </div>
-            </Typography>
+            </div>
           </>
         );
         details = <>{affectation}</>;
       } else {
         //AUCUN TRAITEMENT SUR CETTE REC
-        details = "Cette dénonciation est en attente de traitement";
+        details = (
+          <>
+            <div className="row pb-4 ml-2">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#f5f9ff",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center", 
+                }}
+              >
+                Cette dénonciation est en attente de traitement
+              </div>
+            </div> 
+          </>
+        );
       }
     }
   }
@@ -2224,8 +2290,6 @@ const ListeDenonciations = (props) => {
                               <h5 className="card-title">
                                 Fiche de la dénonciation
                               </h5>
-
-                              {warningConvert}                              
                             </div>
                             <div className="col l6 s12" style={{}}>
                               {statusElt}
@@ -2242,6 +2306,13 @@ const ListeDenonciations = (props) => {
                                 </div>
 
                                 <div className="row">
+                                  <div
+                                    className="col l12 s12 df pb-2"
+                                    id="code"
+                                  >
+                                    {warningConvert}
+                                  </div>
+                                  
                                   <div className="col l6 s12 df pb-2" id="code">
                                     <PinIcon sx={{ mr: 2 }} /> {props.code}
                                   </div>
@@ -2356,7 +2427,39 @@ const ListeDenonciations = (props) => {
                                 {attachmentList}
                               </div>
                             </div></div>
-                        </div>                        
+                        </div>
+
+                        {/* Audio part */}
+                        <div className="">
+                          <div className="card-panel pb-5">
+                            <div className="row" id="">
+                              <div className="col s12 pb-3">
+                                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography
+                                    gutterBottom
+                                    variant="body1"
+                                    component="div"
+                                    sx={{
+                                      fontWeight: 'bold',
+                                      mb: 1,
+                                      mr: 1
+                                    }}
+                                  >  Audios
+
+                                  </Typography>
+                                  <label htmlFor="audio" onClick={() => {
+                                    setAudioBox(true)
+                                    setOpen2(true)
+                                  }} className="btn btn-primary" >
+                                    Ajouter un audio
+                                  </label>
+                                </Box>
+                              </div>
+                              <div className="col s12">
+                                {audioList}
+                              </div>
+                            </div></div>
+                        </div>                                                
                       </div>
 
                       {/* second part */}
@@ -2411,39 +2514,7 @@ const ListeDenonciations = (props) => {
                             </div>
                           </div>
 
-                        </div>
-
-                        {/* Audio part */}
-                        <div className="">
-                          <div className="card-panel pb-5">
-                            <div className="row" id="">
-                              <div className="col s12 pb-3">
-                                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <Typography
-                                    gutterBottom
-                                    variant="body1"
-                                    component="div"
-                                    sx={{
-                                      fontWeight: 'bold',
-                                      mb: 1,
-                                      mr: 1
-                                    }}
-                                  >  Audios
-
-                                  </Typography>
-                                  <label htmlFor="audio" onClick={() => {
-                                    setAudioBox(true)
-                                    setOpen2(true)
-                                  }} className="btn btn-primary" >
-                                    Ajouter un audio
-                                  </label>
-                                </Box>
-                              </div>
-                              <div className="col s12">
-                                {audioList}
-                              </div>
-                            </div></div>
-                        </div>                          
+                        </div>                       
                       </div>                                                    
                     </div>
 

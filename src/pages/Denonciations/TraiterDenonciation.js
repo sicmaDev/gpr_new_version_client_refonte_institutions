@@ -242,13 +242,11 @@ const TraiterDenonciation = (props) => {
   const [usersCGR, setUsersCGR] = React.useState([]);
   const [reafect, setReacfect] = useState(false);
 
-  const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
-    <Tooltip
-      title={`Converti en dénonciation par ${props.convertedBy} le ${props.convertedAt}`}
-      arrow
-    >
-      <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }} />
-    </Tooltip>
+  const warningConvert = (props.convertedBy !== "") && (
+    <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontStyle: 'italic' }}>
+      {/* <WarningAmber fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
+      {`Converti en dénonciation par ${props.convertedBy} le ${formatDate(props.convertedAt)}`} */}
+    </span>
   );
 
   const getStatusLabel = (status) => {
@@ -1451,7 +1449,7 @@ const TraiterDenonciation = (props) => {
     getDenunAudioApi(data.id, props);
     props.extrasChanged(data.extras ?? []);
     props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
-    props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
+    // props.convertedAtChanged(data.convertedAt ? "" : "");
 
     props.sessionChanged(data.session !== null ? data.session : "");
   };
@@ -2292,12 +2290,48 @@ const TraiterDenonciation = (props) => {
             </div>
           </>);
       } else {
-        details = "Aucune donnée"
+        details = (
+          <>
+            <div className="row pb-4">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#f5f9ff",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center", 
+                }}
+              >
+                Aucune donnée
+              </div>
+            </div> 
+          </>
+        );
       }
     }
 
   } else if ((props.solution).length === 0) {
-    details = "Cette dénonciation est en attente de traitement";
+    details = (
+      <>
+        <div className="row pb-4">
+          <div
+            className="col s12 mb-2"
+            style={{
+              background: "#f5f9ff",
+              borderLeft: "4px solid #1976d2",
+              padding: "10px 5px",
+              borderRadius: "6px",
+              display: "flex",
+              alignItems: "center", 
+            }}
+          >
+            Cette dénonciation est en attente de traitement
+          </div>
+        </div> 
+      </>
+    );
   }
 
   let formButtons;
@@ -2592,7 +2626,25 @@ const TraiterDenonciation = (props) => {
       if ((props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
         user.firstAndLastName === props.created_by &&
         props.transmitted === "true") {
-        affectForm = "Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
+        affectForm = (
+          <>
+            <div className="row pb-4">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#f5f9ff",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center", 
+                }}
+              >
+                Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle.
+              </div>
+            </div> 
+          </>
+        );
       }
 
       if (hbt.includes("H6") || addR === "PILOTE") {
@@ -2848,14 +2900,14 @@ const TraiterDenonciation = (props) => {
       let afForm;
       let personAffect =
         <>
-          <div className="row">
+          <div className="row pb-4">
             <div
-              className="col s12 pb-2"
+              className="col s12 mb-2"
               style={{
-                background: "#f5f9ff",
+                background: "#EFF6FF",
                 borderLeft: "4px solid #1976d2",
-                padding: "10px",
-                borderRadius: "6px",
+                padding: "10px 5px",
+                borderRadius: "4px",
               }}
             >
               Dénonciation affectée à{" "}
@@ -3124,13 +3176,13 @@ const TraiterDenonciation = (props) => {
         if (hbt.includes("H14") || addR !== "MOLDUE") {
           tmp = (
             <>
-              <div className="row">
+              <div className="row pb-4">
                 <div
-                  className="col s12 pb-2"
+                  className="col s12 mb-2"
                   style={{
                     background: "#EFF6FF",
                     borderLeft: "4px solid #1976d2",
-                    padding: "8px",
+                    padding: "10px 5px",
                     borderRadius: "4px",
                   }}
                 >
@@ -4300,8 +4352,6 @@ const TraiterDenonciation = (props) => {
                                 <h5 className="card-title" style={{ margin: 0 }}>
                                   Fiche de la dénonciation
                                 </h5>
-
-                                {warningConvert}
                               </div>
                               <div className="col l6 m6 s12 df justify-content-end">
                                 {btnConversion}
@@ -4318,6 +4368,13 @@ const TraiterDenonciation = (props) => {
                                   </div>
 
                                   <div className="row">
+                                    <div
+                                      className="col l12 s12 df pb-2"
+                                      id="code"
+                                    >
+                                      {warningConvert}
+                                    </div>
+
                                     <div
                                       className="col l6 s12 df pb-2"
                                       id="code"
@@ -4470,6 +4527,38 @@ const TraiterDenonciation = (props) => {
                                 </div>
                               </div></div>
                           </div>
+
+                          {/* Audio part */}
+                          <div className="">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-3">
+                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: 'bold',
+                                        mb: 1,
+                                        mr: 1
+                                      }}
+                                    >  Audios
+
+                                    </Typography>
+                                    <label htmlFor="audio" onClick={() => {
+                                      setAudioBox(true)
+                                      setOpen2(true)
+                                    }} className="btn btn-primary" >
+                                      Ajouter un audio
+                                    </label>
+                                  </Box>
+                                </div>
+                                <div className="col s12">
+                                  {audioList}
+                                </div>
+                              </div></div>
+                          </div>                          
                         </div>
 
                         {/* second part */}
@@ -4504,38 +4593,6 @@ const TraiterDenonciation = (props) => {
                             {affectForm}
                             {treatForm}
                             {tchat}
-                          </div>
-
-                          {/* Audio part */}
-                          <div className="">
-                            <div className="card-panel pb-5">
-                              <div className="row" id="">
-                                <div className="col s12 pb-3">
-                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Typography
-                                      gutterBottom
-                                      variant="body1"
-                                      component="div"
-                                      sx={{
-                                        fontWeight: 'bold',
-                                        mb: 1,
-                                        mr: 1
-                                      }}
-                                    >  Audios
-
-                                    </Typography>
-                                    <label htmlFor="audio" onClick={() => {
-                                      setAudioBox(true)
-                                      setOpen2(true)
-                                    }} className="btn btn-primary" >
-                                      Ajouter un audio
-                                    </label>
-                                  </Box>
-                                </div>
-                                <div className="col s12">
-                                  {audioList}
-                                </div>
-                              </div></div>
                           </div>
                         </div>                                                      
                       </div>

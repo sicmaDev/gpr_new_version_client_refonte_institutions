@@ -82,6 +82,7 @@ import { suggestionListErrors } from "../../redux/actions/Suggestions/Traitement
 import { licenseInfo } from "../../apis/LoginApi";
 import { downloadAudioApi } from "../../apis/Denonciations/DenonciationsApi";
 import { WarningAmber } from '@mui/icons-material';
+import WarningIcon from '@mui/icons-material/Warning';
 
 
 const styles = {
@@ -439,12 +440,10 @@ const TraiterSuggestion = (props) => {
   };
 
   const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
-    <Tooltip
-      title={`Converti en suggestion par ${props.convertedBy} le ${props.convertedAt}`}
-      arrow
-    >
-      <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }}  style={{ marginTop: 3 }} />
-    </Tooltip>
+      <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
+        <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
+        {`Converti en dénonciation par ${props.convertedBy} le ${formatDate(props.convertedAt)}`}
+      </span>
   );
 
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
@@ -703,9 +702,7 @@ const TraiterSuggestion = (props) => {
                           <div className="col l6 s12" style={{ display: "flex", alignItems: "center" }}>
                             <h5 className="card-title">
                               Fiche de la suggestion
-                            </h5>
-
-                            {warningConvert}
+                            </h5>                            
                           </div>
 
                           </div>
@@ -718,6 +715,13 @@ const TraiterSuggestion = (props) => {
                                   </h6>
                                 </div>
                                 <div className="row">
+                                  <div
+                                    className="col l12 s12 df pb-2"
+                                    id="code"
+                                  >
+                                    {warningConvert}
+                                  </div>
+
                                   <div
                                     className="col l6 s12 df pb-2"
                                     id="firstname"

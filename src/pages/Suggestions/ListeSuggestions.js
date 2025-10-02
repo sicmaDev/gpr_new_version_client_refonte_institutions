@@ -91,6 +91,7 @@ import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTI
 import { downloadAudioApi } from "../../apis/Denonciations/DenonciationsApi";
 import { WarningAmber } from '@mui/icons-material';
 import Tooltip from "@mui/material/Tooltip";
+import WarningIcon from '@mui/icons-material/Warning';
 // import { downloadAudioApi, getDenunAudioApi } from "../../apis/Denonciations/DenonciationsApi";
 
 
@@ -141,12 +142,10 @@ const ListeSuggestions = (props) => {
 
   
   const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
-    <Tooltip
-      title={`Converti en suggestion par ${props.convertedBy} le ${props.convertedAt}`}
-      arrow
-    >
-      <WarningAmber fontSize="medium" sx={{ ml: 1, color: 'orange' }}  style={{ marginTop: 3 }} />
-    </Tooltip>
+      <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
+        <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
+        {`Converti en dénonciation par ${props.convertedBy} le ${formatDate(props.convertedAt)}`}
+      </span>
   );
 
   let audioList;
@@ -617,16 +616,25 @@ const ListeSuggestions = (props) => {
 
       </>
   } else {
-    details =
+    details = (
       <>
-        <div className="row">
-          <div className="col l12 m12 s12 mt-4">
-            Cette suggestion est en atente de traitement
+        <div className="row pb-4 ml-2">
+          <div
+            className="col s12 mb-2"
+            style={{
+              background: "#f5f9ff",
+              borderLeft: "4px solid #1976d2",
+              padding: "10px 5px",
+              borderRadius: "6px",
+              display: "flex",
+              alignItems: "center", 
+            }}
+          >
+            Cette suggestion est en attente de traitement
           </div>
-
-        </div>
+        </div> 
       </>
-
+    );
   }
 
   let attachmentList;
@@ -1290,8 +1298,6 @@ const ListeSuggestions = (props) => {
                               <h5 className="card-title">
                                 Fiche de la suggestion
                               </h5>
-
-                              {warningConvert}
                             </div>
                             <div className="col l6 s12" style={{}}>
                               {statusElt}
@@ -1306,6 +1312,13 @@ const ListeSuggestions = (props) => {
                                   </h6>
                                 </div>
                                 <div className="row">
+                                  <div
+                                    className="col l12 s12 df pb-2"
+                                    id="code"
+                                  >
+                                    {warningConvert}
+                                  </div>
+                                  
                                   <div
                                     className="col l6 s12 df pb-2"
                                     id="firstname"

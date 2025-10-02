@@ -1997,6 +1997,38 @@ const MesurerReclamation = (props) => {
                                 </div>
                               </div></div>
                           </div>
+                          
+                          {/* Audio part */}
+                          <div className="">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-3">
+                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: 'bold',
+                                        mb: 1,
+                                        mr: 1
+                                      }}
+                                    >  Audios
+
+                                    </Typography>
+                                    <label htmlFor="audio" onClick={() => {
+                                      setAudioBox(true)
+                                      setOpen2(true)
+                                    }} className="btn btn-primary" >
+                                      Ajouter un audio
+                                    </label>
+                                  </Box>
+                                </div>
+                                <div className="col s12">
+                                  {audioList}
+                                </div>
+                              </div></div>
+                          </div> 
                         </div>
 
                         {/* second part */}
@@ -2121,38 +2153,6 @@ const MesurerReclamation = (props) => {
                             {mesureForm}
                             {deForm}
                           </div>
-
-                          {/* Audio part */}
-                          <div className="">
-                            <div className="card-panel pb-5">
-                              <div className="row" id="">
-                                <div className="col s12 pb-3">
-                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Typography
-                                      gutterBottom
-                                      variant="body1"
-                                      component="div"
-                                      sx={{
-                                        fontWeight: 'bold',
-                                        mb: 1,
-                                        mr: 1
-                                      }}
-                                    >  Audios
-
-                                    </Typography>
-                                    <label htmlFor="audio" onClick={() => {
-                                      setAudioBox(true)
-                                      setOpen2(true)
-                                    }} className="btn btn-primary" >
-                                      Ajouter un audio
-                                    </label>
-                                  </Box>
-                                </div>
-                                <div className="col s12">
-                                  {audioList}
-                                </div>
-                              </div></div>
-                          </div> 
                         </div>                       
                       </div>
                     </Dialog>

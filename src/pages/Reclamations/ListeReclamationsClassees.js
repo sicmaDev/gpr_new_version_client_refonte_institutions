@@ -824,17 +824,45 @@ const ListeReclamationsClassees = (props) => {
     if (props.status === "AFFECTED") {
       affectation = (
         <>
-          <Typography component="div">
-            <div>
-              Réclamation affectée à {props.handled_by} par {props.assigned_by}{" "}
-              le {formatDate(props.assigned_at)}
+          <div className="row pb-4">
+            <div
+              className="col s12 mb-2"
+              style={{
+                background: "#EFF6FF",
+                borderLeft: "4px solid #1976d2",
+                padding: "10px 5px",
+                borderRadius: "4px",
+              }}
+            >
+              Réclamation affectée à{" "}
+              <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong> par{" "}
+              <em>{props.assigned_by}</em> le{" "}
+              <span style={{ color: "#555" }}>{formatDate(props.assigned_at)}</span>
             </div>
-          </Typography>
+          </div>
         </>
       );
       details = <>{affectation}</>;
     } else {
-      details = "Cette réclamation est en attente de traitement";
+      details = (
+        <>
+          <div className="row pb-4">
+            <div
+              className="col s12 mb-2"
+              style={{
+                background: "#f5f9ff",
+                borderLeft: "4px solid #1976d2",
+                padding: "10px 5px",
+                borderRadius: "6px",
+                display: "flex",
+                alignItems: "center", 
+              }}
+            >
+              Cette réclamation est en attente de traitement
+            </div>
+          </div> 
+        </>
+      );
     }
   }
 
