@@ -2838,7 +2838,25 @@ const TraiterReclamation = (props) => {
         if ((props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
           user.firstAndLastName === props.created_by &&
           props.transmitted === "true") {
-          affectForm = "Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
+          affectForm = (
+            <>
+              <div className="row pb-4">
+                <div
+                  className="col s12 mb-2"
+                  style={{
+                    background: "#f5f9ff",
+                    borderLeft: "4px solid #1976d2",
+                    padding: "10px 5px",
+                    borderRadius: "6px",
+                    display: "flex",
+                    alignItems: "center", 
+                  }}
+                >
+                  Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle.
+                </div>
+              </div> 
+            </>
+          );
         } else {
           affectForm = (
             <>
@@ -5604,6 +5622,7 @@ const mapStateToProps = (state) => {
     etat: state.claim_handle.etat,
     etat2: state.claim_handle.etat2,
     etat3: state.claim_handle.etat3,
+    etat4: state.claim_handle.etat4,
     anonymat: state.claim_handle.anonymat,
     transmitted: state.claim_handle.transmitted,
     transmittedTo: state.claim_handle.transmittedTo,

@@ -103,7 +103,7 @@ import TimelineDot from '@mui/lab/TimelineDot';
 import excel from '../../assets/images/excel.svg'
 import pdf from '../../assets/images/pdf.svg'
 import timelineOppositeContentClasses from '@mui/lab/TimelineOppositeContent';
-import { formatDate, formatDate2, guessExtension, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from "../../Utils/utils";
+import { formatDate, formatDate2, formatDate3, guessExtension, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import { Avatar, DialogContent, DialogContentText, Text, Box, CardContent, Grid, Tooltip, List, ListItemButton, ListItemText, Card, DialogActions, DialogTitle } from "@mui/material";
 import { FileDownload, History, Info, Pause, PlayArrow, Star, VolumeUp } from "@mui/icons-material";
 import RecorderControls from "../../components/recorder-controls";
@@ -225,7 +225,7 @@ const ListeDenonciations = (props) => {
   const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
     <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
       <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
-      {`Converti en dénonciation par ${props.convertedBy} le ${formatDate(props.convertedAt)}`}
+      {`Converti en dénonciation par ${props.convertedBy} le ${formatDate3(props.convertedAt)}`}
     </span>
   );
 

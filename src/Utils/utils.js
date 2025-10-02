@@ -263,7 +263,30 @@ export const formatDate2 = (date) => {
     return `${year}-${month}-${day}`; // Format YYYY-MM-DD
 };
 
+export const formatDate3 = (dateString) => {
+  if (!dateString) return "date inconnue";
 
+  // séparer date et heure
+  const [datePart, timePart] = dateString.split(" ");
+  if (!datePart || !timePart) return "date invalide";
+
+  const [day, month, year] = datePart.split("-");
+  if (!day || !month || !year) return "date invalide";
+
+  // reconstruire en format ISO
+  const isoDate = `${year}-${month}-${day}T${timePart}`;
+
+  const date = new Date(isoDate);
+  if (isNaN(date.getTime())) return "date invalide";
+
+  return new Intl.DateTimeFormat("fr-FR", {
+    year: "numeric",
+    month: "long",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "numeric",
+  }).format(date);
+};
 
 export const convertToCsv = (objArray) => {
     var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;

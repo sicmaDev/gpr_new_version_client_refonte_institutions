@@ -74,7 +74,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { formatDate, guessExtension, loadItemFromSessionStorage, today } from "../../Utils/utils";
+import { formatDate, formatDate3, guessExtension, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import SaveIcon from '@mui/icons-material/Save';
 import { downloadFillesApi, getFillesApi, getSuggeAudioApi, listeByStatut, listeTousStatuts, treatSuggestionApi } from "../../apis/Suggestions/SuggestionsApi";
 import { LoadingButton } from "@mui/lab";
@@ -442,7 +442,7 @@ const TraiterSuggestion = (props) => {
   const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
       <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
         <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
-        {`Converti en dénonciation par ${props.convertedBy} le ${formatDate(props.convertedAt)}`}
+        {`Converti en suggestion par ${props.convertedBy} le ${formatDate3(props.convertedAt)}`}
       </span>
   );
 

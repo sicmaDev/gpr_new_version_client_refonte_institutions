@@ -9,9 +9,12 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from "@mui/icons-material/Edit";
 import { connect } from "react-redux";
 import Fab from "@mui/material/Fab";
 import MicIcon from "@mui/icons-material/Mic";
+import {modalify} from "../../Utils/modal";
 import {
   addressChanged,
   claimRecordErrors,
@@ -72,6 +75,7 @@ import {
   listeByStatut,
   listeByStatutOffline,
   downloadAudioApi,
+  deleteClaimApi
 } from "../../apis/Reclamations/ReclamationsApi";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
@@ -106,6 +110,7 @@ import moment from "moment"
 import { downloadFilesApi } from "../../apis/WhatsappApi";
 import { reset } from "../../redux/actions/WhatsappActions";
 import { CancelOutlined } from "@mui/icons-material";
+import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 
 
 
@@ -352,7 +357,8 @@ const EnregistrerReclamation = (props) => {
   const [underSubjectOptions, setUnderSubjectOptions] = useState([]);
   const [clearAudio, setClearAudio] = useState(0)
   useEffect(() => { }, [showAudioPlayer, currentAudio])
-
+  
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
   const smsDefault =
     "CHER (E) BENEFICIAIRE, VOTRE RECLAMATION A BIEN ETE PRISE EN COMPTE.NOTRE EQUIPE DEDIEE S'EN OCCUPE ET VOUS CONTACTERA BIENTOT. MERCI DE CONTRIBUER A L'AMELIORATION DE NOS SERVICES.";
@@ -444,6 +450,28 @@ const EnregistrerReclamation = (props) => {
   }
   if (guichetOptions !== "") {
     unitOptions.push({ label: "Guichet", options: guichetOptions });
+  }
+
+  const [loadingId, setLoadingId] = useState(null);
+  const handleEditClick = (claim) => (e) => {
+      rowClickedHandler(e, claim, null)
+  }    
+  const handleModal = (e, claim) => {
+    e.preventDefault()
+    modalify("Confirmation", "Confirmez vous la suppression de cet élément ?", "confirm", (e) => handleDelete(e, claim))
+  }
+  const handleDelete = (e, claim = null) => {
+    e.preventDefault()
+
+    console.log("claim.id", claim.id) 
+    setLoadingId(claim.id);
+    deleteClaimApi(claim.id, props).then(() => {
+      listeByStatut(props, "TEMP_SAVED").then(() => {});
+
+      handleCancel(e)
+      notify("Suppression effectuée avec succès", "success");
+      setTimeout(() => setLoadingId(null), 500);
+    })
   }
 
   const handleChange = (e) => {
@@ -689,7 +717,7 @@ const EnregistrerReclamation = (props) => {
 
       props.etat2Changed(true);
       if (mode === 1) {
-        addClaimApi(formData, props).then(() => {
+        addClaimApi(formData, props).then(() => {          
           handleCancel(e);
           props.resetWhatsapp()
         });
@@ -919,6 +947,30 @@ const EnregistrerReclamation = (props) => {
         }).format(new Date(claim.createdAt));
         return createdAt;
       },
+    },
+    {
+        key: "action",
+        text: "Actions",
+        className: "action",
+        align: "left",
+        sortable: true,
+        cell: (claim, index) => {
+          const isLoading = loadingId === claim.id;
+          return (
+            <div style={{ display: "flex", gap: "5px" }}>
+              <Tooltip title="Modifier">
+                  <IconButton onClick={handleEditClick(claim)} color="primary"><EditIcon /></IconButton>
+              </Tooltip>
+              {mode === 1 && (                
+                <Tooltip title="Supprimer">
+                  <IconButton onClick={(e) => handleModal(e, claim)} color="error" disabled={isLoading}>
+                    {isLoading ? <CircularProgress size={20} /> : <DeleteIcon />}
+                  </IconButton>
+                </Tooltip>
+              )}
+            </div>
+          );
+        }
     },
   ];
 
@@ -1509,7 +1561,7 @@ const EnregistrerReclamation = (props) => {
                       </div>
                       <div className="col s12">
                         <ReactDatatable
-                          className={"responsive-table"}
+                          className={"responsive-table no-hover"}
                           config={config}
                           records={content}
                           columns={columns}
@@ -1750,6 +1802,31 @@ const EnregistrerReclamation = (props) => {
                               <h6 className="card-title">
                                 Détails de la réclamation
                               </h6>
+                            </div>
+                            <div className="col l6 m12 s12 input-field" style={{ display: "none" }}>
+                              <input
+                                id="code"
+                                name="code"
+                                type="text"
+                                placeholder=""
+                                className="validate"
+                                value={props.code}
+                                disabled
+                              />
+                              <label htmlFor="code" className={"active"}>
+                                Code
+                                <span>
+                                  (<span className="red-text darken-2 ">*</span>
+                                  )
+                                </span>
+                              </label>
+                              <small className="errorTxt4">
+                                <div id="cpassword-error" className="error">
+                                  {props.errors !== undefined
+                                    ? props.errors.code
+                                    : ""}
+                                </div>
+                              </small>
                             </div>
                             <div className="col l12 m12 s12 input-field">
                               <DatePicker

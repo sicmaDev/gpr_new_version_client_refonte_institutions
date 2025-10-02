@@ -74,6 +74,7 @@ import { HOST } from "../../Utils/globals";
 import axios from "axios";
 import {
   formatDate,
+  formatDate3,
   guessExtension,
   isEmpty,
   loadItemFromLocalStorage,
@@ -242,10 +243,10 @@ const TraiterDenonciation = (props) => {
   const [usersCGR, setUsersCGR] = React.useState([]);
   const [reafect, setReacfect] = useState(false);
 
-  const warningConvert = (props.convertedBy !== "") && (
+  const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
     <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontStyle: 'italic' }}>
-      {/* <WarningAmber fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
-      {`Converti en dénonciation par ${props.convertedBy} le ${formatDate(props.convertedAt)}`} */}
+      <WarningAmber fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
+      {`Converti en dénonciation par ${props.convertedBy} le ${formatDate3(props.convertedAt)}`}
     </span>
   );
 
@@ -1449,7 +1450,7 @@ const TraiterDenonciation = (props) => {
     getDenunAudioApi(data.id, props);
     props.extrasChanged(data.extras ?? []);
     props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
-    // props.convertedAtChanged(data.convertedAt ? "" : "");
+    props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
 
     props.sessionChanged(data.session !== null ? data.session : "");
   };
@@ -4696,6 +4697,7 @@ const mapStateToProps = (state) => {
     etat: state.claim_handle.etat,
     etat2: state.claim_handle.etat2,
     etat3: state.claim_handle.etat3,
+    etat4: state.claim_handle.etat4,
     session: state.claim_handle.session,
     transmitted: state.claim_handle.transmitted,
     solutionExistant: state.claim_handle.solutionExistant,
