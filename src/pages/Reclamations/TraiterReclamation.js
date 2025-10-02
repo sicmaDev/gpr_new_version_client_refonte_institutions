@@ -1060,7 +1060,7 @@ const TraiterReclamation = (props) => {
     // console.log("session", info);
     // console.log("before props",props);
     props.etat4Changed(true);
-    startSession(info, props).then(() => {
+    startSession(info, props).then(() => { 
       connect();
       // console.log("then props",props);
       // handleCancel(e);
