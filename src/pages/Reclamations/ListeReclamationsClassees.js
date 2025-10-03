@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { KTApp } from "../../Utils/blockui";
 import {
   addressChanged,
   agentsChanged,
@@ -37,6 +38,7 @@ import {
   createdByChanged,
   etat2Changed,
   underSubjectChanged,
+  extrasChanged,
 } from "../../redux/actions/Reclamations/AssuranceReclamationActions";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
@@ -63,6 +65,25 @@ import {
   treatClaimApi,
 } from "../../apis/Reclamations/ReclamationsApi";
 
+import {
+  Card,
+  Box,
+  CardContent,
+  Grid,
+  List,
+  ListItemButton,
+  ListItemText,
+  Tooltip,
+} from "@mui/material";
+import {
+  FileDownload,
+  History,
+  Info,
+  Pause,
+  PlayArrow,
+  Star,
+  VolumeUp,
+} from "@mui/icons-material";
 import Dialog from "@mui/material/Dialog";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -99,8 +120,8 @@ import { Avatar, Hidden } from "@mui/material";
 import ee from "event-emitter";
 import { modalify } from "../../Utils/modal";
 import { LoadingButton } from "@mui/lab";
-import SaveIcon from '@mui/icons-material/Save';
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import SaveIcon from "@mui/icons-material/Save";
+import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 const styles = {
   control: (base) => ({
     ...base,
@@ -123,9 +144,14 @@ const ListeReclamationsClassees = (props) => {
 
   const [open, setOpen] = React.useState(false);
 
+  const [isLoading, setIsLoading] = useState(false)
+
   const handleClickOpen = () => {
     setOpen(true);
   };
+
+  const [currentAudioId, setCurrentAudioId] = useState("");
+  const audioRef = useRef(null);
 
   const handleClose = () => {
     setOpen(false);
@@ -133,8 +159,19 @@ const ListeReclamationsClassees = (props) => {
   let dimf, crew;
 
   useEffect(() => {
-    props.itemsChanged([])
-    listeByStatut(props, "CLASSED").then((r) => { });
+    KTApp.blockPage({
+      overlayColor: '#000000',
+      type: 'v2',
+      state: 'danger',
+      message: 'En cours de chargement...'
+    })
+    setIsLoading(true);
+    
+    props.itemsChanged([]);
+    listeByStatut(props, "CLASSED").then((r) => {}).finally(() => {
+      setIsLoading(false);
+      KTApp.unblockPage();
+    });
 
     window
       .$(".buttons-excel")
@@ -156,12 +193,56 @@ const ListeReclamationsClassees = (props) => {
     window.$("#as-react-datatable tr").addClass("cursor-pointer");
   }, []);
 
-
   const [interne, setInterne] = React.useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
 
-  useEffect(() => { }, [showAudioPlayer, currentAudio])
+  const getStatusLabel = (status) => {
+    var statusElt = status;
+    switch (status) {
+      case "SAVED":
+        statusElt = "Enregistrée";
+        break;
+      case "TEMP_SAVED":
+        statusElt = "Sauvegardée";
+        break;
+      case "AFFECTED":
+        statusElt = "Affectée";
+        break;
+      case "TO_APPROUVED":
+        statusElt = "A approuver";
+        break;
+      case "DESAPPROUVED":
+        statusElt = "Désapprouvée";
+        break;
+      case "TREAT":
+        statusElt = "Traitée";
+        break;
+      case "SATISFIED":
+        statusElt = "Satisfait";
+        break;
+      case "UNSATISFIED":
+        statusElt = "Non satisfait";
+        break;
+      case "PARTIAL_SATISFIED":
+        statusElt = "Partiellement satisfait";
+        break;
+      case "LITIGATION":
+        statusElt = "Contentieux";
+        break;
+      case "CLASSED":
+        statusElt = "Classée";
+        break;
+
+      default:
+        statusElt = "";
+        break;
+    }
+
+    return statusElt;
+  };
+
+  useEffect(() => {}, [showAudioPlayer, currentAudio]);
 
   let content = [];
   content = props.items;
@@ -267,15 +348,10 @@ const ListeReclamationsClassees = (props) => {
         let graviteElt;
         switch (claim.objet.risqueLevel) {
           case "MINEUR":
-            graviteElt = (
-              <span className="green-text text-bold">Mineur</span>
-            );
+            graviteElt = <span className="green-text text-bold">Mineur</span>;
             break;
           case "MOYEN":
-            graviteElt = (
-              <span className="orange-text text-bold">Moyen</span>
-
-            );
+            graviteElt = <span className="orange-text text-bold">Moyen</span>;
             break;
           case "GRAVE":
             graviteElt = (
@@ -339,31 +415,29 @@ const ListeReclamationsClassees = (props) => {
     },
   };
 
-
-
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
 
     switch (data.objet.risqueLevel) {
       case "MINEUR":
         if (hbt.includes("H2")) {
-          props.authorizeChanged(true)
+          props.authorizeChanged(true);
         } else {
-          props.authorizeChanged(false)
+          props.authorizeChanged(false);
         }
         break;
       case "MOYEN":
         if (hbt.includes("H3")) {
-          props.authorizeChanged(true)
+          props.authorizeChanged(true);
         } else {
-          props.authorizeChanged(false)
+          props.authorizeChanged(false);
         }
         break;
       case "GRAVE":
         if (hbt.includes("H4")) {
-          props.authorizeChanged(true)
+          props.authorizeChanged(true);
         } else {
-          props.authorizeChanged(false)
+          props.authorizeChanged(false);
         }
         break;
 
@@ -371,7 +445,9 @@ const ListeReclamationsClassees = (props) => {
         break;
     }
     props.idChanged(data.id ? data.id : "");
-    props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");
+    props.lastnameChanged(
+      data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
+    );
     props.addressChanged(data.address ? data.address : "");
     props.phoneChanged(data.tel ? data.tel : "");
     props.genderChanged(data.gender ? data.gender : "");
@@ -379,19 +455,28 @@ const ListeReclamationsClassees = (props) => {
     props.dossierimfChanged(data.folderCode ? data.folderCode : "");
     props.codeChanged(data.code ? data.code : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
-    props.collectChanged(data.collectionChannel.libelle ? data.collectionChannel.libelle : "");
+    props.collectChanged(
+      data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
+    );
     props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
-    props.underSubjectChanged(data.objet.categorie.libelle ? data.objet.categorie.libelle : "");
+    props.underSubjectChanged(
+      data.objet.categorie.libelle ? data.objet.categorie.libelle : ""
+    );
     props.productChanged(data.product.libelle ? data.product.libelle : "");
-    props.unitChanged(data.servicePoint.libelle ? data.servicePoint.libelle : "");
+    props.unitChanged(
+      data.servicePoint.libelle ? data.servicePoint.libelle : ""
+    );
     props.contentChanged(data.content ? data.content : "");
     props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
     // props.newSolutionChanged(data.assuranceSolution ? data.assuranceSolution : "");
     // props.newCommentChanged(data.assuranceComment ? data.assuranceComment : "");
-    props.createdByChanged(data.collector.firstAndLastName ? data.collector.firstAndLastName : "");
+    props.createdByChanged(
+      data.collector.firstAndLastName ? data.collector.firstAndLastName : ""
+    );
     // props.motifChanged(data.motif)
     props.statusChanged(data.status ? data.status : "");
     props.selectedItemChanged(data);
+    props.extrasChanged(data.extras ?? []);
 
     //fetch attachments for selected claim
     // http.get("/files/list/claim/" + data.code).then((response) => {
@@ -462,120 +547,222 @@ const ListeReclamationsClassees = (props) => {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-          <div className="card box-shadow-none mb-1 app-file-info">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl1 l1 s1 m1">
-                  <div className="app-file-content-logo">
-                    <div className="fonticon hide">
-                      <i className="material-icons ">more_vert</i>
-                    </div>
-                    <img
-                      className="recent-file"
-                      src={icon}
-                      height="38"
-                      width="30"
-                      alt=""
-                    />
-                  </div>
-                </div>
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div className="app-file-last-access">
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadFillesApi(attachment.id, attachment.name);
-                        }}
-                      >
-                        Télécharger
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Grid item xs={12} sm={6} key={attachment.id}>
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              borderRadius: 2,
+              p: 2,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              transition: "transform 0.3s",
+              "&:hover": {
+                transform: "translateY(-3px)",
+              },
+              height: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                backgroundColor: "grey.100",
+                borderRadius: "6px",
+                padding: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: "12px",
+                minWidth: "56px",
+              }}
+            >
+              <img
+                src={icon}
+                height="28"
+                width="22"
+                alt=""
+                style={{ objectFit: "contain" }}
+              />
+            </Box>
+
+            <CardContent sx={{ flex: 1, minWidth: 0, py: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Typography
+                  variant="body1"
+                  component="div"
+                  sx={{
+                    fontWeight: "bold",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    width: "100%",
+                    mb: 0.5,
+                  }}
+                >
+                  {attachment.name}
+                </Typography>
+                {attachment._extra && (
+                  <Tooltip
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${attachment.extra?.createdAt}`}
+                  >
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round((attachment.size / 1024) * 100) / 100} {"Ko"}
+              </Typography>
+            </CardContent>
+
+            <FileDownload
+              sx={{
+                fontSize: "18px",
+                color: "primary.main",
+                ml: 1,
+                "&:hover": {
+                  color: "primary.dark",
+                  cursor: "pointer",
+                },
+              }}
+              onClick={() => downloadFillesApi(attachment.id, attachment.name)}
+            />
+          </Card>
+        </Grid>
       );
     });
+
     attachmentList = (
-      <div className="col s12 app-file-content grey lighten-4 mt-4">
-        <span className="app-file-label">Fichiers joints</span>
-        <div className="row app-file-recent-access mb-3">
-          {attachmentListChild}
-        </div>
-      </div>
+      <Grid container spacing={2} size={12}>
+        {attachmentListChild}
+      </Grid>
     );
   } else {
+    attachmentList = (
+      <Grid container spacing={2} size={12}>
+        <Grid item>Ce dossier ne contient pas de fichiers jointe</Grid>
+      </Grid>
+    );
   }
+
+  const handlePlay = (audioId, audioName) => {
+    if (currentAudioId === audioId) {
+      audioRef.current.pause();
+      setCurrentAudioId(null);
+    } else {
+      setCurrentAudioId(audioId);
+      downloadAudioApi(audioId, audioName).then((data) => {
+        let blobAudio = new Blob([data], {
+          type: "audio/ogg; codecs=opus",
+        });
+
+        setCurrentAudio(window.URL.createObjectURL(blobAudio));
+        setTimeout(() => audioRef.current.play(), 2000);
+        // setAudioPlayer("audio-" + attachment.id);
+      });
+    }
+  };
+
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    let audioListChild = props.selectedItemAudio.map((attachment) => {
-
+    console.log("props.selectedItemAudio", props.selectedItemAudio);
+    let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
+        <Grid item xs={12} sm={6} key={audioItem.id}>
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              borderRadius: 2,
+              p: 1.5,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              height: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: "primary.light",
+                borderRadius: "6px",
+                p: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mr: 2,
+                minWidth: "48px",
+                height: "48px",
+              }}
+            >
+              <VolumeUp
+                sx={{ color: "primary.contrastText", fontSize: "28px" }}
+              />
+            </Box>
 
-          <div className="card box-shadow-none mb-1 ">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div className="app-file-last-access" id={"audio-" + attachment.id}>
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadAudioApi(attachment.id, attachment.name).then(
-                            (data) => {
-                              // console.log(data);
+            <CardContent sx={{ flex: 1, minWidth: 0, p: "8px !important" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 500,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    mb: 0.5,
+                  }}
+                >
+                  {audioItem.name}
+                </Typography>
+                {audioItem._extra && (
+                  <Tooltip
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${audioItem.extra?.createdAt}`}
+                  >
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round((audioItem.size / 1024 + Number.EPSILON) * 100) /
+                  100}{" "}
+                {"Ko"} • {audioItem.duration}
+              </Typography>
+            </CardContent>
 
-                              let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
-                              let aud = new Audio(window.URL.createObjectURL(blobAudio));
-                              setCurrentAudio(window.URL.createObjectURL(blobAudio))
-                              setAudioPlayer("audio-" + attachment.id)
-                            }
-                          )
-                        }}
-                      >{showAudioPlayer === "audio-" + attachment.id && ("")} {showAudioPlayer !== "audio-" + attachment.id && ("Afficher")}</a>
-
-                      {showAudioPlayer === "audio-" + attachment.id && (<audio controls autoPlay onEnded={(e) => { setAudioPlayer("") }}>
-                        <source src={currentAudio} type="audio/ogg" />
-                        Votre navigateur ne prend pas en charge l'élément audio.
-                      </audio>)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+            <Box sx={{ display: "flex" }}>
+              <IconButton
+                onClick={() => handlePlay(audioItem.id, audioItem.name)}
+                sx={{
+                  color:
+                    currentAudioId === audioItem.id
+                      ? "primary.main"
+                      : "text.secondary",
+                }}
+              >
+                {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
+              </IconButton>
+            </Box>
+          </Card>
+        </Grid>
       );
     });
     audioList = (
-      <div className="col s12 app-file-content">
-        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
-      </div>
+      <Grid container spacing={2} size={12}>
+        {audioListChild}
+      </Grid>
+    );
+  } else {
+    audioList = (
+      <Grid container spacing={2} size={12}>
+        <Grid item>Ce dossier ne contient pas de fichiers audio</Grid>
+      </Grid>
     );
   }
+
   const handleValidation = () => {
     let isValid = true;
 
@@ -609,7 +796,7 @@ const ListeReclamationsClassees = (props) => {
       claim["type"] = "classee";
 
       //console.log("assuranceclaim",claim)
-      props.etat2Changed(true)
+      props.etat2Changed(true);
       treatClaimApi(claim, props).then(() => {
         handleCancel(e);
         handleClose();
@@ -634,47 +821,81 @@ const ListeReclamationsClassees = (props) => {
     let solutions =
       interne === false
         ? Array.from(
-          props.solution.filter((e) => {
-            return (
-              e.status === "APPROVED" && e.satisfactionMeasureDto !== null
-            );
-          })
-        )
+            props.solution.filter((e) => {
+              return (
+                e.status === "APPROVED" && e.satisfactionMeasureDto !== null
+              );
+            })
+          )
         : Array.from(props.solution);
 
-    let couleurs = ["#333300", "#00cc00", "#99003d", "#3333ff", "#666666", "#253858", "#00875A", "#36B37", "#FFC400", "#FF8B00", "#FF5630", "#5243AA", "#0052CC", "#00B8D9",];
+    let couleurs = [
+      "#333300",
+      "#00cc00",
+      "#99003d",
+      "#3333ff",
+      "#666666",
+      "#253858",
+      "#00875A",
+      "#36B37",
+      "#FFC400",
+      "#FF8B00",
+      "#FF5630",
+      "#5243AA",
+      "#0052CC",
+      "#00B8D9",
+    ];
 
     if (solutions.length !== 0) {
       details = (
         <>
           <div className="col s12">
-
             {/* let solutions =  */}
             {Array.from(solutions).map((solution) => {
               // let fond = couleurs[getRandomInt(couleurs.length)];
-              let fond = couleurs[index % couleurs.length]; 
+              let fond = couleurs[index % couleurs.length];
 
               let mesure = "";
-              if (solution.status === "APPROVED" && solution.satisfactionMeasureDto !== null) {
-                let degre = solution.satisfactionMeasureDto.status === "SATISFIED" ? "Satisfait" : solution.satisfactionMeasureDto.status === "UNSATISFIED" ? "Non satisfait" : solution.satisfactionMeasureDto.status === "PARTIAL" ? "Partiellement satisfait" : "";
-                mesure =
+              if (
+                solution.status === "APPROVED" &&
+                solution.satisfactionMeasureDto !== null
+              ) {
+                let degre =
+                  solution.satisfactionMeasureDto.status === "SATISFIED"
+                    ? "Satisfait"
+                    : solution.satisfactionMeasureDto.status === "UNSATISFIED"
+                    ? "Non satisfait"
+                    : solution.satisfactionMeasureDto.status === "PARTIAL"
+                    ? "Partiellement satisfait"
+                    : "";
+                mesure = (
                   <>
-                    <Typography component="div" >
+                    <Typography component="div">
                       <div>
-                        <span className="chip2" style={{ backgroundColor: fond }}>
+                        <span
+                          className="chip2"
+                          style={{ backgroundColor: fond }}
+                        >
                           <span className="hero">
                             Client {degre} : mesurée
                             {solution.satisfactionMeasureDto.measurer
                               ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
                               : " depuis le site web "}
-                            le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                            le{" "}
+                            {formatDate(
+                              solution.satisfactionMeasureDto.measureDateTime
+                            )}
                           </span>
                         </span>
                       </div>
                     </Typography>
                   </>
-              } else if (solution.status === "APPROVED" && solution.satisfactionMeasureDto === null) {
-                mesure =
+                );
+              } else if (
+                solution.status === "APPROVED" &&
+                solution.satisfactionMeasureDto === null
+              ) {
+                mesure = (
                   <>
                     <span className="chip2" style={{ backgroundColor: fond }}>
                       <span className="hero">
@@ -682,91 +903,101 @@ const ListeReclamationsClassees = (props) => {
                       </span>
                     </span>
                   </>
+                );
               }
 
               let approbation = "";
-              if (solution.status === "UNAPPROVED" && solution.motifDesaprobation !== null) {
-
-                approbation =
+              if (
+                solution.status === "UNAPPROVED" &&
+                solution.motifDesaprobation !== null
+              ) {
+                approbation = (
                   <>
-                    <Typography component="div" >
-
+                    <Typography component="div">
                       <div className="row">
-                        <div
-                          className="col l12 s12 pb-2"
-                          id="content"
-                        >
+                        <div className="col l12 s12 pb-2" id="content">
                           <div className="df pb-2">
-                            <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                            Motif de désapprobation
+                            <RecordVoiceOverIcon sx={{ mr: 2 }} /> Motif de
+                            désapprobation
                           </div>
-                          <div>{solution.motifDesaprobation !== null ? solution.motifDesaprobation : ""}</div>
+                          <div>
+                            {solution.motifDesaprobation !== null
+                              ? solution.motifDesaprobation
+                              : ""}
+                          </div>
                         </div>
                       </div>
 
                       <div>
-                        <span className="chip2" style={{ backgroundColor: fond }}>
+                        <span
+                          className="chip2"
+                          style={{ backgroundColor: fond }}
+                        >
                           <span className="hero">
-                            Désapprouvée par {solution.unApprouver.firstAndLastName} le {formatDate(solution.unApprouvedAt)}
+                            Désapprouvée par{" "}
+                            {solution.unApprouver.firstAndLastName} le{" "}
+                            {formatDate(solution.unApprouvedAt)}
                           </span>
                         </span>
                       </div>
                     </Typography>
                   </>
-              } else if (solution.status === "UNAPPROVED" && solution.motifDesaprobation === null) {
-                approbation =
+                );
+              } else if (
+                solution.status === "UNAPPROVED" &&
+                solution.motifDesaprobation === null
+              ) {
+                approbation = (
                   <>
                     <span className="chip2" style={{ backgroundColor: fond }}>
-                      <span className="hero">
-                        En attente d'approbation
-                      </span>
+                      <span className="hero">En attente d'approbation</span>
                     </span>
                   </>
+                );
               }
 
-              let enregistrement =
+              let enregistrement = (
                 <>
-
-                  <Timeline
-
-                  >
-                    <TimelineItem >
+                  <Timeline>
+                    <TimelineItem>
                       <TimelineOppositeContent
-                        sx={{ m: 'auto 0', flex: "0" }}
+                        sx={{ m: "auto 0", flex: "0" }}
                         variant="body2"
                         color="text.secondary"
-                      >
-                      </TimelineOppositeContent>
+                      ></TimelineOppositeContent>
                       <TimelineSeparator>
                         <TimelineConnector />
                         <TimelineDot style={{ fontSize: "25px" }}>
-                          <Avatar sx={{ width: 32, height: 32, backgroundColor: fond }}>{index = index + 1}</Avatar>
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              backgroundColor: fond,
+                            }}
+                          >
+                            {(index = index + 1)}
+                          </Avatar>
                         </TimelineDot>
                         <TimelineConnector />
                       </TimelineSeparator>
-                      <TimelineContent sx={{ py: '12px', px: 2 }}>
-
+                      <TimelineContent sx={{ py: "12px", px: 2 }}>
                         <Typography variant="h6" component="span">
-                          {solution.author.firstAndLastName} - <span style={{ fontSize: "12px" }}>{formatDate(solution.createdAt)}</span>
+                          {solution.author.firstAndLastName} -{" "}
+                          <span style={{ fontSize: "12px" }}>
+                            {formatDate(solution.createdAt)}
+                          </span>
                         </Typography>
 
                         <Typography className="pb-2" component="div">
                           <div className="row">
-                            <div
-                              className="col l12 s12 pb-2"
-                              id="content"
-                            >
+                            <div className="col l12 s12 pb-2" id="content">
                               <div className="df pb-2">
-                                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                                Solution
+                                <RecordVoiceOverIcon sx={{ mr: 2 }} /> Solution
                               </div>
                               <div>{solution.content}</div>
                             </div>
 
-                            <div
-                              className="col l12 s12 pb-2"
-                              id="content"
-                            >
+                            <div className="col l12 s12 pb-2" id="content">
                               <div className="df pb-2">
                                 <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
                                 Commentaire
@@ -774,48 +1005,42 @@ const ListeReclamationsClassees = (props) => {
                               <div>{solution.commentaire}</div>
                             </div>
 
-                            {
-                              solution.satisfactionMeasureDto ?
-                                solution.satisfactionMeasureDto.commentaire !== null ?
-
-                                  <div
-                                    className="col l12 s12 pb-2"
-                                    id="content"
-                                  >
-                                    <div className="df pb-2">
-                                      <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
-                                      Commentaire du client
-                                    </div>
-                                    <div>{solution.satisfactionMeasureDto.commentaire}</div>
-                                  </div> : ""
-
-                                : ""
-                            }
+                            {solution.satisfactionMeasureDto ? (
+                              solution.satisfactionMeasureDto.commentaire !==
+                              null ? (
+                                <div className="col l12 s12 pb-2" id="content">
+                                  <div className="df pb-2">
+                                    <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
+                                    Commentaire du client
+                                  </div>
+                                  <div>
+                                    {
+                                      solution.satisfactionMeasureDto
+                                        .commentaire
+                                    }
+                                  </div>
+                                </div>
+                              ) : (
+                                ""
+                              )
+                            ) : (
+                              ""
+                            )}
                           </div>
-
                         </Typography>
                         {approbation}
                         {mesure}
-
                       </TimelineContent>
                     </TimelineItem>
-
                   </Timeline>
-
-                </>
-
-              return (
-                <>
-
-                  {enregistrement}
-
                 </>
               );
 
+              return <>{enregistrement}</>;
             })}
           </div>
-        </>);
-
+        </>
+      );
     } else {
       details = "Aucune donnée";
     }
@@ -835,9 +1060,11 @@ const ListeReclamationsClassees = (props) => {
               }}
             >
               Réclamation affectée à{" "}
-              <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong> par{" "}
-              <em>{props.assigned_by}</em> le{" "}
-              <span style={{ color: "#555" }}>{formatDate(props.assigned_at)}</span>
+              <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong>{" "}
+              par <em>{props.assigned_by}</em> le{" "}
+              <span style={{ color: "#555" }}>
+                {formatDate(props.assigned_at)}
+              </span>
             </div>
           </div>
         </>
@@ -855,12 +1082,12 @@ const ListeReclamationsClassees = (props) => {
                 padding: "10px 5px",
                 borderRadius: "6px",
                 display: "flex",
-                alignItems: "center", 
+                alignItems: "center",
               }}
             >
               Cette réclamation est en attente de traitement
             </div>
-          </div> 
+          </div>
         </>
       );
     }
@@ -876,7 +1103,6 @@ const ListeReclamationsClassees = (props) => {
             </summary>
             <div className="row">
               <div className="col s12 df pb-2">
-
                 <span
                   className="chip indigo lighten-5"
                   style={{ cursor: "pointer" }}
@@ -892,7 +1118,6 @@ const ListeReclamationsClassees = (props) => {
                 <div className="row">{details}</div>
               </div>
             </div>
-
           </details>
         </div>
       </div>
@@ -912,9 +1137,7 @@ const ListeReclamationsClassees = (props) => {
                   <div className="card-panel pb-5">
                     <div className="row">
                       <div className="col s12">
-                        <h6 className="card-title">
-                          Réclamations Classées
-                        </h6>
+                        <h6 className="card-title">Réclamations Classées</h6>
                       </div>
                       <div className="col s12">
                         <ReactDatatable
@@ -963,7 +1186,6 @@ const ListeReclamationsClassees = (props) => {
 
                       <div className="row">
                         {/* first part */}
-
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
                             <div className="row" id="ententeFiche">
@@ -978,7 +1200,7 @@ const ListeReclamationsClassees = (props) => {
                                 <div className="row" id="informationReclamant">
                                   <div className="col s12 pb-2">
                                     <h6 className="card-title">
-                                      Informations du Réclamant
+                                      Informations du réclamant
                                     </h6>
                                   </div>
                                   <div className="row">
@@ -1038,7 +1260,6 @@ const ListeReclamationsClassees = (props) => {
                                           ""
                                         ))
                                     }
-
                                   </div>
                                 </div>
                               </div>
@@ -1127,36 +1348,135 @@ const ListeReclamationsClassees = (props) => {
                                       className="col l12 s12 pb-2"
                                       id="content"
                                     >
-                                      <div className="df pb-2">
-                                        <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                                        Contenu
-                                      </div>
-                                      <div>{props.content}</div>
-                                      <div>{audioList}</div>
-                                      <div>{attachmentList}</div>
+                                      <List component="div" role="group">
+                                        <ListItemButton divider>
+                                          <ListItemText
+                                            primary={props.content}
+                                            secondary={
+                                              props.created_by +
+                                              " le " +
+                                              creationDate
+                                            }
+                                          />
+                                        </ListItemButton>
+
+                                        {props.extras?.map((extra) => {
+                                          return extra.contenu ? (
+                                            <ListItemButton
+                                              key={extra.id}
+                                              divider
+                                            >
+                                              <ListItemText
+                                                primary={extra.contenu}
+                                                secondary={
+                                                  extra.user?.firstAndLastName +
+                                                  " le " +
+                                                  formatDate(extra.createdAt)
+                                                }
+                                              />
+
+                                              <Tooltip
+                                                title={
+                                                  "Ce contenu a été ajouté ultérieurement par " +
+                                                  extra.user?.firstAndLastName +
+                                                  " le " +
+                                                  formatDate(extra.createdAt) +
+                                                  ". la plainte etait en etat: " +
+                                                  getStatusLabel(extra.status)
+                                                }
+                                              >
+                                                <Info />
+                                              </Tooltip>
+                                            </ListItemButton>
+                                          ) : (
+                                            <></>
+                                          );
+                                        })}
+                                      </List>
                                     </div>
 
                                     {/* {dimf = props.dossierimf !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <FolderSharedIcon sx={{ mr: 2}}/> {props.dossierimf}</div></>:""}
-                                  {crew = props.crew !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <Diversity3Icon sx={{ mr: 2}}/> {props.crew}</div></>:""} */}
+                                    {crew = props.crew !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <Diversity3Icon sx={{ mr: 2}}/> {props.crew}</div></>:""} */}
                                   </div>
                                 </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* file part */}
+                          <div className="">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-2">
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "row",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: "bold",
+                                        mb: 1,
+                                        mr: 1,
+                                      }}
+                                    >
+                                      {" "}
+                                      Fichiers
+                                    </Typography>
+                                  </Box>
+                                </div>
+                                <div className="col s12">{attachmentList}</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Audio part */}
+                          <div className="">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-3">
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "row",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: "bold",
+                                        mb: 1,
+                                        mr: 1,
+                                      }}
+                                    >
+                                      {" "}
+                                      Audios
+                                    </Typography>
+                                  </Box>
+                                </div>
+                                <div className="col s12">{audioList}</div>
                               </div>
                             </div>
                           </div>
                         </div>
 
                         {/* second part */}
-
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
                             <div className="row" id="ententeFiche">
                               <div className="col s12">
-                                <h5
-                                  className="card-title df "
-
-                                >
+                                <h5 className="card-title df ">
                                   Détails de la réclamation
-
                                 </h5>
                               </div>
                             </div>
@@ -1293,7 +1613,6 @@ const ListeReclamationsClassees = (props) => {
                                 </div>
                               </>
                             )} */}
-
                           </div>
                         </div>
                       </div>
@@ -1329,6 +1648,7 @@ const mapStateToProps = (state) => {
     product: state.claim_assurance.product,
     unit: state.claim_assurance.unit,
     content: state.claim_assurance.content,
+    extras: state.claim_assurance.extras,
     status: state.claim_assurance.status,
     motif: state.claim_assurance.motif,
     solution: state.claim_assurance.solution,
@@ -1460,13 +1780,16 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(selectedItemFilesChanged(selectedItemFiles));
     },
     selectedItemAudioChanged: (selectedItemAudio) => {
-      dispatch(selectedItemAudioChanged(selectedItemAudio))
+      dispatch(selectedItemAudioChanged(selectedItemAudio));
     },
     authorizeChanged: (item) => {
       dispatch(authorizeChanged(item));
     },
     etat2Changed: (etat2) => {
       dispatch(etat2Changed(etat2));
+    },
+    extrasChanged: (extra) => {
+      dispatch(extrasChanged(extra));
     },
   };
 };

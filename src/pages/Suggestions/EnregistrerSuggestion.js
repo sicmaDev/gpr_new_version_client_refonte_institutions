@@ -9,6 +9,8 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
 import { cleanPhoneNumber, cleanPhoneNumber2, cleanPhoneNumber3, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage } from "../../Utils/utils";
@@ -21,7 +23,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { notify } from "../../Utils/alert";
 import axios from "axios";
 import { addressChanged, codeChanged, collectChanged, collectLibelleChanged, contentChanged, createdAtChanged, createdByChanged, dossierimfChanged, etat2Changed, etatChanged, firstnameChanged, genderChanged, handledAtChanged, handledByChanged, idChanged, itemsChanged, languageChanged, languageLibelleChanged, lastnameChanged, loading, phoneChanged, productChanged, productLibelleChanged, recordedAtChanged, recordedAtDPChanged, resolvedAtChanged, resolvedByChanged, selectedFilesChanged, selectedFilesReset, selectedItemChanged, selectedItemFilesChanged, showSelectPrintItemChanged, solutionChanged, statusChanged, suggestionRecordErrors, unitChanged, unitLibelleChanged, selectedItemAudioChanged } from "../../redux/actions/Suggestions/EnregistrementSuggestionActions";
-import { addSuggestionApi, addSuggestionApiOffline, addTempSuggestionApi, addTempSuggestionApiOffline, downloadFillesApi, getFillesApi, getSuggeAudioApi, listeByStatut, listeByStatutOffline, } from "../../apis/Suggestions/SuggestionsApi";
+import { addSuggestionApi, addSuggestionApiOffline, addTempSuggestionApi, addTempSuggestionApiOffline, downloadFillesApi, getFillesApi, getSuggeAudioApi, listeByStatut, deleteSuggestionApi, listeByStatutOffline, } from "../../apis/Suggestions/SuggestionsApi";
 import PhoneInput from "react-phone-number-input";
 import { licenseInfo } from "../../apis/LoginApi";
 import { INSTITUTION_PAYS_CODE } from "../../Utils/globals";
@@ -34,6 +36,8 @@ import moment from "moment"
 import { downloadFilesApi } from "../../apis/WhatsappApi";
 import { reset } from "../../redux/actions/WhatsappActions";
 import { CancelOutlined } from "@mui/icons-material";
+import { modalify } from "../../Utils/modal";
+import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 
 
 // import DateInput from "../ui/DateInput";
@@ -57,6 +61,8 @@ const EnregistrerSuggestion = (props) => {
     const { recorderState, ...handlers } = useRecorder();
     let { audio } = recorderState;
 
+    const [isLoading, setIsLoading] = useState(false)
+
     let settingComplete = isSettingComplete()
     let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
     let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
@@ -71,12 +77,26 @@ const EnregistrerSuggestion = (props) => {
     };
 
     useEffect(() => {
+        KTApp.blockPage({
+          overlayColor: '#000000',
+          type: 'v2',
+          state: 'danger',
+          message: 'En cours de chargement...'
+        })
+        setIsLoading(true);
+
         if (mode === 1) {
             props.itemsChanged([])
-            listeByStatut(props, "TEMP_SAVED").then((r) => { });
+            listeByStatut(props, "TEMP_SAVED").then((r) => { }).finally(() => {
+                setIsLoading(false);
+                KTApp.unblockPage();
+            });
         } else {
             props.itemsChanged([])
-            listeByStatutOffline(props, "TEMP_SAVED").then((r) => { });
+            listeByStatutOffline(props, "TEMP_SAVED").then((r) => { }).finally(() => {
+                setIsLoading(false);
+                KTApp.unblockPage();
+            });
         }
 
         window.$('.buttons-excel').html('<span><i class="fa fa-file-excel"></i></span>')
@@ -555,6 +575,34 @@ const EnregistrerSuggestion = (props) => {
         props.suggestionsRecordErrors(errors)
     }
 
+    
+    const [loadingId, setLoadingId] = useState(null);
+    const handleEditClick = (claim) => (e) => {
+        rowClickedHandler(e, claim, null);
+    };
+    const handleModal = (e, claim) => {
+        e.preventDefault();
+        modalify(
+            "Confirmation",
+            "Confirmez vous la suppression de cet élément ?",
+            "confirm",
+            (e) => handleDelete(e, claim)
+        );
+    };
+    const handleDelete = (e, claim = null) => {
+        e.preventDefault();
+
+        console.log("claim.id", claim.id);
+        setLoadingId(claim.id);
+        deleteSuggestionApi(claim.id, props).then(() => {
+            listeByStatut(props, "TEMP_SAVED").then(() => {});
+
+            handleCancel(e);
+            notify("Suppression effectuée avec succès", "success");
+            setTimeout(() => setLoadingId(null), 500);
+        });
+    };    
+
 
     if (!settingComplete.length) {
         if (isEmpty(props.selectedItem)) {
@@ -722,6 +770,36 @@ const EnregistrerSuggestion = (props) => {
                 }).format(new Date(claim.createdAt));
                 return (createdAt);
             }
+        },
+        {
+            key: "action",
+            text: "Actions",
+            className: "action",
+            align: "left",
+            sortable: true,
+            cell: (claim, index) => {
+            const isLoading = loadingId === claim.id;
+            return (
+                <div style={{ display: "flex", gap: "5px" }}>
+                <Tooltip title="Modifier">
+                    <IconButton onClick={handleEditClick(claim)} color="primary">
+                    <EditIcon />
+                    </IconButton>
+                </Tooltip>
+                {mode === 1 && (
+                    <Tooltip title="Supprimer">
+                    <IconButton
+                        onClick={(e) => handleModal(e, claim)}
+                        color="error"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? <CircularProgress size={20} /> : <DeleteIcon />}
+                    </IconButton>
+                    </Tooltip>
+                )}
+                </div>
+            );
+            },
         },
     ];
 
@@ -1203,7 +1281,7 @@ const EnregistrerSuggestion = (props) => {
                                                 compléter</h5></div>
                                             <div className="col s12">
                                                 <ReactDatatable
-                                                    className={"responsive-table"}
+                                                    className={"responsive-table no-hover"}
                                                     config={config}
                                                     records={content}
                                                     columns={columns}
@@ -1340,7 +1418,7 @@ const EnregistrerSuggestion = (props) => {
                                                 <div className="col s12 m12">
                                                     <div className="row">
                                                         <div className="col l12 m12 s12"><h6 className="card-title">Détails de la suggestion</h6></div>
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l6 m12 s12 input-field" style={{ display: 'none' }}>
                                                             <input id="code" name="code" type="text" placeholder=""
                                                                 className="validate"
                                                                 value={props.code}
@@ -1352,7 +1430,7 @@ const EnregistrerSuggestion = (props) => {
                                                                     className="error">{(props.errors !== undefined) ? props.errors.code : ""}</div>
                                                             </small>
                                                         </div>
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l12 m12 s12 input-field">
                                                             <DatePicker
                                                                 // placeholderText="Date et Heure de réception"
                                                                 withPortal
@@ -1409,7 +1487,8 @@ const EnregistrerSuggestion = (props) => {
                                                                 onChange={handleChange1}
                                                             />
                                                             <label htmlFor="product" className={"active"}>Produit ou
-                                                                service concerné<span></span></label>
+                                                                service concerné<span>(<span
+                                                                className="red-text darken-2 ">*</span>)</span></label>
                                                             <small className="errorTxt4">
                                                                 <div id="cpassword-error"
                                                                     className="error">{(props.errors !== undefined) ? props.errors.product : ""}</div>
@@ -1426,8 +1505,9 @@ const EnregistrerSuggestion = (props) => {
                                                                 placeholder="Sélectionner le point de service"
                                                                 onChange={handleChange}
                                                             />
-                                                            <label htmlFor="unit" className={"active"}>Unité opérationnelle ou Point de service
-                                                                indexé</label>
+                                                            <label htmlFor="unit" className={"active"}>Point de service
+                                                                indexé<span>(<span
+                                                                className="red-text darken-2 ">*</span>)</span></label>
                                                             <small className="errorTxt4">
                                                                 <div id="cpassword-error"
                                                                     className="error">{(props.errors !== undefined) ? props.errors.unit : ""}</div>

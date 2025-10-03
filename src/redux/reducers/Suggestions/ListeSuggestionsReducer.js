@@ -226,6 +226,11 @@ const ListeSuggestionsReducer = (state = initialState, action) => {
                 ...state,
                 converted_by: action.payload,
             };
+        case 'SUGGESTION_LIST_EXTRAS_CHANGED':
+            return {
+                ...state,
+                extras: action.payload,
+            };
         default:
             return state
     }

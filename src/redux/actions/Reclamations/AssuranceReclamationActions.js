@@ -304,3 +304,10 @@ export const etat3Changed = (etat3) =>{
         info: 'This action is used to ...'
     }
 };
+export const extrasChanged = (extras) => {
+    return {
+        type: 'CLAIM_ASSURANCE_EXTRAS_CHANGED',
+        payload: extras,
+        info: 'This action is used to ...'
+    }
+};

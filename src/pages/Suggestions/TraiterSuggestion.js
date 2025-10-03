@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import { KTApp } from "../../Utils/blockui";
 import {
   addressChanged,
   codeChanged,
@@ -42,6 +43,7 @@ import {
   selectedItemAudioChanged,
   convertedAtChanged,
   convertedByChanged,
+  extrasChanged,
 } from "../../redux/actions/Suggestions/TraitementSuggestionActions";
 import { connect } from "react-redux";
 import {
@@ -50,6 +52,16 @@ import {
   handlePrintAvance,
 } from "../../Utils/tables";
 
+import { 
+  Card,
+  Box,
+  CardContent,
+  Grid,
+  List,
+  ListItemButton,
+  ListItemText,
+} from "@mui/material";
+import { FileDownload, History, Info, Pause, PlayArrow, Star, VolumeUp } from "@mui/icons-material";
 import Dialog from "@mui/material/Dialog";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -74,7 +86,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { formatDate, formatDate3, guessExtension, loadItemFromSessionStorage, today } from "../../Utils/utils";
+import { formatDate, formatDate4, guessExtension, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import SaveIcon from '@mui/icons-material/Save';
 import { downloadFillesApi, getFillesApi, getSuggeAudioApi, listeByStatut, listeTousStatuts, treatSuggestionApi } from "../../apis/Suggestions/SuggestionsApi";
 import { LoadingButton } from "@mui/lab";
@@ -109,6 +121,11 @@ const TraiterSuggestion = (props) => {
     setOpen(true);
   };
 
+  const [isLoading, setIsLoading] = useState(false);   
+
+  const [currentAudioId, setCurrentAudioId] = useState("");
+  const audioRef = useRef(null);
+
   const handleClose = () => {
     setOpen(false);
     setInterne(false);
@@ -119,69 +136,66 @@ const TraiterSuggestion = (props) => {
 
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
+  
+  const getStatusLabel = (status) => {
+    var statusElt = status
+    switch (status) {
+      case "SAVED":
+        statusElt = "Enregistrée";
+        break;
+      case "TEMP_SAVED":
+        statusElt = "Sauvegardée";
+        break;
+      case "AFFECTED":
+        statusElt = "Affectée";
+        break;
+      case "TO_APPROUVED":
+        statusElt = "A approuver";
+        break;
+      case "DESAPPROUVED":
+        statusElt = "Désapprouvée";
+        break;
+      case "TREAT":
+        statusElt = "Traitée";
+        break;
+      case "SATISFIED":
+        statusElt = "Satisfait";
+        break;
+      case "UNSATISFIED":
+        statusElt = "Non satisfait";
+        break;
+      case "PARTIAL_SATISFIED":
+        statusElt = "Partiellement satisfait";
+        break;
+      case "LITIGATION":
+        statusElt = "Contentieux";
+        break;
+      case "CLASSED":
+        statusElt = "Classée";
+        break;
 
-  let audioList;
-  if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    let audioListChild = props.selectedItemAudio.map((attachment) => {
+      default:
+        statusElt = "";
+        break;
+    }
 
-      return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-
-          <div className="card box-shadow-none mb-1 ">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div className="app-file-last-access" id={"audio-" + attachment.id}>
-                      <a href=" "
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          e.preventDefault()
-                          downloadAudioApi(attachment.id, attachment.name).then(
-                            (data) => {
-                              // console.log(data);
-                              // console.log('data', data)
-
-                              let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
-                              let aud = new Audio(window.URL.createObjectURL(blobAudio));
-                              setCurrentAudio(window.URL.createObjectURL(blobAudio))
-                              setAudioPlayer("audio-" + attachment.id)
-                            }
-                          )
-                        }}
-                      >{showAudioPlayer === "audio-" + attachment.id && ("")} {showAudioPlayer !== "audio-" + attachment.id && ("Afficher")}</a>
-
-                      {showAudioPlayer === "audio-" + attachment.id && (<audio controls autoPlay onEnded={(e) => { setAudioPlayer("") }}>
-                        <source src={currentAudio} type="audio/ogg" />
-                        Votre navigateur ne prend pas en charge l'élément audio.
-                      </audio>)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    });
-    audioList = (
-      <div className="col s12 app-file-content">
-        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
-      </div>
-    );
+    return statusElt
   }
+
   useEffect(() => {
+    KTApp.blockPage({
+      overlayColor: '#000000',
+      type: 'v2',
+      state: 'danger',
+      message: 'En cours de chargement...'
+    })
+    setIsLoading(true);
+
     props.itemsChanged([])
-    listeByStatut(props, "SAVED").then((r) => { });
+    listeByStatut(props, "SAVED").then((r) => { }).finally(() => {
+      setIsLoading(false);
+      KTApp.unblockPage();
+    });
 
     window
       .$(".buttons-excel")
@@ -390,7 +404,7 @@ const TraiterSuggestion = (props) => {
     getSuggeAudioApi(data.id, props);
     props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
     props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
-
+    props.extrasChanged(data.extras ?? []);
   };
 
   const handleCancel = (e) => {
@@ -442,7 +456,7 @@ const TraiterSuggestion = (props) => {
   const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
       <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
         <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
-        {`Converti en suggestion par ${props.convertedBy} le ${formatDate3(props.convertedAt)}`}
+        {`Converti en suggestion par ${props.convertedBy} le ${formatDate4(props.convertedAt)}`}
       </span>
   );
 
@@ -532,68 +546,225 @@ const TraiterSuggestion = (props) => {
     details = ""
 
   }
-
+    
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
+
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-          <div className="card box-shadow-none mb-1 app-file-info">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl1 l1 s1 m1">
-                  <div className="app-file-content-logo">
-                    <div className="fonticon hide">
-                      <i className="material-icons ">more_vert</i>
-                    </div>
-                    <img
-                      className="recent-file"
-                      src={icon}
-                      height="38"
-                      width="30"
-                      alt=""
-                    />
-                  </div>
-                </div>
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div className="app-file-last-access">
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadFillesApi(attachment.id, attachment.name);
-                        }}
-                      >
-                        Télécharger
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Grid item xs={12} sm={6} key={attachment.id}>
+          <Card sx={{
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: 2,
+            p: 2,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            transition: 'transform 0.3s',
+            '&:hover': {
+              transform: 'translateY(-3px)'
+            },
+            height: '100%'
+          }}>
+            <Box sx={{
+              backgroundColor: 'grey.100',
+              borderRadius: '6px',
+              padding: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: '12px',
+              minWidth: '56px'
+            }}>
+              <img
+                src={icon}
+                height="28"
+                width="22"
+                alt=""
+                style={{ objectFit: 'contain' }}
+              />
+            </Box>
+
+            <CardContent sx={{ flex: 1, minWidth: 0, py: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography
+                  variant="body1"
+                  component="div"
+                  sx={{
+                    fontWeight: 'bold',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                    mb: 0.5
+                  }}
+                >
+                  {attachment.name}
+                </Typography>
+                {attachment._extra && (
+                  <Tooltip title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${attachment.extra?.createdAt}`}>
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round((attachment.size / 1024) * 100) / 100} {"Ko"}
+              </Typography>
+            </CardContent >
+
+            <FileDownload
+              sx={{
+                fontSize: '18px',
+                color: 'primary.main',
+                ml: 1,
+                '&:hover': {
+                  color: 'primary.dark',
+                  cursor: 'pointer'
+                }
+              }}
+              onClick={() => downloadFillesApi(attachment.id, attachment.name)}
+            />
+          </Card >
+        </Grid >
       );
     });
+
     attachmentList = (
-      <div className="col s12 app-file-content grey lighten-4 mt-5">
-        <span className="app-file-label">Fichiers joints</span>
-        <div className="row app-file-recent-access mb-3">
-          {attachmentListChild}
-        </div>
-      </div>
+      <Grid container spacing={2} size={12}>
+        {attachmentListChild}
+      </Grid>
+
     );
   } else {
+    attachmentList = (<Grid container spacing={2} size={12}>
+      <Grid item>
+
+        Ce dossier ne contient pas de fichiers jointe
+
+      </Grid>
+    </Grid>)
+  }
+
+
+  const handlePlay = (audioId, audioName) => {
+    if (currentAudioId === audioId) {
+      audioRef.current.pause();
+      setCurrentAudioId(null);
+    } else {
+      setCurrentAudioId(audioId);
+      downloadAudioApi(audioId, audioName).then(
+        (data) => {
+
+          let blobAudio = new Blob([data], {
+            type: "audio/ogg; codecs=opus",
+          });
+
+          setCurrentAudio(
+            window.URL.createObjectURL(blobAudio)
+          );
+          setTimeout(() => audioRef.current.play(), 2000);
+          // setAudioPlayer("audio-" + attachment.id);
+        }
+      );
+    }
+  };
+
+  let audioList;
+  if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
+    console.log("props.selectedItemAudio", props.selectedItemAudio);
+    let audioListChild = props.selectedItemAudio.map((audioItem) => {
+      return (
+
+        <Grid item xs={12} sm={6} key={audioItem.id}>
+          <Card sx={{
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: 2,
+            p: 1.5,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            height: '100%'
+          }}>
+            <Box sx={{
+              bgcolor: 'primary.light',
+              borderRadius: '6px',
+              p: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mr: 2,
+              minWidth: '48px',
+              height: '48px'
+            }}>
+              <VolumeUp sx={{ color: 'primary.contrastText', fontSize: '28px' }} />
+            </Box>
+
+            <CardContent sx={{ flex: 1, minWidth: 0, p: '8px !important' }}>
+              <Box sx={{
+
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 500,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    mb: 0.5
+                  }}
+                >
+                  {audioItem.name}
+                </Typography>
+                {audioItem._extra && (
+                  <Tooltip title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${audioItem.extra?.createdAt}`}>
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round(
+                  (audioItem.size / 1024 + Number.EPSILON) * 100
+                ) / 100}{" "}
+                {"Ko"} • {audioItem.duration}
+              </Typography>
+            </CardContent>
+
+            <Box sx={{ display: 'flex' }}>
+              <IconButton
+                onClick={() => handlePlay(audioItem.id, audioItem.name)}
+                sx={{ color: currentAudioId === audioItem.id ? 'primary.main' : 'text.secondary' }}
+              >
+                {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
+              </IconButton>
+
+
+            </Box>
+          </Card>
+        </Grid>
+
+      );
+    });
+    audioList = (
+      <Grid container spacing={2} size={12}>
+
+        {audioListChild}
+
+      </Grid>
+
+    );
+  } else {
+    audioList = (<Grid container spacing={2} size={12}>
+      <Grid item>
+        Ce dossier ne contient pas de fichiers audio
+      </Grid>
+    </Grid>)
   }
 
   let content = [];
@@ -695,7 +866,6 @@ const TraiterSuggestion = (props) => {
 
                     <div className="row">
                       {/* first part */}
-
                       <div className="col l6 s12 pb-5" id="ficheReclamation">
                         <div className="card-panel pb-5">
                           <div className="row pb-5" id="ententeFiche">
@@ -711,7 +881,7 @@ const TraiterSuggestion = (props) => {
                               <div className="row" id="informationReclamant">
                                 <div className="col s12 pb-2">
                                   <h6 className="card-title">
-                                    Informations du Suggéreur
+                                    Informations du suggéreur
                                   </h6>
                                 </div>
                                 <div className="row">
@@ -845,27 +1015,88 @@ const TraiterSuggestion = (props) => {
                                     className="col l12 s12 pb-2"
                                     id="content"
                                   >
-                                    <div className="df pb-2">
-                                      <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                                      Contenu
-                                    </div>
-                                    <div>{props.content}</div>
+                                    <List component="div" role="group">
+                                      <ListItemButton divider >
+                                        <ListItemText
+                                          primary={props.content}
+                                          secondary={props.created_by + ' le ' + creationDate}
+                                        />
+                                      </ListItemButton>
 
-                                    <div className="col l12 s12 pb-2" id="">
-                                      {audioList}
-                                    </div>
-                                    <div>{attachmentList}</div>
-                                  </div>
 
+                                      {props.extras?.map((extra) => {
+                                        return extra.contenu ?
+                                          <ListItemButton key={extra.id} divider >
+                                            <ListItemText primary={extra.contenu} secondary={extra.user?.firstAndLastName + ' le ' + formatDate(extra.createdAt)} />
+
+                                            <Tooltip title={'Ce contenu a été ajouté ultérieurement par ' + extra.user?.firstAndLastName + ' le ' + formatDate(extra.createdAt) + '. la plainte etait en etat: ' + getStatusLabel(extra.status)}>
+                                              <Info />
+                                            </Tooltip>
+                                          </ListItemButton>
+                                          : <></>
+                                      })}
+                                    </List>
+                                  </div>  
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
+                                                    
+                        {/* file part */}
+                        <div className="">
+                          <div className="card-panel pb-5">
+                            <div className="row" id="">
+                              <div className="col s12 pb-2">
+                                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography
+                                    gutterBottom
+                                    variant="body1"
+                                    component="div"
+                                    sx={{
+                                      fontWeight: 'bold',
+                                      mb: 1,
+                                      mr: 1
+                                    }}
+                                  >  Fichiers
+
+                                  </Typography>
+                                </Box>
+                              </div>
+                              <div className="col s12">
+                                {attachmentList}
+                              </div>
+                            </div></div>
+                        </div>
+                        
+                        {/* Audio part */}
+                        <div className="">
+                          <div className="card-panel pb-5">
+                            <div className="row" id="">
+                              <div className="col s12 pb-3">
+                                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography
+                                    gutterBottom
+                                    variant="body1"
+                                    component="div"
+                                    sx={{
+                                      fontWeight: 'bold',
+                                      mb: 1,
+                                      mr: 1
+                                    }}
+                                  >  Audios
+
+                                  </Typography>
+                                </Box>
+                              </div>
+                              <div className="col s12">
+                                {audioList}
+                              </div>
+                            </div></div>
+                        </div> 
                       </div>
 
                       {/* second part */}
-
                       <div className="col l6 s12 pb-5" id="ficheReclamation">
                         <div className="card-panel pb-5">
                           <div className="row" id="">
@@ -912,7 +1143,8 @@ const mapStateToProps = (state) => {
     collect: state.suggestion_handle.collect,
     product: state.suggestion_handle.product,
     unit: state.suggestion_handle.unit,
-    content: state.suggestion_handle.content,
+    content: state.suggestion_handle.content, 
+    extras: state.suggestion_handle.extras,
     status: state.suggestion_handle.status,
     solution: state.suggestion_handle.solution,
     comment: state.suggestion_handle.comment,
@@ -1048,6 +1280,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     convertedAtChanged: (convertedAt) => {
       dispatch(convertedAtChanged(convertedAt));
+    },
+    extrasChanged: (extra) => {
+      dispatch(extrasChanged(extra));
     },
   };
 };

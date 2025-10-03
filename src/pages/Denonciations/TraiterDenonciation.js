@@ -377,6 +377,8 @@ const TraiterDenonciation = (props) => {
   const [audioListForm, setAudioListForm] = useState([])
   const [audioListUrlForm, setAudioListUrlForm] = useState([])
 
+  const [isLoading, setIsLoading] = useState(false)
+
   const handleClickOpen = () => {
     setOpen(true);
   };  
@@ -472,9 +474,20 @@ const TraiterDenonciation = (props) => {
   //console.log("params",props.match)
 
   useEffect(() => {
+    KTApp.blockPage({
+      overlayColor: '#000000',
+      type: 'v2',
+      state: 'danger',
+      message: 'En cours de chargement...'
+    })
+    setIsLoading(true);
+
     if (props.match.params.code === "all") {
       props.itemsChanged([])
-      listeTreat(props).then((r) => { });
+      listeTreat(props).then((r) => { }).finally(() => {
+        setIsLoading(false);
+        KTApp.unblockPage();
+      });
     } else {
 
       async function details() {

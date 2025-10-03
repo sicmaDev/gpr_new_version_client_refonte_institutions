@@ -256,3 +256,10 @@ export const convertedByChanged = (convertedBy) => {
         info: 'This action is used to ...'
     }
 };
+export const extrasChanged = (extras) => {
+    return {
+        type: 'SUGGESTION_LIST_EXTRAS_CHANGED',
+        payload: extras,
+        info: 'This action is used to ...'
+    }
+};

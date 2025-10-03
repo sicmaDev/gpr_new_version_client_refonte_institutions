@@ -110,6 +110,7 @@ import RecorderControls from "../../components/recorder-controls";
 import useRecorder from "../../hooks/useRecorder";
 import GavelIcon from '@mui/icons-material/Gavel';
 import StopIcon from '@mui/icons-material/Stop';
+import { KTApp } from "../../Utils/blockui";
 import { addExtraClaimApi, startSession } from "../../apis/Reclamations/ReclamationsApi";
 import { getClaimAudioApi } from "../../apis/Reclamations/ReclamationsApi";
 import { downloadAudioApi, downloadFillesApi, getDenunAudioApi, getFillesApi, listeTousStatuts, listeTousStatutsOffline } from "../../apis/Denonciations/DenonciationsApi";
@@ -221,6 +222,8 @@ const ListeDenonciations = (props) => {
   const [extraFileLoading, setExtraFileLoading] = useState(false)
   const [claim_id, setClaimId] = useState(null)
 
+  const [isLoading, setIsLoading] = useState(false)
+
   
   const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
     <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
@@ -252,12 +255,26 @@ const ListeDenonciations = (props) => {
 
 
   useEffect(() => {
+    KTApp.blockPage({
+      overlayColor: '#000000',
+      type: 'v2',
+      state: 'danger',
+      message: 'En cours de chargement...'
+    })
+    setIsLoading(true);
+
     if (mode === 1) {
       props.itemsChanged([])
-      listeTousStatuts(props).then((r) => { });
+      listeTousStatuts(props).then((r) => { }).finally(() => {
+        setIsLoading(false);
+        KTApp.unblockPage();
+      });
     } else {
       props.itemsChanged([])
-      listeTousStatutsOffline(props).then((r) => { });
+      listeTousStatutsOffline(props).then((r) => { }).finally(() => {
+        setIsLoading(false);
+        KTApp.unblockPage();
+      });
     }
 
     window

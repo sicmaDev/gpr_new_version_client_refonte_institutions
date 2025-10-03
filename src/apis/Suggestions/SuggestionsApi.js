@@ -12,6 +12,7 @@ const LIST_SUGGESTION_API_BY_STATE = HOST + "api/v1/suggestion/list/state"
 const FILES_SUGGESTION_API = HOST + "api/v1/suggestion/getFilesBy/%s"
 const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const AUDIOS_CLAIM_API = HOST + "api/v1/suggestion/getAudiosBy/%s"
+const DELETE_SUGGESTION_API = HOST + "api/v1/suggestion/delete/{id}"
 
 
 export const listeTousStatuts = async (props) => {
@@ -372,4 +373,28 @@ export const addSuggestionApiOffline = async (data, props) => {
     props.etat2Changed(false)
 
     notify("Bravo - Réclamation enregistrée", "success")
+}
+
+
+export const deleteSuggestionApi = async (id, props) => {
+    console.log("dataId", id)
+    const config = {
+        method: 'delete',
+        url: DELETE_SUGGESTION_API.replace("{id}", id),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    };
+    await axios(config)
+        .then(function (response) {
+            // notify("Bravo - Réclamation supprimé", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+    );
 }

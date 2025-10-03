@@ -288,6 +288,21 @@ export const formatDate3 = (dateString) => {
   }).format(date);
 };
 
+export const formatDate4 = (dateString) => {
+  if (!dateString) return "date inconnue"; 
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "date invalide";
+
+  return new Intl.DateTimeFormat("fr-FR", {
+    year: "numeric",
+    month: "long",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "numeric",
+  }).format(date);
+};
+
 export const convertToCsv = (objArray) => {
     var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
     var str = '';

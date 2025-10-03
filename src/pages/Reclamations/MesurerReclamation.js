@@ -53,8 +53,8 @@ import {
   formatDate,
   guessExtension,
   loadItemFromSessionStorage,
-  loadItemFromLocalStorage, 
-  sleep, 
+  loadItemFromLocalStorage,
+  sleep,
   cleanPhoneNumber3,
   today,
 } from "../../Utils/utils";
@@ -74,8 +74,31 @@ import {
   mesurerClaimSolutionApi,
   unapproveClaimSolutionApi,
 } from "../../apis/Reclamations/ReclamationsApi";
-import { Button, DialogActions, DialogContent, DialogContentText, DialogTitle, Input, Box, CardContent, Grid, Tooltip, List, ListItemButton, ListItemText, Card, } from "@mui/material";
-import { FileDownload, History, Info, Pause, PlayArrow, Star, VolumeUp } from "@mui/icons-material";
+import {
+  Button,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Input,
+  Box,
+  CardContent,
+  Grid,
+  Tooltip,
+  List,
+  ListItemButton,
+  ListItemText,
+  Card,
+} from "@mui/material";
+import {
+  FileDownload,
+  History,
+  Info,
+  Pause,
+  PlayArrow,
+  Star,
+  VolumeUp,
+} from "@mui/icons-material";
 import RecorderControls from "../../components/recorder-controls";
 import useRecorder from "../../hooks/useRecorder";
 import Dialog from "@mui/material/Dialog";
@@ -110,7 +133,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { licenseInfo } from "../../apis/LoginApi";
 import axios from "axios";
 import { HOST } from "../../Utils/globals";
-import WarningIcon from '@mui/icons-material/Warning';
+import WarningIcon from "@mui/icons-material/Warning";
 
 const styles = {
   control: (base) => ({
@@ -132,23 +155,24 @@ const MesurerReclamation = (props) => {
   const [currentAudio, setCurrentAudio] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  
   const [currentData, setCurrentData] = useState(null);
-  const [audioListForm, setAudioListForm] = useState([])
-  const [audioListUrlForm, setAudioListUrlForm] = useState([])
+  const [audioListForm, setAudioListForm] = useState([]);
+  const [audioListUrlForm, setAudioListUrlForm] = useState([]);
 
   useEffect(() => {}, [showAudioPlayer, currentAudio]);
+
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleClickOpen = () => {
     setOpen(true);
   };
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
-  const [filesForm, setFiles] = useState([])
-  const [showExtraContent, setShowExtraContent] = useState(false)
-  const [extraContent, setExtraContent] = useState("")
-  const [extraFileLoading, setExtraFileLoading] = useState(false)
-  const [claim_id, setClaimId] = useState(null)
+  const [filesForm, setFiles] = useState([]);
+  const [showExtraContent, setShowExtraContent] = useState(false);
+  const [extraContent, setExtraContent] = useState("");
+  const [extraFileLoading, setExtraFileLoading] = useState(false);
+  const [claim_id, setClaimId] = useState(null);
 
   const handleClose = () => {
     setOpen(false);
@@ -167,9 +191,8 @@ const MesurerReclamation = (props) => {
   const [open2, setOpen2] = useState(false);
   const [showAudioBox, setAudioBox] = useState(false);
 
-    
   const getStatusLabel = (status) => {
-    var statusElt = status
+    var statusElt = status;
     switch (status) {
       case "SAVED":
         statusElt = "Enregistrée";
@@ -210,14 +233,13 @@ const MesurerReclamation = (props) => {
         break;
     }
 
-    return statusElt
-  }
-  
+    return statusElt;
+  };
+
   useEffect(() => {
     if (audio) {
-      setAudioListForm([...audioListForm, audio])
-      setAudioListUrlForm([...audioListUrlForm, URL.createObjectURL(audio)])
-
+      setAudioListForm([...audioListForm, audio]);
+      setAudioListUrlForm([...audioListUrlForm, URL.createObjectURL(audio)]);
     }
   }, [audio]);
 
@@ -289,7 +311,7 @@ const MesurerReclamation = (props) => {
           props.statusChanged(data.status ? data.status : "");
           props.selectedItemChanged(data);
           setCurrentData(data);
-          
+
           // console.log("soluion",props.solutionId)
           //fetch attachments for selected claim
           // http.get("/files/list/claim/" + data.code).then((response) => {
@@ -314,9 +336,20 @@ const MesurerReclamation = (props) => {
   }, []);
 
   useEffect(() => {
+    KTApp.blockPage({
+      overlayColor: '#000000',
+      type: 'v2',
+      state: 'danger',
+      message: 'En cours de chargement...'
+    })
+    setIsLoading(true);
+
     if (props.match.params.code === "all") {
       props.itemsChanged([]);
-      listeByStatut(props, "TREAT").then((r) => {});
+      listeByStatut(props, "TREAT").then((r) => {}).finally(() => {
+        setIsLoading(false)
+        KTApp.unblockPage()
+      });
     } else {
     }
 
@@ -362,8 +395,12 @@ const MesurerReclamation = (props) => {
 
   const [loading, setLoading] = useState(false);
   const [smsSegments, setSmsSegments] = useState([]);
-  let appSms = loadItemFromLocalStorage("app-sms") !== undefined && (loadItemFromLocalStorage("app-sms").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-sms")) : undefined;
-  
+  let appSms =
+    loadItemFromLocalStorage("app-sms") !== undefined &&
+    loadItemFromLocalStorage("app-sms").length !== 0
+      ? JSON.parse(loadItemFromLocalStorage("app-sms"))
+      : undefined;
+
   const segmentMessage = (message, maxLength = 150) => {
     const segments = [];
     let start = 0;
@@ -376,16 +413,16 @@ const MesurerReclamation = (props) => {
       }
 
       // Chercher le dernier point dans la zone autorisée
-      let end = message.lastIndexOf('.', start + maxLength);
+      let end = message.lastIndexOf(".", start + maxLength);
       if (end === -1 || end < start) {
-        end = message.lastIndexOf(' ', start + maxLength);
+        end = message.lastIndexOf(" ", start + maxLength);
       }
       if (end === -1 || end < start) {
         end = start + maxLength;
       }
 
       segments.push(message.slice(start, end + 1).trim());
-      start = end + 1; 
+      start = end + 1;
     }
 
     return segments;
@@ -395,14 +432,16 @@ const MesurerReclamation = (props) => {
     if (!props.solution[0]) {
       notify("Aucune solution à envoyer", "error");
       return;
-    }
-    else {
-      if (props.solution[0].content === "" || props.solution[0].content === undefined) {
+    } else {
+      if (
+        props.solution[0].content === "" ||
+        props.solution[0].content === undefined
+      ) {
         notify("Aucune solution à envoyer", "error");
         return;
       }
     }
-    
+
     const message = props.solution[0].content;
     const segments = segmentMessage(message, 150);
 
@@ -416,15 +455,18 @@ const MesurerReclamation = (props) => {
     if (props.phone) {
       setLoading(true);
       KTApp.blockPage({
-        overlayColor: '#000000',
-        type: 'v2',
-        state: 'danger',
-        message: 'En cours...'
+        overlayColor: "#000000",
+        type: "v2",
+        state: "danger",
+        message: "En cours...",
       });
 
       try {
         for (const segment of smsSegments) {
-          await send({ phone: cleanPhoneNumber3(props.phone), message: segment });
+          await send({
+            phone: cleanPhoneNumber3(props.phone),
+            message: segment,
+          });
           console.log("Segment envoyé :", segment);
           await sleep(500); // petite pause entre chaque SMS si besoin
         }
@@ -436,7 +478,6 @@ const MesurerReclamation = (props) => {
         setLoading(false);
         KTApp.unblockPage();
       }
-
     } else {
       notify("Les champs sont obligatoires", "error");
     }
@@ -538,14 +579,17 @@ const MesurerReclamation = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let temps
-        if (claim.retardDay > 0 ) {
-          temps = claim.declenchedDate
+        let temps;
+        if (claim.retardDay > 0) {
+          temps = claim.declenchedDate;
         } else {
-          temps =<div className="card-content red-text"><WarningIcon/></div>
+          temps = (
+            <div className="card-content red-text">
+              <WarningIcon />
+            </div>
+          );
         }
         return temps;
-        
       },
     },
   ];
@@ -617,7 +661,7 @@ const MesurerReclamation = (props) => {
     props.statusChanged(data.status ? data.status : "");
     props.selectedItemChanged(data);
     setCurrentData(data);
-    props.extrasChanged(data.extras ?? [])
+    props.extrasChanged(data.extras ?? []);
 
     // console.log("soluion",props.solutionId)
     //fetch attachments for selected claim
@@ -680,7 +724,8 @@ const MesurerReclamation = (props) => {
       props.appraisal === null
     ) {
       isValid = false;
-      errors["appraisal"] = "Prenez une décision en fonction de la satisfaction du client";
+      errors["appraisal"] =
+        "Prenez une décision en fonction de la satisfaction du client";
     }
 
     if (
@@ -889,63 +934,68 @@ const MesurerReclamation = (props) => {
   // }
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
-
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
         <Grid item xs={12} sm={6} key={attachment.id}>
-          <Card sx={{
-            display: 'flex',
-            alignItems: 'center',
-            borderRadius: 2,
-            p: 2,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: 'transform 0.3s',
-            '&:hover': {
-              transform: 'translateY(-3px)'
-            },
-            height: '100%'
-          }}>
-            <Box sx={{
-              backgroundColor: 'grey.100',
-              borderRadius: '6px',
-              padding: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: '12px',
-              minWidth: '56px'
-            }}>
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              borderRadius: 2,
+              p: 2,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              transition: "transform 0.3s",
+              "&:hover": {
+                transform: "translateY(-3px)",
+              },
+              height: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                backgroundColor: "grey.100",
+                borderRadius: "6px",
+                padding: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: "12px",
+                minWidth: "56px",
+              }}
+            >
               <img
                 src={icon}
                 height="28"
                 width="22"
                 alt=""
-                style={{ objectFit: 'contain' }}
+                style={{ objectFit: "contain" }}
               />
             </Box>
 
             <CardContent sx={{ flex: 1, minWidth: 0, py: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Typography
                   variant="body1"
                   component="div"
                   sx={{
-                    fontWeight: 'bold',
-                    display: '-webkit-box',
+                    fontWeight: "bold",
+                    display: "-webkit-box",
                     WebkitLineClamp: 1,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    width: '100%',
-                    mb: 0.5
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    width: "100%",
+                    mb: 0.5,
                   }}
                 >
                   {attachment.name}
                 </Typography>
                 {attachment._extra && (
-                  <Tooltip title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${attachment.extra?.createdAt}`}>
+                  <Tooltip
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${attachment.extra?.createdAt}`}
+                  >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
                 )}
@@ -953,22 +1003,22 @@ const MesurerReclamation = (props) => {
               <Typography variant="body2" color="text.secondary">
                 {Math.round((attachment.size / 1024) * 100) / 100} {"Ko"}
               </Typography>
-            </CardContent >
+            </CardContent>
 
             <FileDownload
               sx={{
-                fontSize: '18px',
-                color: 'primary.main',
+                fontSize: "18px",
+                color: "primary.main",
                 ml: 1,
-                '&:hover': {
-                  color: 'primary.dark',
-                  cursor: 'pointer'
-                }
+                "&:hover": {
+                  color: "primary.dark",
+                  cursor: "pointer",
+                },
               }}
               onClick={() => downloadFillesApi(attachment.id, attachment.name)}
             />
-          </Card >
-        </Grid >
+          </Card>
+        </Grid>
       );
     });
 
@@ -976,18 +1026,14 @@ const MesurerReclamation = (props) => {
       <Grid container spacing={2} size={12}>
         {attachmentListChild}
       </Grid>
-
     );
   } else {
-    attachmentList = (<Grid container spacing={2} size={12}>
-      <Grid item>
-
-        Ce dossier ne contient pas de fichiers jointe
-
+    attachmentList = (
+      <Grid container spacing={2} size={12}>
+        <Grid item>Ce dossier ne contient pas de fichiers jointe</Grid>
       </Grid>
-    </Grid>)
+    );
   }
-
 
   const handlePlay = (audioId, audioName) => {
     if (currentAudioId === audioId) {
@@ -995,20 +1041,15 @@ const MesurerReclamation = (props) => {
       setCurrentAudioId(null);
     } else {
       setCurrentAudioId(audioId);
-      downloadAudioApi(audioId, audioName).then(
-        (data) => {
+      downloadAudioApi(audioId, audioName).then((data) => {
+        let blobAudio = new Blob([data], {
+          type: "audio/ogg; codecs=opus",
+        });
 
-          let blobAudio = new Blob([data], {
-            type: "audio/ogg; codecs=opus",
-          });
-
-          setCurrentAudio(
-            window.URL.createObjectURL(blobAudio)
-          );
-          setTimeout(() => audioRef.current.play(), 2000);
-          // setAudioPlayer("audio-" + attachment.id);
-        }
-      );
+        setCurrentAudio(window.URL.createObjectURL(blobAudio));
+        setTimeout(() => audioRef.current.play(), 2000);
+        // setAudioPlayer("audio-" + attachment.id);
+      });
     }
   };
 
@@ -1017,94 +1058,99 @@ const MesurerReclamation = (props) => {
     console.log("props.selectedItemAudio", props.selectedItemAudio);
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
-
         <Grid item xs={12} sm={6} key={audioItem.id}>
-          <Card sx={{
-            display: 'flex',
-            alignItems: 'center',
-            borderRadius: 2,
-            p: 1.5,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-            height: '100%'
-          }}>
-            <Box sx={{
-              bgcolor: 'primary.light',
-              borderRadius: '6px',
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              borderRadius: 2,
               p: 1.5,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mr: 2,
-              minWidth: '48px',
-              height: '48px'
-            }}>
-              <VolumeUp sx={{ color: 'primary.contrastText', fontSize: '28px' }} />
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              height: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: "primary.light",
+                borderRadius: "6px",
+                p: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mr: 2,
+                minWidth: "48px",
+                height: "48px",
+              }}
+            >
+              <VolumeUp
+                sx={{ color: "primary.contrastText", fontSize: "28px" }}
+              />
             </Box>
 
-            <CardContent sx={{ flex: 1, minWidth: 0, p: '8px !important' }}>
-              <Box sx={{
-
-                display: 'flex',
-                alignItems: 'center'
-              }}>
+            <CardContent sx={{ flex: 1, minWidth: 0, p: "8px !important" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
                 <Typography
                   variant="subtitle1"
                   sx={{
                     fontWeight: 500,
-                    display: '-webkit-box',
+                    display: "-webkit-box",
                     WebkitLineClamp: 1,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    mb: 0.5
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    mb: 0.5,
                   }}
                 >
                   {audioItem.name}
                 </Typography>
                 {audioItem._extra && (
-                  <Tooltip title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${audioItem.extra?.createdAt}`}>
+                  <Tooltip
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${audioItem.extra?.createdAt}`}
+                  >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
                 )}
-
               </Box>
               <Typography variant="body2" color="text.secondary">
-                {Math.round(
-                  (audioItem.size / 1024 + Number.EPSILON) * 100
-                ) / 100}{" "}
+                {Math.round((audioItem.size / 1024 + Number.EPSILON) * 100) /
+                  100}{" "}
                 {"Ko"} • {audioItem.duration}
               </Typography>
             </CardContent>
 
-            <Box sx={{ display: 'flex' }}>
+            <Box sx={{ display: "flex" }}>
               <IconButton
                 onClick={() => handlePlay(audioItem.id, audioItem.name)}
-                sx={{ color: currentAudioId === audioItem.id ? 'primary.main' : 'text.secondary' }}
+                sx={{
+                  color:
+                    currentAudioId === audioItem.id
+                      ? "primary.main"
+                      : "text.secondary",
+                }}
               >
                 {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
               </IconButton>
-
-
             </Box>
           </Card>
         </Grid>
-
       );
     });
     audioList = (
       <Grid spacing={2} container size={12}>
-
         {audioListChild}
-
       </Grid>
-
     );
   } else {
-    audioList = (<Grid container spacing={2} size={12}>
-      <Grid item>
-        Ce dossier ne contient pas de fichiers audio
+    audioList = (
+      <Grid container spacing={2} size={12}>
+        <Grid item>Ce dossier ne contient pas de fichiers audio</Grid>
       </Grid>
-    </Grid>)
+    );
   }
 
   let mesureForm = "";
@@ -1267,20 +1313,20 @@ const MesurerReclamation = (props) => {
 
                 <div className="col s12 display-flex justify-content-end mt-3">
                   {/* {actif !== undefined && actif ? ( */}
-                    <LoadingButton
-                      onClick={handleAppraise}
-                      className="waves-effect waves-effect-b waves-light btn-small"
-                      loading={props.etat}
-                      loadingPosition="end"
-                      endIcon={<SaveIcon />}
-                      variant="contained"
-                      sx={{
-                        backgroundColor: "#1e2188",
-                        textTransform: "initial",
-                      }}
-                    >
-                      <span>Mesurer</span>
-                    </LoadingButton>
+                  <LoadingButton
+                    onClick={handleAppraise}
+                    className="waves-effect waves-effect-b waves-light btn-small"
+                    loading={props.etat}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#1e2188",
+                      textTransform: "initial",
+                    }}
+                  >
+                    <span>Mesurer</span>
+                  </LoadingButton>
                   {/* // ) 
                   // : (
                   //   <div className="card-alert card red lighten-5">
@@ -1417,9 +1463,9 @@ const MesurerReclamation = (props) => {
 
   const handleFileSubmit = (e, isFile = true) => {
     e.preventDefault();
-    setExtraFileLoading(true)
+    setExtraFileLoading(true);
 
-    console.log('filesForm__1 >> ', filesForm);
+    console.log("filesForm__1 >> ", filesForm);
     const formData = new FormData();
     formData.append("claim_id", props.id);
 
@@ -1429,65 +1475,79 @@ const MesurerReclamation = (props) => {
       }
     } else if (audioListForm.length) {
       for (let index = 0; index < audioListForm.length; index++) {
-        const audioFile = new File([audioListForm[index]], "claim_extra_record_" + today().replaceAll("/", "") + ".ogg", {
-          type: "audio/ogg; codecs=opus",
-        });
+        const audioFile = new File(
+          [audioListForm[index]],
+          "claim_extra_record_" + today().replaceAll("/", "") + ".ogg",
+          {
+            type: "audio/ogg; codecs=opus",
+          }
+        );
         formData.append("audios", audioFile);
       }
     }
 
-    console.log('filesForm__2 >> ', filesForm);
-    addExtraClaimApi(formData).then((res) => {
-      console.log('res >> ', res)
-      if (isFile) {
-        getFillesApi(currentData?.id, props);
-        setFiles([])
-        notify("Piece jointe ajoutée  ", "success")
-      } else {
-        getClaimAudioApi(currentData?.id, props)
-        setOpen2(false)
-        setAudioBox(false)
-        setAudioListForm([])
-        setAudioListUrlForm([])
-        notify("Audio ajoutée ", "success")
-      }
-    }).catch((err) => {
-      console.log('err add extra >> ', err)
-      notify("Une erreur s'est produite ", "error")
-    }).then(() => {
-      setExtraFileLoading(false)
-    })
+    console.log("filesForm__2 >> ", filesForm);
+    addExtraClaimApi(formData)
+      .then((res) => {
+        console.log("res >> ", res);
+        if (isFile) {
+          getFillesApi(currentData?.id, props);
+          setFiles([]);
+          notify("Piece jointe ajoutée  ", "success");
+        } else {
+          getClaimAudioApi(currentData?.id, props);
+          setOpen2(false);
+          setAudioBox(false);
+          setAudioListForm([]);
+          setAudioListUrlForm([]);
+          notify("Audio ajoutée ", "success");
+        }
+      })
+      .catch((err) => {
+        console.log("err add extra >> ", err);
+        notify("Une erreur s'est produite ", "error");
+      })
+      .then(() => {
+        setExtraFileLoading(false);
+      });
   };
 
   const handleContentSubmit = (e) => {
     e.preventDefault();
-    setExtraFileLoading(true)
+    setExtraFileLoading(true);
     const formData = new FormData();
     formData.append("claim_id", props.id);
     formData.append("contenu", extraContent);
 
-    addExtraClaimApi(formData).then((res) => {
-      console.log('res >> ', res)
+    addExtraClaimApi(formData)
+      .then((res) => {
+        console.log("res >> ", res);
 
-      notify("Contenue jointe ajoutée  ", "success")
-      setShowExtraContent(false)
-      setExtraContent('')
-
-    }).catch((err) => {
-      console.log('err add extra >> ', err)
-      notify("Une erreur s'est produite ", "error")
-    }).then(() => {
-      setExtraFileLoading(false)
-    })
+        notify("Contenue jointe ajoutée  ", "success");
+        setShowExtraContent(false);
+        setExtraContent("");
+      })
+      .catch((err) => {
+        console.log("err add extra >> ", err);
+        notify("Une erreur s'est produite ", "error");
+      })
+      .then(() => {
+        setExtraFileLoading(false);
+      });
   };
 
   return (
-    <div id="main">           
+    <div id="main">
       {showExtraContent && (
         <div>
-
-          <Dialog open={showExtraContent} fullWidth={true}
-            maxWidth='md' onClose={(e) => { setShowExtraContent(false) }}>
+          <Dialog
+            open={showExtraContent}
+            fullWidth={true}
+            maxWidth="md"
+            onClose={(e) => {
+              setShowExtraContent(false);
+            }}
+          >
             <DialogTitle>Ajouter un contenu</DialogTitle>
             <DialogContent>
               <TextField
@@ -1495,43 +1555,62 @@ const MesurerReclamation = (props) => {
                 multiline
                 minRows={4}
                 value={extraContent}
-                onChange={(e) =>{e.stopPropagation();e.preventDefault(); setExtraContent(e.target.value)}}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setExtraContent(e.target.value);
+                }}
                 placeholder="Saisissez le contenu..."
               />
             </DialogContent>
-            {(extraContent && extraContent?.trim() !== "") ? <DialogActions>
-              <LoadingButton onClick={(e) => {
-                setExtraContent("")
-                setShowExtraContent(false)
-              }}
-
-                className="waves-effect waves-effect-b waves-light btn-small"
-
-                loadingPosition="end"
-                loading={extraFileLoading}
-                endIcon={<CloseIcon />}
-                variant="contained"
-                sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary" >Annuler</LoadingButton>
-              <LoadingButton onClick={(e) => {
-                handleContentSubmit(e)
-              }}
-
-                className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                loading={extraFileLoading}
-                loadingPosition="end"
-                endIcon={<SaveIcon />}
-                variant="contained"
-                sx={{ backgroundColor: "#1e2188", textTransform: "initial" }} color="primary">Enregistrer</LoadingButton>
-
-            </DialogActions> : <></>}
+            {extraContent && extraContent?.trim() !== "" ? (
+              <DialogActions>
+                <LoadingButton
+                  onClick={(e) => {
+                    setExtraContent("");
+                    setShowExtraContent(false);
+                  }}
+                  className="waves-effect waves-effect-b waves-light btn-small"
+                  loadingPosition="end"
+                  loading={extraFileLoading}
+                  endIcon={<CloseIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                  color="secondary"
+                >
+                  Annuler
+                </LoadingButton>
+                <LoadingButton
+                  onClick={(e) => {
+                    handleContentSubmit(e);
+                  }}
+                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                  loading={extraFileLoading}
+                  loadingPosition="end"
+                  endIcon={<SaveIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                  color="primary"
+                >
+                  Enregistrer
+                </LoadingButton>
+              </DialogActions>
+            ) : (
+              <></>
+            )}
           </Dialog>
-
         </div>
       )}
       {filesForm.length ? (
         <div>
-          <Dialog open={filesForm.length ? true : false} fullWidth={true}
-            maxWidth='sm' onClose={(e) => { setFiles([]) }}>
+          <Dialog
+            open={filesForm.length ? true : false}
+            fullWidth={true}
+            maxWidth="sm"
+            onClose={(e) => {
+              setFiles([]);
+            }}
+          >
             <DialogContent>
               <DialogContentText>
                 <div className="col l12 s12 pb-2" id="content">
@@ -1548,37 +1627,48 @@ const MesurerReclamation = (props) => {
               </DialogContentText>
 
               <div className="col l12 m12 s12 file-field input-field">
-
                 <List component="div" role="group">
                   {filesForm.map((file, i) => {
                     return (
-                      <ListItemButton key={i} divider >
-                        <ListItemText primary={file.name} secondary={(Math.round((file.size / 1024) * 100) / 100) + ' ' + ("Ko")} />
+                      <ListItemButton key={i} divider>
+                        <ListItemText
+                          primary={file.name}
+                          secondary={
+                            Math.round((file.size / 1024) * 100) / 100 +
+                            " " +
+                            "Ko"
+                          }
+                        />
                       </ListItemButton>
-                    )
+                    );
                   })}
                 </List>
-                <div style={{ display: 'flex', alignItems: 'center', }} htmlFor="ile" onClick={(e) => setFiles([])} >
+                <div
+                  style={{ display: "flex", alignItems: "center" }}
+                  htmlFor="ile"
+                  onClick={(e) => setFiles([])}
+                >
                   <LoadingButton
                     onClick={(e) => {
-                      handleFileSubmit(e)
+                      handleFileSubmit(e);
                     }}
-
                     className="waves-effect waves-effect-b waves-light btn-small mr-2"
                     loading={extraFileLoading}
                     loadingPosition="end"
                     endIcon={<SaveIcon />}
                     variant="contained"
-                    sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                    sx={{
+                      backgroundColor: "#1e2188",
+                      textTransform: "initial",
+                    }}
                   >
                     <span>Enregistrer</span>
                   </LoadingButton>
 
                   <LoadingButton
                     onClick={(e) => {
-                      setFiles([])
+                      setFiles([]);
                     }}
-
                     className="waves-effect waves-effect-b waves-light btn-small"
                     loading={extraFileLoading}
                     loadingPosition="end"
@@ -1588,20 +1678,21 @@ const MesurerReclamation = (props) => {
                   >
                     <span>Annuler</span>
                   </LoadingButton>
-
                 </div>
-
-
               </div>
             </DialogContent>
           </Dialog>
         </div>
-      ) : <></>}
+      ) : (
+        <></>
+      )}
       {showAudioBox && (
         <div>
           <Dialog
             open={open2}
-            onClose={() => { setOpen2(false) }}
+            onClose={() => {
+              setOpen2(false);
+            }}
             style={{ padding: "16px" }}
           >
             <DialogTitle
@@ -1610,76 +1701,111 @@ const MesurerReclamation = (props) => {
               fontSize={"23px"}
               fontWeight={"bold"}
             >
-              {("Enregistreur vocal Réclamations")}
+              {"Enregistreur vocal Réclamations"}
             </DialogTitle>
             <DialogContent>
-
               <DialogContentText
                 align="center"
                 fontSize={"14px"}
                 textAlign={"center"}
               >
-                {("Cliquez sur le bouton ci-dessous et parler dans le micro de votre téléphone, ou branchez un casque ou des écouteurs")}
+                {
+                  "Cliquez sur le bouton ci-dessous et parler dans le micro de votre téléphone, ou branchez un casque ou des écouteurs"
+                }
               </DialogContentText>
 
               <section className="voice-recorder">
                 <div className="recorder-container">
                   {audioListUrlForm.map((url, i) => {
-
-                    return <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, pt: 2 }}>
-                      <audio src={url} controls sx={{ flex: '1', mr: 2, width: "100%" }} />
-                      <CloseIcon color="red" onClick={() => {
-                        setAudioListForm(() => { return audioListForm.filter((va, ind) => ind !== i) })
-                        setAudioListUrlForm(() => { return audioListUrlForm.filter((va, inde) => inde !== i) })
-                      }} />
-
-                    </Box>
+                    return (
+                      <Box
+                        key={i}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          pb: 2,
+                          pt: 2,
+                        }}
+                      >
+                        <audio
+                          src={url}
+                          controls
+                          sx={{ flex: "1", mr: 2, width: "100%" }}
+                        />
+                        <CloseIcon
+                          color="red"
+                          onClick={() => {
+                            setAudioListForm(() => {
+                              return audioListForm.filter(
+                                (va, ind) => ind !== i
+                              );
+                            });
+                            setAudioListUrlForm(() => {
+                              return audioListUrlForm.filter(
+                                (va, inde) => inde !== i
+                              );
+                            });
+                          }}
+                        />
+                      </Box>
+                    );
                   })}
                   <RecorderControls
                     recorderState={recorderState}
                     handlers={handlers}
-                    closeAction={() => { }}
+                    closeAction={() => {}}
                   />
                 </div>
               </section>
             </DialogContent>
-            {audioListUrlForm.length ? <DialogActions>
-              <Box sx={{ display: 'flex', justifyContent: 'end', alignItems: 'center' }}>
-                <LoadingButton
-                  onClick={(e) => {
-                    handleFileSubmit(e, false)
+            {audioListUrlForm.length ? (
+              <DialogActions>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "end",
+                    alignItems: "center",
                   }}
-
-                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                  loading={extraFileLoading}
-                  loadingPosition="end"
-                  endIcon={<SaveIcon />}
-                  variant="contained"
-                  sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
                 >
-                  <span>Enregistrer</span>
-                </LoadingButton>
+                  <LoadingButton
+                    onClick={(e) => {
+                      handleFileSubmit(e, false);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                    loading={extraFileLoading}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#1e2188",
+                      textTransform: "initial",
+                    }}
+                  >
+                    <span>Enregistrer</span>
+                  </LoadingButton>
 
-                <LoadingButton
-                  onClick={(e) => {
-                    setAudioListForm([])
-                    setAudioListUrlForm([])
-                    setAudioBox(false)
-                    setOpen2(false)
-                  }}
-
-                  className="waves-effect waves-effect-b waves-light btn-small"
-
-                  loadingPosition="end"
-                  // loading={extraFileLoading}
-                  endIcon={<CloseIcon />}
-                  variant="contained"
-                  sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                >
-                  <span>Annuler</span>
-                </LoadingButton>
-              </Box>
-            </DialogActions> : <></>}
+                  <LoadingButton
+                    onClick={(e) => {
+                      setAudioListForm([]);
+                      setAudioListUrlForm([]);
+                      setAudioBox(false);
+                      setOpen2(false);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small"
+                    loadingPosition="end"
+                    // loading={extraFileLoading}
+                    endIcon={<CloseIcon />}
+                    variant="contained"
+                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                  >
+                    <span>Annuler</span>
+                  </LoadingButton>
+                </Box>
+              </DialogActions>
+            ) : (
+              <></>
+            )}
           </Dialog>
         </div>
       )}
@@ -1775,7 +1901,7 @@ const MesurerReclamation = (props) => {
                                 <div className="row" id="informationReclamant">
                                   <div className="col s12 pb-2">
                                     <h6 className="card-title">
-                                      Informations du Réclamant
+                                      Informations du réclamant
                                     </h6>
                                   </div>
                                   <div className="row">
@@ -1922,43 +2048,79 @@ const MesurerReclamation = (props) => {
                                       className="col l12 s12 pb-2"
                                       id="content"
                                     >
-                                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
+                                      >
                                         <div className="df pb-2">
-
                                           <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                                          {("Contenu")}
+                                          {"Contenu"}
                                         </div>
-                                        <span onClick={(e) => {
-                                          e.preventDefault()
-                                          e.stopPropagation()
-                                          setShowExtraContent(true)
-                                          setExtraContent("")
-                                        }} className="pb-2 ml-3 " style={{ cursor: 'pointer', color: '#1e2188' }}>+ Ajouter du contenu</span>
+                                        <span
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setShowExtraContent(true);
+                                            setExtraContent("");
+                                          }}
+                                          className="pb-2 ml-3 "
+                                          style={{
+                                            cursor: "pointer",
+                                            color: "#1e2188",
+                                          }}
+                                        >
+                                          + Ajouter du contenu
+                                        </span>
                                       </Box>
 
-
                                       <List component="div" role="group">
-                                        <ListItemButton divider >
+                                        <ListItemButton divider>
                                           <ListItemText
                                             primary={props.content}
-                                            secondary={props.created_by + ' le ' + creationDate}
+                                            secondary={
+                                              props.created_by +
+                                              " le " +
+                                              creationDate
+                                            }
                                           />
                                         </ListItemButton>
 
-
                                         {props.extras?.map((extra) => {
-                                          return extra.contenu ?
-                                            <ListItemButton key={extra.id} divider >
-                                              <ListItemText primary={extra.contenu} secondary={extra.user?.firstAndLastName + ' le ' + formatDate(extra.createdAt)} />
+                                          return extra.contenu ? (
+                                            <ListItemButton
+                                              key={extra.id}
+                                              divider
+                                            >
+                                              <ListItemText
+                                                primary={extra.contenu}
+                                                secondary={
+                                                  extra.user?.firstAndLastName +
+                                                  " le " +
+                                                  formatDate(extra.createdAt)
+                                                }
+                                              />
 
-                                              <Tooltip title={'Ce contenu a été ajouté ultérieurement par ' + extra.user?.firstAndLastName + ' le ' + formatDate(extra.createdAt) + '. la plainte etait en etat: ' + getStatusLabel(extra.status)}>
+                                              <Tooltip
+                                                title={
+                                                  "Ce contenu a été ajouté ultérieurement par " +
+                                                  extra.user?.firstAndLastName +
+                                                  " le " +
+                                                  formatDate(extra.createdAt) +
+                                                  ". la plainte etait en etat: " +
+                                                  getStatusLabel(extra.status)
+                                                }
+                                              >
                                                 <Info />
                                               </Tooltip>
                                             </ListItemButton>
-                                            : <></>
+                                          ) : (
+                                            <></>
+                                          );
                                         })}
                                       </List>
-                                    </div>  
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -1970,76 +2132,107 @@ const MesurerReclamation = (props) => {
                             <div className="card-panel pb-5">
                               <div className="row" id="">
                                 <div className="col s12 pb-2">
-                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "row",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
                                     <Typography
                                       gutterBottom
                                       variant="body1"
                                       component="div"
                                       sx={{
-                                        fontWeight: 'bold',
+                                        fontWeight: "bold",
                                         mb: 1,
-                                        mr: 1
+                                        mr: 1,
                                       }}
-                                    >  Fichiers
-
+                                    >
+                                      {" "}
+                                      Fichiers
                                     </Typography>
-                                    <label htmlFor="ile" className="btn btn-primary" >
+                                    <label
+                                      htmlFor="ile"
+                                      className="btn btn-primary"
+                                    >
                                       Ajouter un fichier
-                                      <input type="file" id="ile" multiple sx={{ display: 'none' }}
-                                        onChange={(e) => { setFiles([...e.target.files]) }}
-                                        style={{ display: 'none' }}
+                                      <input
+                                        type="file"
+                                        id="ile"
+                                        multiple
+                                        sx={{ display: "none" }}
+                                        onChange={(e) => {
+                                          setFiles([...e.target.files]);
+                                        }}
+                                        style={{ display: "none" }}
                                         accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
-                                      /></label>
+                                      />
+                                    </label>
                                   </Box>
                                 </div>
-                                <div className="col s12">
-                                  {attachmentList}
-                                </div>
-                              </div></div>
+                                <div className="col s12">{attachmentList}</div>
+                              </div>
+                            </div>
                           </div>
-                          
+
                           {/* Audio part */}
                           <div className="">
                             <div className="card-panel pb-5">
                               <div className="row" id="">
                                 <div className="col s12 pb-3">
-                                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "row",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
                                     <Typography
                                       gutterBottom
                                       variant="body1"
                                       component="div"
                                       sx={{
-                                        fontWeight: 'bold',
+                                        fontWeight: "bold",
                                         mb: 1,
-                                        mr: 1
+                                        mr: 1,
                                       }}
-                                    >  Audios
-
+                                    >
+                                      {" "}
+                                      Audios
                                     </Typography>
-                                    <label htmlFor="audio" onClick={() => {
-                                      setAudioBox(true)
-                                      setOpen2(true)
-                                    }} className="btn btn-primary" >
+                                    <label
+                                      htmlFor="audio"
+                                      onClick={() => {
+                                        setAudioBox(true);
+                                        setOpen2(true);
+                                      }}
+                                      className="btn btn-primary"
+                                    >
                                       Ajouter un audio
                                     </label>
                                   </Box>
                                 </div>
-                                <div className="col s12">
-                                  {audioList}
-                                </div>
-                              </div></div>
-                          </div> 
+                                <div className="col s12">{audioList}</div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
                         {/* second part */}
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
-                            <div className="row df align-items-center" id="ententeFiche">
+                            <div
+                              className="row df align-items-center"
+                              id="ententeFiche"
+                            >
                               <div className="col l6 s12">
                                 <h5 className="card-title">
                                   Mesurer la satisfaction
                                 </h5>
-                              </div>                              
+                              </div>
                               <div className="col l6 m6 s12 df justify-content-end">
                                 <LoadingButton
                                   // style={{ marginLeft: '400px', marginTop: '-40px' }}
@@ -2053,46 +2246,66 @@ const MesurerReclamation = (props) => {
                                 </LoadingButton>
                               </div>
                             </div>
-                            <Dialog open={showUploadModal} onClose={() => setShowUploadModal(false)}>
-                              <DialogTitle>Envoyer la solution au Client</DialogTitle>
+                            <Dialog
+                              open={showUploadModal}
+                              onClose={() => setShowUploadModal(false)}
+                            >
+                              <DialogTitle>
+                                Envoyer la solution au Client
+                              </DialogTitle>
                               <DialogContent>
-                                <div style={{ marginBottom: "15px" }}> 
-                                  <h6 style={{ fontWeight: '1000' }}>Prévisualisation SMS</h6>
-                                    <p>
-                                      Le message sera envoyé en <strong>{smsSegments.length}</strong> SMS en raison de la limite de caractères imposée par le fournisseur.
-                                    </p>
+                                <div style={{ marginBottom: "15px" }}>
+                                  <h6 style={{ fontWeight: "1000" }}>
+                                    Prévisualisation SMS
+                                  </h6>
+                                  <p>
+                                    Le message sera envoyé en{" "}
+                                    <strong>{smsSegments.length}</strong> SMS en
+                                    raison de la limite de caractères imposée
+                                    par le fournisseur.
+                                  </p>
 
-                                    <div
-                                      style={{
-                                        maxHeight: "200px",
-                                        overflowY: "auto",
-                                        marginTop: "10px",
-                                        scrollbarWidth: "thin", // Firefox
-                                        scrollbarColor: "#999 transparent" // Firefox
-                                      }}
-                                      className="custom-scroll"
-                                    >
-                                      {smsSegments.map((seg, index) => (
-                                        <div
-                                          key={index}
-                                          style={{
-                                            border: "1px solid #ccc",
-                                            padding: "8px",
-                                            marginBottom: "5px",
-                                            borderRadius: "4px"
-                                          }}
-                                        >
-                                          <strong>SMS {index + 1} :</strong> {seg}
-                                        </div>
-                                      ))}
-                                    </div>
+                                  <div
+                                    style={{
+                                      maxHeight: "200px",
+                                      overflowY: "auto",
+                                      marginTop: "10px",
+                                      scrollbarWidth: "thin", // Firefox
+                                      scrollbarColor: "#999 transparent", // Firefox
+                                    }}
+                                    className="custom-scroll"
+                                  >
+                                    {smsSegments.map((seg, index) => (
+                                      <div
+                                        key={index}
+                                        style={{
+                                          border: "1px solid #ccc",
+                                          padding: "8px",
+                                          marginBottom: "5px",
+                                          borderRadius: "4px",
+                                        }}
+                                      >
+                                        <strong>SMS {index + 1} :</strong> {seg}
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
-                                <br />                                
+                                <br />
                                 <DialogContentText>
-                                  La solution ci-dessus sera envoyée au client par SMS.
-                                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ whiteSpace: 'pre-wrap' }}>{"Nom client : " + props.lastname || ""}</span>
-                                    <span style={{ whiteSpace: 'pre-wrap' }}>{"Téléphone : " + props.phone || ""}</span>
+                                  La solution ci-dessus sera envoyée au client
+                                  par SMS.
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                    }}
+                                  >
+                                    <span style={{ whiteSpace: "pre-wrap" }}>
+                                      {"Nom client : " + props.lastname || ""}
+                                    </span>
+                                    <span style={{ whiteSpace: "pre-wrap" }}>
+                                      {"Téléphone : " + props.phone || ""}
+                                    </span>
                                   </div>
                                 </DialogContentText>
                                 <br />
@@ -2102,10 +2315,14 @@ const MesurerReclamation = (props) => {
                                     <input
                                       type="text"
                                       className="trait-style"
-                                      value={props.solution[0]?.commentaire || ""}
+                                      value={
+                                        props.solution[0]?.commentaire || ""
+                                      }
                                       disabled
                                     />
-                                    <label className="active">Commentaire</label>
+                                    <label className="active">
+                                      Commentaire
+                                    </label>
                                   </div>
                                 </div>
                               </DialogContent>
@@ -2122,7 +2339,7 @@ const MesurerReclamation = (props) => {
                                   Envoyer par SMS
                                 </Button>
                               </DialogActions>
-                            </Dialog>                            
+                            </Dialog>
 
                             <div className="row pb-5">
                               <div className="col l12 s12 pb-3" id="content">
@@ -2153,7 +2370,7 @@ const MesurerReclamation = (props) => {
                             {mesureForm}
                             {deForm}
                           </div>
-                        </div>                       
+                        </div>
                       </div>
                     </Dialog>
                   </div>

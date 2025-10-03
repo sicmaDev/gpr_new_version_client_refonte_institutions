@@ -272,10 +272,15 @@ const AssuranceReclamationReducer = (state = initialState, action) => {
                 etat3: action.payload,
             };
         case 'CLAIM_LIST_EXTERNAL_REMEDIES_CHANGED':
-        return {
-            ...state,
-            external_remedies: action.payload,
-        };
+            return {
+                ...state,
+                external_remedies: action.payload,
+            };
+        case 'CLAIM_ASSURANCE_EXTRAS_CHANGED':
+            return {
+                ...state,
+                extras: action.payload,
+            };
         default:
             return state
     }
