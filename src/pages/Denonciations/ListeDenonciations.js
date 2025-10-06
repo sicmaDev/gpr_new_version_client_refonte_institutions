@@ -1254,7 +1254,7 @@ const ListeDenonciations = (props) => {
   } else {
     attachmentList = (<Grid container spacing={2} size={12}>
       <Grid item>
-        Ce dossier ne contient pas de fichiers jointe
+        Ce dossier ne contient pas de fichiers joints
       </Grid>
     </Grid>)
   }
@@ -2331,11 +2331,12 @@ const ListeDenonciations = (props) => {
                                   </div>
                                   
                                   <div className="col l6 s12 df pb-2" id="code">
-                                    <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                    <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
                                   </div>
 
                                   <div className="col l6 s12 df pb-2" id="recorded_at">
-                                    <CalendarMonthIcon sx={{ mr: 2 }} /> Date de réception : {props.recorded_at}
+                                    <CalendarMonthIcon sx={{ mr: 2 }} />
+                                    {formatDate3(props.recorded_at)}
                                   </div>
 
                                   <div className="col l6 s12 df pb-2" id="collect">

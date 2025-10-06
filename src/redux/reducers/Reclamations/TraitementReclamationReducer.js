@@ -354,6 +354,11 @@ const TraitementReclamationReducer = (state = initialState, action) => {
                 ...state,
                 reaffect: action.payload,
             };
+        case 'CLAIM_HANDLE_CODE_CLIENT_CHANGED':
+            return {
+                ...state,
+                codeClient: action.payload,
+            };
         default:
             return state
     }

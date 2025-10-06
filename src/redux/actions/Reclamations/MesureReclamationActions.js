@@ -297,3 +297,10 @@ export const extrasChanged = (extras) => {
         info: 'This action is used to ...'
     }
 };
+export const codeClientChanged = (codeClient) => {
+    return {
+        type: 'CLAIM_APPRAISE_CODE_CLIENT_CHANGED',
+        payload: codeClient,
+        info: 'This action is used to ...'
+    }
+};

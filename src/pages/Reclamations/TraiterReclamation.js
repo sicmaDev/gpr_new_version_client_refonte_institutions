@@ -58,6 +58,7 @@ import {
   underSubjectChanged,
   transmittedToChanged,
   setReaffect,
+  codeClientChanged,
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -67,6 +68,8 @@ import SaveIcon from "@mui/icons-material/Save";
 import { useParams } from "react-router-dom";
 import {
   formatDate,
+  formatDate3,
+  formatDate4,
   guessExtension,
   isEmpty,
   loadItemFromLocalStorage,
@@ -367,7 +370,7 @@ const TraiterReclamation = (props) => {
     let claim = {};
 
     if (convertionType === "suggestion") {
-      claim["clientFirstAndLastName"] = dataRow.clientFirstAndLastName;
+      claim["clientFirstAndLastName"] = "";
       claim["gender"] = dataRow.gender;
       claim["address"] = dataRow.address;
       claim["phone"] = dataRow.tel;
@@ -600,6 +603,7 @@ const TraiterReclamation = (props) => {
           );
           props.dossierimfChanged(data.folderCode ? data.folderCode : "");
           props.codeChanged(data.code ? data.code : "");
+          props.codeClientChanged(data.codeClient ? data.codeClient : "");
           props.recordedAtChanged(
             data.receiptDateTime ? data.receiptDateTime : ""
           );
@@ -1254,7 +1258,7 @@ const TraiterReclamation = (props) => {
   let columns = [
     {
       key: "code",
-      text: "Code",
+      text: "Code client",
       className: "code",
       align: "left",
       sortable: true,
@@ -1269,7 +1273,7 @@ const TraiterReclamation = (props) => {
             codi = (
               <>
                 <div className="df">
-                  <span className="mr-1">{claim.code}</span>
+                  <span className="mr-1">{claim.codeClient}</span>
                   <div className="card-content red-text ml-4">
                     <AlternateEmailIcon />
                   </div>
@@ -1283,7 +1287,7 @@ const TraiterReclamation = (props) => {
             codi = (
               <>
                 <div className="df">
-                  <span className="mr-1">{claim.code}</span>
+                  <span className="mr-1">{claim.codeClient}</span>
                   <div className="card-content red-text ml-4">
                     <ForumIcon />
                   </div>
@@ -1300,7 +1304,7 @@ const TraiterReclamation = (props) => {
             codi = (
               <>
                 <div className="df">
-                  <span className="mr-1">{claim.code}</span>
+                  <span className="mr-1">{claim.codeClient}</span>
                   <div className="card-content red-text ml-4">
                     <AlternateEmailIcon />
                   </div>
@@ -1308,7 +1312,7 @@ const TraiterReclamation = (props) => {
               </>
             );
           } else {
-            codi = <span className="">{claim.code}</span>;
+            codi = <span className="">{claim.codeClient}</span>;
           }
         }
 
@@ -1586,6 +1590,7 @@ const TraiterReclamation = (props) => {
     props.languageChanged(data?.language?.libelle ? data.language.libelle : "");
     props.dossierimfChanged(data.folderCode ? data.folderCode : "");
     props.codeChanged(data.code ? data.code : "");
+    props.codeClientChanged(data.codeClient ? data.codeClient : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
     props.collectChanged(
       data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
@@ -1838,7 +1843,7 @@ const TraiterReclamation = (props) => {
                     <div className="chat-about mt-0">
                       <div className="chat-with text-uppercase ">Session</div>
                       <label className="text-md text-secondary">
-                        {props.code}
+                        {props.codeClient}
                       </label>
                       <div className="chat-num-messages text-sm">
                         {publicChats != null ? publicChats.length : "Aucun"}{" "}
@@ -4778,7 +4783,7 @@ const TraiterReclamation = (props) => {
   } else {
     attachmentList = (
       <Grid container spacing={2} size={12}>
-        <Grid item>Ce dossier ne contient pas de fichiers jointe</Grid>
+        <Grid item>Ce dossier ne contient pas de fichiers joints</Grid>
       </Grid>
     );
   }
@@ -5722,7 +5727,7 @@ const TraiterReclamation = (props) => {
                                         className="col l6 s12 df pb-2"
                                         id="code"
                                       >
-                                        <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                        <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
                                       </div>
 
                                       <div
@@ -5730,7 +5735,7 @@ const TraiterReclamation = (props) => {
                                         id="recorded_at"
                                       >
                                         <CalendarMonthIcon sx={{ mr: 2 }} />{" "}
-                                        Date de réception : {props.recorded_at}
+                                        {formatDate3(props.recorded_at)}
                                       </div>
 
                                       <div
@@ -6152,6 +6157,7 @@ const mapStateToProps = (state) => {
     language: state.claim_handle.language,
     dossierimf: state.claim_handle.dossierimf,
     code: state.claim_handle.code,
+    codeClient: state.claim_handle.codeClient,
     recorded_at: state.claim_handle.recorded_at,
     collect: state.claim_handle.collect,
     subject: state.claim_handle.subject,
@@ -6361,6 +6367,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     solutionExistantChanged: (solutionExistant) => {
       dispatch(solutionExistantChanged(solutionExistant));
+    },
+    codeClientChanged: (codeClient) => {
+      dispatch(codeClientChanged(codeClient));
     },
 
     setReaffect: (reaffect) => {

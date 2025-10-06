@@ -39,6 +39,7 @@ import {
   etat2Changed,
   underSubjectChanged,
   commentaChanged,
+  codeClientChanged,
 } from "../../redux/actions/Reclamations/MesureReclamationActions";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
@@ -51,6 +52,8 @@ import unsatisfaire_icon from "../../assets/images/mesure/emo1.svg";
 import TextField from "@mui/material/TextField";
 import {
   formatDate,
+  formatDate3,
+  formatDate4,
   guessExtension,
   loadItemFromSessionStorage,
   loadItemFromLocalStorage,
@@ -281,6 +284,7 @@ const MesurerReclamation = (props) => {
           );
           props.dossierimfChanged(data.folderCode ? data.folderCode : "");
           props.codeChanged(data.code ? data.code : "");
+          props.codeClientChanged(data.codeClient ? data.codeClient : "");
           props.recordedAtChanged(
             data.receiptDateTime ? data.receiptDateTime : ""
           );
@@ -488,10 +492,14 @@ const MesurerReclamation = (props) => {
   let columns = [
     {
       key: "code",
-      text: "Code",
+      text: "Code client",
       className: "code",
       align: "left",
       sortable: true,
+      cell: (claim, index) => {
+        let codeClient = claim.codeClient !== "" ? claim.codeClient : ""; 
+        return codeClient;
+      },
     },
     {
       key: "clientFirstAndLastName",
@@ -636,6 +644,7 @@ const MesurerReclamation = (props) => {
     props.languageChanged(data.language.libelle ? data.language.libelle : "");
     props.dossierimfChanged(data.folderCode ? data.folderCode : "");
     props.codeChanged(data.code ? data.code : "");
+    props.codeClientChanged(data.codeClient ? data.codeClient : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
     props.collectChanged(
       data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
@@ -1030,7 +1039,7 @@ const MesurerReclamation = (props) => {
   } else {
     attachmentList = (
       <Grid container spacing={2} size={12}>
-        <Grid item>Ce dossier ne contient pas de fichiers jointe</Grid>
+        <Grid item>Ce dossier ne contient pas de fichiers joints</Grid>
       </Grid>
     );
   }
@@ -1978,15 +1987,15 @@ const MesurerReclamation = (props) => {
                                       className="col l6 s12 df pb-2"
                                       id="code"
                                     >
-                                      <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                      <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
                                     </div>
 
                                     <div
                                       className="col l6 s12 df pb-2"
                                       id="recorded_at"
                                     >
-                                      <CalendarMonthIcon sx={{ mr: 2 }} /> Date
-                                      de réception : {props.recorded_at}
+                                      <CalendarMonthIcon sx={{ mr: 2 }} />
+                                      {formatDate3(props.recorded_at)}
                                     </div>
 
                                     <div
@@ -2397,6 +2406,7 @@ const mapStateToProps = (state) => {
     language: state.claim_appraise.language,
     dossierimf: state.claim_appraise.dossierimf,
     code: state.claim_appraise.code,
+    codeClient: state.claim_appraise.codeClient,
     recorded_at: state.claim_appraise.recorded_at,
     collect: state.claim_appraise.collect,
     subject: state.claim_appraise.subject,
@@ -2549,6 +2559,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     extrasChanged: (collect) => {
       dispatch(extrasChanged(collect));
+    },
+    codeClientChanged: (codeClient) => {
+      dispatch(codeClientChanged(codeClient));
     },
   };
 };

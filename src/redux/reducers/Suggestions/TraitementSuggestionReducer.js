@@ -235,6 +235,11 @@ const TraitementSuggestionReducer = (state = initialState, action) => {
                 ...state,
                 extras: action.payload,
             };
+        case 'SUGGESTION_HANDLE_CODE_CLIENT_CHANGED':
+            return {
+                ...state,
+                codeClient: action.payload,
+            };
         default:
             return state
     }

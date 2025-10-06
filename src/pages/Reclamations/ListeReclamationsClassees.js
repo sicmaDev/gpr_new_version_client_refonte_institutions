@@ -39,11 +39,16 @@ import {
   etat2Changed,
   underSubjectChanged,
   extrasChanged,
+  codeClientChanged,
+  createdAtChanged,
 } from "../../redux/actions/Reclamations/AssuranceReclamationActions";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
 import {
   formatDate,
+  formatDate2,
+  formatDate3,
+  formatDate4,
   guessExtension,
   loadItemFromSessionStorage,
 } from "../../Utils/utils";
@@ -296,10 +301,14 @@ const ListeReclamationsClassees = (props) => {
   let columns = [
     {
       key: "code",
-      text: "Code",
+      text: "Code client",
       className: "code",
       align: "left",
       sortable: true,
+      cell: (claim, index) => {
+        let codeClient = claim.codeClient !== "" ? claim.codeClient : ""; 
+        return codeClient;
+      },
     },
     {
       key: "clientFirstAndLastName",
@@ -417,6 +426,7 @@ const ListeReclamationsClassees = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
+    console.log("rowCliData", data);
 
     switch (data.objet.risqueLevel) {
       case "MINEUR":
@@ -454,7 +464,9 @@ const ListeReclamationsClassees = (props) => {
     props.languageChanged(data.language.libelle ? data.language.libelle : "");
     props.dossierimfChanged(data.folderCode ? data.folderCode : "");
     props.codeChanged(data.code ? data.code : "");
+    props.codeClientChanged(data.codeClient ? data.codeClient : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
+    props.createdAtChanged(data.createdAt ? data.createdAt : "");
     props.collectChanged(
       data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
     );
@@ -513,6 +525,7 @@ const ListeReclamationsClassees = (props) => {
     props.underSubjectChanged("");
     props.dossierimfChanged("");
     props.codeChanged("");
+    props.codeClientChanged("");
     props.recordedAtChanged("");
     props.collectChanged("");
     props.productChanged("");
@@ -640,7 +653,7 @@ const ListeReclamationsClassees = (props) => {
   } else {
     attachmentList = (
       <Grid container spacing={2} size={12}>
-        <Grid item>Ce dossier ne contient pas de fichiers jointe</Grid>
+        <Grid item>Ce dossier ne contient pas de fichiers joints</Grid>
       </Grid>
     );
   }
@@ -1277,15 +1290,15 @@ const ListeReclamationsClassees = (props) => {
                                       className="col l6 s12 df pb-2"
                                       id="code"
                                     >
-                                      <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                      <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
                                     </div>
 
                                     <div
                                       className="col l6 s12 df pb-2"
                                       id="recorded_at"
                                     >
-                                      <CalendarMonthIcon sx={{ mr: 2 }} /> Date
-                                      de réception : {props.recorded_at}
+                                      <CalendarMonthIcon sx={{ mr: 2 }} />
+                                      {formatDate4(props.recorded_at)}
                                     </div>
 
                                     <div
@@ -1348,6 +1361,17 @@ const ListeReclamationsClassees = (props) => {
                                       className="col l12 s12 pb-2"
                                       id="content"
                                     >
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div className="df pb-2">
+                                          <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                          {"Contenu"}
+                                        </div>
+                                      </Box>
                                       <List component="div" role="group">
                                         <ListItemButton divider>
                                           <ListItemText
@@ -1641,6 +1665,7 @@ const mapStateToProps = (state) => {
     language: state.claim_assurance.language,
     dossierimf: state.claim_assurance.dossierimf,
     code: state.claim_assurance.code,
+    codeClient: state.claim_assurance.codeClient,
     recorded_at: state.claim_assurance.recorded_at,
     collect: state.claim_assurance.collect,
     subject: state.claim_assurance.subject,
@@ -1790,6 +1815,12 @@ const mapDispatchToProps = (dispatch) => {
     },
     extrasChanged: (extra) => {
       dispatch(extrasChanged(extra));
+    },
+    codeClientChanged: (codeClient) => {
+      dispatch(codeClientChanged(codeClient));
+    },
+    createdAtChanged: (createdAt) => {
+      dispatch(createdAtChanged(createdAt));
     },
   };
 };

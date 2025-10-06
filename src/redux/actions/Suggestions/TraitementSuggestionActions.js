@@ -269,3 +269,10 @@ export const extrasChanged = (extras) => {
         info: 'This action is used to ...'
     }
 };
+export const codeClientChanged = (codeClient) => {
+    return {
+        type: 'SUGGESTION_HANDLE_CODE_CLIENT_CHANGED',
+        payload: codeClient,
+        info: 'This action is used to ...'
+    }
+};

@@ -1487,8 +1487,7 @@ const EnregistrerSuggestion = (props) => {
                                                                 onChange={handleChange1}
                                                             />
                                                             <label htmlFor="product" className={"active"}>Produit ou
-                                                                service concerné<span>(<span
-                                                                className="red-text darken-2 ">*</span>)</span></label>
+                                                                service concerné</label>
                                                             <small className="errorTxt4">
                                                                 <div id="cpassword-error"
                                                                     className="error">{(props.errors !== undefined) ? props.errors.product : ""}</div>
@@ -1506,8 +1505,7 @@ const EnregistrerSuggestion = (props) => {
                                                                 onChange={handleChange}
                                                             />
                                                             <label htmlFor="unit" className={"active"}>Point de service
-                                                                indexé<span>(<span
-                                                                className="red-text darken-2 ">*</span>)</span></label>
+                                                                indexé</label>
                                                             <small className="errorTxt4">
                                                                 <div id="cpassword-error"
                                                                     className="error">{(props.errors !== undefined) ? props.errors.unit : ""}</div>

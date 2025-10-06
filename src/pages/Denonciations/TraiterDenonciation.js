@@ -59,6 +59,7 @@ import {
   extrasChanged,
   convertedAtChanged,
   convertedByChanged,
+  codeClientChanged,
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
 import { v4 as uuid } from "uuid";
 import LastPageIcon from "@mui/icons-material/LastPage";
@@ -75,6 +76,7 @@ import axios from "axios";
 import {
   formatDate,
   formatDate3,
+  formatDate4,
   guessExtension,
   isEmpty,
   loadItemFromLocalStorage,
@@ -419,7 +421,7 @@ const TraiterDenonciation = (props) => {
     const formData = new FormData();
     let claim = {}
 
-    claim["clientFirstAndLastName"] = dataRow.clientFirstAndLastName ?? null;
+    claim["clientFirstAndLastName"] = ""; 
     claim["gender"] = dataRow.gender ?? null;
     claim["address"] = dataRow.address ?? null;
     claim["phone"] = dataRow.tel ?? null;
@@ -570,6 +572,7 @@ const TraiterDenonciation = (props) => {
           setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45)
           props.idChanged(data.id ? data.id : "");
           props.codeChanged(data.code ? data.code : "");
+          props.codeClientChanged(data.codeClient ? data.codeClient : "");
           props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
           props.collectChanged(data.collectionChannel.libelle ? data.collectionChannel.libelle : "");
           props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
@@ -1047,6 +1050,7 @@ const TraiterDenonciation = (props) => {
     props.solutionChanged("");
     props.solutionIdChanged("");
     props.solutionExistantChanged("");
+    props.codeClientChanged("");
     props.commentChanged("");
     props.newSolutionChanged("");
     props.newCommentChanged("");
@@ -1147,7 +1151,7 @@ const TraiterDenonciation = (props) => {
   let columns = [
     {
       key: "code",
-      text: "Code",
+      text: "Code client",
       className: "code",
       align: "left",
       sortable: true,
@@ -1160,7 +1164,7 @@ const TraiterDenonciation = (props) => {
             codi = (
               <>
                 <div className="df">
-                  <span className="mr-1">{claim.code}</span>
+                  <span className="mr-1">{claim.codeClient}</span>
                   <div className="card-content red-text ml-4"><AlternateEmailIcon /></div>
                   <div className="card-content red-text ml-4"><ForumIcon /></div>
                 </div>
@@ -1171,7 +1175,7 @@ const TraiterDenonciation = (props) => {
             codi = (
               <>
                 <div className="df">
-                  <span className="mr-1">{claim.code}</span>
+                  <span className="mr-1">{claim.codeClient}</span>
                   <div className="card-content red-text ml-4"><ForumIcon /></div>
                 </div>
 
@@ -1186,7 +1190,7 @@ const TraiterDenonciation = (props) => {
             codi = (
               <>
                 <div className="df">
-                  <span className="mr-1">{claim.code}</span>
+                  <span className="mr-1">{claim.codeClient}</span>
                   <div className="card-content red-text ml-4"><AlternateEmailIcon /></div>
                 </div>
 
@@ -1194,7 +1198,7 @@ const TraiterDenonciation = (props) => {
             );
           } else {
             codi = (
-              <span className="">{claim.code}</span>
+              <span className="">{claim.codeClient}</span>
             );
           }
 
@@ -1438,6 +1442,7 @@ const TraiterDenonciation = (props) => {
     setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45)
     props.idChanged(data.id ? data.id : "");
     props.codeChanged(data.code ? data.code : "");
+    props.codeClientChanged(data.codeClient ? data.codeClient : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
     props.collectChanged(data.collectionChannel.libelle ? data.collectionChannel.libelle : "");
     props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
@@ -1606,7 +1611,7 @@ const TraiterDenonciation = (props) => {
                     <div className="chat-about mt-0">
                       <div className="chat-with text-uppercase ">Session</div>
                       <label className="text-md text-secondary">
-                        {props.code}
+                        {props.codeClient}
                       </label>
                       <div className="chat-num-messages text-sm">
                         {publicChats != null ? publicChats.length : "Aucun"}{" "}
@@ -3649,7 +3654,7 @@ const TraiterDenonciation = (props) => {
       attachmentList = (<Grid container spacing={2} size={12}>
         <Grid item>
   
-          Ce dossier ne contient pas de fichiers jointe
+          Ce dossier ne contient pas de fichiers joints
   
         </Grid>
       </Grid>)
@@ -4393,15 +4398,15 @@ const TraiterDenonciation = (props) => {
                                       className="col l6 s12 df pb-2"
                                       id="code"
                                     >
-                                      <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                      <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
                                     </div>
 
                                     <div
                                       className="col l6 s12 df pb-2"
                                       id="recorded_at"
                                     >
-                                      <CalendarMonthIcon sx={{ mr: 2 }} /> Date
-                                      de réception : {props.recorded_at}
+                                      <CalendarMonthIcon sx={{ mr: 2 }} />
+                                      {formatDate4(props.recorded_at)}
                                     </div>
 
                                     <div
@@ -4676,6 +4681,7 @@ const mapStateToProps = (state) => {
     isLoading: state.claim_handle.isLoading,
     id: state.claim_handle.id,
     code: state.claim_handle.code,
+    codeClient: state.claim_handle.codeClient,
     recorded_at: state.claim_handle.recorded_at,
     collect: state.claim_handle.collect,
     subject: state.claim_handle.subject,
@@ -4862,6 +4868,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     convertedAtChanged: (convertedAt) => {
       dispatch(convertedAtChanged(convertedAt));
+    },
+    codeClientChanged: (codeClient) => {
+      dispatch(codeClientChanged(codeClient));
     },
         
     setReaffect: (reaffect) => {

@@ -126,6 +126,8 @@ import timelineOppositeContentClasses from "@mui/lab/TimelineOppositeContent";
 import {
   formatDate,
   formatDate2,
+  formatDate3,
+  formatDate4,
   guessExtension,
   loadItemFromLocalStorage,
   loadItemFromSessionStorage,
@@ -380,10 +382,14 @@ const ListeReclamations = (props) => {
   let columns = [
     {
       key: "code",
-      text: "Code",
+      text: "Code client",
       className: "code",
       align: "left",
       sortable: true,
+      cell: (claim, index) => {
+        let codeClient = claim.codeClient !== "" ? claim.codeClient : ""; 
+        return codeClient;
+      },
     },
     {
       key: "codeClient",
@@ -1153,7 +1159,7 @@ const ListeReclamations = (props) => {
       break;
   }
 
-  let creationDate = props.created_at ? formatDate(props.created_at) : "";
+  let creationDate = props.created_at ? formatDate4(props.created_at) : "";
   let colourOptions = [
     { value: "Code", label: "Code" },
     { value: "Code Client", label: "Code Client" },
@@ -1715,7 +1721,7 @@ const ListeReclamations = (props) => {
   } else {
     attachmentList = (
       <Grid container spacing={2} size={12}>
-        <Grid item>Ce dossier ne contient pas de fichiers jointe</Grid>
+        <Grid item>Ce dossier ne contient pas de fichiers joints</Grid>
       </Grid>
     );
   }
@@ -3211,15 +3217,15 @@ const ListeReclamations = (props) => {
 
                                 <div className="row">
                                   <div className="col l6 s12 df pb-2" id="code">
-                                    <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                    <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
                                   </div>
 
                                   <div
                                     className="col l6 s12 df pb-2"
                                     id="recorded_at"
                                   >
-                                    <CalendarMonthIcon sx={{ mr: 2 }} /> Date de
-                                    réception : {props.recorded_at}
+                                    <CalendarMonthIcon sx={{ mr: 2 }} />
+                                    {formatDate4(props.recorded_at)}
                                   </div>
 
                                   <div
@@ -3284,7 +3290,7 @@ const ListeReclamations = (props) => {
                                         id="content"
                                       >
                                         <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
-                                        Date enregistrement : {creationDate}
+                                        {creationDate}
                                       </div>
                                     </>
                                   )}

@@ -44,6 +44,7 @@ import {
   convertedAtChanged,
   convertedByChanged,
   extrasChanged,
+  codeClientChanged,
 } from "../../redux/actions/Suggestions/TraitementSuggestionActions";
 import { connect } from "react-redux";
 import {
@@ -242,10 +243,14 @@ const TraiterSuggestion = (props) => {
   let columns = [
     {
       key: "code",
-      text: "Code",
+      text: "Code client",
       className: "code",
       align: "left",
       sortable: true,
+      cell: (claim, index) => {
+        let codeClient = claim.codeClient !== "" ? claim.codeClient : ""; 
+        return codeClient;
+      },
     },
     {
       key: "clientFirstAndLastName",
@@ -254,7 +259,7 @@ const TraiterSuggestion = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let nom = claim.clientFirstAndLastName !== "" ? claim.clientFirstAndLastName : <i>Anonyme</i>;
+        let nom = claim.clientFirstAndLastName !== "" ? claim.clientFirstAndLastName : <i>Anonyme</i>; 
         return nom;
       },
     },
@@ -351,6 +356,7 @@ const TraiterSuggestion = (props) => {
     props.firstnameChanged("");
     props.addressChanged("");
     props.phoneChanged("");
+    props.codeClientChanged("");
     props.genderChanged("");
     props.languageChanged("");
     props.dossierimfChanged("");
@@ -390,6 +396,7 @@ const TraiterSuggestion = (props) => {
     props.languageChanged(data.langue.libelle ? data.langue.libelle : "");
     props.dossierimfChanged(data.folderCode ? data.folderCode : "");
     props.codeChanged(data.code ? data.code : "");
+    props.codeClientChanged(data.codeClient ? data.codeClient : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
     props.collectChanged(data.canal.libelle ? data.canal.libelle : "");
     props.productChanged(data.produit ? data.produit.libelle : "");
@@ -642,7 +649,7 @@ const TraiterSuggestion = (props) => {
     attachmentList = (<Grid container spacing={2} size={12}>
       <Grid item>
 
-        Ce dossier ne contient pas de fichiers jointe
+        Ce dossier ne contient pas de fichiers joints
 
       </Grid>
     </Grid>)
@@ -919,7 +926,7 @@ const TraiterSuggestion = (props) => {
                                     className="col l6 s12 df pb-2"
                                     id="gender"
                                   >
-                                    <WcIcon sx={{ mr: 2 }} /> {props.gender !== "" ? props.gender : <i>Non défini</i>}
+                                    <WcIcon sx={{ mr: 2 }} /> {(props.gender !== "" && props.gender !== "NON_DEFINI") ? props.gender : <i>Non défini</i>}
                                   </div>
 
                                   <div
@@ -963,15 +970,15 @@ const TraiterSuggestion = (props) => {
 
                                 <div className="row">
                                   <div className="col l6 s12 df pb-2" id="code">
-                                    <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                    <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
                                   </div>
 
                                   <div
                                     className="col l6 s12 df pb-2"
                                     id="recorded_at"
                                   >
-                                    <CalendarMonthIcon sx={{ mr: 2 }} /> Date de
-                                    réception : {props.recorded_at}
+                                    <CalendarMonthIcon sx={{ mr: 2 }} />
+                                    {formatDate4(props.recorded_at)}
                                   </div>
 
                                   <div
@@ -1015,6 +1022,17 @@ const TraiterSuggestion = (props) => {
                                     className="col l12 s12 pb-2"
                                     id="content"
                                   >
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div className="df pb-2">
+                                        <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                        {"Contenu"}
+                                      </div>
+                                    </Box>
                                     <List component="div" role="group">
                                       <ListItemButton divider >
                                         <ListItemText
@@ -1139,6 +1157,7 @@ const mapStateToProps = (state) => {
     language: state.suggestion_handle.language,
     dossierimf: state.suggestion_handle.dossierimf,
     code: state.suggestion_handle.code,
+    codeClient: state.suggestion_handle.codeClient,
     recorded_at: state.suggestion_handle.recorded_at,
     collect: state.suggestion_handle.collect,
     product: state.suggestion_handle.product,
@@ -1283,6 +1302,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     extrasChanged: (extra) => {
       dispatch(extrasChanged(extra));
+    },
+    codeClientChanged: (codeClient) => {
+      dispatch(codeClientChanged(codeClient));
     },
   };
 };

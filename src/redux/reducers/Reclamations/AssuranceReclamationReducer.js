@@ -281,6 +281,11 @@ const AssuranceReclamationReducer = (state = initialState, action) => {
                 ...state,
                 extras: action.payload,
             };
+        case 'CLAIM_ASSURANCE_CODE_CLIENT_CHANGED':
+            return {
+                ...state,
+                codeClient: action.payload,
+            };
         default:
             return state
     }

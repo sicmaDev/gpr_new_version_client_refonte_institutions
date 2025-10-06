@@ -750,7 +750,7 @@ const ListeSuggestions = (props) => {
     attachmentList = (<Grid container spacing={2} size={12}>
       <Grid item>
 
-        Ce dossier ne contient pas de fichiers jointe
+        Ce dossier ne contient pas de fichiers joints
 
       </Grid>
     </Grid>)
@@ -1565,15 +1565,15 @@ const ListeSuggestions = (props) => {
 
                                 <div className="row">
                                   <div className="col l6 s12 df pb-2" id="code">
-                                    <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                    <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
                                   </div>
 
                                   <div
                                     className="col l6 s12 df pb-2"
                                     id="recorded_at"
                                   >
-                                    <CalendarMonthIcon sx={{ mr: 2 }} /> Date de
-                                    réception : {props.recorded_at}
+                                    <CalendarMonthIcon sx={{ mr: 2 }} />
+                                    {formatDate4(props.recorded_at)}
                                   </div>
 
                                   <div
@@ -1617,6 +1617,17 @@ const ListeSuggestions = (props) => {
                                     className="col l12 s12 pb-2"
                                     id="content"
                                   >
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div className="df pb-2">
+                                        <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                        {"Contenu"}
+                                      </div>
+                                    </Box>
                                     <List component="div" role="group">
                                       <ListItemButton divider >
                                         <ListItemText
