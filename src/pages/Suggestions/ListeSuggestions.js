@@ -254,13 +254,13 @@ const ListeSuggestions = (props) => {
   }, []);
   //Handling the List
   let columns = [
-    {
-      key: "code",
-      text: "Code",
-      className: "code",
-      align: "left",
-      sortable: true,
-    },
+    // {
+    //   key: "code",
+    //   text: "Code",
+    //   className: "code",
+    //   align: "left",
+    //   sortable: true,
+    // },
     {
       key: "codeClient",
       text: "Code client",
@@ -275,7 +275,7 @@ const ListeSuggestions = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let nom = claim.clientFirstAndLastName !== "" ? claim.clientFirstAndLastName : <i>Anonyme</i>;
+        let nom = (claim.clientFirstAndLastName !== "" && claim.clientFirstAndLastName !== null) ? claim.clientFirstAndLastName : <i>Anonyme</i>;
         return nom;
       },
     },
@@ -1468,7 +1468,7 @@ const ListeSuggestions = (props) => {
                       {/* first part */}
                       <div className="col l6 s12 pb-5" id="ficheReclamation">
                         <div className="card-panel pb-5">
-                          <div className="row pb-5" id="ententeFiche">
+                          <div className="row" id="ententeFiche">
                             <div className="col l6 s12" style={{ display: "flex", alignItems: "center" }}>
                               <h5 className="card-title">
                                 Fiche de la suggestion

@@ -44,8 +44,11 @@ import {
 } from "../redux/actions/Reclamations/HistoriqueReclamationActions"; 
 
 const HistoriqueAffectation = (props) => {
+  const codeClient = props.codeClient || "N/A";
+
   useEffect(() => {
-    console.log("props.claimId", props.claimId);
+    console.log("props.claimId", props.claimId); 
+    console.log("props.codeClient", props.codeClient);
     if (props.claimId) {
       getClaimHistorique(props, props.claimId);
     }
@@ -169,7 +172,7 @@ const HistoriqueAffectation = (props) => {
                           color="text.secondary"
                           gutterBottom
                         >
-                          <strong>Code plainte :</strong> {item.codePlainte}
+                          <strong>Code client :</strong> {codeClient}
                         </Typography>
                         
                       </Box>

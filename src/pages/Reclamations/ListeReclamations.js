@@ -380,17 +380,17 @@ const ListeReclamations = (props) => {
   }, []);
   //Handling the List
   let columns = [
-    {
-      key: "code",
-      text: "Code client",
-      className: "code",
-      align: "left",
-      sortable: true,
-      cell: (claim, index) => {
-        let codeClient = claim.codeClient !== "" ? claim.codeClient : ""; 
-        return codeClient;
-      },
-    },
+    // {
+    //   key: "code",
+    //   text: "Code client",
+    //   className: "code",
+    //   align: "left",
+    //   sortable: true,
+    //   cell: (claim, index) => {
+    //     let codeClient = claim.codeClient !== "" ? claim.codeClient : ""; 
+    //     return codeClient;
+    //   },
+    // },
     {
       key: "codeClient",
       text: "Code client",
@@ -683,8 +683,9 @@ const ListeReclamations = (props) => {
     clearComponentState();
     setClaimId(data.id);
 
+    console.log("data", data)
+    console.log("props.codeClient___", props.codeClient)
     // console.log("datarowC", data)
-    // console.log(data.codeClient);
     if (mode === 1) {
       props.lastnameChanged(
         data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -2532,7 +2533,7 @@ const ListeReclamations = (props) => {
     // "Liste Réclamations"
     <div id="main">
       {/* {props.showSelectPrintItem && ( */}
-      <HistoriqueAffectation claimId={claim_id} />
+            <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} />
       {showExtraContent && (
         <div>
           <Dialog
