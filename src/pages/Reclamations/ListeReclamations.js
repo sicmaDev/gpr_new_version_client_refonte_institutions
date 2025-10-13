@@ -1974,7 +1974,7 @@ const ListeReclamations = (props) => {
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Adresse :</b></div><div class="col l9" style="font-size:18px;">${props.selectedItem.address}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Enregistré le :</b></div><div class="col l9" style="font-size:18px;">${datee}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Enregistré par :</b></div><div class="col l9" style="font-size:18px;">${addByTemp}</div></div>
-      <div class="row" style="margin-bottom:15px;"><div class="col l12"><span style="font-size:18px;"><b>Code:</b> ${props.selectedItem.codeClient}</span></div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l12"><span style="font-size:18px;"><b>Code client:</b> ${props.selectedItem.codeClient}</span></div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l4"><b style="font-size:18px;">Date de réception de la réclamation :</b></div><div class="col l8" style="font-size:18px;">${props.selectedItem.receiptDateTime}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Objet de plainte :</b></div><div class="col l9" style="font-size:18px;">${objetTemp}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Produit concerné :</b></div><div class="col l9" style="font-size:18px;">${produitTemp}</div></div>
@@ -2253,7 +2253,7 @@ const ListeReclamations = (props) => {
   const prepareToPrint = async (type = "pdf") => {
     // console.log("mes données", props.session);
     let entete = "<h1>PV de Session</h1>";
-    let codeRec = "Réclamation : " + props.code;
+    let codeRec = "Réclamation : " + props.codeClient;
     let participantsTab;
     let guestsTab;
     let votesTab;

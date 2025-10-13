@@ -361,29 +361,17 @@ const Utilisateurs = (props) => {
         roleOptions = ""
     }
 
-    const [ca, setCa] = useState(false);
+    const [ca, setCa] = useState('');
     const [caOptions, setCaOptions] = useState([
-        {"label": "Sélectionnez votre réponse", "value": "" },
-        {"label": "Non", "value": false },
-        {"label": "Oui", "value": true },
+        { "label": "Sélectionnez votre réponse", "value": "" },
+        { "label": "Non", "value": false },
+        { "label": "Oui", "value": true },
     ]);
-    // if (props.director !== undefined) {
-    //     caOptions = [
-    //         {"label": "Sélectionnez votre réponse", "value": "" },
-    //         {"label": "Non", "value": 0 },
-    //         {"label": "Oui", "value": 1 },
-    //     ]
 
-    // } else {
-    //     caOptions = ""
-    // }
-
-    const handleChange12 = (obj) => {
-        setCa(obj.value)
-        // props.unitLibelleChanged(obj.label)
-
-        // console.log(props.unit)
-    }
+    const handleChange12 = (selectedOption) => {
+        setCa(selectedOption.value);
+        // console.log('Option sélectionnée:', selectedOption);
+    } 
 
 
     const handleValidation = () =>{
@@ -467,7 +455,7 @@ const Utilisateurs = (props) => {
         props.passwordChanged("")
         props.passwordAgainChanged("")
         props.selectedItemChanged({})
-        setCa(false);
+        setCa("");
     }
     const handleCancel = (e) => {
         e.preventDefault()
@@ -559,10 +547,12 @@ const Utilisateurs = (props) => {
 
     }
     const handleEditClick = (sp) => (e) => {
+        setCa("")
         rowClickedHandler(e, sp, null)
     }
 
     const rowClickedHandler = (event, data, rowIndex) => {
+        console.log("data", data)
         props.idChanged(data.id?data.id:"")
         props.codeChanged(data.code?data.code:"")
         props.nameChanged(data.firstAndLastName?data.firstAndLastName:"")
@@ -867,8 +857,8 @@ const Utilisateurs = (props) => {
                                         style={styles}
                                         placeholder="Sélectionnez le role"
                                         options={caOptions}
-                                       
-                                        value={ca}
+
+                                        value={caOptions.find(option => option.value === ca)}
                                         onChange={handleChange12}
                                     />
                                     <label htmlFor="usrole" className={"active"}>Est-il le gérant du point de service ?&nbsp;

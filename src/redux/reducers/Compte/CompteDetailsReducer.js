@@ -25,6 +25,11 @@ const CompteDetailsReducer = (state = initialState, action) => {
                 ...state,
                 id: action.payload,
             };
+        case 'POSTE_CHANGED':
+            return {
+                ...state,
+                poste: action.payload,
+            };
         case 'FIRSTNAME_CHANGED':
             return {
                 ...state,

@@ -1,5 +1,5 @@
 import React, {useEffect} from "react";
-import { compteDetailsErrors, emailChanged, etatChanged, firstnameChanged, idChanged, jobtitleChanged, lastnameChanged, phoneChanged } from "../../redux/actions/Compte/CompteDetailsActions";
+import { compteDetailsErrors, emailChanged, etatChanged, firstnameChanged, idChanged, jobtitleChanged, lastnameChanged, phoneChanged, posteChanged } from "../../redux/actions/Compte/CompteDetailsActions";
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from "../../Utils/utils";
 import { connect } from "react-redux";
 import SaveIcon from '@mui/icons-material/Save';
@@ -35,6 +35,7 @@ const CompteDetails = (props) => {
 
     useEffect(() => {
         const sessionUser = JSON.parse(loadItemFromSessionStorage('app-user'))
+        props.posteChanged(sessionUser.posteDto.libelle)
         props.idChanged(sessionUser.id)
         props.emailChanged(sessionUser.email)
         props.phoneChanged(sessionUser.tel)
@@ -55,7 +56,7 @@ const CompteDetails = (props) => {
             hbt.includes("H13") ? setH13 (<Typography ><span style={{ fontWeight:"bold",color:"#00cc00" }}>H13</span> : Consulter les Alerte de retard de traitement </Typography>) : setH13("")
             hbt.includes("H14") ? setH14 (<Typography ><span style={{ fontWeight:"bold",color:"#333300" }}>H14</span> : Consulter toutes les informations </Typography>) : setH14("")
 
-
+        console.log("sessionUser:", sessionUser);
     }, []);
 
     const handleModal = (e) => {
@@ -150,7 +151,13 @@ const CompteDetails = (props) => {
                 <form id="accountForm" >
                     <div className="row">
                         
-                        <div className="col l12 m12 s12 input-field">
+                        <div className="col l6 m12 s12 input-field">
+                            <input id="poste" name="poste" type="text" readOnly
+                                defaultValue={props.poste} placeholder={props.poste}/>
+                            <label htmlFor="poste" className={"active"}>Poste</label>
+                        </div>
+
+                        <div className="col l6 m12 s12 input-field">
                             <input id="firstname" name="firstname" type="text"
                                     className="validate" defaultValue={props.firstname} placeholder={props.firstname} onChange={(e) => props.firstnameChanged(e.target.value)}
                                     data-error=".errorTxt1"/>
@@ -168,7 +175,6 @@ const CompteDetails = (props) => {
                             <small className="errorTxt4">
                                 <div id="cpassword-error" className="error">{props.errors.email}</div>
                             </small>
-
                         </div>
 
                         <div className="col l6 m12 s12 input-field">
@@ -205,6 +211,7 @@ const CompteDetails = (props) => {
 const mapStateToProps = (state) => {
     return {
         isLoading: state.compte_details.isLoading,
+        poste: state.compte_details.poste,
         id: state.compte_details.id,
         firstname: state.compte_details.firstname,
         email: state.compte_details.email,
@@ -218,6 +225,9 @@ const mapDispatchToProps = (dispatch) => {
     return {
 
         compteDetailsErrors: (err) => {dispatch(compteDetailsErrors(err))},
+        posteChanged: (poste) => {
+            dispatch(posteChanged(poste))
+        },
         idChanged: (id) => {
             dispatch(idChanged(id))
         },

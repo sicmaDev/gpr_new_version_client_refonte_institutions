@@ -11,6 +11,13 @@ export const compteDetailsErrors = (errors) =>{
         info: 'This action is used to '
     }
 };
+export const posteChanged = (poste) =>{
+    return {
+        type: 'POSTE_CHANGED',
+        payload: poste,
+        info: 'This action is used to ...'
+    }
+};
 export const idChanged = (id) =>{
     return {
         type: 'ID_CHANGED',

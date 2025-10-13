@@ -1447,7 +1447,7 @@ const ListeDenonciations = (props) => {
       codeClient: `
         <div class="row" style="margin-bottom: 20px;">
           <div class="col l12">
-            <span style="font-size: 18px;"><b>Code:</b> ${props.selectedItem.codeClient}</span>
+            <span style="font-size: 18px;"><b>Code client:</b> ${props.selectedItem.codeClient}</span>
           </div>
         </div>
       `,
@@ -1589,7 +1589,7 @@ const ListeDenonciations = (props) => {
   const prepareToPrint = async (type = "pdf") => {
     // console.log("mes données", props.session);
     let entete = "<h1>PV de Session</h1>"
-    let codeRec = "Réclamation : " + props.code;
+    let codeRec = "Dénonciation : " + props.codeClient;
     let participantsTab
     let guestsTab
     let votesTab

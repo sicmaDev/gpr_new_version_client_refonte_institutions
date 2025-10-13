@@ -992,7 +992,7 @@ const ListeSuggestions = (props) => {
     `;
     const code = `
       <div class="row" style="margin-bottom: 15px;">
-        <div class="col l12"><span style="font-size: 18px;"><b>CodeClient:</b> ${props.selectedItem.codeClient}</span></div>
+        <div class="col l12"><span style="font-size: 18px;"><b>Code Client:</b> ${props.selectedItem.codeClient}</span></div>
       </div>
     `;
     const datereception = `

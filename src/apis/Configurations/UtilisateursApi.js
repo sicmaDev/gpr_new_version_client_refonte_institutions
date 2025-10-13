@@ -147,12 +147,13 @@ export const modification = async (data, props) => {
 
         })
         .catch(function (error) {
+            console.log("erre", error)
             props.etatChanged(false)
-            if (error.response.data.content !=="") {
-                notify(error.response.data.content.message, "error");
-            } else {
-                notify("Erreur - Veuillez réessayer!", "error");
-            }
+            // if (error.response.data.content !=="") {
+            //     notify(error.response.data.content.message, "error");
+            // } else {
+            //     notify("Erreur - Veuillez réessayer!", "error");
+            // }
         });
 
 }
