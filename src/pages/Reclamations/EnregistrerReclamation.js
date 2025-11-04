@@ -213,6 +213,8 @@ const EnregistrerReclamation = (props) => {
     //     utilsScript: "src/assets/js/phoneUtils.js?1638200991544"
     // });
     // initDatePicker(props, 'recorded_at')
+
+    clearComponentState();
   }, []);
 
   const [actif, setActif] = useState();
@@ -1659,7 +1661,7 @@ const EnregistrerReclamation = (props) => {
                           config={config}
                           records={content}
                           columns={columns}
-                          onRowClicked={rowClickedHandler}
+                          // onRowClicked={rowClickedHandler}
                         />
                       </div>
                     </div>

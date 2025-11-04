@@ -159,6 +159,7 @@ const EnregistrerDenonciation = (props) => {
         window.$('#as-react-datatable tr').addClass('cursor-pointer')
         window.$('.tooltipped').tooltip();
 
+        clearComponentState();
     }, []);
 
     const [open2, setOpen2] = React.useState(false);
@@ -1148,7 +1149,7 @@ const EnregistrerDenonciation = (props) => {
                                                     config={config}
                                                     records={content}
                                                     columns={columns}
-                                                    onRowClicked={rowClickedHandler}
+                                                    // onRowClicked={rowClickedHandler}
                                                 />
                                             </div>
                                         </div>

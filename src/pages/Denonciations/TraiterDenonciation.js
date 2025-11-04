@@ -387,10 +387,18 @@ const TraiterDenonciation = (props) => {
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
   const [filesForm, setFiles] = useState([])
+    const inputRef = useRef(null);
   const [showExtraContent, setShowExtraContent] = useState(false)
   const [extraContent, setExtraContent] = useState("")
   const [extraFileLoading, setExtraFileLoading] = useState(false)
   const [claim_id, setClaimId] = useState(null)
+  
+  const clearFiles = () => {
+    if (inputRef.current) {
+      inputRef.current.value = null;
+    }
+    setFiles([]);
+  };
 
   const history = useHistory();
   const handleClose = () => {
@@ -3617,7 +3625,7 @@ const TraiterDenonciation = (props) => {
                     {attachment.name}
                   </Typography>
                   {attachment._extra && (
-                    <Tooltip title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${attachment.extra?.createdAt}`}>
+                    <Tooltip title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${formatDate(attachment.extra?.createdAt)}`}>
                       <Info fontSize="small" sx={{ ml: 1 }} />
                     </Tooltip>
                   )}
@@ -3734,7 +3742,7 @@ const TraiterDenonciation = (props) => {
                   {audioItem.name}
                 </Typography>
                 {audioItem._extra && (
-                  <Tooltip title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${audioItem.extra?.createdAt}`}>
+                  <Tooltip title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${formatDate(audioItem.extra?.createdAt)}`}>
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
                 )}
@@ -3979,35 +3987,51 @@ const TraiterDenonciation = (props) => {
     }
   }
 
-  // Vérifie si le dialog enfant est ouvert (présent et aria-hidden = false)
+  
   const enfant = document.querySelector('#dialog-enfant');
   const confirmation = document.querySelector('#dialog-confirmation');
+  const addFile = document.querySelector('#dialog-addFile');
+  const noAccess = document.querySelector('#dialog-noAccess');
+  const audioExtrat = document.querySelector('#dialog-audio');
+  const contenuExtrat = document.querySelector('#dialog-contenu');
+
   const enfantOuvert = enfant && enfant.getAttribute('aria-hidden') !== 'true';
   const confirmationOuvert = confirmation && confirmation.getAttribute('aria-hidden') !== 'true';
+  const addFileOuvert = addFile && addFile.getAttribute('aria-hidden') !== 'true';
+  const noAccessOuvert = noAccess && noAccess.getAttribute('aria-hidden') !== 'true';
+  const audioExtratOuvert = audioExtrat && audioExtrat.getAttribute('aria-hidden') !== 'true';
+  const contenuExtratOuvert = contenuExtrat && contenuExtrat.getAttribute('aria-hidden') !== 'true';
 
-  // Sélectionne tous les dialogs MUI
+  // Sélectionnez tous les éléments avec la classe spécifiée
   const elements = document.querySelectorAll('.MuiDialog-root');
 
+  // Parcourez la liste d'éléments
   elements.forEach(element => {
-    // Ne jamais modifier l'affichage du dialog enfant lui-même
-    if (['dialog-enfant', 'dialog-confirmation'].includes(element.id)) {
+    if (['dialog-enfant', 'dialog-confirmation', 'dialog-addFile', 'dialog-noAccess', 'dialog-audio', 'dialog-contenu'].includes(element.id)) {
       return;
     }
 
-    // Si le dialog est caché par MUI (aria-hidden="true")
-    // ET que l'enfant n'est PAS ouvert → on le masque
     if (
       element.hasAttribute('aria-hidden') &&
       element.getAttribute('aria-hidden') === 'true' &&
-      !enfantOuvert && !confirmationOuvert
+      !enfantOuvert && !confirmationOuvert && !addFileOuvert && !noAccessOuvert && !audioExtratOuvert && !contenuExtratOuvert
     ) {
       element.style.display = 'none';
     } else {
-      // Sinon on le laisse visible (au cas où il a été masqué avant)
       element.style.display = '';
     }
   });
 
+
+  useEffect(() => {
+    console.log("filesForm.length", filesForm.length);
+    if (inputRef.current) {
+      inputRef.current.value = null;
+      console.log("inputRef.current", inputRef.current.value);
+    }
+    // clearFiles();
+
+  }, [filesForm.length]);
 
   const handleFileSubmit = (e, isFile = true) => {    
     e.preventDefault();
@@ -4038,7 +4062,7 @@ const TraiterDenonciation = (props) => {
       console.log('res >> ', res)
       if (isFile) {
         getFillesApi(currentData?.id, props);
-        setFiles([])
+        clearFiles(); 
         notify("Piece jointe ajoutée  ", "success")
       } else {
         getClaimAudioApi(currentData?.id, props)
@@ -4088,9 +4112,10 @@ const TraiterDenonciation = (props) => {
         <div>
 
           <Dialog open={showExtraContent} fullWidth={true}
-            maxWidth='md' onClose={(e) => { setShowExtraContent(false) }}>
+            maxWidth='md' onClose={(e) => { setShowExtraContent(false) }} 
+            overflowX='hidden' id="dialog-contenu">
             <DialogTitle>Ajouter un contenu</DialogTitle>
-            <DialogContent>
+            <DialogContent sx={{ overflowX: 'hidden' }}>
               <TextField
                 fullWidth
                 multiline
@@ -4100,7 +4125,7 @@ const TraiterDenonciation = (props) => {
                 placeholder="Saisissez le contenu..."
               />
             </DialogContent>
-            {(extraContent && extraContent?.trim() !== "") ? <DialogActions>
+            {(extraContent && extraContent?.trim() !== "") ? <DialogActions  sx={{ overflowX: 'hidden' }}>
               <LoadingButton onClick={(e) => {
                 setExtraContent("")
                 setShowExtraContent(false)
@@ -4132,7 +4157,8 @@ const TraiterDenonciation = (props) => {
       {filesForm.length ? (
         <div>
           <Dialog open={filesForm.length ? true : false} fullWidth={true}
-            maxWidth='sm' onClose={(e) => { setFiles([]) }}>
+            maxWidth='sm' onClose={(e) => { setFiles([]) }}
+            id="dialog-addFile">
             <DialogContent>
               <DialogContentText>
                 <div className="col l12 s12 pb-2" id="content">
@@ -4204,6 +4230,7 @@ const TraiterDenonciation = (props) => {
             open={open2}
             onClose={() => { setOpen2(false) }}
             style={{ padding: "16px" }}
+            id="dialog-audio"
           >
             <DialogTitle
               align="center"
@@ -4534,7 +4561,7 @@ const TraiterDenonciation = (props) => {
                                     </Typography>
                                     <label htmlFor="ile" className="btn btn-primary" >
                                       Ajouter un fichier
-                                      <input type="file" id="ile" multiple sx={{ display: 'none' }}
+                                      <input type="file" id="ile" ref={inputRef} multiple sx={{ display: 'none' }}
                                         onChange={(e) => { setFiles([...e.target.files]) }}
                                         style={{ display: 'none' }}
                                         accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"

@@ -278,10 +278,18 @@ const ListeReclamations = (props) => {
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
   const [filesForm, setFiles] = useState([]);
+    const inputRef = useRef(null);
   const [showExtraContent, setShowExtraContent] = useState(false);
   const [extraContent, setExtraContent] = useState("");
   const [extraFileLoading, setExtraFileLoading] = useState(false);
   const [claim_id, setClaimId] = useState(null);
+  
+  const clearFiles = () => {
+    if (inputRef.current) {
+      inputRef.current.value = null;
+    }
+    setFiles([]);
+  };
 
   const handleClose = () => {
     setOpen(false);
@@ -1686,7 +1694,7 @@ const ListeReclamations = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${attachment.extra?.createdAt}`}
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${formatDate(attachment.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1802,7 +1810,7 @@ const ListeReclamations = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${audioItem.extra?.createdAt}`}
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${formatDate(audioItem.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -2453,6 +2461,52 @@ const ListeReclamations = (props) => {
       downloadLink.click();
     }
   };
+  
+  const enfant = document.querySelector('#dialog-enfant');
+  const confirmation = document.querySelector('#dialog-confirmation');
+  const addFile = document.querySelector('#dialog-addFile');
+  const noAccess = document.querySelector('#dialog-noAccess');
+  const audioExtrat = document.querySelector('#dialog-audio');
+  const contenuExtrat = document.querySelector('#dialog-contenu');
+
+  const enfantOuvert = enfant && enfant.getAttribute('aria-hidden') !== 'true';
+  const confirmationOuvert = confirmation && confirmation.getAttribute('aria-hidden') !== 'true';
+  const addFileOuvert = addFile && addFile.getAttribute('aria-hidden') !== 'true';
+  const noAccessOuvert = noAccess && noAccess.getAttribute('aria-hidden') !== 'true';
+  const audioExtratOuvert = audioExtrat && audioExtrat.getAttribute('aria-hidden') !== 'true';
+  const contenuExtratOuvert = contenuExtrat && contenuExtrat.getAttribute('aria-hidden') !== 'true';
+
+  // Sélectionnez tous les éléments avec la classe spécifiée
+  const elements = document.querySelectorAll('.MuiDialog-root');
+
+  // Parcourez la liste d'éléments
+  elements.forEach(element => {
+    if (['dialog-enfant', 'dialog-confirmation', 'dialog-addFile', 'dialog-noAccess', 'dialog-audio', 'dialog-contenu'].includes(element.id)) {
+      return;
+    }
+
+    if (
+      element.hasAttribute('aria-hidden') &&
+      element.getAttribute('aria-hidden') === 'true' &&
+      !enfantOuvert && !confirmationOuvert && !addFileOuvert && !noAccessOuvert && !audioExtratOuvert && !contenuExtratOuvert
+    ) {
+      element.style.display = 'none';
+    } else {
+      element.style.display = '';
+    }
+  });
+
+
+  useEffect(() => {
+    console.log("filesForm.length", filesForm.length);
+    if (inputRef.current) {
+      inputRef.current.value = null;
+      console.log("inputRef.current", inputRef.current.value);
+    }
+    // clearFiles();
+
+  }, [filesForm.length]);
+
 
   const handleFileSubmit = (e, isFile = true) => {
     e.preventDefault();
@@ -2485,7 +2539,7 @@ const ListeReclamations = (props) => {
         console.log("res >> ", res);
         if (isFile) {
           getFillesApi(currentData?.id, props);
-          setFiles([]);
+          clearFiles(); 
           notify("Piece jointe ajoutée  ", "success");
         } else {
           getClaimAudioApi(currentData?.id, props);
@@ -2543,9 +2597,10 @@ const ListeReclamations = (props) => {
             onClose={(e) => {
               setShowExtraContent(false);
             }}
+            overflowX='hidden' id="dialog-contenu"
           >
             <DialogTitle>Ajouter un contenu</DialogTitle>
-            <DialogContent>
+            <DialogContent sx={{ overflowX: 'hidden' }}>
               <TextField
                 fullWidth
                 multiline
@@ -2560,7 +2615,7 @@ const ListeReclamations = (props) => {
               />
             </DialogContent>
             {extraContent && extraContent?.trim() !== "" ? (
-              <DialogActions>
+              <DialogActions  sx={{ overflowX: 'hidden' }}>
                 <LoadingButton
                   onClick={(e) => {
                     setExtraContent("");
@@ -2606,6 +2661,7 @@ const ListeReclamations = (props) => {
             onClose={(e) => {
               setFiles([]);
             }}
+            id="dialog-addFile"
           >
             <DialogContent>
               <DialogContentText>
@@ -2690,6 +2746,7 @@ const ListeReclamations = (props) => {
               setOpen2(false);
             }}
             style={{ padding: "16px" }}
+            id="dialog-audio"
           >
             <DialogTitle
               align="center"
@@ -3434,6 +3491,7 @@ const ListeReclamations = (props) => {
                                     <input
                                       type="file"
                                       id="ile"
+                                      ref={inputRef}
                                       multiple
                                       sx={{ display: "none" }}
                                       onChange={(e) => {
