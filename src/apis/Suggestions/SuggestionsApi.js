@@ -77,6 +77,8 @@ export const addTempSuggestionApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etatChanged(false)
+
+            console.log("responseaan", response)
             if (response.data.status) {
                 notify("Bravo - Suggestion sauvegardée", "success");
                 listeByStatut(props, "TEMP_SAVED")

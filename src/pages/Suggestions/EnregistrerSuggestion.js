@@ -558,7 +558,7 @@ const EnregistrerSuggestion = (props) => {
         }
 
 
-        // console.log(formData);
+        console.log("claim____", claim);
         //HERE
         props.etatChanged(true)
         if (mode === 1) {

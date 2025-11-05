@@ -278,12 +278,12 @@ const ListeReclamations = (props) => {
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
   const [filesForm, setFiles] = useState([]);
-    const inputRef = useRef(null);
+  const inputRef = useRef(null);
   const [showExtraContent, setShowExtraContent] = useState(false);
   const [extraContent, setExtraContent] = useState("");
   const [extraFileLoading, setExtraFileLoading] = useState(false);
   const [claim_id, setClaimId] = useState(null);
-  
+
   const clearFiles = () => {
     if (inputRef.current) {
       inputRef.current.value = null;
@@ -318,7 +318,7 @@ const ListeReclamations = (props) => {
   const [open2, setOpen2] = useState(false);
   const [showAudioBox, setAudioBox] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (audio) {
@@ -329,25 +329,29 @@ const ListeReclamations = (props) => {
 
   useEffect(() => {
     KTApp.blockPage({
-      overlayColor: '#000000',
-      type: 'v2',
-      state: 'danger',
-      message: 'En cours de chargement...'
-    })
+      overlayColor: "#000000",
+      type: "v2",
+      state: "danger",
+      message: "En cours de chargement...",
+    });
     setIsLoading(true);
 
     if (mode === 1) {
       props.itemsChanged([]);
-      listeTousStatuts(props).then((r) => {}).finally(() => {
-        setIsLoading(false)
-        KTApp.unblockPage()
-      });
+      listeTousStatuts(props)
+        .then((r) => {})
+        .finally(() => {
+          setIsLoading(false);
+          KTApp.unblockPage();
+        });
     } else {
       props.itemsChanged([]);
-      listeTousStatutsOffline(props).then((r) => {}).finally(() => {
-        setIsLoading(false)
-        KTApp.unblockPage()
-      });
+      listeTousStatutsOffline(props)
+        .then((r) => {})
+        .finally(() => {
+          setIsLoading(false);
+          KTApp.unblockPage();
+        });
     }
     //couleurs
     let couleurs = [
@@ -395,7 +399,7 @@ const ListeReclamations = (props) => {
     //   align: "left",
     //   sortable: true,
     //   cell: (claim, index) => {
-    //     let codeClient = claim.codeClient !== "" ? claim.codeClient : ""; 
+    //     let codeClient = claim.codeClient !== "" ? claim.codeClient : "";
     //     return codeClient;
     //   },
     // },
@@ -691,8 +695,8 @@ const ListeReclamations = (props) => {
     clearComponentState();
     setClaimId(data.id);
 
-    console.log("data", data)
-    console.log("props.codeClient___", props.codeClient)
+    console.log("data", data);
+    console.log("props.codeClient___", props.codeClient);
     // console.log("datarowC", data)
     if (mode === 1) {
       props.lastnameChanged(
@@ -1694,7 +1698,9 @@ const ListeReclamations = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${
+                      attachment.extra?.user?.firstAndLastName
+                    } le ${formatDate(attachment.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1810,7 +1816,9 @@ const ListeReclamations = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${
+                      audioItem.extra?.user?.firstAndLastName
+                    } le ${formatDate(audioItem.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -2461,41 +2469,59 @@ const ListeReclamations = (props) => {
       downloadLink.click();
     }
   };
-  
-  const enfant = document.querySelector('#dialog-enfant');
-  const confirmation = document.querySelector('#dialog-confirmation');
-  const addFile = document.querySelector('#dialog-addFile');
-  const noAccess = document.querySelector('#dialog-noAccess');
-  const audioExtrat = document.querySelector('#dialog-audio');
-  const contenuExtrat = document.querySelector('#dialog-contenu');
 
-  const enfantOuvert = enfant && enfant.getAttribute('aria-hidden') !== 'true';
-  const confirmationOuvert = confirmation && confirmation.getAttribute('aria-hidden') !== 'true';
-  const addFileOuvert = addFile && addFile.getAttribute('aria-hidden') !== 'true';
-  const noAccessOuvert = noAccess && noAccess.getAttribute('aria-hidden') !== 'true';
-  const audioExtratOuvert = audioExtrat && audioExtrat.getAttribute('aria-hidden') !== 'true';
-  const contenuExtratOuvert = contenuExtrat && contenuExtrat.getAttribute('aria-hidden') !== 'true';
+  const enfant = document.querySelector("#dialog-enfant");
+  const confirmation = document.querySelector("#dialog-confirmation");
+  const addFile = document.querySelector("#dialog-addFile");
+  const noAccess = document.querySelector("#dialog-noAccess");
+  const audioExtrat = document.querySelector("#dialog-audio");
+  const contenuExtrat = document.querySelector("#dialog-contenu");
+
+  const enfantOuvert = enfant && enfant.getAttribute("aria-hidden") !== "true";
+  const confirmationOuvert =
+    confirmation && confirmation.getAttribute("aria-hidden") !== "true";
+  const addFileOuvert =
+    addFile && addFile.getAttribute("aria-hidden") !== "true";
+  const noAccessOuvert =
+    noAccess && noAccess.getAttribute("aria-hidden") !== "true";
+  const audioExtratOuvert =
+    audioExtrat && audioExtrat.getAttribute("aria-hidden") !== "true";
+  const contenuExtratOuvert =
+    contenuExtrat && contenuExtrat.getAttribute("aria-hidden") !== "true";
 
   // Sélectionnez tous les éléments avec la classe spécifiée
-  const elements = document.querySelectorAll('.MuiDialog-root');
+  const elements = document.querySelectorAll(".MuiDialog-root");
 
   // Parcourez la liste d'éléments
-  elements.forEach(element => {
-    if (['dialog-enfant', 'dialog-confirmation', 'dialog-addFile', 'dialog-noAccess', 'dialog-audio', 'dialog-contenu'].includes(element.id)) {
+  elements.forEach((element) => {
+    if (
+      [
+        "dialog-enfant",
+        "dialog-confirmation",
+        "dialog-addFile",
+        "dialog-noAccess",
+        "dialog-audio",
+        "dialog-contenu",
+      ].includes(element.id)
+    ) {
       return;
     }
 
     if (
-      element.hasAttribute('aria-hidden') &&
-      element.getAttribute('aria-hidden') === 'true' &&
-      !enfantOuvert && !confirmationOuvert && !addFileOuvert && !noAccessOuvert && !audioExtratOuvert && !contenuExtratOuvert
+      element.hasAttribute("aria-hidden") &&
+      element.getAttribute("aria-hidden") === "true" &&
+      !enfantOuvert &&
+      !confirmationOuvert &&
+      !addFileOuvert &&
+      !noAccessOuvert &&
+      !audioExtratOuvert &&
+      !contenuExtratOuvert
     ) {
-      element.style.display = 'none';
+      element.style.display = "none";
     } else {
-      element.style.display = '';
+      element.style.display = "";
     }
   });
-
 
   useEffect(() => {
     console.log("filesForm.length", filesForm.length);
@@ -2504,9 +2530,7 @@ const ListeReclamations = (props) => {
       console.log("inputRef.current", inputRef.current.value);
     }
     // clearFiles();
-
   }, [filesForm.length]);
-
 
   const handleFileSubmit = (e, isFile = true) => {
     e.preventDefault();
@@ -2539,8 +2563,8 @@ const ListeReclamations = (props) => {
         console.log("res >> ", res);
         if (isFile) {
           getFillesApi(currentData?.id, props);
-          clearFiles(); 
-          notify("Piece jointe ajoutée  ", "success");
+          clearFiles();
+          notify("Piece joint ajoutée  ", "success");
         } else {
           getClaimAudioApi(currentData?.id, props);
           setOpen2(false);
@@ -2570,7 +2594,8 @@ const ListeReclamations = (props) => {
       .then((res) => {
         console.log("res >> ", res);
 
-        notify("Contenue jointe ajoutée  ", "success");
+        props.extrasChanged(res.data.content.extras ?? []);
+        notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
         setExtraContent("");
       })
@@ -2587,7 +2612,7 @@ const ListeReclamations = (props) => {
     // "Liste Réclamations"
     <div id="main">
       {/* {props.showSelectPrintItem && ( */}
-            <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} />
+      <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} />
       {showExtraContent && (
         <div>
           <Dialog
@@ -2597,10 +2622,11 @@ const ListeReclamations = (props) => {
             onClose={(e) => {
               setShowExtraContent(false);
             }}
-            overflowX='hidden' id="dialog-contenu"
+            overflowX="hidden"
+            id="dialog-contenu"
           >
             <DialogTitle>Ajouter un contenu</DialogTitle>
-            <DialogContent sx={{ overflowX: 'hidden' }}>
+            <DialogContent sx={{ overflowX: "hidden" }}>
               <TextField
                 fullWidth
                 multiline
@@ -2615,7 +2641,7 @@ const ListeReclamations = (props) => {
               />
             </DialogContent>
             {extraContent && extraContent?.trim() !== "" ? (
-              <DialogActions  sx={{ overflowX: 'hidden' }}>
+              <DialogActions sx={{ overflowX: "hidden" }}>
                 <LoadingButton
                   onClick={(e) => {
                     setExtraContent("");
@@ -2623,7 +2649,7 @@ const ListeReclamations = (props) => {
                   }}
                   className="waves-effect waves-effect-b waves-light btn-small"
                   loadingPosition="end"
-                  loading={extraFileLoading}
+                  // loading={extraFileLoading}
                   endIcon={<CloseIcon />}
                   variant="contained"
                   sx={{ backgroundColor: "#000", textTransform: "initial" }}
@@ -2722,7 +2748,7 @@ const ListeReclamations = (props) => {
                       setFiles([]);
                     }}
                     className="waves-effect waves-effect-b waves-light btn-small"
-                    loading={extraFileLoading}
+                    // loading={extraFileLoading}
                     loadingPosition="end"
                     endIcon={<CloseIcon />}
                     variant="contained"
@@ -3275,7 +3301,8 @@ const ListeReclamations = (props) => {
 
                                 <div className="row">
                                   <div className="col l6 s12 df pb-2" id="code">
-                                    <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
+                                    <PinIcon sx={{ mr: 2 }} />{" "}
+                                    {props.codeClient}
                                   </div>
 
                                   <div

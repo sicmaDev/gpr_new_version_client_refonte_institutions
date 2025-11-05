@@ -72,7 +72,7 @@ export const listeByStatut = async (props, state) => {
     await axios(config)
         .then(function (response) {
             // console.log("mesureliste",response.data.content)
-            // console.log("response",response.data.content)
+            console.log("response___________",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
@@ -183,7 +183,7 @@ export const listeAssurance = async (props) => {
 }
 
 export const addTempClaimApi = async (data, props) => {
-    // console.log("data",data)
+    // console.log("data____",data)
 
     const config = {
         method: 'post',
@@ -200,6 +200,7 @@ export const addTempClaimApi = async (data, props) => {
             // console.log("reponseaan", response)
             props.etatChanged(false)
             if (response.data.status) {
+                console.log("data____", response.data.content)
                 notify("Bravo - Réclamation sauvegardée", "success");
                 listeByStatut(props, "TEMP_SAVED")
             } else {
@@ -243,7 +244,7 @@ export const addClaimApi = async (data, props) => {
         });
 }
 
-export const addExtraClaimApi = async (data) => {
+export const addExtraClaimApi = async (data, props) => {
     console.log("dataextra",data)
     const config = {
         method: 'post',

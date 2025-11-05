@@ -164,7 +164,7 @@ const MesurerReclamation = (props) => {
 
   useEffect(() => {}, [showAudioPlayer, currentAudio]);
 
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -172,12 +172,12 @@ const MesurerReclamation = (props) => {
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
   const [filesForm, setFiles] = useState([]);
-    const inputRef = useRef(null);
+  const inputRef = useRef(null);
   const [showExtraContent, setShowExtraContent] = useState(false);
   const [extraContent, setExtraContent] = useState("");
   const [extraFileLoading, setExtraFileLoading] = useState(false);
   const [claim_id, setClaimId] = useState(null);
-  
+
   const clearFiles = () => {
     if (inputRef.current) {
       inputRef.current.value = null;
@@ -349,19 +349,21 @@ const MesurerReclamation = (props) => {
 
   useEffect(() => {
     KTApp.blockPage({
-      overlayColor: '#000000',
-      type: 'v2',
-      state: 'danger',
-      message: 'En cours de chargement...'
-    })
+      overlayColor: "#000000",
+      type: "v2",
+      state: "danger",
+      message: "En cours de chargement...",
+    });
     setIsLoading(true);
 
     if (props.match.params.code === "all") {
       props.itemsChanged([]);
-      listeByStatut(props, "TREAT").then((r) => {}).finally(() => {
-        setIsLoading(false)
-        KTApp.unblockPage()
-      });
+      listeByStatut(props, "TREAT")
+        .then((r) => {})
+        .finally(() => {
+          setIsLoading(false);
+          KTApp.unblockPage();
+        });
     } else {
     }
 
@@ -505,7 +507,7 @@ const MesurerReclamation = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let codeClient = claim.codeClient !== "" ? claim.codeClient : ""; 
+        let codeClient = claim.codeClient !== "" ? claim.codeClient : "";
         return codeClient;
       },
     },
@@ -1011,7 +1013,9 @@ const MesurerReclamation = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${
+                      attachment.extra?.user?.firstAndLastName
+                    } le ${formatDate(attachment.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1127,7 +1131,9 @@ const MesurerReclamation = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${
+                      audioItem.extra?.user?.firstAndLastName
+                    } le ${formatDate(audioItem.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1478,41 +1484,58 @@ const MesurerReclamation = (props) => {
   // console.log("props created at", props.created_at);
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
 
-    
-  const enfant = document.querySelector('#dialog-enfant');
-  const confirmation = document.querySelector('#dialog-confirmation');
-  const addFile = document.querySelector('#dialog-addFile');
-  const noAccess = document.querySelector('#dialog-noAccess');
-  const audioExtrat = document.querySelector('#dialog-audio');
-  const contenuExtrat = document.querySelector('#dialog-contenu');
+  const enfant = document.querySelector("#dialog-enfant");
+  const confirmation = document.querySelector("#dialog-confirmation");
+  const addFile = document.querySelector("#dialog-addFile");
+  const noAccess = document.querySelector("#dialog-noAccess");
+  const audioExtrat = document.querySelector("#dialog-audio");
+  const contenuExtrat = document.querySelector("#dialog-contenu");
 
-  const enfantOuvert = enfant && enfant.getAttribute('aria-hidden') !== 'true';
-  const confirmationOuvert = confirmation && confirmation.getAttribute('aria-hidden') !== 'true';
-  const addFileOuvert = addFile && addFile.getAttribute('aria-hidden') !== 'true';
-  const noAccessOuvert = noAccess && noAccess.getAttribute('aria-hidden') !== 'true';
-  const audioExtratOuvert = audioExtrat && audioExtrat.getAttribute('aria-hidden') !== 'true';
-  const contenuExtratOuvert = contenuExtrat && contenuExtrat.getAttribute('aria-hidden') !== 'true';
+  const enfantOuvert = enfant && enfant.getAttribute("aria-hidden") !== "true";
+  const confirmationOuvert =
+    confirmation && confirmation.getAttribute("aria-hidden") !== "true";
+  const addFileOuvert =
+    addFile && addFile.getAttribute("aria-hidden") !== "true";
+  const noAccessOuvert =
+    noAccess && noAccess.getAttribute("aria-hidden") !== "true";
+  const audioExtratOuvert =
+    audioExtrat && audioExtrat.getAttribute("aria-hidden") !== "true";
+  const contenuExtratOuvert =
+    contenuExtrat && contenuExtrat.getAttribute("aria-hidden") !== "true";
 
   // Sélectionnez tous les éléments avec la classe spécifiée
-  const elements = document.querySelectorAll('.MuiDialog-root');
+  const elements = document.querySelectorAll(".MuiDialog-root");
 
   // Parcourez la liste d'éléments
-  elements.forEach(element => {
-    if (['dialog-enfant', 'dialog-confirmation', 'dialog-addFile', 'dialog-noAccess', 'dialog-audio', 'dialog-contenu'].includes(element.id)) {
+  elements.forEach((element) => {
+    if (
+      [
+        "dialog-enfant",
+        "dialog-confirmation",
+        "dialog-addFile",
+        "dialog-noAccess",
+        "dialog-audio",
+        "dialog-contenu",
+      ].includes(element.id)
+    ) {
       return;
     }
 
     if (
-      element.hasAttribute('aria-hidden') &&
-      element.getAttribute('aria-hidden') === 'true' &&
-      !enfantOuvert && !confirmationOuvert && !addFileOuvert && !noAccessOuvert && !audioExtratOuvert && !contenuExtratOuvert
+      element.hasAttribute("aria-hidden") &&
+      element.getAttribute("aria-hidden") === "true" &&
+      !enfantOuvert &&
+      !confirmationOuvert &&
+      !addFileOuvert &&
+      !noAccessOuvert &&
+      !audioExtratOuvert &&
+      !contenuExtratOuvert
     ) {
-      element.style.display = 'none';
+      element.style.display = "none";
     } else {
-      element.style.display = '';
+      element.style.display = "";
     }
   });
-
 
   useEffect(() => {
     console.log("filesForm.length", filesForm.length);
@@ -1521,7 +1544,6 @@ const MesurerReclamation = (props) => {
       console.log("inputRef.current", inputRef.current.value);
     }
     // clearFiles();
-
   }, [filesForm.length]);
 
   const handleFileSubmit = (e, isFile = true) => {
@@ -1555,8 +1577,8 @@ const MesurerReclamation = (props) => {
         console.log("res >> ", res);
         if (isFile) {
           getFillesApi(currentData?.id, props);
-          clearFiles(); 
-          notify("Piece jointe ajoutée  ", "success");
+          clearFiles();
+          notify("Piece joint ajoutée  ", "success");
         } else {
           getClaimAudioApi(currentData?.id, props);
           setOpen2(false);
@@ -1585,8 +1607,9 @@ const MesurerReclamation = (props) => {
     addExtraClaimApi(formData)
       .then((res) => {
         console.log("res >> ", res);
-
-        notify("Contenue jointe ajoutée  ", "success");
+        
+        props.extrasChanged(res.data.content.extras ?? []);
+        notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
         setExtraContent("");
       })
@@ -1610,10 +1633,11 @@ const MesurerReclamation = (props) => {
             onClose={(e) => {
               setShowExtraContent(false);
             }}
-            overflowX='hidden' id="dialog-contenu"
+            overflowX="hidden"
+            id="dialog-contenu"
           >
             <DialogTitle>Ajouter un contenu</DialogTitle>
-            <DialogContent sx={{ overflowX: 'hidden' }}>
+            <DialogContent sx={{ overflowX: "hidden" }}>
               <TextField
                 fullWidth
                 multiline
@@ -1628,7 +1652,7 @@ const MesurerReclamation = (props) => {
               />
             </DialogContent>
             {extraContent && extraContent?.trim() !== "" ? (
-              <DialogActions  sx={{ overflowX: 'hidden' }}>
+              <DialogActions sx={{ overflowX: "hidden" }}>
                 <LoadingButton
                   onClick={(e) => {
                     setExtraContent("");
@@ -1636,7 +1660,7 @@ const MesurerReclamation = (props) => {
                   }}
                   className="waves-effect waves-effect-b waves-light btn-small"
                   loadingPosition="end"
-                  loading={extraFileLoading}
+                  // loading={extraFileLoading}
                   endIcon={<CloseIcon />}
                   variant="contained"
                   sx={{ backgroundColor: "#000", textTransform: "initial" }}
@@ -1735,7 +1759,7 @@ const MesurerReclamation = (props) => {
                       setFiles([]);
                     }}
                     className="waves-effect waves-effect-b waves-light btn-small"
-                    loading={extraFileLoading}
+                    // loading={extraFileLoading}
                     loadingPosition="end"
                     endIcon={<CloseIcon />}
                     variant="contained"
@@ -2044,7 +2068,8 @@ const MesurerReclamation = (props) => {
                                       className="col l6 s12 df pb-2"
                                       id="code"
                                     >
-                                      <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
+                                      <PinIcon sx={{ mr: 2 }} />{" "}
+                                      {props.codeClient}
                                     </div>
 
                                     <div

@@ -473,7 +473,7 @@ const TraiterReclamation = (props) => {
 
   const [confirmChoosedSolution, setConfirmChoosedSolution] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // console.log(userData);
@@ -527,7 +527,7 @@ const TraiterReclamation = (props) => {
         if (cc.status >= 200 && cc.status <= 299) {
           // await listeTreat(props);
           let data = cc.data.content;
-          // console.log("tmp", data);
+          console.log("tmp", data);
 
           clearComponentState();
 
@@ -680,20 +680,22 @@ const TraiterReclamation = (props) => {
 
   useEffect(() => {
     KTApp.blockPage({
-      overlayColor: '#000000',
-      type: 'v2',
-      state: 'danger',
-      message: 'En cours de chargement...'
-    })
+      overlayColor: "#000000",
+      type: "v2",
+      state: "danger",
+      message: "En cours de chargement...",
+    });
     setIsLoading(true);
 
     // console.log("params",props.match.params);
     if (props.match.params.code === "all") {
       props.itemsChanged([]);
-      listeTreat(props).then((r) => {}).finally(() => {
-        setIsLoading(false)
-        KTApp.unblockPage()
-      });
+      listeTreat(props)
+        .then((r) => {})
+        .finally(() => {
+          setIsLoading(false);
+          KTApp.unblockPage();
+        });
     } else {
     }
 
@@ -4756,7 +4758,9 @@ const TraiterReclamation = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${
+                      attachment.extra?.user?.firstAndLastName
+                    } le ${formatDate(attachment.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -4872,7 +4876,9 @@ const TraiterReclamation = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${
+                      audioItem.extra?.user?.firstAndLastName
+                    } le ${formatDate(audioItem.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -5242,41 +5248,58 @@ const TraiterReclamation = (props) => {
     }
   }
 
-  
-  const enfant = document.querySelector('#dialog-enfant');
-  const confirmation = document.querySelector('#dialog-confirmation');
-  const addFile = document.querySelector('#dialog-addFile');
-  const noAccess = document.querySelector('#dialog-noAccess');
-  const audioExtrat = document.querySelector('#dialog-audio');
-  const contenuExtrat = document.querySelector('#dialog-contenu');
+  const enfant = document.querySelector("#dialog-enfant");
+  const confirmation = document.querySelector("#dialog-confirmation");
+  const addFile = document.querySelector("#dialog-addFile");
+  const noAccess = document.querySelector("#dialog-noAccess");
+  const audioExtrat = document.querySelector("#dialog-audio");
+  const contenuExtrat = document.querySelector("#dialog-contenu");
 
-  const enfantOuvert = enfant && enfant.getAttribute('aria-hidden') !== 'true';
-  const confirmationOuvert = confirmation && confirmation.getAttribute('aria-hidden') !== 'true';
-  const addFileOuvert = addFile && addFile.getAttribute('aria-hidden') !== 'true';
-  const noAccessOuvert = noAccess && noAccess.getAttribute('aria-hidden') !== 'true';
-  const audioExtratOuvert = audioExtrat && audioExtrat.getAttribute('aria-hidden') !== 'true';
-  const contenuExtratOuvert = contenuExtrat && contenuExtrat.getAttribute('aria-hidden') !== 'true';
+  const enfantOuvert = enfant && enfant.getAttribute("aria-hidden") !== "true";
+  const confirmationOuvert =
+    confirmation && confirmation.getAttribute("aria-hidden") !== "true";
+  const addFileOuvert =
+    addFile && addFile.getAttribute("aria-hidden") !== "true";
+  const noAccessOuvert =
+    noAccess && noAccess.getAttribute("aria-hidden") !== "true";
+  const audioExtratOuvert =
+    audioExtrat && audioExtrat.getAttribute("aria-hidden") !== "true";
+  const contenuExtratOuvert =
+    contenuExtrat && contenuExtrat.getAttribute("aria-hidden") !== "true";
 
   // Sélectionnez tous les éléments avec la classe spécifiée
-  const elements = document.querySelectorAll('.MuiDialog-root');
+  const elements = document.querySelectorAll(".MuiDialog-root");
 
   // Parcourez la liste d'éléments
-  elements.forEach(element => {
-    if (['dialog-enfant', 'dialog-confirmation', 'dialog-addFile', 'dialog-noAccess', 'dialog-audio', 'dialog-contenu'].includes(element.id)) {
+  elements.forEach((element) => {
+    if (
+      [
+        "dialog-enfant",
+        "dialog-confirmation",
+        "dialog-addFile",
+        "dialog-noAccess",
+        "dialog-audio",
+        "dialog-contenu",
+      ].includes(element.id)
+    ) {
       return;
     }
 
     if (
-      element.hasAttribute('aria-hidden') &&
-      element.getAttribute('aria-hidden') === 'true' &&
-      !enfantOuvert && !confirmationOuvert && !addFileOuvert && !noAccessOuvert && !audioExtratOuvert && !contenuExtratOuvert
+      element.hasAttribute("aria-hidden") &&
+      element.getAttribute("aria-hidden") === "true" &&
+      !enfantOuvert &&
+      !confirmationOuvert &&
+      !addFileOuvert &&
+      !noAccessOuvert &&
+      !audioExtratOuvert &&
+      !contenuExtratOuvert
     ) {
-      element.style.display = 'none';
+      element.style.display = "none";
     } else {
-      element.style.display = '';
+      element.style.display = "";
     }
   });
-
 
   useEffect(() => {
     console.log("filesForm.length", filesForm.length);
@@ -5285,7 +5308,6 @@ const TraiterReclamation = (props) => {
       console.log("inputRef.current", inputRef.current.value);
     }
     // clearFiles();
-
   }, [filesForm.length]);
 
   const handleFileSubmit = (e, isFile = true) => {
@@ -5316,11 +5338,11 @@ const TraiterReclamation = (props) => {
     console.log("filesForm__2 >> ", filesForm);
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >> ", res);
+        console.log("res >>>>>>>>>>>>>> ", res);
         if (isFile) {
           getFillesApi(currentData?.id, props);
-          clearFiles(); 
-          notify("Piece jointe ajoutée  ", "success");
+          clearFiles();
+          notify("Piece joint ajoutée  ", "success");
         } else {
           getClaimAudioApi(currentData?.id, props);
           setOpen2(false);
@@ -5348,9 +5370,10 @@ const TraiterReclamation = (props) => {
 
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >> ", res);
+        console.log("res >><<< ", res);
 
-        notify("Contenue jointe ajoutée  ", "success");
+        props.extrasChanged(res.data.content.extras ?? []);
+        notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
         setExtraContent("");
       })
@@ -5375,10 +5398,11 @@ const TraiterReclamation = (props) => {
               onClose={(e) => {
                 setShowExtraContent(false);
               }}
-              overflowX='hidden' id="dialog-contenu"
+              overflowX="hidden"
+              id="dialog-contenu"
             >
               <DialogTitle>Ajouter un contenu</DialogTitle>
-              <DialogContent sx={{ overflowX: 'hidden' }}>
+              <DialogContent sx={{ overflowX: "hidden" }}>
                 <TextField
                   fullWidth
                   multiline
@@ -5393,7 +5417,7 @@ const TraiterReclamation = (props) => {
                 />
               </DialogContent>
               {extraContent && extraContent?.trim() !== "" ? (
-                <DialogActions  sx={{ overflowX: 'hidden' }}>
+                <DialogActions sx={{ overflowX: "hidden" }}>
                   <LoadingButton
                     onClick={(e) => {
                       setExtraContent("");
@@ -5401,7 +5425,7 @@ const TraiterReclamation = (props) => {
                     }}
                     className="waves-effect waves-effect-b waves-light btn-small"
                     loadingPosition="end"
-                    loading={extraFileLoading}
+                    // loading={extraFileLoading}
                     endIcon={<CloseIcon />}
                     variant="contained"
                     sx={{ backgroundColor: "#000", textTransform: "initial" }}
@@ -5503,7 +5527,7 @@ const TraiterReclamation = (props) => {
                         setFiles([]);
                       }}
                       className="waves-effect waves-effect-b waves-light btn-small"
-                      loading={extraFileLoading}
+                      // loading={extraFileLoading}
                       loadingPosition="end"
                       endIcon={<CloseIcon />}
                       variant="contained"
@@ -5754,7 +5778,8 @@ const TraiterReclamation = (props) => {
                                         className="col l6 s12 df pb-2"
                                         id="code"
                                       >
-                                        <PinIcon sx={{ mr: 2 }} /> {props.codeClient}
+                                        <PinIcon sx={{ mr: 2 }} />{" "}
+                                        {props.codeClient}
                                       </div>
 
                                       <div

@@ -782,6 +782,8 @@ const EnregistrerReclamation = (props) => {
     claim["code"] = props.code;
     claim["id"] = props.id;
 
+    
+    console.log("data____", claim)
     formData.append("claim", JSON.stringify(claim));
     for (let index = 0; index < files.length; index++) {
       formData.append("files", files[index]);
