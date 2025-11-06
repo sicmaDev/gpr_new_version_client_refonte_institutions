@@ -87,7 +87,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { formatDate, formatDate4, guessExtension, loadItemFromSessionStorage, today } from "../../Utils/utils";
+import { formatDate, formatDate2, formatDate3, formatDate4, guessExtension, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import SaveIcon from '@mui/icons-material/Save';
 import { downloadFillesApi, getFillesApi, getSuggeAudioApi, listeByStatut, listeTousStatuts, treatSuggestionApi } from "../../apis/Suggestions/SuggestionsApi";
 import { LoadingButton } from "@mui/lab";
@@ -242,7 +242,7 @@ const TraiterSuggestion = (props) => {
   //Handling the List
   let columns = [
     {
-      key: "code",
+      key: "codeClient",
       text: "Code client",
       className: "code",
       align: "left",
@@ -556,7 +556,7 @@ const TraiterSuggestion = (props) => {
     
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
-
+    console.log("props.selectedItemFiles", props.selectedItemFiles);
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (

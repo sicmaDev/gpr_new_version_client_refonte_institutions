@@ -106,7 +106,7 @@ const HistoriqueAffectation = (props) => {
         props.showModalChanged(false);
       }}
     >
-      <DialogContent>
+      <DialogContent id="dialog-history">
         <DialogContentText>
           <div className="col l12 s12 pb-1" id="content">
             <div className="df sb pb-1">

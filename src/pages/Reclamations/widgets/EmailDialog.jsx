@@ -67,6 +67,7 @@ const EmailDialog = (props) => {
       }}
       maxWidth="md"
       fullWidth
+      className="dialog-email"
     >
       <DialogTitle>Envoyer un email </DialogTitle>
       <DialogContent>

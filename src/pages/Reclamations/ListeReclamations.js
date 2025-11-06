@@ -2476,6 +2476,7 @@ const ListeReclamations = (props) => {
   const noAccess = document.querySelector("#dialog-noAccess");
   const audioExtrat = document.querySelector("#dialog-audio");
   const contenuExtrat = document.querySelector("#dialog-contenu");
+  const historyAffectation = document.querySelector("#dialog-history");
 
   const enfantOuvert = enfant && enfant.getAttribute("aria-hidden") !== "true";
   const confirmationOuvert =
@@ -2488,6 +2489,8 @@ const ListeReclamations = (props) => {
     audioExtrat && audioExtrat.getAttribute("aria-hidden") !== "true";
   const contenuExtratOuvert =
     contenuExtrat && contenuExtrat.getAttribute("aria-hidden") !== "true";
+  const historyAffectationOuvert =
+    historyAffectation && historyAffectation.getAttribute("aria-hidden") !== "true";
 
   // Sélectionnez tous les éléments avec la classe spécifiée
   const elements = document.querySelectorAll(".MuiDialog-root");
@@ -2502,6 +2505,7 @@ const ListeReclamations = (props) => {
         "dialog-noAccess",
         "dialog-audio",
         "dialog-contenu",
+        "dialog-history",
       ].includes(element.id)
     ) {
       return;
@@ -2515,7 +2519,8 @@ const ListeReclamations = (props) => {
       !addFileOuvert &&
       !noAccessOuvert &&
       !audioExtratOuvert &&
-      !contenuExtratOuvert
+      !contenuExtratOuvert &&
+      !historyAffectationOuvert
     ) {
       element.style.display = "none";
     } else {

@@ -1490,6 +1490,7 @@ const MesurerReclamation = (props) => {
   const noAccess = document.querySelector("#dialog-noAccess");
   const audioExtrat = document.querySelector("#dialog-audio");
   const contenuExtrat = document.querySelector("#dialog-contenu");
+  const sendSms = document.querySelector("#dialog-sms");
 
   const enfantOuvert = enfant && enfant.getAttribute("aria-hidden") !== "true";
   const confirmationOuvert =
@@ -1502,6 +1503,8 @@ const MesurerReclamation = (props) => {
     audioExtrat && audioExtrat.getAttribute("aria-hidden") !== "true";
   const contenuExtratOuvert =
     contenuExtrat && contenuExtrat.getAttribute("aria-hidden") !== "true";
+  const sendSmsOuvert =
+    sendSms && sendSms.getAttribute("aria-hidden") !== "true";
 
   // Sélectionnez tous les éléments avec la classe spécifiée
   const elements = document.querySelectorAll(".MuiDialog-root");
@@ -1516,6 +1519,7 @@ const MesurerReclamation = (props) => {
         "dialog-noAccess",
         "dialog-audio",
         "dialog-contenu",
+        "dialog-sms",
       ].includes(element.id)
     ) {
       return;
@@ -1529,7 +1533,8 @@ const MesurerReclamation = (props) => {
       !addFileOuvert &&
       !noAccessOuvert &&
       !audioExtratOuvert &&
-      !contenuExtratOuvert
+      !contenuExtratOuvert &&
+      !sendSmsOuvert
     ) {
       element.style.display = "none";
     } else {
@@ -1607,7 +1612,7 @@ const MesurerReclamation = (props) => {
     addExtraClaimApi(formData)
       .then((res) => {
         console.log("res >> ", res);
-        
+
         props.extrasChanged(res.data.content.extras ?? []);
         notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
@@ -2341,6 +2346,7 @@ const MesurerReclamation = (props) => {
                             <Dialog
                               open={showUploadModal}
                               onClose={() => setShowUploadModal(false)}
+                              id="dialog-sms"
                             >
                               <DialogTitle>
                                 Envoyer la solution au Client
