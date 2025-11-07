@@ -248,3 +248,31 @@ export const etat2Changed = (etat2) => {
         info: 'This action is used to ...'
     }
 };
+export const convertedAtChanged = (convertedAt) => {
+    return {
+        type: 'SUGGESTION_HANDLE_CONVERTED_AT_CHANGED',
+        payload: convertedAt,
+        info: 'This action is used to ...'
+    }
+};
+export const convertedByChanged = (convertedBy) => {
+    return {
+        type: 'SUGGESTION_HANDLE_CONVERTED_BY_CHANGED',
+        payload: convertedBy,
+        info: 'This action is used to ...'
+    }
+};
+export const extrasChanged = (extras) => {
+    return {
+        type: 'SUGGESTION_HANDLE_EXTRAS_CHANGED',
+        payload: extras,
+        info: 'This action is used to ...'
+    }
+};
+export const codeClientChanged = (codeClient) => {
+    return {
+        type: 'SUGGESTION_HANDLE_CODE_CLIENT_CHANGED',
+        payload: codeClient,
+        info: 'This action is used to ...'
+    }
+};

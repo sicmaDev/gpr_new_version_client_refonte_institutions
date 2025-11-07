@@ -9,10 +9,11 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
-
-import { cleanPhoneNumber, cleanPhoneNumber2, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage } from "../../Utils/utils";
+import { cleanPhoneNumber, cleanPhoneNumber2, cleanPhoneNumber3, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage } from "../../Utils/utils";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, TextField } from "@mui/material";
@@ -22,7 +23,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { notify } from "../../Utils/alert";
 import axios from "axios";
 import { addressChanged, codeChanged, collectChanged, collectLibelleChanged, contentChanged, createdAtChanged, createdByChanged, dossierimfChanged, etat2Changed, etatChanged, firstnameChanged, genderChanged, handledAtChanged, handledByChanged, idChanged, itemsChanged, languageChanged, languageLibelleChanged, lastnameChanged, loading, phoneChanged, productChanged, productLibelleChanged, recordedAtChanged, recordedAtDPChanged, resolvedAtChanged, resolvedByChanged, selectedFilesChanged, selectedFilesReset, selectedItemChanged, selectedItemFilesChanged, showSelectPrintItemChanged, solutionChanged, statusChanged, suggestionRecordErrors, unitChanged, unitLibelleChanged, selectedItemAudioChanged } from "../../redux/actions/Suggestions/EnregistrementSuggestionActions";
-import { addSuggestionApi, addSuggestionApiOffline, addTempSuggestionApi, addTempSuggestionApiOffline, downloadFillesApi, getFillesApi, getSuggeAudioApi, listeByStatut, listeByStatutOffline, } from "../../apis/Suggestions/SuggestionsApi";
+import { addSuggestionApi, addSuggestionApiOffline, addTempSuggestionApi, addTempSuggestionApiOffline, downloadFillesApi, getFillesApi, getSuggeAudioApi, listeByStatut, deleteSuggestionApi, listeByStatutOffline, } from "../../apis/Suggestions/SuggestionsApi";
 import PhoneInput from "react-phone-number-input";
 import { licenseInfo } from "../../apis/LoginApi";
 import { INSTITUTION_PAYS_CODE } from "../../Utils/globals";
@@ -35,6 +36,8 @@ import moment from "moment"
 import { downloadFilesApi } from "../../apis/WhatsappApi";
 import { reset } from "../../redux/actions/WhatsappActions";
 import { CancelOutlined } from "@mui/icons-material";
+import { modalify } from "../../Utils/modal";
+import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 
 
 // import DateInput from "../ui/DateInput";
@@ -58,6 +61,8 @@ const EnregistrerSuggestion = (props) => {
     const { recorderState, ...handlers } = useRecorder();
     let { audio } = recorderState;
 
+    const [isLoading, setIsLoading] = useState(false)
+
     let settingComplete = isSettingComplete()
     let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
     let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
@@ -72,12 +77,26 @@ const EnregistrerSuggestion = (props) => {
     };
 
     useEffect(() => {
+        KTApp.blockPage({
+          overlayColor: '#000000',
+          type: 'v2',
+          state: 'danger',
+          message: 'En cours de chargement...'
+        })
+        setIsLoading(true);
+
         if (mode === 1) {
             props.itemsChanged([])
-            listeByStatut(props, "TEMP_SAVED").then((r) => { });
+            listeByStatut(props, "TEMP_SAVED").then((r) => { }).finally(() => {
+                setIsLoading(false);
+                KTApp.unblockPage();
+            });
         } else {
             props.itemsChanged([])
-            listeByStatutOffline(props, "TEMP_SAVED").then((r) => { });
+            listeByStatutOffline(props, "TEMP_SAVED").then((r) => { }).finally(() => {
+                setIsLoading(false);
+                KTApp.unblockPage();
+            });
         }
 
         window.$('.buttons-excel').html('<span><i class="fa fa-file-excel"></i></span>')
@@ -96,6 +115,8 @@ const EnregistrerSuggestion = (props) => {
         //     utilsScript: "src/assets/js/phoneUtils.js?1638200991544"
         // });
         // initDatePicker(props, 'recorded_at')
+
+        clearComponentState();
     }, []);
 
     const [actif, setActif] = useState();
@@ -537,7 +558,7 @@ const EnregistrerSuggestion = (props) => {
         }
 
 
-        // console.log(formData);
+        console.log("claim____", claim);
         //HERE
         props.etatChanged(true)
         if (mode === 1) {
@@ -555,6 +576,34 @@ const EnregistrerSuggestion = (props) => {
 
         props.suggestionsRecordErrors(errors)
     }
+
+    
+    const [loadingId, setLoadingId] = useState(null);
+    const handleEditClick = (claim) => (e) => {
+        rowClickedHandler(e, claim, null);
+    };
+    const handleModal = (e, claim) => {
+        e.preventDefault();
+        modalify(
+            "Confirmation",
+            "Confirmez vous la suppression de cet élément ?",
+            "confirm",
+            (e) => handleDelete(e, claim)
+        );
+    };
+    const handleDelete = (e, claim = null) => {
+        e.preventDefault();
+
+        console.log("claim.id", claim.id);
+        setLoadingId(claim.id);
+        deleteSuggestionApi(claim.id, props).then(() => {
+            listeByStatut(props, "TEMP_SAVED").then(() => {});
+
+            handleCancel(e);
+            notify("Suppression effectuée avec succès", "success");
+            setTimeout(() => setLoadingId(null), 500);
+        });
+    };    
 
 
     if (!settingComplete.length) {
@@ -723,6 +772,36 @@ const EnregistrerSuggestion = (props) => {
                 }).format(new Date(claim.createdAt));
                 return (createdAt);
             }
+        },
+        {
+            key: "action",
+            text: "Actions",
+            className: "action",
+            align: "left",
+            sortable: true,
+            cell: (claim, index) => {
+            const isLoading = loadingId === claim.id;
+            return (
+                <div style={{ display: "flex", gap: "5px" }}>
+                <Tooltip title="Modifier">
+                    <IconButton onClick={handleEditClick(claim)} color="primary">
+                    <EditIcon />
+                    </IconButton>
+                </Tooltip>
+                {mode === 1 && (
+                    <Tooltip title="Supprimer">
+                    <IconButton
+                        onClick={(e) => handleModal(e, claim)}
+                        color="error"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? <CircularProgress size={20} /> : <DeleteIcon />}
+                    </IconButton>
+                    </Tooltip>
+                )}
+                </div>
+            );
+            },
         },
     ];
 
@@ -1021,40 +1100,53 @@ const EnregistrerSuggestion = (props) => {
     });
 
     //   default sms notification
-
+    let appSms = loadItemFromLocalStorage("app-sms") !== undefined && (loadItemFromLocalStorage("app-sms").length !==0)  ? JSON.parse(loadItemFromLocalStorage("app-sms")) : undefined;
+    
     const sendSms = async (e) => {
-        e.preventDefault()
-        let token = "SZhs_fSrSqDn8eITgs77ym17ttv1G8ig";
-        let sender = "GPR"
-        let receiver = cleanPhoneNumber(props.phone);
-        let dlr_url = "";
+        e.preventDefault();
+        // console.log("sms send");
+        let apiurl = appSms.url;
+        let libId = appSms.libId;
+        let valId = appSms.valId;
+        let libMdp = appSms.libMdp;
+        let valMdp = appSms.valMdp;
+        let libEmetteur = appSms.libEmetteur;
+        let valEmetteur = appSms.valEmetteur;
+        let libDestinataire = appSms.libDestinataire;
+        let libMessage = appSms.libMessage;
+    
+        let receiver = cleanPhoneNumber3(props.phone);
         let message = encodeURI(smsToSend);
-        let url = "http://www.wassasms.com/wassasms/api/web/v3/sends?access-token=" + token + "&sender=" + sender + "&receiver=" + receiver + "&text=" + message + "&dlr_url=" + dlr_url;
+        let url =apiurl+libId+"="+valId+"&"+libMdp+"="+valMdp+"&"+libMessage+"="+message+"&"+libDestinataire+"="+receiver+"&"+libEmetteur+"="+valEmetteur+""
+        
+            // console.log("sms url",url);
         // let url = values.url +"?"+ values.libelle_id+"="+values.value_id+"&"+values.libelle_pwd+"="+values.value_pwd+"&"+values.libelle_sender+"="+values.value_sender+"&"+values.libelle_receiver+"="+props.phone+"&" +values.libelle_message+"="+smsToSend;
         const config = {
-            method: 'GET',
+            method: "GET",
             url: url,
             headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + loadItemFromSessionStorage("token"),
             },
-
         };
         await axios(config)
             .then(function (response) {
-                // console.log("smsurl",url)
-                // console.log("sms",response);
-                handleSubmit(e);
-                notify("SMS envoyé", "success")
+            // console.log("smsurl", (props.phone));
+            // console.log("smsurl", cleanPhoneNumber3(props.phone));
+            // console.log("sms", response);
+            handleSubmit(e);
+            notify("SMS envoyé", "success");
             })
             .catch(function (error) {
-                handleSubmit(e);
-                // console.log("smscatch",error);
-                notify("Erreur - Sms non envoyé, mais suggestion enregistrée", "warning")
-                return error;
+            handleSubmit(e);
+            // console.log("smscatch", error);
+            notify(
+                "Erreur - Sms non envoyé",
+                "warning"
+            );
+            return error;
             });
-
-
     };
 
     return (
@@ -1191,11 +1283,11 @@ const EnregistrerSuggestion = (props) => {
                                                 compléter</h5></div>
                                             <div className="col s12">
                                                 <ReactDatatable
-                                                    className={"responsive-table"}
+                                                    className={"responsive-table no-hover"}
                                                     config={config}
                                                     records={content}
                                                     columns={columns}
-                                                    onRowClicked={rowClickedHandler}
+                                                    // onRowClicked={rowClickedHandler}
                                                 />
                                             </div>
                                         </div>
@@ -1328,7 +1420,7 @@ const EnregistrerSuggestion = (props) => {
                                                 <div className="col s12 m12">
                                                     <div className="row">
                                                         <div className="col l12 m12 s12"><h6 className="card-title">Détails de la suggestion</h6></div>
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l6 m12 s12 input-field" style={{ display: 'none' }}>
                                                             <input id="code" name="code" type="text" placeholder=""
                                                                 className="validate"
                                                                 value={props.code}
@@ -1340,7 +1432,7 @@ const EnregistrerSuggestion = (props) => {
                                                                     className="error">{(props.errors !== undefined) ? props.errors.code : ""}</div>
                                                             </small>
                                                         </div>
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l12 m12 s12 input-field">
                                                             <DatePicker
                                                                 // placeholderText="Date et Heure de réception"
                                                                 withPortal
@@ -1397,7 +1489,7 @@ const EnregistrerSuggestion = (props) => {
                                                                 onChange={handleChange1}
                                                             />
                                                             <label htmlFor="product" className={"active"}>Produit ou
-                                                                service concerné<span></span></label>
+                                                                service concerné</label>
                                                             <small className="errorTxt4">
                                                                 <div id="cpassword-error"
                                                                     className="error">{(props.errors !== undefined) ? props.errors.product : ""}</div>
@@ -1414,7 +1506,7 @@ const EnregistrerSuggestion = (props) => {
                                                                 placeholder="Sélectionner le point de service"
                                                                 onChange={handleChange}
                                                             />
-                                                            <label htmlFor="unit" className={"active"}>Unité opérationnelle ou Point de service
+                                                            <label htmlFor="unit" className={"active"}>Point de service
                                                                 indexé</label>
                                                             <small className="errorTxt4">
                                                                 <div id="cpassword-error"

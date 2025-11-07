@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
 import { Link, NavLink } from "react-router-dom";
+import TextField from "@mui/material/TextField";
 import {
   addressChanged,
   agentsChanged,
@@ -50,8 +51,17 @@ import {
   transmittedChanged,
   selectedItemAudioChanged,
   transmittedToChanged,
-
+  handledCustomMessageChanged,
+  handledShowModalChanged,
+  handledMessageChanged,
+  handledDelaiChanged,
+  setReaffect,
+  extrasChanged,
+  convertedAtChanged,
+  convertedByChanged,
+  codeClientChanged,
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
+import { v4 as uuid } from "uuid";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -59,22 +69,26 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
 import { notify } from "../../Utils/alert";
-import SaveIcon from '@mui/icons-material/Save';
+import SaveIcon from "@mui/icons-material/Save";
 import { useParams } from "react-router-dom";
 import { HOST } from "../../Utils/globals";
 import axios from "axios";
 import {
   formatDate,
+  formatDate3,
+  formatDate4,
   guessExtension,
   isEmpty,
   loadItemFromLocalStorage,
   loadItemFromSessionStorage,
+  today,
 } from "../../Utils/utils";
 import { connect } from "react-redux";
 import Dialog from "@mui/material/Dialog";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
+import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 import Slide from "@mui/material/Slide";
@@ -96,27 +110,88 @@ import TimelineConnector from "@mui/lab/TimelineConnector";
 import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineOppositeContent from "@mui/lab/TimelineOppositeContent";
 import TimelineDot from "@mui/lab/TimelineDot";
-import { Avatar, FormControl, FormControlLabel, FormLabel, LinearProgress, Radio, RadioGroup } from "@mui/material";
+import {
+  Avatar,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  LinearProgress,
+  Radio,
+  RadioGroup,
+  DialogContent,
+  DialogContentText,
+  Text,
+  Box,
+  CardContent,
+  Grid,
+  Tooltip,
+  List,
+  ListItemButton,
+  ListItemText,
+  Card,
+  DialogActions,
+  DialogTitle,
+} from "@mui/material";
+import {
+  FileDownload,
+  History,
+  Info,
+  Pause,
+  PlayArrow,
+  Star,
+  VolumeUp,
+} from "@mui/icons-material";
+import RecorderControls from "../../components/recorder-controls";
+import useRecorder from "../../hooks/useRecorder";
 import { LoadingButton } from "@mui/lab";
-import { affectDenunciationApi, approveDenunciationSolutionApi, downloadAudioApi, getDenunAudioApi, getFillesApi, listeTreat, transmissionDenunciationApi, treatDenunciationApi, unapproveDenunciationSolutionApi } from "../../apis/Denonciations/DenonciationsApi";
+import { addExtraClaimApi } from "../../apis/Reclamations/ReclamationsApi";
+import {
+  getClaimAudioApi,
+  convertClaimApi,
+} from "../../apis/Reclamations/ReclamationsApi";
+import {
+  affectDenunciationApi,
+  approveDenunciationSolutionApi,
+  downloadAudioApi,
+  getDenunAudioApi,
+  getFillesApi,
+  listeTreat,
+  transmissionDenunciationApi,
+  treatDenunciationApi,
+  unapproveDenunciationSolutionApi,
+  deleteDenunciationApi,
+  downloadFillesApi,
+  convertDenunciationApi,
+  downloadFillesApi2,
+} from "../../apis/Denonciations/DenonciationsApi";
+import {
+  addSuggestionApi,
+  addSuggestionApiOffline,
+} from "../../apis/Suggestions/SuggestionsApi";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import { modalify } from "../../Utils/modal";
-import SendIcon from '@mui/icons-material/Send';
+import SendIcon from "@mui/icons-material/Send";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import { startSession } from "../../apis/Reclamations/ReclamationsApi";
-import { AddCircleOutline, ChatBubbleOutlineRounded } from "@mui/icons-material";
+import {
+  AddCircleOutline,
+  ChatBubbleOutlineRounded,
+} from "@mui/icons-material";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import ChatIcon from "@mui/icons-material/Chat";
 import CardList from "../../layouts/CardList";
-import MoveUpIcon from '@mui/icons-material/MoveUp';
-import ForumIcon from '@mui/icons-material/Forum';
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import MoveUpIcon from "@mui/icons-material/MoveUp";
+import ForumIcon from "@mui/icons-material/Forum";
+import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import { licenseInfo } from "../../apis/LoginApi";
-import { Redirect } from 'react-router-dom';
-import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
-import WarningIcon from '@mui/icons-material/Warning';
+import { Redirect } from "react-router-dom";
+import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
+import WarningIcon from "@mui/icons-material/Warning";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
+import EmailDialog from "./widgets/EmailDialog";
+import { WarningAmber } from "@mui/icons-material";
 
 const styles = {
   control: (base) => ({
@@ -146,7 +221,7 @@ const TraiterDenonciation = (props) => {
       ? JSON.parse(loadItemFromLocalStorage("app-users"))
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
-  let addR = (user.additionalRole);
+  let addR = user.additionalRole;
 
   let handlingForms;
   const [agentsMailOptions, setAgentsMailOptions] = useState([]);
@@ -207,19 +282,96 @@ const TraiterDenonciation = (props) => {
   const [maxDelai, setMaxDelai] = useState(1);
   const [open, setOpen] = React.useState(false);
   const [interne, setInterne] = React.useState(true);
+  const [conversionBoxOpen, setConversionBoxOpen] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [convertionType, setConvertionType] = useState(null);
+
+  const [dataRow, setDataRow] = useState([]);
+  const [audioFiles, setAudioFiles] = useState([]);
+  const [fileBlobs, setFileBlobs] = useState([]);
+  const [loadingConversion, setLoadingConversion] = useState(false);
+  let mode =
+    loadItemFromLocalStorage("app-mode") !== undefined
+      ? JSON.parse(loadItemFromLocalStorage("app-mode"))
+      : undefined;
 
   //#darrell
   const [usersCGR, setUsersCGR] = React.useState([]);
   const [reafect, setReacfect] = useState(false);
 
+  const warningConvert = props.convertedBy !== "" &&
+    props.convertedAt !== "" && (
+      <span
+        className="mb-1"
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          fontStyle: "italic",
+        }}
+      >
+        <WarningAmber fontSize="medium" sx={{ mr: 1, color: "orange" }} />
+        {`Converti en dénonciation par ${props.convertedBy} le ${formatDate3(
+          props.convertedAt
+        )}`}
+      </span>
+    );
+
+  const getStatusLabel = (status) => {
+    var statusElt = status;
+    switch (status) {
+      case "SAVED":
+        statusElt = "Enregistrée";
+        break;
+      case "TEMP_SAVED":
+        statusElt = "Sauvegardée";
+        break;
+      case "AFFECTED":
+        statusElt = "Affectée";
+        break;
+      case "TO_APPROUVED":
+        statusElt = "A approuver";
+        break;
+      case "DESAPPROUVED":
+        statusElt = "Désapprouvée";
+        break;
+      case "TREAT":
+        statusElt = "Traitée";
+        break;
+      case "SATISFIED":
+        statusElt = "Satisfait";
+        break;
+      case "UNSATISFIED":
+        statusElt = "Non satisfait";
+        break;
+      case "PARTIAL_SATISFIED":
+        statusElt = "Partiellement satisfait";
+        break;
+      case "LITIGATION":
+        statusElt = "Contentieux";
+        break;
+      case "CLASSED":
+        statusElt = "Classée";
+        break;
+
+      default:
+        statusElt = "";
+        break;
+    }
+
+    return statusElt;
+  };
+
   //vérification if user is in guest
   let showJoinBtn = false;
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
   let potentialMember = props.session?.members?.filter((e) => e.id === user.id);
-  if ((potentialGuest != null && potentialGuest.length > 0) || (potentialMember != null && potentialMember.length > 0)) {
+  if (
+    (potentialGuest != null && potentialGuest.length > 0) ||
+    (potentialMember != null && potentialMember.length > 0)
+  ) {
     showJoinBtn = true;
   }
-
 
   const [privateChats, setPrivateChats] = useState(new Map());
   const [publicChats, setPublicChats] = useState([]);
@@ -243,7 +395,8 @@ const TraiterDenonciation = (props) => {
   const [selectedOption, setSelectedOption] = useState("");
   const [votesForPour, setVotesForPour] = useState(0);
   const [votesForContre, setVotesForContre] = useState(0);
-  const [showConfirmChooseSolution, setShowConfirmChooseSolution] = useState(false);
+  const [showConfirmChooseSolution, setShowConfirmChooseSolution] =
+    useState(false);
 
   const [confirmChoosedSolution, setConfirmChoosedSolution] = useState(false);
   const maDivRef = useRef(null);
@@ -252,9 +405,7 @@ const TraiterDenonciation = (props) => {
   }, [userData]);
 
   useEffect(() => {
-
-    setUsersCGR(users)
-
+    setUsersCGR(users);
   }, []);
 
   useEffect(() => {
@@ -274,8 +425,7 @@ const TraiterDenonciation = (props) => {
     try {
       let resultat = await licenseInfo();
       // console.log("resultat", resultat);
-      setActif(resultat.actif)
-
+      setActif(resultat.actif);
     } catch (error) {
       // console.error("Une erreur s'est produite :", error);
     }
@@ -289,41 +439,147 @@ const TraiterDenonciation = (props) => {
     fetchData();
   }, []);
 
+  const [currentData, setCurrentData] = useState(null);
+  const [audioListForm, setAudioListForm] = useState([]);
+  const [audioListUrlForm, setAudioListUrlForm] = useState([]);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleClickOpen = () => {
     setOpen(true);
   };
+  const [currentAudioId, setCurrentAudioId] = useState("");
+  const audioRef = useRef(null);
+  const [filesForm, setFiles] = useState([]);
+  const inputRef = useRef(null);
+  const [showExtraContent, setShowExtraContent] = useState(false);
+  const [extraContent, setExtraContent] = useState("");
+  const [extraFileLoading, setExtraFileLoading] = useState(false);
+  const [claim_id, setClaimId] = useState(null);
+
+  const clearFiles = () => {
+    if (inputRef.current) {
+      inputRef.current.value = null;
+    }
+    setFiles([]);
+  };
+
   const history = useHistory();
   const handleClose = () => {
     setOpen(false);
+    setConversionBoxOpen(false);
     history.push("/denonciations/traitement/all");
   };
-  const handleFerme = () => {
-    // console.log("je suis dans ferme")
-    return <Redirect to="/alertes/denonciations" />
+  const handleConversionBoxClose = () => {
+    if (confirmationOpen) return;
+
+    setConversionBoxOpen(false);
   };
 
+  const handleOpenDialog = (type) => {
+    setConvertionType(type);
+    setConfirmationOpen(true);
+  };
+  const handleConfirmationClose = () => {
+    setConfirmationOpen(false);
+  };
+
+  const handleSubmitConfirmation = (e) => {
+    e.preventDefault();
+    setLoadingConversion(true);
+
+    console.log("dataRow", dataRow);
+    const formData = new FormData();
+    let claim = {};
+
+    claim["clientFirstAndLastName"] = "";
+    claim["gender"] = dataRow.gender ?? null;
+    claim["address"] = dataRow.address ?? null;
+    claim["phone"] = dataRow.tel ?? null;
+    claim["collectionChannelId"] = dataRow.collectionChannel.id ?? null;
+    claim["servicePointId"] = dataRow.servicePoint.id ?? null;
+    claim["fromWhatsapp"] = false;
+    claim["filesWhatsapp"] = [];
+    claim["inboxWhatsapp"] = null;
+    claim["productId"] = dataRow.product.id;
+    // claim["languageId"] = null;
+    claim["languageId"] = 1; // Default to Langue National
+    claim["folderCode"] = dataRow.folderCode;
+    claim["receiptDateTime"] = dataRow.receiptDateTime;
+    claim["collectorId"] = dataRow.collector.id;
+    claim["content"] = dataRow.content;
+    claim["code"] = "";
+    claim["id"] = "";
+
+    formData.append("suggestion", JSON.stringify(claim));
+
+    props.etat2Changed(true);
+    if (mode === 1) {
+      addSuggestionApi(formData, props)
+        .then((response) => {
+          const data = {
+            code: response.data.content.code,
+            claimId: dataRow.id,
+          };
+
+          convertDenunciationApi(data, props)
+            .then(() => {
+              props.etat2Changed(false);
+              history.push("/suggestions/traitement");
+            })
+            .finally(() => {
+              setLoadingConversion(false);
+            });
+        })
+        .finally(() => {
+          setLoadingConversion(false);
+        });
+    } else {
+      // Offline mode
+    }
+  };
+
+  const handleFerme = () => {
+    // console.log("je suis dans ferme")
+    return <Redirect to="/alertes/denonciations" />;
+  };
 
   const { id } = useParams();
   //console.log("params",props.match)
 
   useEffect(() => {
-    if (props.match.params.code === "all") {
-      props.itemsChanged([])
-      listeTreat(props).then((r) => { });
-    } else {
+    KTApp.blockPage({
+      overlayColor: "#000000",
+      type: "v2",
+      state: "danger",
+      message: "En cours de chargement...",
+    });
+    setIsLoading(true);
 
+    if (props.match.params.code === "all") {
+      props.itemsChanged([]);
+      listeTreat(props)
+        .then((r) => {})
+        .finally(() => {
+          setIsLoading(false);
+          KTApp.unblockPage();
+        });
+    } else {
       async function details() {
         await axios({
           method: "get",
-          url: HOST + "api/v1/denunciation/" + props.match.params.code + "/details",
+          url:
+            HOST +
+            "api/v1/denunciation/" +
+            props.match.params.code +
+            "/details",
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+            Authorization: "Bearer " + loadItemFromSessionStorage("token"),
           },
         }).then(function (response) {
-          listeTreat(props).then((r) => { });
+          listeTreat(props).then((r) => {});
           let data = response.data.content;
           // console.log("tmp",data)
           handleClickOpen();
@@ -345,9 +601,9 @@ const TraiterDenonciation = (props) => {
               });
               setAgentsMailOptions(agentMailOptions);
               if (hbt.includes("H2")) {
-                props.authorizeChanged(true)
+                props.authorizeChanged(true);
               } else {
-                props.authorizeChanged(false)
+                props.authorizeChanged(false);
               }
               break;
             case "MOYEN":
@@ -363,9 +619,9 @@ const TraiterDenonciation = (props) => {
               });
               setAgentsMailOptions(agentMailOptions);
               if (hbt.includes("H3")) {
-                props.authorizeChanged(true)
+                props.authorizeChanged(true);
               } else {
-                props.authorizeChanged(false)
+                props.authorizeChanged(false);
               }
               break;
             case "GRAVE":
@@ -373,7 +629,8 @@ const TraiterDenonciation = (props) => {
                 let hab = user.posteDto.habilitations.split(",");
                 if (hab.includes("H4")) {
                   agentMailOptions.push({
-                    label: user.firstAndLastName + "         < " + user.email + " >",
+                    label:
+                      user.firstAndLastName + "         < " + user.email + " >",
                     value: user.id,
                     email: user.email,
                   });
@@ -381,40 +638,65 @@ const TraiterDenonciation = (props) => {
               });
               setAgentsMailOptions(agentMailOptions);
               if (hbt.includes("H4")) {
-                props.authorizeChanged(true)
+                props.authorizeChanged(true);
               } else {
-                props.authorizeChanged(false)
+                props.authorizeChanged(false);
               }
               break;
 
             default:
               break;
           }
+          setMaxDelai(
+            data.objet.processingTime ? data.objet.processingTime : 45
+          );
           props.idChanged(data.id ? data.id : "");
           props.codeChanged(data.code ? data.code : "");
-          props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
-          props.collectChanged(data.collectionChannel.libelle ? data.collectionChannel.libelle : "");
+          props.codeClientChanged(data.codeClient ? data.codeClient : "");
+          props.recordedAtChanged(
+            data.receiptDateTime ? data.receiptDateTime : ""
+          );
+          props.collectChanged(
+            data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
+          );
           props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
-          props.objetLevelChanged(data.objet.risqueLevel ? data.objet.risqueLevel : "");
-          props.productChanged(data.product.libelle ? data.product.libelle : "");
-          props.unitChanged(data.servicePoint.libelle ? data.servicePoint.libelle : "");
+          props.objetLevelChanged(
+            data.objet.risqueLevel ? data.objet.risqueLevel : ""
+          );
+          props.productChanged(
+            data.product.libelle ? data.product.libelle : ""
+          );
+          props.unitChanged(
+            data.servicePoint.libelle ? data.servicePoint.libelle : ""
+          );
           props.contentChanged(data.content ? data.content : "");
           props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
           props.statusChanged(data.status ? data.status : "");
           props.createdAtChanged(data.createdAt ? data.createdAt : "");
-          props.createdByChanged(data.collector.firstAndLastName ? data.collector.firstAndLastName : "");
+          props.createdByChanged(
+            data.collector.firstAndLastName
+              ? data.collector.firstAndLastName
+              : ""
+          );
           props.assignedAtChanged(data.affectedAt ? data.affectedAt : "");
-          props.assignedByChanged(data.treatmentAffectedBy ? data.treatmentAffectedBy.firstAndLastName : "");
-          props.handledByChanged(data.treatmentAffectedTo ? data.treatmentAffectedTo.firstAndLastName : "");
+          props.assignedByChanged(
+            data.treatmentAffectedBy
+              ? data.treatmentAffectedBy.firstAndLastName
+              : ""
+          );
+          props.handledByChanged(
+            data.treatmentAffectedTo
+              ? data.treatmentAffectedTo.firstAndLastName
+              : ""
+          );
           props.selectedItemChanged(data);
+          // setCurrentData(data);
           //fetch attachments for selected claim
           getFillesApi(data.id, props);
-
         });
       }
 
-      details()
-
+      details();
     }
 
     window
@@ -437,26 +719,38 @@ const TraiterDenonciation = (props) => {
     window.$("#as-react-datatable tr").addClass("cursor-pointer");
   }, [props.match.params.code]);
 
-  const invitation = (event) => {
+  const { recorderState, ...handlers } = useRecorder();
+  let { audio } = recorderState;
 
-    let ids = (props?.session?.guests)?.map((e) => {
+  const [open2, setOpen2] = useState(false);
+  const [showAudioBox, setAudioBox] = useState(false);
+
+  useEffect(() => {
+    if (audio) {
+      setAudioListForm([...audioListForm, audio]);
+      setAudioListUrlForm([...audioListUrlForm, URL.createObjectURL(audio)]);
+    }
+  }, [audio]);
+
+  const invitation = (event) => {
+    let ids = props?.session?.guests?.map((e) => {
       return e.id;
-    })
+    });
 
     let princ = users.filter((e) => {
       return (
-        (e.additionalRole !== "MEMBRE_CGR") && (e.additionalRole !== "PR_CGR") && !ids.includes(e.id)
+        e.additionalRole !== "MEMBRE_CGR" &&
+        e.additionalRole !== "PR_CGR" &&
+        !ids.includes(e.id)
       );
-    })
+    });
 
     const { value } = event.target;
     if (value !== "") {
-      let coco = []
+      let coco = [];
       coco = princ.filter((e) => {
-        return (
-          ((e.firstAndLastName).includes(value))
-        );
-      })
+        return e.firstAndLastName.toLowerCase().includes(value.toLowerCase());
+      });
 
       setUsersCGR((prevList) => {
         const newList = coco;
@@ -465,22 +759,28 @@ const TraiterDenonciation = (props) => {
 
       // setUsersCGR(coco)
       if (usersCGR.length !== 0) {
-        maDivRef.current.style.display = "block"
+        maDivRef.current.style.display = "block";
       } else {
         setUsersCGR((prevList) => {
           const newList = coco;
           return princ;
         });
 
-        maDivRef.current.style.display = "none"
+        maDivRef.current.style.display = "none";
       }
       // console.log("cg",usersCGR)
     } else {
-      maDivRef.current.style.display = "none"
+      maDivRef.current.style.display = "none";
     }
 
     // console.log("valeur",value)
-  }
+  };
+
+  const memberIds = props?.session?.members?.map((m) => m.id) || [];
+  const guestIds = guests?.map((g) => g.id) || [];
+  const availableToInvite = usersCGR.filter(
+    (user) => !memberIds.includes(user.id) && !guestIds.includes(user.id)
+  );
 
   const handleInvitation = (e, idi) => {
     var chatMessage = {
@@ -495,7 +795,7 @@ const TraiterDenonciation = (props) => {
       {},
       JSON.stringify(chatMessage)
     );
-  }
+  };
 
   const handleEject = (e, idi) => {
     var chatMessage = {
@@ -510,7 +810,7 @@ const TraiterDenonciation = (props) => {
       {},
       JSON.stringify(chatMessage)
     );
-  }
+  };
 
   const connect = () => {
     let Sock = new SockJS(HOST + "ws");
@@ -546,7 +846,7 @@ const TraiterDenonciation = (props) => {
     );
 
     setPublicChats(props.session.messages);
-    setGuests(props.session.guests)
+    setGuests(props.session.guests);
   };
 
   const onMessageReceived = (payload) => {
@@ -611,13 +911,13 @@ const TraiterDenonciation = (props) => {
 
         setGuests((prevGuests) => {
           if (prevGuests === undefined) {
-            return [chatGuest]
+            return [chatGuest];
           }
           let prevG = prevGuests.filter((e) => {
-            return e.id !== chatGuest.id
-          })
+            return e.id !== chatGuest.id;
+          });
           if (prevG === null || prevG === undefined) {
-            return [chatGuest]
+            return [chatGuest];
           }
           const newList = [...prevG, chatGuest];
           return newList;
@@ -633,12 +933,12 @@ const TraiterDenonciation = (props) => {
         } else {
           nouveaux = list.filter((e) => {
             return e.id !== payloadData.id;
-          })
+          });
 
           //  console.log("ejection",nouveaux)
           setGuests((prevGuests) => {
             if (prevGuests === undefined) {
-              return [nouveaux]
+              return [nouveaux];
             }
             const newList = nouveaux;
             return newList;
@@ -662,7 +962,6 @@ const TraiterDenonciation = (props) => {
         break;
     }
   };
-
 
   const onError = (err) => {
     // console.log(err);
@@ -697,7 +996,6 @@ const TraiterDenonciation = (props) => {
         );
         setUserData({ ...userData, message: "" });
       } else {
-
       }
 
       // console.log("msg", publicChats);
@@ -708,64 +1006,6 @@ const TraiterDenonciation = (props) => {
 
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
-
-  let audioList;
-  if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    let audioListChild = props.selectedItemAudio.map((attachment) => {
-
-      return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-
-          <div className="card box-shadow-none mb-1 ">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div className="app-file-last-access" id={"audio-" + attachment.id}>
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadAudioApi(attachment.id, attachment.name).then(
-                            (data) => {
-                              // console.log(data);
-
-                              let blobAudio = new Blob([data], { type: "audio/ogg; codecs=opus" });
-                              let aud = new Audio(window.URL.createObjectURL(blobAudio));
-                              setCurrentAudio(window.URL.createObjectURL(blobAudio))
-                              setAudioPlayer("audio-" + attachment.id)
-                            }
-                          )
-                        }}
-                      >{showAudioPlayer === "audio-" + attachment.id && ("")} {showAudioPlayer !== "audio-" + attachment.id && ("Afficher")}</a>
-
-                      {showAudioPlayer === "audio-" + attachment.id && (<audio controls autoPlay onEnded={(e) => { setAudioPlayer("") }}>
-                        <source src={currentAudio} type="audio/ogg" />
-                        Votre navigateur ne prend pas en charge l'élément audio.
-                      </audio>)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    });
-    audioList = (
-      <div className="col s12 app-file-content">
-        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
-      </div>
-    );
-  }
 
   const sendVote = () => {
     if (propositionCommentaire === "" || propositionSolution === "") {
@@ -821,8 +1061,8 @@ const TraiterDenonciation = (props) => {
         pour: selectedValue === "POUR",
         claimCode: props.code,
         authorId: user.id,
-        messageId: info
-      }
+        messageId: info,
+      };
       // console.log("voteRequest - remove", voteRequest);
 
       stompClient.send(
@@ -836,8 +1076,8 @@ const TraiterDenonciation = (props) => {
         pour: selectedValue === "POUR",
         claimCode: props.code,
         authorId: user.id,
-        messageId: info
-      }
+        messageId: info,
+      };
       // console.log("voteRequest", voteRequest);
 
       stompClient.send(
@@ -846,7 +1086,6 @@ const TraiterDenonciation = (props) => {
         JSON.stringify(voteRequest)
       );
     }
-
 
     // Mettez à jour le nombre de votes en fonction de l'option sélectionnée
     // if (selectedValue === "for") {
@@ -879,7 +1118,7 @@ const TraiterDenonciation = (props) => {
     //send
     let confirmSolution = {
       messageId: msgId,
-      claimCode: props.code
+      claimCode: props.code,
     };
     if (stompClient) {
       stompClient.send(
@@ -888,11 +1127,11 @@ const TraiterDenonciation = (props) => {
         JSON.stringify(confirmSolution)
       );
     }
-  }
+  };
 
   const handleChooseVoteConfirm = () => {
-    setShowConfirmChooseSolution(!showConfirmChooseSolution)
-  }
+    setShowConfirmChooseSolution(!showConfirmChooseSolution);
+  };
   let errors = {};
   const clearComponentState = () => {
     props.collectChanged("");
@@ -906,6 +1145,7 @@ const TraiterDenonciation = (props) => {
     props.solutionChanged("");
     props.solutionIdChanged("");
     props.solutionExistantChanged("");
+    props.codeClientChanged("");
     props.commentChanged("");
     props.newSolutionChanged("");
     props.newCommentChanged("");
@@ -916,11 +1156,16 @@ const TraiterDenonciation = (props) => {
     props.selectedItemFilesChanged([]);
     props.sessionChanged("");
     setShowSelectPrintItem(false);
+    props.handledMessageChanged("");
+    props.handledDelaiChanged(1);
+    props.handledCustomMessageChanged(false);
+    props.handledShowModalChanged(false);
+    props.setReaffect(null);
     if (stompClient) {
       stompClient.disconnect();
       setUserData({ ...userData, connected: false });
       setPublicChats([]);
-      setGuests([])
+      setGuests([]);
     }
   };
 
@@ -934,17 +1179,18 @@ const TraiterDenonciation = (props) => {
     let isValid = true;
 
     if (
-      (props.solutionExistant === "") && (
-        props.solution === "" ||
+      props.solutionExistant === "" &&
+      (props.solution === "" ||
         props.solution === undefined ||
-        props.solution === null || props.solution.length === 0)
-
+        props.solution === null ||
+        props.solution.length === 0)
     ) {
       isValid = false;
       errors["solution"] = "Champ incorrect";
     }
     if (
-      (props.solutionExistant === "") && (props.comment === "" ||
+      props.solutionExistant === "" &&
+      (props.comment === "" ||
         props.comment === undefined ||
         props.comment === null)
     ) {
@@ -959,17 +1205,18 @@ const TraiterDenonciation = (props) => {
     let isValid = true;
 
     if (
-      (props.solutionExistant === "") && (
-        props.new_solution === "" ||
+      props.solutionExistant === "" &&
+      (props.new_solution === "" ||
         props.new_solution === undefined ||
-        props.new_solution === null || props.new_solution.length === 0)
+        props.new_solution === null ||
+        props.new_solution.length === 0)
     ) {
       isValid = false;
       errors["new_solution"] = "Champ incorrect";
     }
     if (
-      (props.solutionExistant === "") && (
-        props.new_comment === "" ||
+      props.solutionExistant === "" &&
+      (props.new_comment === "" ||
         props.new_comment === undefined ||
         props.new_comment === null)
     ) {
@@ -1000,58 +1247,63 @@ const TraiterDenonciation = (props) => {
   //Handling the List
   let columns = [
     {
-      key: "code",
-      text: "Code",
+      key: "codeClient",
+      text: "Code client",
       className: "code",
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-
-
         let codi;
         if (claim.session !== null && claim.session !== "") {
-          if (claim.status === "AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+          if (
+            claim.status === "AFFECTED" &&
+            claim.treatmentAffectedTo !== null &&
+            claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName
+          ) {
             codi = (
               <>
                 <div className="df">
-                  <span className="mr-1">{claim.code}</span>
-                  <div className="card-content red-text ml-4"><AlternateEmailIcon /></div>
-                  <div className="card-content red-text ml-4"><ForumIcon /></div>
+                  <span className="mr-1">{claim.codeClient}</span>
+                  <div className="card-content red-text ml-4">
+                    <AlternateEmailIcon />
+                  </div>
+                  <div className="card-content red-text ml-4">
+                    <ForumIcon />
+                  </div>
                 </div>
-
               </>
             );
           } else {
             codi = (
               <>
                 <div className="df">
-                  <span className="mr-1">{claim.code}</span>
-                  <div className="card-content red-text ml-4"><ForumIcon /></div>
+                  <span className="mr-1">{claim.codeClient}</span>
+                  <div className="card-content red-text ml-4">
+                    <ForumIcon />
+                  </div>
                 </div>
-
               </>
-
             );
           }
-
-
         } else {
-          if (claim.status === "AFFECTED" && claim.treatmentAffectedTo !== null && claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName) {
+          if (
+            claim.status === "AFFECTED" &&
+            claim.treatmentAffectedTo !== null &&
+            claim.treatmentAffectedTo.firstAndLastName === user.firstAndLastName
+          ) {
             codi = (
               <>
                 <div className="df">
-                  <span className="mr-1">{claim.code}</span>
-                  <div className="card-content red-text ml-4"><AlternateEmailIcon /></div>
+                  <span className="mr-1">{claim.codeClient}</span>
+                  <div className="card-content red-text ml-4">
+                    <AlternateEmailIcon />
+                  </div>
                 </div>
-
               </>
             );
           } else {
-            codi = (
-              <span className="">{claim.code}</span>
-            );
+            codi = <span className="">{claim.codeClient}</span>;
           }
-
         }
 
         return codi;
@@ -1121,23 +1373,18 @@ const TraiterDenonciation = (props) => {
                 <>
                   <div className="df">
                     <span className="green-text text-bold mr-2">Mineur</span>
-                    <div className="card-content red-text ml-4"><MoveUpIcon /></div>
+                    <div className="card-content red-text ml-4">
+                      <MoveUpIcon />
+                    </div>
                   </div>
-
                 </>
-
               );
             } else {
-              graviteElt = (
-                <span className="green-text text-bold">Mineur</span>
-              );
+              graviteElt = <span className="green-text text-bold">Mineur</span>;
             }
             break;
           case "MOYEN":
-            graviteElt = (
-              <span className="orange-text text-bold">Moyen</span>
-
-            );
+            graviteElt = <span className="orange-text text-bold">Moyen</span>;
             break;
           case "GRAVE":
             graviteElt = (
@@ -1179,14 +1426,17 @@ const TraiterDenonciation = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let temps
-        if (claim.retardDay > 0 ) {
-          temps = claim.declenchedDate
+        let temps;
+        if (claim.retardDay > 0) {
+          temps = claim.declenchedDate;
         } else {
-          temps =<div className="card-content red-text"><WarningIcon/></div>
+          temps = (
+            <div className="card-content red-text">
+              <WarningIcon />
+            </div>
+          );
         }
         return temps;
-        
       },
     },
   ];
@@ -1219,6 +1469,11 @@ const TraiterDenonciation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
+    setDataRow(data);
+    setClaimId(data.id);
+    console.log("dataRow", data);
+    console.log("dataRow_", props);
+
     handleClickOpen();
     clearComponentState();
 
@@ -1239,9 +1494,9 @@ const TraiterDenonciation = (props) => {
         });
         setAgentsMailOptions(agentMailOptions);
         if (hbt.includes("H2")) {
-          props.authorizeChanged(true)
+          props.authorizeChanged(true);
         } else {
-          props.authorizeChanged(false)
+          props.authorizeChanged(false);
         }
         break;
       case "MOYEN":
@@ -1257,9 +1512,9 @@ const TraiterDenonciation = (props) => {
         });
         setAgentsMailOptions(agentMailOptions);
         if (hbt.includes("H3")) {
-          props.authorizeChanged(true)
+          props.authorizeChanged(true);
         } else {
-          props.authorizeChanged(false)
+          props.authorizeChanged(false);
         }
         break;
       case "GRAVE":
@@ -1275,85 +1530,145 @@ const TraiterDenonciation = (props) => {
         });
         setAgentsMailOptions(agentMailOptions);
         if (hbt.includes("H4")) {
-          props.authorizeChanged(true)
+          props.authorizeChanged(true);
         } else {
-          props.authorizeChanged(false)
+          props.authorizeChanged(false);
         }
         break;
 
       default:
         break;
     }
+    setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45);
     props.idChanged(data.id ? data.id : "");
     props.codeChanged(data.code ? data.code : "");
+    props.codeClientChanged(data.codeClient ? data.codeClient : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
-    props.collectChanged(data.collectionChannel.libelle ? data.collectionChannel.libelle : "");
+    props.collectChanged(
+      data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
+    );
     props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
-    props.underSubjectChanged(data.objet.categorie.libelle ? data.objet.categorie.libelle : "");
-    props.objetLevelChanged(data.objet.risqueLevel ? data.objet.risqueLevel : "");
+    props.underSubjectChanged(
+      data.objet.categorie.libelle ? data.objet.categorie.libelle : ""
+    );
+    props.objetLevelChanged(
+      data.objet.risqueLevel ? data.objet.risqueLevel : ""
+    );
     props.productChanged(data.product.libelle ? data.product.libelle : "");
-    props.unitChanged(data.servicePoint.libelle ? data.servicePoint.libelle : "");
+    props.unitChanged(
+      data.servicePoint.libelle ? data.servicePoint.libelle : ""
+    );
     props.contentChanged(data.content ? data.content : "");
     props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
     props.statusChanged(data.status ? data.status : "");
     props.createdAtChanged(data.createdAt ? data.createdAt : "");
-    props.createdByChanged(data.collector.firstAndLastName ? data.collector.firstAndLastName : "");
+    props.createdByChanged(
+      data.collector.firstAndLastName ? data.collector.firstAndLastName : ""
+    );
     props.assignedAtChanged(data.affectedAt ? data.affectedAt : "");
-    props.assignedByChanged(data.treatmentAffectedBy ? data.treatmentAffectedBy.firstAndLastName : "");
-    props.handledByChanged(data.treatmentAffectedTo ? data.treatmentAffectedTo.firstAndLastName : "");
+    props.assignedByChanged(
+      data.treatmentAffectedBy ? data.treatmentAffectedBy.firstAndLastName : ""
+    );
+    props.handledByChanged(
+      data.treatmentAffectedTo ? data.treatmentAffectedTo.firstAndLastName : ""
+    );
     props.selectedItemChanged(data);
+    setCurrentData(data);
     props.transmittedChanged(
       data.transmitted !== null ? "" + data.transmitted + "" : ""
     );
     //fetch attachments for selected claim
     getFillesApi(data.id, props);
     getDenunAudioApi(data.id, props);
+    props.extrasChanged(data.extras ?? []);
+    props.convertedByChanged(
+      data.convertedBy ? data.convertedBy.firstAndLastName : ""
+    );
+    props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
 
     props.sessionChanged(data.session !== null ? data.session : "");
   };
 
   /*tchat */
   let tchat;
-  if ((showJoinBtn)) {
+  if (showJoinBtn) {
     tchat = (
       <>
         {userData.connected ? (
           <div className="row containera clearfix mt-5">
-
             <div class="people-list" id="people-list">
-              {props.session.createdBy.id === user.id ?
+              {props.session.createdBy.id === user.id ? (
                 <div class="search">
-                  <input type="text" placeholder="search" onChange={invitation} />
-                </div> : null}
+                  <input
+                    type="text"
+                    placeholder="search"
+                    onChange={invitation}
+                  />
+                </div>
+              ) : null}
               <div id="listI" ref={maDivRef} style={{ display: "none" }}>
-
                 <ul class="list">
-                  <label className="text-xl mb-2" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>A Inviter</label>
+                  <label
+                    className="text-xl mb-2"
+                    style={{
+                      color: "white",
+                      fontSize: "18px",
+                      fontWeight: "600",
+                    }}
+                  >
+                    A Inviter
+                  </label>
 
-                  {usersCGR.map((member) => (
+                  {availableToInvite.map((member) => (
                     <>
-                      <li class="clearfix" key={member.id} style={{ display: "flex", verticalAlign: "center" }}>
-                        <Avatar sx={{ width: 40, height: 40, backgroundColor: "#1E2188" }}>{member.firstAndLastName[0]}</Avatar>
+                      <li
+                        class="clearfix"
+                        key={member.id}
+                        style={{ display: "flex", verticalAlign: "center" }}
+                      >
+                        <Avatar
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            backgroundColor: "#1E2188",
+                          }}
+                        >
+                          {member.firstAndLastName[0]}
+                        </Avatar>
 
                         <div class="about" style={{ marginTop: "0px" }}>
-                          <div class="name">{member.firstAndLastName}</div>
+                          <div class="name nameToInvite">
+                            <span>{member.firstAndLastName}</span>
+                          </div>
                           <div class="" style={{ fontSize: "10px" }}>
                             {member.posteDto.libelle}
                           </div>
                         </div>
-                        <IconButton onClick={(e) => handleInvitation(e, member.id)} color="primary" aria-label="Ajouter" style={{ marginLeft: "auto" }}>
+                        <IconButton
+                          onClick={(e) => handleInvitation(e, member.id)}
+                          color="primary"
+                          aria-label="Ajouter"
+                          style={{ marginLeft: "auto" }}
+                        >
                           <AddCircleOutline />
                         </IconButton>
                       </li>
                     </>
-
                   ))}
-
                 </ul>
               </div>
 
               <ul class="list">
-                <label className="text-xl mb-4" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>Membres</label>
+                <label
+                  className="text-xl mb-4"
+                  style={{
+                    color: "white",
+                    fontSize: "18px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Membres
+                </label>
                 {props?.session?.members?.map((member) => (
                   <>
                     <li
@@ -1372,8 +1687,8 @@ const TraiterDenonciation = (props) => {
                       </Avatar>
 
                       <div className="about" style={{ marginTop: "9.5px" }}>
-                        <div className="name text-bold">
-                          {member.firstAndLastName}
+                        <div className="name nameToInvite text-bold">
+                          <span>{member.firstAndLastName}</span>
                         </div>
                         {/* <div className="status">
                             <i className="fa fa-circle online"></i> online
@@ -1383,33 +1698,59 @@ const TraiterDenonciation = (props) => {
                   </>
                 ))}
                 <div className="d-flex">
-                  <label className="text-xl" style={{ color: "white", fontSize: "18px", fontWeight: "600" }}>Invité(s)</label>
+                  <label
+                    className="text-xl"
+                    style={{
+                      color: "white",
+                      fontSize: "18px",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Invité(s)
+                  </label>
                 </div>
 
-                {guests !== null && (guests)?.length > 0 && guests.at(0).firstAndLastName != null ? (
+                {guests !== null &&
+                guests?.length > 0 &&
+                guests.at(0).firstAndLastName != null ? (
                   <>
-
-                    {(guests)?.map((guest) => (
-                      <li className="clearfix" key={guest.id} style={{ display: "flex", verticalAlign: "center" }}>
-                        <Avatar sx={{ width: 48, height: 48, backgroundColor: "#1E2188", }}>
-                          {guest !== null && guest.firstAndLastName != null && guest?.firstAndLastName[0]}
+                    {guests?.map((guest) => (
+                      <li
+                        className="clearfix"
+                        key={guest.id}
+                        style={{ display: "flex", verticalAlign: "center" }}
+                      >
+                        <Avatar
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            backgroundColor: "#1E2188",
+                          }}
+                        >
+                          {guest !== null &&
+                            guest.firstAndLastName != null &&
+                            guest?.firstAndLastName[0]}
                         </Avatar>
 
                         <div className="about" style={{ marginTop: "9.5px" }}>
-                          <div className="name text-bold">
-                            {guest?.firstAndLastName}
+                          <div className="name nameToInvite text-bold">
+                            <span>{guest?.firstAndLastName}</span>
                           </div>
                           {/* <div className="status">
                               <i className="fa fa-circle online"></i> online
                             </div> */}
                         </div>
-                        {!showJoinBtn ?
-                          <IconButton onClick={(e) => handleEject(e, guest.id)} color="primary" aria-label="Ajouter" style={{ marginLeft: "auto" }}>
+                        {!showJoinBtn ? (
+                          <IconButton
+                            onClick={(e) => handleEject(e, guest.id)}
+                            color="primary"
+                            aria-label="Ajouter"
+                            style={{ marginLeft: "auto" }}
+                          >
                             <RemoveCircleOutlineIcon />
                           </IconButton>
-                          : null}
+                        ) : null}
                       </li>
-
                     ))}
                   </>
                 ) : (
@@ -1430,7 +1771,7 @@ const TraiterDenonciation = (props) => {
                       paddingRight: "20px",
                       paddingTop: "0px",
                       paddingBottom: "0px",
-                      boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)"
+                      boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
                     }}
                   >
                     {/* <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/195612/chat_avatar_01_green.jpg" alt="avatar" /> */}
@@ -1448,7 +1789,7 @@ const TraiterDenonciation = (props) => {
                     <div className="chat-about mt-0">
                       <div className="chat-with text-uppercase ">Session</div>
                       <label className="text-md text-secondary">
-                        {props.code}
+                        {props.codeClient}
                       </label>
                       <div className="chat-num-messages text-sm">
                         {publicChats != null ? publicChats.length : "Aucun"}{" "}
@@ -1456,15 +1797,13 @@ const TraiterDenonciation = (props) => {
                       </div>
                     </div>
                     <div style={{ marginLeft: "auto" }}>
-                      {props.session.createdBy.id === user.id ?
+                      {props.session.createdBy.id === user.id ? (
                         <>
                           <IconButton onClick={handleShowVoteField}>
                             <HowToVoteIcon />
                           </IconButton>
-                        </> :
-                        null
-                      }
-
+                        </>
+                      ) : null}
                     </div>
                   </div>
                   <div className="chat-history">
@@ -1486,7 +1825,13 @@ const TraiterDenonciation = (props) => {
                                       </span>
                                     </div>
                                     <div className="message other-message float-right">
-                                      <div className="row" style={{ display: "grid", justifyContent: "end" }}>
+                                      <div
+                                        className="row"
+                                        style={{
+                                          display: "grid",
+                                          justifyContent: "end",
+                                        }}
+                                      >
                                         <HowToVoteIcon />
                                       </div>
                                       <div>
@@ -1507,22 +1852,34 @@ const TraiterDenonciation = (props) => {
                                         </blockquote>
                                       </div>
 
-                                      <FormControl component="fieldset" style={{ width: "100%" }}>
-                                        <FormLabel component="legend" className="text-white text-md text" style={{ color: "white" }}>
+                                      <FormControl
+                                        component="fieldset"
+                                        style={{ width: "100%" }}
+                                      >
+                                        <FormLabel
+                                          component="legend"
+                                          className="text-white text-md text"
+                                          style={{ color: "white" }}
+                                        >
                                           Que votez-vous pour cette proposition
                                           ?
                                         </FormLabel>
                                         <RadioGroup
                                           aria-label="vote"
                                           name="vote-options"
-                                          value={(chat?.voteDto?.userVote).filter((e) => {
-                                            // console.log("filter", e.author.id === user.id  );
-                                            // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                            return e.author.id === user.id
-                                          })[0]?.voteType + ""}
-                                          onChange={(e) => handleVote(e, chat.id)}
+                                          value={
+                                            (chat?.voteDto?.userVote).filter(
+                                              (e) => {
+                                                // console.log("filter", e.author.id === user.id  );
+                                                // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
+                                                return e.author.id === user.id;
+                                              }
+                                            )[0]?.voteType + ""
+                                          }
+                                          onChange={(e) =>
+                                            handleVote(e, chat.id)
+                                          }
                                         >
-
                                           <FormControlLabel
                                             value="POUR"
                                             control={
@@ -1531,131 +1888,227 @@ const TraiterDenonciation = (props) => {
                                                 sx={{
                                                   "& .MuiSvgIcon-root": {
                                                     display: "none",
-                                                    color: "white"
+                                                    color: "white",
                                                   },
-
                                                 }}
                                               />
                                             }
                                             label="Pour"
-                                            style={{ color: "white", borderColor: "white" }}
+                                            style={{
+                                              color: "white",
+                                              borderColor: "white",
+                                            }}
                                           />
                                           <div>
                                             <LinearProgress
                                               variant="determinate"
                                               color="success"
-                                              value={((chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "POUR"
-                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "POUR"
-                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "CONTRE"
-                                              }).length)) * 100}
+                                              value={
+                                                ((chat?.voteDto?.userVote).filter(
+                                                  (e) => {
+                                                    return (
+                                                      e.voteType === "POUR"
+                                                    );
+                                                  }
+                                                ).length /
+                                                  ((chat?.voteDto?.userVote).filter(
+                                                    (e) => {
+                                                      return (
+                                                        e.voteType === "POUR"
+                                                      );
+                                                    }
+                                                  ).length +
+                                                    (chat?.voteDto?.userVote).filter(
+                                                      (e) => {
+                                                        return (
+                                                          e.voteType ===
+                                                          "CONTRE"
+                                                        );
+                                                      }
+                                                    ).length)) *
+                                                100
+                                              }
                                             />
-                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
-
-                                              return e.voteType === "POUR"
-                                            }).length} vote(s)</p>
+                                            <p>
+                                              {
+                                                (chat?.voteDto?.userVote).filter(
+                                                  (e) => {
+                                                    return (
+                                                      e.voteType === "POUR"
+                                                    );
+                                                  }
+                                                ).length
+                                              }{" "}
+                                              vote(s)
+                                            </p>
                                           </div>
 
                                           <FormControlLabel
                                             value="CONTRE"
-                                            control={<Radio sx={{
-                                              "& .MuiSvgIcon-root": {
-                                                display: "none",
-                                                color: "white"
-                                              },
-                                              " .MuiFormControlLabel-label": {
-                                                color: "white",
-                                                fontWeight: "bold"
-                                              }
-                                            }} />}
+                                            control={
+                                              <Radio
+                                                sx={{
+                                                  "& .MuiSvgIcon-root": {
+                                                    display: "none",
+                                                    color: "white",
+                                                  },
+                                                  " .MuiFormControlLabel-label":
+                                                    {
+                                                      color: "white",
+                                                      fontWeight: "bold",
+                                                    },
+                                                }}
+                                              />
+                                            }
                                             label="Contre"
-                                            style={{ color: "white", borderColor: "white" }}
+                                            style={{
+                                              color: "white",
+                                              borderColor: "white",
+                                            }}
                                           />
                                           <div>
                                             <LinearProgress
-                                              variant="determinate" color="success"
-                                              value={((chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "CONTRE"
-                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "POUR"
-                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "CONTRE"
-                                              }).length)) * 100}
+                                              variant="determinate"
+                                              color="success"
+                                              value={
+                                                ((chat?.voteDto?.userVote).filter(
+                                                  (e) => {
+                                                    return (
+                                                      e.voteType === "CONTRE"
+                                                    );
+                                                  }
+                                                ).length /
+                                                  ((chat?.voteDto?.userVote).filter(
+                                                    (e) => {
+                                                      return (
+                                                        e.voteType === "POUR"
+                                                      );
+                                                    }
+                                                  ).length +
+                                                    (chat?.voteDto?.userVote).filter(
+                                                      (e) => {
+                                                        return (
+                                                          e.voteType ===
+                                                          "CONTRE"
+                                                        );
+                                                      }
+                                                    ).length)) *
+                                                100
+                                              }
                                             />
-                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                              // console.log("filter", e.author.id === user.id  );
-                                              // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                              return e.voteType === "CONTRE"
-                                            }).length} vote(s)</p>
+                                            <p>
+                                              {
+                                                (chat?.voteDto?.userVote).filter(
+                                                  (e) => {
+                                                    // console.log("filter", e.author.id === user.id  );
+                                                    // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
+                                                    return (
+                                                      e.voteType === "CONTRE"
+                                                    );
+                                                  }
+                                                ).length
+                                              }{" "}
+                                              vote(s)
+                                            </p>
                                           </div>
                                         </RadioGroup>
-
-
                                       </FormControl>
 
                                       {(chat?.voteDto?.userVote).filter((e) => {
-
-                                        return e.voteType === "POUR"
-                                      }).length > (chat?.voteDto?.userVote).filter((e) => {
-
-                                        return e.voteType === "CONTRE"
-                                      }).length ? <>
-                                        <hr style={{ borderColor: "white" }} />
-                                        <div style={{ marginLeft: "auto", marginRight: "auto", display: "grid" }}>
-                                          {showConfirmChooseSolution ?
-                                            <div style={{ display: "flex", justifyContent: "space-evenly" }}>
-                                              <label style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>Poursuivre ? </label>
-                                              <button onClick={handleChooseVoteConfirm} className="" style={{
-                                                color: "black",
-                                                fontSize: "16px",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                fontWeight: 'bold',
-                                                backgroundColor: "transparent",
-                                                marginRight: "6px"
-                                              }}  >
-                                                Non
-                                              </button>
-                                              <button onClick={(e) => handleChooseVote(chat.id)} className="" style={{
-                                                color: "white",
-                                                fontSize: "16px",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                fontWeight: 'bold',
-                                                backgroundColor: "transparent"
-
-                                              }}  >
-                                                Oui
-                                              </button>
-                                            </div> :
-                                            <>
-                                              <button onClick={handleChooseVoteConfirm} className="" style={{
-                                                color: "white",
-                                                fontSize: "16px",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                fontWeight: 'bold',
-                                                backgroundColor: "transparent"
-
-                                              }}  >
-                                                Utiliser comme solution
-                                              </button>
-                                            </>}
-
-                                        </div>
-                                      </> : null}
-
-
+                                        return e.voteType === "POUR";
+                                      }).length >
+                                      (chat?.voteDto?.userVote).filter((e) => {
+                                        return e.voteType === "CONTRE";
+                                      }).length ? (
+                                        <>
+                                          <hr
+                                            style={{ borderColor: "white" }}
+                                          />
+                                          <div
+                                            style={{
+                                              marginLeft: "auto",
+                                              marginRight: "auto",
+                                              display: "grid",
+                                            }}
+                                          >
+                                            {showConfirmChooseSolution ? (
+                                              <div
+                                                style={{
+                                                  display: "flex",
+                                                  justifyContent:
+                                                    "space-evenly",
+                                                }}
+                                              >
+                                                <label
+                                                  style={{
+                                                    fontSize: "16px",
+                                                    fontWeight: "bold",
+                                                    color: "white",
+                                                  }}
+                                                >
+                                                  Poursuivre ?{" "}
+                                                </label>
+                                                <button
+                                                  onClick={
+                                                    handleChooseVoteConfirm
+                                                  }
+                                                  className=""
+                                                  style={{
+                                                    color: "black",
+                                                    fontSize: "16px",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    fontWeight: "bold",
+                                                    backgroundColor:
+                                                      "transparent",
+                                                    marginRight: "6px",
+                                                  }}
+                                                >
+                                                  Non
+                                                </button>
+                                                <button
+                                                  onClick={(e) =>
+                                                    handleChooseVote(chat.id)
+                                                  }
+                                                  className=""
+                                                  style={{
+                                                    color: "white",
+                                                    fontSize: "16px",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    fontWeight: "bold",
+                                                    backgroundColor:
+                                                      "transparent",
+                                                  }}
+                                                >
+                                                  Oui
+                                                </button>
+                                              </div>
+                                            ) : (
+                                              <>
+                                                <button
+                                                  onClick={
+                                                    handleChooseVoteConfirm
+                                                  }
+                                                  className=""
+                                                  style={{
+                                                    color: "white",
+                                                    fontSize: "16px",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    fontWeight: "bold",
+                                                    backgroundColor:
+                                                      "transparent",
+                                                  }}
+                                                >
+                                                  Utiliser comme solution
+                                                </button>
+                                              </>
+                                            )}
+                                          </div>
+                                        </>
+                                      ) : null}
                                     </div>
-
                                   </li>
                                 </>
                               ) : (
@@ -1689,7 +2142,13 @@ const TraiterDenonciation = (props) => {
                                       </span>
                                     </div>
                                     <div className="message my-message">
-                                      <div className="row" style={{ display: "grid", justifyContent: "end" }}>
+                                      <div
+                                        className="row"
+                                        style={{
+                                          display: "grid",
+                                          justifyContent: "end",
+                                        }}
+                                      >
                                         <HowToVoteIcon />
                                       </div>
                                       <div>
@@ -1710,21 +2169,33 @@ const TraiterDenonciation = (props) => {
                                         </blockquote>
                                       </div>
 
-                                      <FormControl component="fieldset" style={{ width: "100%" }}>
-                                        <FormLabel component="legend" className="text-white text-md text" style={{ color: "white" }}>
+                                      <FormControl
+                                        component="fieldset"
+                                        style={{ width: "100%" }}
+                                      >
+                                        <FormLabel
+                                          component="legend"
+                                          className="text-white text-md text"
+                                          style={{ color: "white" }}
+                                        >
                                           Que votez-vous pour cette proposition
                                           ?
                                         </FormLabel>
                                         <RadioGroup
                                           aria-label="vote"
                                           name="vote-options"
-                                          value={(chat?.voteDto?.userVote).filter((e) => {
-                                            // console.log("filter", e.author.id === user.id  );
-                                            return e.author.id === user.id
-                                          })[0]?.voteType + ""}
-                                          onChange={(e) => handleVote(e, chat.id)}
+                                          value={
+                                            (chat?.voteDto?.userVote).filter(
+                                              (e) => {
+                                                // console.log("filter", e.author.id === user.id  );
+                                                return e.author.id === user.id;
+                                              }
+                                            )[0]?.voteType + ""
+                                          }
+                                          onChange={(e) =>
+                                            handleVote(e, chat.id)
+                                          }
                                         >
-
                                           <FormControlLabel
                                             value="POUR"
                                             control={
@@ -1735,126 +2206,225 @@ const TraiterDenonciation = (props) => {
                                                   },
                                                   "& .MuiTypography-root": {
                                                     color: "white",
-                                                    fontWeight: "bold"
-                                                  }
+                                                    fontWeight: "bold",
+                                                  },
                                                 }}
                                               />
                                             }
                                             label="Pour"
-                                            style={{ color: "white", borderColor: "white" }}
+                                            style={{
+                                              color: "white",
+                                              borderColor: "white",
+                                            }}
                                           />
                                           <div>
                                             <LinearProgress
-                                              variant="determinate" color="success"
-                                              value={((chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "POUR"
-                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "POUR"
-                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "CONTRE"
-                                              }).length)) * 100}
+                                              variant="determinate"
+                                              color="success"
+                                              value={
+                                                ((chat?.voteDto?.userVote).filter(
+                                                  (e) => {
+                                                    return (
+                                                      e.voteType === "POUR"
+                                                    );
+                                                  }
+                                                ).length /
+                                                  ((chat?.voteDto?.userVote).filter(
+                                                    (e) => {
+                                                      return (
+                                                        e.voteType === "POUR"
+                                                      );
+                                                    }
+                                                  ).length +
+                                                    (chat?.voteDto?.userVote).filter(
+                                                      (e) => {
+                                                        return (
+                                                          e.voteType ===
+                                                          "CONTRE"
+                                                        );
+                                                      }
+                                                    ).length)) *
+                                                100
+                                              }
                                             />
-                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                              // console.log("filter", e.author.id === user.id  );
-                                              return e.voteType === "POUR"
-                                            }).length} vote(s)</p>
+                                            <p>
+                                              {
+                                                (chat?.voteDto?.userVote).filter(
+                                                  (e) => {
+                                                    // console.log("filter", e.author.id === user.id  );
+                                                    return (
+                                                      e.voteType === "POUR"
+                                                    );
+                                                  }
+                                                ).length
+                                              }{" "}
+                                              vote(s)
+                                            </p>
                                           </div>
 
                                           <FormControlLabel
                                             value="CONTRE"
-                                            control={<Radio sx={{
-                                              "& .MuiSvgIcon-root": {
-                                                display: "none",
-                                              },
-                                              "& .MuiTypography-root": {
-                                                color: "white",
-                                                fontWeight: "bold"
-                                              }
-                                            }} />}
+                                            control={
+                                              <Radio
+                                                sx={{
+                                                  "& .MuiSvgIcon-root": {
+                                                    display: "none",
+                                                  },
+                                                  "& .MuiTypography-root": {
+                                                    color: "white",
+                                                    fontWeight: "bold",
+                                                  },
+                                                }}
+                                              />
+                                            }
                                             label="Contre"
-                                            style={{ color: "white", borderColor: "white" }}
+                                            style={{
+                                              color: "white",
+                                              borderColor: "white",
+                                            }}
                                           />
                                           <div>
                                             <LinearProgress
-                                              variant="determinate" color="success"
-                                              value={((chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "CONTRE"
-                                              }).length / ((chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "CONTRE"
-                                              }).length + (chat?.voteDto?.userVote).filter((e) => {
-
-                                                return e.voteType === "POUR"
-                                              }).length)) * 100}
+                                              variant="determinate"
+                                              color="success"
+                                              value={
+                                                ((chat?.voteDto?.userVote).filter(
+                                                  (e) => {
+                                                    return (
+                                                      e.voteType === "CONTRE"
+                                                    );
+                                                  }
+                                                ).length /
+                                                  ((chat?.voteDto?.userVote).filter(
+                                                    (e) => {
+                                                      return (
+                                                        e.voteType === "CONTRE"
+                                                      );
+                                                    }
+                                                  ).length +
+                                                    (chat?.voteDto?.userVote).filter(
+                                                      (e) => {
+                                                        return (
+                                                          e.voteType === "POUR"
+                                                        );
+                                                      }
+                                                    ).length)) *
+                                                100
+                                              }
                                             />
-                                            <p>{(chat?.voteDto?.userVote).filter((e) => {
-                                              // console.log("filter", e.author.id === user.id  );
-                                              // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                              return e.voteType === "CONTRE"
-                                            }).length} vote(s)</p>
+                                            <p>
+                                              {
+                                                (chat?.voteDto?.userVote).filter(
+                                                  (e) => {
+                                                    // console.log("filter", e.author.id === user.id  );
+                                                    // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
+                                                    return (
+                                                      e.voteType === "CONTRE"
+                                                    );
+                                                  }
+                                                ).length
+                                              }{" "}
+                                              vote(s)
+                                            </p>
                                           </div>
                                         </RadioGroup>
-
-
                                       </FormControl>
 
                                       {(chat?.voteDto?.userVote).filter((e) => {
-
-                                        return e.voteType === "POUR"
-                                      }).length > (chat?.voteDto?.userVote).filter((e) => {
-
-                                        return e.voteType === "CONTRE"
-                                      }).length ? <>
-                                        <hr style={{ borderColor: "white" }} />
-                                        <div style={{ marginLeft: "auto", marginRight: "auto", display: "grid" }}>
-                                          {showConfirmChooseSolution ?
-                                            <div style={{ display: "flex", justifyContent: "space-evenly" }}>
-                                              <label style={{ fontSize: "16px", fontWeight: "bold", color: "white" }}>Poursuivre ? </label>
-                                              <button onClick={handleChooseVoteConfirm} className="" style={{
-                                                color: "black",
-                                                fontSize: "16px",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                fontWeight: 'bold',
-                                                backgroundColor: "transparent",
-                                                marginRight: "6px"
-                                              }}  >
-                                                Non
-                                              </button>
-                                              <button onClick={(e) => handleChooseVote(chat.id)} className="" style={{
-                                                color: "white",
-                                                fontSize: "16px",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                fontWeight: 'bold',
-                                                backgroundColor: "transparent"
-
-                                              }}  >
-                                                Oui
-                                              </button>
-                                            </div> :
-                                            <>
-                                              <button onClick={handleChooseVoteConfirm} className="" style={{
-                                                color: "white",
-                                                fontSize: "16px",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                fontWeight: 'bold',
-                                                backgroundColor: "transparent"
-
-                                              }}  >
-                                                Utiliser comme solution
-                                              </button>
-                                            </>}
-                                        </div>
-                                      </> : null}
-
+                                        return e.voteType === "POUR";
+                                      }).length >
+                                      (chat?.voteDto?.userVote).filter((e) => {
+                                        return e.voteType === "CONTRE";
+                                      }).length ? (
+                                        <>
+                                          <hr
+                                            style={{ borderColor: "white" }}
+                                          />
+                                          <div
+                                            style={{
+                                              marginLeft: "auto",
+                                              marginRight: "auto",
+                                              display: "grid",
+                                            }}
+                                          >
+                                            {showConfirmChooseSolution ? (
+                                              <div
+                                                style={{
+                                                  display: "flex",
+                                                  justifyContent:
+                                                    "space-evenly",
+                                                }}
+                                              >
+                                                <label
+                                                  style={{
+                                                    fontSize: "16px",
+                                                    fontWeight: "bold",
+                                                    color: "white",
+                                                  }}
+                                                >
+                                                  Poursuivre ?{" "}
+                                                </label>
+                                                <button
+                                                  onClick={
+                                                    handleChooseVoteConfirm
+                                                  }
+                                                  className=""
+                                                  style={{
+                                                    color: "black",
+                                                    fontSize: "16px",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    fontWeight: "bold",
+                                                    backgroundColor:
+                                                      "transparent",
+                                                    marginRight: "6px",
+                                                  }}
+                                                >
+                                                  Non
+                                                </button>
+                                                <button
+                                                  onClick={(e) =>
+                                                    handleChooseVote(chat.id)
+                                                  }
+                                                  className=""
+                                                  style={{
+                                                    color: "white",
+                                                    fontSize: "16px",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    fontWeight: "bold",
+                                                    backgroundColor:
+                                                      "transparent",
+                                                  }}
+                                                >
+                                                  Oui
+                                                </button>
+                                              </div>
+                                            ) : (
+                                              <>
+                                                <button
+                                                  onClick={
+                                                    handleChooseVoteConfirm
+                                                  }
+                                                  className=""
+                                                  style={{
+                                                    color: "white",
+                                                    fontSize: "16px",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    fontWeight: "bold",
+                                                    backgroundColor:
+                                                      "transparent",
+                                                  }}
+                                                >
+                                                  Utiliser comme solution
+                                                </button>
+                                              </>
+                                            )}
+                                          </div>
+                                        </>
+                                      ) : null}
                                     </div>
-
                                   </li>
                                 </>
                               ) : (
@@ -1875,7 +2445,6 @@ const TraiterDenonciation = (props) => {
                                 </>
                               )}
                             </>
-
                           )}
                         </>
                       ))}
@@ -1929,37 +2498,41 @@ const TraiterDenonciation = (props) => {
                       ></textarea>
                     )}
                     <div className="">
-                      {showVoteField ?
-                        <button onClick={handleShowVoteField} className="btn btn-secondary ml-4" style={{
+                      {showVoteField ? (
+                        <button
+                          onClick={handleShowVoteField}
+                          className="btn btn-secondary ml-4"
+                          style={{
+                            float: "right",
+                            color: "white",
+                            fontSize: "16px",
+                            textTransform: "uppercase",
+                            border: "none",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            backgroundColor: "gray",
+                          }}
+                        >
+                          Annuler
+                        </button>
+                      ) : null}
+                      <button
+                        onClick={showVoteField ? sendVote : sendValue}
+                        className="btn btn-primary"
+                        style={{
                           float: "right",
                           color: "white",
                           fontSize: "16px",
                           textTransform: "uppercase",
                           border: "none",
                           cursor: "pointer",
-                          fontWeight: 'bold',
-                          backgroundColor: "gray"
-
-                        }}  >
-                          Annuler
-                        </button>
-                        : null
-                      }
-                      <button onClick={showVoteField ? sendVote : sendValue} className="btn btn-primary" style={{
-                        float: "right",
-                        color: "white",
-                        fontSize: "16px",
-                        textTransform: "uppercase",
-                        border: "none",
-                        cursor: "pointer",
-                        fontWeight: 'bold',
-                        backgroundColor: "#84cd3e"
-                      }} >
+                          fontWeight: "bold",
+                          backgroundColor: "#84cd3e",
+                        }}
+                      >
                         {showVoteField ? "Soumettre pour vote" : "Envoyer"}
                       </button>
-
                     </div>
-
                   </div>
                 </div>
 
@@ -1979,18 +2552,30 @@ const TraiterDenonciation = (props) => {
     tchat = "";
   }
 
-
   /*Hisotrique*/
 
-
   let details;
-  if ((props.solution).length !== 0) {
-
+  if (props.solution.length !== 0) {
     if (props.status === "TO_APPROUVED" || props.status === "DESAPPROUVED") {
       // console.log("abcde",props.status)
       let index = 0;
       let solutions = Array.from(props.solution);
-      let couleurs = ["#333300", "#00cc00", "#99003d", "#3333ff", "#666666", "#253858", "#00875A", "#36B37E", "#FFC400", "#FF8B00", "#FF5630", "#5243AA", "#0052CC", "#00B8D9"]
+      let couleurs = [
+        "#333300",
+        "#00cc00",
+        "#99003d",
+        "#3333ff",
+        "#666666",
+        "#253858",
+        "#00875A",
+        "#36B37E",
+        "#FFC400",
+        "#FF8B00",
+        "#FF5630",
+        "#5243AA",
+        "#0052CC",
+        "#00B8D9",
+      ];
 
       if (solutions.length !== 0) {
         details = (
@@ -1998,111 +2583,147 @@ const TraiterDenonciation = (props) => {
             <div className="col s12">
               {/* let solutions =  */}
               {Array.from(solutions).map((solution) => {
-                let fond = couleurs[getRandomInt(couleurs.length)];
+                // let fond = couleurs[getRandomInt(couleurs.length)];
+                let fond = couleurs[index % couleurs.length];
 
                 let mesure = "";
-                if (solution.status === "APPROVED" && solution.satisfactionMeasureDto !== null) {
-                  let degre = solution.satisfactionMeasureDto.status === "SATISFIED" ? "Satisfait" : solution.satisfactionMeasureDto.status === "UNSATISFIED" ? "Non satisfait" : solution.satisfactionMeasureDto.status === "PARTIAL" ? "Partiellement satisfait" : "";
-                  mesure =
+                if (
+                  solution.status === "APPROVED" &&
+                  solution.satisfactionMeasureDto !== null
+                ) {
+                  let degre =
+                    solution.satisfactionMeasureDto.status === "SATISFIED"
+                      ? "Satisfait"
+                      : solution.satisfactionMeasureDto.status === "UNSATISFIED"
+                      ? "Non satisfait"
+                      : solution.satisfactionMeasureDto.status === "PARTIAL"
+                      ? "Partiellement satisfait"
+                      : "";
+                  mesure = (
                     <>
-                      <Typography component="div" >
+                      <Typography component="div">
                         <div>
-                          <span className="chip2" style={{ backgroundColor: fond }}>
+                          <span
+                            className="chip2"
+                            style={{ backgroundColor: fond }}
+                          >
                             <span className="hero">
                               Client {degre} : mesurée
                               {solution.satisfactionMeasureDto.measurer
                                 ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
                                 : " depuis le site web "}
-                              le {formatDate(solution.satisfactionMeasureDto.measureDateTime)}
+                              le{" "}
+                              {formatDate(
+                                solution.satisfactionMeasureDto.measureDateTime
+                              )}
                             </span>
                           </span>
                         </div>
                       </Typography>
                     </>
-                } else if (solution.status === "APPROVED" && solution.satisfactionMeasureDto === null) {
-                  mesure =
+                  );
+                } else if (
+                  solution.status === "APPROVED" &&
+                  solution.satisfactionMeasureDto === null
+                ) {
+                  mesure = (
                     <>
                       <span className="chip2" style={{ backgroundColor: fond }}>
-                        <span className="hero">
-                          Traitée
-                        </span>
+                        <span className="hero">Traitée</span>
                         {/* <span className="hero">
                         En attente de mesure de satisfaction
                       </span> */}
                       </span>
                     </>
+                  );
                 }
 
                 let approbation = "";
-                if (solution.status === "UNAPPROVED" && solution.motifDesaprobation !== null) {
-
-                  approbation =
+                if (
+                  solution.status === "UNAPPROVED" &&
+                  solution.motifDesaprobation !== null
+                ) {
+                  approbation = (
                     <>
-                      <Typography component="div" >
+                      <Typography component="div">
                         <div className="row">
-                          <div
-                            className="col l12 s12 pb-2"
-                            id="content"
-                          >
+                          <div className="col l12 s12 pb-2" id="content">
                             <div className="df pb-2">
-                              <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                              Motif de désapprobation
+                              <RecordVoiceOverIcon sx={{ mr: 2 }} /> Motif de
+                              désapprobation
                             </div>
-                            <div>{solution.motifDesaprobation !== null ? solution.motifDesaprobation : ""}</div>
+                            <div>
+                              {solution.motifDesaprobation !== null
+                                ? solution.motifDesaprobation
+                                : ""}
+                            </div>
                           </div>
                         </div>
                         <div>
-                          <span className="chip2" style={{ backgroundColor: fond }}>
+                          <span
+                            className="chip2"
+                            style={{ backgroundColor: fond }}
+                          >
                             <span className="hero">
-                              Désapprouvée par {solution.unApprouver !== null ? solution.unApprouver.firstAndLastName : ""} le {formatDate(solution.unApprouvedAt)}
+                              Désapprouvée par{" "}
+                              {solution.unApprouver !== null
+                                ? solution.unApprouver.firstAndLastName
+                                : ""}{" "}
+                              le {formatDate(solution.unApprouvedAt)}
                             </span>
                           </span>
                         </div>
                       </Typography>
                     </>
-                } else if (solution.status === "UNAPPROVED" && solution.motifDesaprobation === null) {
-                  approbation =
+                  );
+                } else if (
+                  solution.status === "UNAPPROVED" &&
+                  solution.motifDesaprobation === null
+                ) {
+                  approbation = (
                     <>
                       <span className="chip2" style={{ backgroundColor: fond }}>
-                        <span className="hero">
-                          En attente d'approbation
-                        </span>
+                        <span className="hero">En attente d'approbation</span>
                       </span>
                     </>
+                  );
                 }
 
-                let enregistrement =
+                let enregistrement = (
                   <>
-
-                    <Timeline
-
-                    >
-                      <TimelineItem >
+                    <Timeline>
+                      <TimelineItem>
                         <TimelineOppositeContent
-                          sx={{ m: 'auto 0', flex: "0" }}
+                          sx={{ m: "auto 0", flex: "0" }}
                           variant="body2"
                           color="text.secondary"
-                        >
-                        </TimelineOppositeContent>
+                        ></TimelineOppositeContent>
                         <TimelineSeparator>
                           <TimelineConnector />
                           <TimelineDot style={{ fontSize: "25px" }}>
-                            <Avatar sx={{ width: 32, height: 32, backgroundColor: fond }}>{index = index + 1}</Avatar>
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                backgroundColor: fond,
+                              }}
+                            >
+                              {(index = index + 1)}
+                            </Avatar>
                           </TimelineDot>
                           <TimelineConnector />
                         </TimelineSeparator>
-                        <TimelineContent sx={{ py: '12px', px: 2 }}>
-
+                        <TimelineContent sx={{ py: "12px", px: 2 }}>
                           <Typography variant="h6" component="span">
-                            {solution.author.firstAndLastName} - <span style={{ fontSize: "12px" }}>{formatDate(solution.createdAt)}</span>
+                            {solution.author.firstAndLastName} -{" "}
+                            <span style={{ fontSize: "12px" }}>
+                              {formatDate(solution.createdAt)}
+                            </span>
                           </Typography>
 
                           <Typography className="pb-2" component="div">
                             <div className="row">
-                              <div
-                                className="col l12 s12 pb-2"
-                                id="content"
-                              >
+                              <div className="col l12 s12 pb-2" id="content">
                                 <div className="df pb-2">
                                   <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
                                   Solution
@@ -2110,10 +2731,7 @@ const TraiterDenonciation = (props) => {
                                 <div>{solution.content}</div>
                               </div>
 
-                              <div
-                                className="col l12 s12 pb-2"
-                                id="content"
-                              >
+                              <div className="col l12 s12 pb-2" id="content">
                                 <div className="df pb-2">
                                   <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
                                   Commentaire
@@ -2121,36 +2739,62 @@ const TraiterDenonciation = (props) => {
                                 <div>{solution.commentaire}</div>
                               </div>
                             </div>
-
                           </Typography>
                           {approbation}
                           {mesure}
-
                         </TimelineContent>
                       </TimelineItem>
-
                     </Timeline>
-
-                  </>
-
-                return (
-                  <>
-
-                    {enregistrement}
-
                   </>
                 );
 
+                return <>{enregistrement}</>;
               })}
             </div>
-          </>);
+          </>
+        );
       } else {
-        details = "Aucune donnée"
+        details = (
+          <>
+            <div className="row pb-4">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#f5f9ff",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                Aucune donnée
+              </div>
+            </div>
+          </>
+        );
       }
     }
-
-  } else if ((props.solution).length === 0) {
-    details = "Cette dénonciation est en attente de traitement";
+  } else if (props.solution.length === 0) {
+    details = (
+      <>
+        <div className="row pb-4">
+          <div
+            className="col s12 mb-2"
+            style={{
+              background: "#f5f9ff",
+              borderLeft: "4px solid #1976d2",
+              padding: "10px 5px",
+              borderRadius: "6px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            Cette dénonciation est en attente de traitement
+          </div>
+        </div>
+      </>
+    );
   }
 
   let formButtons;
@@ -2198,6 +2842,12 @@ const TraiterDenonciation = (props) => {
       isValid = false;
       errors["handled_by"] = "Champ incorrect";
     }
+    if (props.handled_delai <= 0 || props.handled_delai > maxDelai) {
+      isValid = false;
+      errors[
+        "handled_delai"
+      ] = `Le delai doit etre compris entre ${1} à ${maxDelai}`;
+    }
 
     return isValid;
   };
@@ -2205,12 +2855,18 @@ const TraiterDenonciation = (props) => {
     let isValid = true;
 
     if (
-      reafect === "" ||
-      reafect === undefined ||
-      reafect === null
+      props.reaffect === "" ||
+      props.reaffect === undefined ||
+      props.reaffect === null
     ) {
       isValid = false;
       errors["handled_by"] = "Champ incorrect";
+    }
+    if (props.handled_delai <= 0 || props.handled_delai > maxDelai) {
+      isValid = false;
+      errors[
+        "handled_delai"
+      ] = `Le delai doit etre compris entre ${1} à ${maxDelai}`;
     }
 
     return isValid;
@@ -2222,11 +2878,15 @@ const TraiterDenonciation = (props) => {
       // console.log(props.code);
 
       claim["claimId"] = props.id;
+      claim["delai"] =
+        props.handled_delai > maxDelai ? maxDelai : props.handled_delai;
+      claim["message"] = props.handled_message;
+      claim["isCustomMessage"] = props.handled_custom_message;
       claim["affectToId"] = props.handled_by;
       claim["affectorId"] = user.id;
 
       //console.log("props.handled_by",claim);
-      props.etatChanged(true)
+      props.etatChanged(true);
       affectDenunciationApi(claim, props).then(() => {
         handleCancel(e);
         handleClose();
@@ -2236,6 +2896,23 @@ const TraiterDenonciation = (props) => {
     props.claimHandleErrors(errors);
   };
 
+  const prepareBeforeAssign = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    props.handledShowModalChanged(true);
+  };
+
+  const handleAssignOrReassign = (e) => {
+    console.log("reaffect", props);
+
+    if (props.reaffect) {
+      handleReAssign(e);
+    } else {
+      handleAssign(e);
+    }
+  };
+
   const handleReAssign = (e) => {
     e.preventDefault();
     if (handleValidationForReAssign()) {
@@ -2243,8 +2920,10 @@ const TraiterDenonciation = (props) => {
       // console.log(props.code);
 
       claim["claimId"] = props.id;
-      claim["affectToId"] = reafect;
+      claim["affectToId"] = props.reaffect;
       claim["affectorId"] = user.id;
+      claim["message"] = props.handled_message;
+      claim["delai"] = props.handled_delai;
 
       // console.log("anonymaty", anonymat);
 
@@ -2271,7 +2950,7 @@ const TraiterDenonciation = (props) => {
       claim["isExisting"] = props.solutionExistant !== "" ? true : false;
 
       // console.log("traitementclaim", claim);
-      props.etat2Changed(true)
+      props.etat2Changed(true);
       treatDenunciationApi(claim, props).then(() => {
         handleCancel(e);
         handleClose();
@@ -2292,7 +2971,7 @@ const TraiterDenonciation = (props) => {
       claim["existingId"] = props.solutionExistant;
       claim["isExisting"] = props.solutionExistant !== "" ? true : false;
       // console.log("traitementclaim", claim);
-      props.etat2Changed(true)
+      props.etat2Changed(true);
       treatDenunciationApi(claim, props).then(() => {
         handleCancel(e);
         handleClose();
@@ -2310,7 +2989,7 @@ const TraiterDenonciation = (props) => {
     claim["claimId"] = props.id;
     claim["approuverId"] = user.id;
     //console.log("aprobation",claim)
-    props.etat2Changed(true)
+    props.etat2Changed(true);
     approveDenunciationSolutionApi(claim, props).then(() => {
       handleCancel(e);
       handleClose();
@@ -2340,7 +3019,7 @@ const TraiterDenonciation = (props) => {
       claim["unApprouverId"] = user.id;
       claim["motifDesaprobation"] = props.motif;
       //  console.log("desaprobation",claim)
-      props.etatChanged(true)
+      props.etatChanged(true);
       unapproveDenunciationSolutionApi(claim, props).then(() => {
         handleCancel(e);
         handleClose();
@@ -2353,14 +3032,13 @@ const TraiterDenonciation = (props) => {
   const handleTransmission = (e) => {
     e.preventDefault();
     let info = {
-      "claimId": props.id,
+      claimId: props.id,
     };
-    props.etat3Changed(true)
+    props.etat3Changed(true);
     transmissionDenunciationApi(info, props).then(() => {
       handleCancel(e);
       handleClose();
     });
-
   };
 
   const handleModal = (e) => {
@@ -2408,10 +3086,31 @@ const TraiterDenonciation = (props) => {
         };
       });
       // console.log("solutionsLISTE", solutionsListe);
-      if ((props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+      if (
+        (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
         user.firstAndLastName === props.created_by &&
-        props.transmitted === "true") {
-        affectForm = "Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
+        props.transmitted === "true"
+      ) {
+        affectForm = (
+          <>
+            <div className="row pb-4">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#f5f9ff",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                Vous avez transmis cette réclamation. Vous n'avez plus la main
+                sur elle.
+              </div>
+            </div>
+          </>
+        );
       }
 
       if (hbt.includes("H6") || addR === "PILOTE") {
@@ -2457,7 +3156,6 @@ const TraiterDenonciation = (props) => {
                       </small>
                     </div>
 
-
                     <div className="col s12 display-flex justify-content-end mt-3">
                       {
                         // (actif !== undefined && actif)  ?
@@ -2466,7 +3164,8 @@ const TraiterDenonciation = (props) => {
                             e.preventDefault();
                             if (handleValidationForAssign()) {
                               //setShowSelectPrintItem(true);
-                              handleAssign(e);
+                              prepareBeforeAssign(e);
+                              //handleAssign(e);
                             }
                             props.claimHandleErrors(errors);
                           }}
@@ -2491,14 +3190,7 @@ const TraiterDenonciation = (props) => {
                         //   </div>
                         // </div>
                       }
-
                     </div>
-
-
-
-
-
-
                   </details>
                 </div>
               </div>
@@ -2507,18 +3199,23 @@ const TraiterDenonciation = (props) => {
         );
         // }
       } else {
-        affectForm = ""
+        affectForm = "";
       }
 
-      if (hbt.includes("H2", "H3", "H4") && ((props.created_by === user.firstAndLastName && props.transmitted === "false") || (props.transmittedTo === user.firstAndLastName && props.transmitted === "true" && addR === "MOLDUE"))) {
+      if (
+        hbt.includes("H2", "H3", "H4") &&
+        ((props.created_by === user.firstAndLastName &&
+          props.transmitted === "false") ||
+          (props.transmittedTo === user.firstAndLastName &&
+            props.transmitted === "true" &&
+            addR === "MOLDUE"))
+      ) {
         treatForm = (
           <>
-
-
             {/* {solutionsListe} */}
             {props.authorize ? (
               <>
-                {solutionsListe !== undefined && solutionsListe.length !== 0 ?
+                {solutionsListe !== undefined && solutionsListe.length !== 0 ? (
                   <div className="row">
                     <div className="col l12">
                       <details>
@@ -2529,7 +3226,9 @@ const TraiterDenonciation = (props) => {
                       </details>
                     </div>
                   </div>
-                  : ""}
+                ) : (
+                  ""
+                )}
 
                 <form id="claimHandleForm">
                   <div className="row mb-2">
@@ -2545,7 +3244,9 @@ const TraiterDenonciation = (props) => {
                             placeholder=""
                             className="materialize-textarea textarea-size"
                             value={props.solution}
-                            onChange={(e) => props.solutionChanged(e.target.value)}
+                            onChange={(e) =>
+                              props.solutionChanged(e.target.value)
+                            }
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
                             Solution
@@ -2568,7 +3269,9 @@ const TraiterDenonciation = (props) => {
                             placeholder=""
                             className="materialize-textarea textarea-size"
                             value={props.comment}
-                            onChange={(e) => props.commentChanged(e.target.value)}
+                            onChange={(e) =>
+                              props.commentChanged(e.target.value)
+                            }
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
                             Commentaires/Observations
@@ -2584,7 +3287,6 @@ const TraiterDenonciation = (props) => {
                             </div>
                           </small>
                         </div>
-
                       </details>
                     </div>
                     <div className="col s12 display-flex justify-content-end">
@@ -2612,14 +3314,10 @@ const TraiterDenonciation = (props) => {
                         //         </ul>
                         //       </div>
                         //   </div>
-
                       }
-
                     </div>
                   </div>
                 </form>
-
-
               </>
             ) : (
               <div className="row">
@@ -2643,9 +3341,8 @@ const TraiterDenonciation = (props) => {
           </>
         );
       } else {
-        treatForm = ""
+        treatForm = "";
       }
-
 
       statusElt = (
         <span className="toTreatBgColor chip  z-depth-1">
@@ -2655,7 +3352,6 @@ const TraiterDenonciation = (props) => {
 
       break;
     case "AFFECTED":
-
       statusElt = (
         <span className="affectedBgColor chip z-depth-1">
           <span className="">Affectée</span>
@@ -2664,17 +3360,28 @@ const TraiterDenonciation = (props) => {
 
       let tmp;
       let afForm;
-      let personAffect =
+      let personAffect = (
         <>
-          {/* details affectation */}
-          <div className="row">
-            <div className="col s12 pb-2">
+          <div className="row pb-4">
+            <div
+              className="col s12 mb-2"
+              style={{
+                background: "#EFF6FF",
+                borderLeft: "4px solid #1976d2",
+                padding: "10px 5px",
+                borderRadius: "4px",
+              }}
+            >
               Dénonciation affectée à{" "}
-              <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-              {props.assigned_by} le {formatDate(props.assignedAt)}
+              <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong>{" "}
+              par <em>{props.assigned_by}</em> le{" "}
+              <span style={{ color: "#555" }}>
+                {formatDate(props.assignedAt)}
+              </span>
             </div>
           </div>
         </>
+      );
 
       let solutions1 = props.selectedItem?.objet?.existingSolutions;
 
@@ -2725,7 +3432,7 @@ const TraiterDenonciation = (props) => {
                         style={styles}
                         placeholder="Sélectionner l'agent"
                         onChange={(e) => {
-                          setReacfect(e.value);
+                          props.setReaffect(e.value);
                           setAffectEmail(e.email);
                         }}
                       />
@@ -2745,14 +3452,13 @@ const TraiterDenonciation = (props) => {
                     </div>
 
                     <div className="col s12 display-flex justify-content-end mt-3">
-
-
                       <LoadingButton
                         onClick={(e) => {
                           e.preventDefault();
                           if (handleValidationForReAssign()) {
                             //setShowSelectPrintItem(true);
-                            handleReAssign(e);
+                            prepareBeforeAssign(e);
+                            // handleReAssign(e);
                           }
                           props.claimHandleErrors(errors);
                         }}
@@ -2768,10 +3474,6 @@ const TraiterDenonciation = (props) => {
                       >
                         <span>Affecter</span>
                       </LoadingButton>
-
-
-
-
                     </div>
                   </details>
                 </div>
@@ -2788,7 +3490,7 @@ const TraiterDenonciation = (props) => {
             {/* resolution */}
             {props.authorize ? (
               <>
-                {solutionsListe !== undefined && solutionsListe.length !== 0 ?
+                {solutionsListe !== undefined && solutionsListe.length !== 0 ? (
                   <div className="row">
                     <div className="col l12">
                       <details>
@@ -2799,7 +3501,9 @@ const TraiterDenonciation = (props) => {
                       </details>
                     </div>
                   </div>
-                  : ""}
+                ) : (
+                  ""
+                )}
                 <form id="claimHandleAgainForm">
                   <div className="row">
                     <div className="col s12">
@@ -2814,7 +3518,9 @@ const TraiterDenonciation = (props) => {
                             placeholder=""
                             className="materialize-textarea textarea-size"
                             value={props.solution}
-                            onChange={(e) => props.solutionChanged(e.target.value)}
+                            onChange={(e) =>
+                              props.solutionChanged(e.target.value)
+                            }
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
                             Solution
@@ -2837,7 +3543,9 @@ const TraiterDenonciation = (props) => {
                             placeholder=""
                             className="materialize-textarea textarea-size"
                             value={props.comment}
-                            onChange={(e) => props.commentChanged(e.target.value)}
+                            onChange={(e) =>
+                              props.commentChanged(e.target.value)
+                            }
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
                             Commentaires/Observations
@@ -2878,10 +3586,7 @@ const TraiterDenonciation = (props) => {
                             //       </ul>
                             //   </div>
                             // </div>
-
-
                           }
-
                         </div>
                       </details>
                     </div>
@@ -2916,7 +3621,6 @@ const TraiterDenonciation = (props) => {
               {personAffect}
               {afForm}
               {tmp}
-
             </>
           );
         } else {
@@ -2924,25 +3628,37 @@ const TraiterDenonciation = (props) => {
             <>
               {personAffect}
               {tmp}
-
             </>
           );
         }
-
       } else {
         if (hbt.includes("H14") || addR !== "MOLDUE") {
           tmp = (
-            <div className="row">
-              <div className="col s12 pb-2">
-                Dénonciation affectée à{" "}
-                <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-                {props.assigned_by} le {formatDate(props.assignedAt)}
+            <>
+              <div className="row pb-4">
+                <div
+                  className="col s12 mb-2"
+                  style={{
+                    background: "#EFF6FF",
+                    borderLeft: "4px solid #1976d2",
+                    padding: "10px 5px",
+                    borderRadius: "4px",
+                  }}
+                >
+                  Dénonciation affectée à{" "}
+                  <strong style={{ color: "#1976d2" }}>
+                    {props.handled_by}
+                  </strong>{" "}
+                  par <em>{props.assigned_by}</em> le{" "}
+                  <span style={{ color: "#555" }}>
+                    {formatDate(props.assignedAt)}
+                  </span>
+                </div>
               </div>
-            </div>
-          )
-
+            </>
+          );
         } else {
-          tmp = ""
+          tmp = "";
         }
 
         if (hbt.includes("H6") || addR === "PILOTE") {
@@ -2950,16 +3666,12 @@ const TraiterDenonciation = (props) => {
             <>
               {afForm}
               {tmp}
-
             </>
           );
         } else {
           treatForm = <>{tmp}</>;
         }
-
-
       }
-
 
       break;
     case "TO_APPROUVED":
@@ -2997,7 +3709,6 @@ const TraiterDenonciation = (props) => {
                     <div className="row">{details}</div>
                   </div>
                 </div>
-
               </details>
             </div>
           </div>
@@ -3016,13 +3727,9 @@ const TraiterDenonciation = (props) => {
                 {props.solutionIdChanged(tab[0] !== undefined ? tab[0].id : "")}
 
                 <div className="row pb-5">
-                  <div
-                    className="col l12 s12 pb-3"
-                    id="content"
-                  >
+                  <div className="col l12 s12 pb-3" id="content">
                     <div className="df pb-2">
-                      <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                      Solution
+                      <RecordVoiceOverIcon sx={{ mr: 2 }} /> Solution
                     </div>
                     <div>
                       {props.solution[0] !== undefined
@@ -3031,13 +3738,9 @@ const TraiterDenonciation = (props) => {
                     </div>
                   </div>
 
-                  <div
-                    className="col l12 s12 pb-2"
-                    id="content"
-                  >
+                  <div className="col l12 s12 pb-2" id="content">
                     <div className="df pb-2">
-                      <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                      Commentaire
+                      <RecordVoiceOverIcon sx={{ mr: 2 }} /> Commentaire
                     </div>
                     <div>
                       {props.solution[0] !== undefined
@@ -3070,9 +3773,7 @@ const TraiterDenonciation = (props) => {
                     //  (actif !== undefined && actif)  ?
                     <>
                       <LoadingButton
-                        onClick={
-                          handleDisapprove
-                        }
+                        onClick={handleDisapprove}
                         className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
                         loading={props.etat}
                         loadingPosition="end"
@@ -3084,15 +3785,16 @@ const TraiterDenonciation = (props) => {
                       </LoadingButton>
 
                       <LoadingButton
-                        onClick={
-                          handleApprove
-                        }
+                        onClick={handleApprove}
                         className="waves-effect waves-effect-b waves-light btn-small"
                         loading={props.etat2}
                         loadingPosition="end"
                         endIcon={<SaveIcon />}
                         variant="contained"
-                        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                        sx={{
+                          backgroundColor: "#1e2188",
+                          textTransform: "initial",
+                        }}
                       >
                         <span>Approuver</span>
                       </LoadingButton>
@@ -3105,9 +3807,7 @@ const TraiterDenonciation = (props) => {
                     //       </ul>
                     //   </div>
                     // </div>
-
                   }
-
                 </div>
               </details>
             </div>
@@ -3125,7 +3825,6 @@ const TraiterDenonciation = (props) => {
       } else {
         treatForm = <>{historique}</>;
       }
-
 
       break;
     case "DESAPPROUVED":
@@ -3150,7 +3849,9 @@ const TraiterDenonciation = (props) => {
                         className="chip indigo lighten-5"
                         style={{ cursor: "pointer", height: "auto" }}
                       >
-                        <span className="indigo-text">Traitement en interne</span>
+                        <span className="indigo-text">
+                          Traitement en interne
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -3250,7 +3951,6 @@ const TraiterDenonciation = (props) => {
                           //   </div>
                           // </div>
                         }
-
                       </div>
                     </details>
                   </div>
@@ -3278,7 +3978,6 @@ const TraiterDenonciation = (props) => {
           </>
         );
       } else {
-
       }
       break;
     default:
@@ -3291,56 +3990,226 @@ const TraiterDenonciation = (props) => {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-          <div className="card box-shadow-none mb-1 app-file-info">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl1 l1 s1 m1">
-                  <div className="app-file-content-logo">
-                    <div className="fonticon hide">
-                      <i className="material-icons ">more_vert</i>
-                    </div>
-                    <img
-                      className="recent-file"
-                      src={icon}
-                      height="38"
-                      width="30"
-                      alt=""
-                    />
-                  </div>
-                </div>
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div className="app-file-last-access">
-                      <a href={attachment.url}>Télécharger</a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Grid item xs={12} sm={6} key={attachment.id}>
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              borderRadius: 2,
+              p: 2,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              transition: "transform 0.3s",
+              "&:hover": {
+                transform: "translateY(-3px)",
+              },
+              height: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                backgroundColor: "grey.100",
+                borderRadius: "6px",
+                padding: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: "12px",
+                minWidth: "56px",
+              }}
+            >
+              <img
+                src={icon}
+                height="28"
+                width="22"
+                alt=""
+                style={{ objectFit: "contain" }}
+              />
+            </Box>
+
+            <CardContent sx={{ flex: 1, minWidth: 0, py: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Typography
+                  variant="body1"
+                  component="div"
+                  sx={{
+                    fontWeight: "bold",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    width: "100%",
+                    mb: 0.5,
+                  }}
+                >
+                  {attachment.name}
+                </Typography>
+                {attachment._extra && (
+                  <Tooltip
+                    title={`Ajouté par ${
+                      attachment.extra?.user?.firstAndLastName
+                    } le ${formatDate(attachment.extra?.createdAt)}`}
+                  >
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round((attachment.size / 1024) * 100) / 100} {"Ko"}
+              </Typography>
+            </CardContent>
+
+            <FileDownload
+              sx={{
+                fontSize: "18px",
+                color: "primary.main",
+                ml: 1,
+                "&:hover": {
+                  color: "primary.dark",
+                  cursor: "pointer",
+                },
+              }}
+              onClick={() => downloadFillesApi(attachment.id, attachment.name)}
+            />
+          </Card>
+        </Grid>
       );
     });
+
     attachmentList = (
-      <div className="col s12 app-file-content grey lighten-4">
-        <span className="app-file-label">Fichiers joints</span>
-        <div className="row app-file-recent-access mb-3">
-          {attachmentListChild}
-        </div>
-      </div>
+      <Grid container spacing={2} size={12}>
+        {attachmentListChild}
+      </Grid>
     );
   } else {
+    attachmentList = (
+      <Grid container spacing={2} size={12}>
+        <Grid item>Ce dossier ne contient pas de fichiers joints</Grid>
+      </Grid>
+    );
   }
+
+  const handlePlay = (audioId, audioName) => {
+    if (currentAudioId === audioId) {
+      audioRef.current.pause();
+      setCurrentAudioId(null);
+    } else {
+      setCurrentAudioId(audioId);
+      downloadAudioApi(audioId, audioName).then((data) => {
+        let blobAudio = new Blob([data], {
+          type: "audio/ogg; codecs=opus",
+        });
+
+        setCurrentAudio(window.URL.createObjectURL(blobAudio));
+        setTimeout(() => audioRef.current.play(), 2000);
+        // setAudioPlayer("audio-" + attachment.id);
+      });
+    }
+  };
+
+  let audioList;
+  if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
+    console.log("props.selectedItemAudio", props.selectedItemAudio);
+    let audioListChild = props.selectedItemAudio.map((audioItem) => {
+      return (
+        <Grid item xs={12} sm={6} key={audioItem.id}>
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              borderRadius: 2,
+              p: 1.5,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              height: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: "primary.light",
+                borderRadius: "6px",
+                p: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mr: 2,
+                minWidth: "48px",
+                height: "48px",
+              }}
+            >
+              <VolumeUp
+                sx={{ color: "primary.contrastText", fontSize: "28px" }}
+              />
+            </Box>
+
+            <CardContent sx={{ flex: 1, minWidth: 0, p: "8px !important" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 500,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    mb: 0.5,
+                  }}
+                >
+                  {audioItem.name}
+                </Typography>
+                {audioItem._extra && (
+                  <Tooltip
+                    title={`Ajouté par ${
+                      audioItem.extra?.user?.firstAndLastName
+                    } le ${formatDate(audioItem.extra?.createdAt)}`}
+                  >
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round((audioItem.size / 1024 + Number.EPSILON) * 100) /
+                  100}{" "}
+                {"Ko"} • {audioItem.duration}
+              </Typography>
+            </CardContent>
+
+            <Box sx={{ display: "flex" }}>
+              <IconButton
+                onClick={() => handlePlay(audioItem.id, audioItem.name)}
+                sx={{
+                  color:
+                    currentAudioId === audioItem.id
+                      ? "primary.main"
+                      : "text.secondary",
+                }}
+              >
+                {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
+              </IconButton>
+            </Box>
+          </Card>
+        </Grid>
+      );
+    });
+    audioList = (
+      <Grid spacing={2} container size={12}>
+        {audioListChild}
+      </Grid>
+    );
+  } else {
+    audioList = (
+      <Grid container spacing={2} size={12}>
+        <Grid item>Ce dossier ne contient pas de fichiers audio</Grid>
+      </Grid>
+    );
+  }
+
   const [showSelectPrintItem, setShowSelectPrintItem] = useState(false);
   const [emailSender, setEmailSender] = useState([]);
   const [affectEmail, setAffectEmail] = useState("");
@@ -3403,6 +4272,31 @@ const TraiterDenonciation = (props) => {
     element.createdAtFormated = createdAt;
   });
 
+  let btnConversion;
+  if (addR === "PILOTE" && props.status === "SAVED") {
+    btnConversion = (
+      <>
+        <LoadingButton
+          onClick={() => setConfirmationOpen(true)}
+          className="waves-effect waves-effect-b waves-light btn-small"
+          // loading={props.etat3}
+          loadingPosition="end"
+          endIcon={<AutorenewIcon />}
+          variant="contained"
+          sx={{
+            backgroundColor: "#ef6c00",
+            textTransform: "initial",
+            transition: "background-color 0.3s ease",
+            "&:hover": {
+              backgroundColor: "#fda321",
+            },
+          }}
+        >
+          <span>Convertir</span>
+        </LoadingButton>
+      </>
+    );
+  }
 
   let transmettre = "";
   let btnS = "";
@@ -3412,14 +4306,15 @@ const TraiterDenonciation = (props) => {
     ((user.firstAndLastName === props.created_by &&
       props.transmitted === "false") ||
       (user.firstAndLastName === props.transmittedTo &&
-        props.transmitted === "true" && addR === "MOLDUE")) &&
+        props.transmitted === "true" &&
+        addR === "MOLDUE")) &&
     props.status === "SAVED"
   ) {
     transmettre = (
       <>
         <LoadingButton
           onClick={(e) => handleModal(e)}
-          className="waves-effect waves-effect-b waves-light btn-small"
+          className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
           loading={props.etat3}
           loadingPosition="end"
           endIcon={<SendIcon />}
@@ -3434,15 +4329,25 @@ const TraiterDenonciation = (props) => {
     transmettre = "";
   }
 
-  if ((user.firstAndLastName === props.created_by && props.transmitted === "false" && props.status === "SAVED") || showJoinBtn || ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") && user.firstAndLastName === props.handled_by) || (props.transmitted !== "false" && user.firstAndLastName === props.transmittedTo && props.status === "SAVED" && addR === "MOLDUE")) {
-
+  if (
+    (user.firstAndLastName === props.created_by &&
+      props.transmitted === "false" &&
+      props.status === "SAVED") ||
+    showJoinBtn ||
+    ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") &&
+      user.firstAndLastName === props.handled_by) ||
+    (props.transmitted !== "false" &&
+      user.firstAndLastName === props.transmittedTo &&
+      props.status === "SAVED" &&
+      addR === "MOLDUE")
+  ) {
     if (props.session === "" && props.session.status !== "OPEN") {
-      btnS =
+      btnS = (
         //  (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => registerUser(e)}
-            className="waves-effect waves-effect-b waves-light btn-small"
+            className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
             loading={props.etat4}
             loadingPosition="end"
             endIcon={<ChatIcon />}
@@ -3452,6 +4357,7 @@ const TraiterDenonciation = (props) => {
             <span>Ouvrir une session</span>
           </LoadingButton>
         </>
+      );
       // :
       //   <div className="card-alert card red lighten-5">
       //     <div className="card-content red-text">
@@ -3460,14 +4366,13 @@ const TraiterDenonciation = (props) => {
       //         </ul>
       //     </div>
       //   </div>
-
     } else if (props.session !== "" && props.session.status === "OPEN") {
-      btnS =
+      btnS = (
         //  (actif !== undefined && actif)  ?
         <>
           <LoadingButton
             onClick={(e) => connect()}
-            className="waves-effect waves-effect-b waves-light btn-small"
+            className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
             loading={props.etat4}
             loadingPosition="end"
             endIcon={<ChatIcon />}
@@ -3477,6 +4382,7 @@ const TraiterDenonciation = (props) => {
             <span>Rejoindre la session</span>
           </LoadingButton>
         </>
+      );
       // :
       // <div className="card-alert card red lighten-5">
       //   <div className="card-content red-text">
@@ -3485,9 +4391,8 @@ const TraiterDenonciation = (props) => {
       //       </ul>
       //   </div>
       // </div>
-
     } else if (props.session !== "" && props.session.status === "CLOSED") {
-      btnS =
+      btnS = (
         //  (actif !== undefined && actif)  ?
         <>
           <LoadingButton
@@ -3502,6 +4407,7 @@ const TraiterDenonciation = (props) => {
             <span>Voir la discussion</span>
           </LoadingButton>
         </>
+      );
       // :
       // <div className="card-alert card red lighten-5">
       //   <div className="card-content red-text">
@@ -3510,29 +4416,427 @@ const TraiterDenonciation = (props) => {
       //       </ul>
       //   </div>
       // </div>
-
     } else {
       btnS = "";
     }
   }
 
+  const enfant = document.querySelector("#dialog-enfant");
+  const confirmation = document.querySelector("#dialog-confirmation");
+  const addFile = document.querySelector("#dialog-addFile");
+  const noAccess = document.querySelector("#dialog-noAccess");
+  const audioExtrat = document.querySelector("#dialog-audio");
+  const contenuExtrat = document.querySelector("#dialog-contenu");
+
+  const enfantOuvert = enfant && enfant.getAttribute("aria-hidden") !== "true";
+  const confirmationOuvert =
+    confirmation && confirmation.getAttribute("aria-hidden") !== "true";
+  const addFileOuvert =
+    addFile && addFile.getAttribute("aria-hidden") !== "true";
+  const noAccessOuvert =
+    noAccess && noAccess.getAttribute("aria-hidden") !== "true";
+  const audioExtratOuvert =
+    audioExtrat && audioExtrat.getAttribute("aria-hidden") !== "true";
+  const contenuExtratOuvert =
+    contenuExtrat && contenuExtrat.getAttribute("aria-hidden") !== "true";
 
   // Sélectionnez tous les éléments avec la classe spécifiée
-  const elements = document.querySelectorAll('.MuiDialog-root');
+  const elements = document.querySelectorAll(".MuiDialog-root");
 
   // Parcourez la liste d'éléments
-  elements.forEach(element => {
-    // Vérifiez si l'élément n'a pas l'attribut aria-hidden="true"
-    if (element.hasAttribute('aria-hidden') || element.getAttribute('aria-hidden') === 'true') {
-      // Masquez l'élément en définissant son style sur "none"
-      element.style.display = 'none';
+  elements.forEach((element) => {
+    if (
+      [
+        "dialog-enfant",
+        "dialog-confirmation",
+        "dialog-addFile",
+        "dialog-noAccess",
+        "dialog-audio",
+        "dialog-contenu",
+      ].includes(element.id)
+    ) {
+      return;
+    }
+
+    if (
+      element.hasAttribute("aria-hidden") &&
+      element.getAttribute("aria-hidden") === "true" &&
+      !enfantOuvert &&
+      !confirmationOuvert &&
+      !addFileOuvert &&
+      !noAccessOuvert &&
+      !audioExtratOuvert &&
+      !contenuExtratOuvert
+    ) {
+      element.style.display = "none";
+    } else {
+      element.style.display = "";
     }
   });
 
+  useEffect(() => {
+    console.log("filesForm.length", filesForm.length);
+    if (inputRef.current) {
+      inputRef.current.value = null;
+      console.log("inputRef.current", inputRef.current.value);
+    }
+    // clearFiles();
+  }, [filesForm.length]);
 
+  const handleFileSubmit = (e, isFile = true) => {
+    e.preventDefault();
+    setExtraFileLoading(true);
+
+    const formData = new FormData();
+    formData.append("claim_id", claim_id);
+
+    if (isFile) {
+      console.log("filesForm", filesForm);
+      for (let index = 0; index < filesForm.length; index++) {
+        formData.append("files", filesForm[index]);
+      }
+    } else if (audioListForm.length) {
+      for (let index = 0; index < audioListForm.length; index++) {
+        const audioFile = new File(
+          [audioListForm[index]],
+          "claim_extra_record_" + today().replaceAll("/", "") + ".ogg",
+          {
+            type: "audio/ogg; codecs=opus",
+          }
+        );
+        formData.append("audios", audioFile);
+      }
+    }
+
+    console.log("formData", formData);
+    addExtraClaimApi(formData)
+      .then((res) => {
+        console.log("res >> ", res);
+        if (isFile) {
+          getFillesApi(currentData?.id, props);
+          clearFiles();
+          notify("Piece joint ajoutée  ", "success");
+        } else {
+          getClaimAudioApi(currentData?.id, props);
+          setOpen2(false);
+          setAudioBox(false);
+          setAudioListForm([]);
+          setAudioListUrlForm([]);
+          notify("Audio ajoutée ", "success");
+        }
+      })
+      .catch((err) => {
+        console.log("err add extra >> ", err);
+        notify("Une erreur s'est produite ", "error");
+      })
+      .then(() => {
+        setExtraFileLoading(false);
+      });
+  };
+  const handleContentSubmit = (e) => {
+    e.preventDefault();
+    setExtraFileLoading(true);
+    const formData = new FormData();
+    formData.append("claim_id", claim_id);
+    formData.append("contenu", extraContent);
+
+    addExtraClaimApi(formData)
+      .then((res) => {
+        console.log("res >> ", res);
+
+        props.extrasChanged(res.data.content.extras ?? []);
+        notify("Contenue joint ajoutée  ", "success");
+        setShowExtraContent(false);
+        setExtraContent("");
+      })
+      .catch((err) => {
+        console.log("err add extra >> ", err);
+        notify("Une erreur s'est produite ", "error");
+      })
+      .then(() => {
+        setExtraFileLoading(false);
+      });
+  };
 
   return (
     <div id="main">
+      {showExtraContent && (
+        <div>
+          <Dialog
+            open={showExtraContent}
+            fullWidth={true}
+            maxWidth="md"
+            onClose={(e) => {
+              setShowExtraContent(false);
+            }}
+            overflowX="hidden"
+            id="dialog-contenu"
+          >
+            <DialogTitle>Ajouter un contenu</DialogTitle>
+            <DialogContent sx={{ overflowX: "hidden" }}>
+              <TextField
+                fullWidth
+                multiline
+                minRows={4}
+                value={extraContent}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setExtraContent(e.target.value);
+                }}
+                placeholder="Saisissez le contenu..."
+              />
+            </DialogContent>
+            {extraContent && extraContent?.trim() !== "" ? (
+              <DialogActions sx={{ overflowX: "hidden" }}>
+                <LoadingButton
+                  onClick={(e) => {
+                    setExtraContent("");
+                    setShowExtraContent(false);
+                  }}
+                  className="waves-effect waves-effect-b waves-light btn-small"
+                  loadingPosition="end"
+                  // loading={extraFileLoading}
+                  endIcon={<CloseIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                  color="secondary"
+                >
+                  Annuler
+                </LoadingButton>
+                <LoadingButton
+                  onClick={(e) => {
+                    handleContentSubmit(e);
+                  }}
+                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                  loading={extraFileLoading}
+                  loadingPosition="end"
+                  endIcon={<SaveIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                  color="primary"
+                >
+                  Enregistrer
+                </LoadingButton>
+              </DialogActions>
+            ) : (
+              <></>
+            )}
+          </Dialog>
+        </div>
+      )}
+      {filesForm.length ? (
+        <div>
+          <Dialog
+            open={filesForm.length ? true : false}
+            fullWidth={true}
+            maxWidth="sm"
+            onClose={(e) => {
+              setFiles([]);
+            }}
+            id="dialog-addFile"
+          >
+            <DialogContent>
+              <DialogContentText>
+                <div className="col l12 s12 pb-2" id="content">
+                  <div className="df sb pb-2">
+                    <b>Ajout de fichier</b>
+                    <CloseIcon
+                      style={{ cursor: "pointer" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    />
+                  </div>
+                </div>
+              </DialogContentText>
+
+              <div className="col l12 m12 s12 file-field input-field">
+                <List component="div" role="group">
+                  {filesForm.map((file, i) => {
+                    return (
+                      <ListItemButton key={i} divider>
+                        <ListItemText
+                          primary={file.name}
+                          secondary={
+                            Math.round((file.size / 1024) * 100) / 100 +
+                            " " +
+                            "Ko"
+                          }
+                        />
+                      </ListItemButton>
+                    );
+                  })}
+                </List>
+                <div
+                  style={{ display: "flex", alignItems: "center" }}
+                  htmlFor="ile"
+                  onClick={(e) => setFiles([])}
+                >
+                  <LoadingButton
+                    onClick={(e) => {
+                      handleFileSubmit(e);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                    loading={extraFileLoading}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#1e2188",
+                      textTransform: "initial",
+                    }}
+                  >
+                    <span>Enregistrer</span>
+                  </LoadingButton>
+
+                  <LoadingButton
+                    onClick={(e) => {
+                      setFiles([]);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small"
+                    // loading={extraFileLoading}
+                    loadingPosition="end"
+                    endIcon={<CloseIcon />}
+                    variant="contained"
+                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                  >
+                    <span>Annuler</span>
+                  </LoadingButton>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      ) : (
+        <></>
+      )}
+      {showAudioBox && (
+        <div>
+          <Dialog
+            open={open2}
+            onClose={() => {
+              setOpen2(false);
+            }}
+            style={{ padding: "16px" }}
+            id="dialog-audio"
+          >
+            <DialogTitle
+              align="center"
+              color={"#1E2188"}
+              fontSize={"23px"}
+              fontWeight={"bold"}
+            >
+              {"Enregistreur vocal Réclamations"}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText
+                align="center"
+                fontSize={"14px"}
+                textAlign={"center"}
+              >
+                {
+                  "Cliquez sur le bouton ci-dessous et parler dans le micro de votre téléphone, ou branchez un casque ou des écouteurs"
+                }
+              </DialogContentText>
+
+              <section className="voice-recorder">
+                <div className="recorder-container">
+                  {audioListUrlForm.map((url, i) => {
+                    return (
+                      <Box
+                        key={i}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          pb: 2,
+                          pt: 2,
+                        }}
+                      >
+                        <audio
+                          src={url}
+                          controls
+                          sx={{ flex: "1", mr: 2, width: "100%" }}
+                        />
+                        <CloseIcon
+                          color="red"
+                          onClick={() => {
+                            setAudioListForm(() => {
+                              return audioListForm.filter(
+                                (va, ind) => ind !== i
+                              );
+                            });
+                            setAudioListUrlForm(() => {
+                              return audioListUrlForm.filter(
+                                (va, inde) => inde !== i
+                              );
+                            });
+                          }}
+                        />
+                      </Box>
+                    );
+                  })}
+                  <RecorderControls
+                    recorderState={recorderState}
+                    handlers={handlers}
+                    closeAction={() => {}}
+                  />
+                </div>
+              </section>
+            </DialogContent>
+            {audioListUrlForm.length ? (
+              <DialogActions>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "end",
+                    alignItems: "center",
+                  }}
+                >
+                  <LoadingButton
+                    onClick={(e) => {
+                      handleFileSubmit(e, false);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                    loading={extraFileLoading}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#1e2188",
+                      textTransform: "initial",
+                    }}
+                  >
+                    <span>Enregistrer</span>
+                  </LoadingButton>
+
+                  <LoadingButton
+                    onClick={(e) => {
+                      setAudioListForm([]);
+                      setAudioListUrlForm([]);
+                      setAudioBox(false);
+                      setOpen2(false);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small"
+                    loadingPosition="end"
+                    // loading={extraFileLoading}
+                    endIcon={<CloseIcon />}
+                    variant="contained"
+                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                  >
+                    <span>Annuler</span>
+                  </LoadingButton>
+                </Box>
+              </DialogActions>
+            ) : (
+              <></>
+            )}
+          </Dialog>
+        </div>
+      )}
+      <audio ref={audioRef} src={currentAudio} hidden />
+
       <div className="row">
         <div className="col s12">
           <div className="container">
@@ -3567,9 +4871,8 @@ const TraiterDenonciation = (props) => {
                         if (props?.match?.params?.code === "all") {
                           handleClose();
                         } else {
-                          handleFerme()
+                          handleFerme();
                         }
-
                       }}
                       TransitionComponent={Transition}
                     >
@@ -3580,7 +4883,7 @@ const TraiterDenonciation = (props) => {
                         }}
                       >
                         <Toolbar>
-                          {props?.match?.params?.code === "all" ?
+                          {props?.match?.params?.code === "all" ? (
                             <IconButton
                               edge="start"
                               color="inherit"
@@ -3589,16 +4892,20 @@ const TraiterDenonciation = (props) => {
                             >
                               <CloseIcon />
                             </IconButton>
-                            :
+                          ) : (
                             <IconButton
                               edge="start"
                               color="inherit"
                               // onClick={handleClose}
                               aria-label="close"
                             >
-                              <NavLink to="/alertes/denonciations"><div className="card-content"><CloseIcon /></div></NavLink>
+                              <NavLink to="/alertes/denonciations">
+                                <div className="card-content">
+                                  <CloseIcon />
+                                </div>
+                              </NavLink>
                             </IconButton>
-                          }
+                          )}
                           <Typography
                             sx={{ ml: 2, flex: 1 }}
                             variant="h6"
@@ -3611,18 +4918,31 @@ const TraiterDenonciation = (props) => {
 
                       <div className="row">
                         {/* first part */}
-
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
-                            <div className="row" id="ententeFiche">
-                              <div className="col s12">
-                                <h5 className="card-title">
+                            <div
+                              className="row df align-items-center"
+                              id="ententeFiche"
+                            >
+                              <div
+                                className="col l6 s12"
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <h5
+                                  className="card-title"
+                                  style={{ margin: 0 }}
+                                >
                                   Fiche de la dénonciation
                                 </h5>
                               </div>
+                              <div className="col l6 m6 s12 df justify-content-end">
+                                {btnConversion}
+                              </div>
                             </div>
                             <div className="row">
-
                               <div className="col s12 m12">
                                 <div className="row">
                                   <div className="col s12 pb-2">
@@ -3633,18 +4953,26 @@ const TraiterDenonciation = (props) => {
 
                                   <div className="row">
                                     <div
+                                      className="col l12 s12 df pb-2"
+                                      id="code"
+                                    >
+                                      {warningConvert}
+                                    </div>
+
+                                    <div
                                       className="col l6 s12 df pb-2"
                                       id="code"
                                     >
-                                      <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                      <PinIcon sx={{ mr: 2 }} />{" "}
+                                      {props.codeClient}
                                     </div>
 
                                     <div
                                       className="col l6 s12 df pb-2"
                                       id="recorded_at"
                                     >
-                                      <CalendarMonthIcon sx={{ mr: 2 }} /> Date
-                                      de réception : {props.recorded_at}
+                                      <CalendarMonthIcon sx={{ mr: 2 }} />
+                                      {formatDate4(props.recorded_at)}
                                     </div>
 
                                     <div
@@ -3707,17 +5035,78 @@ const TraiterDenonciation = (props) => {
                                       className="col l12 s12 pb-2"
                                       id="content"
                                     >
-                                      <div className="df pb-2">
-                                        <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                                        Contenu
-                                      </div>
-                                      <div>{props.content}</div>
-                                    </div>
-                                    <div className="col l12 s12 pb-2" id="">
-                                      {audioList}
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <div className="df pb-2">
+                                          <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                          {"Contenu"}
+                                        </div>
+                                        <span
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            setShowExtraContent(true);
+                                            setExtraContent("");
+                                          }}
+                                          className="pb-2 ml-3 "
+                                          style={{
+                                            cursor: "pointer",
+                                            color: "#1e2188",
+                                          }}
+                                        >
+                                          + Ajouter du contenu
+                                        </span>
+                                      </Box>
 
+                                      <List component="div" role="group">
+                                        <ListItemButton divider>
+                                          <ListItemText
+                                            primary={props.content}
+                                            secondary={
+                                              props.created_by +
+                                              " le " +
+                                              creationDate
+                                            }
+                                          />
+                                        </ListItemButton>
+
+                                        {props.extras?.map((extra) => {
+                                          return extra.contenu ? (
+                                            <ListItemButton
+                                              key={extra.id}
+                                              divider
+                                            >
+                                              <ListItemText
+                                                primary={extra.contenu}
+                                                secondary={
+                                                  extra.user?.firstAndLastName +
+                                                  " le " +
+                                                  formatDate(extra.createdAt)
+                                                }
+                                              />
+
+                                              <Tooltip
+                                                title={
+                                                  "Ce contenu a été ajouté ultérieurement par " +
+                                                  extra.user?.firstAndLastName +
+                                                  " le " +
+                                                  formatDate(extra.createdAt) +
+                                                  ". la plainte etait en etat: " +
+                                                  getStatusLabel(extra.status)
+                                                }
+                                              >
+                                                <Info />
+                                              </Tooltip>
+                                            </ListItemButton>
+                                          ) : (
+                                            <></>
+                                          );
+                                        })}
+                                      </List>
                                     </div>
-                                    <div className="mt-5">{attachmentList}</div>
 
                                     {/* {dimf = props.dossierimf !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <FolderSharedIcon sx={{ mr: 2}}/> {props.dossierimf}</div></>:""}
                                   {crew = props.crew !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <Diversity3Icon sx={{ mr: 2}}/> {props.crew}</div></>:""} */}
@@ -3726,39 +5115,127 @@ const TraiterDenonciation = (props) => {
                               </div>
                             </div>
                           </div>
+
+                          {/* file part */}
+                          <div className="">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-2">
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "row",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: "bold",
+                                        mb: 1,
+                                        mr: 1,
+                                      }}
+                                    >
+                                      {" "}
+                                      Fichiers
+                                    </Typography>
+                                    <label
+                                      htmlFor="ile"
+                                      className="btn btn-primary"
+                                    >
+                                      Ajouter un fichier
+                                      <input
+                                        type="file"
+                                        id="ile"
+                                        ref={inputRef}
+                                        multiple
+                                        sx={{ display: "none" }}
+                                        onChange={(e) => {
+                                          setFiles([...e.target.files]);
+                                        }}
+                                        style={{ display: "none" }}
+                                        accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
+                                      />
+                                    </label>
+                                  </Box>
+                                </div>
+                                <div className="col s12">{attachmentList}</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Audio part */}
+                          <div className="">
+                            <div className="card-panel pb-5">
+                              <div className="row" id="">
+                                <div className="col s12 pb-3">
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "row",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <Typography
+                                      gutterBottom
+                                      variant="body1"
+                                      component="div"
+                                      sx={{
+                                        fontWeight: "bold",
+                                        mb: 1,
+                                        mr: 1,
+                                      }}
+                                    >
+                                      {" "}
+                                      Audios
+                                    </Typography>
+                                    <label
+                                      htmlFor="audio"
+                                      onClick={() => {
+                                        setAudioBox(true);
+                                        setOpen2(true);
+                                      }}
+                                      className="btn btn-primary"
+                                    >
+                                      Ajouter un audio
+                                    </label>
+                                  </Box>
+                                </div>
+                                <div className="col s12">{audioList}</div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
                         {/* second part */}
-
                         <div className="col l6 s12 pb-5" id="ficheReclamation">
                           <div className="card-panel pb-5">
                             <div className="row" id="ententeFiche">
-                              <div className="row">
-                                <h5
-                                  className="col l6 m6 s12 card-title"
-                                >
+                              <div className="row df align-items-center">
+                                <h5 className="col l6 m6 s12 m-0 card-title">
                                   Détails du traitement
                                 </h5>
 
-                                {
-                                  transmettre === "" || btnS === "" ?
-                                    <div className="col l6 m6 s12 df justify-content-end">
-                                      {transmettre}
-                                      {btnS}
-                                    </div>
-                                    :
-                                    <div className="col l6 m6 s12 df justify-content-between">
-                                      {transmettre}
-                                      {btnS}
-                                    </div>
-                                }
+                                {transmettre === "" || btnS === "" ? (
+                                  <div className="col l6 m6 s12 m-0 row">
+                                    {transmettre}
+                                    {btnS}
+                                  </div>
+                                ) : (
+                                  <div className="col l6 m6 s12 m-0 row">
+                                    {transmettre}
+                                    {btnS}
+                                  </div>
+                                )}
                               </div>
                               <div className="col s12 input-field">
                                 Etat: &nbsp;{statusElt}
                               </div>
                             </div>
-
-
 
                             {affectForm}
                             {treatForm}
@@ -3767,6 +5244,67 @@ const TraiterDenonciation = (props) => {
                         </div>
                       </div>
                     </Dialog>
+
+                    <Dialog
+                      open={confirmationOpen}
+                      onClose={(_, reason) => {
+                        if (
+                          reason !== "backdropClick" &&
+                          reason !== "escapeKeyDown"
+                        ) {
+                          handleConfirmationClose();
+                        }
+                      }}
+                      id="dialog-confirmation"
+                      disableEscapeKeyDown
+                      disableBackdropClick
+                      sx={{
+                        "& .MuiBackdrop-root": {
+                          background: "transparent !important",
+                        },
+                      }}
+                    >
+                      <DialogTitle className="modal-title red-text text-darken-2">
+                        Confirmer la conversion de la dénoncation
+                      </DialogTitle>
+                      <DialogContent>
+                        <Typography gutterBottom>
+                          Une fois convertie en <strong>{"suggestion"}</strong>,
+                          cette dénonciation ne pourra plus être modifiée ou
+                          restaurée. Souhaitez-vous vraiment continuer ?
+                        </Typography>
+
+                        <div className="mt-5">
+                          <div className="df justify-content-between">
+                            <Button
+                              disabled={loadingConversion}
+                              onClick={() => setConfirmationOpen(false)}
+                              className="col s6"
+                              color="inherit"
+                            >
+                              Annuler
+                            </Button>
+                            <LoadingButton
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleSubmitConfirmation(e);
+                              }}
+                              className="col s6"
+                              variant="contained"
+                              color="error"
+                              loading={loadingConversion}
+                              loadingPosition="end"
+                            >
+                              <span>Confirmer</span>
+                            </LoadingButton>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <EmailDialog
+                      handleSubmit={handleAssignOrReassign}
+                      maxDelai={maxDelai}
+                    />
                   </div>
                 </div>
               </div>
@@ -3784,6 +5322,7 @@ const mapStateToProps = (state) => {
     isLoading: state.claim_handle.isLoading,
     id: state.claim_handle.id,
     code: state.claim_handle.code,
+    codeClient: state.claim_handle.codeClient,
     recorded_at: state.claim_handle.recorded_at,
     collect: state.claim_handle.collect,
     subject: state.claim_handle.subject,
@@ -3818,9 +5357,16 @@ const mapStateToProps = (state) => {
     etat: state.claim_handle.etat,
     etat2: state.claim_handle.etat2,
     etat3: state.claim_handle.etat3,
+    etat4: state.claim_handle.etat4,
     session: state.claim_handle.session,
     transmitted: state.claim_handle.transmitted,
     solutionExistant: state.claim_handle.solutionExistant,
+    reaffect: state.claim_handle.reaffect,
+    handled_message: state.claim_handle.handled_message,
+    handled_delai: state.claim_handle.handled_delai,
+    extras: state.claim_handle.extras,
+    convertedBy: state.claim_handle.converted_by,
+    convertedAt: state.claim_handle.converted_at,
   };
 };
 
@@ -3920,7 +5466,7 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(etatChanged(etat));
     },
     selectedItemAudioChanged: (selectedItemAudio) => {
-      dispatch(selectedItemAudioChanged(selectedItemAudio))
+      dispatch(selectedItemAudioChanged(selectedItemAudio));
     },
     etat2Changed: (etat2) => {
       dispatch(etat2Changed(etat2));
@@ -3943,6 +5489,37 @@ const mapDispatchToProps = (dispatch) => {
     solutionExistantChanged: (solutionExistant) => {
       dispatch(solutionExistantChanged(solutionExistant));
     },
+    handledShowModalChanged: (isShow) => {
+      dispatch(handledShowModalChanged(isShow));
+    },
+    handledMessageChanged: (message) => {
+      dispatch(handledMessageChanged(message));
+    },
+    handledDelaiChanged: (delai) => {
+      dispatch(handledDelaiChanged(delai));
+    },
+    handledCustomMessageChanged: (close) => {
+      dispatch(handledCustomMessageChanged(close));
+    },
+    extrasChanged: (extra) => {
+      dispatch(extrasChanged(extra));
+    },
+    convertedByChanged: (convertedBy) => {
+      dispatch(convertedByChanged(convertedBy));
+    },
+    convertedAtChanged: (convertedAt) => {
+      dispatch(convertedAtChanged(convertedAt));
+    },
+    codeClientChanged: (codeClient) => {
+      dispatch(codeClientChanged(codeClient));
+    },
+
+    setReaffect: (reaffect) => {
+      dispatch(setReaffect(reaffect));
+    },
   };
 };
-export default connect(mapStateToProps, mapDispatchToProps)(TraiterDenonciation);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(TraiterDenonciation);

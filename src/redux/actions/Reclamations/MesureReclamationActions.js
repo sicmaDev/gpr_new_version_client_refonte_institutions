@@ -290,3 +290,17 @@ export const etat2Changed = (etat2) =>{
         info: 'This action is used to ...'
     }
 };
+export const extrasChanged = (extras) => {
+    return {
+        type: 'CLAIM_APPRAISE_EXTRAS_CHANGED',
+        payload: extras,
+        info: 'This action is used to ...'
+    }
+};
+export const codeClientChanged = (codeClient) => {
+    return {
+        type: 'CLAIM_APPRAISE_CODE_CLIENT_CHANGED',
+        payload: codeClient,
+        info: 'This action is used to ...'
+    }
+};

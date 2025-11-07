@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Select from "react-select";
 import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
@@ -6,6 +6,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
+import EditIcon from "@mui/icons-material/Edit";
+import { Tooltip, IconButton } from "@mui/material";
 import {
     descriptionChanged,
     idChanged,
@@ -34,6 +36,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import { Block, BlockOutlined, PersonOff, TaskAlt } from "@mui/icons-material";
 import { notify } from "../../Utils/alert";
 import { Chip } from "@mui/material";
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 
 const emitter = new ee();
 const styles = {
@@ -56,7 +59,8 @@ const PointsServices = (props) => {
         return clearComponentState();
     }, []);
 
-
+    const topRef = useRef(null); 
+    useAutoScroll(topRef, [props.selectedItem.id], "top");
 
     let columns = [
         {
@@ -111,14 +115,41 @@ const PointsServices = (props) => {
             text: "Actions",
             className: "action",
             align: "left",
+            sortable: true,
             cell: (sp) => {
                 if (sp.deleted) {
-                    return <Chip label="Activer ?" color="primary" onClick={(e) => handleDisable(e, sp.id, false)} icon={<TaskAlt />} />
+                    return (
+                        <>
+                            <div style={{ display: "flex", gap: "5px" }}>
+                                <Tooltip title="Activer">
+                                    <IconButton onClick={(e) => handleDisable(e, sp.id, false)} color="default"><TaskAlt sx={{ color: 'black' }} /></IconButton>
+                                </Tooltip>
+                                <Tooltip title="Modifier">
+                                    <IconButton onClick={handleEditClick(sp)} color="primary"><EditIcon /></IconButton>
+                                </Tooltip>
+                                <Tooltip title="Supprimer">
+                                    <IconButton onClick={(e) => handleModal(e, sp)} color="error"><DeleteIcon /></IconButton>
+                                </Tooltip>
+                            </div>
+                        </>
+                    )
                 } else {
-                    return <Chip label="Désactiver ?" onClick={(e) => handleDisabledModal(e, sp.id)} icon={<Block />} variant="outlined" />
-
+                    return (
+                        <>
+                            <div style={{ display: "flex", gap: "5px" }}>
+                                <Tooltip title="Desactiver">
+                                    <IconButton onClick={(e) => handleDisabledModal(e, sp.id)} color="default"><Block /></IconButton>
+                                </Tooltip>
+                                <Tooltip title="Modifier">
+                                    <IconButton onClick={handleEditClick(sp)} color="primary"><EditIcon /></IconButton>
+                                </Tooltip>
+                                <Tooltip title="Supprimer">
+                                    <IconButton onClick={(e) => handleModal(e, sp)} color="error"><DeleteIcon /></IconButton>
+                                </Tooltip>
+                            </div>
+                        </>
+                    )
                 }
-
             }
         },
     ];
@@ -268,20 +299,20 @@ const PointsServices = (props) => {
 
         modalify("Confirmation", "Voulez-vous vraiment désactivé ce point de service ?", "confirm", (e) => { handleDisable(e, spId) })
     }
-    const handleModal = (e) => {
+    const handleModal = (e, sp) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la suppression de cet élément ?", "confirm", handleDelete)
+        modalify("Confirmation", "Confirmez vous la suppression de cet élément ?", "confirm", (e) => handleDelete(e, sp))
     }
     const handleEditModal = (e) => {
         e.preventDefault()
         modalify("Confirmation", "Confirmez vous la modification de cet élément ?", "confirm", handleEdit)
     }
-    const handleDelete = (e) => {
+    const handleDelete = (e, sp) => {
         e.preventDefault()
 
         props.etat3Changed(true)
-        suppression(props).then(() => {
-            handleCancel(e)
+        suppression(props, sp).then(() => {
+            handleCancel(e) 
         })
 
         props.psErrors(errors)
@@ -302,6 +333,10 @@ const PointsServices = (props) => {
             });
 
     }
+    const handleEditClick = (sp) => (e) => {
+        rowClickedHandler(e, sp, null)
+    }
+
     const rowClickedHandler = (event, data, rowIndex) => {
         props.idChanged(data.id ? data.id : "")
         props.typeChanged(data.type ? data.type : "")
@@ -317,18 +352,6 @@ const PointsServices = (props) => {
     let buttons = props.selectedItem.id !== undefined ?
 
         (<>
-            <LoadingButton
-                className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                onClick={(e) => handleModal(e)}
-                loading={props.etat3}
-                loadingPosition="end"
-                endIcon={<DeleteIcon />}
-                variant="contained"
-                sx={{ textTransform: "initial" }}
-            >
-                <span>Supprimer</span>
-            </LoadingButton>
-
             <LoadingButton
                 className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
                 onClick={(e) => handleCancel(e)}
@@ -372,8 +395,8 @@ const PointsServices = (props) => {
 
     return (
         <>
-            <div className="card-panel">
-                <form className="paaswordvalidate" >
+            <div className="card-panel" ref={topRef}>
+                <form className="paaswordvalidate">
                     <div className="row">
                         <div className="col s12">
                             <h6 className="card-title">{titleText} un point de service</h6>
@@ -483,11 +506,11 @@ const PointsServices = (props) => {
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className={"responsive-table table-xlsx app-ps"}
+                                            className={"responsive-table table-xlsx app-ps no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
-                                            onRowClicked={rowClickedHandler}
+                                            // onRowClicked={rowClickedHandler}
                                             onChange={tableChangeHandler}
                                         />
                                     </div>

@@ -283,10 +283,25 @@ const ListeReclamationsReducer = (state = initialState, action) => {
                 ...state,
                 crew: action.payload,
             };
+        case 'CLAIM_HANDLE_CONVERTED_AT_CHANGED':
+            return {
+                ...state,
+                converted_at: action.payload,
+            };
+        case 'CLAIM_HANDLE_CONVERTED_BY_CHANGED':
+            return {
+                ...state,
+                converted_by: action.payload,
+            };
         case 'CLAIM_LIST_SESSION_CHANGED':
             return {
                 ...state,
                 session: action.payload,
+            };
+        case 'CLAIM_LIST_EXTRAS_CHANGED':
+            return {
+                ...state,
+                extras: action.payload,
             };
         default:
             return state

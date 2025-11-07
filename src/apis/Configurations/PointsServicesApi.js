@@ -114,6 +114,8 @@ export const ajout = async (data, props) => {
 }
 
 export const modification = async (data, props) => {
+    console.log("data", data.id)
+    console.log("props", props.id)
 
     const config = {
         method: 'put',
@@ -144,11 +146,11 @@ export const modification = async (data, props) => {
 
 }
 
-export const suppression = async (props) => {
+export const suppression = async (props, data) => {
 
     const config = {
         method: 'delete',
-        url: DELETE_SETTING_API.replace("id",props.id),
+        url: DELETE_SETTING_API.replace("id",data.id),
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',

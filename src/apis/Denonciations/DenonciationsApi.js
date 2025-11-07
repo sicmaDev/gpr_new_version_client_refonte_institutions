@@ -20,6 +20,9 @@ const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const TRANSMISSION_DENUNCIATION_API = HOST + "api/v1/denunciation/transmit_to"
 const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
 const AUDIOS_DENUNCIATION_API = HOST + "api/v1/claim/getAudiosBy/%s"
+const CONVERT_DENUNCIATION_API = HOST + "api/v1/denunciation/convert"
+const DELETE_DENUNCIATION_API = HOST + "api/v1/denunciation/delete/{id}"
+
 
 
 
@@ -37,7 +40,7 @@ export const listeTousStatuts = async (props) => {
     await axios(config)
         .then(function (response) {
 
-            // console.log("response.data.content",response.data.content)
+            console.log("response.data.content",response.data.content)
             props.itemsChanged(response.data.content)
             return response.data.content
         })
@@ -82,7 +85,7 @@ export const listeByStatut = async (props, state) => {
     await axios(config)
         .then(function (response) {
 
-            // console.log("response",response.data.content)
+            console.log("response____",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
@@ -105,7 +108,7 @@ export const listeTreat = async (props) => {
     await axios(config)
         .then(function (response) {
 
-            // console.log("responsetreat",response.data.content)
+            console.log("responsetreat",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
@@ -215,7 +218,7 @@ export const downloadAudioApi = async (data, filename) => {
         // console.log("response audio ", response.data);
         return response.data;
     } catch (error) {
-        notify("Erreur - Veuillez réessayer!", "error");
+        notify("Erreur - Veuillez réessayer! ", "error");
         // console.log("erreur",error)
     }
     // await axios(config)
@@ -584,4 +587,72 @@ export const addDenunciationApiOffline = async (data, props) => {
     props.etat2Changed(false)
 
     notify("Bravo - Dénonciation enregistrée", "success")
+}
+
+
+export const downloadFillesApi2 = async (data, filename) => {
+    const config = {
+        method: 'get',
+        url: FILES_DOWNLOAD_API.replace("%s", data),
+        responseType: 'blob',
+        headers: {
+            'Accept': 'application/octet-stream',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token'),
+        },
+    };
+
+    try {
+        const response = await axios(config);
+        return response.data;
+    } catch (error) {
+        notify("Erreur - Veuillez réessayer!", "error");
+        return null;
+    }
+}
+
+export const deleteDenunciationApi = async (id, props) => {
+    console.log("dataId", id)
+    const config = {
+        method: 'delete',
+        url: DELETE_DENUNCIATION_API.replace("{id}", id),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    };
+    await axios(config)
+        .then(function (response) {
+            // notify("Bravo - Réclamation supprimé", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+    );
+}
+
+export const convertDenunciationApi = async (data, props) => {
+    console.log("datadata", data)
+    const config = {
+        method: 'post',
+        url: CONVERT_DENUNCIATION_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    await axios(config)
+        .then(function (response) {
+            notify("Bravo - Réclamation convertie avec succès", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+    );
 }

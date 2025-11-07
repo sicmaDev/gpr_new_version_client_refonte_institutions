@@ -4,6 +4,8 @@ import ReactDatatable from "@ashvin27/react-datatable";
 import DatePicker, { registerLocale, setDefaultLocale } from "react-datepicker";
 import fr from 'date-fns/locale/fr';
 import RecordingsList from "../../components/recordings-list";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import "react-datepicker/dist/react-datepicker.css";
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -12,6 +14,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
+import { modalify } from "../../Utils/modal";
 import {
     addressChanged,
     claimRecordErrors,
@@ -55,12 +58,13 @@ import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import { notify } from "../../Utils/alert";
 import axios from "axios";
-import { addDenunciationApi, addDenunciationApiOffline, addTempDenunciationApi, addTempDenunciationApiOffline, downloadAudioApi, downloadFillesApi, getDenunAudioApi, getFillesApi, listeByStatut, listeByStatutOffline } from "../../apis/Denonciations/DenonciationsApi";
+import { addDenunciationApi, addDenunciationApiOffline, addTempDenunciationApi, addTempDenunciationApiOffline, downloadAudioApi, downloadFillesApi, getDenunAudioApi, getFillesApi, listeByStatut, deleteDenunciationApi, listeByStatutOffline } from "../../apis/Denonciations/DenonciationsApi";
 import { licenseInfo } from "../../apis/LoginApi";
 import useRecorder from "../../hooks/useRecorder";
 import RecorderControls from "../../components/recorder-controls";
 import { CancelOutlined, Mic } from "@mui/icons-material";
 import { downloadFilesApi } from "../../apis/WhatsappApi";
+import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 // import { licenseControl } from "../../Utils/license";
 // import DateInput from "../ui/DateInput";
 //import IntlTelInput from 'react-intl-tel-input';
@@ -79,11 +83,14 @@ const styles = {
     }),
     menu: provided => ({ ...provided, zIndex: 9999 })
 };
+
+
 const EnregistrerDenonciation = (props) => {
     const [open, setOpen] = React.useState(false)
     const [files, setFiles] = React.useState([]);
     const [underSubjectOptions, setUnderSubjectOptions] = useState([]);
-
+    
+    const [isLoading, setIsLoading] = useState(false)
     const { recorderState, ...handlers } = useRecorder();
     let { audio } = recorderState;
 
@@ -118,12 +125,26 @@ const EnregistrerDenonciation = (props) => {
 
 
     useEffect(() => {
+        KTApp.blockPage({
+          overlayColor: '#000000',
+          type: 'v2',
+          state: 'danger',
+          message: 'En cours de chargement...'
+        })
+        setIsLoading(true); 
+        
         if (mode === 1) {
             props.itemsChanged([])
-            listeByStatut(props, "TEMP_SAVED").then((r) => { });
+            listeByStatut(props, "TEMP_SAVED").then((r) => { }).finally(() => {
+                setIsLoading(false);
+                KTApp.unblockPage();
+            });
         } else {
             props.itemsChanged([])
-            listeByStatutOffline(props, "TEMP_SAVED").then((r) => { });
+            listeByStatutOffline(props, "TEMP_SAVED").then((r) => { }).finally(() => {
+                setIsLoading(false);
+                KTApp.unblockPage();
+            });
         }
 
         window.$('.buttons-excel').html('<span><i class="fa fa-file-excel"></i></span>')
@@ -138,6 +159,7 @@ const EnregistrerDenonciation = (props) => {
         window.$('#as-react-datatable tr').addClass('cursor-pointer')
         window.$('.tooltipped').tooltip();
 
+        clearComponentState();
     }, []);
 
     const [open2, setOpen2] = React.useState(false);
@@ -320,6 +342,33 @@ const EnregistrerDenonciation = (props) => {
     if (directionOptions !== "") { unitOptions.push({ "label": "Direction", "options": directionOptions }) }
     if (agencyOptions !== "") { unitOptions.push({ "label": "Agence", "options": agencyOptions }) }
     if (guichetOptions !== "") { unitOptions.push({ "label": "Guichet", "options": guichetOptions }) }
+    
+    const [loadingId, setLoadingId] = useState(null);
+    const handleEditClick = (claim) => (e) => {
+        rowClickedHandler(e, claim, null);
+    };
+    const handleModal = (e, claim) => {
+        e.preventDefault();
+        modalify(
+            "Confirmation",
+            "Confirmez vous la suppression de cet élément ?",
+            "confirm",
+            (e) => handleDelete(e, claim)
+        );
+    };
+    const handleDelete = (e, claim = null) => {
+        e.preventDefault();
+
+        console.log("claim.id", claim.id);
+        setLoadingId(claim.id);
+        deleteDenunciationApi(claim.id, props).then(() => {
+            listeByStatut(props, "TEMP_SAVED").then(() => {});
+
+            handleCancel(e);
+            notify("Suppression effectuée avec succès", "success");
+            setTimeout(() => setLoadingId(null), 500);
+        });
+    };
 
 
     const handleChange = (e) => {
@@ -665,7 +714,6 @@ const EnregistrerDenonciation = (props) => {
             align: "left",
             sortable: true,
         },
-
         {
             key: "createdAtFormated",
             text: "Sauvegardé le",
@@ -682,6 +730,36 @@ const EnregistrerDenonciation = (props) => {
                 }).format(new Date(claim.createdAt));
                 return (createdAt);
             }
+        },
+        {
+            key: "action",
+            text: "Actions",
+            className: "action",
+            align: "left",
+            sortable: true,
+            cell: (claim, index) => {
+            const isLoading = loadingId === claim.id;
+            return (
+                <div style={{ display: "flex", gap: "5px" }}>
+                <Tooltip title="Modifier">
+                    <IconButton onClick={handleEditClick(claim)} color="primary">
+                    <EditIcon />
+                    </IconButton>
+                </Tooltip>
+                {mode === 1 && (
+                    <Tooltip title="Supprimer">
+                    <IconButton
+                        onClick={(e) => handleModal(e, claim)}
+                        color="error"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? <CircularProgress size={20} /> : <DeleteIcon />}
+                    </IconButton>
+                    </Tooltip>
+                )}
+                </div>
+            );
+            },
         },
     ];
 
@@ -1067,11 +1145,11 @@ const EnregistrerDenonciation = (props) => {
                                                 compléter</h5></div>
                                             <div className="col s12">
                                                 <ReactDatatable
-                                                    className={"responsive-table"}
+                                                    className={"responsive-table no-hover"}
                                                     config={config}
                                                     records={content}
                                                     columns={columns}
-                                                    onRowClicked={rowClickedHandler}
+                                                    // onRowClicked={rowClickedHandler}
                                                 />
                                             </div>
                                         </div>
@@ -1091,7 +1169,7 @@ const EnregistrerDenonciation = (props) => {
                                                 <div className="col l12 m12 s12">
                                                     <div className="row">
                                                         <div className="col l12 m12 s12"><h6 className="card-title">Détails de la dénonciation</h6></div>
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l6 m12 s12 input-field" style={{ display: 'none' }}>
                                                             <input id="code" name="code" type="text" placeholder=""
                                                                 className="validate"
                                                                 value={props.code}
@@ -1103,7 +1181,7 @@ const EnregistrerDenonciation = (props) => {
                                                                     className="error">{(props.errors !== undefined) ? props.errors.code : ""}</div>
                                                             </small>
                                                         </div>
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l12 m12 s12 input-field">
                                                             <DatePicker
                                                                 // placeholderText="Date et Heure de réception"
                                                                 withPortal
@@ -1265,7 +1343,7 @@ const EnregistrerDenonciation = (props) => {
                                                                 placeholder="Sélectionner le point de service"
                                                                 onChange={handleChange}
                                                             />
-                                                            <label htmlFor="unit" className={"active"}>Unité opérationnelle ou Point de service
+                                                            <label htmlFor="unit" className={"active"}>Point de service
                                                                 indexé(<span
                                                                     className="red-text darken-2 ">*</span>)</label>
                                                             <small className="errorTxt4">

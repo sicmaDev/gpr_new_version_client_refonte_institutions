@@ -5,10 +5,24 @@ import { notify } from "../../Utils/alert";
 import { HOST, REPORT_HOST } from "../../Utils/globals";
 
 const REPORT_GLOBAL_API = HOST + "api/v1/report/global"
+const REPORT_TEMPLATE_API = HOST + "api/v1/report/templates"
 const REPORT_GLOBAL_API_FILTRES = HOST + "api/v1/report/filtered"
 const REPORT_NEW_VERSION_API = REPORT_HOST + "api/v1/exportReport"
 const REPORT_DELETE_API = REPORT_HOST + "api/v1/delete"
 
+export const reportTemplateApi = ()=>{
+    
+     const config = {
+        method: 'get',
+        url: REPORT_TEMPLATE_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    return axios(config);
+}
 
 export const reportApi = async (props, setData) => {
     KTApp.blockPage({
@@ -158,6 +172,50 @@ export const reportNewVersionExport = async (filename, generateName, body) => {
 
             // console.log("erreurREPORTfiltres",error)
         });
+}
+
+export const findTemplateApi = (id)=>{
+    
+     const config = {
+        method: 'get',
+        url: REPORT_TEMPLATE_API+"/"+id,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    return axios(config);
+}
+
+export const createOrUpdateTemplateApi = (data)=>{
+    
+     const config = {
+        method: 'post',
+        url: REPORT_TEMPLATE_API+"/update",
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data
+    };
+    return axios(config);
+}
+
+
+export const deleteTemplateApi = (id)=>{
+    
+     const config = {
+        method: 'delete',
+        url: REPORT_TEMPLATE_API+"/"+id,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    return axios(config);
 }
 
 export const deleteFileAfterDownload = async (generateName) => {

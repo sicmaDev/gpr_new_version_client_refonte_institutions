@@ -84,7 +84,7 @@ export let disabled = async (props,id,isDisabled) => {
 }
 
 export const ajout = async (data, props) => {
-
+    
     const config = {
         method: 'post',
         url: ADD_SETTING_API,
@@ -147,17 +147,25 @@ export const modification = async (data, props) => {
 
         })
         .catch(function (error) {
+            console.log("erre", error)
             props.etatChanged(false)
-            notify("Erreur - Veuillez réessayer!", "error");
+            // if (error.response.data.content !=="") {
+            //     notify(error.response.data.content.message, "error");
+            // } else {
+            //     notify("Erreur - Veuillez réessayer!", "error");
+            // }
         });
 
 }
 
-export const suppression = async (props) => {
+export const suppression = async (data, props) => {
 
+    console.log("props", props);
+    console.log("propsID", props.id);
+    console.log("dataID", data.id);
     const config = {
         method: 'delete',
-        url: DELETE_SETTING_API.replace("id",props.id),
+        url: DELETE_SETTING_API.replace("id", data.id),
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
@@ -167,17 +175,18 @@ export const suppression = async (props) => {
 
     await axios(config)
         .then(function (response) {
+            console.log("response1", response);
+
             saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
 
             props.etat3Changed(false)
-           
-            notify("Bravo - Utilisateur supprimé", "success");
-           
+            notify("Bravo - Utilisateur supprimé", "success");    
             all(props)
-
         })
         .catch(function (error) {
+            console.log("response2", error);
+
             props.etat3Changed(false)
             if (error.response.data.content !=="") {
                 notify(error.response.data.content.message, "error");

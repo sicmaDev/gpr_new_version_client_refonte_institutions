@@ -60,7 +60,7 @@ const Bot = (props) => {
         createSession.showMessage = false
 
 
-        axios.get(`http://localhost:21465/api/${number}_session/qrcode-session`, {
+        axios.get(`https://wppsicma.gprserver.com:8081/api/${number}_session/qrcode-session`, {
             headers: {
                 'Authorization': "Bearer " + token
             }
@@ -164,7 +164,7 @@ const Bot = (props) => {
 
     const getAllSessions = () => {
 
-        axios.get(`http://localhost:21465/api/THISISMYSECURETOKEN/show-all-sessions`).then(({ data }) => {
+        axios.get(`https://wppsicma.gprserver.com:8081/api/THISISMYSECURETOKEN/show-all-sessions`).then(({ data }) => {
             const result = data?.response?.map((da) => {
                 return { name: da.split("_wpp_")[1] ?? "Non Defini", number: da.split("_wpp_")[0], session: da, color: "info", message: 'No check', status: false }
             }) ?? []
@@ -179,7 +179,7 @@ const Bot = (props) => {
 
         generateToken(session).then(({ data }) => {
             const token = data.token
-            axios.get(`http://localhost:21465/api/${session}/check-connection-session`, {
+            axios.get(`https://wppsicma.gprserver.com:8081/api/${session}/check-connection-session`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -205,7 +205,7 @@ const Bot = (props) => {
 
         generateToken(session).then(({ data }) => {
             const token = data.token
-            axios.post(`http://localhost:21465/api/${session}/logout-session`, {}, {
+            axios.post(`https://wppsicma.gprserver.com:8081/api/${session}/logout-session`, {}, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -338,7 +338,9 @@ const Bot = (props) => {
         console.log('data', data)
     }
 
-
+    
+    const [actif, setActif] = useState();
+  
     const licenseControl = async () => {
         try {
             await licenseInfo();

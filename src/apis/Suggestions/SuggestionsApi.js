@@ -12,6 +12,7 @@ const LIST_SUGGESTION_API_BY_STATE = HOST + "api/v1/suggestion/list/state"
 const FILES_SUGGESTION_API = HOST + "api/v1/suggestion/getFilesBy/%s"
 const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const AUDIOS_CLAIM_API = HOST + "api/v1/suggestion/getAudiosBy/%s"
+const DELETE_SUGGESTION_API = HOST + "api/v1/suggestion/delete/{id}"
 
 
 export const listeTousStatuts = async (props) => {
@@ -76,6 +77,8 @@ export const addTempSuggestionApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etatChanged(false)
+
+            console.log("responseaan", response)
             if (response.data.status) {
                 notify("Bravo - Suggestion sauvegardée", "success");
                 listeByStatut(props, "TEMP_SAVED")
@@ -103,23 +106,45 @@ export const addSuggestionApi = async (data, props) => {
         },
         data: data
     };
-    await axios(config)
-        .then(function (response) {
-            props.etat2Changed(false)
-            if (response.data.status) {
-                notify("Bravo - Suggestion ajoutée", "success");
-                listeByStatut(props, "TEMP_SAVED")
-            } else {
-                notify("Erreur - Veuillez réessayer!", "error");
-            }
+        // await axios(config)
+        // .then(function (response) {
+        //     console.log("response<<<<", response)
+            
+        //     props.etat2Changed(false)
+        //     if (response.data.status) {
+        //         notify("Bravo - Suggestion ajoutée", "success");
+        //         listeByStatut(props, "TEMP_SAVED")
+        //     } else {
+        //         notify("Erreur - Veuillez réessayer!", "error");
+        //     }
 
-            // listeTousStatuts(props)
-        })
-        .catch(function (error) {
-            props.etat2Changed(false)
-            notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreur", error)
-        });
+        //     // listeTousStatuts(props)
+        // })
+        // .catch(function (error) {
+        //     props.etat2Changed(false)
+        //     notify("Erreur - Veuillez réessayer!", "error");
+        //     // console.log("erreur", error)
+        // });
+    try {
+        const response = await axios(config);
+        console.log("response<<<<", response);
+
+        props.etat2Changed(false);
+
+        if (response.data.status) {
+        notify("Bravo - Suggestion ajoutée", "success");
+        listeByStatut(props, "TEMP_SAVED");
+        } else {
+        notify("Erreur - Veuillez réessayer!", "error");
+        }
+
+        return response; // 🔥 important : on retourne la réponse
+
+    } catch (error) {
+        props.etat2Changed(false);
+        notify("Erreur - Veuillez réessayer!", "error");
+        throw error; // 🔥 on renvoie l'erreur pour pouvoir la gérer
+    }
 }
 
 export const treatSuggestionApi = async (data, props) => {
@@ -226,7 +251,6 @@ export const listeByStatutOffline = async (props, state) => {
     props.itemsChanged(sugsTemp)
 
     return sugsTemp
-
 }
 
 export const listeTousStatutsOffline = async (props) => {
@@ -338,8 +362,6 @@ export const addSuggestionApiOffline = async (data, props) => {
         // console.log("dataasave",data)
         sugs.push(data);
         saveItemToLocalStorage(JSON.stringify(sugs), "sugs-TS")
-
-
     } else {
         let sugsTemp = sugs.filter((e) => { return e.code !== data["code"] })
         let sugsF = sugs.filter((e) => { return e.code === data["code"] })
@@ -349,9 +371,32 @@ export const addSuggestionApiOffline = async (data, props) => {
         saveItemToLocalStorage(JSON.stringify(sugsTemp), "sugs-TS")
     }
 
-
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etat2Changed(false)
 
     notify("Bravo - Réclamation enregistrée", "success")
+}
+
+
+export const deleteSuggestionApi = async (id, props) => {
+    console.log("dataId", id)
+    const config = {
+        method: 'delete',
+        url: DELETE_SUGGESTION_API.replace("{id}", id),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    };
+    await axios(config)
+        .then(function (response) {
+            // notify("Bravo - Réclamation supprimé", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+    );
 }

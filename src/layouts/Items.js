@@ -320,7 +320,7 @@ export const Items = (props) => {
                 </List>
             </Collapse>
         </> : "";
-    let Whatsapp = (hbt.includes("H13") || addR === "PILOTE" || addR === "DE") && mode === 1 ?
+    let Whatsapp = (addR === "PILOTE" || addR === "DE") && mode === 1 ?
         <NavLink to="/whatsapp/liste" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
             <ListItemButton >
                 <ListItemIcon>

@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 //console.log("HOST CLAIM: " + HOST)
 const ADD_TEMP_CLAIM_API = HOST + "api/v1/claim/save_temp"
 const ADD_CLAIM_API = HOST + "api/v1/claim/add"
+const EXTRA_CLAIM_API = HOST + "api/v1/claim/add/extra"
 const AFFECT_CLAIM_API = HOST + "api/v1/claim/affectTreatment"
 const TREAT_CLAIM_API = HOST + "api/v1/claim/treatClaim"
 const APPROVE_CLAIM_SOLUTION_API = HOST + "api/v1/claim/approuvedSolution"
@@ -17,6 +18,7 @@ const ADD_RECOURS_API = HOST + "api/v1/claim/litigate"
 const LIST_ALL_CLAIM_API = HOST + "api/v1/claim/list"
 const LIST_CLAIM_API_TO_TREAT = HOST + "api/v1/claim/listTreat"
 const LIST_CLAIM_DETAILS_API_TO_TREAT = HOST + "api/v1/claim/params/details"
+const LIST_CLAIM_HISTORIQUE_API = HOST + "api/v1/historique-affectation/list/%s"
 const LIST_CLAIM_API_BY_STATE = HOST + "api/v1/claim/list/state"
 const LIST_CLAIM_API_TO_ASSURE_SATISFACTION = HOST + "api/v1/claim/listAssuranceSatisfaction"
 const CLASSIFY_CLAIM_API = HOST + "api/v1/claim/classedClaim"
@@ -27,6 +29,8 @@ const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const AUDIOS_CLAIM_API = HOST + "api/v1/claim/getAudiosBy/%s"
 const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
 const START_SESSION_API = HOST + "api/v1/chat/init"
+const CONVERT_CLAIM_API = HOST + "api/v1/claim/convert"
+const DELETE_CLAIM_API = HOST + "api/v1/claim/delete/{id}"
 
 
 
@@ -69,7 +73,7 @@ export const listeByStatut = async (props, state) => {
     await axios(config)
         .then(function (response) {
             // console.log("mesureliste",response.data.content)
-            // console.log("response",response.data.content)
+            console.log("response___________",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
@@ -92,8 +96,8 @@ export const listeTreat = async (props) => {
     };
     await axios(config)
         .then(function (response) {
+            console.log("responsetreat", response.data.content)
 
-            // console.log("responsetreat",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
@@ -101,8 +105,8 @@ export const listeTreat = async (props) => {
         .catch(function (error) {
             // console.log("responsetreaterror",error)
             return error;
-
-        });
+        }
+    );
 }
 
 export const detailsTreat = async (props, code) => {
@@ -123,6 +127,35 @@ export const detailsTreat = async (props, code) => {
         .catch(function (error) {
             // console.log("detailerror",error)
             return error;
+
+        });
+}
+
+export const getClaimHistorique = async (props, claimId) => {
+    const config = {
+        method: 'get',
+        url: LIST_CLAIM_HISTORIQUE_API.replace("%s",claimId),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    props.isLoadingChanged(true)
+    props.itemsChanged([])
+    axios(config)
+        .then(({ data }) => {
+            console.log('data<>', data.content)
+            props.isSuccessChanged(true)
+            props.messageChanged('Liste des historiques success')
+            props.itemsChanged(data.content)
+        })
+        .catch((error) => {
+            props.isSuccessChanged(false)
+            props.messageChanged(`Erreur: ${error}`)
+
+        }).finally(() => {
+            props.isLoadingChanged(false)
 
         });
 }
@@ -177,7 +210,7 @@ export const PARTIAL_SATISFIED = async (props) => {
 
 
 export const addTempClaimApi = async (data, props) => {
-    // console.log("data",data)
+    // console.log("data____",data)
 
     const config = {
         method: 'post',
@@ -194,6 +227,7 @@ export const addTempClaimApi = async (data, props) => {
             // console.log("reponseaan", response)
             props.etatChanged(false)
             if (response.data.status) {
+                console.log("data____", response.data.content)
                 notify("Bravo - Réclamation sauvegardée", "success");
                 listeByStatut(props, "TEMP_SAVED")
             } else {
@@ -237,6 +271,22 @@ export const addClaimApi = async (data, props) => {
         });
 }
 
+export const addExtraClaimApi = async (data, props) => {
+    console.log("dataextra",data)
+    const config = {
+        method: 'post',
+        url: EXTRA_CLAIM_API,
+        data,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    
+    return axios(config)
+}
+
 export const affectClaimApi = async (data, props) => {
 
     const config = {
@@ -256,14 +306,13 @@ export const affectClaimApi = async (data, props) => {
                 notify("Bravo - Réclamation affectée", "success");
                 listeTreat(props)
             } else {
-                notify("Erreur - Veuillez réessayer!", "error");
+                notify("Erreur - Veuillez réessayer", "error");
             }
-
         })
         .catch(function (error) {
             props.etatChanged(false)
             notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreur",error)
+            console.log("erreur",error);
         });
 }
 
@@ -537,10 +586,11 @@ export const getFillesApi = async (data, props) => {
             // notify("Bravo - Mesure de satisfaction effectuée", "success");
             // console.log("response data content",response.data.content)
             props.selectedItemFilesChanged(response.data.content)
+            // notify("Succès - Chargement des fichiers réussi !!?!", "success");
         })
         .catch(function (error) {
             notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreur",error)
+            console.log("erreur",error);
         });
 }
 
@@ -582,6 +632,26 @@ export const downloadFillesApi = async (data, filename) => {
         });
 }
 
+export const downloadFillesApi2 = async (data, filename) => {
+    const config = {
+        method: 'get',
+        url: FILES_DOWNLOAD_API.replace("%s", data),
+        responseType: 'blob',
+        headers: {
+            'Accept': 'application/octet-stream',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token'),
+        },
+    };
+
+    try {
+        const response = await axios(config);
+        return response.data;
+    } catch (error) {
+        notify("Erreur - Veuillez réessayer!", "error");
+        return null;
+    }
+}
+
 export const getClaimAudioApi = async (data, props) => {
 
     const config = {
@@ -597,7 +667,7 @@ export const getClaimAudioApi = async (data, props) => {
         .then(function (response) {
 
             // notify("Bravo - Mesure de satisfaction effectuée", "success");
-            // console.log("response data content",response.data)
+            console.log("response data content",response.data)
             props.selectedItemAudioChanged(response.data)
         })
         .catch(function (error) {
@@ -625,7 +695,7 @@ export const downloadAudioApi = async (data, filename) => {
         // console.log("response audio ", response.data);
         return response.data;
     } catch (error) {
-        notify("Erreur - Veuillez réessayer!", "error");
+        notify("Erreur - Veuillez réessayer le téléchargement!", "error");
         // console.log("erreur",error)
     }
     // await axios(config)
@@ -768,4 +838,51 @@ export const addClaimApiOffline = async (data, props) => {
     props.etat2Changed(false)
 
     notify("Bravo - Réclamation enregistrée", "success")
+}
+
+export const deleteClaimApi = async (id, props) => {
+    console.log("dataId", id)
+    const config = {
+        method: 'delete',
+        url: DELETE_CLAIM_API.replace("{id}", id),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    };
+    await axios(config)
+        .then(function (response) {
+            // notify("Bravo - Réclamation supprimé", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+    );
+}
+
+export const convertClaimApi = async (data, props) => {
+    console.log("datadata", data)
+    const config = {
+        method: 'post',
+        url: CONVERT_CLAIM_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    await axios(config)
+        .then(function (response) {
+            notify("Bravo - Réclamation convertie avec succès", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+    );
 }

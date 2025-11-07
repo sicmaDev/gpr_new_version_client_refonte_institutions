@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
@@ -6,7 +6,9 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import WarningIcon from '@mui/icons-material/Warning';
+import WarningIcon from "@mui/icons-material/Warning";
+import TextField from "@mui/material/TextField";
+import { KTApp } from "../../Utils/blockui";
 import {
   addressChanged,
   agentsChanged,
@@ -55,9 +57,11 @@ import {
   createdAtOnlineChanged,
   underSubjectChanged,
   sessionChanged,
+  extrasChanged,
 } from "../../redux/actions/Reclamations/ListeReclamationsActions";
 import http from "../../apis/http-common";
 import {
+  addExtraClaimApi,
   downloadAudioApi,
   downloadFillesApi,
   getClaimAudioApi,
@@ -78,7 +82,11 @@ import {
   handlePrintAvance,
 } from "../../Utils/tables";
 
-import { table2XLSX, table2XLS2X, table2XLS2XF } from "../../Utils/tabletoexcel";
+import {
+  table2XLSX,
+  table2XLS2X,
+  table2XLS2XF,
+} from "../../Utils/tabletoexcel";
 // import { useLocation } from "react-router-dom";
 
 import Button from "@mui/material/Button";
@@ -118,15 +126,42 @@ import timelineOppositeContentClasses from "@mui/lab/TimelineOppositeContent";
 import {
   formatDate,
   formatDate2,
+  formatDate3,
+  formatDate4,
   guessExtension,
   loadItemFromLocalStorage,
   loadItemFromSessionStorage,
   today,
 } from "../../Utils/utils";
-import { Avatar, DialogContent, DialogContentText } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  CardContent,
+  Grid,
+  Tooltip,
+  List,
+  ListItemButton,
+  ListItemText,
+  Card,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
+import {
+  FileDownload,
+  History,
+  Info,
+  Pause,
+  PlayArrow,
+  Star,
+  VolumeUp,
+} from "@mui/icons-material";
+import RecorderControls from "../../components/recorder-controls";
+import useRecorder from "../../hooks/useRecorder";
 import GavelIcon from "@mui/icons-material/Gavel";
 import StopIcon from "@mui/icons-material/Stop";
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 
 import {
   INSTITUTION_ADDRESS,
@@ -136,10 +171,12 @@ import {
   INSTITUTION_NAME,
   INSTITUTION_TEL,
 } from "../../Utils/globals";
-import MoveUpIcon from '@mui/icons-material/MoveUp';
+import MoveUpIcon from "@mui/icons-material/MoveUp";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { notify } from "../../Utils/alert";
+import { showModalChanged } from "../../redux/actions/Reclamations/HistoriqueReclamationActions";
+import HistoriqueAffectation from "../../components/HistoriqueAffectation";
 
 const styles = {
   control: (base) => ({
@@ -162,17 +199,64 @@ const ListeReclamations = (props) => {
   const [impression, setImpression] = React.useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
-  const [fond, setFond] = useState("");
+  const [fond_, setFond] = useState("");
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
-  let hbt = (user.posteDto.habilitations).split(',');
-  let addR = (user.additionalRole);
+  const getStatusLabel = (status) => {
+    var statusElt = status;
+    switch (status) {
+      case "SAVED":
+        statusElt = "Enregistrée";
+        break;
+      case "TEMP_SAVED":
+        statusElt = "Sauvegardée";
+        break;
+      case "AFFECTED":
+        statusElt = "Affectée";
+        break;
+      case "TO_APPROUVED":
+        statusElt = "A approuver";
+        break;
+      case "DESAPPROUVED":
+        statusElt = "Désapprouvée";
+        break;
+      case "TREAT":
+        statusElt = "Traitée";
+        break;
+      case "SATISFIED":
+        statusElt = "Satisfait";
+        break;
+      case "UNSATISFIED":
+        statusElt = "Non satisfait";
+        break;
+      case "PARTIAL_SATISFIED":
+        statusElt = "Partiellement satisfait";
+        break;
+      case "LITIGATION":
+        statusElt = "Contentieux";
+        break;
+      case "CLASSED":
+        statusElt = "Classée";
+        break;
 
+      default:
+        statusElt = "";
+        break;
+    }
 
-  useEffect(() => { }, [showAudioPlayer, currentAudio]);
+    return statusElt;
+  };
+
+  let user =
+    loadItemFromSessionStorage("app-user") !== undefined
+      ? JSON.parse(loadItemFromSessionStorage("app-user"))
+      : undefined;
+  let hbt = user.posteDto.habilitations.split(",");
+  let addR = user.additionalRole;
+
+  useEffect(() => {}, [showAudioPlayer, currentAudio]);
 
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
@@ -184,8 +268,27 @@ const ListeReclamations = (props) => {
       ? JSON.parse(loadItemFromLocalStorage("app-objets"))
       : undefined;
 
+  const [currentData, setCurrentData] = useState(null);
+  const [audioListForm, setAudioListForm] = useState([]);
+  const [audioListUrlForm, setAudioListUrlForm] = useState([]);
+
   const handleClickOpen = () => {
     setOpen(true);
+  };
+  const [currentAudioId, setCurrentAudioId] = useState("");
+  const audioRef = useRef(null);
+  const [filesForm, setFiles] = useState([]);
+  const inputRef = useRef(null);
+  const [showExtraContent, setShowExtraContent] = useState(false);
+  const [extraContent, setExtraContent] = useState("");
+  const [extraFileLoading, setExtraFileLoading] = useState(false);
+  const [claim_id, setClaimId] = useState(null);
+
+  const clearFiles = () => {
+    if (inputRef.current) {
+      inputRef.current.value = null;
+    }
+    setFiles([]);
   };
 
   const handleClose = () => {
@@ -209,15 +312,46 @@ const ListeReclamations = (props) => {
     return Math.floor(Math.random() * max);
   }
 
+  const { recorderState, ...handlers } = useRecorder();
+  let { audio } = recorderState;
 
+  const [open2, setOpen2] = useState(false);
+  const [showAudioBox, setAudioBox] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (audio) {
+      setAudioListForm([...audioListForm, audio]);
+      setAudioListUrlForm([...audioListUrlForm, URL.createObjectURL(audio)]);
+    }
+  }, [audio]);
+
+  useEffect(() => {
+    KTApp.blockPage({
+      overlayColor: "#000000",
+      type: "v2",
+      state: "danger",
+      message: "En cours de chargement...",
+    });
+    setIsLoading(true);
+
     if (mode === 1) {
-      props.itemsChanged([])
-      listeTousStatuts(props).then((r) => { });
+      props.itemsChanged([]);
+      listeTousStatuts(props)
+        .then((r) => {})
+        .finally(() => {
+          setIsLoading(false);
+          KTApp.unblockPage();
+        });
     } else {
-      props.itemsChanged([])
-      listeTousStatutsOffline(props).then((r) => { });
+      props.itemsChanged([]);
+      listeTousStatutsOffline(props)
+        .then((r) => {})
+        .finally(() => {
+          setIsLoading(false);
+          KTApp.unblockPage();
+        });
     }
     //couleurs
     let couleurs = [
@@ -258,13 +392,17 @@ const ListeReclamations = (props) => {
   }, []);
   //Handling the List
   let columns = [
-    {
-      key: "code",
-      text: "Code",
-      className: "code",
-      align: "left",
-      sortable: true,
-    },
+    // {
+    //   key: "code",
+    //   text: "Code client",
+    //   className: "code",
+    //   align: "left",
+    //   sortable: true,
+    //   cell: (claim, index) => {
+    //     let codeClient = claim.codeClient !== "" ? claim.codeClient : "";
+    //     return codeClient;
+    //   },
+    // },
     {
       key: "codeClient",
       text: "Code client",
@@ -387,19 +525,16 @@ const ListeReclamations = (props) => {
         let cmp;
         let graviteElt;
         if (mode === 1) {
-          cmp = claim.objet.risqueLevel
+          cmp = claim.objet.risqueLevel;
         } else {
           if (claim.id !== "") {
-            cmp = claim.objet.risqueLevel
+            cmp = claim.objet.risqueLevel;
           } else {
             let idO = objets.filter((e) => {
-              return (
-                e.id === claim.objetId
-              );
-            })
-            cmp = (idO[0]).risqueLevel
+              return e.id === claim.objetId;
+            });
+            cmp = idO[0].risqueLevel;
           }
-
         }
         switch (cmp) {
           case "MINEUR":
@@ -408,24 +543,19 @@ const ListeReclamations = (props) => {
                 <>
                   <div className="df">
                     <span className="green-text text-bold mr-2">Mineur</span>
-                    <div className="card-content red-text ml-4"><MoveUpIcon /></div>
+                    <div className="card-content red-text ml-4">
+                      <MoveUpIcon />
+                    </div>
                   </div>
-
                 </>
-
               );
             } else {
-              graviteElt = (
-                <span className="green-text text-bold">Mineur</span>
-              );
+              graviteElt = <span className="green-text text-bold">Mineur</span>;
             }
 
             break;
           case "MOYEN":
-            graviteElt = (
-              <span className="orange-text text-bold">Moyen</span>
-
-            );
+            graviteElt = <span className="orange-text text-bold">Moyen</span>;
             break;
           case "GRAVE":
             graviteElt = (
@@ -467,14 +597,27 @@ const ListeReclamations = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let temps
-        if (claim.retardDay > 0) {
-          temps = claim.declenchedDate
+        let temps;
+        if (
+          claim.status !== "SATISFIED" &&
+          claim.status !== "UNSATISFIED" &&
+          claim.status !== "PARTIAL_SATISFIED" &&
+          claim.status !== "LITIGATION"
+        ) {
+          if (claim.retardDay > 0) {
+            temps = claim.declenchedDate;
+          } else {
+            temps = (
+              <div className="card-content red-text">
+                <WarningIcon />
+              </div>
+            );
+          }
         } else {
-          temps = <div className="card-content red-text"><WarningIcon /></div>
+          temps = "-";
         }
-        return temps;
 
+        return temps;
       },
     },
   ];
@@ -550,8 +693,11 @@ const ListeReclamations = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
     clearComponentState();
+    setClaimId(data.id);
+
+    console.log("data", data);
+    console.log("props.codeClient___", props.codeClient);
     // console.log("datarowC", data)
-    // console.log(data.codeClient);
     if (mode === 1) {
       props.lastnameChanged(
         data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -571,7 +717,9 @@ const ListeReclamations = (props) => {
         data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
       );
       props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
-      props.underSubjectChanged(data.objet.categorie.libelle ? data.objet.categorie.libelle : "");
+      props.underSubjectChanged(
+        data.objet.categorie.libelle ? data.objet.categorie.libelle : ""
+      );
       props.productChanged(data.product.libelle ? data.product.libelle : "");
       props.unitChanged(
         data.servicePoint.libelle ? data.servicePoint.libelle : ""
@@ -586,7 +734,9 @@ const ListeReclamations = (props) => {
         data.collector.firstAndLastName ? data.collector.firstAndLastName : ""
       );
       props.createdAtChanged(data.createdAt ? data.createdAt : "");
-      props.createdAtOnlineChanged(data.onlineUploadDateTime ? data.onlineUploadDateTime : "");
+      props.createdAtOnlineChanged(
+        data.onlineUploadDateTime ? data.onlineUploadDateTime : ""
+      );
       props.assignedAtChanged(data.affectedAt ? data.affectedAt : "");
       props.assignedByChanged(
         data.treatmentAffectedBy
@@ -600,9 +750,11 @@ const ListeReclamations = (props) => {
       );
       props.sessionChanged(data.session !== null ? data.session : "");
       props.selectedItemChanged(data);
+      setCurrentData(data);
 
       getFillesApi(data.id, props);
       getClaimAudioApi(data.id, props);
+      props.extrasChanged(data.extras ?? []);
     } else {
       if (data.id && data.collectionChannel) {
         props.lastnameChanged(
@@ -627,7 +779,9 @@ const ListeReclamations = (props) => {
           data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
         );
         props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
-        props.underSubjectChanged(data.objet.categorie.libelle ? data.objet.categorie.libelle : "");
+        props.underSubjectChanged(
+          data.objet.categorie.libelle ? data.objet.categorie.libelle : ""
+        );
         props.productChanged(data.product.libelle ? data.product.libelle : "");
         props.unitChanged(
           data.servicePoint.libelle ? data.servicePoint.libelle : ""
@@ -642,7 +796,9 @@ const ListeReclamations = (props) => {
           data.collector.firstAndLastName ? data.collector.firstAndLastName : ""
         );
         props.createdAtChanged(data.createdAt ? data.createdAt : "");
-        props.createdAtOnlineChanged(data.onlineUploadDateTime ? data.onlineUploadDateTime : "");
+        props.createdAtOnlineChanged(
+          data.onlineUploadDateTime ? data.onlineUploadDateTime : ""
+        );
         props.assignedAtChanged(data.affectedAt ? data.affectedAt : "");
         props.assignedByChanged(
           data.treatmentAffectedBy
@@ -656,8 +812,10 @@ const ListeReclamations = (props) => {
         );
         props.sessionChanged(data.session !== null ? data.session : "");
         props.selectedItemChanged(data);
+        setCurrentData(data);
         getFillesApi(data.id, props);
         getClaimAudioApi(data.id, props);
+        props.extrasChanged(data.extras ?? []);
       } else {
         // props.idChanged(data.id ? data.id : "")
         props.lastnameChanged(
@@ -676,53 +834,55 @@ const ListeReclamations = (props) => {
         props.statusChanged(data.status ? data.status : "");
         let description = data.languageId
           ? JSON.parse(loadItemFromSessionStorage("app-langues")).filter(
-            (e) => {
-              return e.id === data.languageId;
-            }
-          )
+              (e) => {
+                return e.id === data.languageId;
+              }
+            )
           : "";
         let description1 = data.collectionChannelId
           ? JSON.parse(loadItemFromSessionStorage("app-supports")).filter(
-            (e) => {
-              return e.id === data.collectionChannelId;
-            }
-          )
+              (e) => {
+                return e.id === data.collectionChannelId;
+              }
+            )
           : "";
         let description2 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-            return e.id === data.objetId;
-          })
+              return e.id === data.objetId;
+            })
           : "";
 
         let description6 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-            return e.id === data.objetId;
-          })
+              return e.id === data.objetId;
+            })
           : "";
 
         let description3 = data.productId
           ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
-            (e) => {
-              return e.id === data.productId;
-            }
-          )
+              (e) => {
+                return e.id === data.productId;
+              }
+            )
           : "";
         let description4 = data.servicePointId
           ? JSON.parse(loadItemFromSessionStorage("app-ps")).filter((e) => {
-            return e.id === data.servicePointId;
-          })
+              return e.id === data.servicePointId;
+            })
           : "";
         let description5 = data.collectorId
           ? JSON.parse(loadItemFromSessionStorage("app-users")).filter((e) => {
-            return e.id === data.collectorId;
-          })
+              return e.id === data.collectorId;
+            })
           : "";
 
         props.languageChanged(data.languageId ? description[0].libelle : "");
         props.collectChanged(
           data.collectionChannelId ? description1[0].libelle : ""
         );
-        props.subjectChanged(data.objetId ? description2[0].categorie.libelle : "");
+        props.subjectChanged(
+          data.objetId ? description2[0].categorie.libelle : ""
+        );
         props.underSubjectChanged(data.objetId ? description2[0].libelle : "");
         props.productChanged(data.productId ? description3[0].libelle : "");
         props.unitChanged(data.servicePointId ? description4[0].libelle : "");
@@ -788,8 +948,15 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true);
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip affectedBgColor">
-              <span className="">Affectée</span>
+              <span className="">{"Affectée"}</span>
             </span>
           </h5>
         </>
@@ -806,8 +973,15 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true);
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip toApprouvedBgColor">
-              <span className="">A approuver</span>
+              <span className="">{"A appouver"}</span>
             </span>
           </h5>
         </>
@@ -824,8 +998,15 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true);
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip unApprouvedBgColor">
-              <span className="">Désapprouvée</span>
+              <span className="">{"Désapprouvée"}</span>
             </span>
           </h5>
         </>
@@ -842,8 +1023,15 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true);
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip treatBgColor">
-              <span className="">Traitée</span>
+              <span className="">{"Traitée"}</span>
             </span>
           </h5>
         </>
@@ -860,8 +1048,16 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true);
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip satisfiedBgColor">
-              <span className="">Satisfait</span>
+              <span className="">{"Satisfait"}</span>
             </span>
           </h5>
         </>
@@ -878,8 +1074,16 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true);
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip unSatisfiedBgColor">
-              <span className="">Non satisfait</span>
+              <span className="">{"Non Satisfait"}</span>
             </span>
           </h5>
         </>
@@ -896,8 +1100,16 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true);
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip partialBgColor">
-              <span className="">Partiellement satisfait</span>
+              <span className="">{"Partiellement Satisfait"}</span>
             </span>
           </h5>
         </>
@@ -914,8 +1126,16 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true);
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip litigationBgColor">
-              <span className="">Contentieux</span>
+              <span className="">{"Contentieux"}</span>
             </span>
           </h5>
         </>
@@ -932,8 +1152,15 @@ const ListeReclamations = (props) => {
               }}
               style={{ cursor: "pointer" }}
             />
+            <History
+              sx={{ mr: 2, verticalAlign: "middle" }}
+              onClick={(e) => {
+                props.showModalHistoriqueChanged(true);
+              }}
+              style={{ cursor: "pointer" }}
+            />
             <span className="chip classedBgColor">
-              <span className="">Classée</span>
+              <span className="">{"Classée"}</span>
             </span>
           </h5>
         </>
@@ -945,7 +1172,7 @@ const ListeReclamations = (props) => {
       break;
   }
 
-  let creationDate = props.created_at ? formatDate(props.created_at) : "";
+  let creationDate = props.created_at ? formatDate4(props.created_at) : "";
   let colourOptions = [
     { value: "Code", label: "Code" },
     { value: "Code Client", label: "Code Client" },
@@ -978,12 +1205,12 @@ const ListeReclamations = (props) => {
       let solutions =
         interne === false
           ? Array.from(
-            props.solution.filter((e) => {
-              return (
-                e.status === "APPROVED" && e.satisfactionMeasureDto !== null
-              );
-            })
-          )
+              props.solution.filter((e) => {
+                return (
+                  e.status === "APPROVED" && e.satisfactionMeasureDto !== null
+                );
+              })
+            )
           : Array.from(props.solution);
       if (props.solution.length !== 0) {
         type =
@@ -992,6 +1219,22 @@ const ListeReclamations = (props) => {
             : " Détails du traitement - En interne";
       }
 
+      let couleurs = [
+        "#333300",
+        "#00cc00",
+        "#99003d",
+        "#3333ff",
+        "#666666",
+        "#253858",
+        "#00875A",
+        "#36B37",
+        "#FFC400",
+        "#FF8B00",
+        "#FF5630",
+        "#5243AA",
+        "#0052CC",
+        "#00B8D9",
+      ];
 
       if (solutions.length !== 0) {
         details = (
@@ -1003,9 +1246,7 @@ const ListeReclamations = (props) => {
                   style={{ cursor: "pointer" }}
                   onClick={handleInterne}
                 >
-                  <span className="indigo-text">
-                    Traitement en interne
-                  </span>
+                  <span className="indigo-text">Traitement en interne</span>
                 </span>
 
                 <span
@@ -1025,6 +1266,7 @@ const ListeReclamations = (props) => {
               {/* let solutions =  */}
               {Array.from(solutions).map((solution) => {
                 // let fond = couleurs[getRandomInt(couleurs.length)];
+                let fond = couleurs[index % couleurs.length];
 
                 let mesure = "";
                 if (
@@ -1035,10 +1277,10 @@ const ListeReclamations = (props) => {
                     solution.satisfactionMeasureDto.status === "SATISFIED"
                       ? "Satisfait"
                       : solution.satisfactionMeasureDto.status === "UNSATISFIED"
-                        ? "Non satisfait"
-                        : solution.satisfactionMeasureDto.status === "PARTIAL"
-                          ? "Partiellement satisfait"
-                          : "";
+                      ? "Non satisfait"
+                      : solution.satisfactionMeasureDto.status === "PARTIAL"
+                      ? "Partiellement satisfait"
+                      : "";
                   mesure = (
                     <>
                       <Typography component="div">
@@ -1048,11 +1290,11 @@ const ListeReclamations = (props) => {
                             style={{ backgroundColor: fond }}
                           >
                             <span className="hero">
-                              Client {degre} : mesurée {" "}
+                              Client {degre} : mesurée{" "}
                               {solution.satisfactionMeasureDto.measurer
                                 ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
                                 : " depuis le site web "}
-                              le {" "}
+                              le{" "}
                               {formatDate(
                                 solution.satisfactionMeasureDto.measureDateTime
                               )}
@@ -1165,7 +1407,8 @@ const ListeReclamations = (props) => {
                             <div className="row">
                               <div className="col l12 s12 pb-2" id="content">
                                 <div className="df pb-2">
-                                  <RecordVoiceOverIcon sx={{ mr: 2 }} /> Solution
+                                  <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                  Solution
                                 </div>
                                 <div>{solution.content}</div>
                               </div>
@@ -1177,23 +1420,32 @@ const ListeReclamations = (props) => {
                                 </div>
                                 <div>{solution.commentaire}</div>
                               </div>
-                              {
-                                solution.satisfactionMeasureDto ?
-                                  solution.satisfactionMeasureDto.commentaire !== null && solution.satisfactionMeasureDto.commentaire !== "" ?
-
-                                    <div
-                                      className="col l12 s12 pb-2"
-                                      id="content"
-                                    >
-                                      <div className="df pb-2">
-                                        <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
-                                        Commentaire du client
-                                      </div>
-                                      <div>{solution.satisfactionMeasureDto.commentaire}</div>
-                                    </div> : ""
-
-                                  : ""
-                              }
+                              {solution.satisfactionMeasureDto ? (
+                                solution.satisfactionMeasureDto.commentaire !==
+                                  null &&
+                                solution.satisfactionMeasureDto.commentaire !==
+                                  "" ? (
+                                  <div
+                                    className="col l12 s12 pb-2"
+                                    id="content"
+                                  >
+                                    <div className="df pb-2">
+                                      <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
+                                      Commentaire du client
+                                    </div>
+                                    <div>
+                                      {
+                                        solution.satisfactionMeasureDto
+                                          .commentaire
+                                      }
+                                    </div>
+                                  </div>
+                                ) : (
+                                  ""
+                                )
+                              ) : (
+                                ""
+                              )}
                             </div>
                           </Typography>
                           {approbation}
@@ -1210,7 +1462,7 @@ const ListeReclamations = (props) => {
           </>
         );
       } else {
-        details =
+        details = (
           <>
             <div className="row">
               <div className="col s12 df pb-2">
@@ -1219,9 +1471,7 @@ const ListeReclamations = (props) => {
                   style={{ cursor: "pointer" }}
                   onClick={handleInterne}
                 >
-                  <span className="indigo-text">
-                    Traitement en interne
-                  </span>
+                  <span className="indigo-text">Traitement en interne</span>
                 </span>
 
                 <span
@@ -1236,27 +1486,71 @@ const ListeReclamations = (props) => {
               </div>
             </div>
             <div className="mt-2">
-              Aucune donnée
+              <div className="row pb-4 ml-2">
+                <div
+                  className="col s12 mb-2"
+                  style={{
+                    background: "#f5f9ff",
+                    borderLeft: "4px solid #1976d2",
+                    padding: "10px 5px",
+                    borderRadius: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  Aucune donnée
+                </div>
+              </div>
             </div>
           </>
+        );
       }
     } else if (props.solution.length === 0) {
       let affectation = "";
       if (props.status === "AFFECTED") {
         affectation = (
           <>
-            <Typography component="div">
-              <div>
+            <div className="row pb-4 ml-2">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#EFF6FF",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "4px",
+                }}
+              >
                 Réclamation affectée à{" "}
-                <span style={{ fontWeight: "bold" }}>{props.handled_by}</span> par{" "}
-                {props.assigned_by}  le  {formatDate(props.assigned_at)}
+                <strong style={{ color: "#1976d2" }}>{props.handled_by}</strong>{" "}
+                par <em>{props.assigned_by}</em> le{" "}
+                <span style={{ color: "#555" }}>
+                  {formatDate(props.assigned_at)}
+                </span>
               </div>
-            </Typography>
+            </div>
           </>
         );
         details = <>{affectation}</>;
       } else {
-        details = "Cette réclamation est en attente de traitement";
+        details = (
+          <>
+            <div className="row pb-4 ml-2">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#f5f9ff",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                Cette réclamation est en attente de traitement
+              </div>
+            </div>
+          </>
+        );
       }
     }
   } else {
@@ -1264,16 +1558,12 @@ const ListeReclamations = (props) => {
     //il n'a pas H14
     if (props.solution.length !== 0) {
       //LA RECLAMATION A AU MOINS UNE SOLUTION
-      details =
+      details = (
         <>
           <div className="row pb-5 mt-4">
-            <div
-              className="col l12 s12 pb-3"
-              id="content"
-            >
+            <div className="col l12 s12 pb-3" id="content">
               <div className="df pb-2">
-                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                Solution
+                <RecordVoiceOverIcon sx={{ mr: 2 }} /> Solution
               </div>
               <div>
                 {props.solution[0] !== undefined
@@ -1282,13 +1572,9 @@ const ListeReclamations = (props) => {
               </div>
             </div>
 
-            <div
-              className="col l12 s12 pb-2"
-              id="content"
-            >
+            <div className="col l12 s12 pb-2" id="content">
               <div className="df pb-2">
-                <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                Commentaire
+                <RecordVoiceOverIcon sx={{ mr: 2 }} /> Commentaire
               </div>
               <div>
                 {props.solution[0] !== undefined
@@ -1298,6 +1584,7 @@ const ListeReclamations = (props) => {
             </div>
           </div>
         </>
+      );
     } else if (props.solution.length === 0) {
       //LA RECLAMATION N'A PAS DE SOLUTION
       let affectation = "";
@@ -1305,163 +1592,275 @@ const ListeReclamations = (props) => {
         //MAIS EST AFFECTEE
         affectation = (
           <>
-            <Typography component="div">
-              <div>
-                Réclamation affectée le {formatDate(props.assigned_at)}
+            <div className="row pb-4 ml-2">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#EFF6FF",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "4px",
+                }}
+              >
+                Réclamation affectée le{" "}
+                <span style={{ color: "#555" }}>
+                  {formatDate(props.assigned_at)}
+                </span>
               </div>
-            </Typography>
+            </div>
           </>
         );
         details = <>{affectation}</>;
       } else {
         //AUCUN TRAITEMENT SUR CETTE REC
-        details = "Cette réclamation est en attente de traitement";
+        details = (
+          <>
+            <div className="row pb-4 ml-2">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#f5f9ff",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                Cette réclamation est en attente de traitement
+              </div>
+            </div>
+          </>
+        );
       }
     }
   }
-
-
 
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-          <div className="card box-shadow-none mb-1 app-file-info">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl1 l1 s1 m1">
-                  <div className="app-file-content-logo">
-                    <div className="fonticon hide">
-                      <i className="material-icons ">more_vert</i>
-                    </div>
-                    <img
-                      className="recent-file"
-                      src={icon}
-                      height="38"
-                      width="30"
-                      alt=""
-                    />
-                  </div>
-                </div>
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div className="app-file-last-access">
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadFillesApi(attachment.id, attachment.name);
-                        }}
-                      >
-                        Télécharger
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Grid item xs={12} sm={6} key={attachment.id}>
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              borderRadius: 2,
+              p: 2,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              transition: "transform 0.3s",
+              "&:hover": {
+                transform: "translateY(-3px)",
+              },
+              height: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                backgroundColor: "grey.100",
+                borderRadius: "6px",
+                padding: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: "12px",
+                minWidth: "56px",
+              }}
+            >
+              <img
+                src={icon}
+                height="28"
+                width="22"
+                alt=""
+                style={{ objectFit: "contain" }}
+              />
+            </Box>
+
+            <CardContent sx={{ flex: 1, minWidth: 0, py: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Typography
+                  variant="body1"
+                  component="div"
+                  sx={{
+                    fontWeight: "bold",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    width: "100%",
+                    mb: 0.5,
+                  }}
+                >
+                  {attachment.name}
+                </Typography>
+                {attachment._extra && (
+                  <Tooltip
+                    title={`Ajouté par ${
+                      attachment.extra?.user?.firstAndLastName
+                    } le ${formatDate(attachment.extra?.createdAt)}`}
+                  >
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round((attachment.size / 1024) * 100) / 100} {"Ko"}
+              </Typography>
+            </CardContent>
+
+            <FileDownload
+              sx={{
+                fontSize: "18px",
+                color: "primary.main",
+                ml: 1,
+                "&:hover": {
+                  color: "primary.dark",
+                  cursor: "pointer",
+                },
+              }}
+              onClick={() => downloadFillesApi(attachment.id, attachment.name)}
+            />
+          </Card>
+        </Grid>
       );
     });
+
     attachmentList = (
-      <div className="row app-file-content grey lighten-4 mt-5">
-        <span className="app-file-label">Fichiers joints</span>
-        <div className="row app-file-recent-access mb-3">
-          {attachmentListChild}
-        </div>
-      </div>
+      <Grid container spacing={2} size={12}>
+        {attachmentListChild}
+      </Grid>
     );
   } else {
+    attachmentList = (
+      <Grid container spacing={2} size={12}>
+        <Grid item>Ce dossier ne contient pas de fichiers joints</Grid>
+      </Grid>
+    );
   }
+
+  const handlePlay = (audioId, audioName) => {
+    if (currentAudioId === audioId) {
+      audioRef.current.pause();
+      setCurrentAudioId(null);
+    } else {
+      setCurrentAudioId(audioId);
+      downloadAudioApi(audioId, audioName).then((data) => {
+        let blobAudio = new Blob([data], {
+          type: "audio/ogg; codecs=opus",
+        });
+
+        setCurrentAudio(window.URL.createObjectURL(blobAudio));
+        setTimeout(() => audioRef.current.play(), 2000);
+        // setAudioPlayer("audio-" + attachment.id);
+      });
+    }
+  };
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    let audioListChild = props.selectedItemAudio.map((attachment) => {
+    console.log("props.selectedItemAudio", props.selectedItemAudio);
+    let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
-        <div className="col xl12 l12 m12 s12" key={attachment.id}>
-          <div className="card box-shadow-none mb-1 ">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {attachment.name}
-                    </div>
-                    <div className="app-file-size">
-                      {Math.round(
-                        (attachment.size / 1024 + Number.EPSILON) * 100
-                      ) / 100}{" "}
-                      Ko
-                    </div>
-                    <div
-                      className="app-file-last-access"
-                      id={"audio-" + attachment.id}
-                    >
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadAudioApi(attachment.id, attachment.name).then(
-                            (data) => {
-                              // console.log(data);
+        <Grid item xs={12} sm={6} key={audioItem.id}>
+          <Card
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              borderRadius: 2,
+              p: 1.5,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              height: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: "primary.light",
+                borderRadius: "6px",
+                p: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mr: 2,
+                minWidth: "48px",
+                height: "48px",
+              }}
+            >
+              <VolumeUp
+                sx={{ color: "primary.contrastText", fontSize: "28px" }}
+              />
+            </Box>
 
-                              let blobAudio = new Blob([data], {
-                                type: "audio/ogg; codecs=opus",
-                              });
-                              let aud = new Audio(
-                                window.URL.createObjectURL(blobAudio)
-                              );
-                              setCurrentAudio(
-                                window.URL.createObjectURL(blobAudio)
-                              );
-                              setAudioPlayer("audio-" + attachment.id);
-                            }
-                          );
-                        }}
-                      >
-                        {showAudioPlayer === "audio-" + attachment.id && ""}{" "}
-                        {showAudioPlayer !== "audio-" + attachment.id &&
-                          "Afficher"}
-                      </a>
+            <CardContent sx={{ flex: 1, minWidth: 0, p: "8px !important" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 500,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 1,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    mb: 0.5,
+                  }}
+                >
+                  {audioItem.name}
+                </Typography>
+                {audioItem._extra && (
+                  <Tooltip
+                    title={`Ajouté par ${
+                      audioItem.extra?.user?.firstAndLastName
+                    } le ${formatDate(audioItem.extra?.createdAt)}`}
+                  >
+                    <Info fontSize="small" sx={{ ml: 1 }} />
+                  </Tooltip>
+                )}
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round((audioItem.size / 1024 + Number.EPSILON) * 100) /
+                  100}{" "}
+                {"Ko"} • {audioItem.duration}
+              </Typography>
+            </CardContent>
 
-                      {showAudioPlayer === "audio-" + attachment.id && (
-                        <audio
-                          controls
-                          autoPlay
-                          onEnded={(e) => {
-                            setAudioPlayer("");
-                          }}
-                        >
-                          <source src={currentAudio} type="audio/ogg" />
-                          Votre navigateur ne prend pas en charge l'élément
-                          audio.
-                        </audio>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+            <Box sx={{ display: "flex" }}>
+              <IconButton
+                onClick={() => handlePlay(audioItem.id, audioItem.name)}
+                sx={{
+                  color:
+                    currentAudioId === audioItem.id
+                      ? "primary.main"
+                      : "text.secondary",
+                }}
+              >
+                {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
+              </IconButton>
+            </Box>
+          </Card>
+        </Grid>
       );
     });
     audioList = (
-      <div className="col s12 app-file-content">
-        <div className="row app-file-recent-access mb-3">{audioListChild}</div>
-      </div>
+      <Grid spacing={2} container size={12}>
+        {audioListChild}
+      </Grid>
+    );
+  } else {
+    audioList = (
+      <Grid container spacing={2} size={12}>
+        <Grid item>Ce dossier ne contient pas de fichiers audio</Grid>
+      </Grid>
     );
   }
+
   let recoursList;
   if (props.external_remedies.length !== 0) {
     recoursList = (
@@ -1498,22 +1897,44 @@ const ListeReclamations = (props) => {
     // console.log(props.codeClient);
     e.preventDefault();
 
-    let image = '<img src="' + INSTITUTION_LOGO + '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
-    let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
-    entete += '<div className="col l2 s3 m3" style="margin-bottom:20px!important">' + image + '</div>';
-    entete += '<div className="col l8 s7 m7"><b>' + INSTITUTION_NAME + '</b><br /><i><span>Numéro Agrément: </span>' + INSTITUTION_AGREMENT + '</i><br /><i><span>Addrese: </span>' + INSTITUTION_ADDRESS + '</i><br /><i><span>Tel: </span>' + INSTITUTION_TEL + '</i><br /><i><span>Email: </span>' + INSTITUTION_EMAIL + '</i></div></div>';
-
-
+    let image =
+      '<img src="' +
+      INSTITUTION_LOGO +
+      '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
+    let entete =
+      '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
+    entete +=
+      '<div className="col l2 s3 m3" style="margin-bottom:20px!important">' +
+      image +
+      "</div>";
+    entete +=
+      '<div className="col l8 s7 m7"><b>' +
+      INSTITUTION_NAME +
+      "</b><br /><i><span>Numéro Agrément: </span>" +
+      INSTITUTION_AGREMENT +
+      "</i><br /><i><span>Addrese: </span>" +
+      INSTITUTION_ADDRESS +
+      "</i><br /><i><span>Tel: </span>" +
+      INSTITUTION_TEL +
+      "</i><br /><i><span>Email: </span>" +
+      INSTITUTION_EMAIL +
+      "</i></div></div>";
 
     // Calcul des descriptions
     const description2 = props.selectedItem.objetId
-      ? JSON.parse(loadItemFromSessionStorage("app-objets")).find(e => e.id === props.selectedItem.objetId)
+      ? JSON.parse(loadItemFromSessionStorage("app-objets")).find(
+          (e) => e.id === props.selectedItem.objetId
+        )
       : {};
     const description3 = props.selectedItem.productId
-      ? JSON.parse(loadItemFromSessionStorage("app-produits")).find(e => e.id === props.selectedItem.productId)
+      ? JSON.parse(loadItemFromSessionStorage("app-produits")).find(
+          (e) => e.id === props.selectedItem.productId
+        )
       : {};
     const description5 = props.selectedItem.collectorId
-      ? JSON.parse(loadItemFromSessionStorage("app-users")).find(e => e.id === props.selectedItem.collectorId)
+      ? JSON.parse(loadItemFromSessionStorage("app-users")).find(
+          (e) => e.id === props.selectedItem.collectorId
+        )
       : {};
 
     // Statut
@@ -1533,11 +1954,33 @@ const ListeReclamations = (props) => {
     const statusElt = statusMap[props.selectedItem.status] || "";
 
     // Variables formatées
-    const datee = props.selectedItem.createdAt ? formatDate(props.selectedItem.createdAt) : "";
-    const telTemp = mode === 1 ? props.selectedItem.tel : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.tel : props.selectedItem.phone;
-    const addByTemp = mode === 1 ? props.selectedItem.collector.firstAndLastName : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.collector.firstAndLastName : description5.firstAndLastName;
-    const objetTemp = mode === 1 ? props.selectedItem.objet.libelle : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.objet.libelle : description2.libelle;
-    const produitTemp = mode === 1 ? props.selectedItem.product.libelle : (props.selectedItem.id && props.selectedItem.collectionChannel) ? props.selectedItem.product.libelle : description3.libelle;
+    const datee = props.selectedItem.createdAt
+      ? formatDate(props.selectedItem.createdAt)
+      : "";
+    const telTemp =
+      mode === 1
+        ? props.selectedItem.tel
+        : props.selectedItem.id && props.selectedItem.collectionChannel
+        ? props.selectedItem.tel
+        : props.selectedItem.phone;
+    const addByTemp =
+      mode === 1
+        ? props.selectedItem.collector.firstAndLastName
+        : props.selectedItem.id && props.selectedItem.collectionChannel
+        ? props.selectedItem.collector.firstAndLastName
+        : description5.firstAndLastName;
+    const objetTemp =
+      mode === 1
+        ? props.selectedItem.objet.libelle
+        : props.selectedItem.id && props.selectedItem.collectionChannel
+        ? props.selectedItem.objet.libelle
+        : description2.libelle;
+    const produitTemp =
+      mode === 1
+        ? props.selectedItem.product.libelle
+        : props.selectedItem.id && props.selectedItem.collectionChannel
+        ? props.selectedItem.product.libelle
+        : description3.libelle;
 
     // Contenu du reçu avec marges inférieures ajustées
     const content = `
@@ -1547,7 +1990,7 @@ const ListeReclamations = (props) => {
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Adresse :</b></div><div class="col l9" style="font-size:18px;">${props.selectedItem.address}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Enregistré le :</b></div><div class="col l9" style="font-size:18px;">${datee}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Enregistré par :</b></div><div class="col l9" style="font-size:18px;">${addByTemp}</div></div>
-      <div class="row" style="margin-bottom:15px;"><div class="col l12"><span style="font-size:18px;"><b>Code:</b> ${props.selectedItem.codeClient}</span></div></div>
+      <div class="row" style="margin-bottom:15px;"><div class="col l12"><span style="font-size:18px;"><b>Code client:</b> ${props.selectedItem.codeClient}</span></div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l4"><b style="font-size:18px;">Date de réception de la réclamation :</b></div><div class="col l8" style="font-size:18px;">${props.selectedItem.receiptDateTime}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Objet de plainte :</b></div><div class="col l9" style="font-size:18px;">${objetTemp}</div></div>
       <div class="row" style="margin-bottom:15px;"><div class="col l3"><b style="font-size:18px;">Produit concerné :</b></div><div class="col l9" style="font-size:18px;">${produitTemp}</div></div>
@@ -1556,7 +1999,6 @@ const ListeReclamations = (props) => {
 
     handlePrintAvance(content);
   };
-
 
   // const printRecu = (e) => {
   //   e.preventDefault();
@@ -1778,31 +2220,23 @@ const ListeReclamations = (props) => {
     let graviteElt;
     let cmp;
     if (mode === 1) {
-      cmp = element.objet?.risqueLevel
+      cmp = element.objet?.risqueLevel;
     } else {
       if (element.id !== "") {
-        cmp = element.objet.risqueLevel
+        cmp = element.objet.risqueLevel;
       } else {
         let idO = objets.filter((e) => {
-          return (
-            e.id === element.objetId
-          );
-        })
-        cmp = (idO[0]).risqueLevel
+          return e.id === element.objetId;
+        });
+        cmp = idO[0].risqueLevel;
       }
-
     }
     switch (cmp) {
       case "MINEUR":
-        graviteElt = (
-          <span className="green-text text-bold">Mineur</span>
-        );
+        graviteElt = <span className="green-text text-bold">Mineur</span>;
         break;
       case "MOYEN":
-        graviteElt = (
-          <span className="orange-text text-bold">Moyen</span>
-
-        );
+        graviteElt = <span className="orange-text text-bold">Moyen</span>;
         break;
       case "GRAVE":
         graviteElt = (
@@ -1829,68 +2263,137 @@ const ListeReclamations = (props) => {
       minute: "numeric",
     }).format(new Date(element.createdAt));
     element.createdAtFormated = createdAt;
-
   });
 
   //PV
   const prepareToPrint = async (type = "pdf") => {
     // console.log("mes données", props.session);
-    let entete = "<h1>PV de Session</h1>"
-    let codeRec = "Réclamation : " + props.code;
-    let participantsTab
-    let guestsTab
-    let votesTab
-    let messagesTab
-    let participants
-    let votes
-    let messages
+    let entete = "<h1>PV de Session</h1>";
+    let codeRec = "Réclamation : " + props.codeClient;
+    let participantsTab;
+    let guestsTab;
+    let votesTab;
+    let messagesTab;
+    let participants;
+    let votes;
+    let messages;
 
     //tableaux
-    participantsTab = (props?.session?.members).length !== 0 ? (props?.session?.members).map((e) => { return e.firstAndLastName }) : []
-    guestsTab = (props?.session?.guests).length !== 0 ? (props?.session?.guests).map((e) => { return e.firstAndLastName }) : []
-    votesTab = (props?.session?.messages).length !== 0 ? (props?.session?.messages).filter((e) => { if (e.vote === true) { return e } }) : []
-    messagesTab = (props?.session?.messages).length !== 0 ? (props?.session?.messages).filter((e) => { if (e.vote === false) { return e } }) : []
+    participantsTab =
+      (props?.session?.members).length !== 0
+        ? (props?.session?.members).map((e) => {
+            return e.firstAndLastName;
+          })
+        : [];
+    guestsTab =
+      (props?.session?.guests).length !== 0
+        ? (props?.session?.guests).map((e) => {
+            return e.firstAndLastName;
+          })
+        : [];
+    votesTab =
+      (props?.session?.messages).length !== 0
+        ? (props?.session?.messages).filter((e) => {
+            if (e.vote === true) {
+              return e;
+            }
+          })
+        : [];
+    messagesTab =
+      (props?.session?.messages).length !== 0
+        ? (props?.session?.messages).filter((e) => {
+            if (e.vote === false) {
+              return e;
+            }
+          })
+        : [];
 
     // console.log("votesTab",votesTab)
     //participants et invités
-    participants = "<div style='margin-top:75px!important'><h2>Participants</h2></div>";
+    participants =
+      "<div style='margin-top:75px!important'><h2>Participants</h2></div>";
     participants += "<ul>";
-    participantsTab.map((e) => { participants += "<li>" + e + "</li>" })
-    guestsTab.map((e) => { participants += "<li>" + e + "  (invité)  </li>" })
+    participantsTab.map((e) => {
+      participants += "<li>" + e + "</li>";
+    });
+    guestsTab.map((e) => {
+      participants += "<li>" + e + "  (invité)  </li>";
+    });
     participants += "</ul>";
 
     //votes
 
-    votes = "<div style='margin-bottom:50px!important;'><h2>Votes</h2></div>"
+    votes = "<div style='margin-bottom:50px!important;'><h2>Votes</h2></div>";
 
     votesTab.map((e) => {
-      votes += "<table width='960' border='1'>"
-      votes += "<tr style='padding:80px!important;'><td style='margin:80px!important;'>Contenu</td><td>" + e.voteDto?.contenu + "</td></tr> "
-      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Commentaire</td><td>" + e.voteDto?.commentaire + "</td></tr>"
-      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Initié par</td><td>" + e.voteDto?.author?.firstAndLastName + "</td></tr>"
+      votes += "<table width='960' border='1'>";
+      votes +=
+        "<tr style='padding:80px!important;'><td style='margin:80px!important;'>Contenu</td><td>" +
+        e.voteDto?.contenu +
+        "</td></tr> ";
+      votes +=
+        "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Commentaire</td><td>" +
+        e.voteDto?.commentaire +
+        "</td></tr>";
+      votes +=
+        "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Initié par</td><td>" +
+        e.voteDto?.author?.firstAndLastName +
+        "</td></tr>";
 
-      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Pour</td><td><ul>"
-      let votesPour = (e.voteDto?.userVote).length !== 0 ? (e.voteDto?.userVote).filter((vote) => { if (vote.voteType === "POUR") { return vote } }) : []
-      votesPour.map((k) => { votes += "<li>" + k?.author?.firstAndLastName + "</li>" })
-      votes += "</ul></td></tr>"
+      votes +=
+        "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Pour</td><td><ul>";
+      let votesPour =
+        (e.voteDto?.userVote).length !== 0
+          ? (e.voteDto?.userVote).filter((vote) => {
+              if (vote.voteType === "POUR") {
+                return vote;
+              }
+            })
+          : [];
+      votesPour.map((k) => {
+        votes += "<li>" + k?.author?.firstAndLastName + "</li>";
+      });
+      votes += "</ul></td></tr>";
 
-      votes += "<tr style='padding:80px!important;'><td>Contre</td><td><ul>"
-      let votesContre = (e.voteDto?.userVote).length !== 0 ? (e.voteDto?.userVote).filter((vote) => { if (vote.voteType === "CONTRE") { return vote } }) : []
-      votesContre.map((l) => { votes += "<li>" + l?.author?.firstAndLastName + "</li>" })
-      votes += "</ul></td></tr>"
+      votes += "<tr style='padding:80px!important;'><td>Contre</td><td><ul>";
+      let votesContre =
+        (e.voteDto?.userVote).length !== 0
+          ? (e.voteDto?.userVote).filter((vote) => {
+              if (vote.voteType === "CONTRE") {
+                return vote;
+              }
+            })
+          : [];
+      votesContre.map((l) => {
+        votes += "<li>" + l?.author?.firstAndLastName + "</li>";
+      });
+      votes += "</ul></td></tr>";
 
-      let decision = (e.voteDto?.choosed) === false ? "Solution non retenu" : "Solution retenu"
+      let decision =
+        e.voteDto?.choosed === false
+          ? "Solution non retenu"
+          : "Solution retenu";
 
-      votes += "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Décision</td><td style='padding:80px!important;'>" + decision + "</td></tr>"
-      votes += "</table><br/><br /><br/><br /><br/><br />"
-    })
-
+      votes +=
+        "<tr style='padding:80px!important;'><td style='padding:80px!important;'>Décision</td><td style='padding:80px!important;'>" +
+        decision +
+        "</td></tr>";
+      votes += "</table><br/><br /><br/><br /><br/><br />";
+    });
 
     //messages
-    messages = "<div style='margin-bottom:50px!important;'><h2>Messages</h2></div>"
-    messagesTab.map((e) => { messages += "<div>" + e.content + " | " + e.createdAt + " | " + e.sender?.firstAndLastName + "</div><br/>" })
-
-
+    messages =
+      "<div style='margin-bottom:50px!important;'><h2>Messages</h2></div>";
+    messagesTab.map((e) => {
+      messages +=
+        "<div>" +
+        e.content +
+        " | " +
+        e.createdAt +
+        " | " +
+        e.sender?.firstAndLastName +
+        "</div><br/>";
+    });
 
     let data =
       entete +
@@ -1945,7 +2448,8 @@ const ListeReclamations = (props) => {
 
     // sleep(15000)
     // Specify file name
-    let filename = "PV_" + props.code + "_" + today().replaceAll("/", "") + ".doc";
+    let filename =
+      "PV_" + props.code + "_" + today().replaceAll("/", "") + ".doc";
 
     // Create download link element
     let downloadLink = document.createElement("a");
@@ -1966,12 +2470,431 @@ const ListeReclamations = (props) => {
     }
   };
 
+  const enfant = document.querySelector("#dialog-enfant");
+  const confirmation = document.querySelector("#dialog-confirmation");
+  const addFile = document.querySelector("#dialog-addFile");
+  const noAccess = document.querySelector("#dialog-noAccess");
+  const audioExtrat = document.querySelector("#dialog-audio");
+  const contenuExtrat = document.querySelector("#dialog-contenu");
+  const historyAffectation = document.querySelector("#dialog-history");
 
+  const enfantOuvert = enfant && enfant.getAttribute("aria-hidden") !== "true";
+  const confirmationOuvert =
+    confirmation && confirmation.getAttribute("aria-hidden") !== "true";
+  const addFileOuvert =
+    addFile && addFile.getAttribute("aria-hidden") !== "true";
+  const noAccessOuvert =
+    noAccess && noAccess.getAttribute("aria-hidden") !== "true";
+  const audioExtratOuvert =
+    audioExtrat && audioExtrat.getAttribute("aria-hidden") !== "true";
+  const contenuExtratOuvert =
+    contenuExtrat && contenuExtrat.getAttribute("aria-hidden") !== "true";
+  const historyAffectationOuvert =
+    historyAffectation && historyAffectation.getAttribute("aria-hidden") !== "true";
+
+  // Sélectionnez tous les éléments avec la classe spécifiée
+  const elements = document.querySelectorAll(".MuiDialog-root");
+
+  // Parcourez la liste d'éléments
+  elements.forEach((element) => {
+    if (
+      [
+        "dialog-enfant",
+        "dialog-confirmation",
+        "dialog-addFile",
+        "dialog-noAccess",
+        "dialog-audio",
+        "dialog-contenu",
+        "dialog-history",
+      ].includes(element.id)
+    ) {
+      return;
+    }
+
+    if (
+      element.hasAttribute("aria-hidden") &&
+      element.getAttribute("aria-hidden") === "true" &&
+      !enfantOuvert &&
+      !confirmationOuvert &&
+      !addFileOuvert &&
+      !noAccessOuvert &&
+      !audioExtratOuvert &&
+      !contenuExtratOuvert &&
+      !historyAffectationOuvert
+    ) {
+      element.style.display = "none";
+    } else {
+      element.style.display = "";
+    }
+  });
+
+  useEffect(() => {
+    console.log("filesForm.length", filesForm.length);
+    if (inputRef.current) {
+      inputRef.current.value = null;
+      console.log("inputRef.current", inputRef.current.value);
+    }
+    // clearFiles();
+  }, [filesForm.length]);
+
+  const handleFileSubmit = (e, isFile = true) => {
+    e.preventDefault();
+    setExtraFileLoading(true);
+
+    console.log("filesForm__1 >> ", filesForm);
+    const formData = new FormData();
+    formData.append("claim_id", claim_id);
+
+    if (isFile) {
+      for (let index = 0; index < filesForm.length; index++) {
+        formData.append("files", filesForm[index]);
+      }
+    } else if (audioListForm.length) {
+      for (let index = 0; index < audioListForm.length; index++) {
+        const audioFile = new File(
+          [audioListForm[index]],
+          "claim_extra_record_" + today().replaceAll("/", "") + ".ogg",
+          {
+            type: "audio/ogg; codecs=opus",
+          }
+        );
+        formData.append("audios", audioFile);
+      }
+    }
+
+    console.log("filesForm__2 >> ", filesForm);
+    addExtraClaimApi(formData)
+      .then((res) => {
+        console.log("res >> ", res);
+        if (isFile) {
+          getFillesApi(currentData?.id, props);
+          clearFiles();
+          notify("Piece joint ajoutée  ", "success");
+        } else {
+          getClaimAudioApi(currentData?.id, props);
+          setOpen2(false);
+          setAudioBox(false);
+          setAudioListForm([]);
+          setAudioListUrlForm([]);
+          notify("Audio ajoutée ", "success");
+        }
+      })
+      .catch((err) => {
+        console.log("err add extra >> ", err);
+        notify("Une erreur s'est produite ", "error");
+      })
+      .then(() => {
+        setExtraFileLoading(false);
+      });
+  };
+
+  const handleContentSubmit = (e) => {
+    e.preventDefault();
+    setExtraFileLoading(true);
+    const formData = new FormData();
+    formData.append("claim_id", claim_id);
+    formData.append("contenu", extraContent);
+
+    addExtraClaimApi(formData)
+      .then((res) => {
+        console.log("res >> ", res);
+
+        props.extrasChanged(res.data.content.extras ?? []);
+        notify("Contenue joint ajoutée  ", "success");
+        setShowExtraContent(false);
+        setExtraContent("");
+      })
+      .catch((err) => {
+        console.log("err add extra >> ", err);
+        notify("Une erreur s'est produite ", "error");
+      })
+      .then(() => {
+        setExtraFileLoading(false);
+      });
+  };
 
   return (
     // "Liste Réclamations"
     <div id="main">
       {/* {props.showSelectPrintItem && ( */}
+      <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} />
+      {showExtraContent && (
+        <div>
+          <Dialog
+            open={showExtraContent}
+            fullWidth={true}
+            maxWidth="md"
+            onClose={(e) => {
+              setShowExtraContent(false);
+            }}
+            overflowX="hidden"
+            id="dialog-contenu"
+          >
+            <DialogTitle>Ajouter un contenu</DialogTitle>
+            <DialogContent sx={{ overflowX: "hidden" }}>
+              <TextField
+                fullWidth
+                multiline
+                minRows={4}
+                value={extraContent}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setExtraContent(e.target.value);
+                }}
+                placeholder="Saisissez le contenu..."
+              />
+            </DialogContent>
+            {extraContent && extraContent?.trim() !== "" ? (
+              <DialogActions sx={{ overflowX: "hidden" }}>
+                <LoadingButton
+                  onClick={(e) => {
+                    setExtraContent("");
+                    setShowExtraContent(false);
+                  }}
+                  className="waves-effect waves-effect-b waves-light btn-small"
+                  loadingPosition="end"
+                  // loading={extraFileLoading}
+                  endIcon={<CloseIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                  color="secondary"
+                >
+                  Annuler
+                </LoadingButton>
+                <LoadingButton
+                  onClick={(e) => {
+                    handleContentSubmit(e);
+                  }}
+                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                  loading={extraFileLoading}
+                  loadingPosition="end"
+                  endIcon={<SaveIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                  color="primary"
+                >
+                  Enregistrer
+                </LoadingButton>
+              </DialogActions>
+            ) : (
+              <></>
+            )}
+          </Dialog>
+        </div>
+      )}
+      {filesForm.length ? (
+        <div>
+          <Dialog
+            open={filesForm.length ? true : false}
+            fullWidth={true}
+            maxWidth="sm"
+            onClose={(e) => {
+              setFiles([]);
+            }}
+            id="dialog-addFile"
+          >
+            <DialogContent>
+              <DialogContentText>
+                <div className="col l12 s12 pb-2" id="content">
+                  <div className="df sb pb-2">
+                    <b>Ajout de fichier</b>
+                    <CloseIcon
+                      style={{ cursor: "pointer" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    />
+                  </div>
+                </div>
+              </DialogContentText>
+
+              <div className="col l12 m12 s12 file-field input-field">
+                <List component="div" role="group">
+                  {filesForm.map((file, i) => {
+                    return (
+                      <ListItemButton key={i} divider>
+                        <ListItemText
+                          primary={file.name}
+                          secondary={
+                            Math.round((file.size / 1024) * 100) / 100 +
+                            " " +
+                            "Ko"
+                          }
+                        />
+                      </ListItemButton>
+                    );
+                  })}
+                </List>
+                <div
+                  style={{ display: "flex", alignItems: "center" }}
+                  htmlFor="ile"
+                  onClick={(e) => setFiles([])}
+                >
+                  <LoadingButton
+                    onClick={(e) => {
+                      handleFileSubmit(e);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                    loading={extraFileLoading}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#1e2188",
+                      textTransform: "initial",
+                    }}
+                  >
+                    <span>Enregistrer</span>
+                  </LoadingButton>
+
+                  <LoadingButton
+                    onClick={(e) => {
+                      setFiles([]);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small"
+                    // loading={extraFileLoading}
+                    loadingPosition="end"
+                    endIcon={<CloseIcon />}
+                    variant="contained"
+                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                  >
+                    <span>Annuler</span>
+                  </LoadingButton>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      ) : (
+        <></>
+      )}
+      {showAudioBox && (
+        <div>
+          <Dialog
+            open={open2}
+            onClose={() => {
+              setOpen2(false);
+            }}
+            style={{ padding: "16px" }}
+            id="dialog-audio"
+          >
+            <DialogTitle
+              align="center"
+              color={"#1E2188"}
+              fontSize={"23px"}
+              fontWeight={"bold"}
+            >
+              {"Enregistreur vocal Réclamations"}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText
+                align="center"
+                fontSize={"14px"}
+                textAlign={"center"}
+              >
+                {
+                  "Cliquez sur le bouton ci-dessous et parler dans le micro de votre téléphone, ou branchez un casque ou des écouteurs"
+                }
+              </DialogContentText>
+
+              <section className="voice-recorder">
+                <div className="recorder-container">
+                  {audioListUrlForm.map((url, i) => {
+                    return (
+                      <Box
+                        key={i}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          pb: 2,
+                          pt: 2,
+                        }}
+                      >
+                        <audio
+                          src={url}
+                          controls
+                          sx={{ flex: "1", mr: 2, width: "100%" }}
+                        />
+                        <CloseIcon
+                          color="red"
+                          onClick={() => {
+                            setAudioListForm(() => {
+                              return audioListForm.filter(
+                                (va, ind) => ind !== i
+                              );
+                            });
+                            setAudioListUrlForm(() => {
+                              return audioListUrlForm.filter(
+                                (va, inde) => inde !== i
+                              );
+                            });
+                          }}
+                        />
+                      </Box>
+                    );
+                  })}
+                  <RecorderControls
+                    recorderState={recorderState}
+                    handlers={handlers}
+                    closeAction={() => {}}
+                  />
+                </div>
+              </section>
+            </DialogContent>
+            {audioListUrlForm.length ? (
+              <DialogActions>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "end",
+                    alignItems: "center",
+                  }}
+                >
+                  <LoadingButton
+                    onClick={(e) => {
+                      handleFileSubmit(e, false);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                    loading={extraFileLoading}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#1e2188",
+                      textTransform: "initial",
+                    }}
+                  >
+                    <span>Enregistrer</span>
+                  </LoadingButton>
+
+                  <LoadingButton
+                    onClick={(e) => {
+                      setAudioListForm([]);
+                      setAudioListUrlForm([]);
+                      setAudioBox(false);
+                      setOpen2(false);
+                    }}
+                    className="waves-effect waves-effect-b waves-light btn-small"
+                    loadingPosition="end"
+                    // loading={extraFileLoading}
+                    endIcon={<CloseIcon />}
+                    variant="contained"
+                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                  >
+                    <span>Annuler</span>
+                  </LoadingButton>
+                </Box>
+              </DialogActions>
+            ) : (
+              <></>
+            )}
+          </Dialog>
+        </div>
+      )}
+      <audio ref={audioRef} src={currentAudio} hidden />
+
       {handleImpression && (
         <>
           <div>
@@ -1992,9 +2915,7 @@ const ListeReclamations = (props) => {
                   </div>
                 </DialogContentText>
                 <div className="row">
-                  <div className="col l12 s12 m12 text-center">
-                    Reçu entre:
-                  </div>
+                  <div className="col l12 s12 m12 text-center">Reçu entre:</div>
                   {/*Date start*/}
                   <div className="col s12 m12 l6 input-field">
                     <DatePicker
@@ -2116,13 +3037,18 @@ const ListeReclamations = (props) => {
                       <a
                         onClick={(e) => {
                           if (startDate && endDate) {
-                            handlePrint22(config, selectOption, props.items, formatDate2(startDate), formatDate2(endDate));
+                            handlePrint22(
+                              config,
+                              selectOption,
+                              props.items,
+                              formatDate2(startDate),
+                              formatDate2(endDate)
+                            );
                           } else {
                             // Sinon, utiliser handlePrint2 sans filtre
                             handlePrint2(config, selectOption, props.items);
                           }
                         }}
-
                         className="btn indigo lighten-5 indigo-text waves-effect waves-effect-b waves-light"
                       >
                         <span className="text-nowrap">Imprimer</span>
@@ -2142,7 +3068,7 @@ const ListeReclamations = (props) => {
                           if (startDate && endDate) {
                             table2XLS2XF(
                               "Liste_des_réclamations" +
-                              today().replaceAll("/", ""),
+                                today().replaceAll("/", ""),
                               "brke",
                               selectOption,
                               props.items,
@@ -2153,7 +3079,7 @@ const ListeReclamations = (props) => {
                             // Sinon, utiliser handlePrint2 sans filtre
                             table2XLS2X(
                               "Liste_des_réclamations" +
-                              today().replaceAll("/", ""),
+                                today().replaceAll("/", ""),
                               "brke",
                               selectOption,
                               props.items
@@ -2203,11 +3129,17 @@ const ListeReclamations = (props) => {
                                   handleImpression();
                                   setChangeButtonPrint(true);
                                 } else {
-                                  handlePrint2(config, selectOption, props.items);
+                                  handlePrint2(
+                                    config,
+                                    selectOption,
+                                    props.items
+                                  );
                                 }
                               }}
                             />
-                          ) : ""}
+                          ) : (
+                            ""
+                          )}
 
                           {hbt.includes("H9") ? (
                             <img
@@ -2221,18 +3153,17 @@ const ListeReclamations = (props) => {
                                 } else {
                                   table2XLS2X(
                                     "Liste_des_réclamations" +
-                                    today().replaceAll("/", ""),
+                                      today().replaceAll("/", ""),
                                     "brke",
                                     selectOption,
                                     props.items
                                   );
                                 }
-
                               }}
                             />
-                          ) : ""}
-
-
+                          ) : (
+                            ""
+                          )}
                         </div>
                       </div>
                       <div className="col s12">
@@ -2300,7 +3231,7 @@ const ListeReclamations = (props) => {
                               <div className="row" id="informationReclamant">
                                 <div className="col s12 pb-2">
                                   <h6 className="card-title">
-                                    Informations du Réclamant
+                                    Informations du réclamant
                                   </h6>
                                 </div>
                                 <div className="row">
@@ -2361,7 +3292,6 @@ const ListeReclamations = (props) => {
                                         ""
                                       ))
                                   }
-
                                 </div>
                               </div>
                             </div>
@@ -2376,15 +3306,16 @@ const ListeReclamations = (props) => {
 
                                 <div className="row">
                                   <div className="col l6 s12 df pb-2" id="code">
-                                    <PinIcon sx={{ mr: 2 }} /> {props.code}
+                                    <PinIcon sx={{ mr: 2 }} />{" "}
+                                    {props.codeClient}
                                   </div>
 
                                   <div
                                     className="col l6 s12 df pb-2"
                                     id="recorded_at"
                                   >
-                                    <CalendarMonthIcon sx={{ mr: 2 }} /> Date de
-                                    réception : {props.recorded_at}
+                                    <CalendarMonthIcon sx={{ mr: 2 }} />
+                                    {formatDate4(props.recorded_at)}
                                   </div>
 
                                   <div
@@ -2431,81 +3362,229 @@ const ListeReclamations = (props) => {
                                     {props.created_by}
                                   </div>
 
-                                  {
-                                    (
-                                      props.created_at_online !== "" ? (
-                                        <>
-                                          <div
-                                            className="col l6 s12 df pb-2"
-                                            id="content"
-                                          >
-                                            <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
-                                            Date enregistrement offline : {creationDate}
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <div
-                                            className="col l6 s12 df pb-2"
-                                            id="content"
-                                          >
-                                            <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
-                                            Date enregistrement : {creationDate}
-                                          </div>
-                                        </>
-                                      ))
-                                  }
+                                  {props.created_at_online !== "" ? (
+                                    <>
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="content"
+                                      >
+                                        <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
+                                        Date enregistrement offline :{" "}
+                                        {creationDate}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="content"
+                                      >
+                                        <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
+                                        {creationDate}
+                                      </div>
+                                    </>
+                                  )}
 
-
-
-                                  {
-                                    (
-                                      props.created_at_online !== "" ? (
-                                        <>
-                                          <div
-                                            className="col l6 s12 df pb-2"
-                                            id="dateOffline"
-                                          >
-                                            {" "}
-                                            <CalendarTodayIcon
-                                              sx={{ mr: 2 }}
-                                            />{" "}
-                                            Date d'enregistrement online : {props.created_at_online !== null && props.created_at_online !== undefined && props.created_at_online !== "" ? formatDate(props.created_at_online) : ""}
-                                          </div>
-                                        </>
-                                      ) : (
-                                        ""
-                                      ))
-                                  }
+                                  {props.created_at_online !== "" ? (
+                                    <>
+                                      <div
+                                        className="col l6 s12 df pb-2"
+                                        id="dateOffline"
+                                      >
+                                        {" "}
+                                        <CalendarTodayIcon
+                                          sx={{ mr: 2 }}
+                                        />{" "}
+                                        Date d'enregistrement online :{" "}
+                                        {props.created_at_online !== null &&
+                                        props.created_at_online !== undefined &&
+                                        props.created_at_online !== ""
+                                          ? formatDate(props.created_at_online)
+                                          : ""}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    ""
+                                  )}
 
                                   <div
                                     className="col l12 s12 pb-2"
                                     id="content"
                                   >
-                                    <div className="df pb-2">
-                                      <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
-                                      Contenu
-                                    </div>
-                                    <div>{props.content}</div>
-                                    <div>{audioList}</div>
-                                    <div>{attachmentList}</div>
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div className="df pb-2">
+                                        <RecordVoiceOverIcon sx={{ mr: 2 }} />{" "}
+                                        {"Contenu"}
+                                      </div>
+                                      <span
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          setShowExtraContent(true);
+                                          setExtraContent("");
+                                        }}
+                                        className="pb-2 ml-3 "
+                                        style={{
+                                          cursor: "pointer",
+                                          color: "#1e2188",
+                                        }}
+                                      >
+                                        + Ajouter du contenu
+                                      </span>
+                                    </Box>
+
+                                    <List component="div" role="group">
+                                      <ListItemButton divider>
+                                        <ListItemText
+                                          primary={props.content}
+                                          secondary={
+                                            props.created_by +
+                                            " le " +
+                                            creationDate
+                                          }
+                                        />
+                                      </ListItemButton>
+
+                                      {props.extras?.map((extra) => {
+                                        return extra.contenu ? (
+                                          <ListItemButton
+                                            key={extra.id}
+                                            divider
+                                          >
+                                            <ListItemText
+                                              primary={extra.contenu}
+                                              secondary={
+                                                extra.user?.firstAndLastName +
+                                                " le " +
+                                                formatDate(extra.createdAt)
+                                              }
+                                            />
+
+                                            <Tooltip
+                                              title={
+                                                "Ce contenu a été ajouté ultérieurement par " +
+                                                extra.user?.firstAndLastName +
+                                                " le " +
+                                                formatDate(extra.createdAt) +
+                                                ". la plainte etait en etat: " +
+                                                getStatusLabel(extra.status)
+                                              }
+                                            >
+                                              <Info />
+                                            </Tooltip>
+                                          </ListItemButton>
+                                        ) : (
+                                          <></>
+                                        );
+                                      })}
+                                    </List>
                                   </div>
-                                  {/* <div
-                                    className="col l12 s12 pb-2"
-                                    id="content"
-                                  >
-                                     {attachmentList}
-                                  </div>
-                                  */}
                                 </div>
                               </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* file part */}
+                        <div className="">
+                          <div className="card-panel pb-5">
+                            <div className="row" id="">
+                              <div className="col s12 pb-2">
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Typography
+                                    gutterBottom
+                                    variant="body1"
+                                    component="div"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      mb: 1,
+                                      mr: 1,
+                                    }}
+                                  >
+                                    {" "}
+                                    Fichiers
+                                  </Typography>
+                                  <label
+                                    htmlFor="ile"
+                                    className="btn btn-primary"
+                                  >
+                                    Ajouter un fichier
+                                    <input
+                                      type="file"
+                                      id="ile"
+                                      ref={inputRef}
+                                      multiple
+                                      sx={{ display: "none" }}
+                                      onChange={(e) => {
+                                        setFiles([...e.target.files]);
+                                      }}
+                                      style={{ display: "none" }}
+                                      accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
+                                    />
+                                  </label>
+                                </Box>
+                              </div>
+                              <div className="col s12">{attachmentList}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Audio part */}
+                        <div className="">
+                          <div className="card-panel pb-5">
+                            <div className="row" id="">
+                              <div className="col s12 pb-3">
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Typography
+                                    gutterBottom
+                                    variant="body1"
+                                    component="div"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      mb: 1,
+                                      mr: 1,
+                                    }}
+                                  >
+                                    {" "}
+                                    Audios
+                                  </Typography>
+                                  <label
+                                    htmlFor="audio"
+                                    onClick={() => {
+                                      setAudioBox(true);
+                                      setOpen2(true);
+                                    }}
+                                    className="btn btn-primary"
+                                  >
+                                    Ajouter un audio
+                                  </label>
+                                </Box>
+                              </div>
+                              <div className="col s12">{audioList}</div>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       {/* second part */}
-
                       <div className="col l6 s12 pb-5" id="ficheReclamation">
                         <div className="card-panel pb-5">
                           <div className="row" id="">
@@ -2515,38 +3594,37 @@ const ListeReclamations = (props) => {
                                 style={{ justifyContent: "space-between" }}
                               >
                                 Détails du traitement
-
-                                {
-                                  (props.session !== "") && (addR === "PILOTE" || addR === "DE") ?
-
-                                    <LoadingButton
-                                      onClick={(e) => {
-                                        if (mode === 1) {
-                                          printToWord()
-                                        } else {
-                                          notify("Passez en mode Online pour télécharger le PV de la session ", "info")
-                                        }
-
-                                      }}
-
-                                      className="waves-effect waves-effect-b waves-light btn-small"
-                                      loading={props.etat3}
-                                      loadingPosition="end"
-                                      endIcon={<SaveIcon />}
-                                      variant="contained"
-                                      sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-                                    >
-                                      <span>Générer le PV de la session</span>
-                                    </LoadingButton>
-                                    : ""
-                                }
-
-
+                                {props.session !== "" &&
+                                (addR === "PILOTE" || addR === "DE") ? (
+                                  <LoadingButton
+                                    onClick={(e) => {
+                                      if (mode === 1) {
+                                        printToWord();
+                                      } else {
+                                        notify(
+                                          "Passez en mode Online pour télécharger le PV de la session ",
+                                          "info"
+                                        );
+                                      }
+                                    }}
+                                    className="waves-effect waves-effect-b waves-light btn-small"
+                                    loading={props.etat3}
+                                    loadingPosition="end"
+                                    endIcon={<SaveIcon />}
+                                    variant="contained"
+                                    sx={{
+                                      backgroundColor: "#1e2188",
+                                      textTransform: "initial",
+                                    }}
+                                  >
+                                    <span>Générer le PV de la session</span>
+                                  </LoadingButton>
+                                ) : (
+                                  ""
+                                )}
                               </h5>
                             </div>
                           </div>
-
-
 
                           <div className="row">
                             <div className="col s12 m12">
@@ -2607,6 +3685,7 @@ const mapStateToProps = (state) => {
     resolved_at: state.claim_list.resolved_at,
     resolved_by: state.claim_list.resolved_by,
     appraised_at: state.claim_list.appraised_at,
+    extras: state.claim_list.extras,
     appraised_by: state.claim_list.appraised_by,
     appraisal: state.claim_list.appraisal,
     errors: state.claim_list.claim_appraise_errors,
@@ -2764,6 +3843,12 @@ const mapDispatchToProps = (dispatch) => {
     },
     crewChanged: (crew) => {
       dispatch(crewChanged(crew));
+    },
+    showModalHistoriqueChanged: (showModal) => {
+      dispatch(showModalChanged(showModal));
+    },
+    extrasChanged: (collect) => {
+      dispatch(extrasChanged(collect));
     },
   };
 };
