@@ -194,19 +194,31 @@ const SignCompteUser = (props) => {
                         navigate.push("/login");
                     } else {
                         localStorage.removeItem("afterInscription");
-                        notify("Erreur, Les identifiants sont incorrectes", "error");
+                        clearComponentState();
+                       const message =
+                            data.response?.content?.message ||
+                            data.response?.data?.message ||
+                            "Erreur - Veuillez réessayer!";
+
+                        notify(message, "error");
                     }
                 })
                 .catch((error) => {
                     console.log("Erreur HTTP : ", error);
                     localStorage.removeItem("afterInscription");
                     const response = error.response;
-                    if (response?.data) {
-                        console.log("Erreur logique ou validation : ", response.data);
-                        notify(`Erreur, ${(response.data.response.content.title === "Invalid email") ? "L'email existe déjà" : response.data.response.content.message || "Une erreur s'est produite"}`, "error");
-                    } else {
-                        notify("Erreur inconnue", "error");
-                    }
+                     const message =
+                            response?.content?.message ||
+                            response?.data?.message ||
+                            "Erreur - Veuillez réessayer!";
+
+                        notify(message, "error");
+                    // if (response?.data) {
+                    //     console.log("Erreur logique ou validation : ", response.data);
+                    //     notify(`Erreur, ${(response.data.response.content.title === "Invalid email") ? "L'email existe déjà" : response.data.response.content.message || "Une erreur s'est produite"}`, "error");
+                    // } else {
+                    //     notify("Erreur inconnue", "error");
+                    // }
                 }).finally(() => {            
                     props.etatChanged(false)
                     handleCancel(e)
@@ -516,7 +528,7 @@ const SignCompteUser = (props) => {
                                                 </Select>
                                             </FormControl>
                                             <label htmlFor="poste" className="active">
-                                                Est-il le gérant du point de service ?&nbsp;
+                                                Etes-vous gérant du point de service ?&nbsp;
                                             </label>
                                             <small className="errorTxt4">
                                                 <div id="cpassword-error" className="error">
