@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
@@ -47,22 +47,44 @@ const styles = {
     }),
     menu: provided => ({ ...provided, zIndex: 9999 })
 };
+
 const PointsServices = (props) => {
+    const [allSPs, setAllSPs] = useState([]);
     useEffect(() => {
-        all(props).then((r) => { });
+        // récupérer tous les points de service
+        all(props).then((r) => {
+            setAllSPs(r); // on stocke dans le state
+        });
 
         emitter.on('confirm', (e) => {
             handleDelete(e);
         });
+
         window.$('.tooltipped').tooltip();
-        //cleanup
+
+        // cleanup
         return clearComponentState();
     }, []);
 
-    const topRef = useRef(null); 
+
+    const topRef = useRef(null);
     useAutoScroll(topRef, [props.selectedItem.id], "top");
 
+
     let columns = [
+        {
+            key: "uuid",
+            text: "Uuid",
+            className: "name",
+            align: "left",
+            sortable: true,
+            cell: (sp) => {
+                let uuid = sp.uuid;
+                if (sp.deleted)
+                    return <div style={{ display: "flex", alignItems: "center" }}><Block color="darkred" fontSize="10px" /><i style={{ color: "lightgray" }}>{uuid}</i></div>
+                return uuid;
+            },
+        },
         {
             key: "libelle",
             text: "Intitulé",
@@ -72,7 +94,7 @@ const PointsServices = (props) => {
             cell: (sp) => {
                 let libelle = sp.libelle;
                 if (sp.deleted)
-                    return <div style={{ display: "flex", alignItems: "center" }}><Block color="darkred" fontSize="10px" /><i style={{ color: "lightgray" }}>{libelle}</i></div>
+                    return <div style={{ display: "flex", alignItems: "center" }}><i style={{ color: "lightgray" }}>{libelle}</i></div>
                 return libelle;
             },
 
@@ -104,12 +126,22 @@ const PointsServices = (props) => {
             },
         },
         {
-            key: "uuid",
-            text: "Uuid",
-            className: "description",
+            key: "direction_id",
+            text: "Lié à",
+            className: "type",
             align: "left",
-            sortable: true
+            sortable: true,
+            cell: (sp) => {
+                // Trouver le SP correspondant à direction_id
+                const directionSP = allSPs.find(d => d.id === sp.direction_id);
+                const libelle = directionSP ? directionSP.libelle : "";
+
+                console.log("SP", libelle);
+
+                return sp.deleted ? <i style={{ color: "lightgray" }}>{libelle}</i> : libelle;
+            },
         },
+
         {
             key: "action",
             text: "Actions",
@@ -283,6 +315,8 @@ const PointsServices = (props) => {
             item["description"] = props.description;
             item["direction_id"] = props.unit;
 
+
+
             props.etat2Changed(true)
             modification(item, props).then(() => {
                 handleCancel(e)
@@ -312,7 +346,7 @@ const PointsServices = (props) => {
 
         props.etat3Changed(true)
         suppression(props, sp).then(() => {
-            handleCancel(e) 
+            handleCancel(e)
         })
 
         props.psErrors(errors)

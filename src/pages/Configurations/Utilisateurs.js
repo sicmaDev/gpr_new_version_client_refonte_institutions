@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
 import HelpIcon from '@mui/icons-material/Help';
@@ -10,24 +10,24 @@ import EditIcon from "@mui/icons-material/Edit";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Tooltip, IconButton } from "@mui/material";
 import {
-    userErrors, additionalRoleChanged,emailChanged,
-    nameChanged,codeChanged,
-    idChanged, posteChanged,unitChanged,
-    phoneChanged,passwordAgainChanged, passwordChanged,itemsChanged, selectedItemChanged, posteLibelleChanged, unitLibelleChanged, etat3Changed, etat2Changed, etatChanged
+    userErrors, additionalRoleChanged, emailChanged,
+    nameChanged, codeChanged,
+    idChanged, posteChanged, unitChanged,
+    phoneChanged, passwordAgainChanged, passwordChanged, itemsChanged, selectedItemChanged, posteLibelleChanged, unitLibelleChanged, etat3Changed, etat2Changed, etatChanged
 } from "../../redux/actions/Configurations/UtilisateursActions";
 
-import {cleanPhoneNumber, isValidMdp, isValidPhone, loadItemFromSessionStorage, today,groupBy, loadItemFromLocalStorage} from "../../Utils/utils";
+import { cleanPhoneNumber, isValidMdp, isValidPhone, loadItemFromSessionStorage, today, groupBy, loadItemFromLocalStorage } from "../../Utils/utils";
 
 // import {useOnScreen} from "../../utils/custom_hooks";
-import {modalify} from "../../Utils/modal";
+import { modalify } from "../../Utils/modal";
 import { connect } from "react-redux";
 import { ajout, all, disabled, liste, modification, suppression } from "../../apis/Configurations/UtilisateursApi";
 // import IntlTelInput from 'react-intl-tel-input';
 // import 'react-intl-tel-input/dist/main.css';
 import excel from '../../assets/images/excel.svg'
 import pdf from '../../assets/images/pdf.svg'
-import {handlePrint} from "../../Utils/tables";
-import {table2XLSX} from "../../Utils/tabletoexcel";
+import { handlePrint } from "../../Utils/tables";
+import { table2XLSX } from "../../Utils/tabletoexcel";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -48,7 +48,7 @@ const styles = {
         height: 35,
         minHeight: 35
     }),
-    menu: provided => ({...provided, zIndex: 9999})
+    menu: provided => ({ ...provided, zIndex: 9999 })
 };
 const Utilisateurs = (props) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -58,7 +58,7 @@ const Utilisateurs = (props) => {
         setShowPassword(!showPassword);
     };
 
-    const topRef = useRef(null); 
+    const topRef = useRef(null);
     useAutoScroll(topRef, [props.selectedItem.id], "top");
 
     const toggleShowPassword1 = () => {
@@ -77,53 +77,53 @@ const Utilisateurs = (props) => {
     let users = loadItemFromLocalStorage("app-users") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-users")) : undefined;
     let nba = users !== undefined ? users.length : 0;
     useEffect(() => {
-        all(props).then((r) => {});
-      
+        all(props).then((r) => { });
+
         window.$('.tooltipped').tooltip();
         //cleanup
         return clearComponentState();
     }, []);
 
     const [max, setMax] = useState();
-  
+
     const licenseControl = async () => {
-      try {
-        let resultat = await licenseInfo();
-        // console.log("resultat", resultat);
-        setMax(resultat.maxPoste)
-        
-      } catch (error) {
-        // console.error("Une erreur s'est produite :", error);
-      }
+        try {
+            let resultat = await licenseInfo();
+            // console.log("resultat", resultat);
+            setMax(resultat.maxPoste)
+
+        } catch (error) {
+            // console.error("Une erreur s'est produite :", error);
+        }
     };
-  
+
     useEffect(() => {
-      const fetchData = async () => {
-        await licenseControl();
-      };
-  
-      fetchData();
+        const fetchData = async () => {
+            await licenseControl();
+        };
+
+        fetchData();
     }, []);
 
     const handleDisable = (e, user, isDisabled = true, suppression = false) => {
         e.preventDefault();
         e.stopPropagation();
-        const id = user.id;        
+        const id = user.id;
 
         if (suppression) {
             handleDelete(e, user)
         } else {
-            disabled(props,id,isDisabled).then(function (response) {
-                notify(`Bravo - Le compte de l'utilisateur a été ${isDisabled ? "désactivé" :"activé"} avec succes`,"success")
+            disabled(props, id, isDisabled).then(function (response) {
+                notify(`Bravo - Le compte de l'utilisateur a été ${isDisabled ? "désactivé" : "activé"} avec succes`, "success")
                 all(props).then((r) => { });
                 handleCancel(e)
             })
-            .catch(function (error) {
-                notify(`Erreur - Le compte de l'utilisateur n'a pas été ${isDisabled ? "désactivé" :"activé"}`,"error")
-            });
+                .catch(function (error) {
+                    notify(`Erreur - Le compte de l'utilisateur n'a pas été ${isDisabled ? "désactivé" : "activé"}`, "error")
+                });
         }
     }
-    
+
     const handleDisabledModal = (e, sp, suppression = false) => {
         e.stopPropagation();
         const spRattached = sp.rattached;
@@ -135,6 +135,7 @@ const Utilisateurs = (props) => {
             modalify("Confirmation", "Voulez-vous vraiment supprimé ce compte ?", "confirm", (e) => handleDisable(e, sp, false, true))
         }
     }
+
 
     let code;
     let columns = [
@@ -183,11 +184,22 @@ const Utilisateurs = (props) => {
             TrOnlyClassName: "hide",
             cell: (user, index) => {
                 let additionalRole = ""
+                let Ra = ""
                 if (user.additionalRole !== undefined) {
+
                     if (user.additionalRole === "DE") additionalRole = "Directeur";
+
                     if (user.additionalRole === "PILOTE") additionalRole = "Pilote";
                 }
-                return additionalRole
+                if (user.ra) {
+                    Ra = "Responsable d'Agence";
+                }
+                else {
+                    Ra = "";
+                }
+
+
+                return additionalRole, Ra
             }
         },
         {
@@ -220,15 +232,19 @@ const Utilisateurs = (props) => {
             sortable: true,
             cell: (user, index) => {
                 let additionalRole = ""
+                let Ra = ""
                 if (user.additionalRole !== undefined) {
                     if (user.additionalRole === "DE") additionalRole = "Directeur";
                     if (user.additionalRole === "PILOTE") additionalRole = "Pilote";
                 }
+                if (user.ra) Ra = "Responsable d'agence";
                 if (user.deleted) {
-                    return (<><i style={{ color: "lightgray" }}>{user.posteDto.libelle}</i><br /><i style={{ color: "lightgray" }} className="truncate">{user.servicePointDto.libelle}</i> <br /><i style={{ color: "lightgray" }}>{additionalRole}</i></>)
-
+                    return (<><i style={{ color: "lightgray" }}>{user.posteDto.libelle}</i><br /><i style={{ color: "lightgray" }} className="truncate">{user.servicePointDto.libelle}</i> <br /><i style={{ color: "lightgray" }}>{additionalRole}</i><i style={{ color: "lightgray" }}>{Ra}</i></>)
                 }
-                return (<><span>{user.posteDto.libelle}</span><br /><span className="truncate">{user.servicePointDto.libelle}</span> <br /><span>{additionalRole}</span></>)
+
+
+
+                return (<><span>{user.posteDto.libelle}</span><br /><span className="truncate">{user.servicePointDto.libelle}</span> <br /><span className="truncate">{additionalRole}</span><span>{Ra}</span> </>)
             }
         },
         {
@@ -275,7 +291,7 @@ const Utilisateurs = (props) => {
                             <>
                                 <div style={{ display: "flex", gap: "5px" }}>
                                     <Tooltip title="Approuver">
-                                        <IconButton onClick={(e) => { handleDisable(e, user, false) }} color="default"><CheckCircleIcon  sx={{ color: '#66bb6a' }} /></IconButton>
+                                        <IconButton onClick={(e) => { handleDisable(e, user, false) }} color="default"><CheckCircleIcon sx={{ color: '#66bb6a' }} /></IconButton>
                                     </Tooltip>
                                     <Tooltip title="Rejeter">
                                         <IconButton onClick={(e) => handleDisabledModal(e, user, true)} color="error"><DeleteIcon /></IconButton>
@@ -315,7 +331,7 @@ const Utilisateurs = (props) => {
                                 </Tooltip>
                             </div>
                         </>
-                    ) 
+                    )
                 }
             }
         },
@@ -323,7 +339,7 @@ const Utilisateurs = (props) => {
 
     let config = {
         page_size: 15,
-        length_menu: [ 15, 25, 50, 100],
+        length_menu: [15, 25, 50, 100],
         show_filter: true,
         show_pagination: true,
         filename: "Utilisateurs",
@@ -336,25 +352,25 @@ const Utilisateurs = (props) => {
             length_menu: "Afficher _MENU_ éléments",
             filter: "Rechercher...",
             info: "Affichage de l'élement _START_ à _END_ sur _TOTAL_ éléments",
-            zero_records:    "Aucun élément à afficher",
+            zero_records: "Aucun élément à afficher",
             no_data_text: "Aucun élément à afficher",
             loading_text: "Chargement en cours...",
             pagination: {
-                first: <FirstPageIcon/>,
-                previous: <ChevronLeftIcon/>,
-                next: <ChevronRightIcon/>,
-                last: <LastPageIcon/>
+                first: <FirstPageIcon />,
+                previous: <ChevronLeftIcon />,
+                next: <ChevronRightIcon />,
+                last: <LastPageIcon />
             }
         }
     }
     let errors = {};
-   
+
     let roleOptions
     if (props.additionalRole !== undefined) {
         roleOptions = [
-            {"label": "Directeur", "value": "DE" },
-            {"label": "Pilote", "value": "PILOTE" },
-            {"label": "Aucun", "value": "MOLDUE" },
+            { "label": "Directeur", "value": "DE" },
+            { "label": "Pilote", "value": "PILOTE" },
+            { "label": "Aucun", "value": "MOLDUE" },
         ]
 
     } else {
@@ -371,51 +387,51 @@ const Utilisateurs = (props) => {
     const handleChange12 = (selectedOption) => {
         setCa(selectedOption.value);
         // console.log('Option sélectionnée:', selectedOption);
-    } 
+    }
 
 
-    const handleValidation = () =>{
+    const handleValidation = () => {
         let isValid = true;
 
-        if((props.name==="" || props.name===undefined || props.name===null)){
+        if ((props.name === "" || props.name === undefined || props.name === null)) {
             isValid = false;
             errors["name"] = "Champ incorrect";
         }
-        
-        if((props.poste==="" || props.poste===undefined || props.poste===null)){
+
+        if ((props.poste === "" || props.poste === undefined || props.poste === null)) {
             isValid = false;
             errors["poste"] = "Champ incorrect";
         }
-        if((props.unit==="" || props.unit===undefined || props.unit===null)){
+        if ((props.unit === "" || props.unit === undefined || props.unit === null)) {
             isValid = false;
             errors["unit"] = "Champ incorrect";
         }
-        if((props.email==="" || props.email===undefined || props.email===null) || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(props.email)){
+        if ((props.email === "" || props.email === undefined || props.email === null) || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(props.email)) {
             isValid = false;
             errors["email"] = "Champ incorrect";
         }
-        if((props.phone==="" || props.phone===undefined || props.phone===null) || !isValidPhone(props.phone)){
+        if ((props.phone === "" || props.phone === undefined || props.phone === null) || !isValidPhone(props.phone)) {
             isValid = false;
             errors["phone"] = "Champ incorrect";
         }
-       
-        if(props.pass!==props.pass_again){
+
+        if (props.pass !== props.pass_again) {
             isValid = false;
             errors["pass"] = "Les mots de passe ne correspondent pas";
             errors["pass_again"] = "Les mots de passe ne correspondent pas";
         }
         return isValid
     }
-    const handleMdp = () =>{
+    const handleMdp = () => {
         let isValid2 = true;
-        if((props.pass==="" || props.pass===undefined || props.pass===null)){
+        if ((props.pass === "" || props.pass === undefined || props.pass === null)) {
             isValid2 = false;
-        }else if((props.pass!=="" || props.pass!==undefined || props.pass!==null)){
+        } else if ((props.pass !== "" || props.pass !== undefined || props.pass !== null)) {
             if (!isValidMdp(props.pass)) {
                 errors["pass"] = "Le mot de passe est faible";
                 isValid2 = false;
             }
-          
+
         }
         return isValid2;
     }
@@ -431,15 +447,15 @@ const Utilisateurs = (props) => {
         data["additionalRole"] = props.additionalRole;
         data["password"] = props.pass;
         data["ra"] = ca;
-    //    console.log("ca",ca)
-       
-        if(handleValidation() && handleMdp()){
+        //    console.log("ca",ca)
+
+        if (handleValidation() && handleMdp()) {
             props.etatChanged(true)
             ajout(data, props).then(() => {
                 handleCancel(e)
             })
         }
-       
+
         props.userErrors(errors)
     }
     function clearComponentState() {
@@ -474,17 +490,17 @@ const Utilisateurs = (props) => {
         data["additionalRole"] = props.additionalRole;
         data["password"] = props.pass;
         data["ra"] = ca;
-       
+
         if (handleValidation()) {
             props.etatChanged(true)
-            if((props.pass==="" || props.pass===undefined || props.pass===null)){
-                modification (data, props).then(() => {
+            if ((props.pass === "" || props.pass === undefined || props.pass === null)) {
+                modification(data, props).then(() => {
                     handleCancel(e)
                 })
-                
-            }else{
+
+            } else {
                 if (handleMdp()) {
-                    modification (data, props).then(() => {
+                    modification(data, props).then(() => {
                         handleCancel(e)
                     })
                 }
@@ -553,28 +569,28 @@ const Utilisateurs = (props) => {
 
     const rowClickedHandler = (event, data, rowIndex) => {
         console.log("data", data)
-        props.idChanged(data.id?data.id:"")
-        props.codeChanged(data.code?data.code:"")
-        props.nameChanged(data.firstAndLastName?data.firstAndLastName:"")
-        props.emailChanged(data.email?data.email:"")
-        props.phoneChanged(data.tel?data.tel:"")
-        props.unitChanged(data.servicePointDto.id?data.servicePointDto.id:"")
-        props.unitLibelleChanged(data.servicePointDto.libelle?data.servicePointDto.libelle:"")
-        props.posteChanged(data.posteDto.id?data.posteDto.id:"")
-        props.posteLibelleChanged(data.posteDto.libelle?data.posteDto.libelle:"")
-        props.additionalRoleChanged(data.additionalRole?data.additionalRole:"")
+        props.idChanged(data.id ? data.id : "")
+        props.codeChanged(data.code ? data.code : "")
+        props.nameChanged(data.firstAndLastName ? data.firstAndLastName : "")
+        props.emailChanged(data.email ? data.email : "")
+        props.phoneChanged(data.tel ? data.tel : "")
+        props.unitChanged(data.servicePointDto.id ? data.servicePointDto.id : "")
+        props.unitLibelleChanged(data.servicePointDto.libelle ? data.servicePointDto.libelle : "")
+        props.posteChanged(data.posteDto.id ? data.posteDto.id : "")
+        props.posteLibelleChanged(data.posteDto.libelle ? data.posteDto.libelle : "")
+        props.additionalRoleChanged(data.additionalRole ? data.additionalRole : "")
         props.selectedItemChanged(data)
-       
+
     }
     let titles
     let units
-    try{
+    try {
         titles = JSON.parse(loadItemFromLocalStorage('app-postes'));
         units = JSON.parse(loadItemFromLocalStorage('app-ps'));
     }
     catch (e) {
-        titles=[];
-        units=[];
+        titles = [];
+        units = [];
     }
 
     let titleOptions
@@ -582,107 +598,107 @@ const Utilisateurs = (props) => {
     let agencyOptions
     let directionOptions
     let guichetOptions
-    let unitsGroupByType = (units!==undefined)? groupBy(units, "type"): undefined;
+    let unitsGroupByType = (units !== undefined) ? groupBy(units, "type") : undefined;
     //
-    if (unitsGroupByType!== undefined && unitsGroupByType["AGENCE"] !== undefined) {
+    if (unitsGroupByType !== undefined && unitsGroupByType["AGENCE"] !== undefined) {
         agencyOptions = unitsGroupByType["AGENCE"].map(agency => {
-            return {"label": agency.libelle, "value": agency.id}
+            return { "label": agency.libelle, "value": agency.id }
         })
     } else {
         agencyOptions = ""
     }
-   
-    if (unitsGroupByType!== undefined && unitsGroupByType["DIRECTION"] !== undefined) {
+
+    if (unitsGroupByType !== undefined && unitsGroupByType["DIRECTION"] !== undefined) {
         directionOptions = unitsGroupByType["DIRECTION"].map(direction => {
-            return {"label": direction.libelle, "value": direction.id}
+            return { "label": direction.libelle, "value": direction.id }
         })
     } else {
         directionOptions = ""
     }
-    if (unitsGroupByType!== undefined && unitsGroupByType["GUICHET"] !== undefined) {
+    if (unitsGroupByType !== undefined && unitsGroupByType["GUICHET"] !== undefined) {
         guichetOptions = unitsGroupByType["GUICHET"].map(guichet => {
-            return {"label": guichet.libelle, "value": guichet.id}
+            return { "label": guichet.libelle, "value": guichet.id }
         })
     } else {
         guichetOptions = ""
     }
-   
+
     unitOptions = []
-    if(directionOptions!==""){unitOptions.push({"label": "Direction", "options": directionOptions})}
-    if(agencyOptions!==""){unitOptions.push({"label": "Agence", "options": agencyOptions})}
-    if(guichetOptions!==""){unitOptions.push({"label": "Guichet", "options": guichetOptions})}
+    if (directionOptions !== "") { unitOptions.push({ "label": "Direction", "options": directionOptions }) }
+    if (agencyOptions !== "") { unitOptions.push({ "label": "Agence", "options": agencyOptions }) }
+    if (guichetOptions !== "") { unitOptions.push({ "label": "Guichet", "options": guichetOptions }) }
     // //
     if (titles !== undefined) {
         titleOptions = titles.map(title => {
-            return {"label": title.libelle, "value": title.id}
+            return { "label": title.libelle, "value": title.id }
         })
     } else {
         titleOptions = ""
     }
-   
-   
+
+
     let roleValue
-    if(props.additionalRole==="PILOTE") roleValue={"label": "Pilote", "value": props.additionalRole }
-    if(props.additionalRole==="MOLDUE") roleValue={"label": "Aucun", "value": "" }
+    if (props.additionalRole === "PILOTE") roleValue = { "label": "Pilote", "value": props.additionalRole }
+    if (props.additionalRole === "MOLDUE") roleValue = { "label": "Aucun", "value": "" }
 
     // if(props.role==="") roleValue={"label": "", "value": props.role }
 
-  
-    let titleText = props.selectedItem.id!== undefined ? "Modifier ou Supprimer" : "Ajouter";
-   
-    let buttons = props.selectedItem.id!== undefined ?
-    (<>
-        <LoadingButton
-            className="btn waves-light mr-1 btn-small red-text white lighten-4"
-            onClick={(e) => handleCancel(e)}
-            loading={props.etat2}
-            loadingPosition="end"
-            endIcon={<CancelIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Annuler</span>
-        </LoadingButton>
 
-        <LoadingButton
-            className="btn  waves-light mr-1 btn-small"
-            onClick={(e) => handleEditModal(e)}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Modifier</span>
-        </LoadingButton>
-        
-    </>)
-    :
-    (
-        (max !== undefined && nba < max) ?
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
-            onClick={(e) => handleSubmit(e)}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Ajouter</span>
-        </LoadingButton>
+    let titleText = props.selectedItem.id !== undefined ? "Modifier ou Supprimer" : "Ajouter";
+
+    let buttons = props.selectedItem.id !== undefined ?
+        (<>
+            <LoadingButton
+                className="btn waves-light mr-1 btn-small red-text white lighten-4"
+                onClick={(e) => handleCancel(e)}
+                loading={props.etat2}
+                loadingPosition="end"
+                endIcon={<CancelIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Annuler</span>
+            </LoadingButton>
+
+            <LoadingButton
+                className="btn  waves-light mr-1 btn-small"
+                onClick={(e) => handleEditModal(e)}
+                loading={props.etat}
+                loadingPosition="end"
+                endIcon={<SaveIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Modifier</span>
+            </LoadingButton>
+
+        </>)
         :
-        <div className="card-alert card red lighten-5">
-            <div className="card-content red-text">
-                <ul>
-                    Nombre maximum de compte utilisateur atteint. <a href="mailto:support.gpr@sicmagroup.com"> Contactez-nous</a> pour mettre à niveau le nombre de comptes utilisateurs.
-                </ul>
-            </div>
-        </div>
-       
-    )
+        (
+            (max !== undefined && nba < max) ?
+                <LoadingButton
+                    className="btn waves-effect waves-light mr-1 btn-small"
+                    onClick={(e) => handleSubmit(e)}
+                    loading={props.etat}
+                    loadingPosition="end"
+                    endIcon={<SaveIcon />}
+                    variant="contained"
+                    sx={{ textTransform: "initial" }}
+                >
+                    <span>Ajouter</span>
+                </LoadingButton>
+                :
+                <div className="card-alert card red lighten-5">
+                    <div className="card-content red-text">
+                        <ul>
+                            Nombre maximum de compte utilisateur atteint. <a href="mailto:support.gpr@sicmagroup.com"> Contactez-nous</a> pour mettre à niveau le nombre de comptes utilisateurs.
+                        </ul>
+                    </div>
+                </div>
 
-    const handlePhoneChanged = (isValid, value, selectedCountryData) =>{
+        )
+
+    const handlePhoneChanged = (isValid, value, selectedCountryData) => {
         // if(isValid){
         //     props.phoneChanged("00"+selectedCountryData.dialCode+value)
 
@@ -692,7 +708,7 @@ const Utilisateurs = (props) => {
         //     props.phoneChanged("")
         // }
     }
-    const tableChangeHandler =()=>{
+    const tableChangeHandler = () => {
         // console.log("Started filtering the table")
     };
     return (
@@ -708,19 +724,19 @@ const Utilisateurs = (props) => {
                             <div className="row">
                                 <div className="col s12 input-field">
                                     <input id="usfirstname" name="name" type="text"
-                                           className="validate" value={props.name} placeholder="" onChange={(e) => props.nameChanged(e.target.value)}
-                                           data-error=".errorTxt1"/>
+                                        className="validate" value={props.name} placeholder="" onChange={(e) => props.nameChanged(e.target.value)}
+                                        data-error=".errorTxt1" />
                                     <label htmlFor="usfirstname" className={"active"}>Nom et Prénom(s)</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.errors.name}</div>
                                     </small>
                                 </div>
-                                
+
                                 <div className="col s12 input-field">
                                     <input id="usemail" name="email" type="text" onChange={(e) => props.emailChanged(e.target.value)}
-                                           className=""
-                                           placeholder=""
-                                           value={props.email}/>
+                                        className=""
+                                        placeholder=""
+                                        value={props.email} />
                                     <label htmlFor="usemail" className={"active"}>Adresse électronique</label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.errors.email}</div>
@@ -732,60 +748,60 @@ const Utilisateurs = (props) => {
 
                                     <label htmlFor="usphone" className={"active"}>Téléphone&nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: 22890909090 ou +22890909090">
-                                            <HelpIcon/>
+                                            <HelpIcon />
                                         </a></label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.errors.phone}</div>
                                     </small>
                                 </div>
                                 {/* <div className="row"> */}
-                                    <div className="col s12">
-                                        <div className="input-field">
-                                            <input id="newpswd" name="newpswd" 
-                                                type={showPassword ? "text" : "password"}
-                                                placeholder=""
-                                                data-error=".errorTxt5" value={props.pass}
-                                                onChange={(e) => props.passwordChanged(e.target.value)}/> 
-                                            <label htmlFor="usnewpswd" className={"active"}>Mot de passe
-                                                <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Le mot de passe doit contenir au moins un chiffre et un symbol">
-                                                    <HelpIcon/>
-                                                </a>
-                                                <span style={{ color: "#007bff", cursor: "pointer", margin: "0px 15px" }} onClick={generateCode}>Générer un mot de passe</span>
-                                            </label>
-                                            <small className="errorTxt4">
-                                                <div id="cpassword-error" className="error">{props.errors.pass}</div>
-                                            </small>
-                                            <span
-                                                onClick={toggleShowPassword}
-                                                style={{
-                                                    position: 'absolute',
-                                                    right: '10px',
-                                                    top: '50%',
-                                                    transform: 'translateY(-50%)',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                            </span>
+                                <div className="col s12">
+                                    <div className="input-field">
+                                        <input id="newpswd" name="newpswd"
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder=""
+                                            data-error=".errorTxt5" value={props.pass}
+                                            onChange={(e) => props.passwordChanged(e.target.value)} />
+                                        <label htmlFor="usnewpswd" className={"active"}>Mot de passe
+                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Le mot de passe doit contenir au moins un chiffre et un symbol">
+                                                <HelpIcon />
+                                            </a>
+                                            <span style={{ color: "#007bff", cursor: "pointer", margin: "0px 15px" }} onClick={generateCode}>Générer un mot de passe</span>
+                                        </label>
+                                        <small className="errorTxt4">
+                                            <div id="cpassword-error" className="error">{props.errors.pass}</div>
+                                        </small>
+                                        <span
+                                            onClick={toggleShowPassword}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '10px',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                                        </span>
 
-                                            {/* <span class="material-icons indigo-text">visibility</span> */}
-                                        </div>
-                                        
+                                        {/* <span class="material-icons indigo-text">visibility</span> */}
                                     </div>
-                                    {/* <div className="col s1">
+
+                                </div>
+                                {/* <div className="col s1">
                                         <span class="material-icons indigo-text">visibility</span>
                                     </div> */}
                                 {/* </div> */}
-                               
+
                                 <div className="col s12">
                                     <div className="input-field">
-                                        <input id="usrepswd" 
+                                        <input id="usrepswd"
                                             type={showPassword1 ? "text" : "password"}
                                             name="repswd"
                                             placeholder=""
                                             data-error=".errorTxt6"
                                             value={props.pass_again}
-                                            onChange={(e) => props.passwordAgainChanged(e.target.value)}/>
+                                            onChange={(e) => props.passwordAgainChanged(e.target.value)} />
                                         <label htmlFor="usrepswd" className={"active"}>Mot de passe encore</label>
                                         <small className="errorTxt4">
                                             <div id="cpassword-error" className="error">{props.errors.pass_again}</div>
@@ -809,7 +825,7 @@ const Utilisateurs = (props) => {
 
                         <div className="col s12 m6">
                             <div className="row">
-                               
+
                                 <div className="col s12 input-field">
                                     <Select
                                         id="usjobtitle"
@@ -818,7 +834,7 @@ const Utilisateurs = (props) => {
                                         classNamePrefix="react-select"
                                         style={styles}
                                         placeholder="Sélectionner le poste"
-                                        value={props.poste ? {"label": props.posteLibelle, "value": props.poste } : "Sélectionner le poste"}
+                                        value={props.poste ? { "label": props.posteLibelle, "value": props.poste } : "Sélectionner le poste"}
                                         // onChange={(e) => props.posteChanged(e.value)}
                                         onChange={handleChange}
                                     />
@@ -837,7 +853,7 @@ const Utilisateurs = (props) => {
                                         classNamePrefix="react-select"
                                         style={styles}
                                         placeholder="Sélectionner l'unité organisationnelle"
-                                        value={props.unit ? {"label": props.unitLibelle, "value": props.unit } : "Sélectionner l'unité organisationnelle"}
+                                        value={props.unit ? { "label": props.unitLibelle, "value": props.unit } : "Sélectionner l'unité organisationnelle"}
                                         // onChange={(e) => props.unitChanged(e.value)}
                                         onChange={handleChange1}
                                     />
@@ -863,8 +879,8 @@ const Utilisateurs = (props) => {
                                     />
                                     <label htmlFor="usrole" className={"active"}>Est-il le gérant du point de service ?&nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                           data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
-                                            <HelpIcon/>
+                                            data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
+                                            <HelpIcon />
                                         </a>
                                     </label>
                                     <small className="errorTxt4">
@@ -888,8 +904,8 @@ const Utilisateurs = (props) => {
                                     />
                                     <label htmlFor="usrole" className={"active"}>Privilège Spécifique&nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                        data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
-                                            <HelpIcon/>
+                                            data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
+                                            <HelpIcon />
                                         </a>
                                     </label>
                                     <small className="errorTxt4">
@@ -898,15 +914,15 @@ const Utilisateurs = (props) => {
                                         </div>
                                     </small>
                                 </div>
-                                
+
                             </div>
                         </div>
-                        
+
                         <div className="col s12 display-flex justify-content-end form-action">
-                            {buttons}   
+                            {buttons}
                         </div>
 
-                        
+
                     </div>
                 </form>
                 <div className="row">
@@ -1011,7 +1027,7 @@ const mapDispatchToProps = (dispatch) => {
         additionalRoleChanged: (additionalRole) => {
             dispatch(additionalRoleChanged(additionalRole))
         },
-      
+
         itemsChanged: (items) => {
             dispatch(itemsChanged(items))
         },
@@ -1030,7 +1046,7 @@ const mapDispatchToProps = (dispatch) => {
     }
 };
 
-export default  connect(
+export default connect(
     mapStateToProps,
     mapDispatchToProps,
 )(Utilisateurs)
