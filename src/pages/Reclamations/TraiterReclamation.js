@@ -277,7 +277,8 @@ const TraiterReclamation = (props) => {
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
-  // console.log("userrrrrrrrrr",user.id)
+  console.log("userrrr", user)
+  console.log("userrrrsssssss", users)
   //vérification if user is in guest
   let showJoinBtn = false;
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
@@ -534,16 +535,30 @@ const TraiterReclamation = (props) => {
           //console.log("level",data.objet.risqueLevel)
           let agentMailOptions = [];
 
+          let userConnected = user;
           switch (data.objet.risqueLevel) {
             case "MINEUR":
               users.map((user) => {
-                let hab = user.posteDto.habilitations.split(",");
-                if (hab.includes("H1", "H2", "H3")) {
-                  agentMailOptions.push({
-                    label: user.firstAndLastName + " < " + user.email + " >",
-                    value: user.id,
-                    email: user.email,
-                  });
+                if (userConnected.ra === true) {
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                    let hab = user.posteDto.habilitations.split(",");
+                    if (hab.includes("H1", "H2", "H3")) {
+                      agentMailOptions.push({
+                        label: user.firstAndLastName + " < " + user.email + " >",
+                        value: user.id,
+                        email: user.email,
+                      });
+                    }
+                  }
+                } else if (user.deleted === false) {
+                  let hab = user.posteDto.habilitations.split(",");
+                  if (hab.includes("H1", "H2", "H3")) {
+                    agentMailOptions.push({
+                      label: user.firstAndLastName + " < " + user.email + " >",
+                      value: user.id,
+                      email: user.email,
+                    });
+                  }
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -555,13 +570,26 @@ const TraiterReclamation = (props) => {
               break;
             case "MOYEN":
               users.map((user) => {
-                let hab = user.posteDto.habilitations.split(",");
-                if (hab.includes("H3")) {
-                  agentMailOptions.push({
-                    label: user.firstAndLastName + " < " + user.email + " >",
-                    value: user.id,
-                    email: user.email,
-                  });
+                if (userConnected.ra === true) {
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                    let hab = user.posteDto.habilitations.split(",");
+                    if (hab.includes("H3")) {
+                      agentMailOptions.push({
+                        label: user.firstAndLastName + " < " + user.email + " >",
+                        value: user.id,
+                        email: user.email,
+                      });
+                    }                  
+                  }
+                } else if (user.deleted === false) {
+                  let hab = user.posteDto.habilitations.split(",");
+                  if (hab.includes("H3")) {
+                    agentMailOptions.push({
+                      label: user.firstAndLastName + " < " + user.email + " >",
+                      value: user.id,
+                      email: user.email,
+                    });
+                  }                  
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -573,14 +601,28 @@ const TraiterReclamation = (props) => {
               break;
             case "GRAVE":
               users.map((user) => {
-                let hab = user.posteDto.habilitations.split(",");
-                if (hab.includes("H4")) {
-                  agentMailOptions.push({
-                    label:
-                      user.firstAndLastName + "         < " + user.email + " >",
-                    value: user.id,
-                    email: user.email,
-                  });
+                if (userConnected.ra === true) {
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                    let hab = user.posteDto.habilitations.split(",");
+                    if (hab.includes("H4")) {
+                      agentMailOptions.push({
+                        label:
+                          user.firstAndLastName + "         < " + user.email + " >",
+                        value: user.id,
+                        email: user.email,
+                      });
+                    }                  
+                  }
+                } else if (user.deleted === false) {
+                  let hab = user.posteDto.habilitations.split(",");
+                  if (hab.includes("H4")) {
+                    agentMailOptions.push({
+                      label:
+                        user.firstAndLastName + "         < " + user.email + " >",
+                      value: user.id,
+                      email: user.email,
+                    });
+                  }                
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -1528,16 +1570,30 @@ const TraiterReclamation = (props) => {
     //console.log("level",data.objet.risqueLevel)
     let agentMailOptions = [];
 
+    let userConnected = user;
     switch (data.objet.risqueLevel) {
       case "MINEUR":
         users.map((user) => {
-          let hab = user.posteDto.habilitations.split(",");
-          if (hab.includes("H1", "H2", "H3")) {
-            agentMailOptions.push({
-              label: user.firstAndLastName + " < " + user.email + " >",
-              value: user.id,
-              email: user.email,
-            });
+          if (userConnected.ra === true) {
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+              let hab = user.posteDto.habilitations.split(",");
+              if (hab.includes("H1", "H2", "H3")) {
+                agentMailOptions.push({
+                  label: user.firstAndLastName + " < " + user.email + " >",
+                  value: user.id,
+                  email: user.email,
+                });
+              }            
+            }
+          } else if (user.deleted === false) {            
+            let hab = user.posteDto.habilitations.split(",");
+            if (hab.includes("H1", "H2", "H3")) {
+              agentMailOptions.push({
+                label: user.firstAndLastName + " < " + user.email + " >",
+                value: user.id,
+                email: user.email,
+              });
+            }
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -1549,13 +1605,26 @@ const TraiterReclamation = (props) => {
         break;
       case "MOYEN":
         users.map((user) => {
-          let hab = user.posteDto.habilitations.split(",");
-          if (hab.includes("H3")) {
-            agentMailOptions.push({
-              label: user.firstAndLastName + " < " + user.email + " >",
-              value: user.id,
-              email: user.email,
-            });
+          if (userConnected.ra === true) {
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+              let hab = user.posteDto.habilitations.split(",");
+              if (hab.includes("H3")) {
+                agentMailOptions.push({
+                  label: user.firstAndLastName + " < " + user.email + " >",
+                  value: user.id,
+                  email: user.email,
+                });
+              }            
+            }
+          } else if (user.deleted === false) {
+            let hab = user.posteDto.habilitations.split(",");
+            if (hab.includes("H3")) {
+              agentMailOptions.push({
+                label: user.firstAndLastName + " < " + user.email + " >",
+                value: user.id,
+                email: user.email,
+              });
+            }            
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -1567,13 +1636,26 @@ const TraiterReclamation = (props) => {
         break;
       case "GRAVE":
         users.map((user) => {
-          let hab = user.posteDto.habilitations.split(",");
-          if (hab.includes("H4")) {
-            agentMailOptions.push({
-              label: user.firstAndLastName + "         < " + user.email + " >",
-              value: user.id,
-              email: user.email,
-            });
+          if (userConnected.ra === true) {
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+              let hab = user.posteDto.habilitations.split(",");
+              if (hab.includes("H4")) {
+                agentMailOptions.push({
+                  label: user.firstAndLastName + "         < " + user.email + " >",
+                  value: user.id,
+                  email: user.email,
+                });
+              }            
+            }
+          } else if (user.deleted === false) {            
+            let hab = user.posteDto.habilitations.split(",");
+            if (hab.includes("H4")) {
+              agentMailOptions.push({
+                label: user.firstAndLastName + "         < " + user.email + " >",
+                value: user.id,
+                email: user.email,
+              });
+            }
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -3232,8 +3314,9 @@ const TraiterReclamation = (props) => {
         };
       });
       // console.log("solutionsLISTE", solutionsListe);
+      console.log("props.authorize", props);
 
-      if (hbt.includes("H6") || addR === "PILOTE") {
+      if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
         if (
           (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
           user.firstAndLastName === props.created_by &&
@@ -3360,7 +3443,7 @@ const TraiterReclamation = (props) => {
           props.transmitted === "false") ||
           (props.transmittedTo === user.firstAndLastName &&
             props.transmitted === "true" &&
-            addR === "MOLDUE"))
+            addR === "MOLDUE") || (user.ra === true))
       ) {
         treatForm = (
           <>
@@ -3779,7 +3862,7 @@ const TraiterReclamation = (props) => {
             </div>
           );
 
-          if (hbt.includes("H6") || addR === "PILOTE") {
+          if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
             treatForm = (
               <>
                 {personAffect}
@@ -3796,7 +3879,7 @@ const TraiterReclamation = (props) => {
             );
           }
         } else {
-          if (hbt.includes("H14") || addR !== "MOLDUE") {
+          if (hbt.includes("H14") || addR !== "MOLDUE" || user.ra === true) {
             tmp = (
               <div className="row pb-4">
                 <div
@@ -3823,7 +3906,7 @@ const TraiterReclamation = (props) => {
             tmp = "";
           }
 
-          if (hbt.includes("H6") || addR === "PILOTE") {
+          if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
             treatForm = (
               <>
                 {tmp}
@@ -4387,7 +4470,7 @@ const TraiterReclamation = (props) => {
       break;
     case "UNSATISFIED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE") {
+      if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -4489,7 +4572,7 @@ const TraiterReclamation = (props) => {
       break;
     case "PARTIAL_SATISFIED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE") {
+      if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -4591,7 +4674,7 @@ const TraiterReclamation = (props) => {
       break;
     case "CLASSED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE") {
+      if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -5127,12 +5210,12 @@ const TraiterReclamation = (props) => {
   let btnS = "";
 
   if (
-    (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+    // (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
     ((user.firstAndLastName === props.created_by &&
       props.transmitted === "false") ||
       (user.firstAndLastName === props.transmittedTo &&
         props.transmitted === "true" &&
-        addR === "MOLDUE")) &&
+        addR === "MOLDUE") || user.ra === true) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -5164,7 +5247,7 @@ const TraiterReclamation = (props) => {
     (props.transmitted !== "false" &&
       user.firstAndLastName === props.transmittedTo &&
       props.status === "SAVED" &&
-      addR === "MOLDUE")
+      addR === "MOLDUE") || user.ra === true
   ) {
     // console.log("lol","azert")
     if (props.session === "" && props.session.status !== "OPEN") {
