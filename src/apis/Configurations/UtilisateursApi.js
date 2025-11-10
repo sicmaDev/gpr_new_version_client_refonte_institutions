@@ -116,7 +116,13 @@ export const ajout = async (data, props) => {
         })
         .catch(function (error) {
             props.etatChanged(false)
-            notify("Erreur - Veuillez réessayer!", "error");
+            console.log(error)
+           const message =
+            error?.response?.data?.content?.message ||
+            error?.response?.data?.message ||
+            "Erreur - Veuillez réessayer!";
+
+            notify(message, "error");
         });
 
 }
@@ -149,11 +155,11 @@ export const modification = async (data, props) => {
         .catch(function (error) {
             console.log("erre", error)
             props.etatChanged(false)
-            // if (error.response.data.content !=="") {
-            //     notify(error.response.data.content.message, "error");
-            // } else {
-            //     notify("Erreur - Veuillez réessayer!", "error");
-            // }
+            if (error.response.data.content !=="") {
+                notify(error.response.data.content.message, "error");
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
         });
 
 }

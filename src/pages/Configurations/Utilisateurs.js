@@ -641,9 +641,7 @@ const Utilisateurs = (props) => {
     if (props.additionalRole === "PILOTE") roleValue = { "label": "Pilote", "value": props.additionalRole }
     if (props.additionalRole === "MOLDUE") roleValue = { "label": "Aucun", "value": "" }
 
-    // if(props.role==="") roleValue={"label": "", "value": props.role }
-
-
+    
     let titleText = props.selectedItem.id !== undefined ? "Modifier ou Supprimer" : "Ajouter";
 
     let buttons = props.selectedItem.id !== undefined ?
