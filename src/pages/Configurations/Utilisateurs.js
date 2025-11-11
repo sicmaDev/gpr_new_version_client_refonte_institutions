@@ -641,13 +641,17 @@ const Utilisateurs = (props) => {
         titleOptions = ""
     }
 
+    let roleValue = null;
 
-    let roleValue
-    if (props.additionalRole === "PILOTE") roleValue = { "label": "Pilote", "value": props.additionalRole }
-    if (props.additionalRole === "DE") roleValue = { "label": "Directeur / Directrice (Executif, General)", "value": props.additionalRole }
-    if (props.additionalRole === "MOLDUE") roleValue = { "label": "Aucun", "value": "" }
+    if (props.additionalRole === "PILOTE") {
+        roleValue = { label: "Pilote", value: "PILOTE" };
+    } else if (props.additionalRole === "DE") {
+        roleValue = { label: "Directeur / Directrice (Executif, General)", value: "DE" };
+    } else if (props.additionalRole === "MOLDUE" || props.additionalRole === "") {
+        roleValue = { label: "Aucun", value: "MOLDUE" };
+    }
 
-    
+
     let titleText = props.selectedItem.id !== undefined ? "Modifier ou Supprimer" : "Ajouter";
 
     let buttons = props.selectedItem.id !== undefined ?
@@ -883,7 +887,7 @@ const Utilisateurs = (props) => {
                                     />
                                     <label htmlFor="usrole" className={"active"}>Est-il le gérant du point de service ?&nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
+                                            data-tooltip="Est ce le gérant (CA,RA) du point de service auquel cet utilisateur appartient">
                                             <HelpIcon />
                                         </a>
                                     </label>
@@ -903,12 +907,12 @@ const Utilisateurs = (props) => {
                                         style={styles}
                                         placeholder="Sélectionnez le role"
                                         options={roleOptions}
-                                        value={roleValue}
+                                        value={roleValue || null}
                                         onChange={(e) => props.additionalRoleChanged(e.value)}
                                     />
                                     <label htmlFor="usrole" className={"active"}>Privilège Spécifique&nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
+                                            data-tooltip="L'un des privilèges spécifiques àdonner à qui de droit">
                                             <HelpIcon />
                                         </a>
                                     </label>
