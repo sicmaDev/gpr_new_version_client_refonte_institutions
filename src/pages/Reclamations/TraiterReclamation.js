@@ -1669,7 +1669,7 @@ const TraiterReclamation = (props) => {
       default:
         break;
     }
-    setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45);
+    setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45); 
     props.idChanged(data.id ? data.id : "");
     props.lastnameChanged(
       data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -3318,9 +3318,9 @@ const TraiterReclamation = (props) => {
 
       if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
         if (
-          (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
-          user.firstAndLastName === props.created_by &&
-          props.transmitted === "true"
+          // (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+          (user.firstAndLastName === props.created_by &&
+          props.transmitted === "true") || (user.ra === true && props.transmitted === "true")
         ) {
           affectForm = (
             <>
@@ -3443,7 +3443,7 @@ const TraiterReclamation = (props) => {
           props.transmitted === "false") ||
           (props.transmittedTo === user.firstAndLastName &&
             props.transmitted === "true" &&
-            addR === "MOLDUE") || (user.ra === true))
+            addR === "MOLDUE") || (user.ra === true && props.transmitted === "false"))
       ) {
         treatForm = (
           <>
@@ -3862,7 +3862,7 @@ const TraiterReclamation = (props) => {
             </div>
           );
 
-          if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
+          if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
             treatForm = (
               <>
                 {personAffect}
@@ -3879,7 +3879,7 @@ const TraiterReclamation = (props) => {
             );
           }
         } else {
-          if (hbt.includes("H14") || addR !== "MOLDUE" || user.ra === true) {
+          if (hbt.includes("H14") || addR !== "MOLDUE" || (user.ra === true && props.transmitted === "false")) {
             tmp = (
               <div className="row pb-4">
                 <div
@@ -3906,7 +3906,7 @@ const TraiterReclamation = (props) => {
             tmp = "";
           }
 
-          if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
+          if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
             treatForm = (
               <>
                 {tmp}
@@ -4470,7 +4470,7 @@ const TraiterReclamation = (props) => {
       break;
     case "UNSATISFIED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
+      if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -4572,7 +4572,7 @@ const TraiterReclamation = (props) => {
       break;
     case "PARTIAL_SATISFIED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
+      if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -4674,7 +4674,7 @@ const TraiterReclamation = (props) => {
       break;
     case "CLASSED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
+      if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -5215,7 +5215,7 @@ const TraiterReclamation = (props) => {
       props.transmitted === "false") ||
       (user.firstAndLastName === props.transmittedTo &&
         props.transmitted === "true" &&
-        addR === "MOLDUE") || user.ra === true) &&
+        addR === "MOLDUE") || (user.ra === true && props.transmitted === "false")) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -5247,7 +5247,7 @@ const TraiterReclamation = (props) => {
     (props.transmitted !== "false" &&
       user.firstAndLastName === props.transmittedTo &&
       props.status === "SAVED" &&
-      addR === "MOLDUE") || user.ra === true
+      addR === "MOLDUE") || (user.ra === true && props.transmitted === "false")
   ) {
     // console.log("lol","azert")
     if (props.session === "" && props.session.status !== "OPEN") {
