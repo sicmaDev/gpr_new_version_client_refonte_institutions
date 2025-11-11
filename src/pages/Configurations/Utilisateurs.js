@@ -581,6 +581,12 @@ const Utilisateurs = (props) => {
         props.additionalRoleChanged(data.additionalRole ? data.additionalRole : "")
         props.selectedItemChanged(data)
 
+         // 👇 Conversion du champ "ra" pour le Select
+        setCa(data.ra === true || data.ra === "true" ? true 
+            : data.ra === false || data.ra === "false" ? false 
+            : "");
+
+
     }
     let titles
     let units
