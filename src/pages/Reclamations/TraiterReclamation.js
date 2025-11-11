@@ -1476,12 +1476,37 @@ const TraiterReclamation = (props) => {
             }
             break;
           case "MOYEN":
-            graviteElt = <span className="orange-text text-bold">Moyen</span>;
+             if (claim.transmitted) {
+              graviteElt = (
+                <>
+                  <div className="df">
+                    <span className="orange-text text-bold mr-2">Moyen</span>
+                    <div className="card-content red-text ml-4">
+                      <MoveUpIcon />
+                    </div>
+                  </div>
+                </>
+              );
+            } else {
+              graviteElt = <span className="orange-text text-bold">Moyen</span>;
+            }
+           
             break;
           case "GRAVE":
-            graviteElt = (
-              <span className="materialize-red-text text-bold">Grave</span>
-            );
+             if (claim.transmitted) {
+              graviteElt = (
+                <>
+                  <div className="df">
+                    <span className="materialize-red text-bold mr-2">Grave</span>
+                    <div className="card-content red-text ml-4">
+                      <MoveUpIcon />
+                    </div>
+                  </div>
+                </>
+              );
+            } else {
+              graviteElt = <span className="materialize-red-text text-bold">Grave</span>;
+            }
             break;
           default:
             graviteElt = (
