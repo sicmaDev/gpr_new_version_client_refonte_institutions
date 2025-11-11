@@ -368,7 +368,7 @@ const Utilisateurs = (props) => {
     let roleOptions
     if (props.additionalRole !== undefined) {
         roleOptions = [
-            { "label": "Directeur", "value": "DE" },
+            { "label": "Directeur / Directrice (Executif, General)", "value": "DE" },
             { "label": "Pilote", "value": "PILOTE" },
             { "label": "Aucun", "value": "MOLDUE" },
         ]
@@ -645,6 +645,7 @@ const Utilisateurs = (props) => {
 
     let roleValue
     if (props.additionalRole === "PILOTE") roleValue = { "label": "Pilote", "value": props.additionalRole }
+    if (props.additionalRole === "DE") roleValue = { "label": "Directeur / Directrice (Executif, General)", "value": props.additionalRole }
     if (props.additionalRole === "MOLDUE") roleValue = { "label": "Aucun", "value": "" }
 
     
