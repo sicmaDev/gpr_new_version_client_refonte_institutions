@@ -114,9 +114,6 @@ export const ajout = async (data, props) => {
 }
 
 export const modification = async (data, props) => {
-    console.log("data", data.id)
-    console.log("props", props.id)
-
     const config = {
         method: 'put',
         url: UPDATE_SETTING_API.replace("id",props.id),

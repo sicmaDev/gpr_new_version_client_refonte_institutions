@@ -77,8 +77,6 @@ export const addTempSuggestionApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             props.etatChanged(false)
-
-            console.log("responseaan", response)
             if (response.data.status) {
                 notify("Bravo - Suggestion sauvegardée", "success");
                 listeByStatut(props, "TEMP_SAVED")
@@ -127,8 +125,7 @@ export const addSuggestionApi = async (data, props) => {
         // });
     try {
         const response = await axios(config);
-        console.log("response<<<<", response);
-
+      
         props.etat2Changed(false);
 
         if (response.data.status) {
@@ -379,7 +376,7 @@ export const addSuggestionApiOffline = async (data, props) => {
 
 
 export const deleteSuggestionApi = async (id, props) => {
-    console.log("dataId", id)
+
     const config = {
         method: 'delete',
         url: DELETE_SUGGESTION_API.replace("{id}", id),
@@ -392,7 +389,7 @@ export const deleteSuggestionApi = async (id, props) => {
     await axios(config)
         .then(function (response) {
             // notify("Bravo - Réclamation supprimé", "success");
-            console.log("reponsesessionadd",response.data.content)
+            // console.log("reponsesessionadd",response.data.content)
         })
         .catch(function (error) {
             notify("Erreur - Veuillez réessayer!", "error");

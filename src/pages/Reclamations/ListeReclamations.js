@@ -695,9 +695,6 @@ const ListeReclamations = (props) => {
     clearComponentState();
     setClaimId(data.id);
 
-    console.log("data", data);
-    console.log("props.codeClient___", props.codeClient);
-    // console.log("datarowC", data)
     if (mode === 1) {
       props.lastnameChanged(
         data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -1761,7 +1758,7 @@ const ListeReclamations = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio);
+
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
         <Grid item xs={12} sm={6} key={audioItem.id}>
@@ -2529,10 +2526,8 @@ const ListeReclamations = (props) => {
   });
 
   useEffect(() => {
-    console.log("filesForm.length", filesForm.length);
     if (inputRef.current) {
       inputRef.current.value = null;
-      console.log("inputRef.current", inputRef.current.value);
     }
     // clearFiles();
   }, [filesForm.length]);
@@ -2541,7 +2536,6 @@ const ListeReclamations = (props) => {
     e.preventDefault();
     setExtraFileLoading(true);
 
-    console.log("filesForm__1 >> ", filesForm);
     const formData = new FormData();
     formData.append("claim_id", claim_id);
 
@@ -2562,10 +2556,8 @@ const ListeReclamations = (props) => {
       }
     }
 
-    console.log("filesForm__2 >> ", filesForm);
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >> ", res);
         if (isFile) {
           getFillesApi(currentData?.id, props);
           clearFiles();
@@ -2580,7 +2572,6 @@ const ListeReclamations = (props) => {
         }
       })
       .catch((err) => {
-        console.log("err add extra >> ", err);
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {
@@ -2597,15 +2588,12 @@ const ListeReclamations = (props) => {
 
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >> ", res);
-
         props.extrasChanged(res.data.content.extras ?? []);
         notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
         setExtraContent("");
       })
       .catch((err) => {
-        console.log("err add extra >> ", err);
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {

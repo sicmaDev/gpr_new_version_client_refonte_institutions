@@ -68,7 +68,7 @@ const Bot = (props) => {
 
             // console.log('data qrcode', data)
         }).catch((err) => {
-            console.log('err', err)
+            // console.log('err', err)
         }).finally(() => {
             createSession.isLoading = false
             createSession.isGenerate = true
@@ -168,10 +168,10 @@ const Bot = (props) => {
             const result = data?.response?.map((da) => {
                 return { name: da.split("_wpp_")[1] ?? "Non Defini", number: da.split("_wpp_")[0], session: da, color: "info", message: 'No check', status: false }
             }) ?? []
-            console.log('result', result)
+            // console.log('result', result)
             setBots(result);
         }).catch((err) => {
-            console.log('err', err)
+            // console.log('err', err)
         })
 
     }
@@ -192,10 +192,10 @@ const Bot = (props) => {
                 })
                 setBots(result)
             }).catch((err) => {
-                console.log('err', err)
+                // console.log('err', err)
             })
         }).catch((err) => {
-            console.log('err generator', err)
+            // console.log('err generator', err)
 
         })
 
@@ -212,10 +212,10 @@ const Bot = (props) => {
             }).then(({ data }) => {
                 getAllSessions()
             }).catch((err) => {
-                console.log('err', err)
+                // console.log('err', err)
             })
         }).catch((err) => {
-            console.log('err generator', err)
+            // console.log('err generator', err)
 
         })
 
@@ -335,7 +335,7 @@ const Bot = (props) => {
         }
     }
     const rowClickedHandler = (event, data, rowIndex) => {
-        console.log('data', data)
+        // console.log('data', data)
     }
 
     

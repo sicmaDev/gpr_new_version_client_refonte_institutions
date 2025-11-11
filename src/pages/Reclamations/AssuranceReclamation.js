@@ -484,10 +484,7 @@ const AssuranceReclamation = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     clearComponentState();
     handleClickOpen();
-    console.log("dataRow", data);
-    console.log("data.createdAt", data.createdAt);
-    console.log("props.createdAt", props.createdAt);
-
+  
     switch (data.objet.risqueLevel) {
       case "MINEUR":
         if (hbt.includes("H2")) {
@@ -775,7 +772,6 @@ const AssuranceReclamation = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio);
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
         <Grid item xs={12} sm={6} key={audioItem.id}>
@@ -1855,7 +1851,6 @@ const AssuranceReclamation = (props) => {
 };
 
 const mapStateToProps = (state) => {
-  console.log("state.claim_assurance", state.claim_assurance);
   return {
     isLoading: state.claim_assurance.isLoading,
     id: state.claim_assurance.id,

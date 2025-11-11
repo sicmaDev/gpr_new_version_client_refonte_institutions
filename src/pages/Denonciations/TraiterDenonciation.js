@@ -487,8 +487,6 @@ const TraiterDenonciation = (props) => {
   const handleSubmitConfirmation = (e) => {
     e.preventDefault();
     setLoadingConversion(true);
-
-    console.log("dataRow", dataRow);
     const formData = new FormData();
     let claim = {};
 
@@ -1512,9 +1510,7 @@ const TraiterDenonciation = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     setDataRow(data);
     setClaimId(data.id);
-    console.log("dataRow", data);
-    console.log("dataRow_", props);
-
+  
     handleClickOpen();
     clearComponentState();
 
@@ -2985,8 +2981,6 @@ const TraiterDenonciation = (props) => {
   };
 
   const handleAssignOrReassign = (e) => {
-    console.log("reaffect", props);
-
     if (props.reaffect) {
       handleReAssign(e);
     } else {
@@ -4212,7 +4206,6 @@ const TraiterDenonciation = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio);
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
         <Grid item xs={12} sm={6} key={audioItem.id}>
@@ -4577,10 +4570,8 @@ const TraiterDenonciation = (props) => {
   });
 
   useEffect(() => {
-    console.log("filesForm.length", filesForm.length);
     if (inputRef.current) {
       inputRef.current.value = null;
-      console.log("inputRef.current", inputRef.current.value);
     }
     // clearFiles();
   }, [filesForm.length]);
@@ -4593,7 +4584,6 @@ const TraiterDenonciation = (props) => {
     formData.append("claim_id", claim_id);
 
     if (isFile) {
-      console.log("filesForm", filesForm);
       for (let index = 0; index < filesForm.length; index++) {
         formData.append("files", filesForm[index]);
       }
@@ -4610,10 +4600,8 @@ const TraiterDenonciation = (props) => {
       }
     }
 
-    console.log("formData", formData);
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >> ", res);
         if (isFile) {
           getFillesApi(currentData?.id, props);
           clearFiles();
@@ -4628,7 +4616,6 @@ const TraiterDenonciation = (props) => {
         }
       })
       .catch((err) => {
-        console.log("err add extra >> ", err);
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {
@@ -4644,15 +4631,12 @@ const TraiterDenonciation = (props) => {
 
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >> ", res);
-
         props.extrasChanged(res.data.content.extras ?? []);
         notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
         setExtraContent("");
       })
       .catch((err) => {
-        console.log("err add extra >> ", err);
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {

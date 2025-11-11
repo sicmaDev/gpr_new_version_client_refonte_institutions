@@ -185,7 +185,7 @@ const SignCompteUser = (props) => {
             
             createUserPublic(dataUser)
                 .then(({ data }) => {
-                    console.log("data", data);
+                 
                     if (data.response.status === true) {
                         localStorage.setItem("afterInscription", true);
 
@@ -203,7 +203,7 @@ const SignCompteUser = (props) => {
                     }
                 })
                 .catch((error) => {
-                    console.log("Erreur HTTP : ", error);
+                  
                     localStorage.removeItem("afterInscription");
                      clearComponentState();
                     const response = error.response;

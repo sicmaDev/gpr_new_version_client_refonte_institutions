@@ -116,7 +116,7 @@ export const ajout = async (data, props) => {
         })
         .catch(function (error) {
             props.etatChanged(false)
-            console.log(error)
+          
            const message =
             error?.response?.data?.content?.message ||
             error?.response?.data?.message ||
@@ -153,7 +153,7 @@ export const modification = async (data, props) => {
 
         })
         .catch(function (error) {
-            console.log("erre", error)
+          
             props.etatChanged(false)
             if (error.response.data.content !=="") {
                 notify(error.response.data.content.message, "error");
@@ -165,10 +165,6 @@ export const modification = async (data, props) => {
 }
 
 export const suppression = async (data, props) => {
-
-    console.log("props", props);
-    console.log("propsID", props.id);
-    console.log("dataID", data.id);
     const config = {
         method: 'delete',
         url: DELETE_SETTING_API.replace("id", data.id),
@@ -181,8 +177,7 @@ export const suppression = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            console.log("response1", response);
-
+           
             saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
 
@@ -191,8 +186,6 @@ export const suppression = async (data, props) => {
             all(props)
         })
         .catch(function (error) {
-            console.log("response2", error);
-
             props.etat3Changed(false)
             if (error.response.data.content !=="") {
                 notify(error.response.data.content.message, "error");

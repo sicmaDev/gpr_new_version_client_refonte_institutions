@@ -73,7 +73,7 @@ export const listeByStatut = async (props, state) => {
     await axios(config)
         .then(function (response) {
             // console.log("mesureliste",response.data.content)
-            console.log("response___________",response.data.content)
+           
             props.itemsChanged(response.data.content)
 
             return response.data.content
@@ -96,7 +96,7 @@ export const listeTreat = async (props) => {
     };
     await axios(config)
         .then(function (response) {
-            console.log("responsetreat", response.data.content)
+            // console.log("responsetreat", response.data.content)
 
             props.itemsChanged(response.data.content)
 
@@ -145,7 +145,7 @@ export const getClaimHistorique = async (props, claimId) => {
     props.itemsChanged([])
     axios(config)
         .then(({ data }) => {
-            console.log('data<>', data.content)
+           
             props.isSuccessChanged(true)
             props.messageChanged('Liste des historiques success')
             props.itemsChanged(data.content)
@@ -227,7 +227,7 @@ export const addTempClaimApi = async (data, props) => {
             // console.log("reponseaan", response)
             props.etatChanged(false)
             if (response.data.status) {
-                console.log("data____", response.data.content)
+              
                 notify("Bravo - Réclamation sauvegardée", "success");
                 listeByStatut(props, "TEMP_SAVED")
             } else {
@@ -272,7 +272,6 @@ export const addClaimApi = async (data, props) => {
 }
 
 export const addExtraClaimApi = async (data, props) => {
-    console.log("dataextra",data)
     const config = {
         method: 'post',
         url: EXTRA_CLAIM_API,
@@ -312,7 +311,6 @@ export const affectClaimApi = async (data, props) => {
         .catch(function (error) {
             props.etatChanged(false)
             notify("Erreur - Veuillez réessayer!", "error");
-            console.log("erreur",error);
         });
 }
 
@@ -590,7 +588,7 @@ export const getFillesApi = async (data, props) => {
         })
         .catch(function (error) {
             notify("Erreur - Veuillez réessayer!", "error");
-            console.log("erreur",error);
+            // console.log("erreur",error);
         });
 }
 
@@ -665,9 +663,6 @@ export const getClaimAudioApi = async (data, props) => {
     };
     await axios(config)
         .then(function (response) {
-
-            // notify("Bravo - Mesure de satisfaction effectuée", "success");
-            console.log("response data content",response.data)
             props.selectedItemAudioChanged(response.data)
         })
         .catch(function (error) {
@@ -841,7 +836,6 @@ export const addClaimApiOffline = async (data, props) => {
 }
 
 export const deleteClaimApi = async (id, props) => {
-    console.log("dataId", id)
     const config = {
         method: 'delete',
         url: DELETE_CLAIM_API.replace("{id}", id),
@@ -853,8 +847,8 @@ export const deleteClaimApi = async (id, props) => {
     };
     await axios(config)
         .then(function (response) {
-            // notify("Bravo - Réclamation supprimé", "success");
-            console.log("reponsesessionadd",response.data.content)
+           
+            // console.log("reponsesessionadd",response.data.content)
         })
         .catch(function (error) {
             notify("Erreur - Veuillez réessayer!", "error");
@@ -864,7 +858,6 @@ export const deleteClaimApi = async (id, props) => {
 }
 
 export const convertClaimApi = async (data, props) => {
-    console.log("datadata", data)
     const config = {
         method: 'post',
         url: CONVERT_CLAIM_API,
@@ -878,7 +871,6 @@ export const convertClaimApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             notify("Bravo - Réclamation convertie avec succès", "success");
-            console.log("reponsesessionadd",response.data.content)
         })
         .catch(function (error) {
             notify("Erreur - Veuillez réessayer!", "error");

@@ -535,7 +535,7 @@ const Utilisateurs = (props) => {
             data = props;
         }
 
-        console.log("data", data)
+        // console.log("data", data)
         props.etat3Changed(true)
         suppression(data, props).then(() => {
             all(props)
@@ -568,7 +568,6 @@ const Utilisateurs = (props) => {
     }
 
     const rowClickedHandler = (event, data, rowIndex) => {
-        console.log("data", data)
         props.idChanged(data.id ? data.id : "")
         props.codeChanged(data.code ? data.code : "")
         props.nameChanged(data.firstAndLastName ? data.firstAndLastName : "")

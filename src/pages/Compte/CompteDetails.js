@@ -56,7 +56,6 @@ const CompteDetails = (props) => {
             hbt.includes("H13") ? setH13 (<Typography ><span style={{ fontWeight:"bold",color:"#00cc00" }}>H13</span> : Consulter les Alerte de retard de traitement </Typography>) : setH13("")
             hbt.includes("H14") ? setH14 (<Typography ><span style={{ fontWeight:"bold",color:"#333300" }}>H14</span> : Consulter toutes les informations </Typography>) : setH14("")
 
-        console.log("sessionUser:", sessionUser);
     }, []);
 
     const handleModal = (e) => {
