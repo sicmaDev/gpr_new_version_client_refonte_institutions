@@ -116,7 +116,7 @@ export const suppression = async (props,id) => {
             // saveItemToLocalStorage(JSON.stringify(response.data.content), "app-recours")
            
             props.etat3Changed(false)
-            notify("Bravo - Question supprimée", "success");
+            notify("Suppression effectuée avec succès !", "success");
            
            liste(props)
            listeU(props)
