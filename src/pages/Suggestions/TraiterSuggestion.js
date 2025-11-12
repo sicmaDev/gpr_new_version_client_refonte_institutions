@@ -384,7 +384,7 @@ const TraiterSuggestion = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    console.log("dataRow",data)
+  
     handleClickOpen();
 
     clearComponentState();
@@ -556,7 +556,7 @@ const TraiterSuggestion = (props) => {
     
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
-    console.log("props.selectedItemFiles", props.selectedItemFiles);
+  
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
@@ -681,7 +681,7 @@ const TraiterSuggestion = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio);
+   
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
 

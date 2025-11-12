@@ -1,0 +1,76 @@
+const initialState = {
+    isLoading: false,
+    claim_list_errors: {},
+    id: "",
+    firstname: "",
+    lastname: "",
+    address: "",
+    phone: "",
+    gender: "",
+    language: "",
+    dossierimf: "",
+    code: "",
+    recorded_at: "",
+    collect: "",
+    subject: "",
+    underSubject: "",
+    product: "",
+    unit: "",
+    content: "",
+    solution: [],
+    comment: "",
+    status: "",
+    motif: "",
+    crew: "",
+    session: "",
+    created_at: "",
+    created_at_online: "",
+    created_by: "",
+    assigned_at: "",
+    assigned_by: "",
+    handled_at: "",
+    handled_by: "",
+    approved_at: "",
+    approved_by: "",
+    appraised_at: "",
+    appraised_by: "",
+    appraisal: "",
+    resolved_at: "",
+    resolved_by: "",
+    external_remedies: "",
+    agents: [],
+    items: [],
+    selectedItem: {},
+    selectedFiles: [],
+    selectedItemFiles: [],
+    selectedItemAudio: [],
+    showSelectPrintItem : false
+};
+
+const PartiallySatisfiedClaimsReducer = (state = initialState, action) => {
+    switch (action.type) {
+        case 'LOADING':
+            return {
+                ...state,
+                isLoading: !state.isLoading,
+            };
+        case 'CLAIM_LIST_ERRORS':
+            return {
+                ...state,
+                claim_list_errors: action.payload,
+            };
+        case 'CLAIM_LIST_ITEMS_CHANGED':
+            return {
+                ...state,
+                items: action.payload.filter(claim => claim.status === 'PARTIAL_SATISFIED'),
+            };
+        case 'CLAIM_LIST_RESET':
+            return {
+                ...initialState,
+            };
+        default:
+            return state;
+    }
+};
+
+export default PartiallySatisfiedClaimsReducer;

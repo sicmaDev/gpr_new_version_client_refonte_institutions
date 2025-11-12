@@ -40,7 +40,7 @@ export const listeTousStatuts = async (props) => {
     await axios(config)
         .then(function (response) {
 
-            console.log("response.data.content",response.data.content)
+            // console.log("response.data.content",response.data.content)
             props.itemsChanged(response.data.content)
             return response.data.content
         })
@@ -85,7 +85,7 @@ export const listeByStatut = async (props, state) => {
     await axios(config)
         .then(function (response) {
 
-            console.log("response____",response.data.content)
+            // console.log("response____",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
@@ -108,7 +108,7 @@ export const listeTreat = async (props) => {
     await axios(config)
         .then(function (response) {
 
-            console.log("responsetreat",response.data.content)
+            // console.log("responsetreat",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
@@ -611,7 +611,7 @@ export const downloadFillesApi2 = async (data, filename) => {
 }
 
 export const deleteDenunciationApi = async (id, props) => {
-    console.log("dataId", id)
+    // console.log("dataId", id)
     const config = {
         method: 'delete',
         url: DELETE_DENUNCIATION_API.replace("{id}", id),
@@ -624,7 +624,7 @@ export const deleteDenunciationApi = async (id, props) => {
     await axios(config)
         .then(function (response) {
             // notify("Bravo - Réclamation supprimé", "success");
-            console.log("reponsesessionadd",response.data.content)
+            // console.log("reponsesessionadd",response.data.content)
         })
         .catch(function (error) {
             notify("Erreur - Veuillez réessayer!", "error");
@@ -634,7 +634,7 @@ export const deleteDenunciationApi = async (id, props) => {
 }
 
 export const convertDenunciationApi = async (data, props) => {
-    console.log("datadata", data)
+    // console.log("datadata", data)
     const config = {
         method: 'post',
         url: CONVERT_DENUNCIATION_API,
@@ -648,7 +648,7 @@ export const convertDenunciationApi = async (data, props) => {
     await axios(config)
         .then(function (response) {
             notify("Bravo - Réclamation convertie avec succès", "success");
-            console.log("reponsesessionadd",response.data.content)
+            // console.log("reponsesessionadd",response.data.content)
         })
         .catch(function (error) {
             notify("Erreur - Veuillez réessayer!", "error");

@@ -510,7 +510,7 @@ export const Items = (props) => {
                         </ListItemButton>
                     </NavLink>
 
-                    <ListItemButton onClick={handleClick6}>
+                    <ListItemButton onClick={handleClick6} sx={{ pl: 4 }}>
                         <ListItemIcon>
                             <ArticleIcon style={{ color: "white" }} />
                         </ListItemIcon>
@@ -520,7 +520,7 @@ export const Items = (props) => {
                     <Collapse in={open6} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
                             <NavLink to="/ressources/documents" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
-                                <ListItemButton sx={{ pl: 4 }} className='lib'>
+                                <ListItemButton sx={{ pl: 8 }} className='lib'>
                                     <ListItemIcon>
                                         <MenuBookIcon style={{ color: "white" }} />
                                     </ListItemIcon>
@@ -529,7 +529,7 @@ export const Items = (props) => {
                             </NavLink>
 
                             <NavLink to="/ressources/faq" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
-                                <ListItemButton sx={{ pl: 4 }} className='lib'>
+                                <ListItemButton sx={{ pl: 8 }} className='lib'>
                                     <ListItemIcon>
                                         <QuizIcon style={{ color: "white" }} />
                                     </ListItemIcon>

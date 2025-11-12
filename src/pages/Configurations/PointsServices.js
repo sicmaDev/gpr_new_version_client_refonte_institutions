@@ -59,10 +59,23 @@ const PointsServices = (props) => {
         return clearComponentState();
     }, []);
 
-    const topRef = useRef(null); 
+    const topRef = useRef(null);
     useAutoScroll(topRef, [props.selectedItem.id], "top");
 
     let columns = [
+        {
+            key: "uuid",
+            text: "Uuid",
+            className: "description",
+            align: "left",
+            sortable: true,
+            cell: (sp) => {
+                let uuid = sp.uuid;
+                if (sp.deleted)
+                    return <div style={{ display: "flex", alignItems: "center" }}><Block color="darkred" fontSize="10px" /><i style={{ color: "lightgray" }}>{uuid}</i></div>
+                return uuid;
+            },
+        },
         {
             key: "libelle",
             text: "Intitulé",
@@ -72,7 +85,7 @@ const PointsServices = (props) => {
             cell: (sp) => {
                 let libelle = sp.libelle;
                 if (sp.deleted)
-                    return <div style={{ display: "flex", alignItems: "center" }}><Block color="darkred" fontSize="10px" /><i style={{ color: "lightgray" }}>{libelle}</i></div>
+                    return <div style={{ display: "flex", alignItems: "center" }}><i style={{ color: "lightgray" }}>{libelle}</i></div>
                 return libelle;
             },
 
@@ -104,12 +117,22 @@ const PointsServices = (props) => {
             },
         },
         {
-            key: "uuid",
-            text: "Uuid",
-            className: "description",
+            key: "direction_id",
+            text: "Lié à",
+            className: "name",
             align: "left",
-            sortable: true
+            sortable: true,
+            cell: (sp) => {
+                if (!props.items || props.items.length === 0) return ""; // protection
+                const directionSP = props.items.find(d => d.id === sp.direction_id);
+                const libelle = directionSP ? directionSP.libelle : "";
+
+                return sp.deleted
+                    ? <i style={{ color: "lightgray" }}>{libelle}</i>
+                    : libelle;
+            },
         },
+
         {
             key: "action",
             text: "Actions",
@@ -312,7 +335,7 @@ const PointsServices = (props) => {
 
         props.etat3Changed(true)
         suppression(props, sp).then(() => {
-            handleCancel(e) 
+            handleCancel(e)
         })
 
         props.psErrors(errors)
@@ -344,6 +367,14 @@ const PointsServices = (props) => {
         props.typeChanged(data.type ? data.type : "")
         props.descriptionChanged(data.description ? data.description : "")
         props.selectedItemChanged(data ? data : {})
+        if (data.direction_id) {
+            const directionSP = props.items.find(d => d.id === data.direction_id);
+            props.unitChanged(data.direction_id);
+            props.unitLibelleChanged(directionSP ? directionSP.libelle : "");
+        } else {
+            props.unitChanged("");
+            props.unitLibelleChanged("");
+        }
     }
     const tableChangeHandler = data => {
     }
@@ -475,7 +506,16 @@ const PointsServices = (props) => {
                                 // onChange={(e) => props.unitChanged(e.value)}
                                 onChange={handleChange1}
                             />
-                            <label htmlFor="usunit" className={"active"}>Lier ce point de service à une direction </label>
+                            <label htmlFor="usunit" className="active">
+                                Lier ce point de service à une direction&nbsp;
+                                <a
+                                    className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text"
+                                    data-position="bottom"
+                                    data-tooltip="Permet d’indiquer la direction responsable : elle pourra suivre toutes les réclamations de ce point de service."
+                                >
+                                    <HelpIcon />
+                                </a>
+                            </label>
                             <small className="errorTxt4">
                                 <div id="cpassword-error" className="error">
                                     {props.errors.unit}

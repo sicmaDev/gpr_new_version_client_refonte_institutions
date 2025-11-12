@@ -116,7 +116,13 @@ export const ajout = async (data, props) => {
         })
         .catch(function (error) {
             props.etatChanged(false)
-            notify("Erreur - Veuillez réessayer!", "error");
+          
+           const message =
+            error?.response?.data?.content?.message ||
+            error?.response?.data?.message ||
+            "Erreur - Veuillez réessayer!";
+
+            notify(message, "error");
         });
 
 }
@@ -147,22 +153,18 @@ export const modification = async (data, props) => {
 
         })
         .catch(function (error) {
-            console.log("erre", error)
+          
             props.etatChanged(false)
-            // if (error.response.data.content !=="") {
-            //     notify(error.response.data.content.message, "error");
-            // } else {
-            //     notify("Erreur - Veuillez réessayer!", "error");
-            // }
+            if (error.response.data.content !=="") {
+                notify(error.response.data.content.message, "error");
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
         });
 
 }
 
 export const suppression = async (data, props) => {
-
-    console.log("props", props);
-    console.log("propsID", props.id);
-    console.log("dataID", data.id);
     const config = {
         method: 'delete',
         url: DELETE_SETTING_API.replace("id", data.id),
@@ -175,8 +177,7 @@ export const suppression = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            console.log("response1", response);
-
+           
             saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
 
@@ -185,8 +186,6 @@ export const suppression = async (data, props) => {
             all(props)
         })
         .catch(function (error) {
-            console.log("response2", error);
-
             props.etat3Changed(false)
             if (error.response.data.content !=="") {
                 notify(error.response.data.content.message, "error");

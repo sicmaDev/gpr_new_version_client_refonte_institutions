@@ -57,11 +57,18 @@ const Objets = (props) => {
         return clearComponentState();
     }, []);
 
-    
-    const topRef = useRef(null); 
+
+    const topRef = useRef(null);
     useAutoScroll(topRef, [props.selectedItem.id], "top");
 
     let columns = [
+        {
+            key: "uuid",
+            text: "Uuid",
+            className: "description",
+            align: "left",
+            sortable: true
+        },
         {
             key: "libelle",
             text: "Intitulé",
@@ -90,13 +97,7 @@ const Objets = (props) => {
             align: "left",
             sortable: true
         },
-        {
-            key: "uuid",
-            text: "Uuid",
-            className: "description",
-            align: "left",
-            sortable: true
-        },
+
         {
             key: "action",
             text: "Actions",
@@ -279,7 +280,7 @@ const Objets = (props) => {
 
         props.objetErrors(errors)
     }
-    
+
     const handleEditClick = (sp) => (e) => {
         rowClickedHandler(e, sp, null)
     }
