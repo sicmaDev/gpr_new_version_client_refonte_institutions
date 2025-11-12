@@ -557,8 +557,6 @@ const EnregistrerSuggestion = (props) => {
             formData.append("audios", audioFile);
         }
 
-
-        console.log("claim____", claim);
         //HERE
         props.etatChanged(true)
         if (mode === 1) {
@@ -593,8 +591,6 @@ const EnregistrerSuggestion = (props) => {
     };
     const handleDelete = (e, claim = null) => {
         e.preventDefault();
-
-        console.log("claim.id", claim.id);
         setLoadingId(claim.id);
         deleteSuggestionApi(claim.id, props).then(() => {
             listeByStatut(props, "TEMP_SAVED").then(() => {});

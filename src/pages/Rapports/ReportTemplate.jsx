@@ -68,7 +68,7 @@ const ReportTemplate = (props) => {
   }, []);
 
   const handleSubmit = (isCreate = false) => {
-    console.log("dataTemplate", props.tmpState);
+    // console.log("dataTemplate", props.tmpState);
 
     if(!props.tmpState.form.title || props.tmpState.form.title === ""){
         notify("le nom du template est obligatoire","error")
@@ -80,23 +80,23 @@ const ReportTemplate = (props) => {
       valeurs: props.tmpState.current_valeurs,
     })
       .then(({ data }) => {
-        console.log("data", data);
+        // console.log("data", data);
         props.setTmpState({ showForm: false });
 
         getTemplates();
       })
       .catch((err) => {
-        console.log("err", err);
+        // console.log("err", err);
       });
   };
   const deleteSubmit = () => {
     deleteTemplateApi(props.tmpState.current_id)
       .then(({ data }) => {
-        console.log("data Delete", data);
+        // console.log("data Delete", data);
         getTemplates();
       })
       .catch((err) => {
-        console.log("err Delete", err);
+        // console.log("err Delete", err);
       });
   };
   const setNewTemplate = (e) => {

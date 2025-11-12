@@ -426,8 +426,7 @@ const ListeReclamationsClassees = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
-    console.log("rowCliData", data);
-
+  
     switch (data.objet.risqueLevel) {
       case "MINEUR":
         if (hbt.includes("H2")) {
@@ -678,7 +677,6 @@ const ListeReclamationsClassees = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio);
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
         <Grid item xs={12} sm={6} key={audioItem.id}>

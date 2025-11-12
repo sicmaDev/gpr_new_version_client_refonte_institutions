@@ -179,14 +179,13 @@ const SignCompteUser = (props) => {
         dataUser["additionalRole"] = props.additionalRole;
         dataUser["password"] = props.pass;
         dataUser["ra"] = ca;
-        console.log("dataUser", dataUser);
         
         if(handleValidation() && handleMdp()){
             props.etatChanged(true)
             
             createUserPublic(dataUser)
                 .then(({ data }) => {
-                    console.log("data", data);
+                 
                     if (data.response.status === true) {
                         localStorage.setItem("afterInscription", true);
 
@@ -194,19 +193,26 @@ const SignCompteUser = (props) => {
                         navigate.push("/login");
                     } else {
                         localStorage.removeItem("afterInscription");
-                        notify("Erreur, Les identifiants sont incorrectes", "error");
+                        clearComponentState();
+                       const message =
+                            data.response?.content?.message ||
+                            data.response?.data?.message ||
+                            "Erreur - Veuillez réessayer!";
+
+                        notify(message, "error");
                     }
                 })
                 .catch((error) => {
-                    console.log("Erreur HTTP : ", error);
+                  
                     localStorage.removeItem("afterInscription");
+                     clearComponentState();
                     const response = error.response;
-                    if (response?.data) {
-                        console.log("Erreur logique ou validation : ", response.data);
-                        notify(`Erreur, ${(response.data.response.content.title === "Invalid email") ? "L'email existe déjà" : response.data.response.content.message || "Une erreur s'est produite"}`, "error");
-                    } else {
-                        notify("Erreur inconnue", "error");
-                    }
+                     const message =
+                            response?.content?.message ||
+                            response?.data?.message ||
+                            "Erreur - Veuillez réessayer!";
+
+                        notify(message, "error");
                 }).finally(() => {            
                     props.etatChanged(false)
                     handleCancel(e)
@@ -372,7 +378,8 @@ const SignCompteUser = (props) => {
                                                 type="text"
                                                 className="validate"
                                                 placeholder=""
-                                                defaultValue={props.name}
+                                                value={props.name || ""}
+                                                // defaultValue={props.name}
                                                 onChange={(e) => props.nameChanged(e.target.value)}
                                                 data-error=".errorTxt1"
                                                 style={{ marginTop: "5px" }}
@@ -425,7 +432,8 @@ const SignCompteUser = (props) => {
                                                 type="text"
                                                 className="validate"
                                                 placeholder=""
-                                                defaultValue={props.email}
+                                                // defaultValue={props.email}
+                                                value={props.email || ""}
                                                 onChange={(e) => props.emailChanged(e.target.value)}
                                                 data-error=".errorTxt1"
                                                 style={{ marginTop: "5px" }}
@@ -481,7 +489,8 @@ const SignCompteUser = (props) => {
                                                 type="tel"
                                                 className="validate"
                                                 placeholder=""
-                                                defaultValue={props.phone}
+                                                // defaultValue={props.phone}
+                                                value={props.phone || ""}
                                                 onChange={(e) => props.phoneChanged(e.target.value)}
                                                 data-error=".errorTxt1"
                                                 style={{ marginTop: "5px" }}
@@ -516,7 +525,7 @@ const SignCompteUser = (props) => {
                                                 </Select>
                                             </FormControl>
                                             <label htmlFor="poste" className="active">
-                                                Est-il le gérant du point de service ?&nbsp;
+                                                Etes-vous gérant du point de service ?&nbsp;
                                             </label>
                                             <small className="errorTxt4">
                                                 <div id="cpassword-error" className="error">

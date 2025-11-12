@@ -23,7 +23,7 @@ import { Cancel, CheckBox, Save } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 
 const EmailDialog = (props) => {
-  console.log("props in email dialog", props);
+ 
   const defaultMessage =
     "Le traitement d'une nouvelle réclamation vous a été affecté(e). Cette réclamation nécessite votre attention et votre expertise pour garantir une résolution rapide et satisfaisante." +
     "\n\n" +

@@ -359,7 +359,7 @@ const EnregistrerDenonciation = (props) => {
     const handleDelete = (e, claim = null) => {
         e.preventDefault();
 
-        console.log("claim.id", claim.id);
+       
         setLoadingId(claim.id);
         deleteDenunciationApi(claim.id, props).then(() => {
             listeByStatut(props, "TEMP_SAVED").then(() => {});

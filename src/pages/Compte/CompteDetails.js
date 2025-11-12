@@ -56,7 +56,6 @@ const CompteDetails = (props) => {
             hbt.includes("H13") ? setH13 (<Typography ><span style={{ fontWeight:"bold",color:"#00cc00" }}>H13</span> : Consulter les Alerte de retard de traitement </Typography>) : setH13("")
             hbt.includes("H14") ? setH14 (<Typography ><span style={{ fontWeight:"bold",color:"#333300" }}>H14</span> : Consulter toutes les informations </Typography>) : setH14("")
 
-        console.log("sessionUser:", sessionUser);
     }, []);
 
     const handleModal = (e) => {
@@ -202,6 +201,24 @@ const CompteDetails = (props) => {
                         <h5 style={{ fontWeight:"bold",textAlign:"center" }}>Habilitations</h5>
                                
                         {h1}{h2}{h3}{h4}{h5}{h6}{h7}{h8}{h9}{h10}{h11}{h12}{h13}{h14}
+                    </div>
+                    <div className="mt-2">
+                        <div className="row pb-4 ml-2">
+                            <div
+                            className="col s12 mb-2"
+                            style={{
+                                background: "#f5f9ff",
+                                borderLeft: "4px solid #1976d2",
+                                padding: "10px 5px",
+                                borderRadius: "6px",
+                                display: "flex",
+                                alignItems: "center", 
+                            }}
+                            >
+                                <span style={{ fontWeight: "bold",marginRight:"12px" }}>Privilèges spécifiques : </span> {addR === "PILOTE"? "Pilote Principal": addR === "DE"? "Directeur / Directrice (Executif, General,...)": "Aucun"}
+
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

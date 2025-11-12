@@ -277,7 +277,7 @@ const TraiterReclamation = (props) => {
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
-  // console.log("userrrrrrrrrr",user.id)
+
   //vérification if user is in guest
   let showJoinBtn = false;
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
@@ -316,8 +316,6 @@ const TraiterReclamation = (props) => {
       ? JSON.parse(loadItemFromLocalStorage("app-mode"))
       : undefined;
 
-  console.log("audioFiles", audioFiles);
-  console.log("fileBlobs", fileBlobs);
   let compteur = 0;
   const handleClickOpen = () => {
     compteur++;
@@ -373,7 +371,6 @@ const TraiterReclamation = (props) => {
     e.preventDefault();
     setLoadingConversion(true);
 
-    console.log("dataRow", dataRow);
     const formData = new FormData();
     let claim = {};
 
@@ -400,7 +397,7 @@ const TraiterReclamation = (props) => {
       props.etat2Changed(true);
       if (mode === 1) {
         addSuggestionApi(formData, props).then((response) => {
-          console.log("response<<<<", response);
+        
           const data = {
             code: response.data.content.code,
             claimId: dataRow.id,
@@ -527,23 +524,36 @@ const TraiterReclamation = (props) => {
         if (cc.status >= 200 && cc.status <= 299) {
           // await listeTreat(props);
           let data = cc.data.content;
-          console.log("tmp", data);
-
+         
           clearComponentState();
 
           //console.log("level",data.objet.risqueLevel)
           let agentMailOptions = [];
 
+          let userConnected = user;
           switch (data.objet.risqueLevel) {
             case "MINEUR":
               users.map((user) => {
-                let hab = user.posteDto.habilitations.split(",");
-                if (hab.includes("H1", "H2", "H3")) {
-                  agentMailOptions.push({
-                    label: user.firstAndLastName + " < " + user.email + " >",
-                    value: user.id,
-                    email: user.email,
-                  });
+                if (userConnected.ra === true) {
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                    let hab = user.posteDto.habilitations.split(",");
+                    if (hab.includes("H1", "H2", "H3")) {
+                      agentMailOptions.push({
+                        label: user.firstAndLastName + " < " + user.email + " >",
+                        value: user.id,
+                        email: user.email,
+                      });
+                    }
+                  }
+                } else if (user.deleted === false) {
+                  let hab = user.posteDto.habilitations.split(",");
+                  if (hab.includes("H1", "H2", "H3")) {
+                    agentMailOptions.push({
+                      label: user.firstAndLastName + " < " + user.email + " >",
+                      value: user.id,
+                      email: user.email,
+                    });
+                  }
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -555,13 +565,26 @@ const TraiterReclamation = (props) => {
               break;
             case "MOYEN":
               users.map((user) => {
-                let hab = user.posteDto.habilitations.split(",");
-                if (hab.includes("H3")) {
-                  agentMailOptions.push({
-                    label: user.firstAndLastName + " < " + user.email + " >",
-                    value: user.id,
-                    email: user.email,
-                  });
+                if (userConnected.ra === true) {
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                    let hab = user.posteDto.habilitations.split(",");
+                    if (hab.includes("H3")) {
+                      agentMailOptions.push({
+                        label: user.firstAndLastName + " < " + user.email + " >",
+                        value: user.id,
+                        email: user.email,
+                      });
+                    }                  
+                  }
+                } else if (user.deleted === false) {
+                  let hab = user.posteDto.habilitations.split(",");
+                  if (hab.includes("H3")) {
+                    agentMailOptions.push({
+                      label: user.firstAndLastName + " < " + user.email + " >",
+                      value: user.id,
+                      email: user.email,
+                    });
+                  }                  
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -573,14 +596,28 @@ const TraiterReclamation = (props) => {
               break;
             case "GRAVE":
               users.map((user) => {
-                let hab = user.posteDto.habilitations.split(",");
-                if (hab.includes("H4")) {
-                  agentMailOptions.push({
-                    label:
-                      user.firstAndLastName + "         < " + user.email + " >",
-                    value: user.id,
-                    email: user.email,
-                  });
+                if (userConnected.ra === true) {
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                    let hab = user.posteDto.habilitations.split(",");
+                    if (hab.includes("H4")) {
+                      agentMailOptions.push({
+                        label:
+                          user.firstAndLastName + "         < " + user.email + " >",
+                        value: user.id,
+                        email: user.email,
+                      });
+                    }                  
+                  }
+                } else if (user.deleted === false) {
+                  let hab = user.posteDto.habilitations.split(",");
+                  if (hab.includes("H4")) {
+                    agentMailOptions.push({
+                      label:
+                        user.firstAndLastName + "         < " + user.email + " >",
+                      value: user.id,
+                      email: user.email,
+                    });
+                  }                
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -1434,12 +1471,37 @@ const TraiterReclamation = (props) => {
             }
             break;
           case "MOYEN":
-            graviteElt = <span className="orange-text text-bold">Moyen</span>;
+             if (claim.transmitted) {
+              graviteElt = (
+                <>
+                  <div className="df">
+                    <span className="orange-text text-bold mr-2">Moyen</span>
+                    <div className="card-content red-text ml-4">
+                      <MoveUpIcon />
+                    </div>
+                  </div>
+                </>
+              );
+            } else {
+              graviteElt = <span className="orange-text text-bold">Moyen</span>;
+            }
+           
             break;
           case "GRAVE":
-            graviteElt = (
-              <span className="materialize-red-text text-bold">Grave</span>
-            );
+             if (claim.transmitted) {
+              graviteElt = (
+                <>
+                  <div className="df">
+                    <span className="materialize-red text-bold mr-2">Grave</span>
+                    <div className="card-content red-text ml-4">
+                      <MoveUpIcon />
+                    </div>
+                  </div>
+                </>
+              );
+            } else {
+              graviteElt = <span className="materialize-red-text text-bold">Grave</span>;
+            }
             break;
           default:
             graviteElt = (
@@ -1519,7 +1581,7 @@ const TraiterReclamation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    console.log("rowClick", data);
+  
     setDataRow(data);
 
     handleClickOpen();
@@ -1528,16 +1590,30 @@ const TraiterReclamation = (props) => {
     //console.log("level",data.objet.risqueLevel)
     let agentMailOptions = [];
 
+    let userConnected = user;
     switch (data.objet.risqueLevel) {
       case "MINEUR":
         users.map((user) => {
-          let hab = user.posteDto.habilitations.split(",");
-          if (hab.includes("H1", "H2", "H3")) {
-            agentMailOptions.push({
-              label: user.firstAndLastName + " < " + user.email + " >",
-              value: user.id,
-              email: user.email,
-            });
+          if (userConnected.ra === true) {
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+              let hab = user.posteDto.habilitations.split(",");
+              if (hab.includes("H1", "H2", "H3")) {
+                agentMailOptions.push({
+                  label: user.firstAndLastName + " < " + user.email + " >",
+                  value: user.id,
+                  email: user.email,
+                });
+              }            
+            }
+          } else if (user.deleted === false) {            
+            let hab = user.posteDto.habilitations.split(",");
+            if (hab.includes("H1", "H2", "H3")) {
+              agentMailOptions.push({
+                label: user.firstAndLastName + " < " + user.email + " >",
+                value: user.id,
+                email: user.email,
+              });
+            }
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -1549,13 +1625,26 @@ const TraiterReclamation = (props) => {
         break;
       case "MOYEN":
         users.map((user) => {
-          let hab = user.posteDto.habilitations.split(",");
-          if (hab.includes("H3")) {
-            agentMailOptions.push({
-              label: user.firstAndLastName + " < " + user.email + " >",
-              value: user.id,
-              email: user.email,
-            });
+          if (userConnected.ra === true) {
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+              let hab = user.posteDto.habilitations.split(",");
+              if (hab.includes("H3")) {
+                agentMailOptions.push({
+                  label: user.firstAndLastName + " < " + user.email + " >",
+                  value: user.id,
+                  email: user.email,
+                });
+              }            
+            }
+          } else if (user.deleted === false) {
+            let hab = user.posteDto.habilitations.split(",");
+            if (hab.includes("H3")) {
+              agentMailOptions.push({
+                label: user.firstAndLastName + " < " + user.email + " >",
+                value: user.id,
+                email: user.email,
+              });
+            }            
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -1567,13 +1656,26 @@ const TraiterReclamation = (props) => {
         break;
       case "GRAVE":
         users.map((user) => {
-          let hab = user.posteDto.habilitations.split(",");
-          if (hab.includes("H4")) {
-            agentMailOptions.push({
-              label: user.firstAndLastName + "         < " + user.email + " >",
-              value: user.id,
-              email: user.email,
-            });
+          if (userConnected.ra === true) {
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+              let hab = user.posteDto.habilitations.split(",");
+              if (hab.includes("H4")) {
+                agentMailOptions.push({
+                  label: user.firstAndLastName + "         < " + user.email + " >",
+                  value: user.id,
+                  email: user.email,
+                });
+              }            
+            }
+          } else if (user.deleted === false) {            
+            let hab = user.posteDto.habilitations.split(",");
+            if (hab.includes("H4")) {
+              agentMailOptions.push({
+                label: user.firstAndLastName + "         < " + user.email + " >",
+                value: user.id,
+                email: user.email,
+              });
+            }
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -1587,7 +1689,7 @@ const TraiterReclamation = (props) => {
       default:
         break;
     }
-    setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45);
+    setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45); 
     props.idChanged(data.id ? data.id : "");
     props.lastnameChanged(
       data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -2983,7 +3085,7 @@ const TraiterReclamation = (props) => {
     return isValid;
   };
   const handleValidationForReAssign = () => {
-    console.log("reaffect", props);
+   
     let isValid = true;
 
     if (
@@ -3037,8 +3139,6 @@ const TraiterReclamation = (props) => {
   };
 
   const handleAssignOrReassign = (e) => {
-    console.log("reaffect", props);
-
     if (props.reaffect) {
       handleReAssign(e);
     } else {
@@ -3060,10 +3160,6 @@ const TraiterReclamation = (props) => {
       claim["message"] = props.handled_message;
       claim["delai"] = props.handled_delai;
 
-      // console.log("anonymaty", anonymat);
-      console.log("claim", claim);
-
-      //console.log("props.handled_by",claim);
       props.etatChanged(true);
       affectClaimApi(claim, props).then(() => {
         handleCancel(e);
@@ -3231,13 +3327,12 @@ const TraiterReclamation = (props) => {
           compteur: solution.compteur,
         };
       });
-      // console.log("solutionsLISTE", solutionsListe);
-
-      if (hbt.includes("H6") || addR === "PILOTE") {
+     
+      if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
         if (
-          (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
-          user.firstAndLastName === props.created_by &&
-          props.transmitted === "true"
+          // (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+          (user.firstAndLastName === props.created_by &&
+          props.transmitted === "true") || (user.ra === true && props.transmitted === "true")
         ) {
           affectForm = (
             <>
@@ -3360,7 +3455,7 @@ const TraiterReclamation = (props) => {
           props.transmitted === "false") ||
           (props.transmittedTo === user.firstAndLastName &&
             props.transmitted === "true" &&
-            addR === "MOLDUE"))
+            addR === "MOLDUE") || (user.ra === true && props.transmitted === "false"))
       ) {
         treatForm = (
           <>
@@ -3779,7 +3874,7 @@ const TraiterReclamation = (props) => {
             </div>
           );
 
-          if (hbt.includes("H6") || addR === "PILOTE") {
+          if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
             treatForm = (
               <>
                 {personAffect}
@@ -3796,7 +3891,7 @@ const TraiterReclamation = (props) => {
             );
           }
         } else {
-          if (hbt.includes("H14") || addR !== "MOLDUE") {
+          if (hbt.includes("H14") || addR !== "MOLDUE" || (user.ra === true && props.transmitted === "false")) {
             tmp = (
               <div className="row pb-4">
                 <div
@@ -3823,7 +3918,7 @@ const TraiterReclamation = (props) => {
             tmp = "";
           }
 
-          if (hbt.includes("H6") || addR === "PILOTE") {
+          if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
             treatForm = (
               <>
                 {tmp}
@@ -4387,7 +4482,7 @@ const TraiterReclamation = (props) => {
       break;
     case "UNSATISFIED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE") {
+      if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -4489,7 +4584,7 @@ const TraiterReclamation = (props) => {
       break;
     case "PARTIAL_SATISFIED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE") {
+      if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -4591,7 +4686,7 @@ const TraiterReclamation = (props) => {
       break;
     case "CLASSED":
       //ils peuvent affecter les réclamations non satisfaites
-      if (hbt.includes("H6") || addR === "PILOTE") {
+      if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
         affectForm = (
           <>
             <form id="claimAssignForm">
@@ -4821,7 +4916,7 @@ const TraiterReclamation = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio);
+   
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
         <Grid item xs={12} sm={6} key={audioItem.id}>
@@ -5127,12 +5222,12 @@ const TraiterReclamation = (props) => {
   let btnS = "";
 
   if (
-    (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+    // (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
     ((user.firstAndLastName === props.created_by &&
       props.transmitted === "false") ||
       (user.firstAndLastName === props.transmittedTo &&
         props.transmitted === "true" &&
-        addR === "MOLDUE")) &&
+        addR === "MOLDUE") || (user.ra === true && props.transmitted === "false")) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -5164,7 +5259,7 @@ const TraiterReclamation = (props) => {
     (props.transmitted !== "false" &&
       user.firstAndLastName === props.transmittedTo &&
       props.status === "SAVED" &&
-      addR === "MOLDUE")
+      addR === "MOLDUE") || (user.ra === true && props.transmitted === "false")
   ) {
     // console.log("lol","azert")
     if (props.session === "" && props.session.status !== "OPEN") {
@@ -5307,10 +5402,10 @@ const TraiterReclamation = (props) => {
   });
 
   useEffect(() => {
-    console.log("filesForm.length", filesForm.length);
+   
     if (inputRef.current) {
       inputRef.current.value = null;
-      console.log("inputRef.current", inputRef.current.value);
+     
     }
     // clearFiles();
   }, [filesForm.length]);
@@ -5319,7 +5414,6 @@ const TraiterReclamation = (props) => {
     e.preventDefault();
     setExtraFileLoading(true);
 
-    console.log("filesForm__1 >> ", filesForm);
     const formData = new FormData();
     formData.append("claim_id", props.id);
 
@@ -5340,10 +5434,10 @@ const TraiterReclamation = (props) => {
       }
     }
 
-    console.log("filesForm__2 >> ", filesForm);
+  
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >>>>>>>>>>>>>> ", res);
+      
         if (isFile) {
           getFillesApi(currentData?.id, props);
           clearFiles();
@@ -5358,7 +5452,7 @@ const TraiterReclamation = (props) => {
         }
       })
       .catch((err) => {
-        console.log("err add extra >> ", err);
+       
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {
@@ -5375,15 +5469,14 @@ const TraiterReclamation = (props) => {
 
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >><<< ", res);
-
+        
         props.extrasChanged(res.data.content.extras ?? []);
         notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
         setExtraContent("");
       })
       .catch((err) => {
-        console.log("err add extra >> ", err);
+        
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {

@@ -487,8 +487,6 @@ const TraiterDenonciation = (props) => {
   const handleSubmitConfirmation = (e) => {
     e.preventDefault();
     setLoadingConversion(true);
-
-    console.log("dataRow", dataRow);
     const formData = new FormData();
     let claim = {};
 
@@ -587,16 +585,30 @@ const TraiterDenonciation = (props) => {
 
           let agentMailOptions = [];
 
+          let userConnected = user;
           switch (data.objet.risqueLevel) {
             case "MINEUR":
               users.map((user) => {
-                let hab = user.posteDto.habilitations.split(",");
-                if (hab.includes("H1", "H2", "H3")) {
-                  agentMailOptions.push({
-                    label: user.firstAndLastName + " < " + user.email + " >",
-                    value: user.id,
-                    email: user.email,
-                  });
+                if (userConnected.ra === true) {
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                    let hab = user.posteDto.habilitations.split(",");
+                    if (hab.includes("H1", "H2", "H3")) {
+                      agentMailOptions.push({
+                        label: user.firstAndLastName + " < " + user.email + " >",
+                        value: user.id,
+                        email: user.email,
+                      });
+                    }
+                  }
+                } else if (user.deleted === false) {
+                  let hab = user.posteDto.habilitations.split(",");
+                  if (hab.includes("H1", "H2", "H3")) {
+                    agentMailOptions.push({
+                      label: user.firstAndLastName + " < " + user.email + " >",
+                      value: user.id,
+                      email: user.email,
+                    });
+                  }
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -608,13 +620,26 @@ const TraiterDenonciation = (props) => {
               break;
             case "MOYEN":
               users.map((user) => {
-                let hab = user.posteDto.habilitations.split(",");
-                if (hab.includes("H3")) {
-                  agentMailOptions.push({
-                    label: user.firstAndLastName + " < " + user.email + " >",
-                    value: user.id,
-                    email: user.email,
-                  });
+                if (userConnected.ra === true) {
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                    let hab = user.posteDto.habilitations.split(",");
+                    if (hab.includes("H3")) {
+                      agentMailOptions.push({
+                        label: user.firstAndLastName + " < " + user.email + " >",
+                        value: user.id,
+                        email: user.email,
+                      });
+                    }                  
+                  }
+                } else if (user.deleted === false) {
+                  let hab = user.posteDto.habilitations.split(",");
+                  if (hab.includes("H3")) {
+                    agentMailOptions.push({
+                      label: user.firstAndLastName + " < " + user.email + " >",
+                      value: user.id,
+                      email: user.email,
+                    });
+                  }                  
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -626,14 +651,28 @@ const TraiterDenonciation = (props) => {
               break;
             case "GRAVE":
               users.map((user) => {
-                let hab = user.posteDto.habilitations.split(",");
-                if (hab.includes("H4")) {
-                  agentMailOptions.push({
-                    label:
-                      user.firstAndLastName + "         < " + user.email + " >",
-                    value: user.id,
-                    email: user.email,
-                  });
+                if (userConnected.ra === true) {
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                    let hab = user.posteDto.habilitations.split(",");
+                    if (hab.includes("H4")) {
+                      agentMailOptions.push({
+                        label:
+                          user.firstAndLastName + "         < " + user.email + " >",
+                        value: user.id,
+                        email: user.email,
+                      });
+                    }                  
+                  }
+                } else if (user.deleted === false) {
+                  let hab = user.posteDto.habilitations.split(",");
+                  if (hab.includes("H4")) {
+                    agentMailOptions.push({
+                      label:
+                        user.firstAndLastName + "         < " + user.email + " >",
+                      value: user.id,
+                      email: user.email,
+                    });
+                  }                
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -1471,25 +1510,37 @@ const TraiterDenonciation = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     setDataRow(data);
     setClaimId(data.id);
-    console.log("dataRow", data);
-    console.log("dataRow_", props);
-
+  
     handleClickOpen();
     clearComponentState();
 
     //console.log("level",data.objet.risqueLevel)
     let agentMailOptions = [];
 
+    let userConnected = user;
     switch (data.objet.risqueLevel) {
       case "MINEUR":
         users.map((user) => {
-          let hab = user.posteDto.habilitations.split(",");
-          if (hab.includes("H1", "H2", "H3")) {
-            agentMailOptions.push({
-              label: user.firstAndLastName + " < " + user.email + " >",
-              value: user.id,
-              email: user.email,
-            });
+          if (userConnected.ra === true) {
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+              let hab = user.posteDto.habilitations.split(",");
+              if (hab.includes("H1", "H2", "H3")) {
+                agentMailOptions.push({
+                  label: user.firstAndLastName + " < " + user.email + " >",
+                  value: user.id,
+                  email: user.email,
+                });
+              }            
+            }
+          } else if (user.deleted === false) {            
+            let hab = user.posteDto.habilitations.split(",");
+            if (hab.includes("H1", "H2", "H3")) {
+              agentMailOptions.push({
+                label: user.firstAndLastName + " < " + user.email + " >",
+                value: user.id,
+                email: user.email,
+              });
+            }
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -1501,13 +1552,26 @@ const TraiterDenonciation = (props) => {
         break;
       case "MOYEN":
         users.map((user) => {
-          let hab = user.posteDto.habilitations.split(",");
-          if (hab.includes("H3")) {
-            agentMailOptions.push({
-              label: user.firstAndLastName + " < " + user.email + " >",
-              value: user.id,
-              email: user.email,
-            });
+          if (userConnected.ra === true) {
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+              let hab = user.posteDto.habilitations.split(",");
+              if (hab.includes("H3")) {
+                agentMailOptions.push({
+                  label: user.firstAndLastName + " < " + user.email + " >",
+                  value: user.id,
+                  email: user.email,
+                });
+              }            
+            }
+          } else if (user.deleted === false) {
+            let hab = user.posteDto.habilitations.split(",");
+            if (hab.includes("H3")) {
+              agentMailOptions.push({
+                label: user.firstAndLastName + " < " + user.email + " >",
+                value: user.id,
+                email: user.email,
+              });
+            }            
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -1519,13 +1583,26 @@ const TraiterDenonciation = (props) => {
         break;
       case "GRAVE":
         users.map((user) => {
-          let hab = user.posteDto.habilitations.split(",");
-          if (hab.includes("H4")) {
-            agentMailOptions.push({
-              label: user.firstAndLastName + "         < " + user.email + " >",
-              value: user.id,
-              email: user.email,
-            });
+          if (userConnected.ra === true) {
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+              let hab = user.posteDto.habilitations.split(",");
+              if (hab.includes("H4")) {
+                agentMailOptions.push({
+                  label: user.firstAndLastName + "         < " + user.email + " >",
+                  value: user.id,
+                  email: user.email,
+                });
+              }            
+            }
+          } else if (user.deleted === false) {            
+            let hab = user.posteDto.habilitations.split(",");
+            if (hab.includes("H4")) {
+              agentMailOptions.push({
+                label: user.firstAndLastName + "         < " + user.email + " >",
+                value: user.id,
+                email: user.email,
+              });
+            }
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -2904,8 +2981,6 @@ const TraiterDenonciation = (props) => {
   };
 
   const handleAssignOrReassign = (e) => {
-    console.log("reaffect", props);
-
     if (props.reaffect) {
       handleReAssign(e);
     } else {
@@ -3087,9 +3162,9 @@ const TraiterDenonciation = (props) => {
       });
       // console.log("solutionsLISTE", solutionsListe);
       if (
-        (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
-        user.firstAndLastName === props.created_by &&
-        props.transmitted === "true"
+        // (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+        (user.firstAndLastName === props.created_by &&
+        props.transmitted === "true") || (user.ra === true && props.transmitted === "true") 
       ) {
         affectForm = (
           <>
@@ -3113,91 +3188,112 @@ const TraiterDenonciation = (props) => {
         );
       }
 
-      if (hbt.includes("H6") || addR === "PILOTE") {
-        // if ((props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
-        //   user.firstAndLastName === props.created_by &&
-        //   props.transmitted === "true") {
-        //  affectForm="Vous avez transmis cette réclamation. Vous n'avez plus la main sur elle "
-        // } else {
-        affectForm = (
-          <>
-            <form id="claimAssignForm">
-              <div className="row">
-                <div className="col s12">
-                  <details>
-                    <summary className="text-details">
-                      Affectation de la dénonciation
-                    </summary>
-
-                    <div className="col s12 input-field">
-                      <Select
-                        options={agentsMailOptions}
-                        className="react-select-container mt-4"
-                        classNamePrefix="react-select"
-                        style={styles}
-                        placeholder="Sélectionner l'agent"
-                        onChange={(e) => {
-                          props.handledByChanged(e.value);
-                          setAffectEmail(e.email);
-                        }}
-                      />
-                      <label htmlFor="gender" className={"active"}>
-                        Affectée à
-                        <span>
-                          (<span className="red-text darken-2 ">*</span>)
-                        </span>
-                      </label>
-                      <small className="errorTxt4">
-                        <div id="cpassword-error" className="error">
-                          {props.errors !== undefined
-                            ? props.errors.handled_by
-                            : ""}
-                        </div>
-                      </small>
-                    </div>
-
-                    <div className="col s12 display-flex justify-content-end mt-3">
-                      {
-                        // (actif !== undefined && actif)  ?
-                        <LoadingButton
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (handleValidationForAssign()) {
-                              //setShowSelectPrintItem(true);
-                              prepareBeforeAssign(e);
-                              //handleAssign(e);
-                            }
-                            props.claimHandleErrors(errors);
-                          }}
-                          className="waves-effect waves-effect-b waves-light btn-small"
-                          loading={props.etat}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{
-                            backgroundColor: "#1e2188",
-                            textTransform: "initial",
-                          }}
-                        >
-                          <span>Affecter</span>
-                        </LoadingButton>
-                        // :
-                        // <div className="card-alert card red lighten-5">
-                        //   <div className="card-content red-text">
-                        //       <ul>
-                        //           Veuillez activer une licence.
-                        //       </ul>
-                        //   </div>
-                        // </div>
-                      }
-                    </div>
-                  </details>
+      if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
+        if (
+          // (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+          (user.firstAndLastName === props.created_by &&
+          props.transmitted === "true") || (user.ra === true && props.transmitted === "true") 
+        ) {
+          affectForm = (
+            <>
+              <div className="row pb-4">
+                <div
+                  className="col s12 mb-2"
+                  style={{
+                    background: "#f5f9ff",
+                    borderLeft: "4px solid #1976d2",
+                    padding: "10px 5px",
+                    borderRadius: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  Vous avez transmis cette réclamation. Vous n'avez plus la main
+                  sur elle.
                 </div>
               </div>
-            </form>
-          </>
-        );
-        // }
+            </>
+          );
+        } else {
+          affectForm = (
+            <>
+              <form id="claimAssignForm">
+                <div className="row">
+                  <div className="col s12">
+                    <details>
+                      <summary className="text-details">
+                        Affectation de la dénonciation
+                      </summary>
+
+                      <div className="col s12 input-field">
+                        <Select
+                          options={agentsMailOptions}
+                          className="react-select-container mt-4"
+                          classNamePrefix="react-select"
+                          style={styles}
+                          placeholder="Sélectionner l'agent"
+                          onChange={(e) => {
+                            props.handledByChanged(e.value);
+                            setAffectEmail(e.email);
+                          }}
+                        />
+                        <label htmlFor="gender" className={"active"}>
+                          Affectée à
+                          <span>
+                            (<span className="red-text darken-2 ">*</span>)
+                          </span>
+                        </label>
+                        <small className="errorTxt4">
+                          <div id="cpassword-error" className="error">
+                            {props.errors !== undefined
+                              ? props.errors.handled_by
+                              : ""}
+                          </div>
+                        </small>
+                      </div>
+
+                      <div className="col s12 display-flex justify-content-end mt-3">
+                        {
+                          // (actif !== undefined && actif)  ?
+                          <LoadingButton
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (handleValidationForAssign()) {
+                                //setShowSelectPrintItem(true);
+                                prepareBeforeAssign(e);
+                                //handleAssign(e);
+                              }
+                              props.claimHandleErrors(errors);
+                            }}
+                            className="waves-effect waves-effect-b waves-light btn-small"
+                            loading={props.etat}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{
+                              backgroundColor: "#1e2188",
+                              textTransform: "initial",
+                            }}
+                          >
+                            <span>Affecter</span>
+                          </LoadingButton>
+                          // :
+                          // <div className="card-alert card red lighten-5">
+                          //   <div className="card-content red-text">
+                          //       <ul>
+                          //           Veuillez activer une licence.
+                          //       </ul>
+                          //   </div>
+                          // </div>
+                        }
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              </form>
+            </>
+          );
+        }
       } else {
         affectForm = "";
       }
@@ -3208,7 +3304,7 @@ const TraiterDenonciation = (props) => {
           props.transmitted === "false") ||
           (props.transmittedTo === user.firstAndLastName &&
             props.transmitted === "true" &&
-            addR === "MOLDUE"))
+            addR === "MOLDUE") || (user.ra === true && props.transmitted === "false"))
       ) {
         treatForm = (
           <>
@@ -3615,7 +3711,7 @@ const TraiterDenonciation = (props) => {
           </div>
         );
 
-        if (hbt.includes("H6") || addR === "PILOTE") {
+        if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
           treatForm = (
             <>
               {personAffect}
@@ -3632,7 +3728,7 @@ const TraiterDenonciation = (props) => {
           );
         }
       } else {
-        if (hbt.includes("H14") || addR !== "MOLDUE") {
+        if (hbt.includes("H14") || addR !== "MOLDUE" || (user.ra === true && props.transmitted === "false")) {
           tmp = (
             <>
               <div className="row pb-4">
@@ -3661,7 +3757,7 @@ const TraiterDenonciation = (props) => {
           tmp = "";
         }
 
-        if (hbt.includes("H6") || addR === "PILOTE") {
+        if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
           treatForm = (
             <>
               {afForm}
@@ -4110,7 +4206,6 @@ const TraiterDenonciation = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio);
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
         <Grid item xs={12} sm={6} key={audioItem.id}>
@@ -4302,12 +4397,12 @@ const TraiterDenonciation = (props) => {
   let btnS = "";
 
   if (
-    (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
+    // (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
     ((user.firstAndLastName === props.created_by &&
       props.transmitted === "false") ||
       (user.firstAndLastName === props.transmittedTo &&
         props.transmitted === "true" &&
-        addR === "MOLDUE")) &&
+        addR === "MOLDUE") || (user.ra === true && props.transmitted === "false")) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -4339,7 +4434,7 @@ const TraiterDenonciation = (props) => {
     (props.transmitted !== "false" &&
       user.firstAndLastName === props.transmittedTo &&
       props.status === "SAVED" &&
-      addR === "MOLDUE")
+      addR === "MOLDUE") || (user.ra === true && props.transmitted === "false")
   ) {
     if (props.session === "" && props.session.status !== "OPEN") {
       btnS = (
@@ -4475,10 +4570,8 @@ const TraiterDenonciation = (props) => {
   });
 
   useEffect(() => {
-    console.log("filesForm.length", filesForm.length);
     if (inputRef.current) {
       inputRef.current.value = null;
-      console.log("inputRef.current", inputRef.current.value);
     }
     // clearFiles();
   }, [filesForm.length]);
@@ -4491,7 +4584,6 @@ const TraiterDenonciation = (props) => {
     formData.append("claim_id", claim_id);
 
     if (isFile) {
-      console.log("filesForm", filesForm);
       for (let index = 0; index < filesForm.length; index++) {
         formData.append("files", filesForm[index]);
       }
@@ -4508,10 +4600,8 @@ const TraiterDenonciation = (props) => {
       }
     }
 
-    console.log("formData", formData);
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >> ", res);
         if (isFile) {
           getFillesApi(currentData?.id, props);
           clearFiles();
@@ -4526,7 +4616,6 @@ const TraiterDenonciation = (props) => {
         }
       })
       .catch((err) => {
-        console.log("err add extra >> ", err);
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {
@@ -4542,15 +4631,12 @@ const TraiterDenonciation = (props) => {
 
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >> ", res);
-
         props.extrasChanged(res.data.content.extras ?? []);
         notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
         setExtraContent("");
       })
       .catch((err) => {
-        console.log("err add extra >> ", err);
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {

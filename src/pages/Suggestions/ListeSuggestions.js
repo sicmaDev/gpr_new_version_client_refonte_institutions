@@ -400,10 +400,9 @@ const ListeSuggestions = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
-    //console.log("external",data.external_remedies);
+   
     clearComponentState();
-    console.log("dataRow", data)
-
+   
     if (mode === 1) {
       props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");
       props.addressChanged(data.address ? data.address : "");
@@ -782,7 +781,7 @@ const ListeSuggestions = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio);
+   
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
 

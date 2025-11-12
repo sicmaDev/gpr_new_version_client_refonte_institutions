@@ -483,7 +483,6 @@ const EnregistrerReclamation = (props) => {
   const handleDelete = (e, claim = null) => {
     e.preventDefault();
 
-    console.log("claim.id", claim.id);
     setLoadingId(claim.id);
     deleteClaimApi(claim.id, props).then(() => {
       listeByStatut(props, "TEMP_SAVED").then(() => {});
@@ -782,8 +781,6 @@ const EnregistrerReclamation = (props) => {
     claim["code"] = props.code;
     claim["id"] = props.id;
 
-    
-    console.log("data____", claim)
     formData.append("claim", JSON.stringify(claim));
     for (let index = 0; index < files.length; index++) {
       formData.append("files", files[index]);

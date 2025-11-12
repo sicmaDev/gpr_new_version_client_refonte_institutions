@@ -481,12 +481,12 @@ const MesurerReclamation = (props) => {
             phone: cleanPhoneNumber3(props.phone),
             message: segment,
           });
-          console.log("Segment envoyé :", segment);
+         
           await sleep(500); // petite pause entre chaque SMS si besoin
         }
         notify("Super - SMS envoyé", "success");
       } catch (err) {
-        console.log(err);
+       
         notify("Oups - SMS non envoyé", "error");
       } finally {
         setLoading(false);
@@ -1076,7 +1076,6 @@ const MesurerReclamation = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio);
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
         <Grid item xs={12} sm={6} key={audioItem.id}>
@@ -1543,10 +1542,8 @@ const MesurerReclamation = (props) => {
   });
 
   useEffect(() => {
-    console.log("filesForm.length", filesForm.length);
     if (inputRef.current) {
       inputRef.current.value = null;
-      console.log("inputRef.current", inputRef.current.value);
     }
     // clearFiles();
   }, [filesForm.length]);
@@ -1554,8 +1551,6 @@ const MesurerReclamation = (props) => {
   const handleFileSubmit = (e, isFile = true) => {
     e.preventDefault();
     setExtraFileLoading(true);
-
-    console.log("filesForm__1 >> ", filesForm);
     const formData = new FormData();
     formData.append("claim_id", props.id);
 
@@ -1576,10 +1571,9 @@ const MesurerReclamation = (props) => {
       }
     }
 
-    console.log("filesForm__2 >> ", filesForm);
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >> ", res);
+       
         if (isFile) {
           getFillesApi(currentData?.id, props);
           clearFiles();
@@ -1594,7 +1588,7 @@ const MesurerReclamation = (props) => {
         }
       })
       .catch((err) => {
-        console.log("err add extra >> ", err);
+       
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {
@@ -1611,15 +1605,14 @@ const MesurerReclamation = (props) => {
 
     addExtraClaimApi(formData)
       .then((res) => {
-        console.log("res >> ", res);
-
+       
         props.extrasChanged(res.data.content.extras ?? []);
         notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
         setExtraContent("");
       })
       .catch((err) => {
-        console.log("err add extra >> ", err);
+      
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {

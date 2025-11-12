@@ -368,7 +368,7 @@ const Utilisateurs = (props) => {
     let roleOptions
     if (props.additionalRole !== undefined) {
         roleOptions = [
-            { "label": "Directeur", "value": "DE" },
+            { "label": "Directeur / Directrice (Executif, General)", "value": "DE" },
             { "label": "Pilote", "value": "PILOTE" },
             { "label": "Aucun", "value": "MOLDUE" },
         ]
@@ -535,7 +535,7 @@ const Utilisateurs = (props) => {
             data = props;
         }
 
-        console.log("data", data)
+        // console.log("data", data)
         props.etat3Changed(true)
         suppression(data, props).then(() => {
             all(props)
@@ -568,7 +568,6 @@ const Utilisateurs = (props) => {
     }
 
     const rowClickedHandler = (event, data, rowIndex) => {
-        console.log("data", data)
         props.idChanged(data.id ? data.id : "")
         props.codeChanged(data.code ? data.code : "")
         props.nameChanged(data.firstAndLastName ? data.firstAndLastName : "")
@@ -580,6 +579,12 @@ const Utilisateurs = (props) => {
         props.posteLibelleChanged(data.posteDto.libelle ? data.posteDto.libelle : "")
         props.additionalRoleChanged(data.additionalRole ? data.additionalRole : "")
         props.selectedItemChanged(data)
+
+         // 👇 Conversion du champ "ra" pour le Select
+        setCa(data.ra === true || data.ra === "true" ? true 
+            : data.ra === false || data.ra === "false" ? false 
+            : "");
+
 
     }
     let titles
@@ -636,12 +641,15 @@ const Utilisateurs = (props) => {
         titleOptions = ""
     }
 
+    let roleValue = null;
 
-    let roleValue
-    if (props.additionalRole === "PILOTE") roleValue = { "label": "Pilote", "value": props.additionalRole }
-    if (props.additionalRole === "MOLDUE") roleValue = { "label": "Aucun", "value": "" }
-
-    // if(props.role==="") roleValue={"label": "", "value": props.role }
+    if (props.additionalRole === "PILOTE") {
+        roleValue = { label: "Pilote", value: "PILOTE" };
+    } else if (props.additionalRole === "DE") {
+        roleValue = { label: "Directeur / Directrice (Executif, General)", value: "DE" };
+    } else if (props.additionalRole === "MOLDUE" || props.additionalRole === "") {
+        roleValue = { label: "Aucun", value: "MOLDUE" };
+    }
 
 
     let titleText = props.selectedItem.id !== undefined ? "Modifier ou Supprimer" : "Ajouter";
@@ -879,7 +887,7 @@ const Utilisateurs = (props) => {
                                     />
                                     <label htmlFor="usrole" className={"active"}>Est-il le gérant du point de service ?&nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
+                                            data-tooltip="Est ce le gérant (CA,RA) du point de service auquel cet utilisateur appartient">
                                             <HelpIcon />
                                         </a>
                                     </label>
@@ -899,12 +907,12 @@ const Utilisateurs = (props) => {
                                         style={styles}
                                         placeholder="Sélectionnez le role"
                                         options={roleOptions}
-                                        value={roleValue}
+                                        value={roleValue || null}
                                         onChange={(e) => props.additionalRoleChanged(e.value)}
                                     />
                                     <label htmlFor="usrole" className={"active"}>Privilège Spécifique&nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="L'un des privilège spécifiques àdonner à qui de droit">
+                                            data-tooltip="L'un des privilèges spécifiques àdonner à qui de droit">
                                             <HelpIcon />
                                         </a>
                                     </label>
