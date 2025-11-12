@@ -72,7 +72,7 @@ export const listeByStatut = async (props, state) => {
     await axios(config)
         .then(function (response) {
             // console.log("mesureliste",response.data.content)
-            console.log("response___________",response.data.content)
+            console.log("response_______________________",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content

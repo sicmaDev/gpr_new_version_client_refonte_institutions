@@ -2,6 +2,7 @@ import {itemsChanged, loading} from "../../redux/actions/Alertes/AlertesActions"
 import React, {useEffect} from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import { Link, NavLink } from "react-router-dom";
+import { KTApp } from "../../Utils/blockui";
 import { loadItemFromSessionStorage, today } from "../../Utils/utils";
 import { connect } from "react-redux";
 import LastPageIcon from "@mui/icons-material/LastPage";
@@ -17,8 +18,17 @@ const DenonciationsAlertes = (props) => {
         props.itemsChanged([])
     }
     useEffect(() => {
+        KTApp.blockPage({
+        overlayColor: "#000000",
+        type: "v2",
+        state: "danger",
+        message: "En cours de chargement...",
+        });
         props.itemsChanged([])
-        alertDenonciationApi(props).then((r) => {});
+        alertDenonciationApi(props).then((r) => {})
+        .finally(() => {
+            KTApp.unblockPage();
+        });
 
         window.$('.buttons-excel').html('<span><i class="fa fa-file-excel"></i></span>')
         window.$('ul.pagination').parent().parent().css({marginTop: "1%", boxShadow: "none"})
@@ -37,11 +47,15 @@ const DenonciationsAlertes = (props) => {
     
     let columns = [
         {
-          key: "claimCode",
-          text: "Code",
-          className: "code",
-          align: "left",
-          sortable: true,
+            key: "claimCodeClient",
+            text: "Code client",
+            className: "code",
+            align: "left",
+            sortable: true,
+            cell: (claim, index) => {
+                let codeClient = claim.claimCodeClient !== "" ? claim.claimCodeClient : "";
+                return codeClient;
+            },
         },
         
         {
@@ -204,7 +218,7 @@ const DenonciationsAlertes = (props) => {
                                             </div>
                                             <div className="col s12">
                                                 <ReactDatatable
-                                                className={"responsive-table table-xlsx"}
+                                                className={"responsive-table table-xlsx no-hover"}
                                                 config={config}
                                                 records={content}
                                                 columns={columns}

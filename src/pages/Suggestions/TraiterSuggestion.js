@@ -750,8 +750,6 @@ const TraiterSuggestion = (props) => {
               >
                 {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
               </IconButton>
-
-
             </Box>
           </Card>
         </Grid>
@@ -810,6 +808,7 @@ const TraiterSuggestion = (props) => {
   return (
     // "Liste Suggestions"
     <div id="main">
+      <audio ref={audioRef} src={currentAudio} hidden />
       <div className="row">
         <div className="col s12">
           <div className="container">

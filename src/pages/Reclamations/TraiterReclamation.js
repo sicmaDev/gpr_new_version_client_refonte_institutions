@@ -379,7 +379,7 @@ const TraiterReclamation = (props) => {
     let claim = {};
 
     if (convertionType === "suggestion") {
-      claim["clientFirstAndLastName"] = "";
+      claim["clientFirstAndLastName"] = dataRow.clientFirstAndLastName;
       claim["gender"] = dataRow.gender;
       claim["address"] = dataRow.address;
       claim["phone"] = dataRow.tel;
