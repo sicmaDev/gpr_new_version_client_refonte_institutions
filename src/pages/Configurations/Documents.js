@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, { useEffect, useRef } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -7,6 +7,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { connect } from "react-redux";
 import { v4 as uuidv4 } from 'uuid';
+import { Tooltip, IconButton } from "@mui/material";
 import {
     documentsErrors,
     etat2Changed,
@@ -16,33 +17,35 @@ import {
     itemsChanged,
     libelleChanged, selectedFilesChanged, selectedFilesReset, selectedItemChanged, selectedItemFilesChanged
 } from "../../redux/actions/Configurations/DocumentsActions";
-import {loadItemFromSessionStorage, today} from "../../Utils/utils";
-import {modalify} from "../../Utils/modal";
+import { loadItemFromSessionStorage, today } from "../../Utils/utils";
+import { modalify } from "../../Utils/modal";
 import ee from "event-emitter";
 import excel from '../../assets/images/excel.svg'
 import pdf from '../../assets/images/pdf.svg'
-import {handlePrint} from "../../Utils/tables";
-import {table2XLSX} from "../../Utils/tabletoexcel";
-import {KTApp} from "../../Utils/blockui";
+import { handlePrint } from "../../Utils/tables";
+import { table2XLSX } from "../../Utils/tabletoexcel";
+import { KTApp } from "../../Utils/blockui";
 import { ajout, downloadFillesApi, liste, suppression } from "../../apis/Configurations/DocumentsApi";
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
-
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 
 const Documents = (props) => {
     const [files, setFiles] = React.useState([]);
-   
+
     useEffect(() => {
-        liste(props).then((r) => {});
-        
+        liste(props).then((r) => { });
+
         window.$('.tooltipped').tooltip();
         //cleanup
         return clearComponentState();
     }, []);
 
+    const topRef = useRef(null);
+    useAutoScroll(topRef, [props.selectedItem.id], "top");
 
     let code;
     let columns = [
@@ -59,19 +62,30 @@ const Documents = (props) => {
             className: "actions",
             align: "left",
             sortable: true,
-            cell: (attachment) => { 
-                let iconeElt =<RemoveRedEyeIcon  style={{ cursor:"pointer" }}
-                                onClick={(e) => {
-                                    downloadFillesApi(attachment.id, attachment.name)
-                                }}/>
-                return iconeElt
-            },
+            cell: (attachment) => {
+                return (
+                    <>
+                        <div style={{ display: "flex", gap: "5px" }}>
+                            <Tooltip title="Visualiser">
+                                <IconButton onClick={() => downloadFillesApi(attachment.id, attachment.name)}>
+                                    <RemoveRedEyeIcon />
+                                </IconButton>
+                            </Tooltip>
+
+                            <Tooltip title="Supprimer">
+                                <IconButton onClick={(e) => handleModal(e, attachment)} color="error"><DeleteIcon /></IconButton>
+                            </Tooltip>
+                        </div>
+                    </>
+                )
+            }
         },
+
     ];
 
     let config = {
         page_size: 15,
-        length_menu: [ 15, 25, 50, 100],
+        length_menu: [15, 25, 50, 100],
         show_filter: true,
         show_pagination: true,
         filename: "Documents",
@@ -84,14 +98,14 @@ const Documents = (props) => {
             length_menu: "Afficher _MENU_ éléments",
             filter: "Rechercher...",
             info: "Affichage de l'élement _START_ à _END_ sur _TOTAL_ éléments",
-            zero_records:    "Aucun élément à afficher",
+            zero_records: "Aucun élément à afficher",
             no_data_text: "Aucun élément à afficher",
             loading_text: "Chargement en cours...",
             pagination: {
-                first: <FirstPageIcon/>,
-                previous: <ChevronLeftIcon/>,
-                next: <ChevronRightIcon/>,
-                last: <LastPageIcon/>
+                first: <FirstPageIcon />,
+                previous: <ChevronLeftIcon />,
+                next: <ChevronRightIcon />,
+                last: <LastPageIcon />
             }
         }
     }
@@ -116,7 +130,7 @@ const Documents = (props) => {
             KTApp.unblockPage()
         })
     }
-    
+
     const handleFile = (e) => {
         setFiles(e.target.files)
         let filesArray = Array.prototype.slice.call(e.target.files)
@@ -130,15 +144,15 @@ const Documents = (props) => {
             errors["libelle"] = "Champ incorrect";
         }
         // console.log("testy",props.selectedFiles)
-        if ((props.selectedFiles === "" || props.selectedFiles === undefined || props.selectedFiles === null || (props.selectedFiles).length ===0)) {
+        if ((props.selectedFiles === "" || props.selectedFiles === undefined || props.selectedFiles === null || (props.selectedFiles).length === 0)) {
             isValid = false;
             errors["selectedFiles"] = "Champ incorrect";
         }
-        
+
         return isValid
     }
 
-    const  clearComponentState = ()=> {
+    const clearComponentState = () => {
         props.idChanged("")
         props.libelleChanged("")
         props.selectedFilesChanged([])
@@ -149,8 +163,8 @@ const Documents = (props) => {
         if (handleValidation()) {
             const formData = new FormData();
             let item = props.libelle
-          
-           
+
+
             formData.append("libelles", item);
             for (let index = 0; index < files.length; index++) {
                 formData.append("files", files[index]);
@@ -167,75 +181,75 @@ const Documents = (props) => {
         props.documentsErrors(errors)
     }
 
-    const handleModal = (e) => {
+    const handleModal = (e, attachment) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", handleDelete)
+        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", (e) => handleDelete(e, attachment))
     }
-  
-    const handleDelete = (e) => {
+
+    const handleDelete = (e, attachment) => {
         e.preventDefault()
-        
+
         props.etat3Changed(true)
-        suppression(props).then(() => {
+        suppression(props, attachment).then(() => {
             handleCancel(e)
         })
-            
-        
+
+
         props.documentsErrors(errors)
     }
     const rowClickedHandler = (event, data, rowIndex) => {
-        props.idChanged(data.id?data.id:"")
-        props.libelleChanged(data.libelle?data.libelle:"")
+        props.idChanged(data.id ? data.id : "")
+        props.libelleChanged(data.libelle ? data.libelle : "")
         // props.selectedFilesChanged(data.doc?data.doc:"")
-        props.selectedItemChanged(data?data:{})
+        props.selectedItemChanged(data ? data : {})
     }
-    const  tableChangeHandler = data => {
+    const tableChangeHandler = data => {
     }
-    
-    let titleText = props.selectedItem.id!== undefined ? "Supprimer" : "Ajouter";
-   
-    let buttons = props.selectedItem.id!== undefined ?
-    (<>
-        <LoadingButton
-            className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-            onClick={(e) => handleModal(e)}
-            loading={props.etat3}
-            loadingPosition="end"
-            endIcon={<DeleteIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Supprimer</span>
-        </LoadingButton>
 
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
-            onClick={(e) => handleCancel(e)}
-            loading={props.etat2}
-            loadingPosition="end"
-            endIcon={<CancelIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Annuler</span>
-        </LoadingButton>
-        
-    </>)
-    :
-    (
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
-            onClick={(e) => handleSubmit(e)}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Ajouter</span>
-        </LoadingButton>
-       
-    )
+    let titleText = props.selectedItem.id !== undefined ? "Supprimer" : "Ajouter";
+
+    let buttons = props.selectedItem.id !== undefined ?
+        (<>
+            {/* <LoadingButton
+                className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                onClick={(e) => handleModal(e)}
+                loading={props.etat3}
+                loadingPosition="end"
+                endIcon={<DeleteIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Supprimer</span>
+            </LoadingButton>
+
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
+                onClick={(e) => handleCancel(e)}
+                loading={props.etat2}
+                loadingPosition="end"
+                endIcon={<CancelIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Annuler</span>
+            </LoadingButton> */}
+
+        </>)
+        :
+        (
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small"
+                onClick={(e) => handleSubmit(e)}
+                loading={props.etat}
+                loadingPosition="end"
+                endIcon={<SaveIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Ajouter</span>
+            </LoadingButton>
+
+        )
 
     return (
         <>
@@ -251,15 +265,15 @@ const Documents = (props) => {
                         <div className="col s12">
                             <div className="input-field">
                                 <input id="uname" name="libelle" type="text"
-                                       data-error=".errorTxt4"
-                                       placeholder=""
-                                       value={props.libelle}
-                                       onChange={(e) => props.libelleChanged(e.target.value)}/>
-                                        <label htmlFor="uname" className="active">Intitulé&nbsp;
-                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: Tribunal, etc.. ">
-                                                <HelpIcon/>
-                                            </a>
-                                        </label>
+                                    data-error=".errorTxt4"
+                                    placeholder=""
+                                    value={props.libelle}
+                                    onChange={(e) => props.libelleChanged(e.target.value)} />
+                                <label htmlFor="uname" className="active">Intitulé&nbsp;
+                                    <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: Tribunal, etc.. ">
+                                        <HelpIcon />
+                                    </a>
+                                </label>
                                 <small className="errorTxt4">
                                     <div id="cpassword-error" className="error">{props.errors.libelle}</div>
                                 </small>
@@ -269,23 +283,23 @@ const Documents = (props) => {
                             <div className="btn btn-small file-small brand-blue">
                                 <span>Fichier</span>
                                 <input type="file"
-                                        onChange={(e) => handleFile(e)}
-                                        accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
+                                    onChange={(e) => handleFile(e)}
+                                    accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
                                 />
                             </div>
                             <div className="file-path-wrapper">
                                 <input className="file-path validate" type="text"
-                                        value={props.selectedFiles}/>
+                                    value={props.selectedFiles} />
                             </div>
                             <small className="errorTxt4">
                                 <div id="cpassword-error"
-                                        className="error">{props.errors.selectedFiles}</div>
+                                    className="error">{props.errors.selectedFiles}</div>
                             </small>
                         </div>
-                       
+
 
                         <div className="col s12 display-flex justify-content-end form-action">
-                            {buttons}   
+                            {buttons}
                         </div>
 
                     </div>
@@ -307,11 +321,11 @@ const Documents = (props) => {
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className = {"responsive-table table-xlsx app-recours"}
+                                            className={"responsive-table table-xlsx app-recours no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
-                                            onRowClicked={rowClickedHandler}
+                                            // onRowClicked={rowClickedHandler}
                                             onChange={tableChangeHandler}
                                         />
                                     </div>
