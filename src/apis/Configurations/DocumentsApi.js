@@ -18,7 +18,7 @@ export let liste = async (props) => {
         method: 'GET',
         url: GET_SETTING_API,
         headers: {
-            
+
             'Content-Type': 'application/json',
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
@@ -32,7 +32,7 @@ export let liste = async (props) => {
 
         })
         .catch(function (error) {
-           
+
         });
 }
 
@@ -54,7 +54,7 @@ export const ajout = async (data, props) => {
             notify("Bravo - Document ajouté", "success");
 
             props.etatChanged(false)
-           liste(props)
+            liste(props)
 
         })
         .catch(function (error) {
@@ -65,31 +65,31 @@ export const ajout = async (data, props) => {
 }
 
 
-export const suppression = async (props) => {
+export const suppression = async (props, data) => {
 
     const config = {
         method: 'delete',
-        url: DELETE_SETTING_API.replace("id",props.id),
+        url: DELETE_SETTING_API.replace("id", data.id),
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
-      
+
     };
 
     await axios(config)
         .then(function (response) {
-          
+
             props.etat3Changed(false)
             notify("Bravo - Document supprimé", "success");
-           
-           liste(props)
+
+            liste(props)
 
         })
         .catch(function (error) {
             props.etat3Changed(false)
-            if (error.response.data.content !=="") {
+            if (error.response.data.content !== "") {
                 notify(error.response.data.content.message, "error");
             } else {
                 notify("Erreur - Veuillez réessayer!", "error");
@@ -109,9 +109,9 @@ export const downloadFillesApi = async (data, filename) => {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
             'Authorization': "Bearer " + loadItemFromSessionStorage('token'),
-            
+
         },
-    
+
     };
     await axios(config)
         .then(function (response) {

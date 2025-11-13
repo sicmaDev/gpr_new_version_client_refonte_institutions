@@ -344,6 +344,13 @@ export const transmittedToChanged = (transmittedTo) =>{
         info: 'This action is used to ...'
     }
 };
+export const transmittedByChanged = (transmittedBy) =>{
+    return {
+        type: 'CLAIM_HANDLE_TRANSMITTED_BY_CHANGED',
+        payload: transmittedBy,
+        info: 'This action is used to ...'
+    }
+};
 export const sessionChanged = (session) =>{
     return {
         type: 'CLAIM_HANDLE_SESSION_CHANGED',

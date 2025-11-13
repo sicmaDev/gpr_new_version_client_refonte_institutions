@@ -48,6 +48,7 @@ const initialState = {
     anonymat: "",
     transmitted: "",
     transmittedTo: "",
+    transmittedBy: "",
     session: [],
     solutionExistant: "",
 };
@@ -307,6 +308,12 @@ const TraitementReclamationReducer = (state = initialState, action) => {
             return {
                 ...state,
                 transmittedTo: action.payload,
+            };
+
+        case 'CLAIM_HANDLE_TRANSMITTED_BY_CHANGED':
+            return {
+                ...state,
+                transmittedBy: action.payload,
             };
 
         case 'CLAIM_HANDLE_SESSION_CHANGED':

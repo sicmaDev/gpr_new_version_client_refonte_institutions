@@ -59,6 +59,7 @@ import {
   transmittedToChanged,
   setReaffect,
   codeClientChanged,
+  transmittedByChanged,
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -346,12 +347,6 @@ const TraiterReclamation = (props) => {
     setOpen(false);
     setConversionBoxOpen(false);
     history.push("/reclamations/traitement/all");
-    // if(stompClient){
-    //   stompClient.disconnect();
-    //   setUserData({ ...userData, connected: false });
-    //   props.sessionChanged("");
-    // }
-    // clearComponentState();
   };
   const handleConversionBoxClose = () => {
     if (confirmationOpen) return;
@@ -394,7 +389,6 @@ const TraiterReclamation = (props) => {
       claim["id"] = "";
       formData.append("suggestion", JSON.stringify(claim));
 
-      props.etat2Changed(true);
       if (mode === 1) {
         addSuggestionApi(formData, props).then((response) => {
         
@@ -405,7 +399,7 @@ const TraiterReclamation = (props) => {
 
           convertClaimApi(data, props)
             .then(() => {
-              props.etat2Changed(false);
+               setLoadingConversion(false);
               history.push("/suggestions/traitement");
             })
             .finally(() => {
@@ -416,7 +410,7 @@ const TraiterReclamation = (props) => {
         // Offline mode
       }
     } else {
-      props.etat2Changed(true);
+   
       if (mode === 1) {
         const data = {
           code: dataRow.code,
@@ -426,7 +420,7 @@ const TraiterReclamation = (props) => {
 
         convertClaimApi(data, props)
           .then(() => {
-            props.etat2Changed(false);
+             setLoadingConversion(false);
             history.push("/denonciations/traitement/all");
           })
           .finally(() => {
@@ -1741,6 +1735,11 @@ const TraiterReclamation = (props) => {
     props.transmittedToChanged(
       data.transmittedTo !== null
         ? "" + data.transmittedTo.firstAndLastName + ""
+        : ""
+    );
+    props.transmittedByChanged(
+      data.transmittedBy !== null
+        ? "" + data.transmittedBy.firstAndLastName + ""
         : ""
     );
     // console.log("tr",data)
@@ -3295,7 +3294,7 @@ const TraiterReclamation = (props) => {
   };
 
   let statusElt;
-  let affectForm;
+  let affectForm="";
   let treatForm;
   let solutionsListe = [];
   switch (props.status) {
@@ -3327,126 +3326,148 @@ const TraiterReclamation = (props) => {
           compteur: solution.compteur,
         };
       });
+
+      let personTransmit = (props.transmitted === "true" && props.transmittedTo === user.firstAndLastName) ? (
+        <>
+          {/* details tranmission */}
+          <div className="row pb-4">
+            <div
+              className="col s12 mb-2"
+              style={{
+                background: "#f5f9ff",
+                borderLeft: "4px solid #1976d2",
+                padding: "10px 5px",
+                borderRadius: "6px",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <span>
+                Cette réclamation vous a été transmise par
+                <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>
+                  {props.transmittedBy ? props.transmittedBy : "—"}
+                </strong>.
+              </span>
+
+            </div>
+          </div>
+         
+        </>
+      ):"";
      
-      if (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) {
-        if (
-          // (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
-          (user.firstAndLastName === props.created_by &&
-          props.transmitted === "true") || (user.ra === true && props.transmitted === "true")
-        ) {
-          affectForm = (
-            <>
-              <div className="row pb-4">
-                <div
-                  className="col s12 mb-2"
-                  style={{
-                    background: "#f5f9ff",
-                    borderLeft: "4px solid #1976d2",
-                    padding: "10px 5px",
-                    borderRadius: "6px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  Vous avez transmis cette réclamation. Vous n'avez plus la main
-                  sur elle.
+      if (
+        (props.transmitted === "true" && user.firstAndLastName === props.transmittedBy )
+      ) {
+        affectForm = (
+          <>
+            <div className="row pb-4">
+              <div
+                className="col s12 mb-2"
+                style={{
+                  background: "#f5f9ff",
+                  borderLeft: "4px solid #1976d2",
+                  padding: "10px 5px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                Vous avez transmis cette réclamation à <strong style={{ color: "#1976d2", marginLeft: "0.25em"  }}>{props.transmittedTo ? props.transmittedTo : "—"}</strong>{" "}. Vous n'avez plus la main sur elle.
+              </div>
+            </div>
+          </>
+        );
+      }else if(hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmittedTo === user.firstAndLastName)) {
+        affectForm = (
+          <>
+            {personTransmit}
+            <form id="claimAssignForm">
+              <div className="row">
+                <div className="col s12">
+                  <details>
+                    <summary className="text-details">
+                      Affectation de la réclamation
+                    </summary>
+
+                    <div className="col s12 input-field">
+                      <Select
+                        options={agentsMailOptions}
+                        className="react-select-container mt-4"
+                        classNamePrefix="react-select"
+                        style={styles}
+                        placeholder="Sélectionner l'agent"
+                        onChange={(e) => {
+                          props.handledByChanged(e.value);
+                          setAffectEmail(e.email);
+                        }}
+                      />
+                      <label htmlFor="gender" className={"active"}>
+                        Affectée à
+                        <span>
+                          (<span className="red-text darken-2 ">*</span>)
+                        </span>
+                      </label>
+                      <small className="errorTxt4">
+                        <div id="cpassword-error" className="error">
+                          {props.errors !== undefined
+                            ? props.errors.handled_by
+                            : ""}
+                        </div>
+                      </small>
+                    </div>
+                    <div className="col s12 input-field mb-2">
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            onChange={(e) => {
+                              handleAnonymat();
+                            }}
+                          />
+                        }
+                        label="Cacher l'identité du plaignant ? "
+                      />
+                    </div>
+                    <div className="col s12 display-flex justify-content-end mt-3">
+                      {
+                        //  (actif !== undefined && actif)  ?
+                        <LoadingButton
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (handleValidationForAssign()) {
+                              //setShowSelectPrintItem(true);
+                              prepareBeforeAssign(e);
+                              //handleAssign(e);
+                            }
+                            props.claimHandleErrors(errors);
+                          }}
+                          className="waves-effect waves-effect-b waves-light btn-small"
+                          loading={props.etat}
+                          loadingPosition="end"
+                          endIcon={<SaveIcon />}
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "#1e2188",
+                            textTransform: "initial",
+                          }}
+                        >
+                          <span>Affecter</span>
+                        </LoadingButton>
+                        // :
+                        // <div className="card-alert card red lighten-5">
+                        //   <div className="card-content red-text">
+                        //       <ul>
+                        //           Veuillez activer une licence.
+                        //       </ul>
+                        //   </div>
+                        // </div>
+                      }
+                    </div>
+                  </details>
                 </div>
               </div>
-            </>
-          );
-        } else {
-          affectForm = (
-            <>
-              <form id="claimAssignForm">
-                <div className="row">
-                  <div className="col s12">
-                    <details>
-                      <summary className="text-details">
-                        Affectation de la réclamation
-                      </summary>
-
-                      <div className="col s12 input-field">
-                        <Select
-                          options={agentsMailOptions}
-                          className="react-select-container mt-4"
-                          classNamePrefix="react-select"
-                          style={styles}
-                          placeholder="Sélectionner l'agent"
-                          onChange={(e) => {
-                            props.handledByChanged(e.value);
-                            setAffectEmail(e.email);
-                          }}
-                        />
-                        <label htmlFor="gender" className={"active"}>
-                          Affectée à
-                          <span>
-                            (<span className="red-text darken-2 ">*</span>)
-                          </span>
-                        </label>
-                        <small className="errorTxt4">
-                          <div id="cpassword-error" className="error">
-                            {props.errors !== undefined
-                              ? props.errors.handled_by
-                              : ""}
-                          </div>
-                        </small>
-                      </div>
-                      <div className="col s12 input-field mb-2">
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              onChange={(e) => {
-                                handleAnonymat();
-                              }}
-                            />
-                          }
-                          label="Cacher l'identité du plaignant ? "
-                        />
-                      </div>
-                      <div className="col s12 display-flex justify-content-end mt-3">
-                        {
-                          //  (actif !== undefined && actif)  ?
-                          <LoadingButton
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (handleValidationForAssign()) {
-                                //setShowSelectPrintItem(true);
-                                prepareBeforeAssign(e);
-                                //handleAssign(e);
-                              }
-                              props.claimHandleErrors(errors);
-                            }}
-                            className="waves-effect waves-effect-b waves-light btn-small"
-                            loading={props.etat}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{
-                              backgroundColor: "#1e2188",
-                              textTransform: "initial",
-                            }}
-                          >
-                            <span>Affecter</span>
-                          </LoadingButton>
-                          // :
-                          // <div className="card-alert card red lighten-5">
-                          //   <div className="card-content red-text">
-                          //       <ul>
-                          //           Veuillez activer une licence.
-                          //       </ul>
-                          //   </div>
-                          // </div>
-                        }
-                      </div>
-                    </details>
-                  </div>
-                </div>
-              </form>
-            </>
-          );
-        }
-      } else {
-        affectForm = "";
+            </form>
+          </>
+        );
       }
 
       if (
@@ -5222,12 +5243,10 @@ const TraiterReclamation = (props) => {
   let btnS = "";
 
   if (
-    // (props.objetLevel === "MINEUR" || props.objetLevel === "MOYEN") &&
-    ((user.firstAndLastName === props.created_by &&
-      props.transmitted === "false") ||
-      (user.firstAndLastName === props.transmittedTo &&
-        props.transmitted === "true" &&
-        addR === "MOLDUE") || (user.ra === true && props.transmitted === "false")) &&
+    (addR !== "PILOTE" &&  !hbt.includes("H6")) &&
+    ((user.firstAndLastName === props.created_by && props.transmitted === "false") ||
+      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && addR === "MOLDUE") || 
+      (user.ra === true && props.transmitted === "false")) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -5248,7 +5267,7 @@ const TraiterReclamation = (props) => {
   } else {
     transmettre = "";
   }
-  // console.log("props;transmitttedTo",props.transmittedTo);
+ 
   if (
     (user.firstAndLastName === props.created_by &&
       props.transmitted === "false" &&
@@ -5279,14 +5298,7 @@ const TraiterReclamation = (props) => {
           </LoadingButton>
         </>
       );
-      // :
-      // <div className="card-alert card red lighten-5">
-      //   <div className="card-content red-text">
-      //       <ul>
-      //           Veuillez activer une licence.
-      //       </ul>
-      //   </div>
-      // </div>
+    
     } else if (props.session !== "" && props.session.status === "OPEN") {
       btnS = (
         // (actif !== undefined && actif) ?
@@ -6358,6 +6370,7 @@ const mapStateToProps = (state) => {
     anonymat: state.claim_handle.anonymat,
     transmitted: state.claim_handle.transmitted,
     transmittedTo: state.claim_handle.transmittedTo,
+    transmittedBy: state.claim_handle.transmittedBy,
     session: state.claim_handle.session,
     solutionExistant: state.claim_handle.solutionExistant,
     reaffect: state.claim_handle.reaffect,
@@ -6521,6 +6534,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     transmittedToChanged: (transmittedTo) => {
       dispatch(transmittedToChanged(transmittedTo));
+    },
+    transmittedByChanged: (transmittedBy) => {
+      dispatch(transmittedByChanged(transmittedBy));
     },
     sessionChanged: (session) => {
       dispatch(sessionChanged(session));

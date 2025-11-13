@@ -427,7 +427,7 @@ export const Items = (props) => {
                             <ListItemIcon>
                                 <RecyclingIcon style={{ color: "white" }} />
                             </ListItemIcon>
-                            <ListItemText primary="Supports de collecte" />
+                            <ListItemText primary="Modalités de dépôt" />
                         </ListItemButton>
                     </NavLink>
 

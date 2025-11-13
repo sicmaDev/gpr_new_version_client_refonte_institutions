@@ -63,6 +63,7 @@ import {
   isValidPhone,
   loadItemFromLocalStorage,
   loadItemFromSessionStorage,
+  sleep,
 } from "../../Utils/utils";
 import {
   addClaimApi,
@@ -111,6 +112,7 @@ import { downloadFilesApi } from "../../apis/WhatsappApi";
 import { reset } from "../../redux/actions/WhatsappActions";
 import { CancelOutlined } from "@mui/icons-material";
 import { Tooltip, IconButton, CircularProgress } from "@mui/material";
+import { send } from "../../apis/Configurations/SmsApi";
 
 registerLocale("fr", fr);
 
@@ -1427,78 +1429,24 @@ const EnregistrerReclamation = (props) => {
     }).format(new Date(element.createdAt));
     element.createdAtFormated = createdAt;
   });
-
-  //   default sms notification
-  let appSms =
-    loadItemFromLocalStorage("app-sms") !== undefined &&
-    loadItemFromLocalStorage("app-sms").length !== 0
-      ? JSON.parse(loadItemFromLocalStorage("app-sms"))
-      : undefined;
+  
   const sendSms = async (e) => {
     e.preventDefault();
-    // console.log("sms send");
-    let apiurl = appSms.url;
-    let libId = appSms.libId;
-    let valId = appSms.valId;
-    let libMdp = appSms.libMdp;
-    let valMdp = appSms.valMdp;
-    let libEmetteur = appSms.libEmetteur;
-    let valEmetteur = appSms.valEmetteur;
-    let libDestinataire = appSms.libDestinataire;
-    let libMessage = appSms.libMessage;
-
-    let receiver = cleanPhoneNumber3(props.phone);
-    let message = encodeURI(smsToSend);
-    let url =
-      apiurl +
-      libId +
-      "=" +
-      valId +
-      "&" +
-      libMdp +
-      "=" +
-      valMdp +
-      "&" +
-      libMessage +
-      "=" +
-      message +
-      "&" +
-      libDestinataire +
-      "=" +
-      receiver +
-      "&" +
-      libEmetteur +
-      "=" +
-      valEmetteur +
-      "";
-
-    // console.log("sms url",url);
-    // let url = values.url +"?"+ values.libelle_id+"="+values.value_id+"&"+values.libelle_pwd+"="+values.value_pwd+"&"+values.libelle_sender+"="+values.value_sender+"&"+values.libelle_receiver+"="+props.phone+"&" +values.libelle_message+"="+smsToSend;
-    const config = {
-      method: "GET",
-      url: url,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + loadItemFromSessionStorage("token"),
-      },
-    };
-    await axios(config)
-      .then(function (response) {
-        // console.log("smsurl", (props.phone));
-        // console.log("smsurl", cleanPhoneNumber3(props.phone));
-        // console.log("sms", response);
-        handleSubmit(e);
-        notify("SMS envoyé", "success");
-      })
-      .catch(function (error) {
-        handleSubmit(e);
-        // console.log("smscatch", error);
-        notify("Erreur - Sms non envoyé", "warning");
-        return error;
+    if (props.phone !== "" && props.phone) {
+      await sleep(3000);
+      props.etat2Changed(true);
+      send({ phone: cleanPhoneNumber3(props.phone), message: smsToSend }).then(({ data }) => {
+        handleSubmit(e)
+        notify("Super - SMS envoyé", "success");
+      }).catch((err) => {
+        handleSubmit(e)
+        notify("Oups - SMS non envoyé", "error");
       }).finally(() => {
         KTApp.unblockPage();
-      });
+      })
+    } else {
+      notify("numéros de téléphone incorrecte", "error")
+    }
   };
   let formAudio;
   if (mode === 1) {

@@ -13,7 +13,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
-import { cleanPhoneNumber, cleanPhoneNumber2, cleanPhoneNumber3, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage } from "../../Utils/utils";
+import { cleanPhoneNumber, cleanPhoneNumber2, cleanPhoneNumber3, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep } from "../../Utils/utils";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, TextField } from "@mui/material";
@@ -38,6 +38,7 @@ import { reset } from "../../redux/actions/WhatsappActions";
 import { CancelOutlined } from "@mui/icons-material";
 import { modalify } from "../../Utils/modal";
 import { Tooltip, IconButton, CircularProgress } from "@mui/material";
+import { send } from "../../apis/Configurations/SmsApi";
 
 
 // import DateInput from "../ui/DateInput";
@@ -1096,54 +1097,26 @@ const EnregistrerSuggestion = (props) => {
     });
 
     //   default sms notification
-    let appSms = loadItemFromLocalStorage("app-sms") !== undefined && (loadItemFromLocalStorage("app-sms").length !==0)  ? JSON.parse(loadItemFromLocalStorage("app-sms")) : undefined;
     
     const sendSms = async (e) => {
-        e.preventDefault();
-        // console.log("sms send");
-        let apiurl = appSms.url;
-        let libId = appSms.libId;
-        let valId = appSms.valId;
-        let libMdp = appSms.libMdp;
-        let valMdp = appSms.valMdp;
-        let libEmetteur = appSms.libEmetteur;
-        let valEmetteur = appSms.valEmetteur;
-        let libDestinataire = appSms.libDestinataire;
-        let libMessage = appSms.libMessage;
-    
-        let receiver = cleanPhoneNumber3(props.phone);
-        let message = encodeURI(smsToSend);
-        let url =apiurl+libId+"="+valId+"&"+libMdp+"="+valMdp+"&"+libMessage+"="+message+"&"+libDestinataire+"="+receiver+"&"+libEmetteur+"="+valEmetteur+""
-        
-            // console.log("sms url",url);
-        // let url = values.url +"?"+ values.libelle_id+"="+values.value_id+"&"+values.libelle_pwd+"="+values.value_pwd+"&"+values.libelle_sender+"="+values.value_sender+"&"+values.libelle_receiver+"="+props.phone+"&" +values.libelle_message+"="+smsToSend;
-        const config = {
-            method: "GET",
-            url: url,
-            headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + loadItemFromSessionStorage("token"),
-            },
-        };
-        await axios(config)
-            .then(function (response) {
-            // console.log("smsurl", (props.phone));
-            // console.log("smsurl", cleanPhoneNumber3(props.phone));
-            // console.log("sms", response);
-            handleSubmit(e);
-            notify("SMS envoyé", "success");
-            })
-            .catch(function (error) {
-            handleSubmit(e);
-            // console.log("smscatch", error);
-            notify(
-                "Erreur - Sms non envoyé",
-                "warning"
-            );
-            return error;
-            });
-    };
+       e.preventDefault();
+       if (props.phone !== "" && props.phone) {
+            props.etat2Changed(true);
+         await sleep(3000);
+         props.etat2Changed(true);
+         send({ phone: cleanPhoneNumber3(props.phone), message: smsToSend }).then(({ data }) => {
+           handleSubmit(e)
+           notify("Super - SMS envoyé", "success");
+         }).catch((err) => {
+           handleSubmit(e)
+           notify("Oups - SMS non envoyé", "error");
+         }).finally(() => {
+           KTApp.unblockPage();
+         })
+       } else {
+         notify("numéros de téléphone incorrecte", "error")
+       }
+     };
 
     return (
         //  'Enregistrer suggestion'
