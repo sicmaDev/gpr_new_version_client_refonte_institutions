@@ -3377,7 +3377,7 @@ const TraiterReclamation = (props) => {
             </div>
           </>
         );
-      }else if(hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmittedTo === user.firstAndLastName)) {
+      }else if(hbt.includes("H6") || addR === "PILOTE" || (user.ra === true)) {
         affectForm = (
           <>
             {personTransmit}

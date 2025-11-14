@@ -187,6 +187,7 @@ const MesurerReclamation = (props) => {
 
   const handleClose = () => {
     setOpen(false);
+    clearComponentState();
   };
 
   let user =
