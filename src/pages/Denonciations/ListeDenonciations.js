@@ -395,13 +395,6 @@ const ListeDenonciations = (props) => {
 
   //Handling the List
   let columns = [
-    // {
-    //   key: "code",
-    //   text: "Code",
-    //   className: "code",
-    //   align: "left",
-    //   sortable: true,
-    // },
     {
       key: "codeClient",
       text: "Code client",

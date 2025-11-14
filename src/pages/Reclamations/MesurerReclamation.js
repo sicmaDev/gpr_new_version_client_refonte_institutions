@@ -502,7 +502,7 @@ const MesurerReclamation = (props) => {
 
   let columns = [
     {
-      key: "code",
+      key: "codeClient",
       text: "Code client",
       className: "code",
       align: "left",

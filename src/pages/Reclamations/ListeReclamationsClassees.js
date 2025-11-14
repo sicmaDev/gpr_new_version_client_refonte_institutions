@@ -300,7 +300,7 @@ const ListeReclamationsClassees = (props) => {
   //Handling the List
   let columns = [
     {
-      key: "code",
+      key: "codeClient",
       text: "Code client",
       className: "code",
       align: "left",

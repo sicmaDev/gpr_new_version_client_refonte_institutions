@@ -392,17 +392,6 @@ const ListeReclamations = (props) => {
   }, []);
   //Handling the List
   let columns = [
-    // {
-    //   key: "code",
-    //   text: "Code client",
-    //   className: "code",
-    //   align: "left",
-    //   sortable: true,
-    //   cell: (claim, index) => {
-    //     let codeClient = claim.codeClient !== "" ? claim.codeClient : "";
-    //     return codeClient;
-    //   },
-    // },
     {
       key: "codeClient",
       text: "Code client",
