@@ -44,6 +44,8 @@
     "react-gauge-chart": "^0.4.1",
     "react-idle-timer": "^5.7.2",
     "react-inactivity": "^1.0.4",
+    "react-intersection-observer": "^10.0.0",
+    "react-loading-skeleton": "^3.5.0",
     "react-mic": "^12.4.6",
     "react-phone-number-input": "^3.3.7",
     "react-qrcode-logo": "^2.9.0",
@@ -66,7 +68,6 @@
     "start": "react-scripts --openssl-legacy-provider start",
     "build": "react-scripts --openssl-legacy-provider build",
     "alby": "react-app-rewired --openssl-legacy-provider start",
-
     "test": "react-scripts  test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
