@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -32,12 +32,21 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAutoScroll } from "../../hooks/useAutoScroll";
-
 const Documents = (props) => {
     const [files, setFiles] = React.useState([]);
-
+    const [isLoading, setIsLoading] = useState(false);
     useEffect(() => {
-        liste(props).then((r) => { });
+        KTApp.blockPage({
+            overlayColor: "#000000",
+            type: "v2",
+            state: "danger",
+            message: "En cours de chargement...",
+        });
+        setIsLoading(true);
+        liste(props).then((r) => { }).finally(() => {
+            setIsLoading(false);
+            KTApp.unblockPage();
+        });
 
         window.$('.tooltipped').tooltip();
         //cleanup
@@ -208,48 +217,19 @@ const Documents = (props) => {
 
     let titleText = props.selectedItem.id !== undefined ? "Supprimer" : "Ajouter";
 
-    let buttons = props.selectedItem.id !== undefined ?
-        (<>
-            {/* <LoadingButton
-                className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                onClick={(e) => handleModal(e)}
-                loading={props.etat3}
-                loadingPosition="end"
-                endIcon={<DeleteIcon />}
-                variant="contained"
-                sx={{ textTransform: "initial" }}
-            >
-                <span>Supprimer</span>
-            </LoadingButton>
-
-            <LoadingButton
-                className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
-                onClick={(e) => handleCancel(e)}
-                loading={props.etat2}
-                loadingPosition="end"
-                endIcon={<CancelIcon />}
-                variant="contained"
-                sx={{ textTransform: "initial" }}
-            >
-                <span>Annuler</span>
-            </LoadingButton> */}
-
-        </>)
-        :
-        (
-            <LoadingButton
-                className="btn waves-effect waves-light mr-1 btn-small"
-                onClick={(e) => handleSubmit(e)}
-                loading={props.etat}
-                loadingPosition="end"
-                endIcon={<SaveIcon />}
-                variant="contained"
-                sx={{ textTransform: "initial" }}
-            >
-                <span>Ajouter</span>
-            </LoadingButton>
-
-        )
+    let buttons = props.selectedItem.id === undefined ? (
+        <LoadingButton
+            className="btn waves-effect waves-light mr-1 btn-small"
+            onClick={(e) => handleSubmit(e)}
+            loading={props.etat}
+            loadingPosition="end"
+            endIcon={<SaveIcon />}
+            variant="contained"
+            sx={{ textTransform: "initial" }}
+        >
+            <span>Ajouter</span>
+        </LoadingButton>
+    ) : null;
 
     return (
         <>

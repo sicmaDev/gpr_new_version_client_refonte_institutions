@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -10,14 +10,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { Tooltip, IconButton } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
-
-import {loadItemFromSessionStorage, today} from "../../Utils/utils";
-import {modalify} from "../../Utils/modal";
+import { KTApp } from "../../Utils/blockui";
+import { loadItemFromSessionStorage, today } from "../../Utils/utils";
+import { modalify } from "../../Utils/modal";
 import ee from "event-emitter";
 import excel from '../../assets/images/excel.svg'
 import pdf from '../../assets/images/pdf.svg'
-import {handlePrint} from "../../Utils/tables";
-import {table2XLSX} from "../../Utils/tabletoexcel";
+import { handlePrint } from "../../Utils/tables";
+import { table2XLSX } from "../../Utils/tabletoexcel";
 import { contenuChanged, etat2Changed, etat3Changed, etatChanged, faqErrors, idChanged, itemsChanged, libelleChanged, selectedItemChanged } from "../../redux/actions/Configurations/FaqActions";
 import { ajout, liste, modification, suppression } from "../../apis/Configurations/FaqApi";
 import { LoadingButton } from "@mui/lab";
@@ -28,10 +28,20 @@ import CancelIcon from '@mui/icons-material/Cancel';
 
 
 const Faq = (props) => {
-   
+    const [isLoading, setIsLoading] = useState(false);
     useEffect(() => {
-        liste(props).then((r) => {});
-        
+        KTApp.blockPage({
+            overlayColor: "#000000",
+            type: "v2",
+            state: "danger",
+            message: "En cours de chargement...",
+        });
+        setIsLoading(true);
+        liste(props).then((r) => { }).finally(() => {
+            setIsLoading(false);
+            KTApp.unblockPage();
+        });
+
         window.$('.tooltipped').tooltip();
         //cleanup
         return clearComponentState();
@@ -82,7 +92,7 @@ const Faq = (props) => {
 
     let config = {
         page_size: 15,
-        length_menu: [ 15, 25, 50, 100],
+        length_menu: [15, 25, 50, 100],
         show_filter: true,
         show_pagination: true,
         filename: "FAQ",
@@ -95,14 +105,14 @@ const Faq = (props) => {
             length_menu: "Afficher _MENU_ éléments",
             filter: "Rechercher...",
             info: "Affichage de l'élement _START_ à _END_ sur _TOTAL_ éléments",
-            zero_records:    "Aucun élément à afficher",
+            zero_records: "Aucun élément à afficher",
             no_data_text: "Aucun élément à afficher",
             loading_text: "Chargement en cours...",
             pagination: {
-                first: <FirstPageIcon/>,
-                previous: <ChevronLeftIcon/>,
-                next: <ChevronRightIcon/>,
-                last: <LastPageIcon/>
+                first: <FirstPageIcon />,
+                previous: <ChevronLeftIcon />,
+                next: <ChevronRightIcon />,
+                last: <LastPageIcon />
             }
         }
     }
@@ -124,11 +134,11 @@ const Faq = (props) => {
             isValid = false;
             errors["contenu"] = "Champ incorrect";
         }
-        
+
         return isValid
     }
 
-    const  clearComponentState = ()=> {
+    const clearComponentState = () => {
         props.idChanged("")
         props.libelleChanged("")
         props.contenuChanged("")
@@ -141,7 +151,7 @@ const Faq = (props) => {
             let item = {}
             item["libelle"] = props.libelle;
             item["contenu"] = props.contenu;
-            
+
             props.etatChanged(true)
             ajout(item, props).then(() => {
                 handleCancel(e)
@@ -157,15 +167,15 @@ const Faq = (props) => {
         if (handleValidation()) {
 
             //Remove selected item
-           
+
             //Create updated version of selected item
             let item = {}
             item["id"] = props.id;
             item["libelle"] = props.libelle;
             item["contenu"] = props.contenu;
-           
+
             props.etat2Changed(true)
-            modification (item, props).then(() => {
+            modification(item, props).then(() => {
                 handleCancel(e)
             })
 
@@ -195,19 +205,19 @@ const Faq = (props) => {
         rowClickedHandler(e, sp, null)
     }
     const rowClickedHandler = (event, data, rowIndex) => {
-        props.idChanged(data.id?data.id:"")
-        props.libelleChanged(data.libelle?data.libelle:"")
-        props.contenuChanged(data.answer?data.answer:"")
-        props.selectedItemChanged(data?data:{})
+        props.idChanged(data.id ? data.id : "")
+        props.libelleChanged(data.libelle ? data.libelle : "")
+        props.contenuChanged(data.answer ? data.answer : "")
+        props.selectedItemChanged(data ? data : {})
     }
-    const  tableChangeHandler = data => {
+    const tableChangeHandler = data => {
     }
-    
-    let titleText = props.selectedItem.id!== undefined ? "Modifier ou Supprimer" : "Ajouter";
-   
-    let buttons = props.selectedItem.id!== undefined ?
-    (<>
-        {/* <LoadingButton
+
+    let titleText = props.selectedItem.id !== undefined ? "Modifier ou Supprimer" : "Ajouter";
+
+    let buttons = props.selectedItem.id !== undefined ?
+        (<>
+            {/* <LoadingButton
             className="btn waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
             onClick={(e) => handleModal(e)}
             loading={props.etat3}
@@ -219,46 +229,46 @@ const Faq = (props) => {
             <span>Supprimer</span>
         </LoadingButton> */}
 
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
-            onClick={(e) => handleCancel(e)}
-            loading={props.etat2}
-            loadingPosition="end"
-            endIcon={<CancelIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Annuler</span>
-        </LoadingButton>
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
+                onClick={(e) => handleCancel(e)}
+                loading={props.etat2}
+                loadingPosition="end"
+                endIcon={<CancelIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Annuler</span>
+            </LoadingButton>
 
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
-            onClick={(e) => handleEditModal(e)}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Modifier</span>
-        </LoadingButton>
-        
-    </>)
-    :
-    (
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
-            onClick={(e) => handleSubmit(e)}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Ajouter</span>
-        </LoadingButton>
-       
-    )
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small"
+                onClick={(e) => handleEditModal(e)}
+                loading={props.etat}
+                loadingPosition="end"
+                endIcon={<SaveIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Modifier</span>
+            </LoadingButton>
+
+        </>)
+        :
+        (
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small"
+                onClick={(e) => handleSubmit(e)}
+                loading={props.etat}
+                loadingPosition="end"
+                endIcon={<SaveIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Ajouter</span>
+            </LoadingButton>
+
+        )
 
     return (
         <>
@@ -274,30 +284,30 @@ const Faq = (props) => {
                         <div className="col s12">
                             <div className="input-field">
                                 <input id="uname" name="libelle" type="text"
-                                       data-error=".errorTxt4"
-                                       placeholder=""
-                                       value={props.libelle}
-                                       onChange={(e) => props.libelleChanged(e.target.value)}/>
-                                        <label htmlFor="uname" className="active">Intitulé&nbsp;
-                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: Tribunal, etc.. ">
-                                                <HelpIcon/>
-                                            </a>
-                                        </label>
+                                    data-error=".errorTxt4"
+                                    placeholder=""
+                                    value={props.libelle}
+                                    onChange={(e) => props.libelleChanged(e.target.value)} />
+                                <label htmlFor="uname" className="active">Intitulé&nbsp;
+                                    <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: Tribunal, etc.. ">
+                                        <HelpIcon />
+                                    </a>
+                                </label>
                                 <small className="errorTxt4">
                                     <div id="cpassword-error" className="error">{props.errors.libelle}</div>
                                 </small>
                             </div>
                         </div>
                         <div className="col s12 input-field">
-                                    <textarea id="contenu" name="contenu" type="text"
-                                              className="validate materialize-textarea"
-                                              placeholder=""
-                                              value={props.contenu}
-                                              onChange={(e) => props.contenuChanged(e.target.value)}
-                                              data-error=".errorTxt2"/>
+                            <textarea id="contenu" name="contenu" type="text"
+                                className="validate materialize-textarea"
+                                placeholder=""
+                                value={props.contenu}
+                                onChange={(e) => props.contenuChanged(e.target.value)}
+                                data-error=".errorTxt2" />
                             <label htmlFor="contenu" className="active">Contenu&nbsp;
                                 <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: ...">
-                                    <HelpIcon/>
+                                    <HelpIcon />
                                 </a>
                             </label>
                             <small className="errorTxt4">
@@ -306,7 +316,7 @@ const Faq = (props) => {
                         </div>
 
                         <div className="col s12 display-flex justify-content-end form-action">
-                            {buttons}   
+                            {buttons}
                         </div>
 
                     </div>
@@ -320,15 +330,15 @@ const Faq = (props) => {
                                     <div className="col l6 m6 s12">
                                         <h4 className="card-title">Liste de la FAQ&nbsp;</h4>
                                     </div>
-                                    <div className="col l6 m6 s12" style={{ textAlign:"end" }}>
-                                        <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0)}} />
-                                        <img src={excel} alt="" style={{ cursor:"pointer" }} onClick={(e) => {table2XLSX("Liste_de_la_faq" + today().replaceAll("/", ""),"app-faq")}} />
+                                    <div className="col l6 m6 s12" style={{ textAlign: "end" }}>
+                                        <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }} onClick={(e) => { handlePrint(config, columns, props.items, 0) }} />
+                                        <img src={excel} alt="" style={{ cursor: "pointer" }} onClick={(e) => { table2XLSX("Liste_de_la_faq" + today().replaceAll("/", ""), "app-faq") }} />
                                     </div>
                                 </div>
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className = {"responsive-table table-xlsx app-faq no-hover"}
+                                            className={"responsive-table table-xlsx app-faq no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}

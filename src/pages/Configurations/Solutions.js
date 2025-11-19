@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactDatatable from '@ashvin27/react-datatable';
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -16,51 +16,60 @@ import {
     objetChanged,
     solutionChanged
 } from "../../redux/actions/Configurations/SolutionsActions";
-import {loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
+import { loadItemFromLocalStorage, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import { connect } from "react-redux";
-import {modalify} from "../../Utils/modal";
+import { modalify } from "../../Utils/modal";
 import { ajout, liste, modification, suppression } from "../../apis/Configurations/SolutionsApi";
 import excel from '../../assets/images/excel.svg'
 import pdf from '../../assets/images/pdf.svg'
-import {handlePrint} from "../../Utils/tables";
-import {table2XLSX} from "../../Utils/tabletoexcel";
+import { handlePrint } from "../../Utils/tables";
+import { table2XLSX } from "../../Utils/tabletoexcel";
 import { pageChanged } from "../../redux/actions/LayoutActions";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAutoScroll } from "../../hooks/useAutoScroll";
-
+import { KTApp } from "../../Utils/blockui";
 const styles = {
     control: base => ({
         ...base,
         height: 35,
         minHeight: 35
     }),
-    menu: provided => ({...provided, zIndex: 9999})
+    menu: provided => ({ ...provided, zIndex: 9999 })
 };
 const Solutions = (props) => {
-
+    const [isLoading, setIsLoading] = useState(false);
     useEffect(() => {
-       
-        liste(props).then((r) => {});
+        KTApp.blockPage({
+            overlayColor: "#000000",
+            type: "v2",
+            state: "danger",
+            message: "En cours de chargement...",
+        });
+        setIsLoading(true);
+        liste(props).then((r) => { }).finally(() => {
+            setIsLoading(false);
+            KTApp.unblockPage();
+        });
         //UI Fixes
-       
+
         window.$('.dropdown-trigger').dropdown({
-                inDuration: 300,
-                outDuration: 225,
-                constrainWidth: false, // Does not change width of dropdown to that of the activator
-                click: true, // Activate on hover
-                gutter: 0, // Spacing from edge
-                coverTrigger: false, // Displays dropdown below the button
-                alignment: 'left', // Displays dropdown with edge aligned to the left of button
-                stopPropagation: false // Stops event propagation
-            }
+            inDuration: 300,
+            outDuration: 225,
+            constrainWidth: false, // Does not change width of dropdown to that of the activator
+            click: true, // Activate on hover
+            gutter: 0, // Spacing from edge
+            coverTrigger: false, // Displays dropdown below the button
+            alignment: 'left', // Displays dropdown with edge aligned to the left of button
+            stopPropagation: false // Stops event propagation
+        }
         );
-       
+
         window.$('.buttons-excel').html('<span><i class="fa fa-file-excel"></i></span>')
-        window.$('ul.pagination').parent().parent().css({marginTop:"1%", boxShadow:"none"})
-        window.$('ul.pagination').parent().css({boxShadow:"none"})
+        window.$('ul.pagination').parent().parent().css({ marginTop: "1%", boxShadow: "none" })
+        window.$('ul.pagination').parent().css({ boxShadow: "none" })
         window.$('ul.pagination').parent().addClass('white')
         window.$('ul.pagination').addClass('right-align')
         window.$('a.page-link input').addClass('indigo-text bold-text')
@@ -72,8 +81,8 @@ const Solutions = (props) => {
         //cleanup
         return clearComponentState();
     }, []);
-    
-    const topRef = useRef(null); 
+
+    const topRef = useRef(null);
     useAutoScroll(topRef, [props.selectedItem.id], "top");
 
     const handleChange1 = (obj) => {
@@ -124,7 +133,7 @@ const Solutions = (props) => {
 
     let config = {
         page_size: 15,
-        length_menu: [ 15, 25, 50, 100],
+        length_menu: [15, 25, 50, 100],
         show_filter: true,
         show_pagination: true,
         filename: "Langues",
@@ -137,23 +146,23 @@ const Solutions = (props) => {
             length_menu: "Afficher _MENU_ éléments",
             filter: "Rechercher...",
             info: "Affichage de l'élement _START_ à _END_ sur _TOTAL_ éléments",
-            zero_records:    "Aucun élément à afficher",
+            zero_records: "Aucun élément à afficher",
             no_data_text: "Aucun élément à afficher",
             loading_text: "Chargement en cours...",
             pagination: {
-                first: <FirstPageIcon/>,
-                previous: <ChevronLeftIcon/>,
-                next: <ChevronRightIcon/>,
-                last: <LastPageIcon/>
+                first: <FirstPageIcon />,
+                previous: <ChevronLeftIcon />,
+                next: <ChevronRightIcon />,
+                last: <LastPageIcon />
             }
         }
     }
 
-    let objets =  loadItemFromLocalStorage("app-objets") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-objets")) : undefined;
+    let objets = loadItemFromLocalStorage("app-objets") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-objets")) : undefined;
     let objetsOptions = [];
-    
+
     objets.map((objet) => {
-        
+
         objetsOptions.push({
             label: objet.libelle,
             value: objet.id,
@@ -173,14 +182,14 @@ const Solutions = (props) => {
             isValid = false;
             errors["solution"] = "Champ incorrect";
         }
-        
+
         return isValid
     }
     const handleSubmit = (e) => {
         e.preventDefault()
         if (handleValidation()) {
-           
-           
+
+
             let item = {}
             item["objet"] = props.objet;
             item["content"] = props.solution;
@@ -209,13 +218,13 @@ const Solutions = (props) => {
     const handleEdit = (e) => {
         e.preventDefault()
         if (handleValidation()) {
-           
+
             //Create updated version of selected item
             let item = {}
             item["id"] = props.id;
             item["objet"] = props.objet;
             item["content"] = props.solution;
-           
+
             props.etat2Changed(true)
             modification(item, props).then(() => {
                 handleCancel(e)
@@ -236,12 +245,12 @@ const Solutions = (props) => {
     }
     const handleDelete = (e, sp) => {
         e.preventDefault()
-       
+
         props.etat3Changed(true)
         suppression(props, sp).then(() => {
             handleCancel(e)
         })
-       
+
         props.solutionErrors(errors)
     }
     const handleEditClick = (sp) => (e) => {
@@ -255,53 +264,53 @@ const Solutions = (props) => {
         props.solutionChanged(data.content)
         props.selectedItemChanged(data)
     }
-    const  tableChangeHandler = data => {
+    const tableChangeHandler = data => {
     }
-   
-    let titleText = props.selectedItem.id!== undefined ? "Modifier ou Supprimer" : "Ajouter";
-    
-    let buttons = props.selectedItem.id!== undefined ?
-    (<>
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
-            onClick={(e) => handleCancel(e)}
-            loading={props.etat2}
-            loadingPosition="end"
-            endIcon={<CancelIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Annuler</span>
-        </LoadingButton>
 
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
-            onClick={(e) => handleEditModal(e)}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Modifier</span>
-        </LoadingButton>
-        
-    </>)
-    :
-    (
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
-            onClick={(e) => handleSubmit(e)}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Ajouter</span>
-        </LoadingButton>
-       
-    )
+    let titleText = props.selectedItem.id !== undefined ? "Modifier ou Supprimer" : "Ajouter";
+
+    let buttons = props.selectedItem.id !== undefined ?
+        (<>
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
+                onClick={(e) => handleCancel(e)}
+                loading={props.etat2}
+                loadingPosition="end"
+                endIcon={<CancelIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Annuler</span>
+            </LoadingButton>
+
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small"
+                onClick={(e) => handleEditModal(e)}
+                loading={props.etat}
+                loadingPosition="end"
+                endIcon={<SaveIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Modifier</span>
+            </LoadingButton>
+
+        </>)
+        :
+        (
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small"
+                onClick={(e) => handleSubmit(e)}
+                loading={props.etat}
+                loadingPosition="end"
+                endIcon={<SaveIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Ajouter</span>
+            </LoadingButton>
+
+        )
 
     return (
         <>
@@ -324,27 +333,27 @@ const Solutions = (props) => {
                                 options={objetsOptions}
                                 // value={roleValue}
                                 // onChange={(e) => props.roleChanged(e.value)}
-                                value={props.role!=="" ? {"label": props.objetLibelle, "value": props.objet } : "Sélectionner l'objet"}
+                                value={props.role !== "" ? { "label": props.objetLibelle, "value": props.objet } : "Sélectionner l'objet"}
                                 onChange={handleChange1}
                             />
                             <label htmlFor="usrole" className={"active"}>Objets&nbsp;</label>
                             <small className="errorTxt4">
                                 <div id="cpassword-error" className="error">
-                                {props.errors !== undefined
-                                ? props.errors.objet
-                                : ""}
+                                    {props.errors !== undefined
+                                        ? props.errors.objet
+                                        : ""}
                                 </div>
                             </small>
                         </div>
-                       
+
                         <div className="col s12 input-field">
-                                    <textarea id="lgdescription" name="description" type="text" placeholder=""
-                                              className="validate materialize-textarea" value={props.solution}
-                                              onChange={(e) => props.solutionChanged(e.target.value)}
-                                              data-error=".errorTxt2"/>
+                            <textarea id="lgdescription" name="description" type="text" placeholder=""
+                                className="validate materialize-textarea" value={props.solution}
+                                onChange={(e) => props.solutionChanged(e.target.value)}
+                                data-error=".errorTxt2" />
                             <label htmlFor="lgdescription" className={"active"}>Solution&nbsp;
                                 <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: La meilleur des solutions dans ce cas est de mener une enquête.....">
-                                    <HelpIcon/>
+                                    <HelpIcon />
                                 </a>
                             </label>
                             <small className="errorTxt4">
@@ -352,9 +361,9 @@ const Solutions = (props) => {
                             </small>
                         </div>
                         <div className="col s12 display-flex justify-content-end form-action">
-                            {buttons}   
+                            {buttons}
                         </div>
-                       
+
                     </div>
                 </form>
 
@@ -366,7 +375,7 @@ const Solutions = (props) => {
                                     <div className="col l6 m6 s12">
                                         <h4 className="card-title">Liste des solutions&nbsp;</h4>
                                     </div>
-                                    <div className="col l6 m6 s12" style={{ textAlign:"end" }}>
+                                    <div className="col l6 m6 s12" style={{ textAlign: "end" }}>
                                         {/* <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0)}} />
                                         <img src={excel} alt="" style={{ cursor:"pointer" }} onClick={(e) => {table2XLSX("Liste_des_solutions" + today().replaceAll("/", ""),"app-solutions")}} /> */}
                                     </div>
@@ -374,7 +383,7 @@ const Solutions = (props) => {
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className = {"responsive-table table-xlsx no-hover"}
+                                            className={"responsive-table table-xlsx no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
@@ -445,7 +454,7 @@ const mapDispatchToProps = (dispatch) => {
         etat3Changed: (etat3) => {
             dispatch(etat3Changed(etat3));
         },
-      
+
     }
 };
 

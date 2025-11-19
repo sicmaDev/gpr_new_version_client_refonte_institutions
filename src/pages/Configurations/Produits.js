@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -27,13 +27,23 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAutoScroll } from "../../hooks/useAutoScroll";
-
+import { KTApp } from "../../Utils/blockui";
 
 
 const Produits = (props) => {
-
+    const [isLoading, setIsLoading] = useState(false);
     useEffect(() => {
-        liste(props).then((r) => { });
+        KTApp.blockPage({
+            overlayColor: "#000000",
+            type: "v2",
+            state: "danger",
+            message: "En cours de chargement...",
+        });
+        setIsLoading(true);
+        liste(props).then((r) => { }).finally(() => {
+            setIsLoading(false);
+            KTApp.unblockPage();
+        });
 
         window.$('.tooltipped').tooltip();
         //cleanup
