@@ -672,7 +672,7 @@ export const handlePrint3 = (config, columns, records) => {
   resetColumns(columns);
 };
 
-export const handlePrint33 = (config, columns, records, startDate, endDate,) => {
+export const handlePrint33 = (config, columns, records, startDate, endDate, hook) => {
 
   let image = '<img src="' + INSTITUTION_LOGO + '" alt="logo" style=" width: "200px",height: "90px" " className=" report-logo"/>';
   let entete = '<div className="row" id="enteteRapport" style="margin-bottom:50px!important">';
@@ -698,12 +698,15 @@ export const handlePrint33 = (config, columns, records, startDate, endDate,) => 
   style = style + "</style>";
   let tableHTML = getExportHtml3(columns, filteredRecords);
   childWindow.document.write(style);
-  childWindow.document.write(entete +
-    '<h2 style="display:inline-block">' +
-    config.filename +
-    ' &nbsp;<h6 style="display:none"><a href="javascript:void" onclick="javascript:print();if(hook===1){\n' +
-    '        columns.splice(1,1);}window.close()">Imprimer</a></h6></h2>'
-  );
+  childWindow.document.write(entete + `
+    <h2 style="display:inline-block;">
+      ${config.filename} (Période : ${startDate} à ${endDate})
+      <h6 style="display:none;">
+        <a href="javascript:void(0)" onclick="print(); if(${hook} === 1){ columns.splice(1,1); } window.close();">Imprimer</a>
+      </h6>
+    </h2>
+  `);
+
   childWindow.document.write(
     tableHTML
     +

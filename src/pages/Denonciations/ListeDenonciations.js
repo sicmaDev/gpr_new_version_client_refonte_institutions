@@ -327,6 +327,8 @@ const ListeDenonciations = (props) => {
   };
   const handleImpression = () => {
     setImpression(!impression);
+    setStartDate(null);
+    setEndDate(null);
   };
 
   function getRandomInt(max) {
@@ -345,7 +347,7 @@ const ListeDenonciations = (props) => {
     if (mode === 1) {
       props.itemsChanged([]);
       listeTousStatuts(props)
-        .then((r) => {})
+        .then((r) => { })
         .finally(() => {
           setIsLoading(false);
           KTApp.unblockPage();
@@ -353,7 +355,7 @@ const ListeDenonciations = (props) => {
     } else {
       props.itemsChanged([]);
       listeTousStatutsOffline(props)
-        .then((r) => {})
+        .then((r) => { })
         .finally(() => {
           setIsLoading(false);
           KTApp.unblockPage();
@@ -623,7 +625,7 @@ const ListeDenonciations = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
-  
+
     clearComponentState();
     setClaimId(data.id);
     // setAudios([])
@@ -746,32 +748,32 @@ const ListeDenonciations = (props) => {
 
         let description1 = data.collectionChannelId
           ? JSON.parse(loadItemFromSessionStorage("app-supports")).filter(
-              (e) => {
-                return e.id === data.collectionChannelId;
-              }
-            )
+            (e) => {
+              return e.id === data.collectionChannelId;
+            }
+          )
           : "";
         let description2 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-              return e.id === data.objetId;
-            })
+            return e.id === data.objetId;
+          })
           : "";
         let description3 = data.productId
           ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
-              (e) => {
-                return e.id === data.productId;
-              }
-            )
+            (e) => {
+              return e.id === data.productId;
+            }
+          )
           : "";
         let description4 = data.servicePointId
           ? JSON.parse(loadItemFromSessionStorage("app-ps")).filter((e) => {
-              return e.id === data.servicePointId;
-            })
+            return e.id === data.servicePointId;
+          })
           : "";
         let description5 = data.collectorId
           ? JSON.parse(loadItemFromSessionStorage("app-users")).filter((e) => {
-              return e.id === data.collectorId;
-            })
+            return e.id === data.collectorId;
+          })
           : "";
 
         props.collectChanged(
@@ -964,12 +966,12 @@ const ListeDenonciations = (props) => {
       let solutions =
         interne === false
           ? Array.from(
-              props.solution.filter((e) => {
-                return (
-                  e.status === "APPROVED" && e.satisfactionMeasureDto !== null
-                );
-              })
-            )
+            props.solution.filter((e) => {
+              return (
+                e.status === "APPROVED" && e.satisfactionMeasureDto !== null
+              );
+            })
+          )
           : Array.from(props.solution);
       if (props.solution.length !== 0) {
         type =
@@ -1035,10 +1037,10 @@ const ListeDenonciations = (props) => {
                     solution.satisfactionMeasureDto.status === "SATISFIED"
                       ? "Satisfait"
                       : solution.satisfactionMeasureDto.status === "UNSATISFIED"
-                      ? "Non satisfait"
-                      : solution.satisfactionMeasureDto.status === "PARTIAL"
-                      ? "Partiellement satisfait"
-                      : "";
+                        ? "Non satisfait"
+                        : solution.satisfactionMeasureDto.status === "PARTIAL"
+                          ? "Partiellement satisfait"
+                          : "";
                   mesure = (
                     <>
                       <Typography component="div">
@@ -1431,9 +1433,8 @@ const ListeDenonciations = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${
-                      attachment.extra?.user?.firstAndLastName
-                    } le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName
+                      } le ${formatDate(attachment.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1548,9 +1549,8 @@ const ListeDenonciations = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${
-                      audioItem.extra?.user?.firstAndLastName
-                    } le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName
+                      } le ${formatDate(audioItem.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1623,18 +1623,18 @@ const ListeDenonciations = (props) => {
     // Données de l'élément sélectionné
     let description2 = props.selectedItem.objetId
       ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter(
-          (e) => e.id === props.selectedItem.objetId
-        )
+        (e) => e.id === props.selectedItem.objetId
+      )
       : "";
     let description3 = props.selectedItem.productId
       ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
-          (e) => e.id === props.selectedItem.productId
-        )
+        (e) => e.id === props.selectedItem.productId
+      )
       : "";
     let description5 = props.selectedItem.collectorId
       ? JSON.parse(loadItemFromSessionStorage("app-users")).filter(
-          (e) => e.id === props.selectedItem.collectorId
-        )
+        (e) => e.id === props.selectedItem.collectorId
+      )
       : "";
 
     // Détermination du statut
@@ -1656,22 +1656,22 @@ const ListeDenonciations = (props) => {
       mode === 1
         ? props.selectedItem.collector.firstAndLastName
         : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.collector.firstAndLastName
-        : description5[0]?.firstAndLastName || "<i>Non défini</i>";
+          ? props.selectedItem.collector.firstAndLastName
+          : description5[0]?.firstAndLastName || "<i>Non défini</i>";
 
     let objetTemp =
       mode === 1
         ? props.selectedItem.objet.libelle
         : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.objet.libelle
-        : description2[0]?.libelle || "<i>Non défini</i>";
+          ? props.selectedItem.objet.libelle
+          : description2[0]?.libelle || "<i>Non défini</i>";
 
     let produitTemp =
       mode === 1
         ? props.selectedItem.product.libelle
         : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.product.libelle
-        : description3[0]?.libelle || "<i>Non défini</i>";
+          ? props.selectedItem.product.libelle
+          : description3[0]?.libelle || "<i>Non défini</i>";
 
     // Création des sections du document
     const sections = {
@@ -1833,30 +1833,30 @@ const ListeDenonciations = (props) => {
     participantsTab =
       (props?.session?.members).length !== 0
         ? (props?.session?.members).map((e) => {
-            return e.firstAndLastName;
-          })
+          return e.firstAndLastName;
+        })
         : [];
     guestsTab =
       (props?.session?.guests).length !== 0
         ? (props?.session?.guests).map((e) => {
-            return e.firstAndLastName;
-          })
+          return e.firstAndLastName;
+        })
         : [];
     votesTab =
       (props?.session?.messages).length !== 0
         ? (props?.session?.messages).filter((e) => {
-            if (e.vote === true) {
-              return e;
-            }
-          })
+          if (e.vote === true) {
+            return e;
+          }
+        })
         : [];
     messagesTab =
       (props?.session?.messages).length !== 0
         ? (props?.session?.messages).filter((e) => {
-            if (e.vote === false) {
-              return e;
-            }
-          })
+          if (e.vote === false) {
+            return e;
+          }
+        })
         : [];
 
     // console.log("votesTab",votesTab)
@@ -1896,10 +1896,10 @@ const ListeDenonciations = (props) => {
       let votesPour =
         (e.voteDto?.userVote).length !== 0
           ? (e.voteDto?.userVote).filter((vote) => {
-              if (vote.voteType === "POUR") {
-                return vote;
-              }
-            })
+            if (vote.voteType === "POUR") {
+              return vote;
+            }
+          })
           : [];
       votesPour.map((k) => {
         votes += "<li>" + k?.author?.firstAndLastName + "</li>";
@@ -1910,10 +1910,10 @@ const ListeDenonciations = (props) => {
       let votesContre =
         (e.voteDto?.userVote).length !== 0
           ? (e.voteDto?.userVote).filter((vote) => {
-              if (vote.voteType === "CONTRE") {
-                return vote;
-              }
-            })
+            if (vote.voteType === "CONTRE") {
+              return vote;
+            }
+          })
           : [];
       votesContre.map((l) => {
         votes += "<li>" + l?.author?.firstAndLastName + "</li>";
@@ -2101,7 +2101,7 @@ const ListeDenonciations = (props) => {
       for (let index = 0; index < audioListForm.length; index++) {
         // Génère un timestamp unique
         const now = new Date();
-        const date = now.toLocaleDateString("fr-FR").replaceAll("/", ""); 
+        const date = now.toLocaleDateString("fr-FR").replaceAll("/", "");
         const time = now
           .toLocaleTimeString("fr-FR", { hour12: false })
           .replaceAll(":", "");
@@ -2388,7 +2388,7 @@ const ListeDenonciations = (props) => {
                   <RecorderControls
                     recorderState={recorderState}
                     handlers={handlers}
-                    closeAction={() => {}}
+                    closeAction={() => { }}
                   />
                 </div>
               </section>
@@ -2609,7 +2609,7 @@ const ListeDenonciations = (props) => {
                           if (startDate && endDate) {
                             table2XLS2XF(
                               "Liste_des_dénonciations" +
-                                today().replaceAll("/", ""),
+                              today().replaceAll("/", ""),
                               "brke",
                               selectOption,
                               props.items,
@@ -2620,7 +2620,7 @@ const ListeDenonciations = (props) => {
                             // Sinon, utiliser handlePrint2 sans filtre
                             table2XLS2X(
                               "Liste_des_dénonciations" +
-                                today().replaceAll("/", ""),
+                              today().replaceAll("/", ""),
                               "brke",
                               selectOption,
                               props.items
@@ -2694,7 +2694,7 @@ const ListeDenonciations = (props) => {
                                 } else {
                                   table2XLS2X(
                                     "Liste_des_denonciations" +
-                                      today().replaceAll("/", ""),
+                                    today().replaceAll("/", ""),
                                     "brke",
                                     selectOption,
                                     props.items
@@ -3040,7 +3040,7 @@ const ListeDenonciations = (props) => {
                               >
                                 Détails du traitement
                                 {props.session !== "" &&
-                                (addR === "PILOTE" || addR === "DE") ? (
+                                  (addR === "PILOTE" || addR === "DE") ? (
                                   <LoadingButton
                                     onClick={(e) => {
                                       if (mode === 1) {
