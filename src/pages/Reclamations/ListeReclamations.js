@@ -392,17 +392,6 @@ const ListeReclamations = (props) => {
   }, []);
   //Handling the List
   let columns = [
-    // {
-    //   key: "code",
-    //   text: "Code client",
-    //   className: "code",
-    //   align: "left",
-    //   sortable: true,
-    //   cell: (claim, index) => {
-    //     let codeClient = claim.codeClient !== "" ? claim.codeClient : "";
-    //     return codeClient;
-    //   },
-    // },
     {
       key: "codeClient",
       text: "Code client",
@@ -2545,13 +2534,22 @@ const ListeReclamations = (props) => {
       }
     } else if (audioListForm.length) {
       for (let index = 0; index < audioListForm.length; index++) {
+        // Génère un timestamp unique
+        const now = new Date();
+        const date = now.toLocaleDateString("fr-FR").replaceAll("/", ""); 
+        const time = now
+          .toLocaleTimeString("fr-FR", { hour12: false })
+          .replaceAll(":", ""); 
+
+        // Crée un nom unique
+        const fileName = `claim_extra_record_${date}_${time}_${index}.ogg`;
+
         const audioFile = new File(
           [audioListForm[index]],
-          "claim_extra_record_" + today().replaceAll("/", "") + ".ogg",
-          {
-            type: "audio/ogg; codecs=opus",
-          }
+          fileName,
+          { type: "audio/ogg; codecs=opus" }
         );
+
         formData.append("audios", audioFile);
       }
     }
