@@ -28,10 +28,10 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAutoScroll } from "../../hooks/useAutoScroll";
-
+import { KTApp } from "../../Utils/blockui";
 
 const Langues = (props) => {
-
+    const [isLoading, setIsLoading] = useState(false);
     // props.pageChanged("hello")
     // console.log("prego1",props.page)
     const [deleteIsLoading, setDeleteIsLoading] = useState(false);
@@ -39,8 +39,17 @@ const Langues = (props) => {
     const [updateIsLoading, setUpdateIsLoading] = useState(false);
 
     useEffect(() => {
-
-        liste(props).then((r) => { });
+        KTApp.blockPage({
+            overlayColor: "#000000",
+            type: "v2",
+            state: "danger",
+            message: "En cours de chargement...",
+        });
+        setIsLoading(true);
+        liste(props).then((r) => { }).finally(() => {
+            setIsLoading(false);
+            KTApp.unblockPage();
+        });
         //UI Fixes
 
         window.$('.dropdown-trigger').dropdown({

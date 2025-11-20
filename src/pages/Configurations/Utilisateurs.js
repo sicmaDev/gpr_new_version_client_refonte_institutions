@@ -40,7 +40,7 @@ import { Block, TaskAlt } from "@mui/icons-material";
 import { notify } from "../../Utils/alert";
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { useAutoScroll } from "../../hooks/useAutoScroll";
-
+import { KTApp } from "../../Utils/blockui";
 
 const styles = {
     control: base => ({
@@ -53,7 +53,7 @@ const styles = {
 const Utilisateurs = (props) => {
     const [showPassword, setShowPassword] = useState(false);
     const [showPassword1, setShowPassword1] = useState(false);
-
+    const [isLoading, setIsLoading] = useState(false);
     const toggleShowPassword = () => {
         setShowPassword(!showPassword);
     };
@@ -77,7 +77,17 @@ const Utilisateurs = (props) => {
     let users = loadItemFromLocalStorage("app-users") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-users")) : undefined;
     let nba = users !== undefined ? users.length : 0;
     useEffect(() => {
-        all(props).then((r) => { });
+        KTApp.blockPage({
+            overlayColor: "#000000",
+            type: "v2",
+            state: "danger",
+            message: "En cours de chargement...",
+        });
+        setIsLoading(true);
+        all(props).then((r) => { }).finally(() => {
+            setIsLoading(false);
+            KTApp.unblockPage();
+        });
 
         window.$('.tooltipped').tooltip();
         //cleanup
@@ -135,7 +145,7 @@ const Utilisateurs = (props) => {
             modalify("Confirmation", "Voulez-vous vraiment supprimé ce compte ?", "confirm", (e) => handleDisable(e, sp, false, true))
         }
     }
-
+    //console.log
 
     let code;
     let columns = [
@@ -580,10 +590,10 @@ const Utilisateurs = (props) => {
         props.additionalRoleChanged(data.additionalRole ? data.additionalRole : "")
         props.selectedItemChanged(data)
 
-         // 👇 Conversion du champ "ra" pour le Select
-        setCa(data.ra === true || data.ra === "true" ? true 
-            : data.ra === false || data.ra === "false" ? false 
-            : "");
+        // 👇 Conversion du champ "ra" pour le Select
+        setCa(data.ra === true || data.ra === "true" ? true
+            : data.ra === false || data.ra === "false" ? false
+                : "");
 
 
     }

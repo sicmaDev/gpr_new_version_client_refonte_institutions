@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
@@ -6,23 +6,23 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import {v4 as uuidv4} from "uuid";
-import {loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
-import {modalify} from "../../Utils/modal";
-import {MAX_SUBJECT_DURATION} from "../../Utils/globals";
+import { v4 as uuidv4 } from "uuid";
+import { loadItemFromLocalStorage, loadItemFromSessionStorage, today } from "../../Utils/utils";
+import { modalify } from "../../Utils/modal";
+import { MAX_SUBJECT_DURATION } from "../../Utils/globals";
 import { connect } from "react-redux";
 import { ajout, liste, modification, suppression } from "../../apis/Configurations/NotificationsApi";
 import excel from '../../assets/images/excel.svg'
 import pdf from '../../assets/images/pdf.svg'
-import {handlePrint} from "../../Utils/tables";
-import {table2XLSX} from "../../Utils/tabletoexcel";
+import { handlePrint } from "../../Utils/tables";
+import { table2XLSX } from "../../Utils/tabletoexcel";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
-import {emailsChanged, emailsLibelleChanged, etat2Changed, etat3Changed, etatChanged, idChanged, items2Changed, itemsChanged, notificationErrors, roleChanged, roleLibelleChanged } from "../../redux/actions/Configurations/NotificationsActions";
+import { emailsChanged, emailsLibelleChanged, etat2Changed, etat3Changed, etatChanged, idChanged, items2Changed, itemsChanged, notificationErrors, roleChanged, roleLibelleChanged } from "../../redux/actions/Configurations/NotificationsActions";
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
-
+import { KTApp } from "../../Utils/blockui";
 
 const styles = {
     control: base => ({
@@ -30,13 +30,23 @@ const styles = {
         height: 35,
         minHeight: 35
     }),
-    menu: provided => ({...provided, zIndex: 9999})
+    menu: provided => ({ ...provided, zIndex: 9999 })
 };
 const Notifications = (props) => {
-    
-    
+    const [isLoading, setIsLoading] = useState(false);
+
     useEffect(() => {
-        liste(props).then((r) => {});
+        KTApp.blockPage({
+            overlayColor: "#000000",
+            type: "v2",
+            state: "danger",
+            message: "En cours de chargement...",
+        });
+        setIsLoading(true);
+        liste(props).then((r) => { }).finally(() => {
+            setIsLoading(false);
+            KTApp.unblockPage();
+        });
 
         window.$('.tooltipped').tooltip();
         //cleanup
@@ -73,7 +83,7 @@ const Notifications = (props) => {
             key: "Titre",
             text: "Titre",
             className: "titre",
-            
+
             cell: (user, index) => {
                 return user.titre
             }
@@ -86,24 +96,24 @@ const Notifications = (props) => {
             sortable: false,
             cell: (user) => {
                 // console.log("use",claim)
-                let iconeElt =<div style={{ cursor:"pointer" }} onClick={(e) => handleModal(e,user.id)} className="card-content red-text"><PersonRemoveIcon/></div>
+                let iconeElt = <div style={{ cursor: "pointer" }} onClick={(e) => handleModal(e, user.id)} className="card-content red-text"><PersonRemoveIcon /></div>
                 return iconeElt
             },
         }
-        
-       
+
+
     ];
 
     let config = {
         page_size: 15,
-        length_menu: [ 15, 25, 50, 100],
+        length_menu: [15, 25, 50, 100],
         show_filter: true,
         show_pagination: true,
         filename: "Objets",
         button: {
             //excel: true,
             //pdf: true,
-           //print: true,
+            //print: true,
         },
         language: {
             length_menu: "Afficher _MENU_ éléments",
@@ -113,10 +123,10 @@ const Notifications = (props) => {
             no_data_text: "Aucun élément à afficher",
             loading_text: "Chargement en cours...",
             pagination: {
-                first: <FirstPageIcon/>,
-                previous: <ChevronLeftIcon/>,
-                next: <ChevronRightIcon/>,
-                last: <LastPageIcon/>
+                first: <FirstPageIcon />,
+                previous: <ChevronLeftIcon />,
+                next: <ChevronRightIcon />,
+                last: <LastPageIcon />
             }
         }
     }
@@ -125,11 +135,11 @@ const Notifications = (props) => {
     let agentMailOptions = [];
     let usersH = users.filter((e) => {
         return (
-          e.emailReceiver === false
+            e.emailReceiver === false
         );
     })
     usersH.map((user) => {
-        
+
         agentMailOptions.push({
             label: user.firstAndLastName + "         < " + user.email + " >",
             value: user.id,
@@ -139,28 +149,28 @@ const Notifications = (props) => {
     let roleOptions
     if (props.role !== undefined) {
         roleOptions = [
-            {"label": "Directeur Exécutif", "value": "DE" },
-            {"label": "Pilote", "value": "PILOTE" },
-            {"label": "Coordonnateur", "value": "COORDONNATEUR" },
-            {"label": "Responsable d'Agence", "value": "RA" },
-            {"label": "Autres", "value": "AUTRES" },
+            { "label": "Directeur Exécutif", "value": "DE" },
+            { "label": "Pilote", "value": "PILOTE" },
+            { "label": "Coordonnateur", "value": "COORDONNATEUR" },
+            { "label": "Responsable d'Agence", "value": "RA" },
+            { "label": "Autres", "value": "AUTRES" },
         ]
 
     } else {
         roleOptions = ""
     }
 
-    
+
 
     let errors = {};
     const handleValidation = () => {
         let isValid = true;
 
-        if((props.emails==="" || props.emails===undefined || props.emails===null)){
+        if ((props.emails === "" || props.emails === undefined || props.emails === null)) {
             isValid = false;
             errors["emails"] = "Champ incorrect";
         }
-        if((props.role==="" || props.role===undefined || props.role===null)){
+        if ((props.role === "" || props.role === undefined || props.role === null)) {
             isValid = false;
             errors["role"] = "Champ incorrect";
         }
@@ -168,9 +178,9 @@ const Notifications = (props) => {
     }
     const handleSubmit = (e) => {
         e.preventDefault()
-       
+
         if (handleValidation()) {
-            
+
             let item = {}
             item["ids"] = props.emails;
             item["poste"] = props.role;
@@ -180,9 +190,9 @@ const Notifications = (props) => {
                 handleCancel(e)
             })
         } else {
-           
+
         }
-       
+
         props.notificationErrors(errors)
 
     }
@@ -194,7 +204,7 @@ const Notifications = (props) => {
         props.roleChanged("")
         props.notificationErrors({})
         // props.selectedItemChanged({})
-       
+
     }
 
     // let buttonText = props.selectedItem!==null ? "Modifier" : "Ajouter";
@@ -202,17 +212,17 @@ const Notifications = (props) => {
         e.preventDefault()
         clearComponentState()
     }
-   
-    const handleModal = (e,id) => {
+
+    const handleModal = (e, id) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", ()=>handleDelete(e,id))
+        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", () => handleDelete(e, id))
     }
-   
-    const handleDelete = (e,id) => {
+
+    const handleDelete = (e, id) => {
         e.preventDefault()
         // console.log("iddelete",id)
         props.etat3Changed(true)
-        suppression(props,id).then(() => {
+        suppression(props, id).then(() => {
             handleCancel(e)
         })
         clearComponentState()
@@ -220,18 +230,18 @@ const Notifications = (props) => {
     }
     const rowClickedHandler = (event, data, rowIndex) => {
         // console.log(data)
-        props.idChanged(data.id?data.id:"")
+        props.idChanged(data.id ? data.id : "")
         // props.libelleChanged(data.libelle?data.libelle:"")
         // props.risqueLevelChanged(data.risqueLevel?data.risqueLevel:"")
         // props.descriptionChanged(data.description?data.description:"")
         // props.processingTimeChanged(data.processingTime?data.processingTime:"")
         // props.selectedItemChanged(data?data:"")
-        
+
 
     }
     const tableChangeHandler = data => {
     }
-     
+
 
     return (
         <>
@@ -244,73 +254,73 @@ const Notifications = (props) => {
                     </div>
 
                     <div className="row">
-                    <div className="col l6 m12 s12 input-field">
-                        <Select
-                            // isMulti
-                            className="react-select-container mt-4"
-                            classNamePrefix="react-select"
-                            style={styles}
-                            placeholder="Qui sont ceux qui doivent recevoir des notifications ?"
-                            options={agentMailOptions}
-                            value={props.emails!=="" ? {"label": props.emailsLibelle, "value": props.emails } : "Sélectionner l'utilisateur"}
-                            onChange={handleChange}
+                        <div className="col l6 m12 s12 input-field">
+                            <Select
+                                // isMulti
+                                className="react-select-container mt-4"
+                                classNamePrefix="react-select"
+                                style={styles}
+                                placeholder="Qui sont ceux qui doivent recevoir des notifications ?"
+                                options={agentMailOptions}
+                                value={props.emails !== "" ? { "label": props.emailsLibelle, "value": props.emails } : "Sélectionner l'utilisateur"}
+                                onChange={handleChange}
                             // onChange={(e) => props.emailsChanged(e.value)}
-                        />
-                        <label
-                        htmlFor="idObjet"
-                        className={"active"}
-                        >
-                        Utilisateurs
-                        </label>
-                        <small className="errorTxt4">
-                        <div
-                            id="cpassword-error"
-                            className="error"
-                        >
-                            {props.errors !== undefined
-                            ? props.errors.emails
-                            : ""}
+                            />
+                            <label
+                                htmlFor="idObjet"
+                                className={"active"}
+                            >
+                                Utilisateurs
+                            </label>
+                            <small className="errorTxt4">
+                                <div
+                                    id="cpassword-error"
+                                    className="error"
+                                >
+                                    {props.errors !== undefined
+                                        ? props.errors.emails
+                                        : ""}
+                                </div>
+                            </small>
                         </div>
-                        </small>
-                    </div>
-                    <div className="col l6 m12 s6 input-field">
+                        <div className="col l6 m12 s6 input-field">
 
-                        <Select
-                            id={"usrole"}
-                            className='react-select-container mt-4'
-                            classNamePrefix="react-select"
-                            style={styles}
-                            placeholder="Sélectionnez le role"
-                            options={roleOptions}
-                            // value={roleValue}
-                            // onChange={(e) => props.roleChanged(e.value)}
-                            value={props.role!=="" ? {"label": props.roleLibelle, "value": props.role } : "Sélectionner l'utilisateur"}
-                            onChange={handleChange1}
-                        />
-                        <label htmlFor="usrole" className={"active"}>Rôle&nbsp;</label>
-                        <small className="errorTxt4">
-                            <div id="cpassword-error" className="error">
-                            {props.errors !== undefined
-                            ? props.errors.role
-                            : ""}
-                            </div>
-                        </small>
-                    </div>
-                    <div className="col s12 display-flex justify-content-end form-action">
-                        {/* {buttons}    */}
-                        <LoadingButton
-                            className="btn waves-effect waves-light mr-1 btn-small"
-                            onClick={(e) => handleSubmit(e)}
-                            loading={props.etat}
-                            loadingPosition="end"
-                            endIcon={<SaveIcon />}
-                            variant="contained"
-                            sx={{ textTransform:"initial" }}
-                        >
-                            <span>Ajouter</span>
-                        </LoadingButton>
-                    </div>
-                        
+                            <Select
+                                id={"usrole"}
+                                className='react-select-container mt-4'
+                                classNamePrefix="react-select"
+                                style={styles}
+                                placeholder="Sélectionnez le role"
+                                options={roleOptions}
+                                // value={roleValue}
+                                // onChange={(e) => props.roleChanged(e.value)}
+                                value={props.role !== "" ? { "label": props.roleLibelle, "value": props.role } : "Sélectionner l'utilisateur"}
+                                onChange={handleChange1}
+                            />
+                            <label htmlFor="usrole" className={"active"}>Rôle&nbsp;</label>
+                            <small className="errorTxt4">
+                                <div id="cpassword-error" className="error">
+                                    {props.errors !== undefined
+                                        ? props.errors.role
+                                        : ""}
+                                </div>
+                            </small>
+                        </div>
+                        <div className="col s12 display-flex justify-content-end form-action">
+                            {/* {buttons}    */}
+                            <LoadingButton
+                                className="btn waves-effect waves-light mr-1 btn-small"
+                                onClick={(e) => handleSubmit(e)}
+                                loading={props.etat}
+                                loadingPosition="end"
+                                endIcon={<SaveIcon />}
+                                variant="contained"
+                                sx={{ textTransform: "initial" }}
+                            >
+                                <span>Ajouter</span>
+                            </LoadingButton>
+                        </div>
+
                     </div>
                 </form>
 
@@ -322,7 +332,7 @@ const Notifications = (props) => {
                                     <div className="col l6 m6 s12">
                                         <h4 className="card-title">Liste des utilisateurs qui peuvent recevoir des mails&nbsp;</h4>
                                     </div>
-                                    <div className="col l6 m6 s12" style={{ textAlign:"end" }}>
+                                    <div className="col l6 m6 s12" style={{ textAlign: "end" }}>
                                         {/* <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0)}} />
                                         <img src={excel} alt="" style={{ cursor:"pointer" }} onClick={(e) => {table2XLSX("Liste_des_objets" + today().replaceAll("/", ""),"app-objets")}} /> */}
                                     </div>
@@ -401,7 +411,7 @@ const mapDispatchToProps = (dispatch) => {
         etat3Changed: (etat3) => {
             dispatch(etat3Changed(etat3));
         },
-      
+
     }
 };
 
