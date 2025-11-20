@@ -221,63 +221,15 @@ const TraiterDenonciation = (props) => {
     loadItemFromLocalStorage("app-users") !== undefined
       ? JSON.parse(loadItemFromLocalStorage("app-users"))
       : undefined;
+  let langues =
+    loadItemFromLocalStorage("app-langues") !== undefined
+      ? JSON.parse(loadItemFromLocalStorage("app-langues"))
+      : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
 
   let handlingForms;
   const [agentsMailOptions, setAgentsMailOptions] = useState([]);
-
-  //  const sendMail = (e) => {
-  //     e.preventDefault()
-  //         const user = JSON.parse(loadItemFromSessionStorage("user"));
-  //             const templateParams = {
-  //               type:"reclamation",
-  //               to:affectEmail,
-  //               bcc:emailSender,
-  //               comment:messageSend,
-  //               delai:delai_at,
-  //               sendBy:user.firstname + " " + user.lastname + " ",
-  //               code:props.code,
-  //               client:props.firstname + "  " + props.lastname,
-  //               enregistrerle:props.recorded_at,
-
-  //             };
-
-  //             let messageF = "Madame,Monsieur\n\n"+
-  //             "Par la présente, je viens vous affecter le traitement d'une dénonciation ​:\n" +
-  //             "Code : "+props.code+"\n"+
-  //             "Client: "+props.firstname + "  " + props.lastname+"\n"+
-  //             "Enregistré le : "+props.recorded_at+"\n\n"+
-  //             messageSend+"\n\n"+
-  //             "Je reste à votre entière disposition pour tout complément d'information relatif à cette affectation.\n"+
-  //             "En conséquence,je vous prie de bien vouloir procéder au traitement de cette dénonciation dans un delai de "+delai_at+" jours a compte de la réception ce mail.\n"+
-  //             "Cordialement\n"+user.firstname + " " + user.lastname + " \n";
-
-  //           let r = {
-  //               "to": affectEmail,
-  //               "cc": emailSender.join(","),
-  //               "from": user.email,
-  //               "message": messageF,
-  //               "subject": "Affectation de traitement d'une dénonciation"
-  //           };
-  //           sendEmailApi(r).then(function(response) {
-  //             handleAssign(e)
-  //               notify("Mail envoyé avec succes", "success");
-  //         }, function(error) {
-  //           handleAssign(e)
-  //               notify("Envoie de mail echoué, Verifier votre connexion", "error");
-  //         });
-
-  //       // emailjs.send('service_iqzwl8e', 'template_uf6f28c', templateParams,"r3_6O5iyn0CtoI5dt")
-  //       //     .then(function(response) {
-  //       //         handleAssign(e)
-  //       //           notify("Mail envoyé avec succes", "success");
-  //       //     }, function(error) {
-  //       //       handleAssign(e)
-  //       //           notify("Envoie de mail echoué, Verifier votre connexion", "error");
-  //       //     });
-
-  //   };
   const [messageSend, setMessageSend] = useState("");
   const [delai_at, setDelai_at] = useState(1);
   const [maxDelai, setMaxDelai] = useState(1);
@@ -502,7 +454,7 @@ const TraiterDenonciation = (props) => {
     claim["inboxWhatsapp"] = null;
     claim["productId"] = dataRow.product.id;
     // claim["languageId"] = null;
-    claim["languageId"] = 1; // Default to Langue National
+    claim["languageId"] = langues.length > 0 ? langues[0].id : 1; // Default to Langue National
     claim["folderCode"] = dataRow.folderCode;
     claim["receiptDateTime"] = dataRow.receiptDateTime;
     claim["collectorId"] = dataRow.collector.id;
