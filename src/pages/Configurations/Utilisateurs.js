@@ -145,7 +145,7 @@ const Utilisateurs = (props) => {
             modalify("Confirmation", "Voulez-vous vraiment supprimé ce compte ?", "confirm", (e) => handleDisable(e, sp, false, true))
         }
     }
-
+    //console.log
 
     let code;
     let columns = [
