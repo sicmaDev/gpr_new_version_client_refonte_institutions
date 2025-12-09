@@ -5246,7 +5246,7 @@ const TraiterReclamation = (props) => {
     (addR !== "PILOTE" &&  !hbt.includes("H6")) &&
     ((user.firstAndLastName === props.created_by && props.transmitted === "false") ||
       (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && addR === "MOLDUE") || 
-      (user.ra === true && props.transmitted === "false" && props.authorize)) &&
+      (user.ra === true && props.transmitted === "false")) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -5278,7 +5278,7 @@ const TraiterReclamation = (props) => {
     (props.transmitted !== "false" &&
       user.firstAndLastName === props.transmittedTo &&
       props.status === "SAVED" &&
-      addR === "MOLDUE") || (user.ra === true && props.transmitted === "false")
+      addR === "MOLDUE") || (user.ra === true && props.transmitted === "false" && props.authorize)
   ) {
     // console.log("lol","azert")
     if (props.session === "" && props.session.status !== "OPEN") {
