@@ -5246,7 +5246,7 @@ const TraiterReclamation = (props) => {
     (addR !== "PILOTE" &&  !hbt.includes("H6")) &&
     ((user.firstAndLastName === props.created_by && props.transmitted === "false") ||
       (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && addR === "MOLDUE") || 
-      (user.ra === true && props.transmitted === "false")) &&
+      (user.ra === true && props.transmitted === "false" && props.authorize)) &&
     props.status === "SAVED"
   ) {
     transmettre = (
