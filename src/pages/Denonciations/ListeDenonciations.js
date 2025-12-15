@@ -2279,7 +2279,6 @@ const ListeDenonciations = (props) => {
                 <div
                   style={{ display: "flex", alignItems: "center" }}
                   htmlFor="ile"
-                  onClick={(e) => setFiles([])}
                 >
                   <LoadingButton
                     onClick={(e) => {

@@ -802,6 +802,8 @@ const TraiterDenonciation = (props) => {
       {},
       JSON.stringify(chatMessage)
     );
+    setGuests(prev => prev.filter(g => g.id !== idi));
+
   };
 
   const connect = () => {
@@ -1780,16 +1782,11 @@ const TraiterDenonciation = (props) => {
                               <i className="fa fa-circle online"></i> online
                             </div> */}
                         </div>
-                        {!showJoinBtn ? (
-                          <IconButton
-                            onClick={(e) => handleEject(e, guest.id)}
-                            color="primary"
-                            aria-label="Ajouter"
-                            style={{ marginLeft: "auto" }}
-                          >
+                        {showJoinBtn ?
+                          <IconButton onClick={(e) => handleEject(e, guest.id)} color="primary" aria-label="Ajouter" style={{ marginLeft: "auto" }}>
                             <RemoveCircleOutlineIcon />
                           </IconButton>
-                        ) : null}
+                          : null}
                       </li>
                     ))}
                   </>
@@ -4712,9 +4709,7 @@ const TraiterDenonciation = (props) => {
                 </List>
                 <div
                   style={{ display: "flex", alignItems: "center" }}
-                  htmlFor="ile"
-                  onClick={(e) => setFiles([])}
-                >
+                  htmlFor="ile">
                   <LoadingButton
                     onClick={(e) => {
                       handleFileSubmit(e);

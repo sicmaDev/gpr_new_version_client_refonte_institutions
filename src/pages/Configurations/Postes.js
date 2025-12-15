@@ -274,16 +274,18 @@ const Postes = (props) => {
             sortable: true,
             cell: (sp) => {
                 let habs = sp.habilitations ? sp.habilitations.split(",") : [];
-
+                habs = habs
+                    .map(h => h.trim())
+                    .sort((a, b) => Number(a.replace("H", "")) - Number(b.replace("H", "")));
                 return (
                     <Stack direction="row" spacing={0.25} flexWrap="wrap" sx={{ width: 'max-content' }}>
                         {habs.map((h, i) => (
                             <Chip
                                 key={i}
-                                label={h.trim()}
+                                label={h}
                                 color="primary"
                                 sx={{
-                                    backgroundColor: getHabilitationColor(h.trim()), color: 'white',
+                                    backgroundColor: getHabilitationColor(h), color: 'white',
                                     // borderColor: getHabilitationColor(h.trim()),
                                     // color: getHabilitationColor(h.trim()),
                                 }}
