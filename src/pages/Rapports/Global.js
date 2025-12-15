@@ -90,6 +90,8 @@ import LazyChart from "./LazyChart";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import LazyChartSkeleton from "./LazyChartSkeleton";
+import { LazyChartWrapper } from "./LazyChartWrapper";
+import { data } from "jquery";
 Chart.register(ChartDataLabels);
 Chart.register(...registerables);
 
@@ -1413,102 +1415,11 @@ const Global = (props) => {
   // Fin dashboard Affichage
 
   //Graphiques
-
-  // const reportGlobalChart = (
-  //   <>
-  //     <div className="invoice-product-details">
-  //       <div className="row vertical-modern-dashboard">
-  //         {/* {props.templateData?.global.globalPieChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align"> */}
-  //           <div
-  //             className="card"
-  //             style={{
-  //               height: "600px",
-  //               maxHeight: "600px",
-  //               display: "flex",
-  //               flexDirection: "column",
-  //               padding: "10px",
-  //             }}
-  //           >              
-  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalPieChartRef: false } }) }} /> : <></>}</div>
-  //             <div style={{ flex: "1 auto" }}>
-  //               <LazyChart height={600}>
-  //                 {rdsBarModaliteGlobal?.datasets?.length > 0 ? (
-  //                 <Pie
-  //                   // redraw={true}
-  //                   ref={globalPieChartRef}
-  //                   data={rdsPieGlobal}
-  //                   options={{
-  //                     plugins: {
-  //                       title: {
-  //                         display: true,
-  //                         text: "Répartition des réclamations, dénonciations et suggestions (%)",
-  //                       },
-  //                       legend: {
-  //                         position: "bottom",
-  //                       },
-  //                     },
-  //                     responsive: true,
-  //                     maintainAspectRatio: false,
-  //                   }}
-  //                 />
-  //               ) : (
-  //                 <LazyChartSkeleton type="pie" height={400} />
-                
-  //               )}
-  //               </LazyChart>
-  //             </div>
-  //           </div>
-  //         {/* </div> : <></>} */}
-  //         {props.templateData?.global.globalLineChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">        
-  //           <div
-  //             className="card"
-  //             style={{
-  //               height: "600px",
-  //               maxHeight: "600px",
-  //               display: "flex",
-  //               flexDirection: "column",
-  //               padding: "10px",
-  //             }}
-  //           >
-  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalLineChartRef: false } }) }} /> : <></>}</div>
-  //             <div
-  //               className="total-transaction-container "
-  //               style={{ flex: "1 auto" }}
-  //             >
-  //               <Bar
-  //                 // redraw={true}
-  //                 ref={globalLineChartRef}
-  //                 data={rdsBarGlobal}
-  //                 options={{
-  //                   plugins: {
-  //                     title: {
-  //                       display: true,
-  //                       text: "Glissement annuel des RSD",
-  //                       position: "top",
-  //                     },
-  //                     legend: {
-  //                       position: "bottom",
-  //                     },
-  //                   },
-  //                   responsive: true,
-  //                   maintainAspectRatio: false,
-  //                 }}
-  //               />
-  //             </div>
-  //           </div>
-  //         </div> : <></>}
-  //       </div>
-  //     </div>
-  //   </>
-  // );
-
   const reportGlobalChart = (
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-
-          {/* Pie Chart */}
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          {props.templateData?.global.globalPieChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1518,39 +1429,15 @@ const Global = (props) => {
                 flexDirection: "column",
                 padding: "10px",
               }}
-            >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                {props.tmpState.showForm && (
-                  <CloseIcon
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      props.setTemplateData({
-                        ...props.templateData,
-                        global: {
-                          ...props.templateData?.global,
-                          globalPieChartRef: false,
-                        },
-                      });
-                    }}
-                  />
-                )}
-              </div>
-
-              <div
-                style={{
-                  flex: "1 auto",
-                  minHeight: "600px",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#fff",
-                }}
-              >
+            >              
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalPieChartRef: false } }) }} /> : <></>}</div>
+              <div style={{ flex: "1 auto" }}>              
                 <LazyChart height={600}>
                   {rdsPieGlobal ? (
-                    <Pie
-                      ref={globalPieChartRef}
+                    <LazyChartWrapper
+                      type="pie"
                       data={rdsPieGlobal}
+                      visible={rdsPieGlobal == null}
                       options={{
                         plugins: {
                           title: {
@@ -1562,6 +1449,7 @@ const Global = (props) => {
                         responsive: true,
                         maintainAspectRatio: false,
                       }}
+                      chartRef={globalPieChartRef}
                     />
                   ) : (
                     <LazyChartSkeleton type="pie" height={600} />
@@ -1569,10 +1457,8 @@ const Global = (props) => {
                 </LazyChart>
               </div>
             </div>
-          </div>
-
-          {/* Line / Bar Chart */}
-          <div className="col s12 m12 l6 animate fadeRight center-align">
+          </div> : <></>}
+          {props.templateData?.global.globalLineChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">        
             <div
               className="card"
               style={{
@@ -1583,51 +1469,26 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                {props.tmpState.showForm && (
-                  <CloseIcon
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      props.setTemplateData({
-                        ...props.templateData,
-                        global: {
-                          ...props.templateData?.global,
-                          globalLineChartRef: false,
-                        },
-                      });
-                    }}
-                  />
-                )}
-              </div>
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalLineChartRef: false } }) }} /> : <></>}</div>
               <div
-                className="total-transaction-container"
-                style={{
-                  flex: "1 auto",
-                  minHeight: "600px",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#fff",
-                }}
+                className="total-transaction-container "
+                style={{ flex: "1 auto" }}
               >
                 <LazyChart height={600}>
                   {rdsBarGlobal ? (
-                    <Bar
-                      ref={globalLineChartRef}
+                    <LazyChartWrapper
+                      type="bar"
                       data={rdsBarGlobal}
+                      visible={rdsBarGlobal == null}
                       options={{
                         plugins: {
-                          title: {
-                            display: true,
-                            text: "Glissement annuel des RSD",
-                            position: "top",
-                          },
+                          title: { display: true, text: "Glissement annuel des RSD", position: "top" },
                           legend: { position: "bottom" },
                         },
                         responsive: true,
                         maintainAspectRatio: false,
                       }}
+                      chartRef={globalLineChartRef}
                     />
                   ) : (
                     <LazyChartSkeleton type="bar" height={600} />
@@ -1635,137 +1496,17 @@ const Global = (props) => {
                 </LazyChart>
               </div>
             </div>
-          </div>
-
+          </div> : <></>}
         </div>
       </div>
     </>
   );
 
-
-  // const reportGlobalByCanalChart = (
-  //   <>
-  //     <div className="invoice-product-details">
-  //       <div className="row vertical-modern-dashboard">
-  //         {/* {props.templateData?.global.globalByCanalPieChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align"> */}
-  //           <div
-  //             className="card"
-  //             style={{
-  //               height: "600px",
-  //               maxHeight: "600px",
-  //               display: "flex",
-  //               flexDirection: "column",
-  //               padding: "10px",
-  //             }}
-  //           >
-  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalPieChartRef: false } }) }} /> : <></>}</div>
-  //             <div
-  //               className="total-transaction-container"
-  //               style={{ flex: "1 auto" }}
-  //             >
-  //               <LazyChart height={600}>
-  //                 {rdsPieModaliteGlobal?.datasets?.length > 0 ? (
-  //                 <Pie
-  //                   // redraw={true}
-  //                   ref={globalByCanalPieChartRef}
-  //                   data={rdsPieModaliteGlobal}
-  //                   options={{
-  //                     plugins: {
-  //                       title: {
-  //                         display: true,
-  //                         text: "Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)",
-  //                         position: "top",
-  //                       },
-  //                       legend: {
-  //                         position: "bottom",
-  //                       },
-  //                     },
-  //                     responsive: true,
-  //                     maintainAspectRatio: false,
-  //                   }}
-  //                 />
-  //               ) : (
-  //                 <LazyChartSkeleton type="pie" height={400} />
-                 
-  //               )}
-  //               </LazyChart>
-  //             </div>
-  //           </div>
-  //         {/* </div> : <></>} */}
-  //         {/* {props.templateData?.global.globalByCanalBarChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align"> */}
-  //           <div
-  //             className="card"
-  //           >
-
-  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalBarChartRef: false } }) }} /> : <></>}</div>
-  //             <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-  //               <div style={{ height: nba, width: "100%", position: "relative" }}>
-  //               <LazyChart height={600}>
-  //                 {rdsBarModaliteGlobal?.datasets?.length > 0 ? (
-  //                   <Bar
-  //                     // redraw={true}
-  //                     ref={globalByCanalBarChartRef}
-  //                     data={rdsBarModaliteGlobal}
-  //                     options={{
-  //                       plugins: {
-  //                         title: {
-  //                           display: true,
-  //                           text: "Répartition des RSD par modalité de dépôt et par agence (%)",
-  //                           position: "top",
-  //                         },
-  //                         legend: {
-  //                           position: "bottom",
-  //                         },
-  //                       },
-  //                       indexAxis: "y",
-  //                       responsive: true,
-  //                       scales: {
-  //                         x: {
-  //                           stacked: true,
-  //                           ticks: {
-  //                             callback: function (value) {
-  //                               return value + "%";
-  //                             },
-  //                           },
-  //                           min: 0,
-  //                           max: 100,
-  //                           offset: false,
-
-  //                         },
-
-  //                         // y: {
-  //                         //   stacked: false,
-  //                         //   max: 100,
-
-  //                         // },
-  //                       },
-
-  //                       maintainAspectRatio: false,
-  //                     }}
-  //                   />
-  //               ) : (
-  //                 <LazyChartSkeleton type="bar" height={400} />
-                 
-  //               )}
-  //               </LazyChart>
-  //               </div>
-  //             </div>
-  //           </div>
-  //         {/* </div> : <></>} */}
-  //       </div>
-  //     </div>
-
-  //     <div className="divider mt-2 mb-2"></div>
-  //   </>
-  // );
-
   const reportGlobalByCanalChart = (
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-
-          {/* Pie Chart */}
-          <div className="col s12 m12 l12 animate fadeRight center-align">
+          {props.templateData?.global.globalByCanalPieChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1776,39 +1517,18 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                {props.tmpState.showForm && (
-                  <CloseIcon
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      props.setTemplateData({
-                        ...props.templateData,
-                        global: {
-                          ...props.templateData?.global,
-                          globalByCanalPieChartRef: false,
-                        },
-                      });
-                    }}
-                  />
-                )}
-              </div>
-
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
-                style={{
-                  flex: "1 auto",
-                  minHeight: "600px", // espace réservé
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#fff", // fond blanc
-                }}
+                style={{ flex: "1 auto" }}
               >
                 <LazyChart height={600}>
-                  {rdsPieModaliteGlobal ? (
-                    <Pie
-                      ref={globalByCanalPieChartRef}
+                 {rdsPieModaliteGlobal ? (
+                    <LazyChartWrapper
+                      type="pie"
+                      chartRef={globalByCanalPieChartRef}
                       data={rdsPieModaliteGlobal}
+                      visible={rdsPieModaliteGlobal == null}
                       options={{
                         plugins: {
                           title: {
@@ -1828,78 +1548,50 @@ const Global = (props) => {
                 </LazyChart>
               </div>
             </div>
-          </div>
-
-          {/* Bar Chart */}
-          <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div className="card">
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                {props.tmpState.showForm && (
-                  <CloseIcon
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      props.setTemplateData({
-                        ...props.templateData,
-                        global: {
-                          ...props.templateData?.global,
-                          globalByCanalBarChartRef: false,
+          </div> : <></>}
+          {props.templateData?.global.globalByCanalBarChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
+            <div
+              className="card"
+            >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalBarChartRef: false } }) }} /> : <></>}</div>              
+              <LazyChart overflow={"y"} height={nba}>
+                {rdsBarModaliteGlobal ? (
+                  <LazyChartWrapper
+                    type="bar"
+                    chartRef={globalByCanalBarChartRef}
+                    data={rdsBarModaliteGlobal}
+                    visible={rdsBarModaliteGlobal == null}
+                    options={{
+                      plugins: {
+                        title: {
+                          display: true,
+                          text: "Répartition des RSD par modalité de dépôt et par agence (%)",
+                          position: "top",
                         },
-                      });
+                        legend: { position: "bottom" },
+                      },
+                      indexAxis: "y",
+                      responsive: true,
+                      scales: {
+                        x: {
+                          stacked: true,
+                          ticks: {
+                            callback: (value) => `${value}%`,
+                          },
+                          min: 0,
+                          max: 100,
+                          offset: false,
+                        },
+                      },
+                      maintainAspectRatio: false,
                     }}
                   />
+                ) : (
+                  <LazyChartSkeleton type="bar" height={1200} />
                 )}
-              </div>
-
-              <div
-                className="scrollContainer"
-                style={{
-                  flex: "1 auto",
-                  height: "600px",
-                  overflowY: "auto",
-                  minHeight: "600px", // espace réservé
-                  backgroundColor: "#fff", // fond blanc
-                }}
-              >
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <LazyChart height={600}>
-                    {rdsBarModaliteGlobal ? (
-                      <Bar
-                        ref={globalByCanalBarChartRef}
-                        data={rdsBarModaliteGlobal}
-                        options={{
-                          plugins: {
-                            title: {
-                              display: true,
-                              text: "Répartition des RSD par modalité de dépôt et par agence (%)",
-                              position: "top",
-                            },
-                            legend: { position: "bottom" },
-                          },
-                          indexAxis: "y",
-                          responsive: true,
-                          scales: {
-                            x: {
-                              stacked: true,
-                              ticks: {
-                                callback: (value) => `${value}%`,
-                              },
-                              min: 0,
-                              max: 100,
-                              offset: false,
-                            },
-                          },
-                          maintainAspectRatio: false,
-                        }}
-                      />
-                    ) : (
-                      <LazyChartSkeleton type="bar" height={600} />
-                    )}
-                  </LazyChart>
-                </div>
-              </div>
+              </LazyChart>
             </div>
-          </div>
-
+          </div> : <></>}
         </div>
       </div>
 
@@ -1907,118 +1599,11 @@ const Global = (props) => {
     </>
   );
 
-  // const reportGlobalByObjetChart = (
-  //   <>
-  //     <div className="invoice-product-details">
-  //       <div className="row vertical-modern-dashboard">
-  //         {props.templateData?.global.globalByObjetPieChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
-  //           <div
-  //             className="card"
-  //             style={{
-  //               height: "500px",
-  //               maxHeight: "500px",
-  //               display: "flex",
-  //               flexDirection: "column",
-  //               padding: "10px",
-  //             }}
-  //           >
-
-  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetPieChartRef: false } }) }} /> : <></>}</div>
-  //             <div
-  //               className="total-transaction-container"
-  //               style={{ flex: "1 auto" }}
-  //             >
-  //               <Pie
-  //                 // redraw={true}
-  //                 ref={globalByObjetPieChartRef}
-  //                 // options={globalPieChartOptions}
-  //                 data={rdsPieObjetGlobal}
-  //                 options={{
-  //                   plugins: {
-  //                     title: {
-  //                       display: true,
-  //                       text: "Répartition des réclamations, dénonciations par objets (%)",
-  //                       position: "top",
-  //                     },
-  //                     legend: {
-  //                       position: "bottom",
-  //                       maxWidth: 30,
-  //                     },
-  //                   },
-  //                   responsive: true,
-  //                   maintainAspectRatio: false,
-  //                 }}
-  //               />
-  //             </div>
-  //           </div>
-  //         </div> : <></>}
-  //         {props.templateData?.global.globalByObjetBarChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
-  //           <div
-  //             className="card"
-  //             style={{
-  //               height: "600px",
-  //               maxHeight: "600px",
-  //               display: "flex",
-  //               flexDirection: "column",
-  //               padding: "10px",
-  //             }}
-  //           >
-  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetBarChartRef: false } }) }} /> : <></>}</div>
-  //             <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-  //               <div style={{ height: nba, width: "100%", position: "relative" }}>
-  //                 <Bar
-  //                   // redraw={true}
-  //                   ref={globalByObjetBarChartRef}
-  //                   data={rdsBarObjetGlobal}
-  //                   options={{
-  //                     plugins: {
-  //                       title: {
-  //                         display: true,
-  //                         text: "Répartition des Réclamations et Dénonciations par objets et par agence(%)",
-  //                         position: "top",
-  //                       },
-  //                       legend: {
-  //                         position: "bottom",
-  //                       },
-  //                     },
-  //                     responsive: true,
-  //                     indexAxis: "y",
-  //                     scales: {
-  //                       x: {
-  //                         stacked: true,
-  //                         ticks: {
-  //                           callback: function (value) {
-  //                             return value + "%";
-  //                           },
-  //                         },
-  //                         max: 100,
-  //                         offset: false,
-  //                       },
-  //                     },
-  //                     maintainAspectRatio: false,
-  //                   }}
-  //                 />
-
-
-  //               </div>
-  //             </div>
-
-  //           </div>
-  //         </div> : <></>}
-  //       </div>
-  //     </div>
-
-  //     <div className="divider mt-2 mb-2"></div>
-  //   </>
-  // );
-
   const reportGlobalByObjetChart = (
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-
-          {/* Pie Chart */}
-          <div className="col s12 m12 l12 animate fadeRight center-align">
+          {props.templateData?.global.globalByObjetPieChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -2029,51 +1614,27 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                {props.tmpState.showForm && (
-                  <CloseIcon
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      props.setTemplateData({
-                        ...props.templateData,
-                        global: {
-                          ...props.templateData?.global,
-                          globalByObjetPieChartRef: false,
-                        },
-                      });
-                    }}
-                  />
-                )}
-              </div>
 
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
-                style={{
-                  flex: "1 auto",
-                  minHeight: "500px",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#fff",
-                }}
+                style={{ flex: "1 auto" }}
               >
                 <LazyChart height={500}>
                   {rdsPieObjetGlobal ? (
-                    <Pie
-                      ref={globalByObjetPieChartRef}
+                    <LazyChartWrapper
+                      type="pie"
                       data={rdsPieObjetGlobal}
+                      visible={rdsPieObjetGlobal == null}
                       options={{
                         plugins: {
-                          title: {
-                            display: true,
-                            text: "Répartition des réclamations, dénonciations par objets (%)",
-                            position: "top",
-                          },
+                          title: { display: true, text: "Répartition des réclamations, dénonciations par objets (%)", position: "top" },
                           legend: { position: "bottom", maxWidth: 30 },
                         },
                         responsive: true,
                         maintainAspectRatio: false,
                       }}
+                      chartRef={globalByObjetPieChartRef}
                     />
                   ) : (
                     <LazyChartSkeleton type="pie" height={500} />
@@ -2081,10 +1642,8 @@ const Global = (props) => {
                 </LazyChart>
               </div>
             </div>
-          </div>
-
-          {/* Bar Chart */}
-          <div className="col s12 m12 l12 animate fadeRight center-align">
+          </div> : <></>}
+          {props.templateData?.global.globalByObjetBarChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -2095,70 +1654,33 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                {props.tmpState.showForm && (
-                  <CloseIcon
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      props.setTemplateData({
-                        ...props.templateData,
-                        global: {
-                          ...props.templateData?.global,
-                          globalByObjetBarChartRef: false,
-                        },
-                      });
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetBarChartRef: false } }) }} /> : <></>}</div>
+              <LazyChart overflow={"y"} height={nba}>
+                {rdsBarObjetGlobal ? (
+                  <LazyChartWrapper
+                    type="bar"
+                    data={rdsBarObjetGlobal}
+                    visible={rdsBarObjetGlobal == null}
+                    options={{
+                      plugins: {
+                        title: { display: true, text: "Répartition des Réclamations et Dénonciations par objets et par agence(%)", position: "top" },
+                        legend: { position: "bottom" },
+                      },
+                      responsive: true,
+                      indexAxis: "y",
+                      scales: {
+                        x: { stacked: true, ticks: { callback: (value) => `${value}%` }, max: 100, offset: false },
+                      },
+                      maintainAspectRatio: false,
                     }}
+                    chartRef={globalByObjetBarChartRef}
                   />
+                ) : (
+                  <LazyChartSkeleton type="bar" height={600} />
                 )}
-              </div>
-
-              <div
-                className="scrollContainer"
-                style={{
-                  flex: "1 auto",
-                  height: "600px",
-                  overflowY: "auto",
-                  minHeight: "600px",
-                  backgroundColor: "#fff",
-                }}
-              >
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <LazyChart height={600}>
-                    {rdsBarObjetGlobal ? (
-                      <Bar
-                        ref={globalByObjetBarChartRef}
-                        data={rdsBarObjetGlobal}
-                        options={{
-                          plugins: {
-                            title: {
-                              display: true,
-                              text: "Répartition des Réclamations et Dénonciations par objets et par agence(%)",
-                              position: "top",
-                            },
-                            legend: { position: "bottom" },
-                          },
-                          responsive: true,
-                          indexAxis: "y",
-                          scales: {
-                            x: {
-                              stacked: true,
-                              ticks: { callback: (value) => `${value}%` },
-                              max: 100,
-                              offset: false,
-                            },
-                          },
-                          maintainAspectRatio: false,
-                        }}
-                      />
-                    ) : (
-                      <LazyChartSkeleton type="bar" height={600} />
-                    )}
-                  </LazyChart>
-                </div>
-              </div>
+              </LazyChart>
             </div>
-          </div>
-
+          </div> : <></>}
         </div>
       </div>
 
@@ -2211,13 +1733,12 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, evolutionByAgenceByAnneeBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="customGraphScroll" style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
-                  <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
-
-                    <Bar
-                      // redraw={true}
-                      ref={evolutionByAgenceByAnneeBarChartRef}
+                <LazyChart overflow={"x"} height={nba}>
+                  {rdsBarAgenceGlobal ? (
+                    <LazyChartWrapper
+                      type="bar"
                       data={rdsBarAgenceGlobal}
+                      visible={rdsBarAgenceGlobal == null}
                       options={{
                         plugins: {
                           title: {
@@ -2225,20 +1746,14 @@ const Global = (props) => {
                             position: "top",
                             display: true,
                           },
-                          legend: {
-                            position: "bottom",
-                          },
+                          legend: { position: "bottom" },
                         },
-
                         scales: {
                           x: {
                             ticks: {
                               callback: function (value) {
                                 let text = this.getLabelForValue(value);
-                                if (text.length > 6) {
-                                  text = text.substring(0, 5) + "...";
-                                }
-                                return text;
+                                return text.length > 6 ? text.substring(0, 5) + "..." : text;
                               },
                             },
                           },
@@ -2246,9 +1761,12 @@ const Global = (props) => {
                         responsive: true,
                         maintainAspectRatio: false,
                       }}
+                      chartRef={evolutionByAgenceByAnneeBarChartRef}
                     />
-                  </div>
-                </div>
+                  ) : (
+                    <LazyChartSkeleton type="bar" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div> : <></>
           }
@@ -2257,7 +1775,7 @@ const Global = (props) => {
 
       <div className="divider mt-2 mb-2"></div>
     </>
-  );
+  ); 
 
   const claimByAgenceChart = (
     <>
@@ -2279,25 +1797,32 @@ const Global = (props) => {
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={claimByAgencePieChartRef}
-                  data={rdsPieAgenceClaim}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des réclamations par agence (%)",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
+                <LazyChart height={600}>
+                  {rdsPieAgenceClaim ? (
+                    <LazyChartWrapper
+                      type="pie"
+                      chartRef={claimByAgencePieChartRef}
+                      data={rdsPieAgenceClaim}
+                      visible={rdsPieAgenceClaim == null}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des réclamations par agence (%)",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -2313,13 +1838,13 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="customGraphScroll" style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
-                <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
-
-                  <Bar
-                    // redraw={true}
-                    ref={claimByAgenceBarChartRef}
+              <LazyChart overflow={"x"} height={nba}>
+                {rdsBarAgenceClaim ? (
+                  <LazyChartWrapper
+                    type="bar"
+                    chartRef={claimByAgenceBarChartRef}
                     data={rdsBarAgenceClaim}
+                    visible={rdsBarAgenceClaim == null}
                     options={{
                       plugins: {
                         title: {
@@ -2342,8 +1867,10 @@ const Global = (props) => {
                       maintainAspectRatio: false,
                     }}
                   />
-                </div>
-              </div>
+                ) : (
+                  <LazyChartSkeleton type="pie" height={600} />
+                )}
+              </LazyChart>
             </div>
           </div> : <></>}
         </div>
@@ -2370,25 +1897,32 @@ const Global = (props) => {
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={denunByAgencePieChartRef}
-                  // options={claimByAgencePieChartRef}
-                  data={rdsPieAgenceDenun}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des dénonciations par agence (%)",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
+                <LazyChart height={600}>
+                  {rdsPieAgenceDenun ? (
+                    <LazyChartWrapper
+                      type="pie"
+                      chartRef={denunByAgencePieChartRef}
+                      // options={claimByAgencePieChartRef}
+                      data={rdsPieAgenceDenun}
+                      visible={rdsPieAgenceDenun == null}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des dénonciations par agence (%)",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -2404,13 +1938,13 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="customGraphScroll" style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
-                <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
-
-                  <Bar
-                    // redraw={true}
-                    ref={denunByAgenceBarChartRef}
+              <LazyChart overflow={"x"} height={nba}>
+                {rdsBarAgenceDenun ? (
+                  <LazyChartWrapper
+                    type="bar"
+                    chartRef={denunByAgenceBarChartRef}
                     data={rdsBarAgenceDenun}
+                    visible={rdsBarAgenceDenun == null}
                     options={{
                       plugins: {
                         title: {
@@ -2433,8 +1967,10 @@ const Global = (props) => {
                       maintainAspectRatio: false,
                     }}
                   />
-                </div>
-              </div>
+                ) : (
+                  <LazyChartSkeleton type="pie" height={600} />
+                )}
+              </LazyChart>
             </div>
           </div> : <></>}
         </div>
@@ -2461,25 +1997,33 @@ const Global = (props) => {
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={sugByAgencePieChartRef}
-                  // options={claimByAgencePieChartRef}
-                  data={rdsPieAgenceSugge}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des suggestions par agence (%)",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
+                <LazyChart height={600}>
+                  {rdsPieAgenceSugge ? (
+                    <LazyChartWrapper
+                      type="pie"
+                      chartRef={sugByAgencePieChartRef}
+                      // redraw={true}
+                      // options={claimByAgencePieChartRef}
+                      data={rdsPieAgenceSugge}
+                      visible={rdsPieAgenceSugge == null}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des suggestions par agence (%)",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -2497,13 +2041,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="customGraphScroll" style={{ flex: "1 auto", overflowX: "scroll", height: "100%", width: "100%" }}>
-                  <div class="chart-container" style={{ height: "100%", position: "relative", width: nba }}>
-
-                    <Bar
+                <LazyChart overflow={"x"} height={nba}>
+                  {rdsBarAgenceSugge ? (
+                    <LazyChartWrapper
+                      type="bar"
+                      chartRef={sugByAgenceBarChartRef}
                       // redraw={true}
-                      ref={sugByAgenceBarChartRef}
                       data={rdsBarAgenceSugge}
+                      visible={rdsBarAgenceSugge == null}
                       options={{
                         plugins: {
                           title: {
@@ -2525,8 +2070,10 @@ const Global = (props) => {
                         maintainAspectRatio: false,
                       }}
                     />
-                  </div>
-                </div>
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -2557,26 +2104,34 @@ const Global = (props) => {
                 className="total-transaction-container "
                 style={{ flex: "1 auto" }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={claimByCanalPieChartRef}
-                  // options={claimByAgencePieChartRef}
-                  data={rdsPieModaliteClaim}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des réclamations par modalité de dépôt (%)",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
+                <LazyChart height={600}>
+                  {rdsPieModaliteClaim ? (
+                    <LazyChartWrapper
+                      type="pie"
+                      chartRef={claimByCanalPieChartRef}
+                      // redraw={true}
+                      // options={claimByAgencePieChartRef}
+                      data={rdsPieModaliteClaim}
+                      visible={rdsPieModaliteClaim == null}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des réclamations par modalité de dépôt (%)",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -2592,12 +2147,14 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByCanalBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
+              <LazyChart overflow={"y"} height={nba}>
+                {rdsBarModaliteClaim ? (
+                  <LazyChartWrapper
+                    type="bar"
+                    chartRef={claimByCanalBarChartRef}
                     // redraw={true}
-                    ref={claimByCanalBarChartRef}
                     data={rdsBarModaliteClaim}
+                    visible={rdsBarModaliteClaim == null}
                     options={{
                       plugins: {
                         title: {
@@ -2629,8 +2186,10 @@ const Global = (props) => {
                       maintainAspectRatio: false,
                     }}
                   />
-                </div>
-              </div>
+                ) : (
+                  <LazyChartSkeleton type="pie" height={600} />
+                )}
+              </LazyChart>
             </div>
           </div> : <></>}
         </div>
@@ -2657,24 +2216,32 @@ const Global = (props) => {
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={denunByCanalPieChartRef}
-                  data={rdsPieModaliteDenun}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des modalités de dépôt des dénonciations (%)",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
+                <LazyChart height={600}>
+                  {rdsPieModaliteDenun ? (
+                    <LazyChartWrapper
+                      type="pie"
+                      chartRef={denunByCanalPieChartRef}
+                      // redraw={true}
+                      data={rdsPieModaliteDenun}
+                      visible={rdsPieModaliteDenun == null}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des modalités de dépôt des dénonciations (%)",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -2690,12 +2257,14 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByCanalBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
+              <LazyChart overflow={"y"} height={nba}>
+                {rdsBarModaliteDenun ? (
+                  <LazyChartWrapper
+                    type="bar"
+                    chartRef={denunByCanalBarChartRef}
                     // redraw={true}
-                    ref={denunByCanalBarChartRef}
                     data={rdsBarModaliteDenun}
+                    visible={rdsBarModaliteDenun == null}
                     options={{
                       plugins: {
                         title: {
@@ -2729,8 +2298,10 @@ const Global = (props) => {
                       maintainAspectRatio: false,
                     }}
                   />
-                </div>
-              </div>
+                ) : (
+                  <LazyChartSkeleton type="pie" height={600} />
+                )}
+              </LazyChart>
             </div>
           </div> : <></>}
         </div>
@@ -2758,25 +2329,33 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <Pie
-                    // redraw={true}
-                    ref={sugByCanalPieChartRef}
-                    // options={claimByAgencePieChartRef}
-                    data={rdsPieModaliteSugge}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: " Répartition des modalités de dépôt des suggestions (%)",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <LazyChart height={600}>
+                    {rdsPieModaliteSugge ? (
+                      <LazyChartWrapper
+                        type="pie"
+                        chartRef={sugByCanalPieChartRef}
+                        // redraw={true}
+                        // options={claimByAgencePieChartRef}
+                        data={rdsPieModaliteSugge}
+                        visible={rdsPieModaliteSugge == null}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: " Répartition des modalités de dépôt des suggestions (%)",
+                            },
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          responsive: true,
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="pie" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -2794,12 +2373,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                  <div style={{ height: nba, width: "100%", position: "relative" }}>
-                    <Bar
+                <LazyChart overflow={"y"} height={nba}>
+                  {rdsBarModaliteSugge ? (
+                    <LazyChartWrapper
+                      type="bar"
+                      chartRef={sugByCanalBarChartRef}
                       // redraw={true}
-                      ref={sugByCanalBarChartRef}
                       data={rdsBarModaliteSugge}
+                      visible={rdsBarModaliteSugge == null}
                       options={{
                         plugins: {
                           title: {
@@ -2834,8 +2415,10 @@ const Global = (props) => {
                         },
                       }}
                     />
-                  </div>
-                </div>
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -2856,8 +2439,8 @@ const Global = (props) => {
               <div
                 className="card"
                 style={{
-                  height: "500px",
-                  maxHeight: "500px",
+                  height: "600px",
+                  maxHeight: "600px",
                   display: "flex",
                   flexDirection: "column",
                   padding: "10px",
@@ -2868,25 +2451,33 @@ const Global = (props) => {
                   className="total-transaction-container "
                   style={{ flex: "1 auto" }}
                 >
-                  <Pie
-                    // redraw={true}
-                    ref={claimByObjetPieChartRef}
-                    // options={claimByAgencePieChartRef}
-                    data={rdsPieObjetClaim}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Répartition des objets des réclamations (%)",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <LazyChart height={600}>
+                    {rdsPieObjetClaim ? (
+                      <LazyChartWrapper
+                        type="pie"
+                        chartRef={claimByObjetPieChartRef}
+                        // redraw={true}
+                        // options={claimByAgencePieChartRef}
+                        data={rdsPieObjetClaim}
+                        visible={rdsPieObjetClaim == null}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: "Répartition des objets des réclamations (%)",
+                            },
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          responsive: true,
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="pie" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -2905,12 +2496,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                  <div style={{ height: nba, width: "100%", position: "relative" }}>
-                    <Bar
+                <LazyChart overflow={"y"} height={nba}>
+                  {rdsBarObjetClaim ? (
+                    <LazyChartWrapper
+                      type="bar"
+                      chartRef={claimByObjetBarChartRef}
                       // redraw={true}
-                      ref={claimByObjetBarChartRef}
                       data={rdsBarObjetClaim}
+                      visible={rdsBarObjetClaim == null}
                       options={{
                         plugins: {
                           title: {
@@ -2944,8 +2537,10 @@ const Global = (props) => {
                         maintainAspectRatio: false,
                       }}
                     />
-                  </div>
-                </div>
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -2963,8 +2558,8 @@ const Global = (props) => {
               <div
                 className="card"
                 style={{
-                  height: "500px",
-                  maxHeight: "500px",
+                  height: "600px",
+                  maxHeight: "600px",
                   display: "flex",
                   flexDirection: "column",
                   padding: "10px",
@@ -2975,25 +2570,33 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <Pie
-                    // redraw={true}
-                    ref={denunByObjetPieChartRef}
-                    // options={claimByAgencePieChartRef}
-                    data={rdsPieObjetDenun}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: " Répartition des objets des dénonciations (%)",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <LazyChart height={600}>
+                    {rdsPieObjetDenun ? (
+                      <LazyChartWrapper
+                        type="pie"
+                        chartRef={denunByObjetPieChartRef}
+                        // redraw={true}
+                        // options={claimByAgencePieChartRef}
+                        data={rdsPieObjetDenun}
+                        visible={rdsPieObjetDenun == null}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: " Répartition des objets des dénonciations (%)",
+                            },
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          responsive: true,
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="pie" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -3011,12 +2614,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                  <div style={{ height: nba, width: "100%", position: "relative" }}>
-                    <Bar
-                      // redraw={true}
-                      ref={denunByObjetBarChartRef}
+                <LazyChart overflow={"y"} height={nba}>
+                  {rdsBarObjetDenun ? (
+                    <LazyChartWrapper
+                      // redraw={true}                      
+                      type="bar"
+                      chartRef={denunByObjetBarChartRef}
                       data={rdsBarObjetDenun}
+                      visible={rdsBarObjetDenun == null}
                       options={{
                         plugins: {
                           title: {
@@ -3048,8 +2653,10 @@ const Global = (props) => {
                         maintainAspectRatio: false,
                       }}
                     />
-                  </div>
-                </div>
+                  ) : (
+                    <LazyChartSkeleton type="bar" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -3079,25 +2686,33 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <Pie
-                    // redraw={true}
-                    ref={claimByGenderPieChartRef}
-                    // options={claimByAgencePieChartRef}
-                    data={rdsPieGenreClaim}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Répartition des réclamations par genre (%)",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <LazyChart height={600}>
+                    {rdsPieGenreClaim ? (
+                      <LazyChartWrapper
+                        type="pie"
+                        chartRef={claimByGenderPieChartRef}
+                        // redraw={true}
+                        // options={claimByAgencePieChartRef}
+                        data={rdsPieGenreClaim}
+                        visible={rdsPieGenreClaim == null}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: "Répartition des réclamations par genre (%)",
+                            },
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          responsive: true,
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="pie" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -3115,12 +2730,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                  <div style={{ height: nba, width: "100%", position: "relative" }}>
-                    <Bar
+                <LazyChart overflow={"y"} height={nba}>
+                  {rdsBarGenreClaim ? (
+                    <LazyChartWrapper
+                      type="bar"
+                      chartRef={claimByGenderBarChartRef}
                       // redraw={true}
-                      ref={claimByGenderBarChartRef}
                       data={rdsBarGenreClaim}
+                      visible={rdsBarGenreClaim == null}
                       options={{
                         plugins: {
                           title: {
@@ -3153,8 +2770,10 @@ const Global = (props) => {
                         maintainAspectRatio: false,
                       }}
                     />
-                  </div>
-                </div>
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}                          
@@ -3184,25 +2803,33 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <Pie
-                    // redraw={true}
-                    ref={sugByGenderPieChartRef}
-                    data={rdsPieGenreSugge}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Répartition des suggestions par genre (%)",
-                          position: "top",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <LazyChart height={600}>
+                    {rdsPieGenreSugge ? (
+                      <LazyChartWrapper
+                        type="pie"
+                        chartRef={sugByGenderPieChartRef}
+                        // redraw={true}
+                        data={rdsPieGenreSugge}
+                        visible={rdsPieGenreSugge == null}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: "Répartition des suggestions par genre (%)",
+                              position: "top",
+                            },
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          responsive: true,
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="pie" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -3220,12 +2847,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                  <div style={{ height: nba, width: "100%", position: "relative" }}>
-                    <Bar
+                <LazyChart overflow={"y"} height={nba}>
+                  {rdsBarGenreSugge ? (
+                    <LazyChartWrapper
+                      type="bar"
+                      chartRef={sugByGenderBarChartRef}
                       // redraw={true}
-                      ref={sugByGenderBarChartRef}
                       data={rdsBarGenreSugge}
+                      visible={rdsBarGenreSugge == null}
                       options={{
                         plugins: {
                           title: {
@@ -3257,8 +2886,10 @@ const Global = (props) => {
                         maintainAspectRatio: false,
                       }}
                     />
-                  </div>
-                </div>
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}    
@@ -3290,25 +2921,33 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <Pie
-                    // redraw={true}
-                    ref={claimByGravitePieChartRef}
-                    data={rdsPieGravityClaim}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Répartition des réclamations par niveau de gravité (%)",
-                          position: "top",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <LazyChart height={600}>
+                    {rdsPieGravityClaim ? (
+                      <LazyChartWrapper
+                        type="pie"
+                        chartRef={claimByGravitePieChartRef}
+                        // redraw={true}
+                        data={rdsPieGravityClaim}
+                        visible={rdsPieGravityClaim == null}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: "Répartition des réclamations par niveau de gravité (%)",
+                              position: "top",
+                            },
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          responsive: true,
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="pie" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -3325,12 +2964,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGraviteBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                  <div style={{ height: nba, width: "100%", position: "relative" }}>
-                    <Bar
+                <LazyChart overflow={"y"} height={nba}>
+                  {rdsBarGravityClaim ? (
+                    <LazyChartWrapper
+                      type="bar"
+                      chartRef={claimByGraviteBarChartRef}
                       // redraw={true}
-                      ref={claimByGraviteBarChartRef}
                       data={rdsBarGravityClaim}
+                      visible={rdsBarGravityClaim == null}
                       options={{
                         plugins: {
                           title: {
@@ -3362,8 +3003,10 @@ const Global = (props) => {
                         maintainAspectRatio: false,
                       }}
                     />
-                  </div>
-                </div>
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
           </div> : <></>} 
         </div>
@@ -3388,29 +3031,37 @@ const Global = (props) => {
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGravitePieChartRef: false } }) }} /> : <></>}</div>
                 <div className="total-transaction-container" style={{ flex: 1 }}>
-                  <Pie
-                    // redraw={true}
-                    ref={denunByGravitePieChartRef}
-                    // options={claimByAgencePieChartRef}
-                    data={rdsPieGravityDenun}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Répartition des dénonciations par niveau de gravité (%)",
-                          position: "top",
-                        },
-                        legend: {
-                          position: "top",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <LazyChart height={600}>
+                    {rdsPieGravityDenun ? (
+                      <LazyChartWrapper
+                        type="pie"
+                        chartRef={denunByGravitePieChartRef}
+                        // redraw={true}
+                        // options={claimByAgencePieChartRef}
+                        data={rdsPieGravityDenun}
+                        visible={rdsPieGravityDenun == null}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: "Répartition des dénonciations par niveau de gravité (%)",
+                              position: "top",
+                            },
+                            legend: {
+                              position: "top",
+                            },
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          responsive: true,
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="pie" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -3428,12 +3079,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGraviteBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                  <div style={{ height: nba, width: "100%", position: "relative" }}>
-                    <Bar
+                <LazyChart overflow={"y"} height={nba}>
+                  {rdsBarGravityDenun ? (
+                    <LazyChartWrapper
+                      type="bar"
+                      chartRef={denunByGraviteBarChartRef}
                       // redraw={true}
-                      ref={denunByGraviteBarChartRef}
                       data={rdsBarGravityDenun}
+                      visible={rdsBarGravityDenun == null}
                       options={{
                         plugins: {
                           title: {
@@ -3465,8 +3118,10 @@ const Global = (props) => {
                         maintainAspectRatio: false,
                       }}
                     />
-                  </div>
-                </div>
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -3496,26 +3151,34 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <Pie
-                    // redraw={true}
-                    ref={claimBySatisfactionPieChartRef}
-                    // options={claimByAgencePieChartRef}
-                    data={rdsPieStatisClaim}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Répartition de la satisfaction des réclamants (%)",
-                          position: "top",
+                  <LazyChart height={600}>
+                    {rdsPieStatisClaim ? (
+                    <LazyChartWrapper
+                      type="pie"
+                      chartRef={claimBySatisfactionPieChartRef}
+                      // redraw={true}
+                      // options={claimByAgencePieChartRef}
+                      data={rdsPieStatisClaim}
+                      visible={rdsPieStatisClaim == null}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition de la satisfaction des réclamants (%)",
+                            position: "top",
+                          },
+                          legend: {
+                            position: "bottom",
+                          },
                         },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                    ) : (
+                      <LazyChartSkeleton type="pie" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -3533,12 +3196,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                  <div style={{ height: nba, width: "100%", position: "relative" }}>
-                    <Bar
+                <LazyChart overflow={"y"} height={nba}>
+                  {tauxMensuelClaimByMonthByAgence ? (
+                    <LazyChartWrapper
+                      type="bar"
+                      chartRef={tauxMensuelClaimByMonthByAgenceBarChartRef}
                       // redraw={true}
-                      ref={tauxMensuelClaimByMonthByAgenceBarChartRef}
                       data={tauxMensuelClaimByMonthByAgence}
+                      visible={tauxMensuelClaimByMonthByAgence == null}
                       options={{
                         plugins: {
                           title: {
@@ -3569,12 +3234,11 @@ const Global = (props) => {
                         responsive: true,
                         maintainAspectRatio: false,
                       }}
-
                     />
-                  </div>
-                </div>
-
-
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}     
@@ -3595,25 +3259,33 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <Bar
-                    // redraw={true}
-                    ref={tauxMensuelClaimByMonthBarChartRef}
-                    data={tauxMensuelClaimByMonth}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Taux de satisfaction mensuel des Réclamations (%))",
-                          position: "top",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <LazyChart height={600}>
+                    {tauxMensuelClaimByMonth ? (
+                      <LazyChartWrapper
+                        type="bar"
+                        chartRef={tauxMensuelClaimByMonthBarChartRef}
+                        // redraw={true}
+                        data={tauxMensuelClaimByMonth}
+                        visible={tauxMensuelClaimByMonth == null}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: "Taux de satisfaction mensuel des Réclamations (%))",
+                              position: "top",
+                            },
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          responsive: true,
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="pie" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -3646,25 +3318,33 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <Bar
-                    // redraw={true}
-                    ref={resolutionClaimDelaiByMonthBarChartRef}
-                    data={rdsBarDelaiGlobal}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Respect du délai de résolution des Réclamations par mois (%))",
-                          position: "top",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <LazyChart height={600}>
+                    {rdsBarDelaiGlobal ? (
+                      <LazyChartWrapper
+                        type="bar"
+                        chartRef={resolutionClaimDelaiByMonthBarChartRef}
+                        // redraw={true}
+                        data={rdsBarDelaiGlobal}
+                        visible={rdsBarDelaiGlobal == null}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: "Respect du délai de résolution des Réclamations par mois (%))",
+                              position: "top",
+                            },
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          responsive: true,
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="pie" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -3682,12 +3362,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                  <div style={{ height: nba, width: "100%", position: "relative" }}>
-                    <Bar
+                <LazyChart overflow={"y"} height={nba}>
+                  {rdsBarDelaiClaimByMonthByAgence ? (
+                    <LazyChartWrapper
+                      type="bar"
+                      chartRef={resolutionClaimDelaiByMonthByAgenceBarChartRef}
                       // redraw={true}
-                      ref={resolutionClaimDelaiByMonthByAgenceBarChartRef}
                       data={rdsBarDelaiClaimByMonthByAgence}
+                      visible={rdsBarDelaiClaimByMonthByAgence == null}
                       options={{
                         plugins: {
                           title: {
@@ -3718,12 +3400,11 @@ const Global = (props) => {
                         responsive: true,
                         maintainAspectRatio: false,
                       }}
-
                     />
-                  </div>
-                </div>
-
-
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -3753,25 +3434,33 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <Bar
-                    // redraw={true}
-                    ref={resolutionDenunDelaiByMonthBarChartRef}
-                    data={denunBarDelaiByMonth}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Respect du délai de résolution des Dénonciations par mois (%))",
-                          position: "top",
-                        },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <LazyChart height={600}>
+                    {denunBarDelaiByMonth ? (
+                      <LazyChartWrapper
+                        type="bar"
+                        chartRef={resolutionDenunDelaiByMonthBarChartRef}
+                        // redraw={true}
+                        data={denunBarDelaiByMonth}
+                        visible={denunBarDelaiByMonth == null}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: "Respect du délai de résolution des Dénonciations par mois (%))",
+                              position: "top",
+                            },
+                            legend: {
+                              position: "bottom",
+                            },
+                          },
+                          responsive: true,
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="bar" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
@@ -3789,12 +3478,14 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, resolutionDenunDelaiByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-                <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                  <div style={{ height: nba, width: "100%", position: "relative" }}>
-                    <Bar
+                <LazyChart overflow={"y"} height={nba}>
+                  {denunBarDelaiByMonthByAgence ? (
+                    <LazyChartWrapper
+                      type="bar"
+                      chartRef={resolutionDenunDelaiByMonthByAgenceBarChartRef}
                       // redraw={true}
-                      ref={resolutionDenunDelaiByMonthByAgenceBarChartRef}
                       data={denunBarDelaiByMonthByAgence}
+                      visible={denunBarDelaiByMonthByAgence == null}
                       options={{
                         plugins: {
                           title: {
@@ -3825,12 +3516,11 @@ const Global = (props) => {
                         responsive: true,
                         maintainAspectRatio: false,
                       }}
-
                     />
-                  </div>
-                </div>
-
-
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
           </div> : <></>}
@@ -4879,7 +4569,7 @@ const Global = (props) => {
                       </div>
                     </div>
 
-                    {/* Unité operationelle */}
+                    {/* Unité operationelle */} 
                     <div className="col s12 m12 l12 input-field">
                       <Select
                         isMulti
@@ -5192,13 +4882,12 @@ const Global = (props) => {
                     </ul>
                   </div>
                 </div> } */}
+
                 {globalShow && (
-                  <>
-                   
+                  <>                
                     <div className="row">
                       <div className="col l12">
                         {(hasFalseInSection("global") && props.tmpState.showForm) ? <div style={{ color: "darkred" }} onClick={(e) => { restoreSection("global") }} >Restaurer les stats globales</div> : <></>}
-
                       </div>
                     </div>
                     <div className="row">

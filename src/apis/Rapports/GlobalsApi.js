@@ -60,9 +60,9 @@ export const reportApi = async (props, setData) => {
                 notify("Bravo - Rapport généré", "success");
 
             }
+            // console.log('report ans',response.data)
             return response.data.content;
 
-            // console.log('report ans',response.data)
         })
         .catch(function (error) {
             KTApp.unblockPage();
