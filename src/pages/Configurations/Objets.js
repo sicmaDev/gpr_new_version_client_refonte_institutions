@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
@@ -29,7 +29,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAutoScroll } from "../../hooks/useAutoScroll";
-
+import { KTApp } from "../../Utils/blockui";
 
 
 const styles = {
@@ -42,6 +42,7 @@ const styles = {
 };
 const Objets = (props) => {
     let categories;
+    const [isLoading, setIsLoading] = useState(false);
     try {
         categories = JSON.parse(loadItemFromLocalStorage('app-categories'));
     }
@@ -50,7 +51,17 @@ const Objets = (props) => {
     }
 
     useEffect(() => {
-        liste(props).then((r) => { });
+        KTApp.blockPage({
+            overlayColor: "#000000",
+            type: "v2",
+            state: "danger",
+            message: "En cours de chargement...",
+        });
+        setIsLoading(true);
+        liste(props).then((r) => { }).finally(() => {
+            setIsLoading(false);
+            KTApp.unblockPage();
+        });
 
         window.$('.tooltipped').tooltip();
         //cleanup

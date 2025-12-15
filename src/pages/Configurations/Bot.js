@@ -118,7 +118,7 @@ const Bot = (props) => {
                     message: ""
 
                 }));
-                setMessageSession("Etape 2/2 : En cour, Veuillez patienter")
+                setMessageSession("Etape 2/2 : En cours, Veuillez patienter")
 
                 axios.post(`${WPP_CONNECT_LINK}/${url}/start-session`, WPP_CONNECT_OPTIONS, {
                     headers: {

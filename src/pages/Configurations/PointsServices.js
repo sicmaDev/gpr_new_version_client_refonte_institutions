@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
@@ -37,7 +37,7 @@ import { Block, BlockOutlined, PersonOff, TaskAlt } from "@mui/icons-material";
 import { notify } from "../../Utils/alert";
 import { Chip } from "@mui/material";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
-
+import { KTApp } from "../../Utils/blockui";
 const emitter = new ee();
 const styles = {
     control: base => ({
@@ -48,8 +48,20 @@ const styles = {
     menu: provided => ({ ...provided, zIndex: 9999 })
 };
 const PointsServices = (props) => {
+    const [isLoading, setIsLoading] = useState(false);
+
     useEffect(() => {
-        all(props).then((r) => { });
+        KTApp.blockPage({
+            overlayColor: "#000000",
+            type: "v2",
+            state: "danger",
+            message: "En cours de chargement...",
+        });
+        setIsLoading(true);
+        all(props).then((r) => { }).finally(() => {
+            setIsLoading(false);
+            KTApp.unblockPage();
+        });
 
         emitter.on('confirm', (e) => {
             handleDelete(e);

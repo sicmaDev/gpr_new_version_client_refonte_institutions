@@ -256,7 +256,7 @@ const ListeReclamations = (props) => {
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
 
-  useEffect(() => {}, [showAudioPlayer, currentAudio]);
+  useEffect(() => { }, [showAudioPlayer, currentAudio]);
 
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
@@ -306,6 +306,8 @@ const ListeReclamations = (props) => {
   };
   const handleImpression = () => {
     setImpression(!impression);
+    setStartDate(null);
+    setEndDate(null);
   };
 
   function getRandomInt(max) {
@@ -339,7 +341,7 @@ const ListeReclamations = (props) => {
     if (mode === 1) {
       props.itemsChanged([]);
       listeTousStatuts(props)
-        .then((r) => {})
+        .then((r) => { })
         .finally(() => {
           setIsLoading(false);
           KTApp.unblockPage();
@@ -347,7 +349,7 @@ const ListeReclamations = (props) => {
     } else {
       props.itemsChanged([]);
       listeTousStatutsOffline(props)
-        .then((r) => {})
+        .then((r) => { })
         .finally(() => {
           setIsLoading(false);
           KTApp.unblockPage();
@@ -820,46 +822,46 @@ const ListeReclamations = (props) => {
         props.statusChanged(data.status ? data.status : "");
         let description = data.languageId
           ? JSON.parse(loadItemFromSessionStorage("app-langues")).filter(
-              (e) => {
-                return e.id === data.languageId;
-              }
-            )
+            (e) => {
+              return e.id === data.languageId;
+            }
+          )
           : "";
         let description1 = data.collectionChannelId
           ? JSON.parse(loadItemFromSessionStorage("app-supports")).filter(
-              (e) => {
-                return e.id === data.collectionChannelId;
-              }
-            )
+            (e) => {
+              return e.id === data.collectionChannelId;
+            }
+          )
           : "";
         let description2 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-              return e.id === data.objetId;
-            })
+            return e.id === data.objetId;
+          })
           : "";
 
         let description6 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-              return e.id === data.objetId;
-            })
+            return e.id === data.objetId;
+          })
           : "";
 
         let description3 = data.productId
           ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
-              (e) => {
-                return e.id === data.productId;
-              }
-            )
+            (e) => {
+              return e.id === data.productId;
+            }
+          )
           : "";
         let description4 = data.servicePointId
           ? JSON.parse(loadItemFromSessionStorage("app-ps")).filter((e) => {
-              return e.id === data.servicePointId;
-            })
+            return e.id === data.servicePointId;
+          })
           : "";
         let description5 = data.collectorId
           ? JSON.parse(loadItemFromSessionStorage("app-users")).filter((e) => {
-              return e.id === data.collectorId;
-            })
+            return e.id === data.collectorId;
+          })
           : "";
 
         props.languageChanged(data.languageId ? description[0].libelle : "");
@@ -1191,12 +1193,12 @@ const ListeReclamations = (props) => {
       let solutions =
         interne === false
           ? Array.from(
-              props.solution.filter((e) => {
-                return (
-                  e.status === "APPROVED" && e.satisfactionMeasureDto !== null
-                );
-              })
-            )
+            props.solution.filter((e) => {
+              return (
+                e.status === "APPROVED" && e.satisfactionMeasureDto !== null
+              );
+            })
+          )
           : Array.from(props.solution);
       if (props.solution.length !== 0) {
         type =
@@ -1263,10 +1265,10 @@ const ListeReclamations = (props) => {
                     solution.satisfactionMeasureDto.status === "SATISFIED"
                       ? "Satisfait"
                       : solution.satisfactionMeasureDto.status === "UNSATISFIED"
-                      ? "Non satisfait"
-                      : solution.satisfactionMeasureDto.status === "PARTIAL"
-                      ? "Partiellement satisfait"
-                      : "";
+                        ? "Non satisfait"
+                        : solution.satisfactionMeasureDto.status === "PARTIAL"
+                          ? "Partiellement satisfait"
+                          : "";
                   mesure = (
                     <>
                       <Typography component="div">
@@ -1409,7 +1411,7 @@ const ListeReclamations = (props) => {
                               {solution.satisfactionMeasureDto ? (
                                 solution.satisfactionMeasureDto.commentaire !==
                                   null &&
-                                solution.satisfactionMeasureDto.commentaire !==
+                                  solution.satisfactionMeasureDto.commentaire !==
                                   "" ? (
                                   <div
                                     className="col l12 s12 pb-2"
@@ -1684,9 +1686,8 @@ const ListeReclamations = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${
-                      attachment.extra?.user?.firstAndLastName
-                    } le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName
+                      } le ${formatDate(attachment.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1802,9 +1803,8 @@ const ListeReclamations = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${
-                      audioItem.extra?.user?.firstAndLastName
-                    } le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName
+                      } le ${formatDate(audioItem.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1909,18 +1909,18 @@ const ListeReclamations = (props) => {
     // Calcul des descriptions
     const description2 = props.selectedItem.objetId
       ? JSON.parse(loadItemFromSessionStorage("app-objets")).find(
-          (e) => e.id === props.selectedItem.objetId
-        )
+        (e) => e.id === props.selectedItem.objetId
+      )
       : {};
     const description3 = props.selectedItem.productId
       ? JSON.parse(loadItemFromSessionStorage("app-produits")).find(
-          (e) => e.id === props.selectedItem.productId
-        )
+        (e) => e.id === props.selectedItem.productId
+      )
       : {};
     const description5 = props.selectedItem.collectorId
       ? JSON.parse(loadItemFromSessionStorage("app-users")).find(
-          (e) => e.id === props.selectedItem.collectorId
-        )
+        (e) => e.id === props.selectedItem.collectorId
+      )
       : {};
 
     // Statut
@@ -1947,26 +1947,26 @@ const ListeReclamations = (props) => {
       mode === 1
         ? props.selectedItem.tel
         : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.tel
-        : props.selectedItem.phone;
+          ? props.selectedItem.tel
+          : props.selectedItem.phone;
     const addByTemp =
       mode === 1
         ? props.selectedItem.collector.firstAndLastName
         : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.collector.firstAndLastName
-        : description5.firstAndLastName;
+          ? props.selectedItem.collector.firstAndLastName
+          : description5.firstAndLastName;
     const objetTemp =
       mode === 1
         ? props.selectedItem.objet.libelle
         : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.objet.libelle
-        : description2.libelle;
+          ? props.selectedItem.objet.libelle
+          : description2.libelle;
     const produitTemp =
       mode === 1
         ? props.selectedItem.product.libelle
         : props.selectedItem.id && props.selectedItem.collectionChannel
-        ? props.selectedItem.product.libelle
-        : description3.libelle;
+          ? props.selectedItem.product.libelle
+          : description3.libelle;
 
     // Contenu du reçu avec marges inférieures ajustées
     const content = `
@@ -2268,30 +2268,30 @@ const ListeReclamations = (props) => {
     participantsTab =
       (props?.session?.members).length !== 0
         ? (props?.session?.members).map((e) => {
-            return e.firstAndLastName;
-          })
+          return e.firstAndLastName;
+        })
         : [];
     guestsTab =
       (props?.session?.guests).length !== 0
         ? (props?.session?.guests).map((e) => {
-            return e.firstAndLastName;
-          })
+          return e.firstAndLastName;
+        })
         : [];
     votesTab =
       (props?.session?.messages).length !== 0
         ? (props?.session?.messages).filter((e) => {
-            if (e.vote === true) {
-              return e;
-            }
-          })
+          if (e.vote === true) {
+            return e;
+          }
+        })
         : [];
     messagesTab =
       (props?.session?.messages).length !== 0
         ? (props?.session?.messages).filter((e) => {
-            if (e.vote === false) {
-              return e;
-            }
-          })
+          if (e.vote === false) {
+            return e;
+          }
+        })
         : [];
 
     // console.log("votesTab",votesTab)
@@ -2331,10 +2331,10 @@ const ListeReclamations = (props) => {
       let votesPour =
         (e.voteDto?.userVote).length !== 0
           ? (e.voteDto?.userVote).filter((vote) => {
-              if (vote.voteType === "POUR") {
-                return vote;
-              }
-            })
+            if (vote.voteType === "POUR") {
+              return vote;
+            }
+          })
           : [];
       votesPour.map((k) => {
         votes += "<li>" + k?.author?.firstAndLastName + "</li>";
@@ -2345,10 +2345,10 @@ const ListeReclamations = (props) => {
       let votesContre =
         (e.voteDto?.userVote).length !== 0
           ? (e.voteDto?.userVote).filter((vote) => {
-              if (vote.voteType === "CONTRE") {
-                return vote;
-              }
-            })
+            if (vote.voteType === "CONTRE") {
+              return vote;
+            }
+          })
           : [];
       votesContre.map((l) => {
         votes += "<li>" + l?.author?.firstAndLastName + "</li>";
@@ -2536,10 +2536,10 @@ const ListeReclamations = (props) => {
       for (let index = 0; index < audioListForm.length; index++) {
         // Génère un timestamp unique
         const now = new Date();
-        const date = now.toLocaleDateString("fr-FR").replaceAll("/", ""); 
+        const date = now.toLocaleDateString("fr-FR").replaceAll("/", "");
         const time = now
           .toLocaleTimeString("fr-FR", { hour12: false })
-          .replaceAll(":", ""); 
+          .replaceAll(":", "");
 
         // Crée un nom unique
         const fileName = `claim_extra_record_${date}_${time}_${index}.ogg`;
@@ -2824,7 +2824,7 @@ const ListeReclamations = (props) => {
                   <RecorderControls
                     recorderState={recorderState}
                     handlers={handlers}
-                    closeAction={() => {}}
+                    closeAction={() => { }}
                   />
                 </div>
               </section>
@@ -3030,6 +3030,7 @@ const ListeReclamations = (props) => {
                               formatDate2(startDate),
                               formatDate2(endDate)
                             );
+
                           } else {
                             // Sinon, utiliser handlePrint2 sans filtre
                             handlePrint2(config, selectOption, props.items);
@@ -3054,7 +3055,7 @@ const ListeReclamations = (props) => {
                           if (startDate && endDate) {
                             table2XLS2XF(
                               "Liste_des_réclamations" +
-                                today().replaceAll("/", ""),
+                              today().replaceAll("/", ""),
                               "brke",
                               selectOption,
                               props.items,
@@ -3065,7 +3066,7 @@ const ListeReclamations = (props) => {
                             // Sinon, utiliser handlePrint2 sans filtre
                             table2XLS2X(
                               "Liste_des_réclamations" +
-                                today().replaceAll("/", ""),
+                              today().replaceAll("/", ""),
                               "brke",
                               selectOption,
                               props.items
@@ -3139,7 +3140,7 @@ const ListeReclamations = (props) => {
                                 } else {
                                   table2XLS2X(
                                     "Liste_des_réclamations" +
-                                      today().replaceAll("/", ""),
+                                    today().replaceAll("/", ""),
                                     "brke",
                                     selectOption,
                                     props.items
@@ -3383,8 +3384,8 @@ const ListeReclamations = (props) => {
                                         />{" "}
                                         Date d'enregistrement online :{" "}
                                         {props.created_at_online !== null &&
-                                        props.created_at_online !== undefined &&
-                                        props.created_at_online !== ""
+                                          props.created_at_online !== undefined &&
+                                          props.created_at_online !== ""
                                           ? formatDate(props.created_at_online)
                                           : ""}
                                       </div>
@@ -3581,7 +3582,7 @@ const ListeReclamations = (props) => {
                               >
                                 Détails du traitement
                                 {props.session !== "" &&
-                                (addR === "PILOTE" || addR === "DE") ? (
+                                  (addR === "PILOTE" || addR === "DE") ? (
                                   <LoadingButton
                                     onClick={(e) => {
                                       if (mode === 1) {

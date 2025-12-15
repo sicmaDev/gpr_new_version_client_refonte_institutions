@@ -5278,7 +5278,7 @@ const TraiterReclamation = (props) => {
     (props.transmitted !== "false" &&
       user.firstAndLastName === props.transmittedTo &&
       props.status === "SAVED" &&
-      addR === "MOLDUE") || (user.ra === true && props.transmitted === "false")
+      addR === "MOLDUE") || (user.ra === true && props.transmitted === "false" && props.authorize)
   ) {
     // console.log("lol","azert")
     if (props.session === "" && props.session.status !== "OPEN") {

@@ -71,18 +71,6 @@ import {
 import tmpActions from "../../redux/actions/Rapports/TemplateActions";
 import { connect } from "react-redux";
 import CheckIcon from "@mui/icons-material/Check";
-// import PrintIcon from "@mui/icons-material/Print";
-// import FileDownloadIcon from "@mui/icons-material/FileDownload";
-// import { BarController, DoughnutController } from "chart.js";
-// import { PieController } from "chart.js";
-// import {
-//   LineController,
-//   LineElement,
-//   PointElement,
-//   LinearScale,
-//   Title,
-//   CategoryScale,
-// } from "chart.js";
 import { registerables } from "chart.js";
 import GaugeChart from "react-gauge-chart";
 import {
@@ -93,13 +81,15 @@ import {
 } from "@mui/material";
 import { Chat, NoBackpack } from "@mui/icons-material";
 import ChartDataLabels from "chartjs-plugin-datalabels";
-// import ChartDataLabels from "chartjs-plugin-labels";
 import html2canvas from "html2canvas";
 import { MyGaugeChart } from "../../Utils/MyGaugeChart";
 import { XAxis } from "recharts";
 import { notify } from "../../Utils/alert";
 import ReportTemplate from "./ReportTemplate";
-
+import LazyChart from "./LazyChart";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import LazyChartSkeleton from "./LazyChartSkeleton";
 Chart.register(ChartDataLabels);
 Chart.register(...registerables);
 
@@ -121,6 +111,12 @@ const styles = {
 };
 
 const Global = (props) => {
+  //add for lenteur souci 
+  Chart.defaults.animation = false;
+  Chart.defaults.datasets.bar.animation = false;
+  Chart.defaults.datasets.line.animation = false;
+  Chart.defaults.transitions.active.animation = false;
+  Chart.defaults.responsiveAnimationDuration = 0;
 
   const [open, setOpen] = React.useState(false);
   const [showSearch, setshowSearch] = useState(false);
@@ -892,134 +888,6 @@ const Global = (props) => {
     }
   }, [dataRaport]);
 
-
-
-  // const newReportGlobalTreatment = (data) => {
-  //   let result = {
-  //     labels: [],
-  //     datasets: [],
-  //   };
-  //   console.log("data new version : ",data);
-  //   if (data) {
-  //     const datasetsKey = [];
-  //     result.labels = Object.keys(data);
-  //     result.labels.forEach((lb) => {
-  //       let dataAgences = data[lb]["data"] ?? [];
-  //       let totalAgences = data[lb]["totals"] == "0" ? 1 : data[lb]["totals"];
-  //       // console.log("totalAgences",totalAgences);
-
-  //       let purcentageCal = 100 / parseInt(totalAgences);
-
-  //       dataAgences.forEach((agence) => {
-  //         let totalClaimsAgence = dataAgences.reduce((acc, ag) => acc + parseFloat(ag.nbre), 0);
-  //         let dataPerc = ((parseFloat(agence.nbre) / totalClaimsAgence) * 100).toFixed(2);
-
-  //         // let dataPerc = (
-  //         //   parseFloat(agence.nbre) * purcentageCal
-  //         // ).toLocaleString("en-US", {
-  //         //   maximumFractionDigits: 2,
-  //         //   minimumFractionDigits: 0,
-  //         // });
-  //         // let dataPerc = Math.round(parseInt(agence.nbre) * purcentageCal);
-  //         // let dataPerc =agence.nbre * purcentageCal
-
-  //         // let dataPerc = (parseFloat(agence.nbre) * purcentageCal).toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 0 });
-  //         if (datasetsKey.includes(agence.name)) {
-  //           const resultdata = [];
-  //           result.datasets.forEach((d) => {
-  //             if (d.label === agence.name) {
-  //               resultdata.push({
-  //                 label: d.label,
-  //                 data: [...d.data, dataPerc],
-  //                 stack: "Stack 0",
-  //                 backgroundColor: d.backgroundColor,
-  //               });
-  //             } else {
-  //               resultdata.push(d);
-  //             }
-  //           });
-  //           result.datasets = resultdata;
-  //         } else {
-  //           datasetsKey.push(agence.name);
-  //           result.datasets.push({
-  //             label: agence.name,
-  //             data: [dataPerc],
-  //             backgroundColor: agence.color,
-  //             stack: "Stack 0",
-  //             totalWt: totalAgences,
-  //           });
-  //         }
-  //       });
-  //     });
-
-  //     let newDatasets = result.datasets.sort((a, b) => b.totalWt - a.totalWt);
-  //     // console.log ("newDatasets",newDatasets);
-  //     const otherPush = {
-  //       label: "Autres",
-  //       data: [],
-  //       backgroundColor: "rgb(10,114,153)",
-  //       stack: "Stack 0",
-  //       isInit: false,
-  //     };
-  //     let resultDatasets = [];
-
-  //     newDatasets.forEach((dd, i) => {
-  //       //console.log(" boucle",dd +"  --  i :",i);
-  //       if (i > 9) {
-  //         otherPush.isInit = true;
-  //         if (otherPush?.data?.length > 0) {
-  //           otherPush.data.forEach((ot, j) => {
-  //             otherPush.data[j] =
-  //               parseFloat(
-  //                 ot?.toLocaleString("en-US", {
-  //                   maximumFractionDigits: 2,
-  //                   minimumFractionDigits: 0,
-  //                 })
-  //               ) +
-  //               parseFloat(
-  //                 dd?.data[j]?.toLocaleString("en-US", {
-  //                   maximumFractionDigits: 2,
-  //                   minimumFractionDigits: 0,
-  //                 })
-  //               );
-  //           });
-  //         } else {
-  //           otherPush.data = dd.data;
-  //         }
-  //       } else {
-  //         resultDatasets.push(dd);
-  //       }
-  //     });
-
-  //     if (otherPush.isInit) {
-  //       resultDatasets.push(otherPush);
-  //     }
-  //     result.datasets = resultDatasets;
-  //   }
-
-  //   // Créer un tableau de paires [label, data] pour les trier
-  //   let combined = result.labels.map((label, index) => {
-  //     return { label: label, data: result?.datasets[0]?.data[index] };
-  //   });
-
-  //   // Trier les paires par ordre décroissant des valeurs de `data`
-  //   combined.sort((a, b) => b.data - a.data);
-
-  //   // Réorganiser les labels et les data en fonction du tri
-  //   // Vérification avant d'affecter les données triées
-  //   if (result.datasets && result.datasets.length > 0) {
-  //     result.datasets[0].data = combined.map(item => item.data);
-  //   } else {
-  //     result.datasets = [{ data: new Array(result.labels.length).fill(0) }]; // Par exemple, un tableau de zéros
-  //     console.error("Error: datasets is undefined or empty");
-  //   }
-
-  //   console.log("result result = ",result);
-  //   return result;
-
-
-  // };
-
   const newReportGlobalTreatment = (data) => {
     let result = {
       labels: [],
@@ -1546,45 +1414,101 @@ const Global = (props) => {
 
   //Graphiques
 
+  // const reportGlobalChart = (
+  //   <>
+  //     <div className="invoice-product-details">
+  //       <div className="row vertical-modern-dashboard">
+  //         {/* {props.templateData?.global.globalPieChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align"> */}
+  //           <div
+  //             className="card"
+  //             style={{
+  //               height: "600px",
+  //               maxHeight: "600px",
+  //               display: "flex",
+  //               flexDirection: "column",
+  //               padding: "10px",
+  //             }}
+  //           >              
+  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalPieChartRef: false } }) }} /> : <></>}</div>
+  //             <div style={{ flex: "1 auto" }}>
+  //               <LazyChart height={600}>
+  //                 {rdsBarModaliteGlobal?.datasets?.length > 0 ? (
+  //                 <Pie
+  //                   // redraw={true}
+  //                   ref={globalPieChartRef}
+  //                   data={rdsPieGlobal}
+  //                   options={{
+  //                     plugins: {
+  //                       title: {
+  //                         display: true,
+  //                         text: "Répartition des réclamations, dénonciations et suggestions (%)",
+  //                       },
+  //                       legend: {
+  //                         position: "bottom",
+  //                       },
+  //                     },
+  //                     responsive: true,
+  //                     maintainAspectRatio: false,
+  //                   }}
+  //                 />
+  //               ) : (
+  //                 <LazyChartSkeleton type="pie" height={400} />
+                
+  //               )}
+  //               </LazyChart>
+  //             </div>
+  //           </div>
+  //         {/* </div> : <></>} */}
+  //         {props.templateData?.global.globalLineChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">        
+  //           <div
+  //             className="card"
+  //             style={{
+  //               height: "600px",
+  //               maxHeight: "600px",
+  //               display: "flex",
+  //               flexDirection: "column",
+  //               padding: "10px",
+  //             }}
+  //           >
+  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalLineChartRef: false } }) }} /> : <></>}</div>
+  //             <div
+  //               className="total-transaction-container "
+  //               style={{ flex: "1 auto" }}
+  //             >
+  //               <Bar
+  //                 // redraw={true}
+  //                 ref={globalLineChartRef}
+  //                 data={rdsBarGlobal}
+  //                 options={{
+  //                   plugins: {
+  //                     title: {
+  //                       display: true,
+  //                       text: "Glissement annuel des RSD",
+  //                       position: "top",
+  //                     },
+  //                     legend: {
+  //                       position: "bottom",
+  //                     },
+  //                   },
+  //                   responsive: true,
+  //                   maintainAspectRatio: false,
+  //                 }}
+  //               />
+  //             </div>
+  //           </div>
+  //         </div> : <></>}
+  //       </div>
+  //     </div>
+  //   </>
+  // );
+
   const reportGlobalChart = (
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          {props.templateData?.global.globalPieChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">
-            <div
-              className="card"
-              style={{
-                height: "600px",
-                maxHeight: "600px",
-                display: "flex",
-                flexDirection: "column",
-                padding: "10px",
-              }}
-            >              
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalPieChartRef: false } }) }} /> : <></>}</div>
-              <div style={{ flex: "1 auto" }}>
-                <Pie
-                  // redraw={true}
-                  ref={globalPieChartRef}
-                  data={rdsPieGlobal}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des réclamations, dénonciations et suggestions (%)",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div> : <></>}
-          {props.templateData?.global.globalLineChartRef ? <div className="col s12 m12 l6 animate fadeRight center-align">        
+
+          {/* Pie Chart */}
+          <div className="col s12 m12 l6 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1595,43 +1519,253 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalLineChartRef: false } }) }} /> : <></>}</div>
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                {props.tmpState.showForm && (
+                  <CloseIcon
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      props.setTemplateData({
+                        ...props.templateData,
+                        global: {
+                          ...props.templateData?.global,
+                          globalPieChartRef: false,
+                        },
+                      });
+                    }}
+                  />
+                )}
+              </div>
+
               <div
-                className="total-transaction-container "
-                style={{ flex: "1 auto" }}
+                style={{
+                  flex: "1 auto",
+                  minHeight: "600px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "#fff",
+                }}
               >
-                <Bar
-                  // redraw={true}
-                  ref={globalLineChartRef}
-                  data={rdsBarGlobal}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Glissement annuel des RSD",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
+                <LazyChart height={600}>
+                  {rdsPieGlobal ? (
+                    <Pie
+                      ref={globalPieChartRef}
+                      data={rdsPieGlobal}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des réclamations, dénonciations et suggestions (%)",
+                          },
+                          legend: { position: "bottom" },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
               </div>
             </div>
-          </div> : <></>}
+          </div>
+
+          {/* Line / Bar Chart */}
+          <div className="col s12 m12 l6 animate fadeRight center-align">
+            <div
+              className="card"
+              style={{
+                height: "600px",
+                maxHeight: "600px",
+                display: "flex",
+                flexDirection: "column",
+                padding: "10px",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                {props.tmpState.showForm && (
+                  <CloseIcon
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      props.setTemplateData({
+                        ...props.templateData,
+                        global: {
+                          ...props.templateData?.global,
+                          globalLineChartRef: false,
+                        },
+                      });
+                    }}
+                  />
+                )}
+              </div>
+
+              <div
+                className="total-transaction-container"
+                style={{
+                  flex: "1 auto",
+                  minHeight: "600px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "#fff",
+                }}
+              >
+                <LazyChart height={600}>
+                  {rdsBarGlobal ? (
+                    <Bar
+                      ref={globalLineChartRef}
+                      data={rdsBarGlobal}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Glissement annuel des RSD",
+                            position: "top",
+                          },
+                          legend: { position: "bottom" },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  ) : (
+                    <LazyChartSkeleton type="bar" height={600} />
+                  )}
+                </LazyChart>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </>
   );
 
+
+  // const reportGlobalByCanalChart = (
+  //   <>
+  //     <div className="invoice-product-details">
+  //       <div className="row vertical-modern-dashboard">
+  //         {/* {props.templateData?.global.globalByCanalPieChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align"> */}
+  //           <div
+  //             className="card"
+  //             style={{
+  //               height: "600px",
+  //               maxHeight: "600px",
+  //               display: "flex",
+  //               flexDirection: "column",
+  //               padding: "10px",
+  //             }}
+  //           >
+  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalPieChartRef: false } }) }} /> : <></>}</div>
+  //             <div
+  //               className="total-transaction-container"
+  //               style={{ flex: "1 auto" }}
+  //             >
+  //               <LazyChart height={600}>
+  //                 {rdsPieModaliteGlobal?.datasets?.length > 0 ? (
+  //                 <Pie
+  //                   // redraw={true}
+  //                   ref={globalByCanalPieChartRef}
+  //                   data={rdsPieModaliteGlobal}
+  //                   options={{
+  //                     plugins: {
+  //                       title: {
+  //                         display: true,
+  //                         text: "Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)",
+  //                         position: "top",
+  //                       },
+  //                       legend: {
+  //                         position: "bottom",
+  //                       },
+  //                     },
+  //                     responsive: true,
+  //                     maintainAspectRatio: false,
+  //                   }}
+  //                 />
+  //               ) : (
+  //                 <LazyChartSkeleton type="pie" height={400} />
+                 
+  //               )}
+  //               </LazyChart>
+  //             </div>
+  //           </div>
+  //         {/* </div> : <></>} */}
+  //         {/* {props.templateData?.global.globalByCanalBarChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align"> */}
+  //           <div
+  //             className="card"
+  //           >
+
+  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalBarChartRef: false } }) }} /> : <></>}</div>
+  //             <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+  //               <div style={{ height: nba, width: "100%", position: "relative" }}>
+  //               <LazyChart height={600}>
+  //                 {rdsBarModaliteGlobal?.datasets?.length > 0 ? (
+  //                   <Bar
+  //                     // redraw={true}
+  //                     ref={globalByCanalBarChartRef}
+  //                     data={rdsBarModaliteGlobal}
+  //                     options={{
+  //                       plugins: {
+  //                         title: {
+  //                           display: true,
+  //                           text: "Répartition des RSD par modalité de dépôt et par agence (%)",
+  //                           position: "top",
+  //                         },
+  //                         legend: {
+  //                           position: "bottom",
+  //                         },
+  //                       },
+  //                       indexAxis: "y",
+  //                       responsive: true,
+  //                       scales: {
+  //                         x: {
+  //                           stacked: true,
+  //                           ticks: {
+  //                             callback: function (value) {
+  //                               return value + "%";
+  //                             },
+  //                           },
+  //                           min: 0,
+  //                           max: 100,
+  //                           offset: false,
+
+  //                         },
+
+  //                         // y: {
+  //                         //   stacked: false,
+  //                         //   max: 100,
+
+  //                         // },
+  //                       },
+
+  //                       maintainAspectRatio: false,
+  //                     }}
+  //                   />
+  //               ) : (
+  //                 <LazyChartSkeleton type="bar" height={400} />
+                 
+  //               )}
+  //               </LazyChart>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         {/* </div> : <></>} */}
+  //       </div>
+  //     </div>
+
+  //     <div className="divider mt-2 mb-2"></div>
+  //   </>
+  // );
+
   const reportGlobalByCanalChart = (
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          {props.templateData?.global.globalByCanalPieChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
+
+          {/* Pie Chart */}
+          <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1642,93 +1776,130 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalPieChartRef: false } }) }} /> : <></>}</div>
-              <div
-                className="total-transaction-container"
-                style={{ flex: "1 auto" }}
-              >
-                <Pie
-                  // redraw={true}
-                  ref={globalByCanalPieChartRef}
-                  data={rdsPieModaliteGlobal}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
-              </div>
-            </div>
-          </div> : <></>}
-          {props.templateData?.global.globalByCanalBarChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
-            <div
-              className="card"
-            // style={{
-            //   height: "600px",
-            //   maxHeight: "600px",
-            //   display: "flex",
-            //   flexDirection: "column",
-            //   padding: "10px",
-            // }}
-            >
-
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
-                    // redraw={true}
-                    ref={globalByCanalBarChartRef}
-                    data={rdsBarModaliteGlobal}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Répartition des RSD par modalité de dépôt et par agence (%)",
-                          position: "top",
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                {props.tmpState.showForm && (
+                  <CloseIcon
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      props.setTemplateData({
+                        ...props.templateData,
+                        global: {
+                          ...props.templateData?.global,
+                          globalByCanalPieChartRef: false,
                         },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      indexAxis: "y",
-                      responsive: true,
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                          },
-                          min: 0,
-                          max: 100,
-                          offset: false,
-
-                        },
-
-                        // y: {
-                        //   stacked: false,
-                        //   max: 100,
-
-                        // },
-                      },
-
-                      maintainAspectRatio: false,
+                      });
                     }}
                   />
+                )}
+              </div>
+
+              <div
+                className="total-transaction-container"
+                style={{
+                  flex: "1 auto",
+                  minHeight: "600px", // espace réservé
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "#fff", // fond blanc
+                }}
+              >
+                <LazyChart height={600}>
+                  {rdsPieModaliteGlobal ? (
+                    <Pie
+                      ref={globalByCanalPieChartRef}
+                      data={rdsPieModaliteGlobal}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)",
+                            position: "top",
+                          },
+                          legend: { position: "bottom" },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={600} />
+                  )}
+                </LazyChart>
+              </div>
+            </div>
+          </div>
+
+          {/* Bar Chart */}
+          <div className="col s12 m12 l12 animate fadeRight center-align">
+            <div className="card">
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                {props.tmpState.showForm && (
+                  <CloseIcon
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      props.setTemplateData({
+                        ...props.templateData,
+                        global: {
+                          ...props.templateData?.global,
+                          globalByCanalBarChartRef: false,
+                        },
+                      });
+                    }}
+                  />
+                )}
+              </div>
+
+              <div
+                className="scrollContainer"
+                style={{
+                  flex: "1 auto",
+                  height: "600px",
+                  overflowY: "auto",
+                  minHeight: "600px", // espace réservé
+                  backgroundColor: "#fff", // fond blanc
+                }}
+              >
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
+                  <LazyChart height={600}>
+                    {rdsBarModaliteGlobal ? (
+                      <Bar
+                        ref={globalByCanalBarChartRef}
+                        data={rdsBarModaliteGlobal}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: "Répartition des RSD par modalité de dépôt et par agence (%)",
+                              position: "top",
+                            },
+                            legend: { position: "bottom" },
+                          },
+                          indexAxis: "y",
+                          responsive: true,
+                          scales: {
+                            x: {
+                              stacked: true,
+                              ticks: {
+                                callback: (value) => `${value}%`,
+                              },
+                              min: 0,
+                              max: 100,
+                              offset: false,
+                            },
+                          },
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="bar" height={600} />
+                    )}
+                  </LazyChart>
                 </div>
               </div>
             </div>
-          </div> : <></>}
+          </div>
+
         </div>
       </div>
 
@@ -1736,11 +1907,118 @@ const Global = (props) => {
     </>
   );
 
+  // const reportGlobalByObjetChart = (
+  //   <>
+  //     <div className="invoice-product-details">
+  //       <div className="row vertical-modern-dashboard">
+  //         {props.templateData?.global.globalByObjetPieChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
+  //           <div
+  //             className="card"
+  //             style={{
+  //               height: "500px",
+  //               maxHeight: "500px",
+  //               display: "flex",
+  //               flexDirection: "column",
+  //               padding: "10px",
+  //             }}
+  //           >
+
+  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetPieChartRef: false } }) }} /> : <></>}</div>
+  //             <div
+  //               className="total-transaction-container"
+  //               style={{ flex: "1 auto" }}
+  //             >
+  //               <Pie
+  //                 // redraw={true}
+  //                 ref={globalByObjetPieChartRef}
+  //                 // options={globalPieChartOptions}
+  //                 data={rdsPieObjetGlobal}
+  //                 options={{
+  //                   plugins: {
+  //                     title: {
+  //                       display: true,
+  //                       text: "Répartition des réclamations, dénonciations par objets (%)",
+  //                       position: "top",
+  //                     },
+  //                     legend: {
+  //                       position: "bottom",
+  //                       maxWidth: 30,
+  //                     },
+  //                   },
+  //                   responsive: true,
+  //                   maintainAspectRatio: false,
+  //                 }}
+  //               />
+  //             </div>
+  //           </div>
+  //         </div> : <></>}
+  //         {props.templateData?.global.globalByObjetBarChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
+  //           <div
+  //             className="card"
+  //             style={{
+  //               height: "600px",
+  //               maxHeight: "600px",
+  //               display: "flex",
+  //               flexDirection: "column",
+  //               padding: "10px",
+  //             }}
+  //           >
+  //             <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetBarChartRef: false } }) }} /> : <></>}</div>
+  //             <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+  //               <div style={{ height: nba, width: "100%", position: "relative" }}>
+  //                 <Bar
+  //                   // redraw={true}
+  //                   ref={globalByObjetBarChartRef}
+  //                   data={rdsBarObjetGlobal}
+  //                   options={{
+  //                     plugins: {
+  //                       title: {
+  //                         display: true,
+  //                         text: "Répartition des Réclamations et Dénonciations par objets et par agence(%)",
+  //                         position: "top",
+  //                       },
+  //                       legend: {
+  //                         position: "bottom",
+  //                       },
+  //                     },
+  //                     responsive: true,
+  //                     indexAxis: "y",
+  //                     scales: {
+  //                       x: {
+  //                         stacked: true,
+  //                         ticks: {
+  //                           callback: function (value) {
+  //                             return value + "%";
+  //                           },
+  //                         },
+  //                         max: 100,
+  //                         offset: false,
+  //                       },
+  //                     },
+  //                     maintainAspectRatio: false,
+  //                   }}
+  //                 />
+
+
+  //               </div>
+  //             </div>
+
+  //           </div>
+  //         </div> : <></>}
+  //       </div>
+  //     </div>
+
+  //     <div className="divider mt-2 mb-2"></div>
+  //   </>
+  // );
+
   const reportGlobalByObjetChart = (
     <>
       <div className="invoice-product-details">
         <div className="row vertical-modern-dashboard">
-          {props.templateData?.global.globalByObjetPieChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
+
+          {/* Pie Chart */}
+          <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1751,37 +2029,62 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                {props.tmpState.showForm && (
+                  <CloseIcon
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      props.setTemplateData({
+                        ...props.templateData,
+                        global: {
+                          ...props.templateData?.global,
+                          globalByObjetPieChartRef: false,
+                        },
+                      });
+                    }}
+                  />
+                )}
+              </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetPieChartRef: false } }) }} /> : <></>}</div>
               <div
                 className="total-transaction-container"
-                style={{ flex: "1 auto" }}
+                style={{
+                  flex: "1 auto",
+                  minHeight: "500px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "#fff",
+                }}
               >
-                <Pie
-                  // redraw={true}
-                  ref={globalByObjetPieChartRef}
-                  // options={globalPieChartOptions}
-                  data={rdsPieObjetGlobal}
-                  options={{
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: "Répartition des réclamations, dénonciations par objets (%)",
-                        position: "top",
-                      },
-                      legend: {
-                        position: "bottom",
-                        maxWidth: 30,
-                      },
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                  }}
-                />
+                <LazyChart height={500}>
+                  {rdsPieObjetGlobal ? (
+                    <Pie
+                      ref={globalByObjetPieChartRef}
+                      data={rdsPieObjetGlobal}
+                      options={{
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Répartition des réclamations, dénonciations par objets (%)",
+                            position: "top",
+                          },
+                          legend: { position: "bottom", maxWidth: 30 },
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                      }}
+                    />
+                  ) : (
+                    <LazyChartSkeleton type="pie" height={500} />
+                  )}
+                </LazyChart>
               </div>
             </div>
-          </div> : <></>}
-          {props.templateData?.global.globalByObjetBarChartRef ? <div className="col s12 m12 l12 animate fadeRight center-align">
+          </div>
+
+          {/* Bar Chart */}
+          <div className="col s12 m12 l12 animate fadeRight center-align">
             <div
               className="card"
               style={{
@@ -1792,48 +2095,70 @@ const Global = (props) => {
                 padding: "10px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetBarChartRef: false } }) }} /> : <></>}</div>
-              <div className="scrollContainer" style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
-                <div style={{ height: nba, width: "100%", position: "relative" }}>
-                  <Bar
-                    // redraw={true}
-                    ref={globalByObjetBarChartRef}
-                    data={rdsBarObjetGlobal}
-                    options={{
-                      plugins: {
-                        title: {
-                          display: true,
-                          text: "Répartition des Réclamations et Dénonciations par objets et par agence(%)",
-                          position: "top",
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                {props.tmpState.showForm && (
+                  <CloseIcon
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      props.setTemplateData({
+                        ...props.templateData,
+                        global: {
+                          ...props.templateData?.global,
+                          globalByObjetBarChartRef: false,
                         },
-                        legend: {
-                          position: "bottom",
-                        },
-                      },
-                      responsive: true,
-                      indexAxis: "y",
-                      scales: {
-                        x: {
-                          stacked: true,
-                          ticks: {
-                            callback: function (value) {
-                              return value + "%";
-                            },
-                          },
-                          max: 100,
-                          offset: false,
-                        },
-                      },
-                      maintainAspectRatio: false,
+                      });
                     }}
                   />
-
-
-                </div>
+                )}
               </div>
 
+              <div
+                className="scrollContainer"
+                style={{
+                  flex: "1 auto",
+                  height: "600px",
+                  overflowY: "auto",
+                  minHeight: "600px",
+                  backgroundColor: "#fff",
+                }}
+              >
+                <div style={{ height: nba, width: "100%", position: "relative" }}>
+                  <LazyChart height={600}>
+                    {rdsBarObjetGlobal ? (
+                      <Bar
+                        ref={globalByObjetBarChartRef}
+                        data={rdsBarObjetGlobal}
+                        options={{
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: "Répartition des Réclamations et Dénonciations par objets et par agence(%)",
+                              position: "top",
+                            },
+                            legend: { position: "bottom" },
+                          },
+                          responsive: true,
+                          indexAxis: "y",
+                          scales: {
+                            x: {
+                              stacked: true,
+                              ticks: { callback: (value) => `${value}%` },
+                              max: 100,
+                              offset: false,
+                            },
+                          },
+                          maintainAspectRatio: false,
+                        }}
+                      />
+                    ) : (
+                      <LazyChartSkeleton type="bar" height={600} />
+                    )}
+                  </LazyChart>
+                </div>
+              </div>
             </div>
-          </div> : <></>}
+          </div>
+
         </div>
       </div>
 
@@ -4794,6 +5119,7 @@ const Global = (props) => {
                     </ul>
                   </div>
                 </div>
+               
                 {/* { <div
                   className="row"
                   style={{ marginTop: "20px" }}
@@ -4868,6 +5194,7 @@ const Global = (props) => {
                 </div> } */}
                 {globalShow && (
                   <>
+                   
                     <div className="row">
                       <div className="col l12">
                         {(hasFalseInSection("global") && props.tmpState.showForm) ? <div style={{ color: "darkred" }} onClick={(e) => { restoreSection("global") }} >Restaurer les stats globales</div> : <></>}

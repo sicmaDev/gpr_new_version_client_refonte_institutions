@@ -71,6 +71,18 @@ import {
 import tmpActions from "../../redux/actions/Rapports/TemplateActions";
 import { connect } from "react-redux";
 import CheckIcon from "@mui/icons-material/Check";
+// import PrintIcon from "@mui/icons-material/Print";
+// import FileDownloadIcon from "@mui/icons-material/FileDownload";
+// import { BarController, DoughnutController } from "chart.js";
+// import { PieController } from "chart.js";
+// import {
+//   LineController,
+//   LineElement,
+//   PointElement,
+//   LinearScale,
+//   Title,
+//   CategoryScale,
+// } from "chart.js";
 import { registerables } from "chart.js";
 import GaugeChart from "react-gauge-chart";
 import {
@@ -81,6 +93,7 @@ import {
 } from "@mui/material";
 import { Chat, NoBackpack } from "@mui/icons-material";
 import ChartDataLabels from "chartjs-plugin-datalabels";
+// import ChartDataLabels from "chartjs-plugin-labels";
 import html2canvas from "html2canvas";
 import { MyGaugeChart } from "../../Utils/MyGaugeChart";
 import { XAxis } from "recharts";
@@ -113,12 +126,6 @@ const styles = {
 };
 
 const Global = (props) => {
-  //add for lenteur souci 
-  Chart.defaults.animation = false;
-  Chart.defaults.datasets.bar.animation = false;
-  Chart.defaults.datasets.line.animation = false;
-  Chart.defaults.transitions.active.animation = false;
-  Chart.defaults.responsiveAnimationDuration = 0;
 
   const [open, setOpen] = React.useState(false);
   const [showSearch, setshowSearch] = useState(false);
@@ -889,6 +896,134 @@ const Global = (props) => {
       }
     }
   }, [dataRaport]);
+
+
+
+  // const newReportGlobalTreatment = (data) => {
+  //   let result = {
+  //     labels: [],
+  //     datasets: [],
+  //   };
+  //   console.log("data new version : ",data);
+  //   if (data) {
+  //     const datasetsKey = [];
+  //     result.labels = Object.keys(data);
+  //     result.labels.forEach((lb) => {
+  //       let dataAgences = data[lb]["data"] ?? [];
+  //       let totalAgences = data[lb]["totals"] == "0" ? 1 : data[lb]["totals"];
+  //       // console.log("totalAgences",totalAgences);
+
+  //       let purcentageCal = 100 / parseInt(totalAgences);
+
+  //       dataAgences.forEach((agence) => {
+  //         let totalClaimsAgence = dataAgences.reduce((acc, ag) => acc + parseFloat(ag.nbre), 0);
+  //         let dataPerc = ((parseFloat(agence.nbre) / totalClaimsAgence) * 100).toFixed(2);
+
+  //         // let dataPerc = (
+  //         //   parseFloat(agence.nbre) * purcentageCal
+  //         // ).toLocaleString("en-US", {
+  //         //   maximumFractionDigits: 2,
+  //         //   minimumFractionDigits: 0,
+  //         // });
+  //         // let dataPerc = Math.round(parseInt(agence.nbre) * purcentageCal);
+  //         // let dataPerc =agence.nbre * purcentageCal
+
+  //         // let dataPerc = (parseFloat(agence.nbre) * purcentageCal).toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+  //         if (datasetsKey.includes(agence.name)) {
+  //           const resultdata = [];
+  //           result.datasets.forEach((d) => {
+  //             if (d.label === agence.name) {
+  //               resultdata.push({
+  //                 label: d.label,
+  //                 data: [...d.data, dataPerc],
+  //                 stack: "Stack 0",
+  //                 backgroundColor: d.backgroundColor,
+  //               });
+  //             } else {
+  //               resultdata.push(d);
+  //             }
+  //           });
+  //           result.datasets = resultdata;
+  //         } else {
+  //           datasetsKey.push(agence.name);
+  //           result.datasets.push({
+  //             label: agence.name,
+  //             data: [dataPerc],
+  //             backgroundColor: agence.color,
+  //             stack: "Stack 0",
+  //             totalWt: totalAgences,
+  //           });
+  //         }
+  //       });
+  //     });
+
+  //     let newDatasets = result.datasets.sort((a, b) => b.totalWt - a.totalWt);
+  //     // console.log ("newDatasets",newDatasets);
+  //     const otherPush = {
+  //       label: "Autres",
+  //       data: [],
+  //       backgroundColor: "rgb(10,114,153)",
+  //       stack: "Stack 0",
+  //       isInit: false,
+  //     };
+  //     let resultDatasets = [];
+
+  //     newDatasets.forEach((dd, i) => {
+  //       //console.log(" boucle",dd +"  --  i :",i);
+  //       if (i > 9) {
+  //         otherPush.isInit = true;
+  //         if (otherPush?.data?.length > 0) {
+  //           otherPush.data.forEach((ot, j) => {
+  //             otherPush.data[j] =
+  //               parseFloat(
+  //                 ot?.toLocaleString("en-US", {
+  //                   maximumFractionDigits: 2,
+  //                   minimumFractionDigits: 0,
+  //                 })
+  //               ) +
+  //               parseFloat(
+  //                 dd?.data[j]?.toLocaleString("en-US", {
+  //                   maximumFractionDigits: 2,
+  //                   minimumFractionDigits: 0,
+  //                 })
+  //               );
+  //           });
+  //         } else {
+  //           otherPush.data = dd.data;
+  //         }
+  //       } else {
+  //         resultDatasets.push(dd);
+  //       }
+  //     });
+
+  //     if (otherPush.isInit) {
+  //       resultDatasets.push(otherPush);
+  //     }
+  //     result.datasets = resultDatasets;
+  //   }
+
+  //   // Créer un tableau de paires [label, data] pour les trier
+  //   let combined = result.labels.map((label, index) => {
+  //     return { label: label, data: result?.datasets[0]?.data[index] };
+  //   });
+
+  //   // Trier les paires par ordre décroissant des valeurs de `data`
+  //   combined.sort((a, b) => b.data - a.data);
+
+  //   // Réorganiser les labels et les data en fonction du tri
+  //   // Vérification avant d'affecter les données triées
+  //   if (result.datasets && result.datasets.length > 0) {
+  //     result.datasets[0].data = combined.map(item => item.data);
+  //   } else {
+  //     result.datasets = [{ data: new Array(result.labels.length).fill(0) }]; // Par exemple, un tableau de zéros
+  //     console.error("Error: datasets is undefined or empty");
+  //   }
+
+  //   console.log("result result = ",result);
+  //   return result;
+
+
+  // };
 
   const newReportGlobalTreatment = (data) => {
     let result = {
@@ -4809,7 +4944,6 @@ const Global = (props) => {
                     </ul>
                   </div>
                 </div>
-               
                 {/* { <div
                   className="row"
                   style={{ marginTop: "20px" }}

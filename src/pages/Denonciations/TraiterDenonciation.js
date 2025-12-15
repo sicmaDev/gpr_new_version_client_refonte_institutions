@@ -193,6 +193,7 @@ import WarningIcon from "@mui/icons-material/Warning";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import EmailDialog from "./widgets/EmailDialog";
 import { WarningAmber } from "@mui/icons-material";
+//import { KTApp } from "../../Utils/blockui";
 
 const styles = {
   control: (base) => ({
@@ -221,63 +222,15 @@ const TraiterDenonciation = (props) => {
     loadItemFromLocalStorage("app-users") !== undefined
       ? JSON.parse(loadItemFromLocalStorage("app-users"))
       : undefined;
+  let langues =
+    loadItemFromLocalStorage("app-langues") !== undefined
+      ? JSON.parse(loadItemFromLocalStorage("app-langues"))
+      : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
 
   let handlingForms;
   const [agentsMailOptions, setAgentsMailOptions] = useState([]);
-
-  //  const sendMail = (e) => {
-  //     e.preventDefault()
-  //         const user = JSON.parse(loadItemFromSessionStorage("user"));
-  //             const templateParams = {
-  //               type:"reclamation",
-  //               to:affectEmail,
-  //               bcc:emailSender,
-  //               comment:messageSend,
-  //               delai:delai_at,
-  //               sendBy:user.firstname + " " + user.lastname + " ",
-  //               code:props.code,
-  //               client:props.firstname + "  " + props.lastname,
-  //               enregistrerle:props.recorded_at,
-
-  //             };
-
-  //             let messageF = "Madame,Monsieur\n\n"+
-  //             "Par la présente, je viens vous affecter le traitement d'une dénonciation ​:\n" +
-  //             "Code : "+props.code+"\n"+
-  //             "Client: "+props.firstname + "  " + props.lastname+"\n"+
-  //             "Enregistré le : "+props.recorded_at+"\n\n"+
-  //             messageSend+"\n\n"+
-  //             "Je reste à votre entière disposition pour tout complément d'information relatif à cette affectation.\n"+
-  //             "En conséquence,je vous prie de bien vouloir procéder au traitement de cette dénonciation dans un delai de "+delai_at+" jours a compte de la réception ce mail.\n"+
-  //             "Cordialement\n"+user.firstname + " " + user.lastname + " \n";
-
-  //           let r = {
-  //               "to": affectEmail,
-  //               "cc": emailSender.join(","),
-  //               "from": user.email,
-  //               "message": messageF,
-  //               "subject": "Affectation de traitement d'une dénonciation"
-  //           };
-  //           sendEmailApi(r).then(function(response) {
-  //             handleAssign(e)
-  //               notify("Mail envoyé avec succes", "success");
-  //         }, function(error) {
-  //           handleAssign(e)
-  //               notify("Envoie de mail echoué, Verifier votre connexion", "error");
-  //         });
-
-  //       // emailjs.send('service_iqzwl8e', 'template_uf6f28c', templateParams,"r3_6O5iyn0CtoI5dt")
-  //       //     .then(function(response) {
-  //       //         handleAssign(e)
-  //       //           notify("Mail envoyé avec succes", "success");
-  //       //     }, function(error) {
-  //       //       handleAssign(e)
-  //       //           notify("Envoie de mail echoué, Verifier votre connexion", "error");
-  //       //     });
-
-  //   };
   const [messageSend, setMessageSend] = useState("");
   const [delai_at, setDelai_at] = useState(1);
   const [maxDelai, setMaxDelai] = useState(1);
@@ -502,7 +455,7 @@ const TraiterDenonciation = (props) => {
     claim["inboxWhatsapp"] = null;
     claim["productId"] = dataRow.product.id;
     // claim["languageId"] = null;
-    claim["languageId"] = 1; // Default to Langue National
+    claim["languageId"] = langues.length > 0 ? langues[0].id : 1; // Default to Langue National
     claim["folderCode"] = dataRow.folderCode;
     claim["receiptDateTime"] = dataRow.receiptDateTime;
     claim["collectorId"] = dataRow.collector.id;
@@ -557,7 +510,7 @@ const TraiterDenonciation = (props) => {
     if (props.match.params.code === "all") {
       props.itemsChanged([]);
       listeTreat(props)
-        .then((r) => {})
+        .then((r) => { })
         .finally(() => {
           setIsLoading(false);
           KTApp.unblockPage();
@@ -577,7 +530,7 @@ const TraiterDenonciation = (props) => {
             Authorization: "Bearer " + loadItemFromSessionStorage("token"),
           },
         }).then(function (response) {
-          listeTreat(props).then((r) => {});
+          listeTreat(props).then((r) => { });
           let data = response.data.content;
           // console.log("tmp",data)
           handleClickOpen();
@@ -590,7 +543,7 @@ const TraiterDenonciation = (props) => {
             case "MINEUR":
               users.map((user) => {
                 if (userConnected.ra === true) {
-                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
                     let hab = user.posteDto.habilitations.split(",");
                     if (hab.includes("H1", "H2", "H3")) {
                       agentMailOptions.push({
@@ -621,7 +574,7 @@ const TraiterDenonciation = (props) => {
             case "MOYEN":
               users.map((user) => {
                 if (userConnected.ra === true) {
-                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
                     let hab = user.posteDto.habilitations.split(",");
                     if (hab.includes("H3")) {
                       agentMailOptions.push({
@@ -629,7 +582,7 @@ const TraiterDenonciation = (props) => {
                         value: user.id,
                         email: user.email,
                       });
-                    }                  
+                    }
                   }
                 } else if (user.deleted === false) {
                   let hab = user.posteDto.habilitations.split(",");
@@ -639,7 +592,7 @@ const TraiterDenonciation = (props) => {
                       value: user.id,
                       email: user.email,
                     });
-                  }                  
+                  }
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -652,7 +605,7 @@ const TraiterDenonciation = (props) => {
             case "GRAVE":
               users.map((user) => {
                 if (userConnected.ra === true) {
-                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
                     let hab = user.posteDto.habilitations.split(",");
                     if (hab.includes("H4")) {
                       agentMailOptions.push({
@@ -661,7 +614,7 @@ const TraiterDenonciation = (props) => {
                         value: user.id,
                         email: user.email,
                       });
-                    }                  
+                    }
                   }
                 } else if (user.deleted === false) {
                   let hab = user.posteDto.habilitations.split(",");
@@ -672,7 +625,7 @@ const TraiterDenonciation = (props) => {
                       value: user.id,
                       email: user.email,
                     });
-                  }                
+                  }
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -1510,7 +1463,7 @@ const TraiterDenonciation = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     setDataRow(data);
     setClaimId(data.id);
-  
+
     handleClickOpen();
     clearComponentState();
 
@@ -1522,7 +1475,7 @@ const TraiterDenonciation = (props) => {
       case "MINEUR":
         users.map((user) => {
           if (userConnected.ra === true) {
-            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
               let hab = user.posteDto.habilitations.split(",");
               if (hab.includes("H1", "H2", "H3")) {
                 agentMailOptions.push({
@@ -1530,9 +1483,9 @@ const TraiterDenonciation = (props) => {
                   value: user.id,
                   email: user.email,
                 });
-              }            
+              }
             }
-          } else if (user.deleted === false) {            
+          } else if (user.deleted === false) {
             let hab = user.posteDto.habilitations.split(",");
             if (hab.includes("H1", "H2", "H3")) {
               agentMailOptions.push({
@@ -1553,7 +1506,7 @@ const TraiterDenonciation = (props) => {
       case "MOYEN":
         users.map((user) => {
           if (userConnected.ra === true) {
-            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
               let hab = user.posteDto.habilitations.split(",");
               if (hab.includes("H3")) {
                 agentMailOptions.push({
@@ -1561,7 +1514,7 @@ const TraiterDenonciation = (props) => {
                   value: user.id,
                   email: user.email,
                 });
-              }            
+              }
             }
           } else if (user.deleted === false) {
             let hab = user.posteDto.habilitations.split(",");
@@ -1571,7 +1524,7 @@ const TraiterDenonciation = (props) => {
                 value: user.id,
                 email: user.email,
               });
-            }            
+            }
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -1584,7 +1537,7 @@ const TraiterDenonciation = (props) => {
       case "GRAVE":
         users.map((user) => {
           if (userConnected.ra === true) {
-            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
               let hab = user.posteDto.habilitations.split(",");
               if (hab.includes("H4")) {
                 agentMailOptions.push({
@@ -1592,9 +1545,9 @@ const TraiterDenonciation = (props) => {
                   value: user.id,
                   email: user.email,
                 });
-              }            
+              }
             }
-          } else if (user.deleted === false) {            
+          } else if (user.deleted === false) {
             let hab = user.posteDto.habilitations.split(",");
             if (hab.includes("H4")) {
               agentMailOptions.push({
@@ -1654,7 +1607,7 @@ const TraiterDenonciation = (props) => {
     props.transmittedChanged(
       data.transmitted !== null ? "" + data.transmitted + "" : ""
     );
-      props.transmittedToChanged(
+    props.transmittedToChanged(
       data.transmittedTo !== null
         ? "" + data.transmittedTo.firstAndLastName + ""
         : ""
@@ -1798,8 +1751,8 @@ const TraiterDenonciation = (props) => {
                 </div>
 
                 {guests !== null &&
-                guests?.length > 0 &&
-                guests.at(0).firstAndLastName != null ? (
+                  guests?.length > 0 &&
+                  guests.at(0).firstAndLastName != null ? (
                   <>
                     {guests?.map((guest) => (
                       <li
@@ -2040,10 +1993,10 @@ const TraiterDenonciation = (props) => {
                                                     color: "white",
                                                   },
                                                   " .MuiFormControlLabel-label":
-                                                    {
-                                                      color: "white",
-                                                      fontWeight: "bold",
-                                                    },
+                                                  {
+                                                    color: "white",
+                                                    fontWeight: "bold",
+                                                  },
                                                 }}
                                               />
                                             }
@@ -2104,9 +2057,9 @@ const TraiterDenonciation = (props) => {
                                       {(chat?.voteDto?.userVote).filter((e) => {
                                         return e.voteType === "POUR";
                                       }).length >
-                                      (chat?.voteDto?.userVote).filter((e) => {
-                                        return e.voteType === "CONTRE";
-                                      }).length ? (
+                                        (chat?.voteDto?.userVote).filter((e) => {
+                                          return e.voteType === "CONTRE";
+                                        }).length ? (
                                         <>
                                           <hr
                                             style={{ borderColor: "white" }}
@@ -2420,9 +2373,9 @@ const TraiterDenonciation = (props) => {
                                       {(chat?.voteDto?.userVote).filter((e) => {
                                         return e.voteType === "POUR";
                                       }).length >
-                                      (chat?.voteDto?.userVote).filter((e) => {
-                                        return e.voteType === "CONTRE";
-                                      }).length ? (
+                                        (chat?.voteDto?.userVote).filter((e) => {
+                                          return e.voteType === "CONTRE";
+                                        }).length ? (
                                         <>
                                           <hr
                                             style={{ borderColor: "white" }}
@@ -2682,10 +2635,10 @@ const TraiterDenonciation = (props) => {
                     solution.satisfactionMeasureDto.status === "SATISFIED"
                       ? "Satisfait"
                       : solution.satisfactionMeasureDto.status === "UNSATISFIED"
-                      ? "Non satisfait"
-                      : solution.satisfactionMeasureDto.status === "PARTIAL"
-                      ? "Partiellement satisfait"
-                      : "";
+                        ? "Non satisfait"
+                        : solution.satisfactionMeasureDto.status === "PARTIAL"
+                          ? "Partiellement satisfait"
+                          : "";
                   mesure = (
                     <>
                       <Typography component="div">
@@ -3170,7 +3123,7 @@ const TraiterDenonciation = (props) => {
           compteur: solution.compteur,
         };
       });
-     
+
       let personTransmit = (props.transmitted === "true" && props.transmittedTo === user.firstAndLastName) ? (
         <>
           {/* details tranmission */}
@@ -3195,12 +3148,12 @@ const TraiterDenonciation = (props) => {
 
             </div>
           </div>
-          
+
         </>
-      ):"";
-          
+      ) : "";
+
       if (
-        (props.transmitted === "true" && user.firstAndLastName === props.transmittedBy )
+        (props.transmitted === "true" && user.firstAndLastName === props.transmittedBy)
       ) {
         affectForm = (
           <>
@@ -3216,12 +3169,12 @@ const TraiterDenonciation = (props) => {
                   alignItems: "center",
                 }}
               >
-                Vous avez transmis cette dénonciation à <strong style={{ color: "#1976d2", marginLeft: "0.25em"  }}>{props.transmittedTo ? props.transmittedTo : "—"}</strong>{" "}. Vous n'avez plus la main sur elle.
+                Vous avez transmis cette dénonciation à <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>{props.transmittedTo ? props.transmittedTo : "—"}</strong>{" "}. Vous n'avez plus la main sur elle.
               </div>
             </div>
           </>
         );
-      }else if(hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmittedTo === user.firstAndLastName)) {
+      } else if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmittedTo === user.firstAndLastName)) {
         affectForm = (
           <>
             {personTransmit}
@@ -3259,7 +3212,7 @@ const TraiterDenonciation = (props) => {
                         </div>
                       </small>
                     </div>
-                    
+
                     <div className="col s12 display-flex justify-content-end mt-3">
                       {
                         //  (actif !== undefined && actif)  ?
@@ -3285,7 +3238,7 @@ const TraiterDenonciation = (props) => {
                         >
                           <span>Affecter</span>
                         </LoadingButton>
-                        
+
                       }
                     </div>
                   </details>
@@ -4141,9 +4094,8 @@ const TraiterDenonciation = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${
-                      attachment.extra?.user?.firstAndLastName
-                    } le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName
+                      } le ${formatDate(attachment.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -4258,9 +4210,8 @@ const TraiterDenonciation = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${
-                      audioItem.extra?.user?.firstAndLastName
-                    } le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName
+                      } le ${formatDate(audioItem.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -4395,9 +4346,9 @@ const TraiterDenonciation = (props) => {
   let btnS = "";
 
   if (
-    (addR !== "PILOTE" &&  !hbt.includes("H6")) &&
+    (addR !== "PILOTE" && !hbt.includes("H6")) &&
     ((user.firstAndLastName === props.created_by && props.transmitted === "false") ||
-      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && addR === "MOLDUE") || 
+      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && addR === "MOLDUE") ||
       (user.ra === true && props.transmitted === "false")) &&
     props.status === "SAVED"
   ) {
@@ -4430,7 +4381,7 @@ const TraiterDenonciation = (props) => {
     (props.transmitted !== "false" &&
       user.firstAndLastName === props.transmittedTo &&
       props.status === "SAVED" &&
-      addR === "MOLDUE") || (user.ra === true && props.transmitted === "false")
+      addR === "MOLDUE") || (user.ra === true && props.transmitted === "false" && props.authorize)
   ) {
     if (props.session === "" && props.session.status !== "OPEN") {
       btnS = (
@@ -4871,7 +4822,7 @@ const TraiterDenonciation = (props) => {
                   <RecorderControls
                     recorderState={recorderState}
                     handlers={handlers}
-                    closeAction={() => {}}
+                    closeAction={() => { }}
                   />
                 </div>
               </section>

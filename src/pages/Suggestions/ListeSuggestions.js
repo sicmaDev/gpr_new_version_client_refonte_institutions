@@ -58,7 +58,7 @@ import {
 
 import { table2XLSX, table2XLS2X, table3XLS2X, table3XLS2XF } from "../../Utils/tabletoexcel";
 // import { useLocation } from "react-router-dom";
-import { 
+import {
   Card,
   Box,
   CardContent,
@@ -138,7 +138,7 @@ const ListeSuggestions = (props) => {
   const handleClickOpen = () => {
     setOpen(true);
   };
-    
+
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
 
@@ -152,11 +152,13 @@ const ListeSuggestions = (props) => {
 
   const handleImpression = () => {
     setImpression(!impression);
+    setStartDate(null);
+    setEndDate(null);
   };
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
 
-  
+
   const getStatusLabel = (status) => {
     var statusElt = status
     switch (status) {
@@ -201,12 +203,12 @@ const ListeSuggestions = (props) => {
 
     return statusElt
   }
-  
+
   const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
-      <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
-        <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
-        {`Converti en Suggestion par ${props.convertedBy} le ${formatDate4(props.convertedAt)}`}
-      </span>
+    <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
+      <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
+      {`Converti en Suggestion par ${props.convertedBy} le ${formatDate4(props.convertedAt)}`}
+    </span>
   );
 
 
@@ -228,8 +230,8 @@ const ListeSuggestions = (props) => {
     } else {
       props.itemsChanged([])
       listeTousStatutsOffline(props).then((r) => { }).finally(() => {
-          setIsLoading(false);
-          KTApp.unblockPage();
+        setIsLoading(false);
+        KTApp.unblockPage();
       });
     }
 
@@ -393,9 +395,9 @@ const ListeSuggestions = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
-   
+
     clearComponentState();
-   
+
     if (mode === 1) {
       props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");
       props.addressChanged(data.address ? data.address : "");
@@ -450,7 +452,7 @@ const ListeSuggestions = (props) => {
         props.selectedItemChanged(data);
         getSuggeAudioApi(data.id, props);
         getFillesApi(data.id, props);
-        
+
         props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
         props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
         props.extrasChanged(data.extras ?? []);
@@ -636,17 +638,17 @@ const ListeSuggestions = (props) => {
               padding: "10px 5px",
               borderRadius: "6px",
               display: "flex",
-              alignItems: "center", 
+              alignItems: "center",
             }}
           >
             Cette suggestion est en attente de traitement
           </div>
-        </div> 
+        </div>
       </>
     );
   }
 
-    
+
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
 
@@ -774,7 +776,7 @@ const ListeSuggestions = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-   
+
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
 
@@ -1485,7 +1487,7 @@ const ListeSuggestions = (props) => {
                                   >
                                     {warningConvert}
                                   </div>
-                                  
+
                                   <div
                                     className="col l6 s12 df pb-2"
                                     id="firstname"
@@ -1604,7 +1606,7 @@ const ListeSuggestions = (props) => {
                                     <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
                                     {creationDate}
                                   </div>
-                                  
+
                                   <div
                                     className="col l12 s12 pb-2"
                                     id="content"
@@ -1641,13 +1643,13 @@ const ListeSuggestions = (props) => {
                                           : <></>
                                       })}
                                     </List>
-                                  </div>  
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                                                                            
+
                         {/* file part */}
                         <div className="">
                           <div className="card-panel pb-5">
@@ -1673,7 +1675,7 @@ const ListeSuggestions = (props) => {
                               </div>
                             </div></div>
                         </div>
-                        
+
                         {/* Audio part */}
                         <div className="">
                           <div className="card-panel pb-5">
@@ -1749,7 +1751,7 @@ const mapStateToProps = (state) => {
     collect: state.suggestion_list.collect,
     product: state.suggestion_list.product,
     unit: state.suggestion_list.unit,
-    content: state.suggestion_list.content, 
+    content: state.suggestion_list.content,
     extras: state.suggestion_list.extras,
     status: state.suggestion_list.status,
     solution: state.suggestion_list.solution,

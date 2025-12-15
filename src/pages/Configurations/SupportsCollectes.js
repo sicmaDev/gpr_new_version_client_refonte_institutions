@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -15,24 +15,24 @@ import {
     scErrors,
     libelleChanged, selectedItemChanged, etat3Changed, etat2Changed, etatChanged
 } from "../../redux/actions/Configurations/SupportsCollectesActions";
-import {loadItemFromSessionStorage, today} from "../../Utils/utils";
+import { loadItemFromSessionStorage, today } from "../../Utils/utils";
 // import Select from "react-select";
-import {modalify} from "../../Utils/modal";
+import { modalify } from "../../Utils/modal";
 import ee from "event-emitter";
 // import {handlePrint} from "../../utils/tables";
-import {notify} from "../../Utils/alert";
+import { notify } from "../../Utils/alert";
 import { connect } from "react-redux";
 import { ajout, liste, modification, suppression } from "../../apis/Configurations/SupportsCollectesApi";
 import excel from '../../assets/images/excel.svg'
 import pdf from '../../assets/images/pdf.svg'
-import {handlePrint} from "../../Utils/tables";
-import {table2XLSX} from "../../Utils/tabletoexcel";
+import { handlePrint } from "../../Utils/tables";
+import { table2XLSX } from "../../Utils/tabletoexcel";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAutoScroll } from "../../hooks/useAutoScroll";
-
+import { KTApp } from "../../Utils/blockui";
 
 
 const emitter = new ee();
@@ -42,19 +42,29 @@ const styles = {
         height: 35,
         minHeight: 35
     }),
-    menu: provided => ({...provided, zIndex: 9999})
+    menu: provided => ({ ...provided, zIndex: 9999 })
 };
 const SupportsCollectes = (props) => {
-   
+    const [isLoading, setIsLoading] = useState(false);
     useEffect(() => {
-        liste(props).then((r) => {});
-       
+        KTApp.blockPage({
+            overlayColor: "#000000",
+            type: "v2",
+            state: "danger",
+            message: "En cours de chargement...",
+        });
+        setIsLoading(true);
+        liste(props).then((r) => { }).finally(() => {
+            setIsLoading(false);
+            KTApp.unblockPage();
+        });
+
         window.$('.tooltipped').tooltip();
         //cleanup
         return clearComponentState();
     }, []);
-    
-    const topRef = useRef(null); 
+
+    const topRef = useRef(null);
     useAutoScroll(topRef, [props.selectedItem.id], "top");
 
     let code;
@@ -98,7 +108,7 @@ const SupportsCollectes = (props) => {
 
     let config = {
         page_size: 15,
-        length_menu: [ 15, 25, 50, 100],
+        length_menu: [15, 25, 50, 100],
         show_filter: true,
         show_pagination: true,
         filename: "Supports de collecte",
@@ -111,14 +121,14 @@ const SupportsCollectes = (props) => {
             length_menu: "Afficher _MENU_ éléments",
             filter: "Rechercher...",
             info: "Affichage de l'élement _START_ à _END_ sur _TOTAL_ éléments",
-            zero_records:    "Aucun élément à afficher",
+            zero_records: "Aucun élément à afficher",
             no_data_text: "Aucun élément à afficher",
             loading_text: "Chargement en cours...",
             pagination: {
-                first: <FirstPageIcon/>,
-                previous: <ChevronLeftIcon/>,
-                next: <ChevronRightIcon/>,
-                last: <LastPageIcon/>
+                first: <FirstPageIcon />,
+                previous: <ChevronLeftIcon />,
+                next: <ChevronRightIcon />,
+                last: <LastPageIcon />
             }
         }
     }
@@ -136,11 +146,11 @@ const SupportsCollectes = (props) => {
             isValid = false;
             errors["libelle"] = "Champ incorrect";
         }
-       
+
         return isValid
     }
 
-    const  clearComponentState = ()=> {
+    const clearComponentState = () => {
         props.idChanged("")
         props.libelleChanged("")
         props.descriptionChanged("")
@@ -174,9 +184,9 @@ const SupportsCollectes = (props) => {
             item["id"] = props.id;
             item["libelle"] = props.libelle;
             item["description"] = props.description;
-          
+
             props.etat2Changed(true)
-            modification (item, props).then(() => {
+            modification(item, props).then(() => {
                 handleCancel(e)
             })
 
@@ -195,71 +205,71 @@ const SupportsCollectes = (props) => {
     }
     const handleDelete = (e, sp) => {
         e.preventDefault()
-        
+
         props.etat3Changed(true)
         suppression(props, sp).then(() => {
             handleCancel(e)
         })
-       
+
         props.scErrors(errors)
-    }    
+    }
     const handleEditClick = (sp) => (e) => {
         rowClickedHandler(e, sp, null)
     }
 
     const rowClickedHandler = (event, data, rowIndex) => {
-        props.idChanged(data.id?data.id:"")
-        props.libelleChanged(data.libelle?data.libelle:"")
-        props.descriptionChanged(data.description?data.description:"")
-        props.selectedItemChanged(data?data:{})
+        props.idChanged(data.id ? data.id : "")
+        props.libelleChanged(data.libelle ? data.libelle : "")
+        props.descriptionChanged(data.description ? data.description : "")
+        props.selectedItemChanged(data ? data : {})
     }
-    const  tableChangeHandler = data => {
+    const tableChangeHandler = data => {
     }
-   
-    let titleText = props.selectedItem.id!== undefined ? "Modifier ou Supprimer" : "Ajouter";
-   
-    let buttons = props.selectedItem.id!== undefined ?
-    (<>
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
-            onClick={(e) => handleCancel(e)}
-            loading={props.etat2}
-            loadingPosition="end"
-            endIcon={<CancelIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Annuler</span>
-        </LoadingButton>
 
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
-            onClick={(e) => handleEditModal(e)}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Modifier</span>
-        </LoadingButton>
-        
-    </>)
-    :
-    (
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
-            onClick={(e) => handleSubmit(e)}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform:"initial" }}
-        >
-            <span>Ajouter</span>
-        </LoadingButton>
-       
-    )
+    let titleText = props.selectedItem.id !== undefined ? "Modifier ou Supprimer" : "Ajouter";
+
+    let buttons = props.selectedItem.id !== undefined ?
+        (<>
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small red-text white lighten-4"
+                onClick={(e) => handleCancel(e)}
+                loading={props.etat2}
+                loadingPosition="end"
+                endIcon={<CancelIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Annuler</span>
+            </LoadingButton>
+
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small"
+                onClick={(e) => handleEditModal(e)}
+                loading={props.etat}
+                loadingPosition="end"
+                endIcon={<SaveIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Modifier</span>
+            </LoadingButton>
+
+        </>)
+        :
+        (
+            <LoadingButton
+                className="btn waves-effect waves-light mr-1 btn-small"
+                onClick={(e) => handleSubmit(e)}
+                loading={props.etat}
+                loadingPosition="end"
+                endIcon={<SaveIcon />}
+                variant="contained"
+                sx={{ textTransform: "initial" }}
+            >
+                <span>Ajouter</span>
+            </LoadingButton>
+
+        )
 
     return (
         <>
@@ -275,13 +285,13 @@ const SupportsCollectes = (props) => {
                         <div className="col s12">
                             <div className="input-field">
                                 <input id="uname" name="libelle" type="text"
-                                       data-error=".errorTxt4"
-                                       placeholder=""
-                                       value={props.libelle}
-                                       onChange={(e) => props.libelleChanged(e.target.value)}/>
+                                    data-error=".errorTxt4"
+                                    placeholder=""
+                                    value={props.libelle}
+                                    onChange={(e) => props.libelleChanged(e.target.value)} />
                                 <label htmlFor="uname" className="active">Intitulé&nbsp;
                                     <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: Registre, Email, Appel Téléphnique, WhatsApp  etc.. ">
-                                        <HelpIcon/>
+                                        <HelpIcon />
                                     </a>
                                 </label>
                                 <small className="errorTxt4">
@@ -290,15 +300,15 @@ const SupportsCollectes = (props) => {
                             </div>
                         </div>
                         <div className="col s12 input-field">
-                                    <textarea id="udescription" name="description" type="text"
-                                              className="validate materialize-textarea"
-                                              placeholder=""
-                                              value={props.description}
-                                              onChange={(e) => props.descriptionChanged(e.target.value)}
-                                              data-error=".errorTxt2"/>
+                            <textarea id="udescription" name="description" type="text"
+                                className="validate materialize-textarea"
+                                placeholder=""
+                                value={props.description}
+                                onChange={(e) => props.descriptionChanged(e.target.value)}
+                                data-error=".errorTxt2" />
                             <label htmlFor="udescription" className="active">Description&nbsp;
                                 <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: Le Registre est... ">
-                                    <HelpIcon/>
+                                    <HelpIcon />
                                 </a>
                             </label>
                             <small className="errorTxt4">
@@ -307,10 +317,10 @@ const SupportsCollectes = (props) => {
                         </div>
 
                         <div className="col s12 display-flex justify-content-end form-action">
-                            {buttons}   
+                            {buttons}
                         </div>
 
-                        
+
                     </div>
                 </form>
 
@@ -322,15 +332,15 @@ const SupportsCollectes = (props) => {
                                     <div className="col l6 m6 s12">
                                         <h4 className="card-title">Liste des supports de collectes&nbsp;</h4>
                                     </div>
-                                    <div className="col l6 m6 s12" style={{ textAlign:"end" }}>
-                                        <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0)}} />
-                                        <img src={excel} alt="" style={{ cursor:"pointer" }} onClick={(e) => {table2XLSX("Liste_des_supports_de_collecte" + today().replaceAll("/", ""),"app-supports")}} />
+                                    <div className="col l6 m6 s12" style={{ textAlign: "end" }}>
+                                        <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }} onClick={(e) => { handlePrint(config, columns, props.items, 0) }} />
+                                        <img src={excel} alt="" style={{ cursor: "pointer" }} onClick={(e) => { table2XLSX("Liste_des_supports_de_collecte" + today().replaceAll("/", ""), "app-supports") }} />
                                     </div>
                                 </div>
                                 <div className="row">
                                     <div className="col s12">
                                         <ReactDatatable
-                                            className = {"responsive-table table-xlsx app-supports no-hover"}
+                                            className={"responsive-table table-xlsx app-supports no-hover"}
                                             config={config}
                                             records={props.items}
                                             columns={columns}
