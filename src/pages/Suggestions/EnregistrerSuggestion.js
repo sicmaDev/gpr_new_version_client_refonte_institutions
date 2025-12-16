@@ -79,10 +79,10 @@ const EnregistrerSuggestion = (props) => {
 
     useEffect(() => {
         KTApp.blockPage({
-          overlayColor: '#000000',
-          type: 'v2',
-          state: 'danger',
-          message: 'En cours de chargement...'
+            overlayColor: '#000000',
+            type: 'v2',
+            state: 'danger',
+            message: 'En cours de chargement...'
         })
         setIsLoading(true);
 
@@ -491,7 +491,7 @@ const EnregistrerSuggestion = (props) => {
             claim["id"] = props.id;
             // claim["files"] = props.selectedFiles;
             // claim["files"] = files;
-
+            console.log("ReceptDateTimeA", props.recorded_at);
             formData.append("suggestion", JSON.stringify(claim));
             for (let index = 0; index < files.length; index++) {
                 formData.append("files", files[index]);
@@ -576,7 +576,7 @@ const EnregistrerSuggestion = (props) => {
         props.suggestionsRecordErrors(errors)
     }
 
-    
+
     const [loadingId, setLoadingId] = useState(null);
     const handleEditClick = (claim) => (e) => {
         rowClickedHandler(e, claim, null);
@@ -594,13 +594,13 @@ const EnregistrerSuggestion = (props) => {
         e.preventDefault();
         setLoadingId(claim.id);
         deleteSuggestionApi(claim.id, props).then(() => {
-            listeByStatut(props, "TEMP_SAVED").then(() => {});
+            listeByStatut(props, "TEMP_SAVED").then(() => { });
 
             handleCancel(e);
             notify("Suppression effectuée avec succès", "success");
             setTimeout(() => setLoadingId(null), 500);
         });
-    };    
+    };
 
 
     if (!settingComplete.length) {
@@ -777,27 +777,27 @@ const EnregistrerSuggestion = (props) => {
             align: "left",
             sortable: true,
             cell: (claim, index) => {
-            const isLoading = loadingId === claim.id;
-            return (
-                <div style={{ display: "flex", gap: "5px" }}>
-                <Tooltip title="Modifier">
-                    <IconButton onClick={handleEditClick(claim)} color="primary">
-                    <EditIcon />
-                    </IconButton>
-                </Tooltip>
-                {mode === 1 && (
-                    <Tooltip title="Supprimer">
-                    <IconButton
-                        onClick={(e) => handleModal(e, claim)}
-                        color="error"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? <CircularProgress size={20} /> : <DeleteIcon />}
-                    </IconButton>
-                    </Tooltip>
-                )}
-                </div>
-            );
+                const isLoading = loadingId === claim.id;
+                return (
+                    <div style={{ display: "flex", gap: "5px" }}>
+                        <Tooltip title="Modifier">
+                            <IconButton onClick={handleEditClick(claim)} color="primary">
+                                <EditIcon />
+                            </IconButton>
+                        </Tooltip>
+                        {mode === 1 && (
+                            <Tooltip title="Supprimer">
+                                <IconButton
+                                    onClick={(e) => handleModal(e, claim)}
+                                    color="error"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? <CircularProgress size={20} /> : <DeleteIcon />}
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </div>
+                );
             },
         },
     ];
@@ -1097,26 +1097,26 @@ const EnregistrerSuggestion = (props) => {
     });
 
     //   default sms notification
-    
+
     const sendSms = async (e) => {
-       e.preventDefault();
-       if (props.phone !== "" && props.phone) {
+        e.preventDefault();
+        if (props.phone !== "" && props.phone) {
             props.etat2Changed(true);
-         await sleep(3000);
-         props.etat2Changed(true);
-         send({ phone: cleanPhoneNumber3(props.phone), message: smsToSend }).then(({ data }) => {
-           handleSubmit(e)
-           notify("Super - SMS envoyé", "success");
-         }).catch((err) => {
-           handleSubmit(e)
-           notify("Oups - SMS non envoyé", "error");
-         }).finally(() => {
-           KTApp.unblockPage();
-         })
-       } else {
-         notify("numéros de téléphone incorrecte", "error")
-       }
-     };
+            await sleep(3000);
+            props.etat2Changed(true);
+            send({ phone: cleanPhoneNumber3(props.phone), message: smsToSend }).then(({ data }) => {
+                handleSubmit(e)
+                notify("Super - SMS envoyé", "success");
+            }).catch((err) => {
+                handleSubmit(e)
+                notify("Oups - SMS non envoyé", "error");
+            }).finally(() => {
+                KTApp.unblockPage();
+            })
+        } else {
+            notify("numéros de téléphone incorrecte", "error")
+        }
+    };
 
     return (
         //  'Enregistrer suggestion'
@@ -1256,7 +1256,7 @@ const EnregistrerSuggestion = (props) => {
                                                     config={config}
                                                     records={content}
                                                     columns={columns}
-                                                    // onRowClicked={rowClickedHandler}
+                                                // onRowClicked={rowClickedHandler}
                                                 />
                                             </div>
                                         </div>

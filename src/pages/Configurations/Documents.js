@@ -55,7 +55,7 @@ const Documents = (props) => {
 
     const topRef = useRef(null);
     useAutoScroll(topRef, [props.selectedItem.id], "top");
-
+    const fileInputRef = useRef(null);
     let code;
     let columns = [
         {
@@ -166,6 +166,12 @@ const Documents = (props) => {
         props.libelleChanged("")
         props.selectedFilesChanged([])
         props.selectedItemChanged({})
+        props.selectedFilesReset("");
+        setFiles([]);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     }
     const handleSubmit = (e) => {
         e.preventDefault()
@@ -263,6 +269,7 @@ const Documents = (props) => {
                             <div className="btn btn-small file-small brand-blue">
                                 <span>Fichier</span>
                                 <input type="file"
+                                    ref={fileInputRef}
                                     onChange={(e) => handleFile(e)}
                                     accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
                                 />

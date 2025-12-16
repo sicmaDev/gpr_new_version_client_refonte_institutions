@@ -162,7 +162,7 @@ const MesurerReclamation = (props) => {
   const [audioListForm, setAudioListForm] = useState([]);
   const [audioListUrlForm, setAudioListUrlForm] = useState([]);
 
-  useEffect(() => {}, [showAudioPlayer, currentAudio]);
+  useEffect(() => { }, [showAudioPlayer, currentAudio]);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -360,7 +360,7 @@ const MesurerReclamation = (props) => {
     if (props.match.params.code === "all") {
       props.itemsChanged([]);
       listeByStatut(props, "TREAT")
-        .then((r) => {})
+        .then((r) => { })
         .finally(() => {
           setIsLoading(false);
           KTApp.unblockPage();
@@ -412,7 +412,7 @@ const MesurerReclamation = (props) => {
   const [smsSegments, setSmsSegments] = useState([]);
   let appSms =
     loadItemFromLocalStorage("app-sms") !== undefined &&
-    loadItemFromLocalStorage("app-sms").length !== 0
+      loadItemFromLocalStorage("app-sms").length !== 0
       ? JSON.parse(loadItemFromLocalStorage("app-sms"))
       : undefined;
 
@@ -482,12 +482,12 @@ const MesurerReclamation = (props) => {
             phone: cleanPhoneNumber3(props.phone),
             message: segment,
           });
-         
+
           await sleep(500); // petite pause entre chaque SMS si besoin
         }
         notify("Super - SMS envoyé", "success");
       } catch (err) {
-       
+
         notify("Oups - SMS non envoyé", "error");
       } finally {
         setLoading(false);
@@ -1014,9 +1014,8 @@ const MesurerReclamation = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${
-                      attachment.extra?.user?.firstAndLastName
-                    } le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName
+                      } le ${formatDate(attachment.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1131,9 +1130,8 @@ const MesurerReclamation = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${
-                      audioItem.extra?.user?.firstAndLastName
-                    } le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName
+                      } le ${formatDate(audioItem.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1583,7 +1581,7 @@ const MesurerReclamation = (props) => {
 
     addExtraClaimApi(formData)
       .then((res) => {
-       
+
         if (isFile) {
           getFillesApi(currentData?.id, props);
           clearFiles();
@@ -1598,7 +1596,7 @@ const MesurerReclamation = (props) => {
         }
       })
       .catch((err) => {
-       
+
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {
@@ -1615,14 +1613,14 @@ const MesurerReclamation = (props) => {
 
     addExtraClaimApi(formData)
       .then((res) => {
-       
+
         props.extrasChanged(res.data.content.extras ?? []);
         notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
         setExtraContent("");
       })
       .catch((err) => {
-      
+
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {
@@ -1740,11 +1738,8 @@ const MesurerReclamation = (props) => {
                     );
                   })}
                 </List>
-                <div
-                  style={{ display: "flex", alignItems: "center" }}
-                  htmlFor="ile"
-                  onClick={(e) => setFiles([])}
-                >
+                <div style={{ display: "flex", alignItems: "center" }}
+                  htmlFor="ile">
                   <LoadingButton
                     onClick={(e) => {
                       handleFileSubmit(e);
@@ -1852,7 +1847,7 @@ const MesurerReclamation = (props) => {
                   <RecorderControls
                     recorderState={recorderState}
                     handlers={handlers}
-                    closeAction={() => {}}
+                    closeAction={() => { }}
                   />
                 </div>
               </section>

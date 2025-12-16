@@ -391,7 +391,7 @@ const TraiterReclamation = (props) => {
 
       if (mode === 1) {
         addSuggestionApi(formData, props).then((response) => {
-        
+
           const data = {
             code: response.data.content.code,
             claimId: dataRow.id,
@@ -399,7 +399,7 @@ const TraiterReclamation = (props) => {
 
           convertClaimApi(data, props)
             .then(() => {
-               setLoadingConversion(false);
+              setLoadingConversion(false);
               history.push("/suggestions/traitement");
             })
             .finally(() => {
@@ -410,7 +410,7 @@ const TraiterReclamation = (props) => {
         // Offline mode
       }
     } else {
-   
+
       if (mode === 1) {
         const data = {
           code: dataRow.code,
@@ -420,7 +420,7 @@ const TraiterReclamation = (props) => {
 
         convertClaimApi(data, props)
           .then(() => {
-             setLoadingConversion(false);
+            setLoadingConversion(false);
             history.push("/denonciations/traitement/all");
           })
           .finally(() => {
@@ -518,7 +518,7 @@ const TraiterReclamation = (props) => {
         if (cc.status >= 200 && cc.status <= 299) {
           // await listeTreat(props);
           let data = cc.data.content;
-         
+
           clearComponentState();
 
           //console.log("level",data.objet.risqueLevel)
@@ -529,7 +529,7 @@ const TraiterReclamation = (props) => {
             case "MINEUR":
               users.map((user) => {
                 if (userConnected.ra === true) {
-                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
                     let hab = user.posteDto.habilitations.split(",");
                     if (hab.includes("H1", "H2", "H3")) {
                       agentMailOptions.push({
@@ -560,7 +560,7 @@ const TraiterReclamation = (props) => {
             case "MOYEN":
               users.map((user) => {
                 if (userConnected.ra === true) {
-                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
                     let hab = user.posteDto.habilitations.split(",");
                     if (hab.includes("H3")) {
                       agentMailOptions.push({
@@ -568,7 +568,7 @@ const TraiterReclamation = (props) => {
                         value: user.id,
                         email: user.email,
                       });
-                    }                  
+                    }
                   }
                 } else if (user.deleted === false) {
                   let hab = user.posteDto.habilitations.split(",");
@@ -578,7 +578,7 @@ const TraiterReclamation = (props) => {
                       value: user.id,
                       email: user.email,
                     });
-                  }                  
+                  }
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -591,7 +591,7 @@ const TraiterReclamation = (props) => {
             case "GRAVE":
               users.map((user) => {
                 if (userConnected.ra === true) {
-                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+                  if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
                     let hab = user.posteDto.habilitations.split(",");
                     if (hab.includes("H4")) {
                       agentMailOptions.push({
@@ -600,7 +600,7 @@ const TraiterReclamation = (props) => {
                         value: user.id,
                         email: user.email,
                       });
-                    }                  
+                    }
                   }
                 } else if (user.deleted === false) {
                   let hab = user.posteDto.habilitations.split(",");
@@ -611,7 +611,7 @@ const TraiterReclamation = (props) => {
                       value: user.id,
                       email: user.email,
                     });
-                  }                
+                  }
                 }
               });
               setAgentsMailOptions(agentMailOptions);
@@ -722,7 +722,7 @@ const TraiterReclamation = (props) => {
     if (props.match.params.code === "all") {
       props.itemsChanged([]);
       listeTreat(props)
-        .then((r) => {})
+        .then((r) => { })
         .finally(() => {
           setIsLoading(false);
           KTApp.unblockPage();
@@ -850,6 +850,8 @@ const TraiterReclamation = (props) => {
       {},
       JSON.stringify(chatMessage)
     );
+    setGuests(prev => prev.filter(g => g.id !== idi));
+
   };
 
   const connect = () => {
@@ -1465,7 +1467,7 @@ const TraiterReclamation = (props) => {
             }
             break;
           case "MOYEN":
-             if (claim.transmitted) {
+            if (claim.transmitted) {
               graviteElt = (
                 <>
                   <div className="df">
@@ -1479,10 +1481,10 @@ const TraiterReclamation = (props) => {
             } else {
               graviteElt = <span className="orange-text text-bold">Moyen</span>;
             }
-           
+
             break;
           case "GRAVE":
-             if (claim.transmitted) {
+            if (claim.transmitted) {
               graviteElt = (
                 <>
                   <div className="df">
@@ -1575,7 +1577,7 @@ const TraiterReclamation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-  
+
     setDataRow(data);
 
     handleClickOpen();
@@ -1589,7 +1591,7 @@ const TraiterReclamation = (props) => {
       case "MINEUR":
         users.map((user) => {
           if (userConnected.ra === true) {
-            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
               let hab = user.posteDto.habilitations.split(",");
               if (hab.includes("H1", "H2", "H3")) {
                 agentMailOptions.push({
@@ -1597,9 +1599,9 @@ const TraiterReclamation = (props) => {
                   value: user.id,
                   email: user.email,
                 });
-              }            
+              }
             }
-          } else if (user.deleted === false) {            
+          } else if (user.deleted === false) {
             let hab = user.posteDto.habilitations.split(",");
             if (hab.includes("H1", "H2", "H3")) {
               agentMailOptions.push({
@@ -1620,7 +1622,7 @@ const TraiterReclamation = (props) => {
       case "MOYEN":
         users.map((user) => {
           if (userConnected.ra === true) {
-            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
               let hab = user.posteDto.habilitations.split(",");
               if (hab.includes("H3")) {
                 agentMailOptions.push({
@@ -1628,7 +1630,7 @@ const TraiterReclamation = (props) => {
                   value: user.id,
                   email: user.email,
                 });
-              }            
+              }
             }
           } else if (user.deleted === false) {
             let hab = user.posteDto.habilitations.split(",");
@@ -1638,7 +1640,7 @@ const TraiterReclamation = (props) => {
                 value: user.id,
                 email: user.email,
               });
-            }            
+            }
           }
         });
         setAgentsMailOptions(agentMailOptions);
@@ -1651,7 +1653,7 @@ const TraiterReclamation = (props) => {
       case "GRAVE":
         users.map((user) => {
           if (userConnected.ra === true) {
-            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {                    
+            if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
               let hab = user.posteDto.habilitations.split(",");
               if (hab.includes("H4")) {
                 agentMailOptions.push({
@@ -1659,9 +1661,9 @@ const TraiterReclamation = (props) => {
                   value: user.id,
                   email: user.email,
                 });
-              }            
+              }
             }
-          } else if (user.deleted === false) {            
+          } else if (user.deleted === false) {
             let hab = user.posteDto.habilitations.split(",");
             if (hab.includes("H4")) {
               agentMailOptions.push({
@@ -1683,7 +1685,7 @@ const TraiterReclamation = (props) => {
       default:
         break;
     }
-    setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45); 
+    setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45);
     props.idChanged(data.id ? data.id : "");
     props.lastnameChanged(
       data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -1877,8 +1879,8 @@ const TraiterReclamation = (props) => {
                 </div>
 
                 {guests !== null &&
-                guests?.length > 0 &&
-                guests.at(0).firstAndLastName != null ? (
+                  guests?.length > 0 &&
+                  guests.at(0).firstAndLastName != null ? (
                   <>
                     {guests?.map((guest) => (
                       <li
@@ -1906,16 +1908,12 @@ const TraiterReclamation = (props) => {
                               <i className="fa fa-circle online"></i> online
                             </div> */}
                         </div>
-                        {!showJoinBtn ? (
-                          <IconButton
-                            onClick={(e) => handleEject(e, guest.id)}
-                            color="primary"
-                            aria-label="Ajouter"
-                            style={{ marginLeft: "auto" }}
-                          >
+                        {showJoinBtn ?
+                          <IconButton onClick={(e) => handleEject(e, guest.id)} color="primary" aria-label="Ajouter" style={{ marginLeft: "auto" }}>
                             <RemoveCircleOutlineIcon />
                           </IconButton>
-                        ) : null}
+                          : null
+                        }
                       </li>
                     ))}
                   </>
@@ -2119,10 +2117,10 @@ const TraiterReclamation = (props) => {
                                                     color: "white",
                                                   },
                                                   " .MuiFormControlLabel-label":
-                                                    {
-                                                      color: "white",
-                                                      fontWeight: "bold",
-                                                    },
+                                                  {
+                                                    color: "white",
+                                                    fontWeight: "bold",
+                                                  },
                                                 }}
                                               />
                                             }
@@ -2183,9 +2181,9 @@ const TraiterReclamation = (props) => {
                                       {(chat?.voteDto?.userVote).filter((e) => {
                                         return e.voteType === "POUR";
                                       }).length >
-                                      (chat?.voteDto?.userVote).filter((e) => {
-                                        return e.voteType === "CONTRE";
-                                      }).length ? (
+                                        (chat?.voteDto?.userVote).filter((e) => {
+                                          return e.voteType === "CONTRE";
+                                        }).length ? (
                                         <>
                                           <hr
                                             style={{ borderColor: "white" }}
@@ -2499,9 +2497,9 @@ const TraiterReclamation = (props) => {
                                       {(chat?.voteDto?.userVote).filter((e) => {
                                         return e.voteType === "POUR";
                                       }).length >
-                                      (chat?.voteDto?.userVote).filter((e) => {
-                                        return e.voteType === "CONTRE";
-                                      }).length ? (
+                                        (chat?.voteDto?.userVote).filter((e) => {
+                                          return e.voteType === "CONTRE";
+                                        }).length ? (
                                         <>
                                           <hr
                                             style={{ borderColor: "white" }}
@@ -2732,12 +2730,12 @@ const TraiterReclamation = (props) => {
     let solutions =
       interne === false
         ? Array.from(
-            props.solution.filter((e) => {
-              return (
-                e.status === "APPROVED" && e.satisfactionMeasureDto !== null
-              );
-            })
-          )
+          props.solution.filter((e) => {
+            return (
+              e.status === "APPROVED" && e.satisfactionMeasureDto !== null
+            );
+          })
+        )
         : Array.from(props.solution);
 
     let couleurs = [
@@ -2775,10 +2773,10 @@ const TraiterReclamation = (props) => {
                   solution.satisfactionMeasureDto.status === "SATISFIED"
                     ? "Satisfait"
                     : solution.satisfactionMeasureDto.status === "UNSATISFIED"
-                    ? "Non satisfait"
-                    : solution.satisfactionMeasureDto.status === "PARTIAL"
-                    ? "Partiellement satisfait"
-                    : "";
+                      ? "Non satisfait"
+                      : solution.satisfactionMeasureDto.status === "PARTIAL"
+                        ? "Partiellement satisfait"
+                        : "";
                 mesure = (
                   <>
                     <Typography component="div">
@@ -2895,8 +2893,8 @@ const TraiterReclamation = (props) => {
                           {solution?.author?.firstAndLastName} -{" "}
                           <span style={{ fontSize: "12px" }}>
                             {solution !== null &&
-                            solution?.createdAt !== null &&
-                            solution?.createdAt !== undefined
+                              solution?.createdAt !== null &&
+                              solution?.createdAt !== undefined
                               ? formatDate(solution?.createdAt)
                               : ""}
                           </span>
@@ -2921,7 +2919,7 @@ const TraiterReclamation = (props) => {
 
                             {solution.satisfactionMeasureDto ? (
                               solution.satisfactionMeasureDto.commentaire !==
-                              null ? (
+                                null ? (
                                 <div className="col l12 s12 pb-2" id="content">
                                   <div className="df pb-2">
                                     <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
@@ -3084,7 +3082,7 @@ const TraiterReclamation = (props) => {
     return isValid;
   };
   const handleValidationForReAssign = () => {
-   
+
     let isValid = true;
 
     if (
@@ -3294,7 +3292,7 @@ const TraiterReclamation = (props) => {
   };
 
   let statusElt;
-  let affectForm="";
+  let affectForm = "";
   let treatForm;
   let solutionsListe = [];
   switch (props.status) {
@@ -3351,12 +3349,12 @@ const TraiterReclamation = (props) => {
 
             </div>
           </div>
-         
+
         </>
-      ):"";
-     
+      ) : "";
+
       if (
-        (props.transmitted === "true" && user.firstAndLastName === props.transmittedBy )
+        (props.transmitted === "true" && user.firstAndLastName === props.transmittedBy)
       ) {
         affectForm = (
           <>
@@ -3372,12 +3370,12 @@ const TraiterReclamation = (props) => {
                   alignItems: "center",
                 }}
               >
-                Vous avez transmis cette réclamation à <strong style={{ color: "#1976d2", marginLeft: "0.25em"  }}>{props.transmittedTo ? props.transmittedTo : "—"}</strong>{" "}. Vous n'avez plus la main sur elle.
+                Vous avez transmis cette réclamation à <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>{props.transmittedTo ? props.transmittedTo : "—"}</strong>{" "}. Vous n'avez plus la main sur elle.
               </div>
             </div>
           </>
         );
-      }else if(hbt.includes("H6") || addR === "PILOTE" || (user.ra === true)) {
+      } else if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true)) {
         affectForm = (
           <>
             {personTransmit}
@@ -3770,7 +3768,7 @@ const TraiterReclamation = (props) => {
               {props.authorize ? (
                 <>
                   {solutionsListe !== undefined &&
-                  solutionsListe.length !== 0 ? (
+                    solutionsListe.length !== 0 ? (
                     <div className="row">
                       <div className="col l12">
                         <details>
@@ -4874,9 +4872,8 @@ const TraiterReclamation = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${
-                      attachment.extra?.user?.firstAndLastName
-                    } le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName
+                      } le ${formatDate(attachment.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -4937,7 +4934,7 @@ const TraiterReclamation = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio); 
+    console.log("props.selectedItemAudio", props.selectedItemAudio);
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
         <Grid item xs={12} sm={6} key={audioItem.id}>
@@ -4992,9 +4989,8 @@ const TraiterReclamation = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${
-                      audioItem.extra?.user?.firstAndLastName
-                    } le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName
+                      } le ${formatDate(audioItem.extra?.createdAt)}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -5243,10 +5239,10 @@ const TraiterReclamation = (props) => {
   let btnS = "";
 
   if (
-    (addR !== "PILOTE" &&  !hbt.includes("H6")) &&
+    (addR !== "PILOTE" && !hbt.includes("H6")) &&
     ((user.firstAndLastName === props.created_by && props.transmitted === "false") ||
-      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && addR === "MOLDUE") || 
-      (user.ra === true && props.transmitted === "false")) &&
+      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && addR === "MOLDUE") ||
+      (user.ra === true && props.transmitted === "false" && props.authorize)) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -5267,7 +5263,7 @@ const TraiterReclamation = (props) => {
   } else {
     transmettre = "";
   }
- 
+
   if (
     (user.firstAndLastName === props.created_by &&
       props.transmitted === "false" &&
@@ -5298,7 +5294,7 @@ const TraiterReclamation = (props) => {
           </LoadingButton>
         </>
       );
-    
+
     } else if (props.session !== "" && props.session.status === "OPEN") {
       btnS = (
         // (actif !== undefined && actif) ?
@@ -5414,10 +5410,10 @@ const TraiterReclamation = (props) => {
   });
 
   useEffect(() => {
-   
+
     if (inputRef.current) {
       inputRef.current.value = null;
-     
+
     }
     // clearFiles();
   }, [filesForm.length]);
@@ -5437,10 +5433,10 @@ const TraiterReclamation = (props) => {
       for (let index = 0; index < audioListForm.length; index++) {
         // Génère un timestamp unique
         const now = new Date();
-        const date = now.toLocaleDateString("fr-FR").replaceAll("/", ""); 
+        const date = now.toLocaleDateString("fr-FR").replaceAll("/", "");
         const time = now
           .toLocaleTimeString("fr-FR", { hour12: false })
-          .replaceAll(":", ""); 
+          .replaceAll(":", "");
 
         // Crée un nom unique
         const fileName = `claim_extra_record_${date}_${time}_${index}.ogg`;
@@ -5455,10 +5451,10 @@ const TraiterReclamation = (props) => {
       }
     }
 
-  
+
     addExtraClaimApi(formData)
       .then((res) => {
-      
+
         if (isFile) {
           getFillesApi(currentData?.id, props);
           clearFiles();
@@ -5473,7 +5469,7 @@ const TraiterReclamation = (props) => {
         }
       })
       .catch((err) => {
-       
+
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {
@@ -5490,14 +5486,14 @@ const TraiterReclamation = (props) => {
 
     addExtraClaimApi(formData)
       .then((res) => {
-        
+
         props.extrasChanged(res.data.content.extras ?? []);
         notify("Contenue joint ajoutée  ", "success");
         setShowExtraContent(false);
         setExtraContent("");
       })
       .catch((err) => {
-        
+
         notify("Une erreur s'est produite ", "error");
       })
       .then(() => {
@@ -5619,11 +5615,7 @@ const TraiterReclamation = (props) => {
                       );
                     })}
                   </List>
-                  <div
-                    style={{ display: "flex", alignItems: "center" }}
-                    htmlFor="ile"
-                    onClick={(e) => setFiles([])}
-                  >
+                  <div style={{ display: 'flex', alignItems: 'center', }} htmlFor="ile" >
                     <LoadingButton
                       onClick={(e) => {
                         handleFileSubmit(e);
@@ -5731,7 +5723,7 @@ const TraiterReclamation = (props) => {
                     <RecorderControls
                       recorderState={recorderState}
                       handlers={handlers}
-                      closeAction={() => {}}
+                      closeAction={() => { }}
                     />
                   </div>
                 </section>
@@ -6184,8 +6176,8 @@ const TraiterReclamation = (props) => {
                               </div>
 
                               {props.status === "PARTIAL_SATISFIED" ||
-                              props.status === "UNSATISFIED" ||
-                              props.status === "CLASSED"
+                                props.status === "UNSATISFIED" ||
+                                props.status === "CLASSED"
                                 ? historique
                                 : null}
 

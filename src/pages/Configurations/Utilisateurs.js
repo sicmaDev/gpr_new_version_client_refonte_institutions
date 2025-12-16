@@ -145,7 +145,7 @@ const Utilisateurs = (props) => {
             modalify("Confirmation", "Voulez-vous vraiment supprimé ce compte ?", "confirm", (e) => handleDisable(e, sp, false, true))
         }
     }
-    //console.log
+
 
     let code;
     let columns = [
@@ -922,7 +922,7 @@ const Utilisateurs = (props) => {
                                     />
                                     <label htmlFor="usrole" className={"active"}>Privilège Spécifique&nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="L'un des privilèges spécifiques àdonner à qui de droit">
+                                            data-tooltip="L'un des privilèges spécifiques à donner à qui de droit">
                                             <HelpIcon />
                                         </a>
                                     </label>

@@ -2714,9 +2714,7 @@ const ListeReclamations = (props) => {
                 </List>
                 <div
                   style={{ display: "flex", alignItems: "center" }}
-                  htmlFor="ile"
-                  onClick={(e) => setFiles([])}
-                >
+                  htmlFor="ile">
                   <LoadingButton
                     onClick={(e) => {
                       handleFileSubmit(e);
