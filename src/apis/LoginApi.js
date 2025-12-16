@@ -93,53 +93,30 @@ export const LoginApi = (credentials, props,isLocked =false) => {
         })
         .catch(function (error) {
             props.etatChanged(false)
-            notify("Erreur - Les identifiants sont incorrects", "error");
+            
             saveItemToSessionStorage(0, 'logged')
-        //    console.log("loginerror",error)
+            //    console.log("loginerror",error)
+            if (error?.response) {
+                const status = error.response.status;
+                const message = error.response.data?.message;
+
+                if (status === 403) {
+                    // message personnalisé pour 403
+                    notify("Erreur - Les identifiants sont incorrects", "error");
+                } else if (message) {
+                    // afficher le message renvoyé par le backend
+                    notify(message, "error");
+                } else {
+                    // fallback générique
+                    notify("Erreur - Les identifiants sont incorrects", "error");
+                }
+            } else {
+                // erreur réseau ou autre
+                notify("Erreur - Les identifiants sont incorrects", "error");
+            }
             
         });
 }
-
-
-// export const licenseInfo = async () => {
-//     let contenu;
-
-//     const response = await axios.post(READ_LICENSE_INFO, {
-//         headers: {
-//             'Accept': 'application/json',
-//             'Content-Type': 'application/json',
-//             // 'Authorization': loadItemFromSessionStorage('tok')
-//         }
-//     });
-//     const config = {
-//         method: 'post',
-//         url: READ_LICENSE_INFO,
-//         headers: {
-//             'Accept': 'application/json',
-//             'Content-Type': 'application/json',
-//             // 'Authorization': loadItemFromSessionStorage('tok')
-//         }
-//     };
-//         axios(config)
-//             .then(function (response) {
-
-//                 if (response.data.status === false) {
-//                     // notify(response.data.content.message, "error");
-//                 } else {
-                    
-//                     console.log("licence info demande",response.data);
-//                     return "azerty"
-//                 }
-//                 console.log("licence info demande",response.data);
-//                 contenu = "blalabla";
-//             })
-//             .catch(function (error) {
-//                 console.log("licence info error",error)
-//             });  
-   
-//     return contenu;
-
-// }
 
 export const licenseInfo = async () => {
     try {
@@ -173,33 +150,6 @@ export const licenseInfo = async () => {
 export const LoginApiOffline = (credentials, props) => {
     let user = loadItemFromLocalStorage("app-user") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-user")) : undefined;
     props.etatChanged(false)
-    
-    // let date1 = new Intl.DateTimeFormat("fr-FR", {year: "numeric", day: "2-digit", month: "2-digit", hour:"2-digit", minute:"2-digit"}).format(new Date(Date.now()))
-
-    // let tmpsR = JSON.parse((loadItemFromLocalStorage("recs-TS"))).filter((e)=>{ return e.id===""})
-    // let dateR = tmpsR.length !==0 ? new Intl.DateTimeFormat("fr-FR", {year: "numeric", day: "2-digit", month: "2-digit", hour:"2-digit", minute:"2-digit"}).format(new Date(tmpsR[0].createdAt)):""
-    // let etatR = tmpsR.length !==0 ? ((date1 > dateR) ? true :false) : false;
-   
-    
-    // let tmpsD = JSON.parse((loadItemFromLocalStorage("dens-TS"))).filter((e)=>{ return e.id===""})
-    // let dateD = tmpsD.length !==0 ? new Intl.DateTimeFormat("fr-FR", {year: "numeric", day: "2-digit", month: "2-digit", hour:"2-digit", minute:"2-digit"}).format(new Date(tmpsD[0].createdAt)):""
-    // let etatD = tmpsD.length !==0 ? ((date1 > dateD) ? true :false) : false;
-
-    // let tmpsS = JSON.parse((loadItemFromLocalStorage("sugs-TS"))).filter((e)=>{ return e.id===""})
-    // let dateS = tmpsS.length !==0 ? new Intl.DateTimeFormat("fr-FR", {year: "numeric", day: "2-digit", month: "2-digit", hour:"2-digit", minute:"2-digit"}).format(new Date(tmpsS[0].createdAt)):""
-    // let etatS = tmpsS.length !==0 ? ((date1 > dateS) ? true :false) : false;
-
-    // var day1 = new Date('08/25/2020');
-    // var day2 = new Date('08/25/2021');
-
-    // var difference = Math.abs(new Date(day2)-new Date(day1));
-    // let days = difference / (1000 * 3600 * 24)
-
- 
-    // console.log("today1",days)
-    // console.log("etats",etatR + "den : "+etatD+"sug : "+etatS)
-    // console.log("today2",date1 < date2)
-
 
     if (user.email === credentials.email) {
         // if (etatR === true || etatD === true || etatS === true) {

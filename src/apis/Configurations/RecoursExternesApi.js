@@ -64,7 +64,11 @@ export const ajout = async (data, props) => {
         })
         .catch(function (error) {
             props.etatChanged(false)
-            notify("Erreur - Veuillez réessayer!", "error");
+            if (error.response.data.content !== "") {
+                notify(error.response.data.content.message, "error");
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
         });
 
 }
@@ -95,7 +99,11 @@ export const modification = async (data, props) => {
         })
         .catch(function (error) {
             props.etat2Changed(false)
-            notify("Erreur - Veuillez réessayer!", "error");
+            if (error.response.data.content !== "") {
+                notify(error.response.data.content.message, "error");
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
         });
 
 }

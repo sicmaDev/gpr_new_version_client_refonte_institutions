@@ -558,7 +558,7 @@ export const startSession = async (data, props) => {
             notify("Bravo - Session démarrée", "success");
             // console.log("reponsesessionadd",response.data.content)
             props.sessionChanged(response.data.content)
-            // listeByStatut(props,"TEMP_SAVED")
+            listeTreat(props)
         })
         .catch(function (error) {
             props.etat4Changed(false)

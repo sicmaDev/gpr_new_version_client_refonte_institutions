@@ -5263,7 +5263,8 @@ const TraiterReclamation = (props) => {
   } else {
     transmettre = "";
   }
-
+  console.log("props.handled", (props.status === "AFFECTED" || props.status === "DESAPPROUVED") &&
+      user.firstAndLastName === props.handled_by);
   if (
     (user.firstAndLastName === props.created_by &&
       props.transmitted === "false" &&
@@ -5295,7 +5296,13 @@ const TraiterReclamation = (props) => {
         </>
       );
 
-    } else if (props.session !== "" && props.session.status === "OPEN") {
+    } else if (
+      (props.session !== "" && props.session.status === "OPEN") && 
+      (props.transmitted !== "false" &&
+      user.firstAndLastName === props.transmittedTo &&
+      props.status === "SAVED" &&
+      addR === "MOLDUE")
+    ) {
       btnS = (
         // (actif !== undefined && actif) ?
         <>
