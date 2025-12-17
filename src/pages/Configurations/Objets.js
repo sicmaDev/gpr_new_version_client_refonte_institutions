@@ -62,7 +62,6 @@ const Objets = (props) => {
             setIsLoading(false);
             KTApp.unblockPage();
         });
-
         window.$('.tooltipped').tooltip();
         //cleanup
         return clearComponentState();
@@ -76,7 +75,7 @@ const Objets = (props) => {
         {
             key: "uuid",
             text: "Uuid",
-            className: "description",
+            className: "name",
             align: "left",
             sortable: true
         },
@@ -94,6 +93,17 @@ const Objets = (props) => {
             align: "left",
             sortable: true
         },
+
+        {
+            key: "categorie",
+            text: "Catégorie",
+            className: "level",
+            align: "left",
+            sortable: true,
+            cell: (row) => (
+                row?.categorie?.libelle ?? "-"
+            )
+        },
         {
             key: "risqueLevel",
             text: "Niveau de gravité",
@@ -108,7 +118,6 @@ const Objets = (props) => {
             align: "left",
             sortable: true
         },
-
         {
             key: "action",
             text: "Actions",
@@ -306,6 +315,7 @@ const Objets = (props) => {
         props.descriptionChanged(data.description ? data.description : "")
         props.processingTimeChanged(data.processingTime ? data.processingTime : "")
         props.selectedItemChanged(data ? data : "")
+
 
 
     }
