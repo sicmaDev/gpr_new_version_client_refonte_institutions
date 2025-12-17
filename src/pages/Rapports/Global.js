@@ -502,6 +502,8 @@ const Global = (props) => {
     datasets: [],
   });
 
+  const [isPrinting, setIsPrinting] = useState(false);
+
   // console.log("taille ps:",rdsBarModaliteGlobal?.datasets[0]?.data?.length)
   // const nba = unit.length === 0 ? ((ps.length)*100)+"px" : ((unit.length)*100)+"px" ;
   let nba = ((rdsBarModaliteGlobal?.datasets[0]?.data?.length) * 100);
@@ -1567,7 +1569,7 @@ const Global = (props) => {
             >              
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalPieChartRef: false } }) }} /> : <></>}</div>
               <div style={{ flex: "1 auto" }}>              
-                <LazyChart height={600}>
+                <LazyChart height={600} forceRender={isPrinting}>
                   {rdsPieGlobal ? (
                     <LazyChartWrapper
                       type="pie"
@@ -1609,7 +1611,7 @@ const Global = (props) => {
                 className="total-transaction-container "
                 style={{ flex: "1 auto" }}
               >
-                <LazyChart height={600}>
+                <LazyChart height={600} forceRender={isPrinting}>
                   {rdsBarGlobal ? (
                     <LazyChartWrapper
                       type="bar"
@@ -1657,7 +1659,7 @@ const Global = (props) => {
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                <LazyChart height={600}>
+                <LazyChart height={600} forceRender={isPrinting}>
                  {rdsPieModaliteGlobal ? (
                     <LazyChartWrapper
                       type="pie"
@@ -1689,7 +1691,7 @@ const Global = (props) => {
               className="card"
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalBarChartRef: false } }) }} /> : <></>}</div>              
-              <LazyChart overflow={"y"} height={nba}>
+              <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                 {rdsBarModaliteGlobal ? (
                   <LazyChartWrapper
                     type="bar"
@@ -1755,7 +1757,7 @@ const Global = (props) => {
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                <LazyChart height={500}>
+                <LazyChart height={500} forceRender={isPrinting}>
                   {rdsPieObjetGlobal ? (
                     <LazyChartWrapper
                       type="pie"
@@ -1790,7 +1792,7 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetBarChartRef: false } }) }} /> : <></>}</div>
-              <LazyChart overflow={"y"} height={nba}>
+              <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                 {rdsBarObjetGlobal ? (
                   <LazyChartWrapper
                     type="bar"
@@ -1868,7 +1870,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, evolutionByAgenceByAnneeBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"x"} height={nba}>
+                <LazyChart overflow={"x"} height={nba} forceRender={isPrinting}>
                   {rdsBarAgenceGlobal ? (
                     <LazyChartWrapper
                       type="bar"
@@ -1932,7 +1934,7 @@ const Global = (props) => {
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                <LazyChart height={600}>
+                <LazyChart height={600} forceRender={isPrinting}>
                   {rdsPieAgenceClaim ? (
                     <LazyChartWrapper
                       type="pie"
@@ -1973,7 +1975,7 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-              <LazyChart overflow={"x"} height={nba}>
+              <LazyChart overflow={"x"} height={nba} forceRender={isPrinting}>
                 {rdsBarAgenceClaim ? (
                   <LazyChartWrapper
                     type="bar"
@@ -2032,7 +2034,7 @@ const Global = (props) => {
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                <LazyChart height={600}>
+                <LazyChart height={600} forceRender={isPrinting}>
                   {rdsPieAgenceDenun ? (
                     <LazyChartWrapper
                       type="pie"
@@ -2073,7 +2075,7 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-              <LazyChart overflow={"x"} height={nba}>
+              <LazyChart overflow={"x"} height={nba} forceRender={isPrinting}>
                 {rdsBarAgenceDenun ? (
                   <LazyChartWrapper
                     type="bar"
@@ -2132,7 +2134,7 @@ const Global = (props) => {
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                <LazyChart height={600}>
+                <LazyChart height={600} forceRender={isPrinting}>
                   {rdsPieAgenceSugge ? (
                     <LazyChartWrapper
                       type="pie"
@@ -2176,7 +2178,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"x"} height={nba}>
+                <LazyChart overflow={"x"} height={nba} forceRender={isPrinting}>
                   {rdsBarAgenceSugge ? (
                     <LazyChartWrapper
                       type="bar"
@@ -2239,7 +2241,7 @@ const Global = (props) => {
                 className="total-transaction-container "
                 style={{ flex: "1 auto" }}
               >
-                <LazyChart height={600}>
+                <LazyChart height={600} forceRender={isPrinting}>
                   {rdsPieModaliteClaim ? (
                     <LazyChartWrapper
                       type="pie"
@@ -2282,7 +2284,7 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByCanalBarChartRef: false } }) }} /> : <></>}</div>
-              <LazyChart overflow={"y"} height={nba}>
+              <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                 {rdsBarModaliteClaim ? (
                   <LazyChartWrapper
                     type="bar"
@@ -2351,7 +2353,7 @@ const Global = (props) => {
                 className="total-transaction-container"
                 style={{ flex: "1 auto" }}
               >
-                <LazyChart height={600}>
+                <LazyChart height={600} forceRender={isPrinting}>
                   {rdsPieModaliteDenun ? (
                     <LazyChartWrapper
                       type="pie"
@@ -2392,7 +2394,7 @@ const Global = (props) => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByCanalBarChartRef: false } }) }} /> : <></>}</div>
-              <LazyChart overflow={"y"} height={nba}>
+              <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                 {rdsBarModaliteDenun ? (
                   <LazyChartWrapper
                     type="bar"
@@ -2464,7 +2466,7 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {rdsPieModaliteSugge ? (
                       <LazyChartWrapper
                         type="pie"
@@ -2508,7 +2510,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"y"} height={nba}>
+                <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                   {rdsBarModaliteSugge ? (
                     <LazyChartWrapper
                       type="bar"
@@ -2586,7 +2588,7 @@ const Global = (props) => {
                   className="total-transaction-container "
                   style={{ flex: "1 auto" }}
                 >
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {rdsPieObjetClaim ? (
                       <LazyChartWrapper
                         type="pie"
@@ -2631,7 +2633,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"y"} height={nba}>
+                <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                   {rdsBarObjetClaim ? (
                     <LazyChartWrapper
                       type="bar"
@@ -2705,7 +2707,7 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {rdsPieObjetDenun ? (
                       <LazyChartWrapper
                         type="pie"
@@ -2749,7 +2751,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"y"} height={nba}>
+                <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                   {rdsBarObjetDenun ? (
                     <LazyChartWrapper
                       // redraw={true}                      
@@ -2821,7 +2823,7 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {rdsPieGenreClaim ? (
                       <LazyChartWrapper
                         type="pie"
@@ -2865,7 +2867,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"y"} height={nba}>
+                <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                   {rdsBarGenreClaim ? (
                     <LazyChartWrapper
                       type="bar"
@@ -2938,7 +2940,7 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {rdsPieGenreSugge ? (
                       <LazyChartWrapper
                         type="pie"
@@ -2982,7 +2984,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"y"} height={nba}>
+                <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                   {rdsBarGenreSugge ? (
                     <LazyChartWrapper
                       type="bar"
@@ -3056,7 +3058,7 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {rdsPieGravityClaim ? (
                       <LazyChartWrapper
                         type="pie"
@@ -3099,7 +3101,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGraviteBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"y"} height={nba}>
+                <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                   {rdsBarGravityClaim ? (
                     <LazyChartWrapper
                       type="bar"
@@ -3166,7 +3168,7 @@ const Global = (props) => {
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGravitePieChartRef: false } }) }} /> : <></>}</div>
                 <div className="total-transaction-container" style={{ flex: 1 }}>
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {rdsPieGravityDenun ? (
                       <LazyChartWrapper
                         type="pie"
@@ -3214,7 +3216,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGraviteBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"y"} height={nba}>
+                <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                   {rdsBarGravityDenun ? (
                     <LazyChartWrapper
                       type="bar"
@@ -3286,7 +3288,7 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {rdsPieStatisClaim ? (
                     <LazyChartWrapper
                       type="pie"
@@ -3331,7 +3333,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"y"} height={nba}>
+                <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                   {tauxMensuelClaimByMonthByAgence ? (
                     <LazyChartWrapper
                       type="bar"
@@ -3394,7 +3396,7 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {tauxMensuelClaimByMonth ? (
                       <LazyChartWrapper
                         type="bar"
@@ -3453,7 +3455,7 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {rdsBarDelaiGlobal ? (
                       <LazyChartWrapper
                         type="bar"
@@ -3497,7 +3499,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"y"} height={nba}>
+                <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                   {rdsBarDelaiClaimByMonthByAgence ? (
                     <LazyChartWrapper
                       type="bar"
@@ -3569,7 +3571,7 @@ const Global = (props) => {
                   className="total-transaction-container"
                   style={{ flex: "1 auto" }}
                 >
-                  <LazyChart height={600}>
+                  <LazyChart height={600} forceRender={isPrinting}>
                     {denunBarDelaiByMonth ? (
                       <LazyChartWrapper
                         type="bar"
@@ -3613,7 +3615,7 @@ const Global = (props) => {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>{props.tmpState.showForm ? <CloseIcon style={{ cursor: "pointer" }} onClick={(e) => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, resolutionDenunDelaiByMonthByAgenceBarChartRef: false } }) }} /> : <></>}</div>
-                <LazyChart overflow={"y"} height={nba}>
+                <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
                   {denunBarDelaiByMonthByAgence ? (
                     <LazyChartWrapper
                       type="bar"
@@ -3809,6 +3811,10 @@ const Global = (props) => {
   };
 
   const prepareToPrint = async (type = "pdf") => {
+    setIsPrinting(true);
+
+    // attendre que React monte les charts
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     let entete = document.querySelector("#enteteRapport").innerHTML;
     let title = document.querySelector("#titleRapport").innerHTML;
@@ -4120,9 +4126,24 @@ const Global = (props) => {
   };
 
   const printToPDF = async () => {
-    const toStri = await prepareToPrint();
-    handlePrintAvance(toStri);
+    // 🔥 ouvrir la fenêtre IMMEDIATEMENT
+    const childWindow = window.open("", "modal");
+
+    if (!childWindow) {
+      alert("Veuillez autoriser les popups pour l'impression.");
+      return;
+    }
+
+    const dom = await prepareToPrint(childWindow);
+
+    handlePrintAvance(childWindow, dom);
   };
+
+
+  // const printToPDF = async () => {
+  //   const toStri = await prepareToPrint();
+  //   handlePrintAvance(toStri);
+  // };
 
   const [nameReport, setNameReport] = useState("")
   const prepareReportTablesToXLSX = () => {

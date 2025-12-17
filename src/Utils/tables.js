@@ -629,13 +629,39 @@ export const getExportHtml2 = (columns, records, id = "") => {
 };
 
 
-export const handlePrintAvance = (dom) => {
+// export const handlePrintAvance = (dom) => {
 
-  const childWindow = window.open("", "modal");
+//   const childWindow = window.open("", "modal");
 
-  childWindow.document.write(
-    dom + '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
-  );
+//   childWindow.document.write(
+//     dom + '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
+//   );
+// };
+export const handlePrintAvance = (childWindow, dom) => {
+  if (!childWindow || childWindow.closed) {
+    console.error("Fenêtre d'impression indisponible");
+    return;
+  }
+
+  const doc = childWindow.document;
+  doc.open();
+  doc.write(`
+    <html>
+      <head>
+        <title>Impression</title>
+      </head>
+      <body>
+        ${dom}
+        <script>
+          setTimeout(function () {
+            window.print();
+            window.close();
+          }, 500);
+        </script>
+      </body>
+    </html>
+  `);
+  doc.close();
 };
 
 export const handlePrint3 = (config, columns, records) => {
