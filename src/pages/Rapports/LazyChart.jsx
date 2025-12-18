@@ -1,11 +1,14 @@
 import React from "react";
 import { useInView } from "react-intersection-observer";
 
-export default function LazyChart({ children, overflow, height = 600 }) {
+export default function LazyChart({ children, overflow, height = 600, forceRender = false }) {
   const { ref, inView } = useInView({
     triggerOnce: false,
     threshold: 0.2, // 20% visible => charge
   });
+   if (forceRender) {
+    return <div style={{ height }}>{children}</div>;
+  }
 
   return (
     overflow === "x" ? (

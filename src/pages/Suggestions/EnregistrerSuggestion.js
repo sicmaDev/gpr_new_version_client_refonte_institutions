@@ -184,7 +184,7 @@ const EnregistrerSuggestion = (props) => {
 
     // //variable to show box of sms
     const [showSmsBox, setShowSmsBox] = useState(false);
-    const smsDefault = "Votre suggestion a bien été pris en compte. Merci de contribuer à l'amélioration de nos services.";
+    const smsDefault = "Cher(e) bénéficiaire, votre suggestion a bien été prise en compte. Notre équipe dédiée s’en occupe et vous contactera prochainement. Merci de contribuer à l’amélioration de nos services.";
     const [smsToSend, setSmsToSend] = useState(smsDefault)
 
     genderOptions = [
@@ -306,6 +306,8 @@ const EnregistrerSuggestion = (props) => {
         props.selectedItemFilesChanged([])
         props.selectedItemAudioChanged([]);
         setClearAudio(clearAudio + 1);
+        handlers.cancelRecording();
+        setFiles([]);
     }
 
     const handleCancel = (e) => {
@@ -1330,10 +1332,11 @@ const EnregistrerSuggestion = (props) => {
                                                         <div style={{ clear: "both" }}></div>
                                                         <div className="col l6 m12 s12 input-field">
                                                             <Select
-                                                                value={(props.gender) ? {
-                                                                    label: props.gender,
-                                                                    value: props.gender
-                                                                } : { label: "Sélectionner le genre", value: "" }}
+                                                                value={
+                                                                    (props.gender && props.gender !== "NON_DEFINI")
+                                                                    ? { label: props.gender, value: props.gender }
+                                                                    : { label: "Sélectionner le genre", value: "" }
+                                                                }
                                                                 options={genderOptions}
                                                                 className='react-select-container mt-4'
                                                                 classNamePrefix="react-select"

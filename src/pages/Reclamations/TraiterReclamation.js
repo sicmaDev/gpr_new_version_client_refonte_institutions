@@ -320,8 +320,8 @@ const TraiterReclamation = (props) => {
   let compteur = 0;
   const handleClickOpen = () => {
     compteur++;
-    // console.log("affichage",open)
     setOpen(!open);
+    KTApp.unblockPage();
   };
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
@@ -346,7 +346,12 @@ const TraiterReclamation = (props) => {
 
     setOpen(false);
     setConversionBoxOpen(false);
-    history.push("/reclamations/traitement/all");
+    // Rediriger selon la provenance
+    if (props?.match?.params?.code === "all") {
+      history.push("/reclamations/traitement/all");
+    } else {
+      history.push("/alertes/reclamations");
+    }
   };
   const handleConversionBoxClose = () => {
     if (confirmationOpen) return;
@@ -366,6 +371,8 @@ const TraiterReclamation = (props) => {
     e.preventDefault();
     setLoadingConversion(true);
 
+    console.log("props", props); 
+    console.log("dataRow", dataRow); 
     const formData = new FormData();
     let claim = {};
 
@@ -520,10 +527,10 @@ const TraiterReclamation = (props) => {
           let data = cc.data.content;
 
           clearComponentState();
+          setDataRow(data);
 
           //console.log("level",data.objet.risqueLevel)
           let agentMailOptions = [];
-
           let userConnected = user;
           switch (data.objet.risqueLevel) {
             case "MINEUR":
@@ -718,7 +725,7 @@ const TraiterReclamation = (props) => {
     });
     setIsLoading(true);
 
-    // console.log("params",props.match.params);
+    // console.log("params",props.match.params); 
     if (props.match.params.code === "all") {
       props.itemsChanged([]);
       listeTreat(props)
@@ -1370,7 +1377,6 @@ const TraiterReclamation = (props) => {
       align: "left",
       sortable: true,
     },
-
     {
       key: "statusStr",
       text: "Statut",
@@ -1488,7 +1494,7 @@ const TraiterReclamation = (props) => {
               graviteElt = (
                 <>
                   <div className="df">
-                    <span className="materialize-red text-bold mr-2">Grave</span>
+                    <span className="materialize-red-text text-bold mr-2">Grave</span>
                     <div className="card-content red-text ml-4">
                       <MoveUpIcon />
                     </div>
@@ -4934,7 +4940,7 @@ const TraiterReclamation = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    console.log("props.selectedItemAudio", props.selectedItemAudio);
+    // console.log("props.selectedItemAudio", props.selectedItemAudio);
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
         <Grid item xs={12} sm={6} key={audioItem.id}>
@@ -5263,8 +5269,8 @@ const TraiterReclamation = (props) => {
   } else {
     transmettre = "";
   }
-  console.log("props.handled", (props.status === "AFFECTED" || props.status === "DESAPPROUVED") &&
-      user.firstAndLastName === props.handled_by);
+  // console.log("props.handled", (props.status === "AFFECTED" || props.status === "DESAPPROUVED") &&
+      // user.firstAndLastName === props.handled_by);
   if (
     (user.firstAndLastName === props.created_by &&
       props.transmitted === "false" &&
