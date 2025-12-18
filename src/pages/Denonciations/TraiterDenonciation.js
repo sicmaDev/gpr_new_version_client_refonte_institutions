@@ -422,7 +422,12 @@ const TraiterDenonciation = (props) => {
   const handleClose = () => {
     setOpen(false);
     setConversionBoxOpen(false);
-    history.push("/denonciations/traitement/all");
+    // Rediriger selon la provenance
+    if (props?.match?.params?.code === "all") {
+      history.push("/denonciations/traitement/all"); 
+    } else {
+      history.push("/alertes/denonciations");
+    }
   };
   const handleConversionBoxClose = () => {
     if (confirmationOpen) return;
@@ -535,6 +540,7 @@ const TraiterDenonciation = (props) => {
           // console.log("tmp",data)
           handleClickOpen();
           clearComponentState();
+          setDataRow(data);
 
           let agentMailOptions = [];
 
@@ -3171,7 +3177,7 @@ const TraiterDenonciation = (props) => {
             </div>
           </>
         );
-      } else if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmittedTo === user.firstAndLastName)) {
+      } else if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true)) {
         affectForm = (
           <>
             {personTransmit}
@@ -4405,7 +4411,13 @@ const TraiterDenonciation = (props) => {
       //         </ul>
       //     </div>
       //   </div>
-    } else if (props.session !== "" && props.session.status === "OPEN") {
+    } else if (
+      (props.session !== "" && props.session.status === "OPEN") && 
+      (props.transmitted !== "false" &&
+      user.firstAndLastName === props.transmittedTo &&
+      props.status === "SAVED" &&
+      addR === "MOLDUE")
+    ) {
       btnS = (
         //  (actif !== undefined && actif)  ?
         <>

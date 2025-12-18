@@ -45,6 +45,7 @@ import {
   createdAtChanged,
 } from "../../redux/actions/Reclamations/AssuranceReclamationActions";
 import ReactDatatable from "@ashvin27/react-datatable";
+import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import Select from "react-select";
 import {
   formatDate,
@@ -163,6 +164,7 @@ const AssuranceReclamation = (props) => {
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
 
+  const history = useHistory();
   const handleClose = () => {
     setOpen(false);
   };
@@ -1251,7 +1253,8 @@ const AssuranceReclamation = (props) => {
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
 
   return (
-    <div id="main">
+    <div id="main">      
+      <audio ref={audioRef} src={currentAudio} hidden />
       <div className="row">
         <div className="col s12">
           <div className="container">
