@@ -74,6 +74,32 @@ const PointsServices = (props) => {
     const topRef = useRef(null);
     useAutoScroll(topRef, [props.selectedItem.id], "top");
 
+    let units = [];
+
+    try {
+        const stored = JSON.parse(loadItemFromLocalStorage('app-ps'));
+
+        // on force un tableau
+        if (Array.isArray(stored)) {
+            units = stored;
+        } else if (stored?.data && Array.isArray(stored.data)) {
+            units = stored.data;
+        } else {
+            units = [];
+        }
+    } catch (e) {
+        units = [];
+    }
+
+    const directionsMap = {};
+
+    units.forEach(u => {
+        if (u.type === "DIRECTION") {
+            directionsMap[u.id] = u.libelle;
+        }
+    });
+
+
     let columns = [
         {
             key: "uuid",
@@ -135,9 +161,7 @@ const PointsServices = (props) => {
             align: "left",
             sortable: true,
             cell: (sp) => {
-                if (!props.items || props.items.length === 0) return ""; // protection
-                const directionSP = props.items.find(d => d.id === sp.direction_id);
-                const libelle = directionSP ? directionSP.libelle : "";
+                const libelle = directionsMap[sp.direction_id] ?? "-";
 
                 return sp.deleted
                     ? <i style={{ color: "lightgray" }}>{libelle}</i>
@@ -216,13 +240,6 @@ const PointsServices = (props) => {
         }
     }
 
-    let units
-    try {
-        units = JSON.parse(loadItemFromLocalStorage('app-ps'));
-    }
-    catch (e) {
-        units = [];
-    }
 
     let unitOptions
     let directionOptions
@@ -380,9 +397,8 @@ const PointsServices = (props) => {
         props.descriptionChanged(data.description ? data.description : "")
         props.selectedItemChanged(data ? data : {})
         if (data.direction_id) {
-            const directionSP = props.items.find(d => d.id === data.direction_id);
             props.unitChanged(data.direction_id);
-            props.unitLibelleChanged(directionSP ? directionSP.libelle : "");
+            props.unitLibelleChanged(directionsMap[data.direction_id] ?? "");
         } else {
             props.unitChanged("");
             props.unitLibelleChanged("");
@@ -550,7 +566,13 @@ const PointsServices = (props) => {
                                         <h4 className="card-title">Liste des points de services&nbsp;</h4>
                                     </div>
                                     <div className="col l6 m6 s12" style={{ textAlign: "end" }}>
-                                        <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }} onClick={(e) => { handlePrint(config, columns, props.items, 0, ["Actions"]) }} />
+                                        <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }} onClick={(e) => {
+                                            const printableItems = props.items.map(item => ({
+                                                ...item,
+                                                direction_id: directionsMap[item.direction_id] ?? "-"
+                                            }));
+                                            handlePrint(config, columns, printableItems, 0, ["Actions"])
+                                        }} />
                                         <img src={excel} alt="" style={{ cursor: "pointer" }} onClick={(e) => { table2XLSX("Liste_des_unités_opérationnelles" + today().replaceAll("/", ""), "app-ps") }} />
                                     </div>
                                 </div>

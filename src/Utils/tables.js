@@ -138,7 +138,11 @@ const resetColumns = (columns, hook) => {
   console.debug(columns);
 };
 
-export const handlePrint = (config, columns, records, hook, without = []) => {
+export const handlePrint = (config, exportColumns, records, hook, without = []) => {
+  //Supprimer la colonne actions uniquement pour l'impression
+  let columns = exportColumns.filter(
+    col => col.key !== "action"
+  );
   if (hook === 1) {
     columns.splice(1, 0, {
       key: "subject",
@@ -148,6 +152,34 @@ export const handlePrint = (config, columns, records, hook, without = []) => {
       sortable: true,
     });
   }
+  const prepareRecordsForPrint = (records, columns, without = []) => {
+    return records.map(record => {
+      const newRecord = { ...record };
+
+      columns.forEach(col => {
+        if (without.includes(col.key)) return;
+
+        let value = record[col.key];
+
+        // Si la valeur est un objet
+        if (typeof value === "object" && value !== null) {
+          newRecord[col.key] = value.libelle ?? value.name ?? "-";
+        }
+        // Si la valeur est une string avec des sauts de ligne
+        else if (typeof value === "string") {
+          newRecord[col.key] = value.replace(/\n/g, "<br />");
+        }
+        // Sinon on garde la valeur telle quelle
+      });
+
+      return newRecord;
+    });
+  };
+
+  const printableRecords = prepareRecordsForPrint(records, columns, []);
+
+
+
 
   try {
   } catch (e) { }
@@ -158,7 +190,7 @@ export const handlePrint = (config, columns, records, hook, without = []) => {
     style + "table, th, td {border: solid 1px #DDD; border-collapse: collapse;";
   style = style + "padding: 2px 3px;text-align:left;}";
   style = style + "</style>";
-  let tableHTML = getExportHtml(columns, records, without);
+  let tableHTML = getExportHtml(columns, printableRecords, without);
   childWindow.document.write(style);
   childWindow.document.write(
     '<h2 style="display:inline-block">' +
@@ -341,7 +373,10 @@ function ready(callback) {
     });
 }
 
-export const handlePrint2 = (config, columns, records, hook) => {
+export const handlePrint2 = (config, exportColumns, records, hook) => {
+  let columns = exportColumns.filter(
+    col => col.key !== "action"
+  );
   if (hook === 1) {
     columns.splice(1, 0, {
       key: "subject",
