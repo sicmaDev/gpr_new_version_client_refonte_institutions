@@ -320,8 +320,8 @@ const TraiterReclamation = (props) => {
   let compteur = 0;
   const handleClickOpen = () => {
     compteur++;
-    // console.log("affichage",open)
     setOpen(!open);
+    KTApp.unblockPage();
   };
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);

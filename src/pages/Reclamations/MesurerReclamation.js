@@ -168,6 +168,7 @@ const MesurerReclamation = (props) => {
 
   const handleClickOpen = () => {
     setOpen(true);
+    KTApp.unblockPage();
   };
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
@@ -255,12 +256,12 @@ const MesurerReclamation = (props) => {
     }
   }, [audio]);
 
-  let alreadyCall = false;
+
   useEffect(() => {
     //  console.log("params",props.match.params)
     //  console.log("params 2",props.id)
-    if (props.match.params.code !== "all" && alreadyCall === false) {
-      alreadyCall = true;
+    if (props.match.params.code !== "all") {
+     
       async function details() {
         let cc = await axios({
           method: "get",
@@ -320,27 +321,15 @@ const MesurerReclamation = (props) => {
               ? data.collector.firstAndLastName
               : ""
           );
-          // props.commentChanged(data.comment ? data.comment : "");
+          props.commentChanged(data.comment ? data.comment : "");
           props.statusChanged(data.status ? data.status : "");
           props.selectedItemChanged(data);
           setCurrentData(data);
-
-          // console.log("soluion",props.solutionId)
-          //fetch attachments for selected claim
-          // http.get("/files/list/claim/" + data.code).then((response) => {
-          //   props.selectedItemFilesChanged(response.data);
-          // });
 
           getFillesApi(data.id, props);
           getClaimAudioApi(data.id, props);
 
           handleClickOpen();
-          // if (props.id) {
-
-          // }
-          // setOpen((prev) => {
-          //   return false;
-          // });
         }
       }
 
@@ -1181,7 +1170,11 @@ const MesurerReclamation = (props) => {
                     placeholder=""
                     className="materialize-textarea textarea-size"
                     value={props.commenta}
-                    onChange={(e) => props.commentaChanged(e.target.value)}
+                    onChange={(e) => {
+                        console.log("typing", e.target.value);
+                        props.commentaChanged(e.target.value)
+                      }
+                    }
                   ></textarea>
                   <label htmlFor="content" className={"active"}>
                     Commentaire par rapport à la mesure de satisfaction

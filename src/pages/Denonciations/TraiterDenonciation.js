@@ -401,6 +401,7 @@ const TraiterDenonciation = (props) => {
 
   const handleClickOpen = () => {
     setOpen(true);
+    KTApp.unblockPage();
   };
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
