@@ -50,6 +50,7 @@ import partiel_icon from "../../assets/images/mesure/emo2.svg";
 import satisfaire_icon from "../../assets/images/mesure/emo3.svg";
 import unsatisfaire_icon from "../../assets/images/mesure/emo1.svg";
 import TextField from "@mui/material/TextField";
+import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import {
   formatDate,
   formatDate3,
@@ -185,10 +186,18 @@ const MesurerReclamation = (props) => {
     }
     setFiles([]);
   };
-
+  
+  const history = useHistory();
   const handleClose = () => {
     setOpen(false);
     clearComponentState();
+
+    // Rediriger selon la provenance
+    if (props?.match?.params?.code === "all") {
+      history.push("/reclamations/mesure/all");
+    } else {
+      history.push("/alertes/reclamations");
+    }
   };
 
   let user =

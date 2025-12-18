@@ -9,6 +9,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import WarningIcon from "@mui/icons-material/Warning";
 import TextField from "@mui/material/TextField";
 import { KTApp } from "../../Utils/blockui";
+import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import {
   addressChanged,
   agentsChanged,
@@ -291,6 +292,7 @@ const ListeReclamations = (props) => {
     setFiles([]);
   };
 
+  const history = useHistory();
   const handleClose = () => {
     setOpen(false);
     setInterne(false);

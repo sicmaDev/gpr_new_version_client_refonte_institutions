@@ -433,6 +433,8 @@ const EnregistrerDenonciation = (props) => {
         props.selectedItemAudioChanged([]);
         props.selectedItemFilesChanged([])
         setClearAudio(clearAudio + 1);
+        handlers.cancelRecording();
+        setFiles([]);
     }
 
     const handleCancel = (e) => {

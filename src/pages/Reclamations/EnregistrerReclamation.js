@@ -380,7 +380,7 @@ const EnregistrerReclamation = (props) => {
   const [loadingDelete, setLoadingDelete] = useState(false);
 
   const smsDefault =
-    "CHER (E) BENEFICIAIRE, VOTRE RECLAMATION A BIEN ETE PRISE EN COMPTE.NOTRE EQUIPE DEDIEE S'EN OCCUPE ET VOUS CONTACTERA BIENTOT. MERCI DE CONTRIBUER A L'AMELIORATION DE NOS SERVICES.";
+    "Cher(e) bénéficiaire, votre réclamation a bien été prise en compte. Notre équipe dédiée s’en occupe et vous contactera prochainement. Merci de contribuer à l’amélioration de nos services.";
   const [smsToSend, setSmsToSend] = useState(smsDefault);
 
   genderOptions = [
@@ -560,6 +560,8 @@ const EnregistrerReclamation = (props) => {
     props.selectedItemFilesChanged([]);
     props.selectedItemAudioChanged([]);
     setClearAudio(clearAudio + 1);
+    handlers.cancelRecording();
+    setFiles([]);
   };
 
   const handleCancel = (e) => {
