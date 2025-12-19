@@ -327,6 +327,16 @@ const TraiterDenonciation = (props) => {
     showJoinBtn = true;
   }
 
+  // Permissions
+ const isTransmittedToUser = props.transmitted !== "false" && user.firstAndLastName === props.transmittedTo && props.status === "SAVED" && addR === "MOLDUE";
+  // const isAuthorWithAuthorization = user.firstAndLastName === props.created_by && props.authorize;
+  const isAuthorWithAuthorization = 
+  user.firstAndLastName === props.created_by && // c'est l'auteur
+  props.authorize &&                           // il a l'autorisation
+  !(props.transmitted !== "false" && user.firstAndLastName === props.transmittedBy); // n'est pas celui qui a transmis
+  const isAffectedUser = user.firstAndLastName === props.handled_by;
+  const isUserOpenSession = props.session && user.firstAndLastName === props.session?.createdBy?.firstAndLastName;
+
   const [privateChats, setPrivateChats] = useState(new Map());
   const [publicChats, setPublicChats] = useState([]);
   const [guests, setGuests] = useState([]);
@@ -1789,7 +1799,7 @@ const TraiterDenonciation = (props) => {
                               <i className="fa fa-circle online"></i> online
                             </div> */}
                         </div>
-                        {showJoinBtn ?
+                        {(showJoinBtn & isUserOpenSession) ?
                           <IconButton onClick={(e) => handleEject(e, guest.id)} color="primary" aria-label="Ajouter" style={{ marginLeft: "auto" }}>
                             <RemoveCircleOutlineIcon />
                           </IconButton>
@@ -2075,7 +2085,7 @@ const TraiterDenonciation = (props) => {
                                               display: "grid",
                                             }}
                                           >
-                                            {showConfirmChooseSolution ? (
+                                            {(showConfirmChooseSolution && isUserOpenSession) ? (
                                               <div
                                                 style={{
                                                   display: "flex",
@@ -2391,7 +2401,7 @@ const TraiterDenonciation = (props) => {
                                               display: "grid",
                                             }}
                                           >
-                                            {showConfirmChooseSolution ? (
+                                            {(showConfirmChooseSolution && isUserOpenSession) ? (
                                               <div
                                                 style={{
                                                   display: "flex",
@@ -2446,6 +2456,7 @@ const TraiterDenonciation = (props) => {
                                               </div>
                                             ) : (
                                               <>
+                                              {(showConfirmChooseSolution && isUserOpenSession) && (
                                                 <button
                                                   onClick={
                                                     handleChooseVoteConfirm
@@ -2463,6 +2474,7 @@ const TraiterDenonciation = (props) => {
                                                 >
                                                   Utiliser comme solution
                                                 </button>
+                                                )}
                                               </>
                                             )}
                                           </div>
@@ -4375,102 +4387,142 @@ const TraiterDenonciation = (props) => {
     transmettre = "";
   }
 
-  if (
-    (user.firstAndLastName === props.created_by &&
-      props.transmitted === "false" &&
-      props.status === "SAVED") ||
-    showJoinBtn ||
-    ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") &&
-      user.firstAndLastName === props.handled_by) ||
-    (props.transmitted !== "false" &&
-      user.firstAndLastName === props.transmittedTo &&
-      props.status === "SAVED" &&
-      addR === "MOLDUE") || (user.ra === true && props.transmitted === "false" && props.authorize)
-  ) {
-    if (props.session === "" && props.session.status !== "OPEN") {
-      btnS = (
-        //  (actif !== undefined && actif)  ?
-        <>
-          <LoadingButton
-            onClick={(e) => registerUser(e)}
-            className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
-            loading={props.etat4}
-            loadingPosition="end"
-            endIcon={<ChatIcon />}
-            variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-          >
-            <span>Ouvrir une session</span>
-          </LoadingButton>
-        </>
-      );
-      // :
-      //   <div className="card-alert card red lighten-5">
-      //     <div className="card-content red-text">
-      //         <ul>
-      //           Veuillez activer une licence.
-      //         </ul>
-      //     </div>
-      //   </div>
-    } else if (
-      (props.session !== "" && props.session.status === "OPEN") && 
-      (props.transmitted !== "false" &&
-      user.firstAndLastName === props.transmittedTo &&
-      props.status === "SAVED" &&
-      addR === "MOLDUE")
-    ) {
-      btnS = (
-        //  (actif !== undefined && actif)  ?
-        <>
-          <LoadingButton
-            onClick={(e) => connect()}
-            className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
-            loading={props.etat4}
-            loadingPosition="end"
-            endIcon={<ChatIcon />}
-            variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-          >
-            <span>Rejoindre la session</span>
-          </LoadingButton>
-        </>
-      );
-      // :
-      // <div className="card-alert card red lighten-5">
-      //   <div className="card-content red-text">
-      //       <ul>
-      //           Veuillez activer une licence.
-      //       </ul>
-      //   </div>
-      // </div>
-    } else if (props.session !== "" && props.session.status === "CLOSED") {
-      btnS = (
-        //  (actif !== undefined && actif)  ?
-        <>
-          <LoadingButton
-            onClick={(e) => connect()}
-            className="waves-effect waves-effect-b waves-light btn-small"
-            loading={props.etat4}
-            loadingPosition="end"
-            endIcon={<ChatIcon />}
-            variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-          >
-            <span>Voir la discussion</span>
-          </LoadingButton>
-        </>
-      );
-      // :
-      // <div className="card-alert card red lighten-5">
-      //   <div className="card-content red-text">
-      //       <ul>
-      //           Veuillez activer une licence.
-      //       </ul>
-      //   </div>
-      // </div>
-    } else {
-      btnS = "";
-    }
+  // if (
+  //   (user.firstAndLastName === props.created_by &&
+  //     props.transmitted === "false" &&
+  //     props.status === "SAVED") ||
+  //   showJoinBtn ||
+  //   ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") &&
+  //     user.firstAndLastName === props.handled_by) ||
+  //   (props.transmitted !== "false" &&
+  //     user.firstAndLastName === props.transmittedTo &&
+  //     props.status === "SAVED" &&
+  //     addR === "MOLDUE") || (user.ra === true && props.transmitted === "false" && props.authorize)
+  // ) {
+  //   if (props.session === "" && props.session.status !== "OPEN") {
+  //     btnS = (
+  //       //  (actif !== undefined && actif)  ?
+  //       <>
+  //         <LoadingButton
+  //           onClick={(e) => registerUser(e)}
+  //           className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
+  //           loading={props.etat4}
+  //           loadingPosition="end"
+  //           endIcon={<ChatIcon />}
+  //           variant="contained"
+  //           sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+  //         >
+  //           <span>Ouvrir une session</span>
+  //         </LoadingButton>
+  //       </>
+  //     );
+  //   } else if (
+  //     (props.session !== "" && props.session.status === "OPEN") && 
+  //     (props.transmitted !== "false" &&
+  //     user.firstAndLastName === props.transmittedTo &&
+  //     props.status === "SAVED" &&
+  //     addR === "MOLDUE")
+  //   ) {
+  //     btnS = (
+  //       //  (actif !== undefined && actif)  ?
+  //       <>
+  //         <LoadingButton
+  //           onClick={(e) => connect()}
+  //           className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
+  //           loading={props.etat4}
+  //           loadingPosition="end"
+  //           endIcon={<ChatIcon />}
+  //           variant="contained"
+  //           sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+  //         >
+  //           <span>Rejoindre la session</span>
+  //         </LoadingButton>
+  //       </>
+  //     );
+  //   } else if (props.session !== "" && props.session.status === "CLOSED") {
+  //     btnS = (
+  //       //  (actif !== undefined && actif)  ?
+  //       <>
+  //         <LoadingButton
+  //           onClick={(e) => connect()}
+  //           className="waves-effect waves-effect-b waves-light btn-small"
+  //           loading={props.etat4}
+  //           loadingPosition="end"
+  //           endIcon={<ChatIcon />}
+  //           variant="contained"
+  //           sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+  //         >
+  //           <span>Voir la discussion</span>
+  //         </LoadingButton>
+  //       </>
+  //     );
+  //     // :
+  //     // <div className="card-alert card red lighten-5">
+  //     //   <div className="card-content red-text">
+  //     //       <ul>
+  //     //           Veuillez activer une licence.
+  //     //       </ul>
+  //     //   </div>
+  //     // </div>
+  //   } else {
+  //     btnS = "";
+  //   }
+  // }
+
+  // Peut ouvrir la session si auteur avec autorisation ou affecté
+  const canOpenSession = isAuthorWithAuthorization || isAffectedUser;
+  
+  // Détermination du bouton
+  if (canOpenSession && (!props.session || props.session.status !== "OPEN")) {
+    // Bouton "Ouvrir la session"
+    btnS = (
+      <LoadingButton
+        onClick={registerUser}
+        className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
+        loading={props.etat4}
+        loadingPosition="end"
+        endIcon={<ChatIcon />}
+        variant="contained"
+        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+      >
+        <span>Ouvrir une session</span>
+      </LoadingButton>
+    );
+  
+  } else if (props.session?.status === "OPEN" && showJoinBtn) {
+    // Bouton "Rejoindre la session" si l'utilisateur est invité/membre
+    btnS = (
+      <LoadingButton
+        onClick={connect}
+        className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
+        loading={props.etat4}
+        loadingPosition="end"
+        endIcon={<ChatIcon />}
+        variant="contained"
+        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+      >
+        <span>Rejoindre la session</span>
+      </LoadingButton>
+    );
+  
+  } else if (props.session?.status === "CLOSED") {
+    // Bouton "Voir la discussion"
+    btnS = (
+      <LoadingButton
+        onClick={connect}
+        className="waves-effect waves-effect-b waves-light btn-small"
+        loading={props.etat4}
+        loadingPosition="end"
+        endIcon={<ChatIcon />}
+        variant="contained"
+        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+      >
+        <span>Voir la discussion</span>
+      </LoadingButton>
+    );
+  
+  } else {
+    btnS = null;
   }
 
   const enfant = document.querySelector("#dialog-enfant");

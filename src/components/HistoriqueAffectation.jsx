@@ -246,7 +246,7 @@ const HistoriqueAffectation = (props) => {
                         display="block"
                         sx={{ mt: 1, color: "text.secondary" }}
                       >
-                        Affectée par : {item.nomAgent ?? "UNDEFINED"} ({item.emailAffecteur}) le{" "}
+                        Affectée par : {item.nomAffecteur ?? "UNDEFINED"} ({item.emailAffecteur}) le{" "}
                         {formatDate(item.createdAt)}
                       </Typography>
                     </Paper>

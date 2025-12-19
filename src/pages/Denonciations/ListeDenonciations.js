@@ -1732,7 +1732,15 @@ const ListeDenonciations = (props) => {
       ${sections.statut}
     `;
 
-    handlePrintAvance(toStri);
+    // handlePrintAvance(toStri);
+    const childWindow = window.open("", "modal");
+
+    if (!childWindow) {
+      alert("Veuillez autoriser les popups.");
+      return;
+    }
+
+    handlePrintAvance(childWindow, toStri);
   };
 
   let content = [];

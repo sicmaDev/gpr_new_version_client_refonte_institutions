@@ -372,11 +372,24 @@ const Bceao = (props) => {
     document.querySelector("#trSimple").innerHTML = "";
     return results;
   };
+  // const printToPDF = async () => {
+
+
+  //   const toStri = await prepareToPrint();
+  //   handlePrintAvance(toStri);
+  // };
   const printToPDF = async () => {
+    // 🔥 ouvrir la fenêtre IMMEDIATEMENT
+    const childWindow = window.open("", "modal");
 
+    if (!childWindow) {
+      alert("Veuillez autoriser les popups pour l'impression.");
+      return;
+    }
 
-    const toStri = await prepareToPrint();
-    handlePrintAvance(toStri);
+    const dom = await prepareToPrint(childWindow);
+
+    handlePrintAvance(childWindow, dom);
   };
   const prepareReportTablesToXLSX = () => {
     let filename = "Statistiques_BCEAO_GPR_" + today().replaceAll("/", "");

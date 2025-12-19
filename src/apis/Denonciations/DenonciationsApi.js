@@ -623,7 +623,7 @@ export const deleteDenunciationApi = async (id, props) => {
     };
     await axios(config)
         .then(function (response) {
-            // notify("Bravo - Réclamation supprimé", "success");
+            // notify("Bravo - Dénonciation supprimé", "success");
             // console.log("reponsesessionadd",response.data.content)
         })
         .catch(function (error) {
@@ -647,7 +647,7 @@ export const convertDenunciationApi = async (data, props) => {
     };
     await axios(config)
         .then(function (response) {
-            notify("Bravo - Réclamation convertie avec succès", "success");
+            notify("Bravo - Dénonciation convertie avec succès", "success");
             // console.log("reponsesessionadd",response.data.content)
         })
         .catch(function (error) {

@@ -663,15 +663,33 @@ export const getExportHtml2 = (columns, records, id = "") => {
   } catch (e) { }
 };
 
+// export const handlePrintAvance = (childWindow, dom) => {
+//   if (!childWindow || childWindow.closed) {
+//     console.error("Fenêtre d'impression indisponible");
+//     return;
+//   }
 
-// export const handlePrintAvance = (dom) => {
-
-//   const childWindow = window.open("", "modal");
-
-//   childWindow.document.write(
-//     dom + '<script type="text/javascript">setTimeout(function() { window.print();window.close(); },500)</script>'
-//   );
+//   const doc = childWindow.document;
+//   doc.open();
+//   doc.write(`
+//     <html>
+//       <head>
+//         <title>Impression</title>
+//       </head>
+//       <body>
+//         ${dom}
+//         <script>
+//           setTimeout(function () {
+//             window.print();
+//             window.close();
+//           }, 500);
+//         </script>
+//       </body>
+//     </html>
+//   `);
+//   doc.close();
 // };
+
 export const handlePrintAvance = (childWindow, dom) => {
   if (!childWindow || childWindow.closed) {
     console.error("Fenêtre d'impression indisponible");
@@ -698,6 +716,7 @@ export const handlePrintAvance = (childWindow, dom) => {
   `);
   doc.close();
 };
+
 
 export const handlePrint3 = (config, columns, records) => {
 
