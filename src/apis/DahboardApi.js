@@ -1,5 +1,5 @@
 import axios from "axios";
-import { loadItemFromSessionStorage} from "../Utils/utils";
+import { loadItemFromSessionStorage } from "../Utils/utils";
 import { HOST } from "../Utils/globals";
 
 const DASHBOARD_API = HOST + "api/v1/auth/dashboard"
@@ -20,6 +20,7 @@ export const DashboardApi = async (props) => {
             // console.log("responseDASH",response)
             props.etat1Changed(true)
             props.dashboardChanged(response.data.content);
+            console.log("je suis ici ", props.dashboardChanged)
             // notify("Bravo - Rapport généré","success");
         })
         .catch(function (error) {
