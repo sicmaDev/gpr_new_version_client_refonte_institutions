@@ -4164,6 +4164,7 @@ const TraiterReclamation = (props) => {
                     </details>
                   </div>
                 </div>
+                 {afForm}
               </>
             );
           }
