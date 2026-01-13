@@ -1,10 +1,10 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
 
-import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep, today} from "../../Utils/utils";
+import { cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep, today } from "../../Utils/utils";
 import { connect } from "react-redux";
-import {modalify} from "../../Utils/modal";
-import { ajout,test } from "../../apis/Configurations/MailApi";
+import { modalify } from "../../Utils/modal";
+import { ajout, test } from "../../apis/Configurations/MailApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
@@ -32,7 +32,7 @@ const Email = (props) => {
     const [message, setMessage] = useState(null)
 
     const handleTest = async () => {
-        if(to !== "" && to && subject !== "" && subject && message !== "" && message ){
+        if (to !== "" && to && subject !== "" && subject && message !== "" && message) {
             setShowTestModal(false);
             KTApp.blockPage({
                 overlayColor: '#000000',
@@ -41,25 +41,26 @@ const Email = (props) => {
                 message: 'En cours...'
             });
             await sleep(3000);
-            test({ to,subject,message }).then(({ data }) => {
+            test({ to, subject, message }).then(({ data }) => {
                 notify("Super - Mail envoyé", "success");
+                resetTestForm();
             }).catch((err) => {
                 notify("Oups - Mail non envoyé; Vérifier la configuration de votre serveur", "error");
             }).finally(() => {
                 KTApp.unblockPage();
             })
-        }else{
-            notify("Les champs sont obligatoires","error")
+        } else {
+            notify("Les champs sont obligatoires", "error")
         }
-       
+
 
     }
-    
+
     useEffect(() => {
 
         try {
-            let appMail =  loadItemFromLocalStorage("app-mail") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-mail")) : undefined;
-           
+            let appMail = loadItemFromLocalStorage("app-mail") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-mail")) : undefined;
+
             if (appMail !== undefined || appMail !== "") {
                 props.userChanged(appMail.user)
                 props.hostChanged(appMail.host)
@@ -70,25 +71,25 @@ const Email = (props) => {
             }
         } catch (e) {
         }
-       
-       
+
+
         //UI Fixes
-       
+
         window.$('.dropdown-trigger').dropdown({
-                inDuration: 300,
-                outDuration: 225,
-                constrainWidth: false, // Does not change width of dropdown to that of the activator
-                click: true, // Activate on hover
-                gutter: 0, // Spacing from edge
-                coverTrigger: false, // Displays dropdown below the button
-                alignment: 'left', // Displays dropdown with edge aligned to the left of button
-                stopPropagation: false // Stops event propagation
-            }
+            inDuration: 300,
+            outDuration: 225,
+            constrainWidth: false, // Does not change width of dropdown to that of the activator
+            click: true, // Activate on hover
+            gutter: 0, // Spacing from edge
+            coverTrigger: false, // Displays dropdown below the button
+            alignment: 'left', // Displays dropdown with edge aligned to the left of button
+            stopPropagation: false // Stops event propagation
+        }
         );
-       
+
         window.$('.buttons-excel').html('<span><i class="fa fa-file-excel"></i></span>')
-        window.$('ul.pagination').parent().parent().css({marginTop:"1%", boxShadow:"none"})
-        window.$('ul.pagination').parent().css({boxShadow:"none"})
+        window.$('ul.pagination').parent().parent().css({ marginTop: "1%", boxShadow: "none" })
+        window.$('ul.pagination').parent().css({ boxShadow: "none" })
         window.$('ul.pagination').parent().addClass('white')
         window.$('ul.pagination').addClass('right-align')
         window.$('a.page-link input').addClass('indigo-text bold-text')
@@ -98,37 +99,42 @@ const Email = (props) => {
         window.$('#as-react-datatable tr').addClass('cursor-pointer')
         window.$('.tooltipped').tooltip();
         //cleanup
-       
+
     }, []);
 
-   
+
 
     const [actif, setActif] = useState();
-  
+
     const licenseControl = async () => {
-      try {
-        let resultat = await licenseInfo();
-        // console.log("resultat", resultat);
-        setActif(resultat.actif)
-        
-      } catch (error) {
-        // console.error("Une erreur s'est produite :", error);
-      }
+        try {
+            let resultat = await licenseInfo();
+            // console.log("resultat", resultat);
+            setActif(resultat.actif)
+
+        } catch (error) {
+            // console.error("Une erreur s'est produite :", error);
+        }
     };
-  
+
     useEffect(() => {
-      const fetchData = async () => {
-        await licenseControl();
-      };
-  
-      fetchData();
+        const fetchData = async () => {
+            await licenseControl();
+        };
+
+        fetchData();
     }, []);
 
     let errors = {};
+    const resetTestForm = () => {
+        setTo("");
+        setSubject("");
+        setMessage("");
+    };
 
     const handleValidation = () => {
         let isValid = true;
-       
+
         if ((props.user === "" || props.user === undefined || props.user === null)) {
             isValid = false;
             errors["user"] = "Champ incorrect";
@@ -149,7 +155,7 @@ const Email = (props) => {
         return isValid
     }
 
-  
+
 
 
     const handleSubmit = (e) => {
@@ -160,7 +166,7 @@ const Email = (props) => {
             item["port"] = props.port;
             item["user"] = props.user;
             item["pwd"] = props.password;
-           
+
             props.etatChanged(true)
             ajout(item, props).then(() => {
                 // handleCancel(e)
@@ -171,8 +177,8 @@ const Email = (props) => {
     }
 
     return (
-        <> 
-        <div className="card-panel">
+        <>
+            <div className="card-panel">
                 <Dialog open={showTestModal} onClose={(e) => { setShowTestModal(false) }}>
                     <DialogTitle >
                         Vérification de la configuration
@@ -182,7 +188,7 @@ const Email = (props) => {
                             Renseigner les informations nécessaire pour le teste
                         </DialogContentText>
                         <div className="row">
-                            
+
                             <div className="col l12 m12 s12 input-field">
                                 <input
                                     style={{ minWidth: "100%" }}
@@ -241,8 +247,8 @@ const Email = (props) => {
 
                     </DialogActions>
                 </Dialog>
-           
-          
+
+
                 <div className="row mb-2">
                     <div className="col s12"><h6 className="card-title">Serveur mail</h6>
                         <p>Il s'agit d'enregistrer les accès à votre serveur mail pour pouvoir envoyez des mails</p></div>
@@ -316,19 +322,19 @@ const Email = (props) => {
                         </div>
 
                         <div className="col s12 display-flex justify-content-end mt-3">
-                           
+
                             <>
                                 <LoadingButton
-                                        className="btn  waves-light mr-1 btn-small"
-                                        onClick={(e) => {
-                                            setShowTestModal(true);
-                                        }}
-                                        loadingPosition="end"
-                                        endIcon={<ForwardToInboxOutlined />}
-                                        variant="oulined"
-                                    >
-                                        <span>Tester</span>
-                                    </LoadingButton>
+                                    className="btn  waves-light mr-1 btn-small"
+                                    onClick={(e) => {
+                                        setShowTestModal(true);
+                                    }}
+                                    loadingPosition="end"
+                                    endIcon={<ForwardToInboxOutlined />}
+                                    variant="oulined"
+                                >
+                                    <span>Tester</span>
+                                </LoadingButton>
                                 <LoadingButton
                                     className="btn waves-light mr-1 btn-small"
                                     onClick={(e) => handleSubmit(e)}
@@ -336,12 +342,12 @@ const Email = (props) => {
                                     loadingPosition="end"
                                     endIcon={<SaveIcon />}
                                     variant="contained"
-                                    sx={{ textTransform:"initial" }}
+                                    sx={{ textTransform: "initial" }}
                                 >
                                     <span>Enregistrer</span>
                                 </LoadingButton>
                             </>
-                           
+
                         </div>
                     </div>
                 </form>
