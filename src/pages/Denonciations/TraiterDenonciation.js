@@ -1481,7 +1481,6 @@ const TraiterDenonciation = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     setDataRow(data);
-    setClaimId(data.id);
 
     handleClickOpen();
     clearComponentState();
@@ -4508,7 +4507,7 @@ const TraiterDenonciation = (props) => {
     setExtraFileLoading(true);
 
     const formData = new FormData();
-    formData.append("claim_id", claim_id);
+    formData.append("claim_id", props.id);
 
     if (isFile) {
       for (let index = 0; index < filesForm.length; index++) {
@@ -4562,7 +4561,7 @@ const TraiterDenonciation = (props) => {
     e.preventDefault();
     setExtraFileLoading(true);
     const formData = new FormData();
-    formData.append("claim_id", claim_id);
+    formData.append("claim_id", props.id);
     formData.append("contenu", extraContent);
 
     addExtraClaimApi(formData)
