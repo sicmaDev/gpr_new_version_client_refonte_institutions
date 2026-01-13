@@ -190,7 +190,7 @@ const Dashboard = (props) => {
             },
         },
         {
-            key: "codeClient",
+            key: "claimCodeClient",
             text: "Code Client",
             className: "retard",
             align: "left",
