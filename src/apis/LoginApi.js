@@ -78,11 +78,13 @@ export const LoginApi = (credentials, props,isLocked =false) => {
                 response.data.response.content.settings.products ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.products), 'app-produits') : saveItemToLocalStorage([], 'app-produits');
                 response.data.response.content.settings.help ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.help), 'help') : saveItemToLocalStorage([], 'help');
 
-                
-
             } else {
-                notify("Erreur - La connexion a échouée", "error");
-                
+                if (response.content?.message) {
+                    notify(response.content?.message, "error");
+                } else {
+                    notify("Erreur - La connexion a échouée", "error");
+                }
+               
             }
            
             // console.log(JSON.parse(response.data.data));
@@ -98,11 +100,11 @@ export const LoginApi = (credentials, props,isLocked =false) => {
             //    console.log("loginerror",error)
             if (error?.response) {
                 const status = error.response.status;
-                const message = error.response.data?.message;
+                const message = error.response.data?.message || error.response.data?.response?.content.message;
 
                 if (status === 403) {
                     // message personnalisé pour 403
-                    notify("Erreur - Les identifiants sont incorrects", "error");
+                    notify(message, "error");
                 } else if (message) {
                     // afficher le message renvoyé par le backend
                     notify(message, "error");
