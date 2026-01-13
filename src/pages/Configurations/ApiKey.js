@@ -37,17 +37,17 @@ const ApiKey = (props) => {
     const handleDisabledModal = (e, spId, isDeleted = false) => {
         e.stopPropagation();
         var message = "Voulez-vous vraiment regénérer ce api key ?"
-      
+
         if (isDeleted) {
             message = "Voulez-vous vraiment supprimer ce api key ?";
-         
+
         }
 
-        modalify("Confirmation", message,"confirm", (e) => {
-            if(isDeleted){
+        modalify("Confirmation", message, "confirm", (e) => {
+            if (isDeleted) {
 
                 deleteTokenApi(spId)
-            }else{
+            } else {
                 regenerateTokenApi(spId)
             }
         })
@@ -117,7 +117,7 @@ const ApiKey = (props) => {
 
                 return <div style={{ display: 'flex', }}>
                     <Chip label="Régénérer" onClick={(e) => handleDisabledModal(e, user.id)} />
-                    <Chip label="Supprimer" color="error" onClick={(e) => handleDisabledModal(e, user.id,true)} style={{ marginLeft: "5px" }} />
+                    <Chip label="Supprimer" color="error" onClick={(e) => handleDisabledModal(e, user.id, true)} style={{ marginLeft: "5px" }} />
                 </div>
 
 
@@ -188,11 +188,21 @@ const ApiKey = (props) => {
         secret: null,
         key: null
     });
+    const getApiKeys = () => {
+        apiKeyTokens().then(({ data }) => {
+            // console.log('data', data.content)
+            setApiKeyList(data.content);
+
+        }).catch((err) => {
+            notify("Une erreur s'est produite", "error")
+        })
+    }
     const createTokenApi = (e) => {
         e.preventDefault();
         apiKeyTokenGenerator(keyField).then(({ data }) => {
             notify("L'API KEY a ete généré", "success")
             setKeyField({ ...keyField, secret: data.content.api_secret, key: data.content.api_key })
+            getApiKeys(data);
         }).catch((err) => {
             notify("Une erreur s'est produite", "error")
         })
@@ -217,15 +227,7 @@ const ApiKey = (props) => {
             notify("Une erreur s'est produite", "error")
         })
     }
-    const getApiKeys = () => {
-        apiKeyTokens().then(({ data }) => {
-            // console.log('data', data.content)
-            setApiKeyList(data.content);
 
-        }).catch((err) => {
-            notify("Une erreur s'est produite", "error")
-        })
-    }
     return (
         <>
 

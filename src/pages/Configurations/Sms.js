@@ -23,7 +23,7 @@ import { notify } from "../../Utils/alert";
 
 
 const Sms = (props) => {
-   
+
     const [showPassword, setShowPassword] = useState(false);
     const [showPassword1, setShowPassword1] = useState(false);
 
@@ -39,10 +39,10 @@ const Sms = (props) => {
         props.posteChanged(e.value)
         props.posteLibelleChanged(e.label)
     }
-   
+
     useEffect(() => {
         try {
-            let appSms = loadItemFromLocalStorage("app-sms") !== undefined && (loadItemFromLocalStorage("app-sms").length !==0)  ? JSON.parse(loadItemFromLocalStorage("app-sms")) : undefined;
+            let appSms = loadItemFromLocalStorage("app-sms") !== undefined && (loadItemFromLocalStorage("app-sms").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-sms")) : undefined;
             let apiurl = appSms.url;
             let libId = appSms.libId;
             let valId = appSms.valId;
@@ -62,7 +62,7 @@ const Sms = (props) => {
                 props.valueSenderChanged(appSms.valEmetteur);
                 props.libelleReceiverChanged(appSms.libDestinataire);
                 props.libelleMessageChanged(appSms.libMessage);
-        
+
             } else {
             }
         } catch (e) {
@@ -181,7 +181,10 @@ const Sms = (props) => {
     const [messageTest, setMessageTest] = useState(null);
     const [phoneTest, setPhoneTest] = useState(null);
 
-
+    const resetTestForm = () => {
+        setMessageTest("");
+        setPhoneTest("");
+    };
     const handleSubmit = (e) => {
         e.preventDefault()
 
@@ -208,28 +211,30 @@ const Sms = (props) => {
         //console.log(errors.contenu);
     }
 
-    
+
     const handleTest = async () => {
-        if(phoneTest !== "" && phoneTest && messageTest !== "" && messageTest ){
-        
-        setShowTestModal(false);
-        KTApp.blockPage({
-            overlayColor: '#000000',
-            type: 'v2',
-            state: 'danger',
-            message: 'En cours...'
-        });
-        await sleep(3000);
-        test({ phone: cleanPhoneNumber3(phoneTest), message: messageTest }).then(({ data }) => {
-            // console.log("first : ",phoneTest);
-            // console.log("second : ",cleanPhoneNumber3(phoneTest));
-            notify("Super - SMS envoyé", "success");
-        }).catch((err) => {
-            notify("Oups - SMS non envoyé; Vérifier la configuration de votre serveur", "error");
-        }).finally(() => {
-            KTApp.unblockPage();
-        })}else{
-            notify("Les champs sont obligatoires","error")
+        if (phoneTest !== "" && phoneTest && messageTest !== "" && messageTest) {
+
+            setShowTestModal(false);
+            KTApp.blockPage({
+                overlayColor: '#000000',
+                type: 'v2',
+                state: 'danger',
+                message: 'En cours...'
+            });
+            await sleep(3000);
+            test({ phone: cleanPhoneNumber3(phoneTest), message: messageTest }).then(({ data }) => {
+                // console.log("first : ",phoneTest);
+                // console.log("second : ",cleanPhoneNumber3(phoneTest));
+                notify("Super - SMS envoyé", "success");
+                resetTestForm();
+            }).catch((err) => {
+                notify("Oups - SMS non envoyé; Vérifier la configuration de votre serveur", "error");
+            }).finally(() => {
+                KTApp.unblockPage();
+            })
+        } else {
+            notify("Les champs sont obligatoires", "error")
         }
 
     }
@@ -283,7 +288,7 @@ const Sms = (props) => {
 
                     </DialogContent>
                     <DialogActions>
-                        
+
                         <Button variant="contained" color="error" onClick={(e) => {
                             setShowTestModal(false)
                         }}>Fermer</Button>
@@ -291,18 +296,18 @@ const Sms = (props) => {
 
                     </DialogActions>
                 </Dialog>
-               
+
                 <div className="row">
                     <div className="col s12"><h6 className="card-title">Configuration SMS</h6>
                         <p>Il s'agit de configurer GPR pour utiliser l'API de votre fournisseur de SMS Banking</p></div>
                 </div>
                 <form id="accountForm" onSubmit={handleSubmit}>
                     <div className="row">
-                    
+
 
                         <div className="col s12 m6">
                             <div className="row">
-                            <div className="col s12"><p className="">Information Générale</p></div>
+                                <div className="col s12"><p className="">Information Générale</p></div>
 
                                 <div className="col s12 input-field">
                                     <input id="url" placeholder="" name="url" type="url"
@@ -318,35 +323,35 @@ const Sms = (props) => {
                             <div className="row">
                                 <div className="col s12"><p className="">Informations d'identification de votre compte SMS Banking</p></div>
 
-                                    <div className="col s6 input-field">
-                                        <input id="libelle_id" placeholder="" name="libelle_id" type="text"
-                                            className="validate" value={props.libelleId}
-                                            onChange={(e) => props.libelleIdChanged(e.target.value)}
-                                            data-error=".errorTxt1" />
-                                        <label htmlFor="libelle_id" className={"active"}>Libelle paramètre id &nbsp;
-                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
+                                <div className="col s6 input-field">
+                                    <input id="libelle_id" placeholder="" name="libelle_id" type="text"
+                                        className="validate" value={props.libelleId}
+                                        onChange={(e) => props.libelleIdChanged(e.target.value)}
+                                        data-error=".errorTxt1" />
+                                    <label htmlFor="libelle_id" className={"active"}>Libelle paramètre id &nbsp;
+                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
                                             data-tooltip="Il s'agit du nom du paramètre représentant l'identifiant de votre compte de SMS Banking.">
-                                                <HelpIcon/>
-                                            </a></label>
-                                        <small className="errorTxt4">
-                                            <div id="cpassword-error" className="error">{props.smsErrors.libelle_id}</div>
-                                        </small>
-                                    </div>
-                                    <div className="col s6 input-field">
-                                        <input id="value_id" placeholder="" name="value_id" type="text"
-                                            className="validate" value={props.valueId}
-                                            onChange={(e) => props.valueIdChanged(e.target.value)}
-                                            data-error=".errorTxt1" />
-                                        <label htmlFor="value_id" className={"active"}>Valeur id &nbsp;
-                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit de la valeur de votre identifiant de votre compte de SMS Banking.">
-                                                <HelpIcon/>
-                                            </a></label>
-                                        <small className="errorTxt4">
-                                            <div id="cpassword-error" className="error">{props.smsErrors.value_id}</div>
-                                        </small>
-                                    </div>
+                                            <HelpIcon />
+                                        </a></label>
+                                    <small className="errorTxt4">
+                                        <div id="cpassword-error" className="error">{props.smsErrors.libelle_id}</div>
+                                    </small>
                                 </div>
+                                <div className="col s6 input-field">
+                                    <input id="value_id" placeholder="" name="value_id" type="text"
+                                        className="validate" value={props.valueId}
+                                        onChange={(e) => props.valueIdChanged(e.target.value)}
+                                        data-error=".errorTxt1" />
+                                    <label htmlFor="value_id" className={"active"}>Valeur id &nbsp;
+                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
+                                            data-tooltip="Il s'agit de la valeur de votre identifiant de votre compte de SMS Banking.">
+                                            <HelpIcon />
+                                        </a></label>
+                                    <small className="errorTxt4">
+                                        <div id="cpassword-error" className="error">{props.smsErrors.value_id}</div>
+                                    </small>
+                                </div>
+                            </div>
                             <div className="row">
                                 <div className="col s6 input-field">
                                     <input id="libelle_pwd" placeholder="" name="libelle_pwd" type={showPassword1 ? "text" : "password"}
@@ -355,8 +360,8 @@ const Sms = (props) => {
                                         data-error=".errorTxt1" />
                                     <label htmlFor="libelle_pwd" className={"active"}>Libelle paramètre mot de passe &nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                           data-tooltip="Il s'agit du nom du paramètre représentant le mot de passe de votre compte de SMS Banking.">
-                                             <HelpIcon/>
+                                            data-tooltip="Il s'agit du nom du paramètre représentant le mot de passe de votre compte de SMS Banking.">
+                                            <HelpIcon />
                                         </a></label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.libelle_pwd}</div>
@@ -381,8 +386,8 @@ const Sms = (props) => {
                                         data-error=".errorTxt1" />
                                     <label htmlFor="value_pwd" className={"active"}>Valeur mot de passe &nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                           data-tooltip="Il s'agit de la valeur du mot de passe de votre compte de SMS Banking.">
-                                             <HelpIcon/>
+                                            data-tooltip="Il s'agit de la valeur du mot de passe de votre compte de SMS Banking.">
+                                            <HelpIcon />
                                         </a></label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.value_pwd}</div>
@@ -413,8 +418,8 @@ const Sms = (props) => {
                                         data-error=".errorTxt1" />
                                     <label htmlFor="libelle_sender" className={"active"}>Libelle paramètre emetteur &nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                           data-tooltip="Il s'agit du nom du paramètre représentant le sender de votre compte de SMS Banking.">
-                                             <HelpIcon/>
+                                            data-tooltip="Il s'agit du nom du paramètre représentant le sender de votre compte de SMS Banking.">
+                                            <HelpIcon />
                                         </a></label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.libelle_sender}</div>
@@ -427,8 +432,8 @@ const Sms = (props) => {
                                         data-error=".errorTxt1" />
                                     <label htmlFor="value_sender" className={"active"}>Valeur emetteur &nbsp;
                                         <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                           data-tooltip="Il s'agit de la valeur du sender de vos messages configurer auprès de votre fournisseur de SMS Banking.">
-                                             <HelpIcon/>
+                                            data-tooltip="Il s'agit de la valeur du sender de vos messages configurer auprès de votre fournisseur de SMS Banking.">
+                                            <HelpIcon />
                                         </a></label>
                                     <small className="errorTxt4">
                                         <div id="cpassword-error" className="error">{props.smsErrors.value_sender}</div>
@@ -445,8 +450,8 @@ const Sms = (props) => {
                                             data-error=".errorTxt1" />
                                         <label htmlFor="libelle_receiver" className={"active"}>Libelle paramètre destinataire &nbsp;
                                             <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit du nom du paramètre représentant le destinataire du message.">
-                                                 <HelpIcon/>
+                                                data-tooltip="Il s'agit du nom du paramètre représentant le destinataire du message.">
+                                                <HelpIcon />
                                             </a></label>
                                         <small className="errorTxt4">
                                             <div id="cpassword-error" className="error">{props.smsErrors.libelle_receiver}</div>
@@ -462,8 +467,8 @@ const Sms = (props) => {
                                             data-error=".errorTxt1" />
                                         <label htmlFor="libelle_message" className={"active"}>Libelle paramètre message &nbsp;
                                             <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit du nom du paramètre représentant le message à envoyer au client.">
-                                                <HelpIcon/>
+                                                data-tooltip="Il s'agit du nom du paramètre représentant le message à envoyer au client.">
+                                                <HelpIcon />
                                             </a></label>
                                         <small className="errorTxt4">
                                             <div id="cpassword-error" className="error">{props.smsErrors.libelle_message}</div>
@@ -472,10 +477,10 @@ const Sms = (props) => {
                                 </div>
                             </div>
                         </div>
-                       
+
 
                         <div className="col s12 display-flex justify-content-end mt-3">
-                        
+
                             <>
                                 <LoadingButton
                                     className="btn  waves-light mr-1 btn-small"
@@ -504,7 +509,7 @@ const Sms = (props) => {
                     </div>
                 </form>
 
-           
+
 
             </div>
         </>
