@@ -20,7 +20,7 @@ export const DashboardApi = async (props) => {
             // console.log("responseDASH",response)
             props.etat1Changed(true)
             props.dashboardChanged(response.data.content);
-            console.log("je suis ici ", props.dashboardChanged)
+            console.log("je suis ici ", response.data.content)
             // notify("Bravo - Rapport généré","success");
         })
         .catch(function (error) {

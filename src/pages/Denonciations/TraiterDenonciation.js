@@ -437,7 +437,7 @@ const TraiterDenonciation = (props) => {
     setConversionBoxOpen(false);
     // Rediriger selon la provenance
     if (props?.match?.params?.code === "all") {
-      history.push("/denonciations/traitement/all"); 
+      history.push("/denonciations/traitement/all");
     } else {
       history.push("/alertes/denonciations");
     }
@@ -1397,12 +1397,37 @@ const TraiterDenonciation = (props) => {
             }
             break;
           case "MOYEN":
-            graviteElt = <span className="orange-text text-bold">Moyen</span>;
+            if (claim.transmitted) {
+              graviteElt = (
+                <>
+                  <div className="df">
+                    <span className="orange-text text-bold mr-2">Moyen</span>
+                    <div className="card-content red-text ml-4">
+                      <MoveUpIcon />
+                    </div>
+                  </div>
+                </>
+              );
+            } else {
+              graviteElt = <span className="orange-text text-bold">Moyen</span>;
+            }
+
             break;
           case "GRAVE":
-            graviteElt = (
-              <span className="materialize-red-text text-bold">Grave</span>
-            );
+            if (claim.transmitted) {
+              graviteElt = (
+                <>
+                  <div className="df">
+                    <span className="materialize-red-text text-bold mr-2">Grave</span>
+                    <div className="card-content red-text ml-4">
+                      <MoveUpIcon />
+                    </div>
+                  </div>
+                </>
+              );
+            } else {
+              graviteElt = <span className="materialize-red-text text-bold">Grave</span>;
+            }
             break;
           default:
             graviteElt = (
@@ -2457,24 +2482,24 @@ const TraiterDenonciation = (props) => {
                                               </div>
                                             ) : (
                                               <>
-                                              {(showConfirmChooseSolution && isUserOpenSession) && (
-                                                <button
-                                                  onClick={
-                                                    handleChooseVoteConfirm
-                                                  }
-                                                  className=""
-                                                  style={{
-                                                    color: "white",
-                                                    fontSize: "16px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    fontWeight: "bold",
-                                                    backgroundColor:
-                                                      "transparent",
-                                                  }}
-                                                >
-                                                  Utiliser comme solution
-                                                </button>
+                                                {(showConfirmChooseSolution && isUserOpenSession) && (
+                                                  <button
+                                                    onClick={
+                                                      handleChooseVoteConfirm
+                                                    }
+                                                    className=""
+                                                    style={{
+                                                      color: "white",
+                                                      fontSize: "16px",
+                                                      border: "none",
+                                                      cursor: "pointer",
+                                                      fontWeight: "bold",
+                                                      backgroundColor:
+                                                        "transparent",
+                                                    }}
+                                                  >
+                                                    Utiliser comme solution
+                                                  </button>
                                                 )}
                                               </>
                                             )}
@@ -4407,7 +4432,7 @@ const TraiterDenonciation = (props) => {
         <span>Ouvrir une session</span>
       </LoadingButton>
     );
-  
+
   } else if (props.session?.status === "OPEN" && showJoinBtn) {
     // Bouton "Rejoindre la session" si l'utilisateur est invité/membre
     btnS = (
@@ -4423,7 +4448,7 @@ const TraiterDenonciation = (props) => {
         <span>Rejoindre la session</span>
       </LoadingButton>
     );
-  
+
   } else if (props.session?.status === "CLOSED") {
     // Bouton "Voir la discussion"
     btnS = (
@@ -4439,7 +4464,7 @@ const TraiterDenonciation = (props) => {
         <span>Voir la discussion</span>
       </LoadingButton>
     );
-  
+
   } else {
     btnS = null;
   }
