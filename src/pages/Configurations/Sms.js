@@ -43,15 +43,6 @@ const Sms = (props) => {
     useEffect(() => {
         try {
             let appSms = loadItemFromLocalStorage("app-sms") !== undefined && (loadItemFromLocalStorage("app-sms").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-sms")) : undefined;
-            let apiurl = appSms.url;
-            let libId = appSms.libId;
-            let valId = appSms.valId;
-            let libMdp = appSms.libMdp;
-            let valMdp = appSms.valMdp;
-            let libEmetteur = appSms.libEmetteur;
-            let valEmetteur = appSms.valEmetteur;
-            let libDestinataire = appSms.libDestinataire;
-            let libMessage = appSms.libMessage;
             if (appSms !== undefined || appSms !== "") {
                 props.urlChange(appSms.url)
                 props.libelleIdChanged(appSms.libId);

@@ -193,6 +193,7 @@ import WarningIcon from "@mui/icons-material/Warning";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import EmailDialog from "./widgets/EmailDialog";
 import { WarningAmber } from "@mui/icons-material";
+import { usePermissions } from "../Reclamations/widgets/usePermissions";
 //import { KTApp } from "../../Utils/blockui";
 
 const styles = {
@@ -328,14 +329,17 @@ const TraiterDenonciation = (props) => {
   }
 
   // Permissions
- const isTransmittedToUser = props.transmitted !== "false" && user.firstAndLastName === props.transmittedTo && props.status === "SAVED" && addR === "MOLDUE";
-  // const isAuthorWithAuthorization = user.firstAndLastName === props.created_by && props.authorize;
-  const isAuthorWithAuthorization = 
-  user.firstAndLastName === props.created_by && // c'est l'auteur
-  props.authorize &&                           // il a l'autorisation
-  !(props.transmitted !== "false" && user.firstAndLastName === props.transmittedBy); // n'est pas celui qui a transmis
-  const isAffectedUser = user.firstAndLastName === props.handled_by;
-  const isUserOpenSession = props.session && user.firstAndLastName === props.session?.createdBy?.firstAndLastName;
+  const {
+    isAuthorWithAuthorization,
+    isTransmittedToUser,
+    isAuthor,
+    isTransmitter,
+    isAffecter,
+    isAffectedUser,
+    isUserOpenSession,
+    isRa,
+    raCanOpenSession,
+  } = usePermissions(user, props);
 
   const [privateChats, setPrivateChats] = useState(new Map());
   const [publicChats, setPublicChats] = useState([]);
@@ -353,14 +357,12 @@ const TraiterDenonciation = (props) => {
   const [propositionSolution, setPropositionSolution] = useState("");
   const [propositionCommentaire, setPropositionCommentaire] = useState("");
   const [propositionSolutionError, setPropositionSolutionError] = useState("");
-  const [propositionCommentaireError, setPropositionCommentaireError] =
-    useState("");
+  const [propositionCommentaireError, setPropositionCommentaireError] = useState("");
 
   const [selectedOption, setSelectedOption] = useState("");
   const [votesForPour, setVotesForPour] = useState(0);
   const [votesForContre, setVotesForContre] = useState(0);
-  const [showConfirmChooseSolution, setShowConfirmChooseSolution] =
-    useState(false);
+  const [showConfirmChooseSolution, setShowConfirmChooseSolution] = useState(false);
 
   const [confirmChoosedSolution, setConfirmChoosedSolution] = useState(false);
   const maDivRef = useRef(null);
@@ -699,7 +701,7 @@ const TraiterDenonciation = (props) => {
               : ""
           );
           props.selectedItemChanged(data);
-          // setCurrentData(data);
+          setCurrentData(data);
           //fetch attachments for selected claim
           getFillesApi(data.id, props);
         });
@@ -4387,7 +4389,7 @@ const TraiterDenonciation = (props) => {
   }
 
   // Peut ouvrir la session si auteur avec autorisation ou affecté
-  const canOpenSession = isAuthorWithAuthorization || isAffectedUser;
+  const canOpenSession = isAuthorWithAuthorization || isAffectedUser || raCanOpenSession;
   
   // Détermination du bouton
   if (canOpenSession && (!props.session || props.session.status !== "OPEN")) {
@@ -4540,14 +4542,14 @@ const TraiterDenonciation = (props) => {
         if (isFile) {
           getFillesApi(currentData?.id, props);
           clearFiles();
-          notify("Piece joint ajoutée  ", "success");
+          notify("Piece jointe ajoutée  ", "success");
         } else {
           getClaimAudioApi(currentData?.id, props);
           setOpen2(false);
           setAudioBox(false);
           setAudioListForm([]);
           setAudioListUrlForm([]);
-          notify("Audio ajoutée ", "success");
+          notify("Audio ajouté ", "success");
         }
       })
       .catch((err) => {

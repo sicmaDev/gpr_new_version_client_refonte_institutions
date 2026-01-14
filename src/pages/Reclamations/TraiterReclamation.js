@@ -216,6 +216,7 @@ import { licenseInfo } from "../../apis/LoginApi";
 import WarningIcon from "@mui/icons-material/Warning";
 import EmailDialog from "./widgets/EmailDialog";
 import { data } from "jquery";
+import { usePermissions } from "./widgets/usePermissions";
 
 const styles = {
   control: (base) => ({
@@ -290,16 +291,18 @@ const TraiterReclamation = (props) => {
     showJoinBtn = true;
   }
   // Permissions
-  const isTransmittedToUser = props.transmitted !== "false" && user.firstAndLastName === props.transmittedTo && props.status === "SAVED" && addR === "MOLDUE";
-  // const isAuthorWithAuthorization = user.firstAndLastName === props.created_by && props.authorize;
-  const isAuthorWithAuthorization = 
-  user.firstAndLastName === props.created_by && // c'est l'auteur
-  props.authorize &&                           // il a l'autorisation
-  !(props.transmitted !== "false" && user.firstAndLastName === props.transmittedBy); // n'est pas celui qui a transmis
-  const isAffectedUser = user.firstAndLastName === props.handled_by;
-  const isUserOpenSession = props.session && user.firstAndLastName === props.session?.createdBy?.firstAndLastName;
-
-
+  const {
+    isAuthorWithAuthorization,
+    isTransmittedToUser,
+    isAuthor,
+    isTransmitter,
+    isAffecter,
+    isAffectedUser,
+    isUserOpenSession,
+    isRa,
+    raCanOpenSession,
+  } = usePermissions(user, props);
+ 
   let handlingForms;
   const [agentsMailOptions, setAgentsMailOptions] = useState([]);
 
@@ -379,8 +382,8 @@ const TraiterReclamation = (props) => {
     e.preventDefault();
     setLoadingConversion(true);
 
-    console.log("props", props); 
-    console.log("dataRow", dataRow); 
+    // console.log("props", props); 
+    // console.log("dataRow", dataRow); 
     const formData = new FormData();
     let claim = {};
 
@@ -5280,92 +5283,12 @@ const TraiterReclamation = (props) => {
   } else {
     transmettre = "";
   }
-  // console.log("props.handled", (props.status === "AFFECTED" || props.status === "DESAPPROUVED") &&
-      // user.firstAndLastName === props.handled_by);
-  // if (
-  //   (user.firstAndLastName === props.created_by &&
-  //     props.transmitted === "false" &&
-  //     props.status === "SAVED") ||
-  //   showJoinBtn ||
-  //   ((props.status === "AFFECTED" || props.status === "DESAPPROUVED") &&
-  //     user.firstAndLastName === props.handled_by) ||
-  //   (props.transmitted !== "false" &&
-  //     user.firstAndLastName === props.transmittedTo &&
-  //     props.status === "SAVED" &&
-  //     addR === "MOLDUE") || (user.ra === true && props.transmitted === "false" && props.authorize)
-  // ) {
-  //   // console.log("lol","azert")
-  //   if (props.session === "" && props.session.status !== "OPEN") {
-  //     btnS = (
-  //       // (actif !== undefined && actif) ?
-  //       <>
-  //         <LoadingButton
-  //           onClick={(e) => registerUser(e)}
-  //           className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
-  //           loading={props.etat4}
-  //           loadingPosition="end"
-  //           endIcon={<ChatIcon />}
-  //           variant="contained"
-  //           sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-  //         >
-  //           <span>Ouvrir une session</span>
-  //         </LoadingButton>
-  //       </>
-  //     );
-
-  //   } else if (
-  //     (props.session !== "" && props.session.status === "OPEN") && 
-  //     (props.transmitted !== "false" &&
-  //     user.firstAndLastName === props.transmittedTo &&
-  //     props.status === "SAVED" &&
-  //     addR === "MOLDUE")
-  //   ) {
-  //     btnS = (
-  //       // (actif !== undefined && actif) ?
-  //       <>
-  //         <LoadingButton
-  //           onClick={(e) => connect()}
-  //           className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
-  //           loading={props.etat4}
-  //           loadingPosition="end"
-  //           endIcon={<ChatIcon />}
-  //           variant="contained"
-  //           sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-  //         >
-  //           <span>Rejoindre la session</span>
-  //         </LoadingButton>
-  //       </>
-  //     );
-     
-  //   } else if (props.session !== "" && props.session.status === "CLOSED") {
-  //     btnS = (
-  //       // (actif !== undefined && actif) ?
-  //       <>
-  //         <LoadingButton
-  //           onClick={(e) => connect()}
-  //           className="waves-effect waves-effect-b waves-light btn-small"
-  //           loading={props.etat4}
-  //           loadingPosition="end"
-  //           endIcon={<ChatIcon />}
-  //           variant="contained"
-  //           sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-  //         >
-  //           <span>Voir la discussion</span>
-  //         </LoadingButton>
-  //       </>
-  //     );
-      
-  //   } else {
-  //     // console.log("lol1","azert")
-  //     btnS = "";
-  //   }
-  // }
-
+ 
   // Vérifier si l'utilisateur est invité ou membre de la session
-
+  
   // Peut ouvrir la session si auteur avec autorisation ou affecté
-  const canOpenSession = isAuthorWithAuthorization || isAffectedUser;
-
+  const canOpenSession = isAuthorWithAuthorization || isAffectedUser || raCanOpenSession;
+ 
   // Détermination du bouton
   if (canOpenSession && (!props.session || props.session.status !== "OPEN")) {
     // Bouton "Ouvrir la session"
@@ -5527,14 +5450,14 @@ const TraiterReclamation = (props) => {
         if (isFile) {
           getFillesApi(currentData?.id, props);
           clearFiles();
-          notify("Piece joint ajoutée  ", "success");
+          notify("Piece jointe ajoutée  ", "success");
         } else {
           getClaimAudioApi(currentData?.id, props);
           setOpen2(false);
           setAudioBox(false);
           setAudioListForm([]);
           setAudioListUrlForm([]);
-          notify("Audio ajoutée ", "success");
+          notify("Audio ajouté ", "success");
         }
       })
       .catch((err) => {
