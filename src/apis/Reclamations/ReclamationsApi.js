@@ -48,7 +48,7 @@ export const listeTousStatuts = async (props) => {
     await axios(config)
         .then(function (response) {
 
-            console.log("response.data.content",response.data.content)
+            // console.log("response.data.content",response.data.content)
             props.itemsChanged(response.data.content)
             saveItemToLocalStorage(response.data.content, 'app-recsTS')
             return response.data.content
@@ -73,7 +73,7 @@ export const listeByStatut = async (props, state) => {
     await axios(config)
         .then(function (response) {
             // console.log("mesureliste",response.data.content)
-            console.log("response_______________________",response.data.content)
+            // console.log("response_______________________",response.data.content)
             props.itemsChanged(response.data.content)
 
             return response.data.content
@@ -96,7 +96,7 @@ export const listeTreat = async (props) => {
     };
     await axios(config)
         .then(function (response) {
-            console.log("responsetreat", response.data.content)
+            // console.log("responsetreat", response.data.content)
 
             props.itemsChanged(response.data.content)
 
@@ -121,7 +121,7 @@ export const detailsTreat = async (props, code) => {
     };
     await axios(config)
         .then(function (response) {
-            console.log("detailstreatresponse", response.data)
+            // console.log("detailstreatresponse", response.data)
             return response.data.conte;
         })
         .catch(function (error) {

@@ -117,7 +117,7 @@ export const ajout = async (data, props) => {
         .catch(function (error) {
 
             props.etatChanged(false)
-            console.log("erroradduserA", error)
+            // console.log("erroradduserA", error)
             if (error?.response?.data?.content !== "" || error?.response?.data?.response?.content !== "") {
                 notify(error?.response?.data?.response?.content?.message, "error");
             } else {

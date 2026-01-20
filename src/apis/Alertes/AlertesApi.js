@@ -41,7 +41,7 @@ export const alertDenonciationApi = async (props) => {
     };
     await axios(config)
         .then(function (response) {
-            console.log("responsealertdenun",response.data.content)
+            // console.log("responsealertdenun",response.data.content)
             props.itemsChanged(response.data.content)
         })
         .catch(function (error) {

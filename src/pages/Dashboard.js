@@ -246,7 +246,6 @@ const Dashboard = (props) => {
             align: "left",
             sortable: false,
             cell: (claim) => {
-
                 let url;
                 if (claim.type === "CLAIM") {
 

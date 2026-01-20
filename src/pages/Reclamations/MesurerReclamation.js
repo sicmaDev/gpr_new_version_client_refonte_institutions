@@ -1180,7 +1180,7 @@ const MesurerReclamation = (props) => {
                     className="materialize-textarea textarea-size"
                     value={props.commenta}
                     onChange={(e) => {
-                        console.log("typing", e.target.value);
+                        // console.log("typing", e.target.value);
                         props.commentaChanged(e.target.value)
                       }
                     }

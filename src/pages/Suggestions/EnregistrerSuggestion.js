@@ -493,7 +493,7 @@ const EnregistrerSuggestion = (props) => {
             claim["id"] = props.id;
             // claim["files"] = props.selectedFiles;
             // claim["files"] = files;
-            console.log("ReceptDateTimeA", props.recorded_at);
+            // console.log("ReceptDateTimeA", props.recorded_at);
             formData.append("suggestion", JSON.stringify(claim));
             for (let index = 0; index < files.length; index++) {
                 formData.append("files", files[index]);
