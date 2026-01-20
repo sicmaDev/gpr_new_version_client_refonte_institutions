@@ -22,7 +22,7 @@ export let liste = async (props) => {
         method: 'GET',
         url: GET_SETTING_API,
         headers: {
-            
+
             'Content-Type': 'application/json',
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
@@ -31,7 +31,7 @@ export let liste = async (props) => {
         .then(function (response) {
             //console.log("reponse", response.data)
             if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
-                saveItemToSessionStorage(JSON.stringify(response.data.content),"app-users")
+                saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
                 saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
                 props.itemsChanged(response.data.content);
                 // console.log("reponseuser", response.data.content)
@@ -39,7 +39,7 @@ export let liste = async (props) => {
 
         })
         .catch(function (error) {
-           
+
         });
 }
 export let all = async (props) => {
@@ -48,7 +48,7 @@ export let all = async (props) => {
         method: 'GET',
         url: GET_SETTING_ALL_API,
         headers: {
-            
+
             'Content-Type': 'application/json',
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
@@ -57,7 +57,7 @@ export let all = async (props) => {
         .then(function (response) {
             //console.log("reponse", response.data)
             if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
-                saveItemToSessionStorage(JSON.stringify(response.data.content),"app-users")
+                saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
                 saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
                 props.itemsChanged(response.data.content);
                 // console.log("reponseuser", response.data.content)
@@ -65,11 +65,11 @@ export let all = async (props) => {
 
         })
         .catch(function (error) {
-           
+
         });
 }
 
-export let disabled = async (props,id,isDisabled) => {
+export let disabled = async (props, id, isDisabled) => {
 
     const config = {
         method: 'DELETE',
@@ -80,11 +80,11 @@ export let disabled = async (props,id,isDisabled) => {
         },
     };
     return axios(config)
-        
+
 }
 
 export const ajout = async (data, props) => {
-    
+
     const config = {
         method: 'post',
         url: ADD_SETTING_API,
@@ -102,36 +102,35 @@ export const ajout = async (data, props) => {
             if (response.data.response.status) {
                 saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
                 saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
-                
+
                 // console.log("responseadduser",response)
-            
+
                 notify("Bravo - Utilisateur ajouté", "success");
-            
+
                 all(props)
             } else {
                 notify(response.data.response.content.message, "error");
             }
-            
+
 
         })
         .catch(function (error) {
+
             props.etatChanged(false)
-          
-           const message =
-            error?.response?.data?.content?.message ||
-            error?.response?.data?.message ||
-            "Erreur - Veuillez réessayer!";
-
-            notify(message, "error");
+            console.log("erroradduserA", error)
+            if (error?.response?.data?.content !== "" || error?.response?.data?.response?.content !== "") {
+                notify(error?.response?.data?.response?.content?.message, "error");
+            } else {
+                notify("Erreur - Veuillez réessayer!", "error");
+            }
         });
-
 }
 
 export const modification = async (data, props) => {
 
     const config = {
         method: 'put',
-        url: UPDATE_SETTING_API.replace("id",props.id),
+        url: UPDATE_SETTING_API.replace("id", props.id),
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
@@ -146,16 +145,16 @@ export const modification = async (data, props) => {
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
 
             props.etatChanged(false)
-           
+
             notify("Bravo - Utilisateur modifié", "success");
-           
+
             all(props)
 
         })
         .catch(function (error) {
-          
+
             props.etatChanged(false)
-            if (error.response.data.content !=="") {
+            if (error.response.data.content !== "") {
                 notify(error.response.data.content.message, "error");
             } else {
                 notify("Erreur - Veuillez réessayer!", "error");
@@ -177,17 +176,17 @@ export const suppression = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-           
+
             saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
 
             props.etat3Changed(false)
-            notify("Bravo - Utilisateur supprimé", "success");    
+            notify("Bravo - Utilisateur supprimé", "success");
             all(props)
         })
         .catch(function (error) {
             props.etat3Changed(false)
-            if (error.response.data.content !=="") {
+            if (error.response.data.content !== "") {
                 notify(error.response.data.content.message, "error");
             } else {
                 notify("Erreur - Veuillez réessayer!", "error");
