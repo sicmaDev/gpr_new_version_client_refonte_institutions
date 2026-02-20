@@ -31,6 +31,7 @@ import ReclamationsAlertes from '../pages/Alertes/ReclamationsAlertes';
 import DenonciationsAlertes from '../pages/Alertes/DenonciationsAlertes';
 import Global from '../pages/Rapports/Global';
 import Bceao from '../pages/Rapports/Bceao';
+import Superset from '../pages/Rapports/Superset';
 import Compte from '../pages/Compte/Compte';
 import Documents from '../pages/Configurations/Documents';
 import Faq from '../pages/Configurations/Faq';
@@ -154,6 +155,7 @@ export default function Contenu() {
                     {/* rapports */}
                     <Route path="/rapports/global" component={Global} />
                     <Route path="/rapports/bceao" component={Bceao} />
+                    <Route path="/rapports/superset" component={Superset} />
 
                     {/* compte */}
                     <Route path="/compte" component={Compte} />

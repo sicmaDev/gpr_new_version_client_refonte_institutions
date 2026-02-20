@@ -1,0 +1,65 @@
+body {
+  font-family: Arial, sans-serif;
+  /* padding: 20px; */
+}
+
+.controls {
+  margin-bottom: 20px;
+}
+
+input {
+  padding: 8px;
+  margin-right: 10px;
+  width: 300px;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* .dashboard-container {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+} */
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.dashboard-wrapper {
+  /* Prend toute la largeur */
+  width: 100%;
+  /* Force une hauteur minimale pour éviter que ce soit tout plat au début */
+  min-height: 100vh; 
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-container {
+  flex: 1; /* Prend tout l'espace restant */
+  width: 100%;
+  border: none; /* Plus joli sans bordure pour une intégration fluide */
+}
+
+/* Important: Force l'iframe générée par Superset à prendre toute la place */
+.dashboard-container iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  min-height: 2000px
+}
