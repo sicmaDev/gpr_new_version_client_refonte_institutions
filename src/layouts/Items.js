@@ -10,6 +10,7 @@ import InboxIcon from '@mui/icons-material/MoveToInbox';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import StarBorder from '@mui/icons-material/StarBorder';
+import PieChartIcon from '@mui/icons-material/PieChart';
 import QuizIcon from '@mui/icons-material/Quiz';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -283,6 +284,15 @@ export const Items = (props) => {
                                 <StarBorder style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Commission Bancaire" />
+                        </ListItemButton>
+                    </NavLink>
+
+                    <NavLink to="/rapports/superset" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
+                        <ListItemButton sx={{ pl: 4 }} className='lib'>
+                            <ListItemIcon>
+                                <PieChartIcon style={{ color: "white" }} />
+                            </ListItemIcon>
+                            <ListItemText primary="Superset" />
                         </ListItemButton>
                     </NavLink>
                 </List>
