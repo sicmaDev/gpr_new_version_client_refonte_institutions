@@ -132,6 +132,11 @@ const EnregistrerSuggestion = (props) => {
             // console.error("Une erreur s'est produite :", error);
         }
     };
+    const languageRef = useRef(null);
+    const recordedAtRef = useRef(null);
+    const collectRef = useRef(null);
+    const contentRef = useRef(null);
+    const firstErrorRef = useRef(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -281,6 +286,16 @@ const EnregistrerSuggestion = (props) => {
     const [clearAudio, setClearAudio] = useState(0)
 
     let errors = {};
+    const scrollToFirstError = (firstErrorFieldRef) => {
+        if (firstErrorFieldRef && firstErrorFieldRef.current) {
+            setTimeout(() => {
+                firstErrorFieldRef.current.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+            }, 100);
+        }
+    };
     const clearComponentState = () => {
         props.idChanged("")
         props.lastnameChanged("")
@@ -341,17 +356,21 @@ const EnregistrerSuggestion = (props) => {
         //     isValid = false;
         //     errors["gender"] = "Champ incorrect";
         // }
+        let firstErrorFieldRef = null;
         if ((props.language === "" || props.language === undefined || props.language === null)) {
             isValid = false;
             errors["language"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = languageRef;
         }
         if ((props.recorded_at === "" || props.recorded_at === undefined || props.recorded_at === null || !isValidDate(props.recorded_at))) {
             isValid = false;
             errors["recorded_at"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
         }
         if ((props.collect === "" || props.collect === undefined || props.collect === null)) {
             isValid = false;
             errors["collect"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = collectRef;
         }
         if (
             (props.content === "" ||
@@ -362,6 +381,7 @@ const EnregistrerSuggestion = (props) => {
         ) {
             isValid = false;
             errors["content"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = contentRef;
         }
         // if ((props.product === "" || props.product === undefined || props.product === null)) {
         //     isValid = false;
@@ -371,6 +391,9 @@ const EnregistrerSuggestion = (props) => {
         //     isValid = false;
         //     errors["unit"] = "Champ incorrect";
         // }
+        if (!isValid) {
+            scrollToFirstError(firstErrorFieldRef);
+        }
         return isValid
     }
 
@@ -1334,8 +1357,8 @@ const EnregistrerSuggestion = (props) => {
                                                             <Select
                                                                 value={
                                                                     (props.gender && props.gender !== "NON_DEFINI")
-                                                                    ? { label: props.gender, value: props.gender }
-                                                                    : { label: "Sélectionner le genre", value: "" }
+                                                                        ? { label: props.gender, value: props.gender }
+                                                                        : { label: "Sélectionner le genre", value: "" }
                                                                 }
                                                                 options={genderOptions}
                                                                 className='react-select-container mt-4'
@@ -1352,7 +1375,7 @@ const EnregistrerSuggestion = (props) => {
                                                             </small>
                                                         </div>
 
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l6 m12 s12 input-field" ref={languageRef} >
                                                             <Select
                                                                 value={props.language ? { "label": props.languageLibelle, "value": props.language } : "Sélectionner la langue"}
                                                                 options={languageOptions}
@@ -1404,7 +1427,7 @@ const EnregistrerSuggestion = (props) => {
                                                                     className="error">{(props.errors !== undefined) ? props.errors.code : ""}</div>
                                                             </small>
                                                         </div>
-                                                        <div className="col l12 m12 s12 input-field">
+                                                        <div className="col l12 m12 s12 input-field" ref={recordedAtRef}>
                                                             <DatePicker
                                                                 // placeholderText="Date et Heure de réception"
                                                                 withPortal
@@ -1427,7 +1450,7 @@ const EnregistrerSuggestion = (props) => {
                                                                     className="error">{(props.errors !== undefined) ? props.errors.recorded_at : ""}</div>
                                                             </small>
                                                         </div>
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l6 m12 s12 input-field" ref={collectRef}>
                                                             <Select
                                                                 value={props.collect ? { "label": props.collectLibelle, "value": props.collect } : "Sélectionner la modalité de dépôt"}
                                                                 options={collectOptions}
@@ -1485,7 +1508,7 @@ const EnregistrerSuggestion = (props) => {
                                                                     className="error">{(props.errors !== undefined) ? props.errors.unit : ""}</div>
                                                             </small>
                                                         </div>
-                                                        <div className="col l12 m12 s12 input-field">
+                                                        <div className="col l12 m12 s12 input-field" ref={contentRef}>
                                                             <textarea id="content" name="content" placeholder="" rows={"2"}
                                                                 className="materialize-textarea"
                                                                 value={props.content}

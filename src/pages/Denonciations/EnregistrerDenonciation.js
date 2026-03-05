@@ -89,7 +89,7 @@ const EnregistrerDenonciation = (props) => {
     const [open, setOpen] = React.useState(false)
     const [files, setFiles] = React.useState([]);
     const [underSubjectOptions, setUnderSubjectOptions] = useState([]);
-    
+
     const [isLoading, setIsLoading] = useState(false)
     const { recorderState, ...handlers } = useRecorder();
     let { audio } = recorderState;
@@ -115,6 +115,15 @@ const EnregistrerDenonciation = (props) => {
         }
     };
 
+    const recordedAtRef = useRef(null);
+    const collectRef = useRef(null);
+    const subjectRef = useRef(null);
+    const underSubjectRef = useRef(null);
+    const productRef = useRef(null);
+    const unitRef = useRef(null);
+    const contentRef = useRef(null);
+    const firstErrorRef = useRef(null);
+
     useEffect(() => {
         const fetchData = async () => {
             await licenseControl();
@@ -126,13 +135,13 @@ const EnregistrerDenonciation = (props) => {
 
     useEffect(() => {
         KTApp.blockPage({
-          overlayColor: '#000000',
-          type: 'v2',
-          state: 'danger',
-          message: 'En cours de chargement...'
+            overlayColor: '#000000',
+            type: 'v2',
+            state: 'danger',
+            message: 'En cours de chargement...'
         })
-        setIsLoading(true); 
-        
+        setIsLoading(true);
+
         if (mode === 1) {
             props.itemsChanged([])
             listeByStatut(props, "TEMP_SAVED").then((r) => { }).finally(() => {
@@ -169,94 +178,94 @@ const EnregistrerDenonciation = (props) => {
     const [clearAudio, setClearAudio] = useState(0)
 
     // whatsapp
-    
-      useEffect(() => {
-    
+
+    useEffect(() => {
+
         if (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) {
-          clearComponentState();
-          props.contentChanged(transformConversation(props.whatsappSelectMessage))
+            clearComponentState();
+            props.contentChanged(transformConversation(props.whatsappSelectMessage))
         }
-      }, [""])
-    
-      const transformConversation = (conversations = []) => {
+    }, [""])
+
+    const transformConversation = (conversations = []) => {
         var result = ""
         const convert = conversations.sort((a, b) => {
-          return parseInt(a.date) - parseInt(b.date)
+            return parseInt(a.date) - parseInt(b.date)
         })
-    
+
         convert.forEach((msg) => {
-          if (msg.type === "chat") {
-    
-            result += ` [${moment(parseInt(msg.date)).format("DD/MM/Y H:mm:ss")}]` + (msg.message_id.startsWith("false") ? " Plaignant: " : " GPR WHATSAPP: ") + " " + msg.content + " \n";
-          }
+            if (msg.type === "chat") {
+
+                result += ` [${moment(parseInt(msg.date)).format("DD/MM/Y H:mm:ss")}]` + (msg.message_id.startsWith("false") ? " Plaignant: " : " GPR WHATSAPP: ") + " " + msg.content + " \n";
+            }
         })
         return result;
-      }
-    
-      let whatsappAttachmentList;
-      // console.log("props.selectedItemFiles", props.selectedItemFiles);
-      if (props.whatsappSelectMessage.length > 0) {
+    }
+
+    let whatsappAttachmentList;
+    // console.log("props.selectedItemFiles", props.selectedItemFiles);
+    if (props.whatsappSelectMessage.length > 0) {
         const preuves = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat")) ?? []
         let whatsappAttachmentListChild = preuves.map((msg) => {
-          let icon = guessExtension({ name: msg.type });
-          return (
-            <div className="col xl12 l12 m12 s12" key={msg.id}>
-              <div className="card box-shadow-none mb-1 app-file-info">
-                <div className="card-content">
-                  <div className="row">
-                    <div className="col xl1 l1 s1 m1">
-                      <div className="app-file-content-logo">
-                        <div className="fonticon hide">
-                          <i className="material-icons ">more_vert</i>
+            let icon = guessExtension({ name: msg.type });
+            return (
+                <div className="col xl12 l12 m12 s12" key={msg.id}>
+                    <div className="card box-shadow-none mb-1 app-file-info">
+                        <div className="card-content">
+                            <div className="row">
+                                <div className="col xl1 l1 s1 m1">
+                                    <div className="app-file-content-logo">
+                                        <div className="fonticon hide">
+                                            <i className="material-icons ">more_vert</i>
+                                        </div>
+                                        <img
+                                            className="recent-file"
+                                            src={icon}
+                                            height="38"
+                                            width="30"
+                                            alt=""
+                                        />
+                                    </div>
+                                </div>
+                                <div className="col xl11 l11 s11 m11">
+                                    <div className="app-file-recent-details">
+                                        <div className="app-file-name font-weight-700 truncate">
+                                            {msg.content}
+                                        </div>
+                                        <div className="app-file-size">
+
+                                        </div>
+                                        <div className="app-file-last-access">
+                                            <span
+                                                style={{ cursor: "pointer" }}
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    // downloadFillesApi(attachment.id, attachment.name);
+                                                    downloadFilesApi(msg.content)
+                                                }}
+                                            >
+                                                Télécharger
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <img
-                          className="recent-file"
-                          src={icon}
-                          height="38"
-                          width="30"
-                          alt=""
-                        />
-                      </div>
                     </div>
-                    <div className="col xl11 l11 s11 m11">
-                      <div className="app-file-recent-details">
-                        <div className="app-file-name font-weight-700 truncate">
-                          {msg.content}
-                        </div>
-                        <div className="app-file-size">
-    
-                        </div>
-                        <div className="app-file-last-access">
-                          <span
-                            style={{ cursor: "pointer" }}
-                            onClick={(e) => {
-                              e.preventDefault()
-                              // downloadFillesApi(attachment.id, attachment.name);
-                              downloadFilesApi(msg.content)
-                            }}
-                          >
-                            Télécharger
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </div>
-            </div>
-          );
+            );
         });
         whatsappAttachmentList = preuves.length ? (
-          <div className="col s12 app-file-content grey lighten-4">
-            <span className="app-file-label">Pieces joints(Whatsapp) </span>
-            <div className="row app-file-recent-access mb-3">
-              {whatsappAttachmentListChild}
+            <div className="col s12 app-file-content grey lighten-4">
+                <span className="app-file-label">Pieces joints(Whatsapp) </span>
+                <div className="row app-file-recent-access mb-3">
+                    {whatsappAttachmentListChild}
+                </div>
             </div>
-          </div>
-        ):<></>;
-      } else {
-      }
-    
+        ) : <></>;
+    } else {
+    }
+
 
     //Handling the form
     let collects
@@ -342,7 +351,7 @@ const EnregistrerDenonciation = (props) => {
     if (directionOptions !== "") { unitOptions.push({ "label": "Direction", "options": directionOptions }) }
     if (agencyOptions !== "") { unitOptions.push({ "label": "Agence", "options": agencyOptions }) }
     if (guichetOptions !== "") { unitOptions.push({ "label": "Guichet", "options": guichetOptions }) }
-    
+
     const [loadingId, setLoadingId] = useState(null);
     const handleEditClick = (claim) => (e) => {
         rowClickedHandler(e, claim, null);
@@ -359,10 +368,10 @@ const EnregistrerDenonciation = (props) => {
     const handleDelete = (e, claim = null) => {
         e.preventDefault();
 
-       
+
         setLoadingId(claim.id);
         deleteDenunciationApi(claim.id, props).then(() => {
-            listeByStatut(props, "TEMP_SAVED").then(() => {});
+            listeByStatut(props, "TEMP_SAVED").then(() => { });
 
             handleCancel(e);
             notify("Suppression effectuée avec succès", "success");
@@ -411,6 +420,16 @@ const EnregistrerDenonciation = (props) => {
     };
 
     let errors = {};
+    const scrollToFirstError = (firstErrorFieldRef) => {
+        if (firstErrorFieldRef && firstErrorFieldRef.current) {
+            setTimeout(() => {
+                firstErrorFieldRef.current.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+            }, 100);
+        }
+    };
     const clearComponentState = () => {
         props.idChanged("")
         props.subjectChanged("")
@@ -445,22 +464,26 @@ const EnregistrerDenonciation = (props) => {
 
     const handleValidation = () => {
         let isValid = true;
-
+        let firstErrorFieldRef = null;
         if ((props.recorded_at === "" || props.recorded_at === undefined || props.recorded_at === null || !isValidDate(props.recorded_at))) {
             isValid = false;
             errors["recorded_at"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
         }
         if ((props.collect === "" || props.collect === undefined || props.collect === null)) {
             isValid = false;
             errors["collect"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = collectRef;
         }
         if ((props.subject === "" || props.subject === undefined || props.subject === null)) {
             isValid = false;
             errors["subject"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = subjectRef;
         }
         if ((props.underSubject === "" || props.underSubject === undefined || props.underSubject === null)) {
             isValid = false;
             errors["underSubject"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = underSubjectRef;
         }
         if (
             (props.content === "" ||
@@ -471,14 +494,20 @@ const EnregistrerDenonciation = (props) => {
         ) {
             isValid = false;
             errors["content"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = contentRef;
         }
         if ((props.product === "" || props.product === undefined || props.product === null)) {
             isValid = false;
             errors["product"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = productRef;
         }
         if ((props.unit === "" || props.unit === undefined || props.unit === null)) {
             isValid = false;
             errors["unit"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = unitRef;
+        }
+        if (!isValid) {
+            scrollToFirstError(firstErrorFieldRef);
         }
         return isValid
     }
@@ -492,8 +521,8 @@ const EnregistrerDenonciation = (props) => {
             claim["collectionChannelId"] = props.collect;
             claim["servicePointId"] = props.unit;
             claim["productId"] = props.product;
-            claim["fromWhatsapp"] = (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false ;
-            claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(({type})=>(type !== "chat"))
+            claim["fromWhatsapp"] = (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false;
+            claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat"))
             claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null
             claim["objetId"] = props.underSubject;
             claim["receiptDateTime"] = props.recorded_at;
@@ -740,27 +769,27 @@ const EnregistrerDenonciation = (props) => {
             align: "left",
             sortable: true,
             cell: (claim, index) => {
-            const isLoading = loadingId === claim.id;
-            return (
-                <div style={{ display: "flex", gap: "5px" }}>
-                <Tooltip title="Modifier">
-                    <IconButton onClick={handleEditClick(claim)} color="primary">
-                    <EditIcon />
-                    </IconButton>
-                </Tooltip>
-                {mode === 1 && (
-                    <Tooltip title="Supprimer">
-                    <IconButton
-                        onClick={(e) => handleModal(e, claim)}
-                        color="error"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? <CircularProgress size={20} /> : <DeleteIcon />}
-                    </IconButton>
-                    </Tooltip>
-                )}
-                </div>
-            );
+                const isLoading = loadingId === claim.id;
+                return (
+                    <div style={{ display: "flex", gap: "5px" }}>
+                        <Tooltip title="Modifier">
+                            <IconButton onClick={handleEditClick(claim)} color="primary">
+                                <EditIcon />
+                            </IconButton>
+                        </Tooltip>
+                        {mode === 1 && (
+                            <Tooltip title="Supprimer">
+                                <IconButton
+                                    onClick={(e) => handleModal(e, claim)}
+                                    color="error"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? <CircularProgress size={20} /> : <DeleteIcon />}
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </div>
+                );
             },
         },
     ];
@@ -1151,7 +1180,7 @@ const EnregistrerDenonciation = (props) => {
                                                     config={config}
                                                     records={content}
                                                     columns={columns}
-                                                    // onRowClicked={rowClickedHandler}
+                                                // onRowClicked={rowClickedHandler}
                                                 />
                                             </div>
                                         </div>
@@ -1183,7 +1212,7 @@ const EnregistrerDenonciation = (props) => {
                                                                     className="error">{(props.errors !== undefined) ? props.errors.code : ""}</div>
                                                             </small>
                                                         </div>
-                                                        <div className="col l12 m12 s12 input-field">
+                                                        <div className="col l12 m12 s12 input-field" ref={recordedAtRef}>
                                                             <DatePicker
                                                                 // placeholderText="Date et Heure de réception"
                                                                 withPortal
@@ -1206,7 +1235,7 @@ const EnregistrerDenonciation = (props) => {
                                                                     className="error">{(props.errors !== undefined) ? props.errors.recorded_at : ""}</div>
                                                             </small>
                                                         </div>
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l6 m12 s12 input-field" ref={collectRef}>
                                                             <Select
                                                                 value={props.collect ? { "label": props.collectLibelle, "value": props.collect } : "Sélectionner la modalité de dépôt"}
                                                                 options={collectOptions}
@@ -1247,7 +1276,7 @@ const EnregistrerDenonciation = (props) => {
                                                             </small>
                                                         </div> */}
 
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l6 m12 s12 input-field" ref={subjectRef}>
                                                             <Select
                                                                 value={
                                                                     props.subject
@@ -1281,7 +1310,7 @@ const EnregistrerDenonciation = (props) => {
                                                             </small>
                                                         </div>
 
-                                                        <div className="col l12 m12 s12 input-field">
+                                                        <div className="col l12 m12 s12 input-field" ref={underSubjectRef}>
                                                             <Select
                                                                 value={
                                                                     props.underSubject
@@ -1315,7 +1344,7 @@ const EnregistrerDenonciation = (props) => {
                                                             </small>
                                                         </div>
 
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l6 m12 s12 input-field" ref={productRef}>
 
                                                             <Select
                                                                 value={props.product ? { "label": props.productLibelle, "value": props.product } : "Sélectionner le produit"}
@@ -1335,7 +1364,7 @@ const EnregistrerDenonciation = (props) => {
                                                             </small>
 
                                                         </div>
-                                                        <div className="col l6 m12 s12 input-field">
+                                                        <div className="col l6 m12 s12 input-field" ref={unitRef}>
                                                             <Select
                                                                 value={props.unit ? { "label": props.unitLibelle, "value": props.unit } : "Sélectionner le point de service"}
                                                                 options={unitOptions}
@@ -1353,7 +1382,7 @@ const EnregistrerDenonciation = (props) => {
                                                                     className="error">{(props.errors !== undefined) ? props.errors.unit : ""}</div>
                                                             </small>
                                                         </div>
-                                                        <div className="col l12 m12 s12 input-field">
+                                                        <div className="col l12 m12 s12 input-field" ref={contentRef}>
                                                             {formAudio}
                                                             <textarea id="content" name="content" placeholder="" rows={"2"}
                                                                 className="materialize-textarea"

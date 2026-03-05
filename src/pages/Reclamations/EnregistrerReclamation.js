@@ -113,7 +113,7 @@ import { reset } from "../../redux/actions/WhatsappActions";
 import { CancelOutlined } from "@mui/icons-material";
 import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 import { send } from "../../apis/Configurations/SmsApi";
-
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 registerLocale("fr", fr);
 
 const styles = {
@@ -133,14 +133,6 @@ const EnregistrerReclamation = (props) => {
   let { audio } = recorderState;
 
   const [isLoading, setIsLoading] = useState(false)
-
-  // const [openParent, setOpenParent] = useState(false);
-  // const [openChild, setOpenChild] = useState(false);
-  // const handleOpenParent = () => setOpenParent(true);
-  // const handleCloseParent = () => setOpenParent(false);
-  // const handleOpenChild = () => setOpenChild(true);
-  // const handleCloseChild = () => setOpenChild(false);
-
   let settingComplete = isSettingComplete();
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
@@ -153,7 +145,7 @@ const EnregistrerReclamation = (props) => {
 
   let appInstitution =
     loadItemFromLocalStorage("app-institution") !== undefined &&
-    loadItemFromLocalStorage("app-institution").length !== 0
+      loadItemFromLocalStorage("app-institution").length !== 0
       ? JSON.parse(loadItemFromLocalStorage("app-institution"))
       : undefined;
 
@@ -179,13 +171,13 @@ const EnregistrerReclamation = (props) => {
 
     if (mode === 1) {
       props.itemsChanged([]);
-      listeByStatut(props, "TEMP_SAVED").then((r) => {}).finally(() => {
+      listeByStatut(props, "TEMP_SAVED").then((r) => { }).finally(() => {
         setIsLoading(false)
         KTApp.unblockPage()
       });
     } else {
       props.itemsChanged([]);
-      listeByStatutOffline(props, "TEMP_SAVED").then((r) => {}).finally(() => {
+      listeByStatutOffline(props, "TEMP_SAVED").then((r) => { }).finally(() => {
         setIsLoading(false)
         KTApp.unblockPage()
       });
@@ -210,12 +202,6 @@ const EnregistrerReclamation = (props) => {
       .addClass("highlight display dataTable dtr-inline");
     window.$("#as-react-datatable tr").addClass("cursor-pointer");
     window.$(".tooltipped").tooltip();
-    // window.intlTelInput(clientPhone, {
-    //     initialCountry: 'gb',
-    //     utilsScript: "src/assets/js/phoneUtils.js?1638200991544"
-    // });
-    // initDatePicker(props, 'recorded_at')
-
     clearComponentState();
   }, []);
 
@@ -231,6 +217,19 @@ const EnregistrerReclamation = (props) => {
       // console.error("Une erreur s'est produite :", error);
     }
   };
+  const lastnameRef = useRef(null);
+  const phoneRef = useRef(null);
+  const addressRef = useRef(null);
+  const genderRef = useRef(null);
+  const languageRef = useRef(null);
+  const recordedAtRef = useRef(null);
+  const collectRef = useRef(null);
+  const subjectRef = useRef(null);
+  const underSubjectRef = useRef(null);
+  const productRef = useRef(null);
+  const unitRef = useRef(null);
+  const contentRef = useRef(null);
+  const firstErrorRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -375,7 +374,7 @@ const EnregistrerReclamation = (props) => {
   const [currentAudio, setCurrentAudio] = useState("");
   const [underSubjectOptions, setUnderSubjectOptions] = useState([]);
   const [clearAudio, setClearAudio] = useState(0);
-  useEffect(() => {}, [showAudioPlayer, currentAudio]);
+  useEffect(() => { }, [showAudioPlayer, currentAudio]);
 
   const [loadingDelete, setLoadingDelete] = useState(false);
 
@@ -487,7 +486,7 @@ const EnregistrerReclamation = (props) => {
 
     setLoadingId(claim.id);
     deleteClaimApi(claim.id, props).then(() => {
-      listeByStatut(props, "TEMP_SAVED").then(() => {});
+      listeByStatut(props, "TEMP_SAVED").then(() => { });
 
       handleCancel(e);
       notify("Suppression effectuée avec succès", "success");
@@ -537,6 +536,16 @@ const EnregistrerReclamation = (props) => {
   };
 
   let errors = {};
+  const scrollToFirstError = (firstErrorFieldRef) => {
+    if (firstErrorFieldRef && firstErrorFieldRef.current) {
+      setTimeout(() => {
+        firstErrorFieldRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }, 100);
+    }
+  };
   const clearComponentState = () => {
     props.idChanged("");
     props.lastnameChanged("");
@@ -570,11 +579,8 @@ const EnregistrerReclamation = (props) => {
   };
 
   const handleValidation = () => {
-    // console.log("console : ", props.content==="");
-    // console.log("console : ",audio);
-    // console.log("console : ",props.selectedItemAudio);
-    // console.log("console : ",props.selectedItemAudio!= null && props.selectedItemAudio.length != 0);
     let isValid = true;
+    let firstErrorFieldRef = null;
 
     if (
       props.lastname === "" ||
@@ -583,6 +589,7 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["lastname"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = lastnameRef;
     }
 
     if (
@@ -592,6 +599,7 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["address"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = addressRef;
     }
     if (
       props.phone === "" ||
@@ -601,6 +609,7 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["phone"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = phoneRef;
     }
     if (
       props.gender === "" ||
@@ -609,6 +618,7 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["gender"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = genderRef;
     }
     if (
       props.language === "" ||
@@ -617,6 +627,7 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["language"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = languageRef;
     }
     // if ((props.code === "" || props.code === undefined || props.code === null)) {
     //     isValid = false;
@@ -630,6 +641,7 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["recorded_at"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
     }
     if (
       props.collect === "" ||
@@ -638,6 +650,7 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["collect"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = collectRef;
     }
     if (
       props.subject === "" ||
@@ -646,6 +659,7 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["subject"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = subjectRef;
     }
     if (
       props.underSubject === "" ||
@@ -654,6 +668,7 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["underSubject"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = underSubjectRef;
     }
     if (
       (props.content === "" ||
@@ -666,6 +681,7 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["content"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = contentRef;
     }
     if (
       props.product === "" ||
@@ -674,10 +690,16 @@ const EnregistrerReclamation = (props) => {
     ) {
       isValid = false;
       errors["product"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = productRef;
     }
     if (props.unit === "" || props.unit === undefined || props.unit === null) {
       isValid = false;
       errors["unit"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = unitRef;
+    }
+
+    if (!isValid) {
+      scrollToFirstError(firstErrorFieldRef);
     }
     return isValid;
   };
@@ -730,11 +752,6 @@ const EnregistrerReclamation = (props) => {
         formData.append("files", files[index]);
       }
 
-      // console.log("claimenregistrer",formData);
-      // HERE
-      // console.log("etattttttttttttt", audio);
-      // Convert Blob to File
-      // console.log(audio);
       if (audio != null) {
         const audioFile = new File([audio], "claim_record_" + uuid() + ".ogg", {
           type: "audio/ogg; codecs=opus",
@@ -1142,42 +1159,42 @@ const EnregistrerReclamation = (props) => {
 
         let description = data.languageId
           ? JSON.parse(loadItemFromSessionStorage("app-langues")).filter(
-              (e) => {
-                return e.id === data.languageId;
-              }
-            )
+            (e) => {
+              return e.id === data.languageId;
+            }
+          )
           : "";
         let description1 = data.collectionChannelId
           ? JSON.parse(loadItemFromSessionStorage("app-supports")).filter(
-              (e) => {
-                return e.id === data.collectionChannelId;
-              }
-            )
+            (e) => {
+              return e.id === data.collectionChannelId;
+            }
+          )
           : "";
         // console.log("description2",JSON.parse(loadItemFromSessionStorage("app-objets")))
         let description2 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-              // console.log("description2",e.categorie.id === data.objetId)
-              return e.id === data.objetId;
-            })
+            // console.log("description2",e.categorie.id === data.objetId)
+            return e.id === data.objetId;
+          })
           : "";
 
         let description5 = data.objetId
           ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
-              return e.id === data.objetId;
-            })
+            return e.id === data.objetId;
+          })
           : "";
         let description3 = data.productId
           ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
-              (e) => {
-                return e.id === data.productId;
-              }
-            )
+            (e) => {
+              return e.id === data.productId;
+            }
+          )
           : "";
         let description4 = data.servicePointId
           ? JSON.parse(loadItemFromSessionStorage("app-ps")).filter((e) => {
-              return e.id === data.servicePointId;
-            })
+            return e.id === data.servicePointId;
+          })
           : "";
 
         props.languageChanged(data.languageId ? description[0].id : "");
@@ -1431,7 +1448,7 @@ const EnregistrerReclamation = (props) => {
     }).format(new Date(element.createdAt));
     element.createdAtFormated = createdAt;
   });
-  
+
   const sendSms = async (e) => {
     e.preventDefault();
     if (props.phone !== "" && props.phone) {
@@ -1610,7 +1627,7 @@ const EnregistrerReclamation = (props) => {
                           config={config}
                           records={content}
                           columns={columns}
-                          // onRowClicked={rowClickedHandler}
+                        // onRowClicked={rowClickedHandler}
                         />
                       </div>
                     </div>
@@ -1642,7 +1659,7 @@ const EnregistrerReclamation = (props) => {
                               type="hidden"
                               value={JSON.stringify(props.selectedItem)}
                             />
-                            <div className="col l12 m12 s12 input-field">
+                            <div className="col l12 m12 s12 input-field" ref={lastnameRef}>
                               <input
                                 id="lastname"
                                 name="lastname"
@@ -1670,7 +1687,7 @@ const EnregistrerReclamation = (props) => {
                                 </div>
                               </small>
                             </div>
-                            <div className="col l6 m12 s12 input-field">
+                            <div className="col l6 m12 s12 input-field" ref={addressRef}>
                               <input
                                 id="address"
                                 name="address"
@@ -1699,7 +1716,7 @@ const EnregistrerReclamation = (props) => {
                               </small>
                             </div>
 
-                            <div className="col l6 m12 s12 input-field">
+                            <div className="col l6 m12 s12 input-field" ref={phoneRef}>
                               <PhoneInput
                                 international
                                 countryCallingCodeEditable={false}
@@ -1744,18 +1761,18 @@ const EnregistrerReclamation = (props) => {
                               </small>
                             </div>
                             <div style={{ clear: "both" }}></div>
-                            <div className="col l6 m12 s12 input-field">
+                            <div className="col l6 m12 s12 input-field" ref={genderRef}>
                               <Select
                                 value={
                                   props.gender
                                     ? {
-                                        label: props.gender,
-                                        value: props.gender,
-                                      }
+                                      label: props.gender,
+                                      value: props.gender,
+                                    }
                                     : {
-                                        label: "Sélectionner le genre",
-                                        value: "",
-                                      }
+                                      label: "Sélectionner le genre",
+                                      value: "",
+                                    }
                                 }
                                 options={genderOptions}
                                 className="react-select-container mt-4"
@@ -1780,14 +1797,14 @@ const EnregistrerReclamation = (props) => {
                               </small>
                             </div>
 
-                            <div className="col l6 m12 s12 input-field">
+                            <div className="col l6 m12 s12 input-field" ref={languageRef}>
                               <Select
                                 value={
                                   props.language
                                     ? {
-                                        label: props.languageLibelle,
-                                        value: props.language,
-                                      }
+                                      label: props.languageLibelle,
+                                      value: props.language,
+                                    }
                                     : "Sélectionner la langue"
                                 }
                                 options={languageOptions}
@@ -1877,7 +1894,7 @@ const EnregistrerReclamation = (props) => {
                                 </div>
                               </small>
                             </div>
-                            <div className="col l12 m12 s12 input-field">
+                            <div className="col l12 m12 s12 input-field" ref={recordedAtRef}>
                               <DatePicker
                                 // placeholderText="Date et Heure de réception"
                                 withPortal
@@ -1910,14 +1927,14 @@ const EnregistrerReclamation = (props) => {
                                 </div>
                               </small>
                             </div>
-                            <div className="col l6 m12 s12 input-field">
+                            <div className="col l6 m12 s12 input-field" ref={collectRef}>
                               <Select
                                 value={
                                   props.collect
                                     ? {
-                                        label: props.collectLibelle,
-                                        value: props.collect,
-                                      }
+                                      label: props.collectLibelle,
+                                      value: props.collect,
+                                    }
                                     : "Sélectionner la modalité de dépôt"
                                 }
                                 options={collectOptions}
@@ -1951,14 +1968,14 @@ const EnregistrerReclamation = (props) => {
                                 value=""
                               />
                             </div>
-                            <div className="col l6 m12 s12 input-field">
+                            <div className="col l6 m12 s12 input-field" ref={subjectRef}>
                               <Select
                                 value={
                                   props.subject
                                     ? {
-                                        label: props.subjectLibelle,
-                                        value: props.subject,
-                                      }
+                                      label: props.subjectLibelle,
+                                      value: props.subject,
+                                    }
                                     : "Sélectionner la catégorie de l'objet"
                                 }
                                 options={subjectOptions}
@@ -1985,14 +2002,14 @@ const EnregistrerReclamation = (props) => {
                               </small>
                             </div>
 
-                            <div className="col l12 m12 s12 input-field">
+                            <div className="col l12 m12 s12 input-field" ref={underSubjectRef}>
                               <Select
                                 value={
                                   props.underSubject
                                     ? {
-                                        label: props.underSubjectLibelle,
-                                        value: props.underSubject,
-                                      }
+                                      label: props.underSubjectLibelle,
+                                      value: props.underSubject,
+                                    }
                                     : "Sélectionner le motif de réclamation"
                                 }
                                 options={underSubjectOptions}
@@ -2019,14 +2036,14 @@ const EnregistrerReclamation = (props) => {
                               </small>
                             </div>
 
-                            <div className="col l6 m12 s12 input-field">
+                            <div className="col l6 m12 s12 input-field" ref={productRef}>
                               <Select
                                 value={
                                   props.product
                                     ? {
-                                        label: props.productLibelle,
-                                        value: props.product,
-                                      }
+                                      label: props.productLibelle,
+                                      value: props.product,
+                                    }
                                     : "Sélectionner le produit"
                                 }
                                 options={productOptions}
@@ -2051,14 +2068,14 @@ const EnregistrerReclamation = (props) => {
                                 </div>
                               </small>
                             </div>
-                            <div className="col l6 m12 s12 input-field">
+                            <div className="col l6 m12 s12 input-field" ref={unitRef}>
                               <Select
                                 value={
                                   props.unit
                                     ? {
-                                        label: props.unitLibelle,
-                                        value: props.unit,
-                                      }
+                                      label: props.unitLibelle,
+                                      value: props.unit,
+                                    }
                                     : "Sélectionner le point de service"
                                 }
                                 options={unitOptions}
@@ -2080,7 +2097,7 @@ const EnregistrerReclamation = (props) => {
                                 </div>
                               </small>
                             </div>
-                            <div className="col l12 m12 s12 input-field">
+                            <div className="col l12 m12 s12 input-field" ref={contentRef}>
                               {/* <div
                                 style={{
                                   position: "absolute",
