@@ -77,7 +77,7 @@ export const dossierimfChanged = (dossierimf) => {
 export const crewChanged = (crew) => {
     return {
         type: 'CLAIM_RECORD_CREW_CHANGED',
-        payload:crew,
+        payload: crew,
         info: 'This action is used to ...'
     }
 };
@@ -185,59 +185,74 @@ export const reset = () => {
         info: 'This action is used to ...'
     }
 };
-export const itemsChanged = (items) =>{
+export const itemsChanged = (items) => {
     return {
         type: 'CLAIM_RECORD_ITEMS_CHANGED',
         payload: items,
         info: 'This action is used to ...'
     }
 };
-export const selectedFilesChanged = (selectedFiles) =>{
+export const selectedFilesChanged = (selectedFiles) => {
     return {
         type: 'CLAIM_RECORD_SELECTED_FILES_CHANGED',
         payload: selectedFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedFilesReset = (selectedFiles) =>{
+export const selectedFilesReset = (selectedFiles) => {
     return {
         type: 'CLAIM_RECORD_SELECTED_FILES_RESET',
         payload: selectedFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemChanged = (selectedItem) =>{
+export const selectedItemChanged = (selectedItem) => {
     return {
         type: 'CLAIM_RECORD_SELECTED_ITEM_CHANGED',
         payload: selectedItem,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemFilesChanged = (selectedItemFiles) =>{
+export const selectedItemFilesChanged = (selectedItemFiles) => {
     return {
         type: 'CLAIM_RECORD_SELECTED_ITEM_FILES_CHANGED',
         payload: selectedItemFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemAudioChanged = (selectedItemAudio) =>{
+export const selectedItemAudioChanged = (selectedItemAudio) => {
     return {
         type: 'CLAIM_RECORD_SELECTED_ITEM_AUDIO_CHANGED',
         payload: selectedItemAudio,
         info: 'This action is used to ...'
     }
 };
-export const etatChanged = (etat) =>{
+export const etatChanged = (etat) => {
     return {
         type: 'CLAIM_RECORD_ETAT_CHANGED',
         payload: etat,
         info: 'This action is used to ...'
     }
 };
-export const etat2Changed = (etat2) =>{
+export const etat2Changed = (etat2) => {
     return {
         type: 'CLAIM_RECORD_ETAT2_CHANGED',
         payload: etat2,
+        info: 'This action is used to ...'
+    }
+};
+
+export const setExistingClaims = (existingClaims) => {
+    return {
+        type: 'CLAIM_RECORD_EXISTING_CLAIMS_CHANGED',
+        payload: existingClaims,
+        info: 'This action is used to ...'
+    }
+};
+export const setModalVisible = (modalVisible) => {
+    return {
+        type: 'CLAIM_RECORD_MODAL_VISIBLE_CHANGED',
+        payload: modalVisible,
         info: 'This action is used to ...'
     }
 };

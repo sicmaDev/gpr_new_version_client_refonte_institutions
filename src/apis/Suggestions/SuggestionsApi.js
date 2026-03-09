@@ -13,7 +13,8 @@ const FILES_SUGGESTION_API = HOST + "api/v1/suggestion/getFilesBy/%s"
 const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const AUDIOS_CLAIM_API = HOST + "api/v1/suggestion/getAudiosBy/%s"
 const DELETE_SUGGESTION_API = HOST + "api/v1/suggestion/delete/{id}"
-
+const DELETE_SUGGEST_API = HOST + "api/v1/suggestion/delete/soft"
+const RESTORE_SUGGEST_API = HOST + "api/v1/suggestion/restore/%s"
 
 export const listeTousStatuts = async (props) => {
 
@@ -396,4 +397,33 @@ export const deleteSuggestionApi = async (id, props) => {
             // console.log("erreursessionadd",error)
         }
     );
+}
+
+export const deleteSuggestApi = async (data) => {
+    // console.log("dataId", data.claimId)
+    const config = {
+        method: 'post',
+        url: DELETE_SUGGEST_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    await axios(config)
+        .then(function (response) {
+            notify("Bravo - Suggestion supprimée", "success");
+            // console.log("reponsesessionadd", response.data.content)
+        })
+        .catch(function (error) {
+            const msg =
+                error?.response?.data?.content?.message ||
+                error?.response?.data?.content ||
+                "Erreur - Veuillez réessayer !";
+    
+                notify(msg, "error");
+            // console.log("erreursessionadd", error)
+        }
+        );
 }

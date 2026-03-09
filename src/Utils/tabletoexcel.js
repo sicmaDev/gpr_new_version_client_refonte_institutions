@@ -329,9 +329,10 @@ export const table3XLS2XF = (filename, style = "", columns, records, startDate, 
   };
 
   const filteredRecords = records.filter(record => {
-    const recordDate = resetTime(new Date(formatDate(record.receiptDateTime)));
-    return recordDate >= resetTime(new Date(startDate)) && recordDate <= resetTime(new Date(endDate));
-  });
+  const recordDate = resetTime(new Date(parseDate(record.receiptDateTime)));
+  
+  return recordDate >= resetTime(new Date(startDate)) && recordDate <= resetTime(new Date(endDate));
+});
   // console.log("filteredRecords", filteredRecords)
   if (filteredRecords.length === 0) {
     alert("Aucune donnée trouvée pour la période spécifiée.");

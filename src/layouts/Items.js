@@ -44,7 +44,7 @@ import SmsIcon from '@mui/icons-material/Sms';
 import EmailIcon from '@mui/icons-material/Email';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import { AddToDriveOutlined, KeyOffTwoTone, KeyTwoTone, WhatsApp } from '@mui/icons-material';
-
+import { RestoreFromTrash } from '@mui/icons-material';
 export const Items = (props) => {
 
     const [open, setOpen] = React.useState(false);
@@ -517,6 +517,15 @@ export const Items = (props) => {
                                 <NotificationAddIcon style={{ color: "white" }} />
                             </ListItemIcon>
                             <ListItemText primary="Notifications" />
+                        </ListItemButton>
+                    </NavLink>
+
+                    <NavLink to="/configurations/corbeille" style={{ color: "white", textDecoration: "none" }} activeClassName="hero">
+                        <ListItemButton sx={{ pl: 4 }} className='lib'>
+                            <ListItemIcon>
+                                <RestoreFromTrash style={{ color: "white" }} />
+                            </ListItemIcon>
+                            <ListItemText primary="RSD supprimées" />
                         </ListItemButton>
                     </NavLink>
 

@@ -24,6 +24,7 @@ export const getExportHtml = (columns, records, without = []) => {
     tableHtml += "<tbody>";
 
     records.map((record) => {
+      console.log("receiptDateTime:", record.receiptDateTime, "createdAt:", record.createdAt);
       tableHtml += "<tr>";
       columns.map((column, index) => {
         //Formatting custom columns cells
@@ -208,12 +209,8 @@ export const handlePrint = (config, exportColumns, records, hook, without = []) 
   resetColumns(columns, hook);
 };
 export const getExportHtmlStatsTable = (columns, records) => {
-  // console.log(columns);
-  // console.log(records);
+
   try {
-    // console.log("-----Table before columns------");
-    // console.log("-----------------------");
-    // console.log("-----------------------");
 
     let tableHtml = "<table>";
     tableHtml += "<thead>";
@@ -423,25 +420,19 @@ export const handlePrint2 = (config, exportColumns, records, hook) => {
 
 const parseDate = (dateString) => {
   if (!dateString) return null;
-
-  // Séparer la date et l'heure
   const [datePart] = dateString.split(" ");
-
-  // Séparer le jour, le mois et l'année
   const [day, month, year] = datePart.split("-");
-
-  // Reformer la date au format YYYY-MM-DD
   return `${year}-${month}-${day}`;
 };
 const formatDate = (dateString) => {
-  // Séparer la date et l'heure
-  return dateString.split('T')[0]; // Garde seulement 'YYYY-MM-DD'
+
+  return dateString.split('T')[0];
 };
 
 
 const resetTime = (date) => {
   const d = new Date(date);
-  d.setHours(0, 0, 0, 0); // Réinitialiser l'heure à 00:00:00
+  d.setHours(0, 0, 0, 0);
   return d;
 };
 
@@ -451,7 +442,6 @@ export const handlePrint22 = (config, columns, records, startDate, endDate, hook
     const recordDate = resetTime(new Date(parseDate(record.receiptDateTime)));
     return recordDate >= resetTime(new Date(startDate)) && recordDate <= resetTime(new Date(endDate));
   });
-  // console.log("filteredRecords", filteredRecords)
   if (filteredRecords.length === 0) {
     alert("Aucune donnée trouvée pour la période spécifiée.");
     return;
@@ -509,16 +499,12 @@ export const handlePrint22 = (config, columns, records, startDate, endDate, hook
        setTimeout(function() { window.print(); window.close(); }, 1000);
      </script>`
   );
-
-  // 10. ✅ Réinitialiser les colonnes après impression
   resetColumns(columns, hook);
 };
 
 
 export const getExportHtml2 = (columns, records, id = "") => {
   try {
-    // console.log(columns);
-    // console.log("recorsd",records);
     let tableHtml = "<table class='" + id + "'>";
     tableHtml += "<thead>";
     tableHtml += "<tr style='font-weight: bold'>";
@@ -760,7 +746,10 @@ export const handlePrint33 = (config, columns, records, startDate, endDate, hook
   entete += '<div className="col l8 s7 m7"><b>' + INSTITUTION_NAME + '</b><br /><i><span>Numéro Agrément: </span>' + INSTITUTION_AGREMENT + '</i><br /><i><span>Addrese: </span>' + INSTITUTION_ADDRESS + '</i><br /><i><span>Tel: </span>' + INSTITUTION_TEL + '</i><br /><i><span>Email: </span>' + INSTITUTION_EMAIL + '</i></div></div>';
 
   const filteredRecords = records.filter(record => {
-    const recordDate = resetTime(new Date(formatDate(record.receiptDateTime)));
+    const [datePart, timePart] = record.receiptDateTime.split(" ");
+    const [day, month, year] = datePart.split("-");
+    const recordDate = resetTime(new Date(`${year}-${month}-${day}T${timePart}`));
+
     return recordDate >= resetTime(new Date(startDate)) && recordDate <= resetTime(new Date(endDate));
   });
   // console.log("filteredRecords", records)

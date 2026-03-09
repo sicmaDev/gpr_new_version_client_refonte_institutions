@@ -49,6 +49,8 @@ import {
   underSubjectLibelleChanged,
   unitChanged,
   unitLibelleChanged,
+  setExistingClaims,
+  setModalVisible,
 } from "../../redux/actions/Reclamations/EnregistrementReclamationActions";
 import {
   cleanPhoneNumber,
@@ -77,6 +79,7 @@ import {
   listeByStatutOffline,
   downloadAudioApi,
   deleteClaimApi,
+  checkPhoneApi,
 } from "../../apis/Reclamations/ReclamationsApi";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
@@ -114,6 +117,23 @@ import { CancelOutlined } from "@mui/icons-material";
 import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 import { send } from "../../apis/Configurations/SmsApi";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
+import CallIcon from "@mui/icons-material/Call";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import WcIcon from "@mui/icons-material/Wc";
+import LanguageIcon from "@mui/icons-material/Language";
+import FolderSharedIcon from "@mui/icons-material/FolderShared";
+import Diversity3Icon from "@mui/icons-material/Diversity3";
+import RecyclingIcon from "@mui/icons-material/Recycling";
+import CategoryIcon from "@mui/icons-material/Category";
+import AddBusinessIcon from "@mui/icons-material/AddBusiness";
+import DataObjectIcon from "@mui/icons-material/DataObject";
+import PinIcon from "@mui/icons-material/Pin";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
+import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import WarningIcon from '@mui/icons-material/Warning';
+import PersonIcon from "@mui/icons-material/Person";
 registerLocale("fr", fr);
 
 const styles = {
@@ -703,6 +723,20 @@ const EnregistrerReclamation = (props) => {
     }
     return isValid;
   };
+
+  const [phoneError, setPhoneError] = useState("");
+
+  const handlePhoneChange = (value) => {
+    props.phoneChanged(value);
+    setPhoneError("");
+  };
+
+  const handleBlur = async () => {
+    if (props.phone) {
+      await checkPhoneApi(cleanPhoneNumber(props.phone), props).then(() => { });
+    }
+  };
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1497,6 +1531,81 @@ const EnregistrerReclamation = (props) => {
     formAudio = "";
   }
 
+ const getStatusChip = (status) => {
+    switch (status) {
+      case "SAVED":
+        return (
+          <span className="toTreatBgColor chip lighten-5">
+            <span>A traiter</span>
+          </span>
+        );
+
+      case "AFFECTED":
+        return (
+          <span className="affectedBgColor chip lighten-5">
+            <span>Affectée</span>
+          </span>
+        );
+
+      case "TO_APPROUVED":
+        return (
+          <span className="toApprouvedBgColor chip lighten-5">
+            <span>A approuvée</span>
+          </span>
+        );
+
+      case "DESAPPROUVED":
+        return (
+          <span className="unApprouvedBgColor chip lighten-5">
+            <span>Désapprouvée</span>
+          </span>
+        );
+
+      case "TREAT":
+        return (
+          <span className="chip treatBgColor">
+            <span className="">Traitée</span>
+          </span>
+        );
+        break;
+
+      case "UNSATISFIED":
+        return (
+          <span className="chip unSatisfiedBgColor lighten-5">
+            <span>Non Satisfait</span>
+          </span>
+        );
+
+      case "PARTIAL_SATISFIED":
+        return (
+          <span className="chip partialBgColor lighten-5">
+            <span>Partiellement Satisfait</span>
+          </span>
+        );
+
+      case "CLASSED":
+        return (
+          <span className="chip classedBgColor lighten-5">
+            <span>Classée</span>
+          </span>
+        );
+
+      case "LITIGATION":
+        return (
+          <span className="chip litigationBgColor">
+            <span className="">Contentieux</span>
+          </span>
+        );
+
+      default:
+        return (
+          <span className="chip indigo lighten-5">
+            <span className="indigo-text">N/A</span>
+          </span>
+        );
+    }
+  };
+
   return (
     //  'Enregistrer réclamation'
     <div id="main">
@@ -1610,6 +1719,95 @@ const EnregistrerReclamation = (props) => {
           </Dialog>
         </div>
       )}
+
+      {props.modalVisible && props.existingClaims.length > 0 && (
+        <div>
+          <Dialog
+            open={props.modalVisible}
+            fullWidth
+            maxWidth="sm"
+            disableEscapeKeyDown
+            onClose={(event, reason) => {
+              if (reason === "backdropClick") return;
+              props.setModalVisible(false);
+            }}
+          >
+            <DialogTitle>
+              <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center" }}>
+                <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
+                Réclamation déjà existante
+              </span>
+              <DialogContentText sx={{ mb: 2 }}>
+                {props.existingClaims.length === 1 ?
+                  `Ce numéro est déjà associé à une réclamation en cours.` :
+                  `Ce numéro est déjà associé à ${props.existingClaims.length} réclamations en cours.`}
+              </DialogContentText>
+            </DialogTitle>
+
+            <DialogContent sx={{ maxHeight: 400, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#999 transparent' }}>
+              {props.existingClaims.map((claim, index) => (
+                <>
+                  <div className="claim-details" style={{ marginBottom: "40px", paddingBottom: "5px", borderBottom: "1px solid #ccc" }}>
+                    <p className="claim-item">
+                      <strong style={{ marginRight: "5px" }}>Etat :&nbsp;</strong>
+                      {getStatusChip(claim.status)}
+                    </p>
+
+                    <p className="claim-item">
+                      <strong style={{ marginRight: "5px" }}><PinIcon style={{ marginBottom: "-5px" }} /> Code : </strong>
+                      <span>{claim.code}</span>
+                    </p>
+
+                    <p className="claim-item">
+                      <strong style={{ marginRight: "5px" }}><PersonIcon style={{ marginBottom: "-5px" }} /> Client : </strong>
+                      <span>{claim.clientFirstAndLastName}</span>
+                    </p>
+
+                    <p className="claim-item">
+                      <strong style={{ marginRight: "5px" }}><CallIcon style={{ marginBottom: "-5px" }} /> Téléphone : </strong>
+                      <span>{claim.tel}</span>
+                    </p>
+
+                    <p className="claim-item">
+                      <strong style={{ marginRight: "5px" }}><AddBusinessIcon style={{ marginBottom: "-5px" }} /> Point de service indexé : </strong>
+                      <span>{claim.servicePoint?.libelle}</span>
+                    </p>
+
+                    <p className="claim-item">
+                      <strong style={{ marginRight: "5px" }}><DataObjectIcon style={{ marginBottom: "-5px" }} /> Objet : </strong>
+                      <span>{claim.objet?.libelle}</span>
+                    </p>
+
+                    <p className="claim-item">
+                      <strong style={{ marginRight: "5px" }}><CategoryIcon style={{ marginBottom: "-5px" }} /> Produit : </strong>
+                      <span>{claim.product?.libelle}</span>
+                    </p>
+
+                    <p className="claim-item">
+                      <strong style={{ marginRight: "5px" }}><CalendarMonthIcon style={{ marginBottom: "-5px" }} /> Date de réception : </strong>
+                      <span>{claim.receiptDateTime}</span>
+                    </p>
+
+                    {/* <Divider sx={{ my: 2 }} /> */}
+
+                    <p className="claim-description">
+                      <strong style={{ marginRight: "5px" }}><RecordVoiceOverIcon style={{ marginBottom: "-5px" }} /> Contenu : </strong>
+                      {claim.content}
+                    </p>
+                  </div>
+                </>
+              ))}
+            </DialogContent>
+
+            <DialogActions>
+              <Button onClick={() => props.setModalVisible(false)} color="error">
+                Fermer
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </div>
+      )}
+
       <div className="row">
         <div className="col s12">
           <div className="container">
@@ -1720,13 +1918,10 @@ const EnregistrerReclamation = (props) => {
                               <PhoneInput
                                 international
                                 countryCallingCodeEditable={false}
-                                defaultCountry={
-                                  appInstitution !== undefined
-                                    ? appInstitution.paysCode
-                                    : "BJ"
-                                }
+                                defaultCountry={navigator.language.split('-')[1] || undefined}
                                 value={props.phone}
-                                onChange={(e) => props.phoneChanged(e)}
+                                onChange={handlePhoneChange}
+                                onBlur={handleBlur}
                               />
                               {/* <input
                                 type="tel"
@@ -2216,6 +2411,8 @@ const mapStateToProps = (state) => {
     selectedItemAudio: state.claim_record.selectedItemAudio,
     etat: state.claim_record.etat,
     etat2: state.claim_record.etat2,
+    existingClaims: state.claim_record.existingClaims,
+    modalVisible: state.claim_record.modalVisible,
   };
 };
 
@@ -2322,6 +2519,12 @@ const mapDispatchToProps = (dispatch) => {
     },
     resetWhatsapp: () => {
       dispatch(reset());
+    },
+    setExistingClaims: (existingClaims) => {
+      dispatch(setExistingClaims(existingClaims));
+    },
+    setModalVisible: (modalVisible) => {
+      dispatch(setModalVisible(modalVisible));
     },
   };
 };

@@ -22,7 +22,8 @@ const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
 const AUDIOS_DENUNCIATION_API = HOST + "api/v1/claim/getAudiosBy/%s"
 const CONVERT_DENUNCIATION_API = HOST + "api/v1/denunciation/convert"
 const DELETE_DENUNCIATION_API = HOST + "api/v1/denunciation/delete/{id}"
-
+const DELETE_DENUN_API = HOST + "api/v1/denunciation/delete/soft"
+const RESTORE_DENUN_API = HOST + "api/v1/denunciation/restore/%s"
 
 
 
@@ -656,3 +657,52 @@ export const convertDenunciationApi = async (data, props) => {
         }
     );
 }
+
+export const deleteDenunApi = async (data) => {
+    console.log("dataId", data.claimId)
+    const config = {
+        method: 'post',
+        url: DELETE_DENUN_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    await axios(config)
+        .then(function (response) {
+            notify("Bravo - Dénonciation supprimé", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            console.log("erreursessionadd",error)
+        }
+    );
+}
+
+export const restoreDenunApi = async (data) => {
+    console.log("dataId", data.claimId)
+    const config = {
+        method: 'post',
+        url: RESTORE_DENUN_API.replace("%s", data.claimId),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    await axios(config)
+        .then(function (response) {
+            notify("Bravo - Dénonciation restaurée", "success");
+            console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            console.log("erreursessionadd",error)
+        }
+    );
+}
+

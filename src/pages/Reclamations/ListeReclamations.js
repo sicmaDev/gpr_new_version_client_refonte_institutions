@@ -7,6 +7,7 @@ import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import WarningIcon from "@mui/icons-material/Warning";
+import DeleteIcon from "@mui/icons-material/Delete";
 import TextField from "@mui/material/TextField";
 import { KTApp } from "../../Utils/blockui";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
@@ -201,7 +202,9 @@ const ListeReclamations = (props) => {
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
   const [fond_, setFond] = useState("");
-
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -888,6 +891,37 @@ const ListeReclamations = (props) => {
     }
   };
 
+  let btnDelete;
+  if (hbt.includes("H12") && props.status === "SAVED") {
+    btnDelete = (
+      <>
+        <div className="col l6 m6 s12 justify-content-end">
+          <LoadingButton
+            onClick={(e) => {
+              e.preventDefault();
+              setShowDeleteModal(true);
+              setDeleteReason("");
+            }}
+            className="waves-effect waves-effect-b waves-light btn-small"
+            // loading={props.etat3}
+            loadingPosition="end"
+            endIcon={<DeleteIcon />}
+            variant="contained"
+            sx={{
+              backgroundColor: "#ef6c00",
+              textTransform: "initial",
+              transition: "background-color 0.3s ease",
+              '&:hover': {
+                backgroundColor: '#fda321',
+              },
+            }}
+          >
+            <span>Supprimer</span>
+          </LoadingButton>
+        </div>
+      </>
+    );
+  }
   let statusElt;
 
   switch (props.status) {
@@ -3445,9 +3479,12 @@ const ListeReclamations = (props) => {
                                   >
                                     <span>Générer le PV de la session</span>
                                   </LoadingButton>
+                                   
                                 ) : (
                                   ""
                                 )}
+
+                                {btnDelete}  
                               </h5>
                             </div>
                           </div>

@@ -30,9 +30,11 @@ const AUDIOS_CLAIM_API = HOST + "api/v1/claim/getAudiosBy/%s"
 const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
 const START_SESSION_API = HOST + "api/v1/chat/init"
 const CONVERT_CLAIM_API = HOST + "api/v1/claim/convert"
-const DELETE_CLAIM_API = HOST + "api/v1/claim/delete/{id}"
-
-
+const DELETE_CLAIM_API = HOST + "api/v1/claim/delete/soft"
+const RESTORE_CLAIM_API = HOST + "api/v1/claim/restore/%s"
+const DELETE_ONLY_CLAIM_API = HOST + "api/v1/claim/delete/{id}"
+const LIST_DELETE_CLAIM_API = HOST + "api/v1/claim/list/deleted"
+const CHECK_PHONE_API = HOST + "api/v1/claim/checkPhone/%s"
 
 export const listeTousStatuts = async (props) => {
 
@@ -106,7 +108,7 @@ export const listeTreat = async (props) => {
             // console.log("responsetreaterror",error)
             return error;
         }
-    );
+        );
 }
 
 export const detailsTreat = async (props, code) => {
@@ -134,7 +136,7 @@ export const detailsTreat = async (props, code) => {
 export const getClaimHistorique = async (props, claimId) => {
     const config = {
         method: 'get',
-        url: LIST_CLAIM_HISTORIQUE_API.replace("%s",claimId),
+        url: LIST_CLAIM_HISTORIQUE_API.replace("%s", claimId),
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
@@ -145,7 +147,7 @@ export const getClaimHistorique = async (props, claimId) => {
     props.itemsChanged([])
     axios(config)
         .then(({ data }) => {
-           
+
             props.isSuccessChanged(true)
             props.messageChanged('Liste des historiques success')
             props.itemsChanged(data.content)
@@ -197,7 +199,7 @@ export const PARTIAL_SATISFIED = async (props) => {
     };
     await axios(config)
         .then(function (response) {
-           
+
             // console.log("responseassure",response.data.content)
             props.itemsChanged(response.data.content)
 
@@ -227,7 +229,7 @@ export const addTempClaimApi = async (data, props) => {
             // console.log("reponseaan", response)
             props.etatChanged(false)
             if (response.data.status) {
-              
+
                 notify("Bravo - Réclamation sauvegardée", "success");
                 listeByStatut(props, "TEMP_SAVED")
             } else {
@@ -282,7 +284,7 @@ export const addExtraClaimApi = async (data, props) => {
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
     };
-    
+
     return axios(config)
 }
 
@@ -847,14 +849,14 @@ export const deleteClaimApi = async (id, props) => {
     };
     await axios(config)
         .then(function (response) {
-           
+
             // console.log("reponsesessionadd",response.data.content)
         })
         .catch(function (error) {
             notify("Erreur - Veuillez réessayer!", "error");
             // console.log("erreursessionadd",error)
         }
-    );
+        );
 }
 
 export const convertClaimApi = async (data, props) => {
@@ -876,5 +878,113 @@ export const convertClaimApi = async (data, props) => {
             notify("Erreur - Veuillez réessayer!", "error");
             // console.log("erreursessionadd",error)
         }
-    );
+        );
+
+
+}
+
+
+export const restoreClaimApi = async (data) => {
+    // console.log("dataId", data.claimId)
+    const config = {
+        method: 'post',
+        url: RESTORE_CLAIM_API.replace("%s", data.claimId),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    await axios(config)
+        .then(function (response) {
+            notify("Bravo - Réclamation restaurée", "success");
+            // console.log("reponsesessionadd", response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd", error)
+        }
+        );
+}
+
+export const listeRSDDelete = async (props) => {
+
+    const config = {
+        method: 'get',
+        url: LIST_DELETE_CLAIM_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    await axios(config)
+        .then(function (response) {
+
+            // console.log("response.data.content", response.data.content)
+            props.itemsChanged(response.data.content)
+            // saveItemToLocalStorage(response.data.content, 'app-recsTS')
+            return response.data.content
+        })
+        .catch(function (error) {
+            // console.log("errorstatutliste",error)
+            return error;
+
+        });
+}
+
+export const deleteOnlyClaimApi = async (id, props) => {
+    const config = {
+        method: 'delete',
+        url: DELETE_ONLY_CLAIM_API.replace("{id}", id),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    };
+    await axios(config)
+        .then(function (response) {
+
+            // console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+        );
+}
+
+export const checkPhoneApi = async (phoneValue, props) => {
+    const config = {
+        method: "get",
+        url: CHECK_PHONE_API.replace("%s", phoneValue),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    };
+    await axios(config)
+        .then(function (response) {
+            const content = response.data.content;
+            if (content.exists) {
+                props.setExistingClaims(content.claims);
+                props.setModalVisible(true);
+                const count = content.claims.length;
+                if (count === 1) {
+                    notify("Ce numéro est déjà associé à une réclamation en cours.", "warning");
+                } else {
+                    notify(`Ce numéro est déjà associé à ${count} réclamations en cours.`, "warning");
+                }
+
+            } else {
+                props.setExistingClaims(null);
+                props.setModalVisible(false);
+            }
+        })
+        .catch(function (error) {
+           
+        });
 }

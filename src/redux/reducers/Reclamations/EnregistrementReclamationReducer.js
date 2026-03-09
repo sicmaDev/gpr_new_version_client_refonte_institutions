@@ -205,6 +205,16 @@ const claimRecordReducer = (state = initialState, action) => {
         ...state,
         etat2: action.payload,
       };
+    case "CLAIM_RECORD_EXISTING_CLAIMS_CHANGED":
+      return {
+        ...state,
+        existingClaims: action.payload,
+      };
+    case "CLAIM_RECORD_MODAL_VISIBLE_CHANGED":
+      return {
+        ...state,
+        modalVisible: action.payload,
+      };
     default:
       return state;
   }

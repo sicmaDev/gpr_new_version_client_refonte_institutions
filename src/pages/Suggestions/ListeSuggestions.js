@@ -1262,12 +1262,11 @@ const ListeSuggestions = (props) => {
                               "brke",
                               selectOption,
                               props.items,
-                              formatDate2(startDate),
-                              formatDate2(endDate)
+                              startDate,
+                              endDate
                             );
 
                           } else {
-                            // Sinon, utiliser handlePrint2 sans filtre
                             table3XLS2X(
                               "Liste_des_suggestions" +
                               today().replaceAll("/", ""),
