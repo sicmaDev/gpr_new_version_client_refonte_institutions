@@ -38,7 +38,7 @@ const initialState = {
     handled_by: "",
     resolved_at: "",
     resolved_by: "",
-    authorize:true,
+    authorize: true,
     agents: [],
     items: [],
     selectedItem: {},
@@ -51,6 +51,7 @@ const initialState = {
     transmittedBy: "",
     session: [],
     solutionExistant: "",
+    email: "",
 };
 const TraitementReclamationReducer = (state = initialState, action) => {
     switch (action.type) {
@@ -83,6 +84,11 @@ const TraitementReclamationReducer = (state = initialState, action) => {
             return {
                 ...state,
                 address: action.payload,
+            };
+        case 'CLAIM_HANDLE_EMAIL_CHANGED':
+            return {
+                ...state,
+                email: action.payload,
             };
         case 'CLAIM_HANDLE_PHONE_CHANGED':
             return {
@@ -238,15 +244,15 @@ const TraitementReclamationReducer = (state = initialState, action) => {
                 ...state,
                 selectedItemFiles: action.payload,
             };
-            case "CLAIM_HANDLE_SELECTED_ITEM_AUDIO_CHANGED":
-                return {
-                  ...state,
-                  selectedItemAudio: action.payload,
-                };
-        case 'CLAIM_HANDLE_AUTHORIZE':
-            return{
+        case "CLAIM_HANDLE_SELECTED_ITEM_AUDIO_CHANGED":
+            return {
                 ...state,
-                authorize:action.payload
+                selectedItemAudio: action.payload,
+            };
+        case 'CLAIM_HANDLE_AUTHORIZE':
+            return {
+                ...state,
+                authorize: action.payload
             }
         case 'CLAIM_HANDLE_CREW_CHANGED':
             return {

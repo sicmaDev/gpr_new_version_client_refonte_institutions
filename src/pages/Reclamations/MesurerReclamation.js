@@ -30,6 +30,7 @@ import {
   extrasChanged,
   collectChanged,
   dossierimfChanged,
+  emailChanged,
   authorizeChanged,
   solutionIdChanged,
   createdByChanged,
@@ -43,6 +44,7 @@ import {
 } from "../../redux/actions/Reclamations/MesureReclamationActions";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
+import EmailIcon from '@mui/icons-material/Email';
 // import partiel_icon from "../../assets/images/mesure/partial.svg"
 // import satisfaire_icon from "../../assets/images/mesure/satisfied3.svg"
 // import unsatisfaire_icon from "../../assets/images/mesure/unsatisfied2.svg"
@@ -137,6 +139,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { licenseInfo } from "../../apis/LoginApi";
 import axios from "axios";
 import { HOST } from "../../Utils/globals";
+import { sendEmail } from "../../apis/Configurations/MailApi";
 import WarningIcon from "@mui/icons-material/Warning";
 
 const styles = {
@@ -152,7 +155,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const MesurerReclamation = (props) => {
-  let dimf, crew;
+  let dimf, crew, emailDisplay;
 
   const [open, setOpen] = React.useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
@@ -179,14 +182,15 @@ const MesurerReclamation = (props) => {
   const [extraContent, setExtraContent] = useState("");
   const [extraFileLoading, setExtraFileLoading] = useState(false);
   const [claim_id, setClaimId] = useState(null);
-
+  const [showMailModal, setShowMailModal] = useState(false);
+  const [loadingMail, setLoadingMail] = useState(false);
   const clearFiles = () => {
     if (inputRef.current) {
       inputRef.current.value = null;
     }
     setFiles([]);
   };
-  
+
   const history = useHistory();
   const handleClose = () => {
     setOpen(false);
@@ -270,7 +274,7 @@ const MesurerReclamation = (props) => {
     //  console.log("params",props.match.params)
     //  console.log("params 2",props.id)
     if (props.match.params.code !== "all") {
-     
+
       async function details() {
         let cc = await axios({
           method: "get",
@@ -302,6 +306,7 @@ const MesurerReclamation = (props) => {
             data.language.libelle ? data.language.libelle : ""
           );
           props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+          props.emailChanged(data.email ? data.email : "");
           props.codeChanged(data.code ? data.code : "");
           props.codeClientChanged(data.codeClient ? data.codeClient : "");
           props.recordedAtChanged(
@@ -461,6 +466,50 @@ const MesurerReclamation = (props) => {
     setSmsSegments(segments);
     setShowUploadModal(true);
   };
+
+
+  const handleShowModalMail = () => {
+    if (!props.solution[0] || props.solution[0].content === "") {
+      notify("Aucune solution à envoyer", "error");
+      return;
+    }
+    const message = props.solution[0].content;
+    const segments = segmentMessage(message, 150);
+    setSmsSegments(segments);
+    setShowMailModal(true);
+  };
+
+  const handleMail = async () => {
+    setShowMailModal(false);
+    if (props.phone) {
+      setLoadingMail(true);
+      KTApp.blockPage({
+        overlayColor: "#000000",
+        type: "v2",
+        state: "danger",
+        message: "Envoi en cours...",
+      });
+      try {
+
+        await sendEmail({
+          email: props.email,
+          subject: "Solution à votre réclamation ",
+          message: props.solution[0].content,
+          commentaire: props.solution[0].commentaire,
+        });
+        notify("Mail envoyé avec succès", "success");
+      } catch (err) {
+        notify("Oups - Mail non envoyé", "error");
+      } finally {
+        setLoadingMail(false);
+        KTApp.unblockPage();
+      }
+    } else {
+      notify("Les champs sont obligatoires", "error");
+    }
+  };
+
+
 
   const handleSms = async () => {
     setShowUploadModal(false);
@@ -652,6 +701,7 @@ const MesurerReclamation = (props) => {
     props.genderChanged(data.gender ? data.gender : "");
     props.languageChanged(data.language.libelle ? data.language.libelle : "");
     props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+    props.emailChanged(data.email ? data.email : "");
     props.codeChanged(data.code ? data.code : "");
     props.codeClientChanged(data.codeClient ? data.codeClient : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
@@ -707,6 +757,7 @@ const MesurerReclamation = (props) => {
     props.subjectChanged("");
     props.underSubjectChanged("");
     props.dossierimfChanged("");
+    props.emailChanged("");
     props.codeChanged("");
     props.recordedAtChanged("");
     props.collectChanged("");
@@ -1180,9 +1231,9 @@ const MesurerReclamation = (props) => {
                     className="materialize-textarea textarea-size"
                     value={props.commenta}
                     onChange={(e) => {
-                        // console.log("typing", e.target.value);
-                        props.commentaChanged(e.target.value)
-                      }
+                      // console.log("typing", e.target.value);
+                      props.commentaChanged(e.target.value)
+                    }
                     }
                   ></textarea>
                   <label htmlFor="content" className={"active"}>
@@ -1890,6 +1941,18 @@ const MesurerReclamation = (props) => {
                                     >
                                       <WcIcon sx={{ mr: 2 }} /> {props.gender}
                                     </div>
+                                    {
+                                      (emailDisplay =
+                                        props.email !== "" ? (
+                                          <>
+                                            <div className="col l6 s12 df pb-2" id="email">
+                                              <EmailIcon sx={{ mr: 2 }} /> {props.email}
+                                            </div>
+                                          </>
+                                        ) : (
+                                          ""
+                                        ))
+                                    }
 
                                     <div
                                       className="col l6 s12 df pb-2"
@@ -2191,9 +2254,8 @@ const MesurerReclamation = (props) => {
                                   Mesurer la satisfaction
                                 </h5>
                               </div>
-                              <div className="col l6 m6 s12 df justify-content-end">
+                              <div className="col l6 m6 s12 df justify-content-end" style={{ gap: "8px" }}>
                                 <LoadingButton
-                                  // style={{ marginLeft: '400px', marginTop: '-40px' }}
                                   className="btn waves-light btn-small flex-shrink-0"
                                   onClick={handleShowModalSms}
                                   loading={loading}
@@ -2201,6 +2263,17 @@ const MesurerReclamation = (props) => {
                                   variant="outlined"
                                 >
                                   <span>Envoyer SMS</span>
+                                </LoadingButton>
+
+                                <LoadingButton
+                                  className="btn waves-light btn-small flex-shrink-0"
+                                  onClick={handleShowModalMail}
+                                  loading={loadingMail}
+                                  loadingPosition="end"
+                                  variant="outlined"
+                                  color="secondary"
+                                >
+                                  <span>Envoyer Mail</span>
                                 </LoadingButton>
                               </div>
                             </div>
@@ -2326,6 +2399,82 @@ const MesurerReclamation = (props) => {
                               </div>
                             </div>
 
+                            <Dialog
+                              open={showMailModal}
+                              onClose={() => setShowMailModal(false)}
+                              id="dialog-mail"
+                            >
+                              <DialogTitle>Envoyer la solution au Client par Mail</DialogTitle>
+                              <DialogContent>
+                                <div style={{ marginBottom: "15px" }}>
+                                  <h6 style={{ fontWeight: "1000" }}>Prévisualisation Mail</h6>
+                                  <p>Le message sera envoyé en un seul mail.</p>
+
+                                  {/* Même affichage des segments que la modale SMS */}
+                                  <div
+                                    style={{
+                                      maxHeight: "200px",
+                                      overflowY: "auto",
+                                      marginTop: "10px",
+                                      scrollbarWidth: "thin",
+                                      scrollbarColor: "#999 transparent",
+                                    }}
+                                  >
+                                    {smsSegments.map((seg, index) => (
+                                      <div
+                                        key={index}
+                                        style={{
+                                          border: "1px solid #ccc",
+                                          padding: "8px",
+                                          marginBottom: "5px",
+                                          borderRadius: "4px",
+                                        }}
+                                      >
+                                        <strong>Partie {index + 1} :</strong> {seg}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                <br />
+                                <DialogContentText>
+                                  La solution ci-dessus sera envoyée au client par Mail.
+                                  <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <span style={{ whiteSpace: "pre-wrap" }}>
+                                      {"Nom client : " + props.lastname || ""}
+                                    </span>
+                                    <span style={{ whiteSpace: "pre-wrap" }}>
+                                      {"Email : " + props.email || ""}
+                                    </span>
+                                  </div>
+                                </DialogContentText>
+                                <br />
+                                <div className="row">
+                                  <div className="col s12 input-field">
+                                    <input
+                                      type="text"
+                                      className="trait-style"
+                                      value={props.solution[0]?.commentaire || ""}
+                                      disabled
+                                    />
+                                    <label className="active">Commentaire</label>
+                                  </div>
+                                </div>
+                              </DialogContent>
+
+                              <DialogActions>
+                                <Button
+                                  variant="contained"
+                                  color="error"
+                                  onClick={() => setShowMailModal(false)}
+                                >
+                                  Fermer
+                                </Button>
+                                <Button variant="contained" onClick={handleMail}>
+                                  Envoyer par Mail
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
+
                             {mesureForm}
                             {deForm}
                           </div>
@@ -2355,6 +2504,7 @@ const mapStateToProps = (state) => {
     gender: state.claim_appraise.gender,
     language: state.claim_appraise.language,
     dossierimf: state.claim_appraise.dossierimf,
+    email: state.claim_appraise.email,
     code: state.claim_appraise.code,
     codeClient: state.claim_appraise.codeClient,
     recorded_at: state.claim_appraise.recorded_at,
@@ -2425,6 +2575,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     dossierimfChanged: (dossierimf) => {
       dispatch(dossierimfChanged(dossierimf));
+    },
+    emailChanged: (email) => {
+      dispatch(emailChanged(email));
     },
     codeChanged: (code) => {
       dispatch(codeChanged(code));

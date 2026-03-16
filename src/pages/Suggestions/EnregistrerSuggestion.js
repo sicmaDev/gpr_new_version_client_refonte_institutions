@@ -22,7 +22,7 @@ import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import { notify } from "../../Utils/alert";
 import axios from "axios";
-import { addressChanged, codeChanged, collectChanged, collectLibelleChanged, contentChanged, createdAtChanged, createdByChanged, dossierimfChanged, etat2Changed, etatChanged, firstnameChanged, genderChanged, handledAtChanged, handledByChanged, idChanged, itemsChanged, languageChanged, languageLibelleChanged, lastnameChanged, loading, phoneChanged, productChanged, productLibelleChanged, recordedAtChanged, recordedAtDPChanged, resolvedAtChanged, resolvedByChanged, selectedFilesChanged, selectedFilesReset, selectedItemChanged, selectedItemFilesChanged, showSelectPrintItemChanged, solutionChanged, statusChanged, suggestionRecordErrors, unitChanged, unitLibelleChanged, selectedItemAudioChanged } from "../../redux/actions/Suggestions/EnregistrementSuggestionActions";
+import { addressChanged, codeChanged, collectChanged, collectLibelleChanged, contentChanged, createdAtChanged, createdByChanged, dossierimfChanged, etat2Changed, etatChanged, firstnameChanged, genderChanged, handledAtChanged, handledByChanged, idChanged, itemsChanged, languageChanged, languageLibelleChanged, lastnameChanged, loading, phoneChanged, productChanged, productLibelleChanged, recordedAtChanged, recordedAtDPChanged, resolvedAtChanged, resolvedByChanged, selectedFilesChanged, selectedFilesReset, selectedItemChanged, selectedItemFilesChanged, showSelectPrintItemChanged, solutionChanged, statusChanged, suggestionRecordErrors, unitChanged, unitLibelleChanged, selectedItemAudioChanged, emailChanged } from "../../redux/actions/Suggestions/EnregistrementSuggestionActions";
 import { addSuggestionApi, addSuggestionApiOffline, addTempSuggestionApi, addTempSuggestionApiOffline, downloadFillesApi, getFillesApi, getSuggeAudioApi, listeByStatut, deleteSuggestionApi, listeByStatutOffline, } from "../../apis/Suggestions/SuggestionsApi";
 import PhoneInput from "react-phone-number-input";
 import { licenseInfo } from "../../apis/LoginApi";
@@ -39,8 +39,10 @@ import { CancelOutlined } from "@mui/icons-material";
 import { modalify } from "../../Utils/modal";
 import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 import { send } from "../../apis/Configurations/SmsApi";
-
-
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
+import { sendEmail } from "../../apis/Configurations/MailApi";
+import "moment/locale/fr";
+moment.locale("fr");
 // import DateInput from "../ui/DateInput";
 //import IntlTelInput from 'react-intl-tel-input';
 //import 'react-intl-tel-input/dist/main.css';
@@ -304,6 +306,7 @@ const EnregistrerSuggestion = (props) => {
         props.genderChanged("")
         props.languageChanged("")
         props.languageLibelleChanged("")
+        props.emailChanged("")
         props.dossierimfChanged("")
         props.collectChanged("")
         props.collectLibelleChanged("")
@@ -509,6 +512,7 @@ const EnregistrerSuggestion = (props) => {
             claim["productId"] = props.product;
             claim["languageId"] = props.language;
             claim["folderCode"] = props.dossierimf;
+            claim["email"] = props.email;
             claim["receiptDateTime"] = props.recorded_at;
             claim["collectorId"] = user.id;
             claim["content"] = props.content;
@@ -566,6 +570,7 @@ const EnregistrerSuggestion = (props) => {
         claim["productId"] = props.product;
         claim["languageId"] = props.language;
         claim["folderCode"] = props.dossierimf;
+        claim["email"] = props.email;
         claim["receiptDateTime"] = props.recorded_at;
         claim["collectorId"] = user.id;
         claim["content"] = props.content;
@@ -861,6 +866,7 @@ const EnregistrerSuggestion = (props) => {
             props.languageChanged(data.langue ? data.langue.id : "");
             props.languageLibelleChanged(data.langue ? data.langue.libelle : "");
             props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+            props.emailChanged(data.email ? data.email : "");
             props.codeChanged(data.code ? data.code : "");
             props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
             props.collectChanged(data.canal ? data.canal.id : "");
@@ -884,6 +890,7 @@ const EnregistrerSuggestion = (props) => {
                 props.languageChanged(data.langue ? data.langue.id : "");
                 props.languageLibelleChanged(data.langue ? data.langue.libelle : "");
                 props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+                props.emailChanged(data.email ? data.email : "");
                 props.codeChanged(data.code ? data.code : "");
                 props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
                 props.collectChanged(data.canal ? data.canal.id : "");
@@ -904,6 +911,7 @@ const EnregistrerSuggestion = (props) => {
                 props.phoneChanged(data.tel ? cleanPhoneNumber2(data.tel) : "");
                 props.genderChanged(data.gender ? data.gender : "");
                 props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+                props.emailChanged(data.email ? data.email : "");
                 props.codeChanged(data.code ? data.code : "");
                 props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
                 props.contentChanged(data.content ? data.content : "");
@@ -1126,20 +1134,37 @@ const EnregistrerSuggestion = (props) => {
     const sendSms = async (e) => {
         e.preventDefault();
         if (props.phone !== "" && props.phone) {
-            props.etat2Changed(true);
             await sleep(3000);
             props.etat2Changed(true);
             send({ phone: cleanPhoneNumber3(props.phone), message: smsToSend }).then(({ data }) => {
-                handleSubmit(e)
-                notify("Super - SMS envoyé", "success");
+                if (props.email && props.email !== "") {
+                    notify("Super - SMS et Email envoyé au client avec succès ", "success");
+                } else {
+                    notify("Super - SMS envoyé", "success");
+                }
             }).catch((err) => {
-                handleSubmit(e)
                 notify("Oups - SMS non envoyé", "error");
             }).finally(() => {
-                KTApp.unblockPage();
-            })
+                if (props.email && props.email !== "") {
+                    sendEmail({
+                        email: props.email,
+                        subject: "Accusé de réception - Votre suggestion a bien été enregistrée",
+                        message: smsToSend
+                    }).then(() => {
+                        // SMS déjà notifié avant
+                    }).catch(() => {
+                        notify("Oups - Email non envoyé", "error");
+                    }).finally(() => {
+                        handleSubmit(e);
+                        KTApp.unblockPage();
+                    });
+                } else {
+                    handleSubmit(e);
+                    KTApp.unblockPage();
+                }
+            });
         } else {
-            notify("numéros de téléphone incorrecte", "error")
+            notify("numéros de téléphone incorrecte", "error");
         }
     };
 
@@ -1148,81 +1173,230 @@ const EnregistrerSuggestion = (props) => {
         <div id="main">
             {showSmsBox && (
                 <div>
+                    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
 
-                    <Dialog open={open} onClose={handleClose}>
+                        <DialogTitle style={{ borderBottom: "1px solid #e0e0e0", fontSize: "15px", fontWeight: "600", padding: "12px 16px" }}>
+                            Confirmation de la suggestion
+                        </DialogTitle>
 
-                        <DialogContent>
-                            <DialogContentText>
-                                Envoyez un sms de notification au client
-                            </DialogContentText>
+                        <DialogContent style={{ padding: "16px", maxHeight: "65vh", overflowY: "auto" }}>
 
-                            <div className="row">
-                                <div className="col l12 s12 pb-5">
-                                    <div className="row">
-                                        <div className="col l12 s12 l12">
-                                            <span>
-                                                Envoie à: <b> {props.lastname}</b>
-                                            </span>
-                                            <br />
-                                            <span>
-                                                au : {cleanPhoneNumber(props.phone)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <br />
-                                    <label htmlFor="comment3"> Message:</label>
-                                    <textarea
-                                        id="comment3"
-                                        name="comment1"
-                                        style={{ height: "20px !important" }}
-                                        placeholder=""
-                                        value={smsToSend}
-                                        className="materialize-textarea"
-                                        onChange={(e) => {
-                                            setSmsToSend(e.target.value);
-                                        }}
-                                    ></textarea>
-                                    <br />
+                            <div style={{ border: "1px solid #e0e0e0", borderRadius: "6px", marginBottom: "16px" }}>
+
+                                <div style={{ backgroundColor: "#f5f5f5", padding: "8px 14px", borderBottom: "1px solid #e0e0e0", display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <SupportAgentIcon style={{ fontSize: "18px", color: "#616161" }} />
+                                    <span style={{ color: "#424242", fontWeight: "600", fontSize: "14px" }}>
+                                        Résumé de la suggestion
+                                    </span>
                                 </div>
+
+                                <div style={{ padding: "4px 14px" }}>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Client</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.lastname}</span>
+                                    </div>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Téléphone</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{cleanPhoneNumber(props.phone)}</span>
+                                    </div>
+                                    {props.email && props.email !== "" && (
+                                        <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                            <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Email</span>
+                                            <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.email}</span>
+                                        </div>
+                                    )}
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Genre</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.gender}</span>
+                                    </div>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Produit</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.productLibelle}</span>
+                                    </div>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Point de service</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.unitLibelle}</span>
+                                    </div>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Date de réception</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>
+                                            {props.recorded_at
+                                                ? moment(props.recorded_at, "DD-MM-YYYY HH:mm").format("DD MMMM YYYY [à] HH:mm")
+                                                : "—"}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
+                                            Contenu
+                                        </span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px", flex: 1 }}>
+                                            {props.content && props.content !== "#ReclamationAudio" && (
+                                                <span>{props.content}</span>
+                                            )}
+
+                                            {audio != null && (
+                                                <div style={{ marginTop: "4px" }}>
+                                                    <span style={{ fontSize: "12px", color: "#757575", display: "block", marginBottom: "4px" }}>
+                                                        Audio enregistré
+                                                    </span>
+                                                    <audio controls style={{ width: "100%", height: "36px" }}>
+                                                        <source src={URL.createObjectURL(audio)} type="audio/ogg" />
+                                                    </audio>
+                                                </div>
+                                            )}
+
+
+                                            {props.selectedItemAudio && props.selectedItemAudio.length > 0 && (
+                                                <div style={{ marginTop: "4px" }}>
+                                                    <span style={{ fontSize: "12px", color: "#757575", display: "block", marginBottom: "4px" }}>
+                                                        Audio enregistré
+                                                    </span>
+                                                    <audio controls style={{ width: "100%", height: "36px" }}>
+                                                        <source src={URL.createObjectURL(new Blob([props.selectedItemAudio[0]], { type: "audio/ogg" }))} type="audio/ogg" />
+                                                    </audio>
+                                                </div>
+                                            )}
+
+                                            {!props.content && audio == null && (!props.selectedItemAudio || props.selectedItemAudio.length === 0) && (
+                                                <span style={{ color: "#bdbdbd" }}>—</span>
+                                            )}
+
+                                        </span>
+                                    </div>
+
+                                    {files && files.length > 0 && (
+                                        <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                            <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
+                                                Fichiers joints
+                                            </span>
+                                            <div style={{ flex: 1 }}>
+                                                {Array.from(files).map((file, index) => (
+                                                    <div key={index} style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "space-between",
+                                                        padding: "4px 8px",
+                                                        marginBottom: "4px",
+                                                        backgroundColor: "#f9f9f9",
+                                                        borderRadius: "4px",
+                                                        border: "1px solid #eeeeee"
+                                                    }}>
+                                                        <span style={{ fontSize: "12px", color: "#424242", flex: 1, marginRight: "8px" }}>
+                                                            {file.name}
+                                                        </span>
+                                                        <a
+                                                            href={URL.createObjectURL(file)}
+                                                            download={file.name}
+                                                            style={{
+                                                                fontSize: "12px",
+                                                                color: "#1e2188",
+                                                                textDecoration: "none",
+                                                                whiteSpace: "nowrap"
+                                                            }}
+                                                        >
+                                                            Télécharger
+                                                        </a>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {props.selectedItemFiles && props.selectedItemFiles.length > 0 && (
+                                        <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                            <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
+                                                Fichiers joints
+                                            </span>
+                                            <div style={{ flex: 1 }}>
+                                                {props.selectedItemFiles.map((file, index) => (
+                                                    <div key={index} style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "space-between",
+                                                        padding: "4px 8px",
+                                                        marginBottom: "4px",
+                                                        backgroundColor: "#f9f9f9",
+                                                        borderRadius: "4px",
+                                                        border: "1px solid #eeeeee"
+                                                    }}>
+                                                        <span style={{ fontSize: "12px", color: "#424242", flex: 1, marginRight: "8px" }}>
+                                                            {file.name}
+                                                        </span>
+                                                        <a
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                downloadFillesApi(file.id, file.name);
+                                                            }}
+                                                            style={{
+                                                                fontSize: "12px",
+                                                                color: "#1e2188",
+                                                                textDecoration: "none",
+                                                                whiteSpace: "nowrap",
+                                                                cursor: "pointer"
+                                                            }}
+                                                        >
+                                                            Télécharger
+                                                        </a>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </div>
+
                             </div>
 
-                            <div className="row">
-                                {/* <div className="col s12 justify-content-end mt-3"> */}
-                                <>
-                                    <div className="col l6 m12 s12 mt-4">
-                                        <form onSubmit={handleSubmit}>
-                                            <button type="submit" className="btn waves-effect waves-light mr-1 btn-small red-text red lighten-4 ml-1 mr-3" style={{ width: "100%" }}>
-                                                Enregistrer Uniquement
-                                            </button>
-                                        </form>
-                                    </div>
+                            <div style={{ border: "1px solid #e0e0e0", borderRadius: "6px", padding: "12px 14px" }}>
+                                <span style={{ fontSize: "13px", color: "#424242", fontWeight: "600" }}>
+                                    Envoyez un sms de notification au client
+                                </span>
+                                <div style={{ marginTop: "8px", marginBottom: "8px", fontSize: "13px" }}>
+                                    <span style={{ color: "#757575" }}>Envoie à :  <b>{props.lastname}</b></span>
 
-                                    <div className="col l6 m12 s12 mt-4">
-                                        <a
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setShowSmsBox(false);
-                                                sendSms(e);
+                                    <br />
+                                    <span style={{ color: "#757575" }}>au : {cleanPhoneNumber(props.phone)} </span>
 
-                                            }}
-                                            className="waves-effect waves-effect-b waves-light btn-small"
-                                            style={{ width: "100%" }}
-                                        >
-                                            Enregistrer et Notifier
-                                        </a>
-                                    </div>
-
-                                </>
-
-                                {/* </div> */}
+                                </div>
+                                <label htmlFor="comment3" style={{ fontSize: "12px", color: "#757575" }}>Message :</label>
+                                <textarea
+                                    id="comment3"
+                                    name="comment1"
+                                    placeholder=""
+                                    value={smsToSend}
+                                    className="materialize-textarea"
+                                    style={{ minHeight: "80px", resize: "none" }}
+                                    onChange={(e) => setSmsToSend(e.target.value)}
+                                />
                             </div>
 
                         </DialogContent>
 
+                        <DialogActions style={{ borderTop: "1px solid #e0e0e0", padding: "10px 16px", gap: "8px" }}>
+                            <form onSubmit={handleSubmit} style={{ flex: 1, margin: 0 }}>
+                                <button
+                                    type="submit"
+                                    className="btn waves-effect waves-light btn-small red-text red lighten-4"
+                                    style={{ width: "100%" }}
+                                >
+                                    Enregistrer Uniquement
+                                </button>
+                            </form>
+                            <span
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setShowSmsBox(false);
+                                    sendSms(e);
+                                }}
+                                className="waves-effect waves-effect-b waves-light btn-small"
+                                style={{ flex: 1, textAlign: "center", display: "block", cursor: "pointer" }}
+                            >
+                                Enregistrer et Notifier
+                            </span>
+                        </DialogActions>
+
                     </Dialog>
+
                 </div>
-
-
             )}
             {showAudioBox && (
                 <div>
@@ -1256,7 +1430,7 @@ const EnregistrerSuggestion = (props) => {
                                         handlers={handlers}
                                         closeAction={handleClose2}
                                     />
-                                    {/* <RecordingsList audio={audio} /> */}
+
                                 </div>
                             </section>
                         </DialogContent>
@@ -1352,6 +1526,31 @@ const EnregistrerSuggestion = (props) => {
                                                                     className="error">{(props.errors !== undefined) ? props.errors.phone : ""}</div>
                                                             </small>
                                                         </div>
+                                                        <div className="col l12 m12 s12 input-field">
+                                                            <input
+                                                                id="email"
+                                                                name="email"
+                                                                type="email"
+                                                                className="validate"
+                                                                placeholder=""
+                                                                value={props.email}
+                                                                data-error=".errorTxt2"
+                                                                onChange={(e) =>
+                                                                    props.emailChanged(e.target.value)
+                                                                }
+                                                            />
+                                                            <label htmlFor="lastname" className={"active"}>
+                                                                Email
+                                                            </label>
+                                                            <small className="errorTxt4">
+                                                                <div id="cpassword-error" className="error">
+                                                                    {props.errors !== undefined
+                                                                        ? props.errors.email
+                                                                        : ""}
+                                                                </div>
+                                                            </small>
+                                                        </div>
+
                                                         <div style={{ clear: "both" }}></div>
                                                         <div className="col l6 m12 s12 input-field">
                                                             <Select
@@ -1575,6 +1774,7 @@ const mapStateToProps = (state) => {
         language: state.suggestion_record.language,
         languageLibelle: state.suggestion_record.languageLibelle,
         dossierimf: state.suggestion_record.dossierimf,
+        email: state.suggestion_record.email,
         code: state.suggestion_record.code,
         recorded_at: state.suggestion_record.recorded_at,
         recorded_at_dp: state.suggestion_record.recorded_at_dp,
@@ -1642,6 +1842,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         dossierimfChanged: (dossierimf) => {
             dispatch(dossierimfChanged(dossierimf));
+        },
+        emailChanged: (email) => {
+            dispatch(emailChanged(email));
         },
         codeChanged: (code) => {
             dispatch(codeChanged(code));

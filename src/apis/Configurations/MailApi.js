@@ -6,7 +6,7 @@ import { HOST } from "../../Utils/globals";
 // ADD
 const ADD_SETTING_API = HOST + "api/v1/config/setting/others/mail/create"
 const TEST_MAIL_API = HOST + "api/v1/config/setting/others/mail/test"
-
+const SEND_EMAIL_API = HOST + "api/v1/config/setting/others/mail/sendMailToClient"
 
 export const ajout = async (data, props) => {
 
@@ -56,4 +56,18 @@ export const test =  (data) => {
 
 }
 
+
+export const sendEmail = (data) => {
+    const config = {
+        method: 'post',
+        url: SEND_EMAIL_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    return axios(config);
+}
 

@@ -74,6 +74,13 @@ export const dossierimfChanged = (dossierimf) => {
         info: 'This action is used to ...'
     }
 };
+export const emailChanged = (email) => {
+    return {
+        type: 'CLAIM_RECORD_EMAIL_CHANGED',
+        payload:email,
+        info: 'This action is used to ...'
+    }
+};
 export const crewChanged = (crew) => {
     return {
         type: 'CLAIM_RECORD_CREW_CHANGED',

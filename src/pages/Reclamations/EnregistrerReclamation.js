@@ -23,6 +23,7 @@ import {
   collectLibelleChanged,
   contentChanged,
   dossierimfChanged,
+  emailChanged,
   etat2Changed,
   etatChanged,
   firstnameChanged,
@@ -134,6 +135,9 @@ import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import WarningIcon from '@mui/icons-material/Warning';
 import PersonIcon from "@mui/icons-material/Person";
+import { sendEmail } from "../../apis/Configurations/MailApi";
+import "moment/locale/fr";
+moment.locale("fr");
 registerLocale("fr", fr);
 
 const styles = {
@@ -574,6 +578,7 @@ const EnregistrerReclamation = (props) => {
     props.genderChanged("");
     props.languageChanged("");
     props.dossierimfChanged("");
+    props.emailChanged("");
     props.subjectChanged("");
     props.underSubjectChanged("");
     props.collectChanged("");
@@ -764,6 +769,7 @@ const EnregistrerReclamation = (props) => {
       claim["objetId"] = props.underSubject;
       claim["languageId"] = props.language;
       claim["folderCode"] = props.dossierimf;
+      claim["email"] = props.email;
       claim["receiptDateTime"] = props.recorded_at;
       claim["collectorId"] = user.id;
       if (
@@ -830,6 +836,7 @@ const EnregistrerReclamation = (props) => {
     claim["objetId"] = props.underSubject;
     claim["languageId"] = props.language;
     claim["folderCode"] = props.dossierimf;
+    claim["email"] = props.email;
     claim["receiptDateTime"] = props.recorded_at;
     claim["collectorId"] = user.id;
     claim["content"] = props.content;
@@ -1106,6 +1113,7 @@ const EnregistrerReclamation = (props) => {
       props.languageChanged(data.language ? data.language.id : "");
       props.languageLibelleChanged(data.language ? data.language.libelle : "");
       props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+      props.emailChanged(data.email ? data.email : "");
       props.codeChanged(data.code ? data.code : "");
       props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
       props.collectChanged(
@@ -1147,6 +1155,7 @@ const EnregistrerReclamation = (props) => {
           data.language ? data.language.libelle : ""
         );
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+        props.emailChanged(data.email ? data.email : "");
         props.codeChanged(data.code ? data.code : "");
         props.recordedAtChanged(
           data.receiptDateTime ? data.receiptDateTime : ""
@@ -1185,6 +1194,7 @@ const EnregistrerReclamation = (props) => {
         props.phoneChanged(data.tel ? cleanPhoneNumber2(data.tel) : "");
         props.genderChanged(data.gender ? data.gender : "");
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+        props.emailChanged(data.email ? data.email : "");
         props.codeChanged(data.code ? data.code : "");
         props.recordedAtChanged(
           data.receiptDateTime ? data.receiptDateTime : ""
@@ -1489,16 +1499,34 @@ const EnregistrerReclamation = (props) => {
       await sleep(3000);
       props.etat2Changed(true);
       send({ phone: cleanPhoneNumber3(props.phone), message: smsToSend }).then(({ data }) => {
-        handleSubmit(e)
-        notify("Super - SMS envoyé", "success");
+        if (props.email && props.email !== "") {
+          notify("Super - SMS et Email envoyé au client avec succès ", "success");
+        } else {
+          notify("Super - SMS envoyé", "success");
+        }
       }).catch((err) => {
-        handleSubmit(e)
         notify("Oups - SMS non envoyé", "error");
       }).finally(() => {
-        KTApp.unblockPage();
-      })
+        if (props.email && props.email !== "") {
+          sendEmail({
+            email: props.email,
+            subject: "Accusé de réception - Votre réclamation a bien été enregistrée",
+            message: smsToSend
+          }).then(() => {
+            // SMS déjà notifié avant
+          }).catch(() => {
+            notify("Oups - Email non envoyé", "error");
+          }).finally(() => {
+            handleSubmit(e);
+            KTApp.unblockPage();
+          });
+        } else {
+          handleSubmit(e);
+          KTApp.unblockPage();
+        }
+      });
     } else {
-      notify("numéros de téléphone incorrecte", "error")
+      notify("numéros de téléphone incorrecte", "error");
     }
   };
   let formAudio;
@@ -1531,7 +1559,7 @@ const EnregistrerReclamation = (props) => {
     formAudio = "";
   }
 
- const getStatusChip = (status) => {
+  const getStatusChip = (status) => {
     switch (status) {
       case "SAVED":
         return (
@@ -1611,73 +1639,246 @@ const EnregistrerReclamation = (props) => {
     <div id="main">
       {showSmsBox && (
         <div>
-          <Dialog open={open} onClose={handleClose}>
-            <DialogContent>
-              <DialogContentText>
-                Envoyez un sms de notification au client
-              </DialogContentText>
+          <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
 
-              <div className="row">
-                <div className="col l12 s12 pb-5">
-                  <div className="row">
-                    <div className="col l12 s12 l12">
-                      <span>
-                        Envoie à: <b> {props.lastname}</b>
-                      </span>
-                      <br />
-                      <span>au : {cleanPhoneNumber(props.phone)}</span>
-                    </div>
-                  </div>
-                  <br />
-                  <label htmlFor="comment3"> Message:</label>
-                  <textarea
-                    id="comment3"
-                    name="comment1"
-                    style={{ height: "20px !important" }}
-                    placeholder=""
-                    value={smsToSend}
-                    className="materialize-textarea"
-                    onChange={(e) => {
-                      setSmsToSend(e.target.value);
-                    }}
-                  ></textarea>
-                  <br />
+            <DialogTitle style={{ borderBottom: "1px solid #e0e0e0", fontSize: "15px", fontWeight: "600", padding: "12px 16px" }}>
+              Confirmation de la réclamation
+            </DialogTitle>
+
+            <DialogContent style={{ padding: "16px", maxHeight: "65vh", overflowY: "auto" }}>
+
+
+              <div style={{ border: "1px solid #e0e0e0", borderRadius: "6px", marginBottom: "16px" }}>
+
+                <div style={{ backgroundColor: "#f5f5f5", padding: "8px 14px", borderBottom: "1px solid #e0e0e0", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <SupportAgentIcon style={{ fontSize: "18px", color: "#616161" }} />
+                  <span style={{ color: "#424242", fontWeight: "600", fontSize: "14px" }}>
+                    Résumé de la réclamation
+                  </span>
                 </div>
-              </div>
 
-              <div className="row">
-                {/* <div className="col s12  justify-content-end mt-3"> */}
-                <>
-                  <div className="col l6 m12 s12 mt-4">
-                    <form onSubmit={handleSubmit}>
-                      <button
-                        type="submit"
-                        className="btn waves-effect waves-light mr-1 btn-small red-text red lighten-4 ml-1 mr-3"
-                        style={{ width: "100%" }}
-                      >
-                        Enregistrer Uniquement
-                      </button>
-                    </form>
+                <div style={{ padding: "4px 14px" }}>
+                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Client</span>
+                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.lastname}</span>
                   </div>
-
-                  <div className="col l6 m12 s12 mt-4">
-                    <span
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setShowSmsBox(false);
-                        sendSms(e);
-                      }}
-                      className="waves-effect waves-effect-b waves-light btn-small"
-                      style={{ width: "100%" }}
-                    >
-                      Enregistrer et Notifier
+                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Téléphone</span>
+                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{cleanPhoneNumber(props.phone)}</span>
+                  </div>
+                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Genre</span>
+                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.gender}</span>
+                  </div>
+                  {props.email && props.email !== "" && (
+                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                      <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Email</span>
+                      <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.email}</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Produit</span>
+                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.productLibelle}</span>
+                  </div>
+                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Catégorie</span>
+                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.subjectLibelle}</span>
+                  </div>
+                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Motif</span>
+                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.underSubjectLibelle}</span>
+                  </div>
+                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Point de service</span>
+                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.unitLibelle}</span>
+                  </div>
+                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Date de réception</span>
+                    <span style={{ fontWeight: "500", fontSize: "13px" }}>
+                      {props.recorded_at
+                        ? moment(props.recorded_at, "DD-MM-YYYY HH:mm").format("DD MMMM YYYY [à] HH:mm")
+                        : "—"}
                     </span>
                   </div>
-                </>
-                {/* </div> */}
+                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
+                      Contenu
+                    </span>
+                    <span style={{ fontWeight: "500", fontSize: "13px", flex: 1 }}>
+
+                      {/* Cas 1 : contenu texte normal */}
+                      {props.content && props.content !== "#ReclamationAudio" && (
+                        <span>{props.content}</span>
+                      )}
+
+                      {/* Cas 2 : audio nouveau (enregistré maintenant) */}
+                      {audio != null && (
+                        <div style={{ marginTop: "4px" }}>
+                          <span style={{ fontSize: "12px", color: "#757575", display: "block", marginBottom: "4px" }}>
+                            Audio enregistré
+                          </span>
+                          <audio controls style={{ width: "100%", height: "36px" }}>
+                            <source src={URL.createObjectURL(audio)} type="audio/ogg" />
+                          </audio>
+                        </div>
+                      )}
+
+                      {/* Cas 3 : audio existant (déjà sauvegardé) */}
+                      {props.selectedItemAudio && props.selectedItemAudio.length > 0 && (
+                        <div style={{ marginTop: "4px" }}>
+                          <span style={{ fontSize: "12px", color: "#757575", display: "block", marginBottom: "4px" }}>
+                            Audio enregistré
+                          </span>
+                          <audio controls style={{ width: "100%", height: "36px" }}>
+                            <source src={URL.createObjectURL(new Blob([props.selectedItemAudio[0]], { type: "audio/ogg" }))} type="audio/ogg" />
+                          </audio>
+                        </div>
+                      )}
+
+                      {/* Cas 4 : rien du tout */}
+                      {!props.content && audio == null && (!props.selectedItemAudio || props.selectedItemAudio.length === 0) && (
+                        <span style={{ color: "#bdbdbd" }}>—</span>
+                      )}
+
+                    </span>
+                  </div>
+
+                  {files && files.length > 0 && (
+                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                      <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
+                        Fichiers joints
+                      </span>
+                      <div style={{ flex: 1 }}>
+                        {Array.from(files).map((file, index) => (
+                          <div key={index} style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "4px 8px",
+                            marginBottom: "4px",
+                            backgroundColor: "#f9f9f9",
+                            borderRadius: "4px",
+                            border: "1px solid #eeeeee"
+                          }}>
+                            <span style={{ fontSize: "12px", color: "#424242", flex: 1, marginRight: "8px" }}>
+                              {file.name}
+                            </span>
+                            <a
+                              href={URL.createObjectURL(file)}
+                              download={file.name}
+                              style={{
+                                fontSize: "12px",
+                                color: "#1e2188",
+                                textDecoration: "none",
+                                whiteSpace: "nowrap"
+                              }}
+                            >
+                              Télécharger
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fichiers déjà sauvegardés */}
+                  {props.selectedItemFiles && props.selectedItemFiles.length > 0 && (
+                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                      <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
+                        Fichiers joints
+                      </span>
+                      <div style={{ flex: 1 }}>
+                        {props.selectedItemFiles.map((file, index) => (
+                          <div key={index} style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "4px 8px",
+                            marginBottom: "4px",
+                            backgroundColor: "#f9f9f9",
+                            borderRadius: "4px",
+                            border: "1px solid #eeeeee"
+                          }}>
+                            <span style={{ fontSize: "12px", color: "#424242", flex: 1, marginRight: "8px" }}>
+                              {file.name}
+                            </span>
+                            <a
+                              onClick={(e) => {
+                                e.preventDefault();
+                                downloadFillesApi(file.id, file.name);
+                              }}
+                              style={{
+                                fontSize: "12px",
+                                color: "#1e2188",
+                                textDecoration: "none",
+                                whiteSpace: "nowrap",
+                                cursor: "pointer"
+                              }}
+                            >
+                              Télécharger
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+
               </div>
+
+
+              <div style={{ border: "1px solid #e0e0e0", borderRadius: "6px", padding: "12px 14px" }}>
+                <span style={{ fontSize: "13px", color: "#424242", fontWeight: "600" }}>
+                  Envoyez un sms de notification au client
+                </span>
+                <div style={{ marginTop: "8px", marginBottom: "8px", fontSize: "13px" }}>
+                  <span style={{ color: "#757575" }}>Envoie à :  <b>{props.lastname}</b></span>
+
+                  <br />
+                  <span style={{ color: "#757575" }}>au : {cleanPhoneNumber(props.phone)} </span>
+
+                </div>
+                <label htmlFor="comment3" style={{ fontSize: "12px", color: "#757575" }}>Message :</label>
+                <textarea
+                  id="comment3"
+                  name="comment1"
+                  placeholder=""
+                  value={smsToSend}
+                  className="materialize-textarea"
+                  style={{ minHeight: "80px", resize: "none" }}
+                  onChange={(e) => setSmsToSend(e.target.value)}
+                />
+              </div>
+
             </DialogContent>
+
+
+            <DialogActions style={{ borderTop: "1px solid #e0e0e0", padding: "10px 16px", gap: "8px" }}>
+              <form onSubmit={handleSubmit} style={{ flex: 1, margin: 0 }}>
+                <button
+                  type="submit"
+                  className="btn waves-effect waves-light btn-small red-text red lighten-4"
+                  style={{ width: "100%" }}
+                >
+                  Enregistrer Uniquement
+                </button>
+              </form>
+              <span
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowSmsBox(false);
+                  sendSms(e);
+                }}
+                className="waves-effect waves-effect-b waves-light btn-small"
+                style={{ flex: 1, textAlign: "center", display: "block", cursor: "pointer" }}
+              >
+                Enregistrer et Notifier
+              </span>
+            </DialogActions>
+
           </Dialog>
+
         </div>
       )}
       {showAudioBox && (
@@ -1735,7 +1936,7 @@ const EnregistrerReclamation = (props) => {
             <DialogTitle>
               <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center" }}>
                 <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
-                Réclamation déjà existante
+                Vérification des doublons
               </span>
               <DialogContentText sx={{ mb: 2 }}>
                 {props.existingClaims.length === 1 ?
@@ -1955,6 +2156,32 @@ const EnregistrerReclamation = (props) => {
                                 </div>
                               </small>
                             </div>
+
+                            <div className="col l12 m12 s12 input-field">
+                              <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                className="validate"
+                                placeholder=""
+                                value={props.email}
+                                data-error=".errorTxt2"
+                                onChange={(e) =>
+                                  props.emailChanged(e.target.value)
+                                }
+                              />
+                              <label htmlFor="lastname" className={"active"}>
+                                Email
+                              </label>
+                              <small className="errorTxt4">
+                                <div id="cpassword-error" className="error">
+                                  {props.errors !== undefined
+                                    ? props.errors.email
+                                    : ""}
+                                </div>
+                              </small>
+                            </div>
+
                             <div style={{ clear: "both" }}></div>
                             <div className="col l6 m12 s12 input-field" ref={genderRef}>
                               <Select
@@ -2385,6 +2612,7 @@ const mapStateToProps = (state) => {
     lastname: state.claim_record.lastname,
     address: state.claim_record.address,
     phone: state.claim_record.phone,
+    email: state.claim_record.email,
     gender: state.claim_record.gender,
     language: state.claim_record.language,
     languageLibelle: state.claim_record.languageLibelle,
@@ -2480,6 +2708,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     productChanged: (product) => {
       dispatch(productChanged(product));
+    },
+    emailChanged: (email) => {
+      dispatch(emailChanged(email));
     },
     productLibelleChanged: (productLibelle) => {
       dispatch(productLibelleChanged(productLibelle));

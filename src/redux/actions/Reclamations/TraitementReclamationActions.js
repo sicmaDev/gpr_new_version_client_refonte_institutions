@@ -74,6 +74,13 @@ export const codeChanged = (code) => {
         info: 'This action is used to ...'
     }
 };
+export const emailChanged = (email) => {
+    return {
+        type: 'CLAIM_HANDLE_EMAIL_CHANGED',
+        payload: email,
+        info: 'This action is used to ...'
+    }
+};
 export const recordedAtChanged = (recordedAt) => {
     return {
         type: 'CLAIM_HANDLE_RECORDED_AT_CHANGED',
@@ -129,56 +136,56 @@ export const reset = () => {
         info: 'This action is used to ...'
     }
 };
-export const itemsChanged = (items) =>{
+export const itemsChanged = (items) => {
     return {
         type: 'CLAIM_HANDLE_ITEMS_CHANGED',
         payload: items,
         info: 'This action is used to ...'
     }
 };
-export const agentsChanged = (agents) =>{
+export const agentsChanged = (agents) => {
     return {
         type: 'CLAIM_HANDLE_AGENTS_CHANGED',
         payload: agents,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemChanged = (selectedItem) =>{
+export const selectedItemChanged = (selectedItem) => {
     return {
         type: 'CLAIM_HANDLE_SELECTED_ITEM_CHANGED',
         payload: selectedItem,
         info: 'This action is used to ...'
     }
 };
-export const solutionChanged = (solution) =>{
+export const solutionChanged = (solution) => {
     return {
         type: 'CLAIM_HANDLE_SOLUTION_CHANGED',
         payload: solution,
         info: 'This action is used to ...'
     }
 };
-export const solutionIdChanged = (solutionId) =>{
+export const solutionIdChanged = (solutionId) => {
     return {
         type: 'CLAIM_HANDLE_SOLUTION_ID_CHANGED',
         payload: solutionId,
         info: 'This action is used to ...'
     }
 };
-export const commentChanged = (comment) =>{
+export const commentChanged = (comment) => {
     return {
         type: 'CLAIM_HANDLE_COMMENT_CHANGED',
         payload: comment,
         info: 'This action is used to ...'
     }
 };
-export const statusChanged = (status) =>{
+export const statusChanged = (status) => {
     return {
         type: 'CLAIM_HANDLE_STATUS_CHANGED',
         payload: status,
         info: 'This action is used to ...'
     }
 };
-export const motifChanged = (motif) =>{
+export const motifChanged = (motif) => {
     return {
         type: 'CLAIM_HANDLE_MOTIF_CHANGED',
         payload: motif,
@@ -228,14 +235,14 @@ export const handledByChanged = (handledBy) => {
         info: 'This action is used to ...'
     }
 };
-export const selectedFilesReset = (selectedFiles) =>{
+export const selectedFilesReset = (selectedFiles) => {
     return {
         type: 'CLAIM_HANDLE_SELECTED_FILES_RESET',
         payload: selectedFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemFilesChanged = (selectedItemFiles) =>{
+export const selectedItemFilesChanged = (selectedItemFiles) => {
     return {
         type: 'CLAIM_HANDLE_SELECTED_ITEM_FILES_CHANGED',
         payload: selectedItemFiles,
@@ -243,7 +250,7 @@ export const selectedItemFilesChanged = (selectedItemFiles) =>{
     }
 };
 
-export const selectedItemAudioChanged = (selectedItemAudio) =>{
+export const selectedItemAudioChanged = (selectedItemAudio) => {
     return {
         type: 'CLAIM_HANDLE_SELECTED_ITEM_AUDIO_CHANGED',
         payload: selectedItemAudio,
@@ -251,7 +258,7 @@ export const selectedItemAudioChanged = (selectedItemAudio) =>{
     }
 };
 
-export const authorizeChanged = (info) =>{
+export const authorizeChanged = (info) => {
     return {
         type: 'CLAIM_HANDLE_AUTHORIZE',
         payload: info,
@@ -262,32 +269,32 @@ export const authorizeChanged = (info) =>{
 export const crewChanged = (crew) => {
     return {
         type: 'CLAIM_HANDLE_CREW_CHANGED',
-        payload:crew,
+        payload: crew,
         info: 'This action is used to ...'
     }
 };
 export const objetLevelChanged = (objetLevel) => {
     return {
         type: 'CLAIM_HANDLE_OBJET_LEVEL_CHANGED',
-        payload:objetLevel,
+        payload: objetLevel,
         info: 'This action is used to ...'
     }
 };
-export const newSolutionChanged = (new_solution) =>{
+export const newSolutionChanged = (new_solution) => {
     return {
         type: 'CLAIM_HANDLE_NEW_SOLUTION_CHANGED',
         payload: new_solution,
         info: 'This action is used to ...'
     }
 };
-export const newCommentChanged = (new_comment) =>{
+export const newCommentChanged = (new_comment) => {
     return {
         type: 'CLAIM_HANDLE_NEW_COMMENT_CHANGED',
         payload: new_comment,
         info: 'This action is used to ...'
     }
 };
-export const etatChanged = (etat) =>{
+export const etatChanged = (etat) => {
     return {
         type: 'CLAIM_HANDLE_ETAT_CHANGED',
         payload: etat,
@@ -302,63 +309,63 @@ export const extrasChanged = (extras) => {
         info: 'This action is used to ...'
     }
 };
-export const etat2Changed = (etat2) =>{
+export const etat2Changed = (etat2) => {
     return {
         type: 'CLAIM_HANDLE_ETAT2_CHANGED',
         payload: etat2,
         info: 'This action is used to ...'
     }
 };
-export const etat3Changed = (etat3) =>{
+export const etat3Changed = (etat3) => {
     return {
         type: 'CLAIM_HANDLE_ETAT3_CHANGED',
         payload: etat3,
         info: 'This action is used to ...'
     }
 };
-export const etat4Changed = (etat4) =>{
+export const etat4Changed = (etat4) => {
     return {
         type: 'CLAIM_HANDLE_ETAT4_CHANGED',
         payload: etat4,
         info: 'This action is used to ...'
     }
 };
-export const anonymatChanged = (anonymat) =>{
+export const anonymatChanged = (anonymat) => {
     return {
         type: 'CLAIM_HANDLE_ANONYMAT_CHANGED',
         payload: anonymat,
         info: 'This action is used to ...'
     }
 };
-export const transmittedChanged = (transmitted) =>{
+export const transmittedChanged = (transmitted) => {
     return {
         type: 'CLAIM_HANDLE_TRANSMITTED_CHANGED',
         payload: transmitted,
         info: 'This action is used to ...'
     }
 };
-export const transmittedToChanged = (transmittedTo) =>{
+export const transmittedToChanged = (transmittedTo) => {
     return {
         type: 'CLAIM_HANDLE_TRANSMITTED_TO_CHANGED',
         payload: transmittedTo,
         info: 'This action is used to ...'
     }
 };
-export const transmittedByChanged = (transmittedBy) =>{
+export const transmittedByChanged = (transmittedBy) => {
     return {
         type: 'CLAIM_HANDLE_TRANSMITTED_BY_CHANGED',
         payload: transmittedBy,
         info: 'This action is used to ...'
     }
 };
-export const sessionChanged = (session) =>{
+export const sessionChanged = (session) => {
     return {
         type: 'CLAIM_HANDLE_SESSION_CHANGED',
         payload: session,
         info: 'This action is used to ...'
     }
 };
-export const solutionExistantChanged = (solutionExistant) =>{
+export const solutionExistantChanged = (solutionExistant) => {
     return {
         type: 'CLAIM_HANDLE_SOLUTION_EXISTANT_CHANGED',
         payload: solutionExistant,

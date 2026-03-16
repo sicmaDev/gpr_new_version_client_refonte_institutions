@@ -39,6 +39,13 @@ export const addressChanged = (address) => {
         info: 'This action is used to ...'
     }
 };
+export const emailChanged = (email) => {
+    return {
+        type: 'SUGGESTION_RECORD_EMAIL_CHANGED',
+        payload: email,
+        info: 'This action is used to ...'
+    }
+};
 export const phoneChanged = (phone) => {
     return {
         type: 'SUGGESTION_RECORD_PHONE_CHANGED',

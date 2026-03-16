@@ -129,63 +129,63 @@ export const reset = () => {
         info: 'This action is used to ...'
     }
 };
-export const itemsChanged = (items) =>{
+export const itemsChanged = (items) => {
     return {
         type: 'CLAIM_APPRAISE_ITEMS_CHANGED',
         payload: items,
         info: 'This action is used to ...'
     }
 };
-export const agentsChanged = (agents) =>{
+export const agentsChanged = (agents) => {
     return {
         type: 'CLAIM_APPRAISE_AGENTS_CHANGED',
         payload: agents,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemChanged = (selectedItem) =>{
+export const selectedItemChanged = (selectedItem) => {
     return {
         type: 'CLAIM_APPRAISE_SELECTED_ITEM_CHANGED',
         payload: selectedItem,
         info: 'This action is used to ...'
     }
 };
-export const solutionChanged = (solution) =>{
+export const solutionChanged = (solution) => {
     return {
         type: 'CLAIM_APPRAISE_SOLUTION_CHANGED',
         payload: solution,
         info: 'This action is used to ...'
     }
 };
-export const solutionIdChanged = (solutionId) =>{
+export const solutionIdChanged = (solutionId) => {
     return {
         type: 'CLAIM_APPRAISE_SOLUTION_ID_CHANGED',
         payload: solutionId,
         info: 'This action is used to ...'
     }
 };
-export const commentChanged = (comment) =>{
+export const commentChanged = (comment) => {
     return {
         type: 'CLAIM_APPRAISE_COMMENT_CHANGED',
         payload: comment,
         info: 'This action is used to ...'
     }
 };
-export const commentaChanged = (commenta) =>{
+export const commentaChanged = (commenta) => {
     return {
         type: 'CLAIM_APPRAISE_COMMENTA_CHANGED',
         payload: commenta,
         info: 'This action is used to ...'
     }
 };
-export const statusChanged = (status) =>{
+export const statusChanged = (status) => {
     return {
         type: 'CLAIM_APPRAISE_STATUS_CHANGED',
         payload: status,
         info: 'This action is used to ...'
     }
 };
-export const motifChanged = (motif) =>{
+export const motifChanged = (motif) => {
     return {
         type: 'CLAIM_APPRAISE_MOTIF_CHANGED',
         payload: motif,
@@ -248,42 +248,42 @@ export const appraisalChanged = (appraisal) => {
         info: 'This action is used to ...'
     }
 };
-export const selectedFilesReset = (selectedFiles) =>{
+export const selectedFilesReset = (selectedFiles) => {
     return {
         type: 'CLAIM_APPRAISE_SELECTED_FILES_RESET',
         payload: selectedFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemFilesChanged = (selectedItemFiles) =>{
+export const selectedItemFilesChanged = (selectedItemFiles) => {
     return {
         type: 'CLAIM_APPRAISE_SELECTED_ITEM_FILES_CHANGED',
         payload: selectedItemFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemAudioChanged = (selectedItemAudio) =>{
+export const selectedItemAudioChanged = (selectedItemAudio) => {
     return {
         type: 'CLAIM_APPRAISE_SELECTED_ITEM_AUDIO_CHANGED',
         payload: selectedItemAudio,
         info: 'This action is used to ...'
     }
 };
-export const authorizeChanged = (item) =>{
+export const authorizeChanged = (item) => {
     return {
         type: 'CLAIM_APPRAISE_AUTHORIZE',
         payload: item,
         info: 'This action is used to ...'
     }
 };
-export const etatChanged = (etat) =>{
+export const etatChanged = (etat) => {
     return {
         type: 'CLAIM_APPRAISE_ETAT_CHANGED',
         payload: etat,
         info: 'This action is used to ...'
     }
 };
-export const etat2Changed = (etat2) =>{
+export const etat2Changed = (etat2) => {
     return {
         type: 'CLAIM_APPRAISE_ETAT2_CHANGED',
         payload: etat2,
@@ -301,6 +301,13 @@ export const codeClientChanged = (codeClient) => {
     return {
         type: 'CLAIM_APPRAISE_CODE_CLIENT_CHANGED',
         payload: codeClient,
+        info: 'This action is used to ...'
+    }
+};
+export const emailChanged = (email) => {
+    return {
+        type: 'CLAIM_APPRAISE_EMAIL_CHANGED',
+        payload: email,
         info: 'This action is used to ...'
     }
 };

@@ -15,6 +15,10 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
 import { modalify } from "../../Utils/modal";
+import moment from "moment";
+import "moment/locale/fr";
+
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import {
     addressChanged,
     claimRecordErrors,
@@ -69,9 +73,9 @@ import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 // import DateInput from "../ui/DateInput";
 //import IntlTelInput from 'react-intl-tel-input';
 //import 'react-intl-tel-input/dist/main.css';
-import moment from "moment";
-import { reset } from "../../redux/actions/WhatsappActions";
 
+import { reset } from "../../redux/actions/WhatsappActions";
+moment.locale("fr");
 
 registerLocale('fr', fr)
 
@@ -176,7 +180,7 @@ const EnregistrerDenonciation = (props) => {
     const [showAudioPlayer, setAudioPlayer] = useState("");
     const [currentAudio, setCurrentAudio] = useState("");
     const [clearAudio, setClearAudio] = useState(0)
-
+    const [showSmsBox, setShowSmsBox] = useState(false);
     // whatsapp
 
     useEffect(() => {
@@ -514,6 +518,8 @@ const EnregistrerDenonciation = (props) => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
+        setShowSmsBox(false);
+        setOpen(false);
         if (handleValidation()) {
             const formData = new FormData();
 
@@ -647,7 +653,13 @@ const EnregistrerDenonciation = (props) => {
                         onClick={(e) => {
                             e.preventDefault();
                             if (handleValidation()) {
-                                handleSubmit(e)
+                                // console.log("mode",mode)
+                                if (mode === 1) {
+                                    setShowSmsBox(true);
+                                    setOpen(true);
+                                } else {
+                                    handleSubmit();
+                                }
                             }
                             props.claimRecordErrors(errors);
                         }}
@@ -694,10 +706,23 @@ const EnregistrerDenonciation = (props) => {
                         </LoadingButton> : ""}
 
                     <LoadingButton
+                        // onClick={(e) => {
+                        //     e.preventDefault();
+                        //     if (handleValidation()) {
+                        //         handleSubmit(e)
+                        //     }
+                        //     props.claimRecordErrors(errors);
+                        // }}
+
                         onClick={(e) => {
                             e.preventDefault();
                             if (handleValidation()) {
-                                handleSubmit(e)
+                                if (mode === 1) {
+                                    setShowSmsBox(true);
+                                    setOpen(true);
+                                } else {
+                                    handleSubmit(e);
+                                }
                             }
                             props.claimRecordErrors(errors);
                         }}
@@ -1122,6 +1147,202 @@ const EnregistrerDenonciation = (props) => {
     return (
         //  'Enregistrer dénonciation'
         <div id="main">
+
+            {showSmsBox && (
+                <div>
+                    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+
+                        <DialogTitle style={{ borderBottom: "1px solid #e0e0e0", fontSize: "15px", fontWeight: "600", padding: "12px 16px" }}>
+                            Confirmation de la Dénonciation
+                        </DialogTitle>
+
+                        <DialogContent style={{ padding: "16px", maxHeight: "65vh", overflowY: "auto" }}>
+
+
+                            <div style={{ border: "1px solid #e0e0e0", borderRadius: "6px", marginBottom: "16px" }}>
+
+                                <div style={{ backgroundColor: "#f5f5f5", padding: "8px 14px", borderBottom: "1px solid #e0e0e0", display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <SupportAgentIcon style={{ fontSize: "18px", color: "#616161" }} />
+                                    <span style={{ color: "#424242", fontWeight: "600", fontSize: "14px" }}>
+                                        Résumé de la dénonciation
+                                    </span>
+                                </div>
+
+                                <div style={{ padding: "4px 14px" }}>
+
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Produit</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.productLibelle}</span>
+                                    </div>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Catégorie</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.subjectLibelle}</span>
+                                    </div>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Motif</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.underSubjectLibelle}</span>
+                                    </div>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Point de service</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.unitLibelle}</span>
+                                    </div>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Date de réception</span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>
+                                            {props.recorded_at
+                                                ? moment(props.recorded_at, "DD-MM-YYYY HH:mm").format("DD MMMM YYYY [à] HH:mm")
+                                                : "—"}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
+                                            Contenu
+                                        </span>
+                                        <span style={{ fontWeight: "500", fontSize: "13px", flex: 1 }}>
+                                            {props.content && props.content !== "#ReclamationAudio" && (
+                                                <span>{props.content}</span>
+                                            )}
+
+                                            {audio != null && (
+                                                <div style={{ marginTop: "4px" }}>
+                                                    <span style={{ fontSize: "12px", color: "#757575", display: "block", marginBottom: "4px" }}>
+                                                        Audio enregistré
+                                                    </span>
+                                                    <audio controls style={{ width: "100%", height: "36px" }}>
+                                                        <source src={URL.createObjectURL(audio)} type="audio/ogg" />
+                                                    </audio>
+                                                </div>
+                                            )}
+
+                                            {props.selectedItemAudio && props.selectedItemAudio.length > 0 && (
+                                                props.selectedItemAudio.map((audioItem, index) => (
+                                                    <div key={index} style={{ marginTop: "4px" }}>
+                                                        <span style={{ fontSize: "12px", color: "#757575", display: "block", marginBottom: "4px" }}>
+                                                            Audio sauvegardé {index + 1}
+                                                        </span>
+                                                        <audio controls style={{ width: "100%", height: "36px" }}>
+                                                            <source
+                                                                src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))}
+                                                                type="audio/ogg"
+                                                            />
+                                                        </audio>
+                                                    </div>
+                                                ))
+                                            )}
+
+
+                                            {!props.content && audio == null && (!props.selectedItemAudio || props.selectedItemAudio.length === 0) && (
+                                                <span style={{ color: "#bdbdbd" }}>—</span>
+                                            )}
+
+                                        </span>
+                                    </div>
+
+
+
+                                    {files && files.length > 0 && (
+                                        <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                            <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
+                                                Fichiers joints
+                                            </span>
+                                            <div style={{ flex: 1 }}>
+                                                {Array.from(files).map((file, index) => (
+                                                    <div key={index} style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "space-between",
+                                                        padding: "4px 8px",
+                                                        marginBottom: "4px",
+                                                        backgroundColor: "#f9f9f9",
+                                                        borderRadius: "4px",
+                                                        border: "1px solid #eeeeee"
+                                                    }}>
+                                                        <span style={{ fontSize: "12px", color: "#424242", flex: 1, marginRight: "8px" }}>
+                                                            {file.name}
+                                                        </span>
+                                                        <a
+                                                            href={URL.createObjectURL(file)}
+                                                            download={file.name}
+                                                            style={{
+                                                                fontSize: "12px",
+                                                                color: "#1e2188",
+                                                                textDecoration: "none",
+                                                                whiteSpace: "nowrap"
+                                                            }}
+                                                        >
+                                                            Télécharger
+                                                        </a>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+
+                                    {props.selectedItemFiles && props.selectedItemFiles.length > 0 && (
+                                        <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                                            <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
+                                                Fichiers joints
+                                            </span>
+                                            <div style={{ flex: 1 }}>
+                                                {props.selectedItemFiles.map((file, index) => (
+                                                    <div key={index} style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "space-between",
+                                                        padding: "4px 8px",
+                                                        marginBottom: "4px",
+                                                        backgroundColor: "#f9f9f9",
+                                                        borderRadius: "4px",
+                                                        border: "1px solid #eeeeee"
+                                                    }}>
+                                                        <span style={{ fontSize: "12px", color: "#424242", flex: 1, marginRight: "8px" }}>
+                                                            {file.name}
+                                                        </span>
+                                                        <a
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                downloadFillesApi(file.id, file.name);
+                                                            }}
+                                                            style={{
+                                                                fontSize: "12px",
+                                                                color: "#1e2188",
+                                                                textDecoration: "none",
+                                                                whiteSpace: "nowrap",
+                                                                cursor: "pointer"
+                                                            }}
+                                                        >
+                                                            Télécharger
+                                                        </a>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </div>
+
+                            </div>
+                        </DialogContent>
+
+
+                        <DialogActions style={{ borderTop: "1px solid #e0e0e0", padding: "10px 16px", gap: "8px" }}>
+                            <form onSubmit={handleSubmit} style={{ flex: 1, margin: 0 }}>
+                                <button
+                                    type="submit"
+                                    className="btn waves-effect waves-light btn-small red-text red lighten-4"
+                                    style={{ width: "100%" }}
+                                >
+                                    Enregistrer
+                                </button>
+                            </form>
+                        </DialogActions>
+
+                    </Dialog>
+
+                </div>
+            )}
+
             {showAudioBox && (
                 <div>
                     <Dialog

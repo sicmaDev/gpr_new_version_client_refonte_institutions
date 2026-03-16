@@ -9,6 +9,7 @@ const initialState = {
   gender: "",
   language: "",
   dossierimf: "",
+  email:"",
   crew: "",
   code: "",
   recorded_at: "",
@@ -95,6 +96,11 @@ const claimRecordReducer = (state = initialState, action) => {
       return {
         ...state,
         code: action.payload,
+      };
+    case "CLAIM_RECORD_EMAIL_CHANGED":
+      return {
+        ...state,
+        email: action.payload,
       };
     case "CLAIM_RECORD_RECORDED_AT_CHANGED":
       return {

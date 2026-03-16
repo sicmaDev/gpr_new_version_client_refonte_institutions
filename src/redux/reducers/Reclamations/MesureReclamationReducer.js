@@ -10,6 +10,7 @@ const initialState = {
     language: "",
     dossierimf: "",
     code: "",
+    email: "",
     recorded_at: "",
     collect: "",
     subject: "",
@@ -35,7 +36,7 @@ const initialState = {
     etat2: false,
     resolved_at: "",
     resolved_by: "",
-    authorize:true,
+    authorize: true,
     agents: [],
     items: [],
     selectedItem: {},
@@ -244,11 +245,11 @@ const MesurerReclamationReducer = (state = initialState, action) => {
                 ...state,
                 selectedItemFiles: action.payload,
             };
-            case "CLAIM_APPRAISE_SELECTED_ITEM_AUDIO_CHANGED":
-                return {
-                  ...state,
-                  selectedItemAudio: action.payload,
-                };
+        case "CLAIM_APPRAISE_SELECTED_ITEM_AUDIO_CHANGED":
+            return {
+                ...state,
+                selectedItemAudio: action.payload,
+            };
         case 'CLAIM_APPRAISE_AUTHORIZE':
             return {
                 ...state,
@@ -273,6 +274,11 @@ const MesurerReclamationReducer = (state = initialState, action) => {
             return {
                 ...state,
                 codeClient: action.payload,
+            };
+        case 'CLAIM_APPRAISE_EMAIL_CHANGED':
+            return {
+                ...state,
+                email: action.payload,
             };
         default:
             return state

@@ -59,12 +59,14 @@ import {
   transmittedToChanged,
   setReaffect,
   codeClientChanged,
+  emailChanged,
   transmittedByChanged,
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import EmailIcon from '@mui/icons-material/Email';
 import SaveIcon from "@mui/icons-material/Save";
 import { useParams } from "react-router-dom";
 import {
@@ -268,7 +270,7 @@ const TraiterReclamation = (props) => {
   const handleCheck = () => {
     setChecked(!checked);
   };
-  let dimf, crew;
+  let dimf, crew, emailDisplay;
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
       ? JSON.parse(loadItemFromSessionStorage("app-user"))
@@ -302,7 +304,7 @@ const TraiterReclamation = (props) => {
     isRa,
     raCanOpenSession,
   } = usePermissions(user, props);
- 
+
   let handlingForms;
   const [agentsMailOptions, setAgentsMailOptions] = useState([]);
 
@@ -660,6 +662,7 @@ const TraiterReclamation = (props) => {
             data.language.libelle ? data.language.libelle : ""
           );
           props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+          props.emailChanged(data.email ? data.email : "");
           props.codeChanged(data.code ? data.code : "");
           props.codeClientChanged(data.codeClient ? data.codeClient : "");
           props.recordedAtChanged(
@@ -1203,6 +1206,7 @@ const TraiterReclamation = (props) => {
     props.genderChanged("");
     props.languageChanged("");
     props.dossierimfChanged("");
+    props.emailChanged("");
     props.collectChanged("");
     props.subjectChanged("");
     props.underSubjectChanged("");
@@ -1596,7 +1600,7 @@ const TraiterReclamation = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
 
     setDataRow(data);
-
+    console.log(data)
     handleClickOpen();
     clearComponentState();
     // console.log("donnees",data)
@@ -1715,6 +1719,7 @@ const TraiterReclamation = (props) => {
     props.genderChanged(data.gender ? data.gender : "");
     props.languageChanged(data?.language?.libelle ? data.language.libelle : "");
     props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+    props.emailChanged(data.email ? data.email : "");
     props.codeChanged(data.code ? data.code : "");
     props.codeClientChanged(data.codeClient ? data.codeClient : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
@@ -2583,24 +2588,24 @@ const TraiterReclamation = (props) => {
                                               </div>
                                             ) : (
                                               <>
-                                              {(showConfirmChooseSolution && isUserOpenSession) && (
-                                                <button
-                                                  onClick={
-                                                    handleChooseVoteConfirm
-                                                  }
-                                                  className=""
-                                                  style={{
-                                                    color: "white",
-                                                    fontSize: "16px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    fontWeight: "bold",
-                                                    backgroundColor:
-                                                      "transparent",
-                                                  }}
-                                                >
-                                                  Utiliser comme solution
-                                                </button>
+                                                {(showConfirmChooseSolution && isUserOpenSession) && (
+                                                  <button
+                                                    onClick={
+                                                      handleChooseVoteConfirm
+                                                    }
+                                                    className=""
+                                                    style={{
+                                                      color: "white",
+                                                      fontSize: "16px",
+                                                      border: "none",
+                                                      cursor: "pointer",
+                                                      fontWeight: "bold",
+                                                      backgroundColor:
+                                                        "transparent",
+                                                    }}
+                                                  >
+                                                    Utiliser comme solution
+                                                  </button>
                                                 )}
                                               </>
                                             )}
@@ -4167,7 +4172,7 @@ const TraiterReclamation = (props) => {
                     </details>
                   </div>
                 </div>
-                 {afForm}
+                {afForm}
               </>
             );
           }
@@ -5201,6 +5206,18 @@ const TraiterReclamation = (props) => {
                 <div className="col l6 s12 df pb-2" id="gender">
                   <WcIcon sx={{ mr: 2 }} /> {props.gender}
                 </div>
+                {
+                  (emailDisplay =
+                    props.email !== "" ? (
+                      <>
+                        <div className="col l6 s12 df pb-2" id="email">
+                          <EmailIcon sx={{ mr: 2 }} /> {props.email}
+                        </div>
+                      </>
+                    ) : (
+                      ""
+                    ))
+                }
 
                 <div className="col l6 s12 df pb-2" id="language">
                   <LanguageIcon sx={{ mr: 2 }} /> {props.language}
@@ -5283,12 +5300,12 @@ const TraiterReclamation = (props) => {
   } else {
     transmettre = "";
   }
- 
+
   // Vérifier si l'utilisateur est invité ou membre de la session
-  
+
   // Peut ouvrir la session si auteur avec autorisation ou affecté
   const canOpenSession = isAuthorWithAuthorization || isAffectedUser || raCanOpenSession;
- 
+
   // Détermination du bouton
   if (canOpenSession && (!props.session || props.session.status !== "OPEN")) {
     // Bouton "Ouvrir la session"
@@ -6360,6 +6377,7 @@ const mapStateToProps = (state) => {
     reaffect: state.claim_handle.reaffect,
     handled_message: state.claim_handle.handled_message,
     handled_delai: state.claim_handle.handled_delai,
+    email: state.claim_handle.email,
   };
 };
 
@@ -6394,6 +6412,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     dossierimfChanged: (dossierimf) => {
       dispatch(dossierimfChanged(dossierimf));
+    },
+    emailChanged: (email) => {
+      dispatch(emailChanged(email));
     },
     codeChanged: (code) => {
       dispatch(codeChanged(code));

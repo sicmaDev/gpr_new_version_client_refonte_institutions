@@ -9,6 +9,7 @@ const initialState = {
     gender: "",
     language: "",
     dossierimf: "",
+    email: "",
     selectedItemAudio:[],
     code: "",
     recorded_at: "",
@@ -67,6 +68,11 @@ const EnregistrementSuggestionReducer = (state = initialState, action) => {
             return {
                 ...state,
                 address: action.payload,
+            };
+        case 'SUGGESTION_RECORD_EMAIL_CHANGED':
+            return {
+                ...state,
+                email: action.payload,
             };
         case 'SUGGESTION_RECORD_PHONE_CHANGED':
             return {
