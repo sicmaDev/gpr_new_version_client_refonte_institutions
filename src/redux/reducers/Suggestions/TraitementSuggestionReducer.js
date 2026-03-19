@@ -7,6 +7,7 @@ const initialState = {
     address: "",
     phone: "",
     gender: "",
+    email: "",
     language: "",
     dossierimf: "",
     code: "",
@@ -33,7 +34,7 @@ const initialState = {
     selectedFiles: [],
     selectedItemFiles: [],
     selectedItemAudio: [],
-    showSelectPrintItem : false
+    showSelectPrintItem: false
 };
 const TraitementSuggestionReducer = (state = initialState, action) => {
     switch (action.type) {
@@ -132,12 +133,17 @@ const TraitementSuggestionReducer = (state = initialState, action) => {
                 ...state,
                 comment: action.payload,
             };
+        case 'SUGGESTION_HANDLE_EMAIL_CHANGED':
+            return {
+                ...state,
+                email: action.payload,
+            };
         case 'SUGGESTION_HANDLE_STATUS_CHANGED':
             return {
                 ...state,
                 status: action.payload,
             };
-       
+
         case 'SUGGESTION_HANDLE_CREATED_BY_CHANGED':
             return {
                 ...state,
@@ -148,7 +154,7 @@ const TraitementSuggestionReducer = (state = initialState, action) => {
                 ...state,
                 created_at: action.payload,
             };
-        
+
         case 'SUGGESTION_HANDLE_HANDLED_BY_CHANGED':
             return {
                 ...state,
@@ -159,7 +165,7 @@ const TraitementSuggestionReducer = (state = initialState, action) => {
                 ...state,
                 handled_at: action.payload,
             };
-       
+
         case 'SUGGESTION_HANDLE_RESOLVED_BY_CHANGED':
             return {
                 ...state,
@@ -201,9 +207,9 @@ const TraitementSuggestionReducer = (state = initialState, action) => {
                 selectedItemAudio: action.payload,
             };
         case 'SUGGESTION_HANDLE_SHOW_SELECT_PRINT_ITEMS':
-            return{
+            return {
                 ...state,
-                showSelectPrintItem:!state.showSelectPrintItem
+                showSelectPrintItem: !state.showSelectPrintItem
             }
         case 'SUGGESTION_HANDLE_CREW_CHANGED':
             return {

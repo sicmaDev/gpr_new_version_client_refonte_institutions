@@ -67,6 +67,13 @@ export const dossierimfChanged = (dossierimf) => {
         info: 'This action is used to ...'
     }
 };
+export const emailChanged = (email) => {
+    return {
+        type: 'SUGGESTION_LIST_EMAIL_CHANGED',
+        payload: email,
+        info: 'This action is used to ...'
+    }
+};
 export const codeChanged = (code) => {
     return {
         type: 'SUGGESTION_LIST_CODE_CHANGED',

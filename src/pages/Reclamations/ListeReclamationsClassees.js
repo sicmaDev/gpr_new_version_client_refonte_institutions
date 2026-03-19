@@ -31,6 +31,7 @@ import {
   unitChanged,
   collectChanged,
   dossierimfChanged,
+  emailChanged,
   newSolutionChanged,
   newCommentChanged,
   claimAssuranceErrors,
@@ -127,6 +128,7 @@ import ee from "event-emitter";
 import { modalify } from "../../Utils/modal";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from "@mui/icons-material/Save";
+import EmailIcon from '@mui/icons-material/Email';
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 const styles = {
   control: (base) => ({
@@ -163,7 +165,7 @@ const ListeReclamationsClassees = (props) => {
   const handleClose = () => {
     setOpen(false);
   };
-  let dimf, crew;
+  let dimf, crew, emailDisplay;
 
   useEffect(() => {
     KTApp.blockPage({
@@ -173,9 +175,9 @@ const ListeReclamationsClassees = (props) => {
       message: 'En cours de chargement...'
     })
     setIsLoading(true);
-    
+
     props.itemsChanged([]);
-    listeByStatut(props, "CLASSED").then((r) => {}).finally(() => {
+    listeByStatut(props, "CLASSED").then((r) => { }).finally(() => {
       setIsLoading(false);
       KTApp.unblockPage();
     });
@@ -249,7 +251,7 @@ const ListeReclamationsClassees = (props) => {
     return statusElt;
   };
 
-  useEffect(() => {}, [showAudioPlayer, currentAudio]);
+  useEffect(() => { }, [showAudioPlayer, currentAudio]);
 
   let content = [];
   content = props.items;
@@ -308,7 +310,7 @@ const ListeReclamationsClassees = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let codeClient = claim.codeClient !== "" ? claim.codeClient : ""; 
+        let codeClient = claim.codeClient !== "" ? claim.codeClient : "";
         return codeClient;
       },
     },
@@ -428,7 +430,7 @@ const ListeReclamationsClassees = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     handleClickOpen();
-  
+
     switch (data.objet.risqueLevel) {
       case "MINEUR":
         if (hbt.includes("H2")) {
@@ -464,6 +466,7 @@ const ListeReclamationsClassees = (props) => {
     props.genderChanged(data.gender ? data.gender : "");
     props.languageChanged(data.language.libelle ? data.language.libelle : "");
     props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+    props.emailChanged(data.email ? data.email : "");
     props.codeChanged(data.code ? data.code : "");
     props.codeClientChanged(data.codeClient ? data.codeClient : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
@@ -525,6 +528,7 @@ const ListeReclamationsClassees = (props) => {
     props.subjectChanged("");
     props.underSubjectChanged("");
     props.dossierimfChanged("");
+    props.emailChanged("");
     props.codeChanged("");
     props.codeClientChanged("");
     props.recordedAtChanged("");
@@ -834,12 +838,12 @@ const ListeReclamationsClassees = (props) => {
     let solutions =
       interne === false
         ? Array.from(
-            props.solution.filter((e) => {
-              return (
-                e.status === "APPROVED" && e.satisfactionMeasureDto !== null
-              );
-            })
-          )
+          props.solution.filter((e) => {
+            return (
+              e.status === "APPROVED" && e.satisfactionMeasureDto !== null
+            );
+          })
+        )
         : Array.from(props.solution);
 
     let couleurs = [
@@ -877,10 +881,10 @@ const ListeReclamationsClassees = (props) => {
                   solution.satisfactionMeasureDto.status === "SATISFIED"
                     ? "Satisfait"
                     : solution.satisfactionMeasureDto.status === "UNSATISFIED"
-                    ? "Non satisfait"
-                    : solution.satisfactionMeasureDto.status === "PARTIAL"
-                    ? "Partiellement satisfait"
-                    : "";
+                      ? "Non satisfait"
+                      : solution.satisfactionMeasureDto.status === "PARTIAL"
+                        ? "Partiellement satisfait"
+                        : "";
                 mesure = (
                   <>
                     <Typography component="div">
@@ -1020,7 +1024,7 @@ const ListeReclamationsClassees = (props) => {
 
                             {solution.satisfactionMeasureDto ? (
                               solution.satisfactionMeasureDto.commentaire !==
-                              null ? (
+                                null ? (
                                 <div className="col l12 s12 pb-2" id="content">
                                   <div className="df pb-2">
                                     <FormatQuoteIcon sx={{ mr: 2 }} />{" "}
@@ -1140,7 +1144,7 @@ const ListeReclamationsClassees = (props) => {
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
 
   return (
-    <div id="main">      
+    <div id="main">
       <audio ref={audioRef} src={currentAudio} hidden />
       <div className="row">
         <div className="col s12">
@@ -1247,6 +1251,18 @@ const ListeReclamationsClassees = (props) => {
                                     >
                                       <WcIcon sx={{ mr: 2 }} /> {props.gender}
                                     </div>
+                                    {
+                                      (emailDisplay =
+                                        props.email !== "" ? (
+                                          <>
+                                            <div className="col l6 s12 df pb-2" id="email">
+                                              <EmailIcon sx={{ mr: 2 }} /> {props.email}
+                                            </div>
+                                          </>
+                                        ) : (
+                                          ""
+                                        ))
+                                    }
 
                                     <div
                                       className="col l6 s12 df pb-2"
@@ -1665,6 +1681,7 @@ const mapStateToProps = (state) => {
     gender: state.claim_assurance.gender,
     language: state.claim_assurance.language,
     dossierimf: state.claim_assurance.dossierimf,
+    email: state.claim_assurance.email,
     code: state.claim_assurance.code,
     codeClient: state.claim_assurance.codeClient,
     recorded_at: state.claim_assurance.recorded_at,
@@ -1735,6 +1752,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     dossierimfChanged: (dossierimf) => {
       dispatch(dossierimfChanged(dossierimf));
+    },
+    emailChanged: (email) => {
+      dispatch(emailChanged(email));
     },
     codeChanged: (code) => {
       dispatch(codeChanged(code));

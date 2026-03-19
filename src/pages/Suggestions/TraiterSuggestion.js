@@ -45,6 +45,7 @@ import {
   convertedByChanged,
   extrasChanged,
   codeClientChanged,
+  emailChanged
 } from "../../redux/actions/Suggestions/TraitementSuggestionActions";
 import { connect } from "react-redux";
 import {
@@ -53,7 +54,7 @@ import {
   handlePrintAvance,
 } from "../../Utils/tables";
 
-import { 
+import {
   Card,
   Box,
   CardContent,
@@ -96,6 +97,7 @@ import { licenseInfo } from "../../apis/LoginApi";
 import { downloadAudioApi } from "../../apis/Denonciations/DenonciationsApi";
 import { WarningAmber } from '@mui/icons-material';
 import WarningIcon from '@mui/icons-material/Warning';
+import EmailIcon from '@mui/icons-material/Email';
 
 
 const styles = {
@@ -112,7 +114,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const TraiterSuggestion = (props) => {
-  let dimf, crew;
+  let dimf, crew, emailDisplay;
   const [open, setOpen] = React.useState(false);
   const [interne, setInterne] = React.useState(false);
   const [impression, setImpression] = React.useState(false);
@@ -122,7 +124,7 @@ const TraiterSuggestion = (props) => {
     setOpen(true);
   };
 
-  const [isLoading, setIsLoading] = useState(false);   
+  const [isLoading, setIsLoading] = useState(false);
 
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
@@ -137,7 +139,7 @@ const TraiterSuggestion = (props) => {
 
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
-  
+
   const getStatusLabel = (status) => {
     var statusElt = status
     switch (status) {
@@ -248,7 +250,7 @@ const TraiterSuggestion = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let codeClient = claim.codeClient !== "" ? claim.codeClient : ""; 
+        let codeClient = claim.codeClient !== "" ? claim.codeClient : "";
         return codeClient;
       },
     },
@@ -259,7 +261,7 @@ const TraiterSuggestion = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let nom = (claim.clientFirstAndLastName !== "" && claim.clientFirstAndLastName !== null) ? claim.clientFirstAndLastName : <i>Anonyme</i>; 
+        let nom = (claim.clientFirstAndLastName !== "" && claim.clientFirstAndLastName !== null) ? claim.clientFirstAndLastName : <i>Anonyme</i>;
         return nom;
       },
     },
@@ -360,6 +362,7 @@ const TraiterSuggestion = (props) => {
     props.genderChanged("");
     props.languageChanged("");
     props.dossierimfChanged("");
+    props.emailChanged("");
     props.codeChanged("");
     props.recordedAtChanged("");
     props.collectChanged("");
@@ -384,7 +387,7 @@ const TraiterSuggestion = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-  
+
     handleClickOpen();
 
     clearComponentState();
@@ -395,6 +398,7 @@ const TraiterSuggestion = (props) => {
     props.genderChanged(data.gender ? data.gender : "");
     props.languageChanged(data.langue.libelle ? data.langue.libelle : "");
     props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+    props.emailChanged(data.email ? data.email : "");
     props.codeChanged(data.code ? data.code : "");
     props.codeClientChanged(data.codeClient ? data.codeClient : "");
     props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
@@ -461,10 +465,10 @@ const TraiterSuggestion = (props) => {
   };
 
   const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
-      <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
-        <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
-        {`Converti en suggestion par ${props.convertedBy} le ${formatDate4(props.convertedAt)}`}
-      </span>
+    <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
+      <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
+      {`Converti en suggestion par ${props.convertedBy} le ${formatDate4(props.convertedAt)}`}
+    </span>
   );
 
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
@@ -504,36 +508,36 @@ const TraiterSuggestion = (props) => {
 
                   {
                     // (actif !== undefined && actif)  ?
-                      <>
-                        <LoadingButton
-                          onClick={(e) => {
-                            handleTreatment(e, false)
-                          }}
+                    <>
+                      <LoadingButton
+                        onClick={(e) => {
+                          handleTreatment(e, false)
+                        }}
 
-                          className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
-                          loading={props.etat}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{ textTransform: "initial" }}
-                        >
-                          <span>Ne pas prendre en compte</span>
-                        </LoadingButton>
+                        className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                        loading={props.etat}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{ textTransform: "initial" }}
+                      >
+                        <span>Ne pas prendre en compte</span>
+                      </LoadingButton>
 
-                        <LoadingButton
-                          onClick={(e) => {
-                            handleTreatment(e, true)
-                          }}
-                          className="waves-effect waves-effect-b waves-light btn-small"
-                          loading={props.etat2}
-                          loadingPosition="end"
-                          endIcon={<SaveIcon />}
-                          variant="contained"
-                          sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-                        >
-                          <span>Prendre en compte</span>
-                        </LoadingButton>
-                      </>
+                      <LoadingButton
+                        onClick={(e) => {
+                          handleTreatment(e, true)
+                        }}
+                        className="waves-effect waves-effect-b waves-light btn-small"
+                        loading={props.etat2}
+                        loadingPosition="end"
+                        endIcon={<SaveIcon />}
+                        variant="contained"
+                        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                      >
+                        <span>Prendre en compte</span>
+                      </LoadingButton>
+                    </>
                     // :
                     // <div className="card-alert card red lighten-5">
                     //   <div className="card-content red-text">
@@ -553,10 +557,10 @@ const TraiterSuggestion = (props) => {
     details = ""
 
   }
-    
+
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
-  
+
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
       let icon = guessExtension(attachment);
       return (
@@ -681,7 +685,7 @@ const TraiterSuggestion = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-   
+
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
       return (
 
@@ -875,11 +879,11 @@ const TraiterSuggestion = (props) => {
                       <div className="col l6 s12 pb-5" id="ficheReclamation">
                         <div className="card-panel pb-5">
                           <div className="row" id="ententeFiche">
-                          <div className="col l6 s12" style={{ display: "flex", alignItems: "center" }}>
-                            <h5 className="card-title">
-                              Fiche de la suggestion
-                            </h5>                            
-                          </div>
+                            <div className="col l6 s12" style={{ display: "flex", alignItems: "center" }}>
+                              <h5 className="card-title">
+                                Fiche de la suggestion
+                              </h5>
+                            </div>
 
                           </div>
                           <div className="row">
@@ -927,6 +931,19 @@ const TraiterSuggestion = (props) => {
                                   >
                                     <WcIcon sx={{ mr: 2 }} /> {(props.gender !== "" && props.gender !== "NON_DEFINI") ? props.gender : <i>Non défini</i>}
                                   </div>
+                                  {
+                                    (emailDisplay =
+                                      props.email !== "" ? (
+                                        <>
+                                          <div className="col l6 s12 df pb-2" id="email">
+                                            <EmailIcon sx={{ mr: 2 }} /> {props.email}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        ""
+                                      ))
+                                  }
+
 
                                   <div
                                     className="col l6 s12 df pb-2"
@@ -1053,13 +1070,13 @@ const TraiterSuggestion = (props) => {
                                           : <></>
                                       })}
                                     </List>
-                                  </div>  
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                                                    
+
                         {/* file part */}
                         <div className="">
                           <div className="card-panel pb-5">
@@ -1085,7 +1102,7 @@ const TraiterSuggestion = (props) => {
                               </div>
                             </div></div>
                         </div>
-                        
+
                         {/* Audio part */}
                         <div className="">
                           <div className="card-panel pb-5">
@@ -1110,7 +1127,7 @@ const TraiterSuggestion = (props) => {
                                 {audioList}
                               </div>
                             </div></div>
-                        </div> 
+                        </div>
                       </div>
 
                       {/* second part */}
@@ -1155,13 +1172,14 @@ const mapStateToProps = (state) => {
     gender: state.suggestion_handle.gender,
     language: state.suggestion_handle.language,
     dossierimf: state.suggestion_handle.dossierimf,
+    email: state.suggestion_handle.email,
     code: state.suggestion_handle.code,
     codeClient: state.suggestion_handle.codeClient,
     recorded_at: state.suggestion_handle.recorded_at,
     collect: state.suggestion_handle.collect,
     product: state.suggestion_handle.product,
     unit: state.suggestion_handle.unit,
-    content: state.suggestion_handle.content, 
+    content: state.suggestion_handle.content,
     extras: state.suggestion_handle.extras,
     status: state.suggestion_handle.status,
     solution: state.suggestion_handle.solution,
@@ -1221,6 +1239,10 @@ const mapDispatchToProps = (dispatch) => {
     dossierimfChanged: (dossierimf) => {
       dispatch(dossierimfChanged(dossierimf));
     },
+    emailChanged: (email) => {
+      dispatch(emailChanged(email));
+    },
+
     codeChanged: (code) => {
       dispatch(codeChanged(code));
     },

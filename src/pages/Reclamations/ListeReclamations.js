@@ -60,6 +60,7 @@ import {
   underSubjectChanged,
   sessionChanged,
   extrasChanged,
+  emailChanged
 } from "../../redux/actions/Reclamations/ListeReclamationsActions";
 import http from "../../apis/http-common";
 import {
@@ -72,6 +73,7 @@ import {
   listeTousStatutsOffline,
 } from "../../apis/Reclamations/ReclamationsApi";
 import PrintIcon from "@mui/icons-material/Print";
+import EmailIcon from '@mui/icons-material/Email';
 import { connect } from "react-redux";
 
 // import { loadItemFromSessionStorage, today } from "../../utils/utils";
@@ -194,7 +196,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const ListeReclamations = (props) => {
-  let dimf, crew;
+  let dimf, crew, emailDisplay;
   const [open, setOpen] = React.useState(false);
   const [interne, setInterne] = React.useState(false);
   const [changeButtonPrint, setChangeButtonPrint] = useState(false);
@@ -652,6 +654,7 @@ const ListeReclamations = (props) => {
     props.genderChanged("");
     props.languageChanged("");
     props.dossierimfChanged("");
+    props.emailChanged("");
     props.subjectChanged("");
     props.codeChanged("");
     props.codeClientChanged("");
@@ -703,6 +706,7 @@ const ListeReclamations = (props) => {
       props.genderChanged(data.gender ? data.gender : "");
       props.languageChanged(data.language.libelle ? data.language.libelle : "");
       props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+      props.emailChanged(data.email ? data.email : "");
       props.codeChanged(data.code ? data.code : "");
       props.codeClientChanged(data.codeClient ? data.codeClient : "");
       props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
@@ -763,6 +767,7 @@ const ListeReclamations = (props) => {
           data.language.libelle ? data.language.libelle : ""
         );
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+        props.emailChanged(data.email ? data.email : "");
         props.codeChanged(data.code ? data.code : "");
         props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(
@@ -819,6 +824,7 @@ const ListeReclamations = (props) => {
         props.genderChanged(data.gender ? data.gender : "");
         props.crewChanged(data.crew ? data.crew : "");
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+        props.emailChanged(data.email ? data.email : "");
         props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(
           data.receiptDateTime ? data.receiptDateTime : ""
@@ -3125,6 +3131,19 @@ const ListeReclamations = (props) => {
                                     <WcIcon sx={{ mr: 2 }} /> {props.gender}
                                   </div>
 
+                                  {
+                                    (emailDisplay =
+                                      props.email !== "" ? (
+                                        <>
+                                          <div className="col l6 s12 df pb-2" id="email">
+                                            <EmailIcon sx={{ mr: 2 }} /> {props.email}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        ""
+                                      ))
+                                  }
+
                                   <div
                                     className="col l6 s12 df pb-2"
                                     id="language"
@@ -3479,12 +3498,12 @@ const ListeReclamations = (props) => {
                                   >
                                     <span>Générer le PV de la session</span>
                                   </LoadingButton>
-                                   
+
                                 ) : (
                                   ""
                                 )}
 
-                                {btnDelete}  
+                                {btnDelete}
                               </h5>
                             </div>
                           </div>
@@ -3520,6 +3539,7 @@ const mapStateToProps = (state) => {
     address: state.claim_list.address,
     phone: state.claim_list.phone,
     gender: state.claim_list.gender,
+    email: state.claim_list.email,
     language: state.claim_list.language,
     dossierimf: state.claim_list.dossierimf,
     code: state.claim_list.code,
@@ -3595,6 +3615,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     dossierimfChanged: (dossierimf) => {
       dispatch(dossierimfChanged(dossierimf));
+    },
+    emailChanged: (email) => {
+      dispatch(emailChanged(email));
     },
     codeChanged: (code) => {
       dispatch(codeChanged(code));

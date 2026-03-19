@@ -9,6 +9,7 @@ const initialState = {
     gender: "",
     language: "",
     dossierimf: "",
+    email: "",
     code: "",
     codeClient: "",
     recorded_at: "",
@@ -96,6 +97,11 @@ const ListeSuggestionsReducer = (state = initialState, action) => {
             return {
                 ...state,
                 codeClient: action.payload,
+            };
+        case 'SUGGESTION_LIST_EMAIL_CHANGED':
+            return {
+                ...state,
+                email: action.payload,
             };
         case 'SUGGESTION_LIST_RECORDED_AT_CHANGED':
             return {

@@ -32,6 +32,7 @@ import {
   statusChanged,
   collectChanged,
   dossierimfChanged,
+  emailChanged,
   unitChanged,
   createdByChanged,
   selectedFilesReset,
@@ -103,6 +104,7 @@ import { downloadAudioApi } from "../../apis/Denonciations/DenonciationsApi";
 import { WarningAmber } from '@mui/icons-material';
 import Tooltip from "@mui/material/Tooltip";
 import WarningIcon from '@mui/icons-material/Warning';
+import EmailIcon from '@mui/icons-material/Email';
 // import { downloadAudioApi, getDenunAudioApi } from "../../apis/Denonciations/DenonciationsApi";
 
 
@@ -120,7 +122,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const ListeSuggestions = (props) => {
-  let dimf, crew;
+  let dimf, crew, emailDisplay;
   const [open, setOpen] = React.useState(false);
   const [interne, setInterne] = React.useState(false);
   const [changeButtonPrint, setChangeButtonPrint] = useState(false);
@@ -370,6 +372,7 @@ const ListeSuggestions = (props) => {
     props.genderChanged("");
     props.languageChanged("");
     props.dossierimfChanged("");
+    props.emailChanged("");
     props.codeChanged("");
     props.codeClientChanged("");
     props.recordedAtChanged("");
@@ -405,6 +408,7 @@ const ListeSuggestions = (props) => {
       props.genderChanged(data.gender ? data.gender : "");
       props.languageChanged(data.langue.libelle ? data.langue.libelle : "");
       props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+      props.emailChanged(data.email ? data.email : "");
       props.crewChanged(data.crew ? data.crew : "");
       props.codeChanged(data.code ? data.code : "");
       props.codeClientChanged(data.codeClient ? data.codeClient : "");
@@ -434,6 +438,7 @@ const ListeSuggestions = (props) => {
         props.genderChanged(data.gender ? data.gender : "");
         props.languageChanged(data.langue.libelle ? data.langue.libelle : "");
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+        props.emailChanged(data.email ? data.email : "");
         props.crewChanged(data.crew ? data.crew : "");
         props.codeChanged(data.code ? data.code : "");
         props.codeClientChanged(data.codeClient ? data.codeClient : "");
@@ -464,6 +469,7 @@ const ListeSuggestions = (props) => {
         props.genderChanged(data.gender ? data.gender : "");
         props.crewChanged(data.crew ? data.crew : "");
         props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+        props.emailChanged(data.email ? data.email : "");
         props.codeChanged(data.code ? data.code : "");
         props.codeClientChanged(data.codeClient ? data.codeClient : "");
         props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
@@ -1455,6 +1461,19 @@ const ListeSuggestions = (props) => {
                                   >
                                     <WcIcon sx={{ mr: 2 }} /> {props.gender !== "" ? props.gender : <i>Non défini</i>}
                                   </div>
+                                  {
+                                    (emailDisplay =
+                                      props.email !== "" ? (
+                                        <>
+                                          <div className="col l6 s12 df pb-2" id="email">
+                                            <EmailIcon sx={{ mr: 2 }} /> {props.email}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        ""
+                                      ))
+                                  }
+
 
                                   <div
                                     className="col l6 s12 df pb-2"
@@ -1683,6 +1702,7 @@ const mapStateToProps = (state) => {
     gender: state.suggestion_list.gender,
     language: state.suggestion_list.language,
     dossierimf: state.suggestion_list.dossierimf,
+    email: state.suggestion_list.email,
     code: state.suggestion_list.code,
     codeClient: state.suggestion_list.codeClient,
     recorded_at: state.suggestion_list.recorded_at,
@@ -1746,6 +1766,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     dossierimfChanged: (dossierimf) => {
       dispatch(dossierimfChanged(dossierimf));
+    },
+    emailChanged: (email) => {
+      dispatch(emailChanged(email));
     },
     codeChanged: (code) => {
       dispatch(codeChanged(code));

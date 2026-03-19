@@ -36,6 +36,7 @@ const initialState = {
     appraised_at: "",
     appraised_by: "",
     appraisal: "",
+    email: "",
     resolved_at: "",
     resolved_by: "",
     external_remedies: "",
@@ -88,6 +89,11 @@ const ListeReclamationsReducer = (state = initialState, action) => {
             return {
                 ...state,
                 gender: action.payload,
+            };
+        case 'CLAIM_LIST_EMAIL_CHANGED':
+            return {
+                ...state,
+                email: action.payload,
             };
         case 'CLAIM_LIST_LANGUAGE_CHANGED':
             return {

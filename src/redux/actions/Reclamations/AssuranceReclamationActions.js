@@ -67,6 +67,13 @@ export const dossierimfChanged = (dossierimf) => {
         info: 'This action is used to ...'
     }
 };
+export const emailChanged = (email) => {
+    return {
+        type: 'CLAIM_ASSURANCE_EMAIL_CHANGED',
+        payload: email,
+        info: 'This action is used to ...'
+    }
+};
 export const codeChanged = (code) => {
     return {
         type: 'CLAIM_ASSURANCE_CODE_CHANGED',
@@ -129,63 +136,63 @@ export const reset = () => {
         info: 'This action is used to ...'
     }
 };
-export const itemsChanged = (items) =>{
+export const itemsChanged = (items) => {
     return {
         type: 'CLAIM_ASSURANCE_ITEMS_CHANGED',
         payload: items,
         info: 'This action is used to ...'
     }
 };
-export const agentsChanged = (agents) =>{
+export const agentsChanged = (agents) => {
     return {
         type: 'CLAIM_ASSURANCE_AGENTS_CHANGED',
         payload: agents,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemChanged = (selectedItem) =>{
+export const selectedItemChanged = (selectedItem) => {
     return {
         type: 'CLAIM_ASSURANCE_SELECTED_ITEM_CHANGED',
         payload: selectedItem,
         info: 'This action is used to ...'
     }
 };
-export const solutionChanged = (solution) =>{
+export const solutionChanged = (solution) => {
     return {
         type: 'CLAIM_ASSURANCE_SOLUTION_CHANGED',
         payload: solution,
         info: 'This action is used to ...'
     }
 };
-export const commentChanged = (comment) =>{
+export const commentChanged = (comment) => {
     return {
         type: 'CLAIM_ASSURANCE_COMMENT_CHANGED',
         payload: comment,
         info: 'This action is used to ...'
     }
 };
-export const newSolutionChanged = (new_solution) =>{
+export const newSolutionChanged = (new_solution) => {
     return {
         type: 'CLAIM_ASSURANCE_NEW_SOLUTION_CHANGED',
         payload: new_solution,
         info: 'This action is used to ...'
     }
 };
-export const newCommentChanged = (new_comment) =>{
+export const newCommentChanged = (new_comment) => {
     return {
         type: 'CLAIM_ASSURANCE_NEW_COMMENT_CHANGED',
         payload: new_comment,
         info: 'This action is used to ...'
     }
 };
-export const statusChanged = (status) =>{
+export const statusChanged = (status) => {
     return {
         type: 'CLAIM_ASSURANCE_STATUS_CHANGED',
         payload: status,
         info: 'This action is used to ...'
     }
 };
-export const motifChanged = (motif) =>{
+export const motifChanged = (motif) => {
     return {
         type: 'CLAIM_ASSURANCE_MOTIF_CHANGED',
         payload: motif,
@@ -248,56 +255,56 @@ export const appraisalChanged = (appraisal) => {
         info: 'This action is used to ...'
     }
 };
-export const selectedFilesReset = (selectedFiles) =>{
+export const selectedFilesReset = (selectedFiles) => {
     return {
         type: 'CLAIM_ASSURANCE_SELECTED_FILES_RESET',
         payload: selectedFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemFilesChanged = (selectedItemFiles) =>{
+export const selectedItemFilesChanged = (selectedItemFiles) => {
     return {
         type: 'CLAIM_ASSURANCE_SELECTED_ITEM_FILES_CHANGED',
         payload: selectedItemFiles,
         info: 'This action is used to ...'
     }
 };
-export const selectedItemAudioChanged = (selectedItemAudio) =>{
+export const selectedItemAudioChanged = (selectedItemAudio) => {
     return {
         type: 'CLAIM_ASSURANCE_SELECTED_ITEM_AUDIO_CHANGED',
         payload: selectedItemAudio,
         info: 'This action is used to ...'
     }
 };
-export const authorizeChanged = (item) =>{
+export const authorizeChanged = (item) => {
     return {
         type: 'CLAIM_ASSURANCE_AUTHORIZE',
         payload: item,
         info: 'This action is used to ...'
     }
 };
-export const externalRemediesChanged = (externalRemedies) =>{
+export const externalRemediesChanged = (externalRemedies) => {
     return {
         type: 'CLAIM_LIST_EXTERNAL_REMEDIES_CHANGED',
         payload: externalRemedies,
         info: 'This action is used to ...'
     }
 };
-export const etatChanged = (etat) =>{
+export const etatChanged = (etat) => {
     return {
         type: 'CLAIM_ASSURANCE_ETAT_CHANGED',
         payload: etat,
         info: 'This action is used to ...'
     }
 };
-export const etat2Changed = (etat2) =>{
+export const etat2Changed = (etat2) => {
     return {
         type: 'CLAIM_ASSURANCE_ETAT2_CHANGED',
         payload: etat2,
         info: 'This action is used to ...'
     }
 };
-export const etat3Changed = (etat3) =>{
+export const etat3Changed = (etat3) => {
     return {
         type: 'CLAIM_ASSURANCE_ETAT3_CHANGED',
         payload: etat3,

@@ -9,6 +9,7 @@ const initialState = {
     gender: "",
     language: "",
     dossierimf: "",
+    email: "",
     code: "",
     recorded_at: "",
     collect: "",
@@ -37,7 +38,7 @@ const initialState = {
     etat2: false,
     etat3: false,
     external_remedies: "",
-    authorize:true,
+    authorize: true,
     agents: [],
     items: [],
     selectedItem: {},
@@ -96,6 +97,11 @@ const AssuranceReclamationReducer = (state = initialState, action) => {
             return {
                 ...state,
                 dossierimf: action.payload,
+            };
+        case 'CLAIM_ASSURANCE_EMAIL_CHANGED':
+            return {
+                ...state,
+                email: action.payload,
             };
         case 'CLAIM_ASSURANCE_CODE_CHANGED':
             return {
