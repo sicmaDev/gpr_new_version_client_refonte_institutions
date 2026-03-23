@@ -62,9 +62,9 @@ const Corbeille = (props) => {
 
     let columns = [
         {
-            key: "code",
-            text: "Code",
-            className: "code",
+            key: "codeClient",
+            text: "Code Client",
+            className: "codeClient",
             align: "left",
             sortable: true,
         },
@@ -118,7 +118,7 @@ const Corbeille = (props) => {
             align: "left",
             sortable: true,
             cell: (claim, index) => {
-               if (claim.deletedAt) {
+                if (claim.deletedAt) {
                     const date = new Date(claim.deletedAt);
                     if (!isNaN(date)) {
                         return new Intl.DateTimeFormat("fr-FR", {
@@ -291,31 +291,31 @@ const Corbeille = (props) => {
     let btnDelete;
     if (hbt.includes("H12")) {
         btnDelete = (
-          <>
-            <div className="col l6 m6 s12 justify-content-end">          
-              <LoadingButton
-                onClick={(e) => {
-                  e.preventDefault();
-                  prepareBeforeDelete(e);
-                }}
-                className="waves-effect waves-effect-b waves-light btn-small"
-                // loading={props.etat3}
-                loadingPosition="end"
-                endIcon={<DeleteIcon />}
-                variant="contained"
-                sx={{
-                  backgroundColor: "#ef6c00",
-                  textTransform: "initial",
-                  transition: "background-color 0.3s ease",
-                  '&:hover': {
-                    backgroundColor: '#fda321',
-                  },
-                }}
-              >
-                <span>Supprimer</span>
-              </LoadingButton>
-            </div>
-          </>
+            <>
+                <div className="col l6 m6 s12 justify-content-end">
+                    <LoadingButton
+                        onClick={(e) => {
+                            e.preventDefault();
+                            prepareBeforeDelete(e);
+                        }}
+                        className="waves-effect waves-effect-b waves-light btn-small"
+                        // loading={props.etat3}
+                        loadingPosition="end"
+                        endIcon={<DeleteIcon />}
+                        variant="contained"
+                        sx={{
+                            backgroundColor: "#ef6c00",
+                            textTransform: "initial",
+                            transition: "background-color 0.3s ease",
+                            '&:hover': {
+                                backgroundColor: '#fda321',
+                            },
+                        }}
+                    >
+                        <span>Supprimer</span>
+                    </LoadingButton>
+                </div>
+            </>
         );
     }
 
@@ -338,7 +338,7 @@ const Corbeille = (props) => {
             return;
         }
 
-         let data = {};
+        let data = {};
         data["claimCode"] = code;
         data["reason"] = reason;
 

@@ -31,9 +31,9 @@ const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
 const START_SESSION_API = HOST + "api/v1/chat/init"
 const CONVERT_CLAIM_API = HOST + "api/v1/claim/convert"
 const DELETE_CLAIM_API = HOST + "api/v1/claim/delete/soft"
+const LIST_DELETE_CLAIM_API = HOST + "api/v1/claim/list/deleted"
 const RESTORE_CLAIM_API = HOST + "api/v1/claim/restore/%s"
 const DELETE_ONLY_CLAIM_API = HOST + "api/v1/claim/delete/{id}"
-const LIST_DELETE_CLAIM_API = HOST + "api/v1/claim/list/deleted"
 const CHECK_PHONE_API = HOST + "api/v1/claim/checkPhone/%s"
 
 export const listeTousStatuts = async (props) => {
@@ -837,27 +837,6 @@ export const addClaimApiOffline = async (data, props) => {
     notify("Bravo - Réclamation enregistrée", "success")
 }
 
-export const deleteClaimApi = async (id, props) => {
-    const config = {
-        method: 'delete',
-        url: DELETE_CLAIM_API.replace("{id}", id),
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
-        }
-    };
-    await axios(config)
-        .then(function (response) {
-
-            // console.log("reponsesessionadd",response.data.content)
-        })
-        .catch(function (error) {
-            notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreursessionadd",error)
-        }
-        );
-}
 
 export const convertClaimApi = async (data, props) => {
     const config = {
@@ -883,6 +862,59 @@ export const convertClaimApi = async (data, props) => {
 
 }
 
+
+export const deleteClaimApi = async (data) => {
+    // console.log("dataId", data.claimId)
+    const config = {
+        method: 'post',
+        url: DELETE_CLAIM_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    await axios(config)
+        .then(function (response) {
+            notify("Bravo - Réclamation supprimée", "success");
+            // console.log("reponsesessionadd", response.data.content)
+        })
+        .catch(function (error) {
+            const msg =
+                error?.response?.data?.content?.message ||
+                error?.response?.data?.content ||
+                "Erreur - Veuillez réessayer !";
+
+            notify(msg, "error");
+
+            // console.log("erreursessionadd", error)
+        }
+        );
+}
+
+
+export const deleteOnlyClaimApi = async (id, props) => {
+    const config = {
+        method: 'delete',
+        url: DELETE_ONLY_CLAIM_API.replace("{id}", id),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    };
+    await axios(config)
+        .then(function (response) {
+
+            // console.log("reponsesessionadd",response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
+            // console.log("erreursessionadd",error)
+        }
+        );
+}
 
 export const restoreClaimApi = async (data) => {
     // console.log("dataId", data.claimId)
@@ -934,27 +966,6 @@ export const listeRSDDelete = async (props) => {
         });
 }
 
-export const deleteOnlyClaimApi = async (id, props) => {
-    const config = {
-        method: 'delete',
-        url: DELETE_ONLY_CLAIM_API.replace("{id}", id),
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
-        }
-    };
-    await axios(config)
-        .then(function (response) {
-
-            // console.log("reponsesessionadd",response.data.content)
-        })
-        .catch(function (error) {
-            notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreursessionadd",error)
-        }
-        );
-}
 
 export const checkPhoneApi = async (phoneValue, props) => {
     const config = {
@@ -985,6 +996,7 @@ export const checkPhoneApi = async (phoneValue, props) => {
             }
         })
         .catch(function (error) {
-           
+
         });
 }
+

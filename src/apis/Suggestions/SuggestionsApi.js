@@ -105,35 +105,35 @@ export const addSuggestionApi = async (data, props) => {
         },
         data: data
     };
-        // await axios(config)
-        // .then(function (response) {
-        //     console.log("response<<<<", response)
-            
-        //     props.etat2Changed(false)
-        //     if (response.data.status) {
-        //         notify("Bravo - Suggestion ajoutée", "success");
-        //         listeByStatut(props, "TEMP_SAVED")
-        //     } else {
-        //         notify("Erreur - Veuillez réessayer!", "error");
-        //     }
+    // await axios(config)
+    // .then(function (response) {
+    //     console.log("response<<<<", response)
 
-        //     // listeTousStatuts(props)
-        // })
-        // .catch(function (error) {
-        //     props.etat2Changed(false)
-        //     notify("Erreur - Veuillez réessayer!", "error");
-        //     // console.log("erreur", error)
-        // });
+    //     props.etat2Changed(false)
+    //     if (response.data.status) {
+    //         notify("Bravo - Suggestion ajoutée", "success");
+    //         listeByStatut(props, "TEMP_SAVED")
+    //     } else {
+    //         notify("Erreur - Veuillez réessayer!", "error");
+    //     }
+
+    //     // listeTousStatuts(props)
+    // })
+    // .catch(function (error) {
+    //     props.etat2Changed(false)
+    //     notify("Erreur - Veuillez réessayer!", "error");
+    //     // console.log("erreur", error)
+    // });
     try {
         const response = await axios(config);
-      
+
         props.etat2Changed(false);
 
         if (response.data.status) {
-        notify("Bravo - Suggestion ajoutée", "success");
-        listeByStatut(props, "TEMP_SAVED");
+            notify("Bravo - Suggestion ajoutée", "success");
+            listeByStatut(props, "TEMP_SAVED");
         } else {
-        notify("Erreur - Veuillez réessayer!", "error");
+            notify("Erreur - Veuillez réessayer!", "error");
         }
 
         return response; // 🔥 important : on retourne la réponse
@@ -396,7 +396,7 @@ export const deleteSuggestionApi = async (id, props) => {
             notify("Erreur - Veuillez réessayer!", "error");
             // console.log("erreursessionadd",error)
         }
-    );
+        );
 }
 
 export const deleteSuggestApi = async (data) => {
@@ -421,8 +421,32 @@ export const deleteSuggestApi = async (data) => {
                 error?.response?.data?.content?.message ||
                 error?.response?.data?.content ||
                 "Erreur - Veuillez réessayer !";
-    
-                notify(msg, "error");
+
+            notify(msg, "error");
+            // console.log("erreursessionadd", error)
+        }
+        );
+}
+
+export const restoreSuggestApi = async (data) => {
+    // console.log("dataId", data.claimId)
+    const config = {
+        method: 'post',
+        url: RESTORE_SUGGEST_API.replace("%s", data.claimId),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+        data: data
+    };
+    await axios(config)
+        .then(function (response) {
+            notify("Bravo - Suggestion restaurée", "success");
+            // console.log("reponsesessionadd", response.data.content)
+        })
+        .catch(function (error) {
+            notify("Erreur - Veuillez réessayer!", "error");
             // console.log("erreursessionadd", error)
         }
         );

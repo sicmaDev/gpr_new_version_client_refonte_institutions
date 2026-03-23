@@ -13,14 +13,9 @@ import {
 import { LoadingButton } from "@mui/lab";
 import { Delete, Cancel, WarningAmber } from "@mui/icons-material";
 
-const CODE_REGEX = /^(rec|den|sug).+$/;
+const CODE_REGEX = /^(REC|DEN|SUG).+$/;
 
-const DeleteModal = ({
-  open,
-  loading = false,
-  onClose,
-  onConfirm,
-}) => {
+const DeleteModal = ({ open, loading = false, onClose, onConfirm }) => {
   const [localCode, setLocalCode] = useState("");
   const [reason, setReason] = useState("");
   const [confirmStep, setConfirmStep] = useState(false);
@@ -44,8 +39,7 @@ const DeleteModal = ({
     if (!localCode.trim()) {
       newErrors.code = "Le code est obligatoire";
     } else if (!CODE_REGEX.test(localCode.trim())) {
-      newErrors.code =
-        "Format invalide. Ex: rec-001, den-123, sug-45";
+      newErrors.code = "Format invalide. Ex: rec-001, den-123, sug-45";
     }
 
     if (!reason.trim()) {
@@ -89,21 +83,17 @@ const DeleteModal = ({
 
           {/* Message d’alerte de confirmation */}
           {confirmStep && (
-            <Alert
-              severity="warning"
-              icon={<WarningAmber />}
-              sx={{ mb: 3 }}
-            >
-              Vous êtes sur le point de supprimer cet élément.
-              Cliquez sur <strong>« Confirmer la suppression »</strong> pour continuer.
+            <Alert severity="warning" icon={<WarningAmber />} sx={{ mb: 3 }}>
+              Vous êtes sur le point de supprimer cet élément. Cliquez sur{" "}
+              <strong>« Confirmer la suppression »</strong> pour continuer.
             </Alert>
           )}
 
           {/* Code */}
           <TextField
             fullWidth
-            label="Code (rec, den ou sug)"
-            placeholder="Ex: recxxxx-xxxx"
+            label="Code Client (REC,DEN ou SUG)"
+            placeholder="Ex: REC-xxxx, DEN-xxxx, SUG-xxxx"
             value={localCode}
             type="text"
             onChange={(e) => setLocalCode(e.target.value)}
@@ -137,11 +127,7 @@ const DeleteModal = ({
       </DialogContent>
 
       <DialogActions>
-        <Button
-          startIcon={<Cancel />}
-          onClick={onClose}
-          disabled={loading}
-        >
+        <Button startIcon={<Cancel />} onClick={onClose} disabled={loading}>
           Annuler
         </Button>
 
@@ -153,9 +139,7 @@ const DeleteModal = ({
           startIcon={<Delete />}
           onClick={handleDeleteClick}
         >
-          {confirmStep
-            ? "Confirmer la suppression"
-            : "Supprimer"}
+          {confirmStep ? "Confirmer la suppression" : "Supprimer"}
         </LoadingButton>
       </DialogActions>
     </Dialog>

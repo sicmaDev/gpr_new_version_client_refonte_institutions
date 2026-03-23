@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import {Route, Switch, Redirect } from "react-router-dom";
+import { Route, Switch, Redirect } from "react-router-dom";
 import Dashboard from '../pages/Dashboard';
 import Help from '../pages/Help';
 import { Container, Toolbar } from '@mui/material';
@@ -47,57 +47,57 @@ import Log from '../pages/Configurations/Log';
 import Exportation from '../pages/Configurations/Exportation';
 import ApiKey from '../pages/Configurations/ApiKey';
 import Whatsapp from '../pages/Whatsapp';
+import Corbeille from '../pages/Configurations/Corbeille';
 
-
-export default function Contenu() { 
-    let mode =loadItemFromSessionStorage("app-mode") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-mode")) : undefined;
+export default function Contenu() {
+    let mode = loadItemFromSessionStorage("app-mode") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-mode")) : undefined;
     let rendu;
     if (mode === 1) {
-        rendu = 
-        <Route render={() => <Dashboard />} />
+        rendu =
+            <Route render={() => <Dashboard />} />
     } else {
-        rendu = 
-        <Route render={() => <Help />} />
+        rendu =
+            <Route render={() => <Help />} />
     }
     const [screenSize, setScreenSize] = useState({
         width: window.innerWidth,
         height: window.innerHeight,
-      });
+    });
 
-      useEffect(() => {
+    useEffect(() => {
         const handleResize = () => {
-          setScreenSize({
-            width: window.innerWidth,
-            height: window.innerHeight,
-          });
+            setScreenSize({
+                width: window.innerWidth,
+                height: window.innerHeight,
+            });
         };
-    
+
         // Add event listener to handle window resize
         window.addEventListener('resize', handleResize);
-    
+
         // Clean up the event listener on component unmount
         return () => {
-          window.removeEventListener('resize', handleResize);
+            window.removeEventListener('resize', handleResize);
         };
-      }, []); // Empty dependency array means this effect will only run once on mount
-    
+    }, []); // Empty dependency array means this effect will only run once on mount
+
     return (
-        
+
         <Box
-          component="main"
-          sx={{
-              backgroundColor: (theme) =>
-              theme.palette.mode === 'light'
-                  ? theme.palette.grey[100]
-                  : theme.palette.grey[900],
-              flexGrow: 1,
-              height: '100vh',
-              overflowY:'scroll',
-          }}
+            component="main"
+            sx={{
+                backgroundColor: (theme) =>
+                    theme.palette.mode === 'light'
+                        ? theme.palette.grey[100]
+                        : theme.palette.grey[900],
+                flexGrow: 1,
+                height: '100vh',
+                overflowY: 'scroll',
+            }}
         >
             <Toolbar />
-          
-            <Container maxWidth="100%" sx={{ mt: 4, mb: 4}} >
+
+            <Container maxWidth="100%" sx={{ mt: 4, mb: 4 }} >
                 <Switch>
                     <Route path="/dashboard" component={Dashboard} />
 
@@ -122,6 +122,7 @@ export default function Contenu() {
                     <Route path="/ressources/documents" component={Documents} />
                     <Route path="/ressources/faq" component={Faq} />
                     <Route path="/configurations/notifications" component={Notifications} />
+                    <Route path="/configurations/corbeille" component={Corbeille} />
 
                     {/* reclamations */}
                     <Route path="/reclamations/enregistrement" component={EnregistrerReclamation} />
@@ -130,7 +131,7 @@ export default function Contenu() {
                     <Route path="/reclamations/assurance" component={AssuranceReclamation} />
                     <Route path="/reclamations/liste" component={ListeReclamations} />
                     <Route path="/reclamations/classees" component={ListeReclamationsClassees} />
-                    
+
                     {/* denonciations */}
                     <Route path="/denonciations/enregistrement" component={EnregistrerDenonciation} />
                     <Route path="/denonciations/traitement/:code" component={TraiterDenonciation} />
@@ -159,19 +160,19 @@ export default function Contenu() {
 
                     {/* compte */}
                     <Route path="/compte" component={Compte} />
-                   
+
                     <Route path="/help" component={Help} />
 
-                    
+
                     {rendu}
                 </Switch>
             </Container>
-      
-        
+
+
         </Box>
-        
-           
+
+
     );
-    
+
 }
- 
+
