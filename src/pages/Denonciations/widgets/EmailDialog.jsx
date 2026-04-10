@@ -28,7 +28,7 @@ const EmailDialog = (props) => {
     "\n\n" +
     "Détails de la réclamation : \n\n" +
     "* Code de réclamation : " +
-    props.code +
+    props.codeClient +
     "\n" +
     "* Délai de traitement : " +
     props.handled_delai +
@@ -155,6 +155,7 @@ const EmailDialog = (props) => {
 const mapStateToProps = (state) => {
   return {
     code: state.claim_handle.code,
+    codeClient: state.claim_handle.codeClient,
     isLoading: state.claim_handle.etat,
     handled_at: state.claim_handle.handled_at,
     handled_by: state.claim_handle.handled_by,

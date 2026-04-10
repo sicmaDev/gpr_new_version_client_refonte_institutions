@@ -23,13 +23,12 @@ import { Cancel, CheckBox, Save } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 
 const EmailDialog = (props) => {
- 
   const defaultMessage =
     "Le traitement d'une nouvelle réclamation vous a été affecté(e). Cette réclamation nécessite votre attention et votre expertise pour garantir une résolution rapide et satisfaisante." +
     "\n\n" +
     "Détails de la réclamation : \n\n" +
     "* Code de réclamation : " +
-    props.code +
+    props.codeClient +
     "\n" +
     "* Délai de traitement : " +
     props.handled_delai +
@@ -51,7 +50,6 @@ const EmailDialog = (props) => {
 
   const handleSend = (e) => {
     if (props.maxDelai >= props.handled_delai) {
-     
       setErrors({ maxDelai: false });
       props.handleSubmit(e);
     } else {
@@ -143,10 +141,14 @@ const EmailDialog = (props) => {
         >
           Annuler
         </LoadingButton>
-        <LoadingButton  loading={props.isLoading}
+        <LoadingButton
+          loading={props.isLoading}
           loadingPosition="end"
           endIcon={<Save />}
-            onClick={handleSend} color="primary" variant="contained">
+          onClick={handleSend}
+          color="primary"
+          variant="contained"
+        >
           Envoyer
         </LoadingButton>
       </DialogActions>
@@ -157,6 +159,7 @@ const EmailDialog = (props) => {
 const mapStateToProps = (state) => {
   return {
     code: state.claim_handle.code,
+    codeClient: state.claim_handle.codeClient,
     isLoading: state.claim_handle.etat,
     handled_at: state.claim_handle.handled_at,
     handled_by: state.claim_handle.handled_by,
