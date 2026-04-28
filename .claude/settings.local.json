@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx --no-install react-scripts build --max-warnings=0)",
+      "Bash(node_modules/.bin/eslint src/pages/Reclamations/modals/ src/pages/Reclamations/TraiterReclamation.js --max-warnings=0)",
+      "Bash(node_modules/.bin/eslint \"src/pages/Reclamations/modals/*.jsx\")",
+      "Bash(xargs wc *)",
+      "Bash(awk 'NR==2557{start=NR} NR==4978{end=NR} END{print \"Switch block starts at:\", start; print \"File ends at:\", end; print \"Detail JSX lines:\", end-start}' \"c:/xampp/htdocs/GPR/test_projet/gpr_client_sicma_new_version/src/pages/Denonciations/TraiterDenonciation.js\")",
+      "Bash(awk '/tab === \"CHATROOM\"/{start=NR} start && /^[[:space:]]*\\\\}\\\\\\)$|^[[:space:]]*\\\\}$/ && NR>start+5{count++; if\\(count==2\\){print \"Chat JSX ends at line:\", NR; exit}} start{chars++}' \"c:/xampp/htdocs/GPR/test_projet/gpr_client_sicma_new_version/src/pages/Reclamations/TraiterReclamation.js\")",
+      "Bash(awk 'NR==1420{start=NR} NR==2385{print \"tchat JSX: lines\", start, \"to\", NR, \"=\", NR-start, \"lines\"; exit}' \"c:/xampp/htdocs/GPR/test_projet/gpr_client_sicma_new_version/src/pages/Reclamations/TraiterReclamation.js\")",
+      "Bash(awk 'NR==1304{start=NR} NR==2263{print \"tchat JSX:\", NR-start, \"lines\"; exit}' \"c:/xampp/htdocs/GPR/test_projet/gpr_client_sicma_new_version/src/pages/Denonciations/TraiterDenonciation.js\")",
+      "Bash(grep -n \"TREATMENT PAGE\\\\|EmailDialog\\\\|<\\\\/div>$\" \"c:/xampp/htdocs/GPR/test_projet/gpr_client_sicma_new_version/src/pages/Reclamations/TraiterReclamation.js\")",
+      "Bash(grep -n \"TREATMENT PAGE\\\\|<EmailDialog\\\\|^      </div>$\" \"c:/xampp/htdocs/GPR/test_projet/gpr_client_sicma_new_version/src/pages/Reclamations/TraiterReclamation.js\")",
+      "Bash(awk -F: '$2>1635{print; exit}')"
+    ]
+  }
+}

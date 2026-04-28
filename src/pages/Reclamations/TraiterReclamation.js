@@ -91,8 +91,6 @@ import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
 import {
   addExtraClaimApi,
-  affectClaimApi,
-  approveClaimSolutionApi,
   detailsTreat,
   downloadAudioApi,
   downloadFillesApi,
@@ -102,9 +100,6 @@ import {
   listeByStatut,
   listeTreat,
   startSession,
-  transmissionClaimApi,
-  treatClaimApi,
-  unapproveClaimSolutionApi,
   deleteClaimApi,
   convertClaimApi,
 } from "../../apis/Reclamations/ReclamationsApi";
@@ -197,8 +192,8 @@ import CardList from "../../layouts/CardList";
 import SendIcon from "@mui/icons-material/Send";
 import ChatIcon from "@mui/icons-material/Chat";
 import { modalify } from "../../Utils/modal";
-import SockJS from "sockjs-client";
-import { over } from "stompjs";
+import useWebSocketSession from "../../hooks/useWebSocketSession";
+import useTreatmentHandlers from "../../hooks/useTreatmentHandlers";
 import {
   AddCircleOutline,
   ChatBubble,
@@ -216,9 +211,31 @@ import ForumIcon from "@mui/icons-material/Forum";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import { licenseInfo } from "../../apis/LoginApi";
 import WarningIcon from "@mui/icons-material/Warning";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
+import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
+import ThumbDownOffAltIcon from "@mui/icons-material/ThumbDownOffAlt";
+import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
+import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
+import SentimentNeutralIcon from "@mui/icons-material/SentimentNeutral";
+import SidebarInfosClient from "../../components/treatment/SidebarInfosClient";
+import SidebarDetailsDossier from "../../components/treatment/SidebarDetailsDossier";
+import ActionsDisponibles from "../../components/treatment/ActionsDisponibles";
+import FichiersTab from "../../components/treatment/FichiersTab";
+import HistoriqueTimeline from "../../components/treatment/HistoriqueTimeline";
+import PreEnregistreesTab from "../../components/treatment/PreEnregistreesTab";
+import SessionChat from "../../components/treatment/SessionChat";
+import TraitementShell from "../../components/treatment/TraitementShell";
 import EmailDialog from "./widgets/EmailDialog";
 import { data } from "jquery";
 import { usePermissions } from "./widgets/usePermissions";
+import AffecterModal from "./modals/AffecterModal";
+import ConvertirModal from "./modals/ConvertirModal";
+import TransmettreModal from "./modals/TransmettreModal";
+import ApprouverModal from "./modals/ApprouverModal";
 
 const styles = {
   control: (base) => ({
@@ -246,7 +263,6 @@ const ExpandMore = styled((props) => {
   }),
 }));
 
-var stompClient = null;
 const TraiterReclamation = (props) => {
   const [expanded, setExpanded] = React.useState(false);
   const [checked, setChecked] = React.useState(false);
@@ -262,6 +278,8 @@ const TraiterReclamation = (props) => {
   const handleCloseParent = () => setOpenParent(false);
   const handleOpenChild = () => setOpenChild(true);
   const handleCloseChild = () => setOpenChild(false);
+
+  // activeTab, openAccordion, treatSubTab, openModal → gérés par TraitementShell
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
@@ -456,27 +474,47 @@ const TraiterReclamation = (props) => {
     setAnonymat(!anonymat);
   };
 
-  const [privateChats, setPrivateChats] = useState(new Map());
-  const [publicChats, setPublicChats] = useState([]);
-  const [guests, setGuests] = useState([]);
-  const [tab, setTab] = useState("CHATROOM");
-  const [userData, setUserData] = useState({
-    username: "",
-    receivername: "",
-    connected: false,
-    message: "",
+  // ── Hooks Phase 2 ─────────────────────────────────────────────────────────
+  const {
+    userData, setUserData,
+    publicChats, setPublicChats,
+    guests, setGuests,
+    propositionSolution, setPropositionSolution,
+    propositionCommentaire, setPropositionCommentaire,
+    propositionSolutionError,
+    propositionCommentaireError,
+    showVoteField, setShowVoteField,
+    selectedOption, setSelectedOption,
+    connect, disconnect,
+    handleMessage,
+    sendValue, sendVote,
+    handleVote, handleChooseVote,
+    ejectGuest, inviteGuest,
+  } = useWebSocketSession({ code: props.code, claimId: props.id, session: props.session, user });
+
+  const {
+    prepareBeforeAssign,
+    handleAssign,
+    handleReAssign,
+    handleAssignOrReassign,
+    handleSolve,
+    handleReSolve,
+    handleApprove,
+    handleDisapprove,
+    handleTransmission,
+  } = useTreatmentHandlers({
+    props,
+    user,
+    anonymat,
+    maxDelai,
+    onSuccess: (e) => { handleCancel(e); handleClose(); },
   });
+
+  const [privateChats, setPrivateChats] = useState(new Map());
+  const [tab, setTab] = useState("CHATROOM");
   //#darrell use for autoscroll
   const bottomRef = useRef(null);
-  const [showVoteField, setShowVoteField] = useState(false);
-  const [propositionSolution, setPropositionSolution] = useState("");
-  const [propositionCommentaire, setPropositionCommentaire] = useState("");
-  const [propositionSolutionError, setPropositionSolutionError] = useState("");
-  const [propositionCommentaireError, setPropositionCommentaireError] =
-    useState("");
   const [messageError, setMessageError] = useState("");
-
-  const [selectedOption, setSelectedOption] = useState("");
   const [votesForPour, setVotesForPour] = useState(0);
   const [votesForContre, setVotesForContre] = useState(0);
   const [showConfirmChooseSolution, setShowConfirmChooseSolution] =
@@ -716,7 +754,6 @@ const TraiterReclamation = (props) => {
 
           getFillesApi(data.id, props);
           getClaimAudioApi(data.id, props);
-          handleClickOpen();
           // if (props.id) {
 
           // }
@@ -749,6 +786,8 @@ const TraiterReclamation = (props) => {
           KTApp.unblockPage();
         });
     } else {
+      setIsLoading(false);
+      KTApp.unblockPage();
     }
 
     window
@@ -842,362 +881,31 @@ const TraiterReclamation = (props) => {
   // console.log("availableToInvite", availableToInvite);
   // console.log("usersCGR", usersCGR);
 
-  const handleInvitation = (e, idi) => {
-    var chatMessage = {
-      userId: idi,
-      claimCode: props.code,
-      status: "INVITATION",
-    };
+  const handleInvitation = (e, idi) => inviteGuest(idi);
+  const handleEject = (e, idi) => ejectGuest(idi);
 
-    // console.log("codeconnected42", idi);
-    // console.log("props.code", props.code);
-    stompClient.send(
-      "/api/v1/session/join/guest/" + props.code + "",
-      {},
-      JSON.stringify(chatMessage)
-    );
-  };
 
-  const handleEject = (e, idi) => {
-    var chatMessage = {
-      userId: idi,
-      claimCode: props.code,
-      status: "EJECTION",
-    };
-
-    // console.log("codeconnected42", idi);
-    stompClient.send(
-      "/api/v1/session/eject/guest/" + props.code + "",
-      {},
-      JSON.stringify(chatMessage)
-    );
-    setGuests(prev => prev.filter(g => g.id !== idi));
-
-  };
-
-  const connect = () => {
-    let Sock = new SockJS(HOST + "ws");
-    stompClient = over(Sock);
-    stompClient.connect({}, onConnected, onError);
-  };
-
-  const onConnected = () => {
-    setUserData({ ...userData, connected: true });
-    // console.log("codeconnected", props.code);
-    // console.log("propsconect",props)
-    stompClient.subscribe(
-      "/topic/session/" + props.code + "",
-      onMessageReceived
-    );
-    // stompClient.subscribe('/'+props.code+'/secured/session/', onPrivateMessage);
-
-    userJoin();
-  };
-
-  const userJoin = () => {
-    var chatMessage = {
-      userId: user.id,
-      claimCode: props.code,
-      status: "JOIN",
-    };
-    // setUserData({...userData,"username": user.id});
-    // console.log("codeconnected4", props.code);
-    stompClient.send(
-      "/api/v1/session/join/" + props.code + "",
-      {},
-      JSON.stringify(chatMessage)
-    );
-
-    setPublicChats(props.session.messages);
-    setGuests(props.session.guests);
-  };
-
-  const onMessageReceived = (payload) => {
-    var payloadData = JSON.parse(payload.body);
-    // console.log("payloadDta", payloadData);
-    switch (payloadData.status) {
-      case "JOIN":
-        // console.log("privee", "un");
-        // if (!privateChats.get(payloadData.firstAndLastName)) {
-        //   privateChats.set(payloadData.firstAndLastName, []);
-        //   setPrivateChats(new Map(privateChats));
-
-        //   let list = props.session.messages;
-        //   console.log("messageslist", list);
-        //   // publicChats.push(list);
-        //   setPublicChats((prevPublicChats) => {
-        //     const newList = list;
-        //     return newList;
-        //   });
-        //   console.log("publicchatsjoin", publicChats);
-        //   // list.push(payloadData);
-        //   // privateChats.set(payloadData.senderName,list);
-        // }
-        break;
-      case "MESSAGE":
-        // let list = props.session.messages;
-        // list.push(payloadData);
-        // console.log("message", list);
-        // setPublicChats(list);
-        // if(publicChats !== null && publicChats.length > 0 ){
-        setPublicChats((prevPublicChats) => {
-          if (prevPublicChats === undefined || prevPublicChats === null) {
-            return [payloadData];
-          }
-          const newList = [...prevPublicChats, payloadData];
-          return newList;
-        });
-        // } else {
-        //   setPublicChats( [payloadData]);
-        // }
-
-        // props.sessionChanged(list);
-        // console.log("message",publicChats)
-        // publicChats.set(payloadData,publicChats);
-        // publicChats.push(payloadData);
-        // setPublicChats([...publicChats]);
-        // console.log("message2", publicChats);
-        break;
-      case "VOTE":
-        // console.log("hello",payloadData)
-        setPublicChats((prevPublicChats) => {
-          const newList = payloadData.messages;
-          return newList;
-        });
-        break;
-      case "INVITATION":
-        // console.log("hello2",payloadData)
-        //objet
-        var chatGuest = {
-          id: payloadData.id,
-          code: payloadData.code,
-          firstAndLastName: payloadData.firstAndLastName,
-        };
-
-        setGuests((prevGuests) => {
-          if (prevGuests === undefined || prevGuests === null) {
-            return [chatGuest];
-          }
-          let prevG = prevGuests.filter((e) => {
-            return e.id !== chatGuest.id;
-          });
-          if (prevG === null || prevG === undefined) {
-            return [chatGuest];
-          }
-          const newList = [...prevG, chatGuest];
-          return newList;
-        });
-
-        break;
-      case "EJECTION":
-        // console.log("payloadEjection",payloadData)
-        let nouveaux = [];
-        let list = props.session.guests;
-        if (list === undefined) {
-          setGuests([]);
-        } else {
-          nouveaux = list.filter((e) => {
-            return e.id !== payloadData.id;
-          });
-
-          //  console.log("ejection",nouveaux)
-          setGuests((prevGuests) => {
-            if (prevGuests === undefined) {
-              return nouveaux;
-            }
-            const newList = nouveaux;
-            return newList;
-          });
-        }
-        // console.log("condition", payloadData.id === user.id)
-        // console.log("condition 2", payloadData.id == user.id)
-        if (payloadData.id === user.id) {
-          notify("Un membre du CGR vous a éjecté", "info");
-          setTimeout(() => {
-            window.location.reload();
-          }, 3000);
-        }
-        break;
-      case "CONFIRME_SOLUTION":
-        notify("Bravo - Réclamation traitée", "success");
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
-        break;
-    }
-  };
-
-  const onError = (err) => {
-    // console.log(err);
-  };
-
-  const handleMessage = (event) => {
-    const { value } = event.target;
-    setUserData({ ...userData, message: value });
-  };
   const handlePropositionSolution = (event) => {
-    const { value } = event.target;
-    setPropositionSolution(value);
+    setPropositionSolution(event.target.value);
   };
   const handlePropositionCommentaire = (event) => {
-    const { value } = event.target;
-    setPropositionCommentaire(value);
-  };
-  const sendValue = () => {
-    if (stompClient) {
-      if (userData.message !== "") {
-        var chatMessage = {
-          senderId: user.id,
-          content: userData.message,
-          claimCode: props.code,
-          status: "MESSAGE",
-        };
-        // console.log(chatMessage);
-        stompClient.send(
-          "/api/v1/session/" + props.code + "",
-          {},
-          JSON.stringify(chatMessage)
-        );
-        setUserData({ ...userData, message: "" });
-      } else {
-        // setMessageError("Champ incr")
-      }
-
-      // console.log("msg", publicChats);
-    } else {
-      // console.log("errorr", "nop");
-    }
-  };
-
-  const sendVote = () => {
-    if (propositionCommentaire === "" || propositionSolution === "") {
-      if (propositionCommentaire === "") {
-        setPropositionCommentaireError(
-          "Veuillez renseigner la proposition de commentaire"
-        );
-      }
-      if (propositionSolution === "") {
-        setPropositionSolutionError(
-          "Veuillez renseigner la proposition de solution"
-        );
-      }
-    } else {
-      //save vote
-      if (stompClient) {
-        let objContent = {
-          contenu: propositionSolution,
-          commentaire: propositionCommentaire,
-        };
-        let content = JSON.stringify(objContent);
-        var chatMessage = {
-          senderId: user.id,
-          content: content,
-          claimCode: props.code,
-          status: "MESSAGE",
-          vote: true,
-        };
-        stompClient.send(
-          "/api/v1/session/" + props.code + "",
-          {},
-          JSON.stringify(chatMessage)
-        );
-
-        setPropositionCommentaire("");
-        setPropositionSolution("");
-        setPropositionCommentaireError("");
-        setPropositionSolutionError("");
-        setShowVoteField(false);
-        setUserData({ ...userData, message: "" });
-      } else {
-        // console.log("errorr", "nop");
-      }
-    }
-  };
-
-  const handleVote = (e, info) => {
-    const selectedValue = e.target.value;
-    if (selectedOption !== "") {
-      //removeVote
-      let voteRequest = {
-        removeVote: true,
-        pour: selectedValue === "POUR",
-        claimCode: props.code,
-        authorId: user.id,
-        messageId: info,
-      };
-      // console.log("voteRequest - remove", voteRequest);
-
-      stompClient.send(
-        "/api/v1/session/vote/" + props.code + "",
-        {},
-        JSON.stringify(voteRequest)
-      );
-    } else {
-      let voteRequest = {
-        removeVote: false,
-        pour: selectedValue === "POUR",
-        claimCode: props.code,
-        authorId: user.id,
-        messageId: info,
-      };
-      // console.log("voteRequest", voteRequest);
-
-      stompClient.send(
-        "/api/v1/session/vote/" + props.code + "",
-        {},
-        JSON.stringify(voteRequest)
-      );
-    }
-
-    // Mettez à jour le nombre de votes en fonction de l'option sélectionnée
-    // if (selectedValue === "for") {
-    //   setVotesForOption1(votesForOption1 + 1);
-    // } else if (selectedValue === "against") {
-    //   setVotesForOption2(votesForOption2 + 1);
-    // }
-
-    // Mettez à jour l'option sélectionnée
-    // setSelectedOption(selectedValue);
+    setPropositionCommentaire(event.target.value);
   };
 
   const registerUser = (e) => {
-    let info = {};
-    info["claimId"] = props.id;
-    info["creatorId"] = user.id;
-    // console.log("session", info);
-    // console.log("before props",props);
+    let info = { claimId: props.id, creatorId: user.id };
     props.etat4Changed(true);
-    startSession(info, props).then(() => {
-      connect();
-      // console.log("then props",props);
-      // handleCancel(e);
-    });
+    startSession(info, props).then(() => { connect(); });
   };
 
   const handleShowVoteField = () => {
     setShowVoteField(!showVoteField);
   };
 
-  const handleChooseVote = (msgId) => {
-    //send
-    let confirmSolution = {
-      messageId: msgId,
-      claimCode: props.code,
-    };
-    if (stompClient) {
-      stompClient.send(
-        "/api/v1/session/confirm-solution/" + props.code + "",
-        {},
-        JSON.stringify(confirmSolution)
-      );
-    }
-  };
-
   const handleChooseVoteConfirm = () => {
     setShowConfirmChooseSolution(!showConfirmChooseSolution);
   };
 
-  let errors = {};
   const clearComponentState = () => {
     props.lastnameChanged("");
     props.firstnameChanged("");
@@ -1238,86 +946,12 @@ const TraiterReclamation = (props) => {
     setShowSelectPrintItem(false);
     setCurrentAudio("");
     setAudioPlayer("");
-    if (stompClient) {
-      stompClient.disconnect();
-      setUserData({ ...userData, connected: false });
-      setPublicChats([]);
-      setGuests([]);
-    }
+    disconnect();
   };
 
   const handleCancel = (e) => {
     e.preventDefault();
     clearComponentState();
-  };
-  const handleValidation = () => {
-    let isValid = true;
-    // console.log("props.solution",props.solutionExistant)
-    if (
-      props.solutionExistant === "" &&
-      (props.solution === "" ||
-        props.solution === undefined ||
-        props.solution === null ||
-        props.solution.length === 0)
-    ) {
-      isValid = false;
-      errors["solution"] = "Champ incorrect";
-    }
-    if (
-      props.solutionExistant === "" &&
-      (props.comment === "" ||
-        props.comment === undefined ||
-        props.comment === null)
-    ) {
-      isValid = false;
-      errors["comment"] = "Champ incorrect";
-    }
-    // console.log("isValid", isValid);
-    return isValid;
-  };
-
-  const handleReValidation = () => {
-    let isValid = true;
-    // console.log("props.solution",props.new_solution)
-    // console.log("props.solution2",props.solutionExistant)
-    if (
-      props.solutionExistant === "" &&
-      (props.new_solution === "" ||
-        props.new_solution === undefined ||
-        props.new_solution === null ||
-        props.new_solution.length === 0)
-    ) {
-      isValid = false;
-      errors["new_solution"] = "Champ incorrect";
-    }
-    if (
-      props.solutionExistant === "" &&
-      (props.new_comment === "" ||
-        props.new_comment === undefined ||
-        props.new_comment === null)
-    ) {
-      isValid = false;
-      errors["new_comment"] = "Champ incorrect";
-    }
-    // console.log("isValid",isValid);
-    return isValid;
-  };
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (handleValidation()) {
-      let claim = {};
-      claim["code"] = props.code;
-      claim["solution"] = props.solution;
-      claim["comment"] = props.comment;
-      claim["handled_by"] = JSON.parse(loadItemFromSessionStorage("user"));
-      claim["status"] = 5;
-      //   handleClaimApi(claim, props).then(() => {
-      //     handleCancel(e);
-      //   });
-      // console.log(claim);
-    } else {
-    }
-    props.claimHandleErrors(errors);
   };
 
   //Handling the List
@@ -1601,7 +1235,7 @@ const TraiterReclamation = (props) => {
 
     setDataRow(data);
     console.log(data)
-    handleClickOpen();
+    history.push('/reclamations/traitement/' + data.code);
     clearComponentState();
     // console.log("donnees",data)
     //console.log("level",data.objet.risqueLevel)
@@ -1780,970 +1414,39 @@ const TraiterReclamation = (props) => {
     // console.log("create",props.created_by);
   };
 
-  let tchat;
-  if (showJoinBtn) {
-    tchat = (
-      <>
-        {userData.connected ? (
-          <div className="row containera clearfix mt-5">
-            <div class="people-list" id="people-list">
-              {props.session.createdBy.id === user.id ? (
-                <div class="search">
-                  <input
-                    type="text"
-                    placeholder="Rechercher"
-                    onChange={invitation}
-                  />
-                </div>
-              ) : null}
-              <div id="listI" ref={maDivRef} style={{ display: "none" }}>
-                <ul class="list">
-                  <label
-                    className="text-xl mb-2"
-                    style={{
-                      color: "white",
-                      fontSize: "18px",
-                      fontWeight: "600",
-                    }}
-                  >
-                    A Inviter
-                  </label>
-
-                  {availableToInvite.map((member) => (
-                    <>
-                      <li
-                        class="clearfix"
-                        key={member.id}
-                        style={{ display: "flex", verticalAlign: "center" }}
-                      >
-                        <Avatar
-                          sx={{
-                            width: 40,
-                            height: 40,
-                            backgroundColor: "#1E2188",
-                          }}
-                        >
-                          {member.firstAndLastName[0]}
-                        </Avatar>
-
-                        <div class="about" style={{ marginTop: "0px" }}>
-                          <div class="name nameToInvite">
-                            <span>{member.firstAndLastName}</span>
-                          </div>
-                          <div class="" style={{ fontSize: "10px" }}>
-                            {member.posteDto.libelle}
-                          </div>
-                        </div>
-                        <IconButton
-                          onClick={(e) => handleInvitation(e, member.id)}
-                          color="primary"
-                          aria-label="Ajouter"
-                          style={{ marginLeft: "auto" }}
-                        >
-                          <AddCircleOutline />
-                        </IconButton>
-                      </li>
-                    </>
-                  ))}
-                </ul>
-              </div>
-
-              <ul class="list">
-                <label
-                  className="text-xl mb-4"
-                  style={{
-                    color: "white",
-                    fontSize: "18px",
-                    fontWeight: "600",
-                  }}
-                >
-                  Membres
-                </label>
-                {props?.session?.members?.map((member) => (
-                  <>
-                    <li
-                      className="clearfix"
-                      key={member.id}
-                      style={{ display: "flex", verticalAlign: "center" }}
-                    >
-                      <Avatar
-                        sx={{
-                          width: 48,
-                          height: 48,
-                          backgroundColor: "#1E2188",
-                        }}
-                      >
-                        {member.firstAndLastName[0]}
-                      </Avatar>
-
-                      <div className="about" style={{ marginTop: "9.5px" }}>
-                        <div className="name nameToInvite text-bold">
-                          <span>{member.firstAndLastName}</span>
-                        </div>
-                        {/* <div className="status">
-                            <i className="fa fa-circle online"></i> online
-                          </div> */}
-                      </div>
-                    </li>
-                  </>
-                ))}
-                <div className="d-flex">
-                  <label
-                    className="text-xl"
-                    style={{
-                      color: "white",
-                      fontSize: "18px",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Invité(s)
-                  </label>
-                </div>
-
-                {guests !== null &&
-                  guests?.length > 0 &&
-                  guests.at(0).firstAndLastName != null ? (
-                  <>
-                    {guests?.map((guest) => (
-                      <li
-                        className="clearfix"
-                        key={guest.id}
-                        style={{ display: "flex", verticalAlign: "center" }}
-                      >
-                        <Avatar
-                          sx={{
-                            width: 48,
-                            height: 48,
-                            backgroundColor: "#1E2188",
-                          }}
-                        >
-                          {guest !== null &&
-                            guest.firstAndLastName != null &&
-                            guest?.firstAndLastName[0]}
-                        </Avatar>
-
-                        <div className="about" style={{ marginTop: "9.5px" }}>
-                          <div className="name nameToInvite text-bold">
-                            <span>{guest?.firstAndLastName}</span>
-                          </div>
-                          {/* <div className="status">
-                              <i className="fa fa-circle online"></i> online
-                            </div> */}
-                        </div>
-                        {showJoinBtn && isUserOpenSession ?
-                          <IconButton onClick={(e) => handleEject(e, guest.id)} color="primary" aria-label="Ajouter" style={{ marginLeft: "auto" }}>
-                            <RemoveCircleOutlineIcon />
-                          </IconButton>
-                          : null
-                        }
-                      </li>
-                    ))}
-                  </>
-                ) : (
-                  <></>
-                )}
-              </ul>
-            </div>
-
-            {tab === "CHATROOM" && (
-              <div className="">
-                <div className="chat">
-                  <div
-                    className="chat-header clearfix"
-                    style={{
-                      display: "flex",
-                      verticalAlign: "center",
-                      paddingLeft: "20px",
-                      paddingRight: "20px",
-                      paddingTop: "0px",
-                      paddingBottom: "0px",
-                      boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-                    }}
-                  >
-                    {/* <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/195612/chat_avatar_01_green.jpg" alt="avatar" /> */}
-                    <Avatar
-                      sx={{
-                        width: 48,
-                        height: 48,
-                        backgroundColor: "#1E2188",
-                        marginTop: "auto",
-                        marginBottom: "auto",
-                      }}
-                    >
-                      <ChatBubbleOutlineRounded />
-                    </Avatar>
-                    <div className="chat-about mt-0">
-                      <div className="chat-with text-uppercase ">Session</div>
-                      <label className="text-md text-secondary">
-                        {props.codeClient}
-                      </label>
-                      <div className="chat-num-messages text-sm">
-                        {publicChats != null ? publicChats.length : "Aucun"}{" "}
-                        message(s)
-                      </div>
-                    </div>
-                    <div style={{ marginLeft: "auto" }}>
-                      {props.session.createdBy.id === user.id ? (
-                        <>
-                          <IconButton onClick={handleShowVoteField}>
-                            <HowToVoteIcon />
-                          </IconButton>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="chat-history">
-                    <ul>
-                      {publicChats?.map((chat, index) => (
-                        <>
-                          {chat.sender.id === user.id ? (
-                            <>
-                              {chat.vote ? (
-                                <>
-                                  <li className="clearfix" key={chat.id}>
-                                    <div className="message-data align-right">
-                                      <span className="message-data-time">
-                                        {chat.createdAt}
-                                      </span>{" "}
-                                      &nbsp; &nbsp;
-                                      <span className="message-data-name">
-                                        {chat.sender.firstAndLastName}
-                                      </span>
-                                    </div>
-                                    <div className="message other-message float-right">
-                                      <div
-                                        className="row"
-                                        style={{
-                                          display: "grid",
-                                          justifyContent: "end",
-                                        }}
-                                      >
-                                        <HowToVoteIcon />
-                                      </div>
-                                      <div>
-                                        <blockquote>
-                                          <p>
-                                            <strong>Solution :</strong>{" "}
-                                            {JSON.parse(chat.content).contenu}
-                                          </p>
-                                        </blockquote>
-                                        <blockquote>
-                                          <p>
-                                            <strong>Commentaire :</strong>{" "}
-                                            {
-                                              JSON.parse(chat.content)
-                                                .commentaire
-                                            }
-                                          </p>
-                                        </blockquote>
-                                      </div>
-
-                                      <FormControl
-                                        component="fieldset"
-                                        style={{ width: "100%" }}
-                                      >
-                                        <FormLabel
-                                          component="legend"
-                                          className="text-white text-md text"
-                                          style={{ color: "white" }}
-                                        >
-                                          Que votez-vous pour cette proposition
-                                          ?
-                                        </FormLabel>
-                                        <RadioGroup
-                                          aria-label="vote"
-                                          name="vote-options"
-                                          value={
-                                            (chat?.voteDto?.userVote).filter(
-                                              (e) => {
-                                                // console.log("filter", e.author.id === user.id  );
-                                                // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                                return e.author.id === user.id;
-                                              }
-                                            )[0]?.voteType + ""
-                                          }
-                                          onChange={(e) =>
-                                            handleVote(e, chat.id)
-                                          }
-                                        >
-                                          <FormControlLabel
-                                            value="POUR"
-                                            control={
-                                              <Radio
-                                                color="error"
-                                                sx={{
-                                                  "& .MuiSvgIcon-root": {
-                                                    display: "none",
-                                                    color: "white",
-                                                  },
-                                                }}
-                                              />
-                                            }
-                                            label="Pour"
-                                            style={{
-                                              color: "white",
-                                              borderColor: "white",
-                                            }}
-                                          />
-                                          <div>
-                                            <LinearProgress
-                                              variant="determinate"
-                                              color="success"
-                                              value={
-                                                ((chat?.voteDto?.userVote).filter(
-                                                  (e) => {
-                                                    return (
-                                                      e.voteType === "POUR"
-                                                    );
-                                                  }
-                                                ).length /
-                                                  ((chat?.voteDto?.userVote).filter(
-                                                    (e) => {
-                                                      return (
-                                                        e.voteType === "POUR"
-                                                      );
-                                                    }
-                                                  ).length +
-                                                    (chat?.voteDto?.userVote).filter(
-                                                      (e) => {
-                                                        return (
-                                                          e.voteType ===
-                                                          "CONTRE"
-                                                        );
-                                                      }
-                                                    ).length)) *
-                                                100
-                                              }
-                                            />
-                                            <p>
-                                              {
-                                                (chat?.voteDto?.userVote).filter(
-                                                  (e) => {
-                                                    return (
-                                                      e.voteType === "POUR"
-                                                    );
-                                                  }
-                                                ).length
-                                              }{" "}
-                                              vote(s)
-                                            </p>
-                                          </div>
-
-                                          <FormControlLabel
-                                            value="CONTRE"
-                                            control={
-                                              <Radio
-                                                sx={{
-                                                  "& .MuiSvgIcon-root": {
-                                                    display: "none",
-                                                    color: "white",
-                                                  },
-                                                  " .MuiFormControlLabel-label":
-                                                  {
-                                                    color: "white",
-                                                    fontWeight: "bold",
-                                                  },
-                                                }}
-                                              />
-                                            }
-                                            label="Contre"
-                                            style={{
-                                              color: "white",
-                                              borderColor: "white",
-                                            }}
-                                          />
-                                          <div>
-                                            <LinearProgress
-                                              variant="determinate"
-                                              color="success"
-                                              value={
-                                                ((chat?.voteDto?.userVote).filter(
-                                                  (e) => {
-                                                    return (
-                                                      e.voteType === "CONTRE"
-                                                    );
-                                                  }
-                                                ).length /
-                                                  ((chat?.voteDto?.userVote).filter(
-                                                    (e) => {
-                                                      return (
-                                                        e.voteType === "POUR"
-                                                      );
-                                                    }
-                                                  ).length +
-                                                    (chat?.voteDto?.userVote).filter(
-                                                      (e) => {
-                                                        return (
-                                                          e.voteType ===
-                                                          "CONTRE"
-                                                        );
-                                                      }
-                                                    ).length)) *
-                                                100
-                                              }
-                                            />
-                                            <p>
-                                              {
-                                                (chat?.voteDto?.userVote).filter(
-                                                  (e) => {
-                                                    // console.log("filter", e.author.id === user.id  );
-                                                    // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                                    return (
-                                                      e.voteType === "CONTRE"
-                                                    );
-                                                  }
-                                                ).length
-                                              }{" "}
-                                              vote(s)
-                                            </p>
-                                          </div>
-                                        </RadioGroup>
-                                      </FormControl>
-
-                                      {(chat?.voteDto?.userVote).filter((e) => {
-                                        return e.voteType === "POUR";
-                                      }).length >
-                                        (chat?.voteDto?.userVote).filter((e) => {
-                                          return e.voteType === "CONTRE";
-                                        }).length ? (
-                                        <>
-                                          <hr
-                                            style={{ borderColor: "white" }}
-                                          />
-                                          <div
-                                            style={{
-                                              marginLeft: "auto",
-                                              marginRight: "auto",
-                                              display: "grid",
-                                            }}
-                                          >
-                                            {showConfirmChooseSolution && isUserOpenSession ? (
-                                              <div
-                                                style={{
-                                                  display: "flex",
-                                                  justifyContent:
-                                                    "space-evenly",
-                                                }}
-                                              >
-                                                <label
-                                                  style={{
-                                                    fontSize: "16px",
-                                                    fontWeight: "bold",
-                                                    color: "white",
-                                                  }}
-                                                >
-                                                  Poursuivre ?{" "}
-                                                </label>
-                                                <button
-                                                  onClick={
-                                                    handleChooseVoteConfirm
-                                                  }
-                                                  className=""
-                                                  style={{
-                                                    color: "black",
-                                                    fontSize: "16px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    fontWeight: "bold",
-                                                    backgroundColor:
-                                                      "transparent",
-                                                    marginRight: "6px",
-                                                  }}
-                                                >
-                                                  Non
-                                                </button>
-                                                <button
-                                                  onClick={(e) =>
-                                                    handleChooseVote(chat.id)
-                                                  }
-                                                  className=""
-                                                  style={{
-                                                    color: "white",
-                                                    fontSize: "16px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    fontWeight: "bold",
-                                                    backgroundColor:
-                                                      "transparent",
-                                                  }}
-                                                >
-                                                  Oui
-                                                </button>
-                                              </div>
-                                            ) : (
-                                              <>
-                                                <button
-                                                  onClick={
-                                                    handleChooseVoteConfirm
-                                                  }
-                                                  className=""
-                                                  style={{
-                                                    color: "white",
-                                                    fontSize: "16px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    fontWeight: "bold",
-                                                    backgroundColor:
-                                                      "transparent",
-                                                  }}
-                                                >
-                                                  Utiliser comme solution
-                                                </button>
-                                              </>
-                                            )}
-                                          </div>
-                                        </>
-                                      ) : null}
-                                    </div>
-                                  </li>
-                                </>
-                              ) : (
-                                <li className="clearfix" key={chat.id}>
-                                  <div className="message-data align-right">
-                                    <span className="message-data-time">
-                                      {chat.createdAt}
-                                    </span>{" "}
-                                    &nbsp; &nbsp;
-                                    <span className="message-data-name">
-                                      {chat.sender.firstAndLastName}
-                                    </span>
-                                  </div>
-                                  <div className="message other-message float-right">
-                                    {chat.content}
-                                  </div>
-                                </li>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              {chat.vote ? (
-                                <>
-                                  <li key={chat.id}>
-                                    <div className="message-data">
-                                      <span className="message-data-name">
-                                        {chat.sender.firstAndLastName}
-                                      </span>
-                                      <span className="message-data-time">
-                                        {chat.createdAt}
-                                      </span>
-                                    </div>
-                                    <div className="message my-message">
-                                      <div
-                                        className="row"
-                                        style={{
-                                          display: "grid",
-                                          justifyContent: "end",
-                                        }}
-                                      >
-                                        <HowToVoteIcon />
-                                      </div>
-                                      <div>
-                                        <blockquote>
-                                          <p>
-                                            <strong>Solution :</strong>{" "}
-                                            {JSON.parse(chat.content).contenu}
-                                          </p>
-                                        </blockquote>
-                                        <blockquote>
-                                          <p>
-                                            <strong>Commentaire :</strong>{" "}
-                                            {
-                                              JSON.parse(chat.content)
-                                                .commentaire
-                                            }
-                                          </p>
-                                        </blockquote>
-                                      </div>
-
-                                      <FormControl
-                                        component="fieldset"
-                                        style={{ width: "100%" }}
-                                      >
-                                        <FormLabel
-                                          component="legend"
-                                          className="text-white text-md text"
-                                          style={{ color: "white" }}
-                                        >
-                                          Que votez-vous pour cette proposition
-                                          ?
-                                        </FormLabel>
-                                        <RadioGroup
-                                          aria-label="vote"
-                                          name="vote-options"
-                                          value={
-                                            (chat?.voteDto?.userVote).filter(
-                                              (e) => {
-                                                // console.log("filter", e.author.id === user.id  );
-                                                return e.author.id === user.id;
-                                              }
-                                            )[0]?.voteType + ""
-                                          }
-                                          onChange={(e) =>
-                                            handleVote(e, chat.id)
-                                          }
-                                        >
-                                          <FormControlLabel
-                                            value="POUR"
-                                            control={
-                                              <Radio
-                                                sx={{
-                                                  "& .MuiSvgIcon-root": {
-                                                    display: "none",
-                                                  },
-                                                  "& .MuiTypography-root": {
-                                                    color: "white",
-                                                    fontWeight: "bold",
-                                                  },
-                                                }}
-                                              />
-                                            }
-                                            label="Pour"
-                                            style={{
-                                              color: "white",
-                                              borderColor: "white",
-                                            }}
-                                          />
-                                          <div>
-                                            <LinearProgress
-                                              variant="determinate"
-                                              color="success"
-                                              value={
-                                                ((chat?.voteDto?.userVote).filter(
-                                                  (e) => {
-                                                    return (
-                                                      e.voteType === "POUR"
-                                                    );
-                                                  }
-                                                ).length /
-                                                  ((chat?.voteDto?.userVote).filter(
-                                                    (e) => {
-                                                      return (
-                                                        e.voteType === "POUR"
-                                                      );
-                                                    }
-                                                  ).length +
-                                                    (chat?.voteDto?.userVote).filter(
-                                                      (e) => {
-                                                        return (
-                                                          e.voteType ===
-                                                          "CONTRE"
-                                                        );
-                                                      }
-                                                    ).length)) *
-                                                100
-                                              }
-                                            />
-                                            <p>
-                                              {
-                                                (chat?.voteDto?.userVote).filter(
-                                                  (e) => {
-                                                    // console.log("filter", e.author.id === user.id  );
-                                                    return (
-                                                      e.voteType === "POUR"
-                                                    );
-                                                  }
-                                                ).length
-                                              }{" "}
-                                              vote(s)
-                                            </p>
-                                          </div>
-
-                                          <FormControlLabel
-                                            value="CONTRE"
-                                            control={
-                                              <Radio
-                                                sx={{
-                                                  "& .MuiSvgIcon-root": {
-                                                    display: "none",
-                                                  },
-                                                  "& .MuiTypography-root": {
-                                                    color: "white",
-                                                    fontWeight: "bold",
-                                                  },
-                                                }}
-                                              />
-                                            }
-                                            label="Contre"
-                                            style={{
-                                              color: "white",
-                                              borderColor: "white",
-                                            }}
-                                          />
-                                          <div>
-                                            <LinearProgress
-                                              variant="determinate"
-                                              color="success"
-                                              value={
-                                                ((chat?.voteDto?.userVote).filter(
-                                                  (e) => {
-                                                    return (
-                                                      e.voteType === "CONTRE"
-                                                    );
-                                                  }
-                                                ).length /
-                                                  ((chat?.voteDto?.userVote).filter(
-                                                    (e) => {
-                                                      return (
-                                                        e.voteType === "CONTRE"
-                                                      );
-                                                    }
-                                                  ).length +
-                                                    (chat?.voteDto?.userVote).filter(
-                                                      (e) => {
-                                                        return (
-                                                          e.voteType === "POUR"
-                                                        );
-                                                      }
-                                                    ).length)) *
-                                                100
-                                              }
-                                            />
-                                            <p>
-                                              {
-                                                (chat?.voteDto?.userVote).filter(
-                                                  (e) => {
-                                                    // console.log("filter", e.author.id === user.id  );
-                                                    // console.log("filter", e.author.id === user.id ? e.voteType : "fuck" );
-                                                    return (
-                                                      e.voteType === "CONTRE"
-                                                    );
-                                                  }
-                                                ).length
-                                              }{" "}
-                                              vote(s)
-                                            </p>
-                                          </div>
-                                        </RadioGroup>
-                                      </FormControl>
-
-                                      {(chat?.voteDto?.userVote).filter((e) => {
-                                        return e.voteType === "POUR";
-                                      }).length >
-                                        (chat?.voteDto?.userVote).filter((e) => {
-                                          return e.voteType === "CONTRE";
-                                        }).length ? (
-                                        <>
-                                          <hr
-                                            style={{ borderColor: "white" }}
-                                          />
-                                          <div
-                                            style={{
-                                              marginLeft: "auto",
-                                              marginRight: "auto",
-                                              display: "grid",
-                                            }}
-                                          >
-                                            {(showConfirmChooseSolution && isUserOpenSession) ? (
-                                              <div
-                                                style={{
-                                                  display: "flex",
-                                                  justifyContent:
-                                                    "space-evenly",
-                                                }}
-                                              >
-                                                <label
-                                                  style={{
-                                                    fontSize: "16px",
-                                                    fontWeight: "bold",
-                                                    color: "white",
-                                                  }}
-                                                >
-                                                  Poursuivre ?{" "}
-                                                </label>
-                                                <button
-                                                  onClick={
-                                                    handleChooseVoteConfirm
-                                                  }
-                                                  className=""
-                                                  style={{
-                                                    color: "black",
-                                                    fontSize: "16px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    fontWeight: "bold",
-                                                    backgroundColor:
-                                                      "transparent",
-                                                    marginRight: "6px",
-                                                  }}
-                                                >
-                                                  Non
-                                                </button>
-                                                <button
-                                                  onClick={(e) =>
-                                                    handleChooseVote(chat.id)
-                                                  }
-                                                  className=""
-                                                  style={{
-                                                    color: "white",
-                                                    fontSize: "16px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    fontWeight: "bold",
-                                                    backgroundColor:
-                                                      "transparent",
-                                                  }}
-                                                >
-                                                  Oui
-                                                </button>
-                                              </div>
-                                            ) : (
-                                              <>
-                                                {(showConfirmChooseSolution && isUserOpenSession) && (
-                                                  <button
-                                                    onClick={
-                                                      handleChooseVoteConfirm
-                                                    }
-                                                    className=""
-                                                    style={{
-                                                      color: "white",
-                                                      fontSize: "16px",
-                                                      border: "none",
-                                                      cursor: "pointer",
-                                                      fontWeight: "bold",
-                                                      backgroundColor:
-                                                        "transparent",
-                                                    }}
-                                                  >
-                                                    Utiliser comme solution
-                                                  </button>
-                                                )}
-                                              </>
-                                            )}
-                                          </div>
-                                        </>
-                                      ) : null}
-                                    </div>
-                                  </li>
-                                </>
-                              ) : (
-                                <>
-                                  <li key={chat.id}>
-                                    <div className="message-data">
-                                      <span className="message-data-name">
-                                        {chat.sender.firstAndLastName}
-                                      </span>
-                                      <span className="message-data-time">
-                                        {chat.createdAt}
-                                      </span>
-                                    </div>
-                                    <div className="message my-message">
-                                      {chat.content}
-                                    </div>
-                                  </li>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </>
-                      ))}
-                    </ul>
-                    <div ref={bottomRef} />
-                  </div>
-                  <div className="chat-message clearfix">
-                    {showVoteField ? (
-                      <>
-                        <textarea
-                          name="message-to-send"
-                          id="message-to-send"
-                          placeholder="Entrez la solution"
-                          value={propositionSolution}
-                          onChange={handlePropositionSolution}
-                          rows="3"
-                          className="mb-4"
-                          style={{
-                            background: "#f0f0f0 !important",
-                            color: "black",
-                          }}
-                        ></textarea>
-                        <div id="solution-error" className="error">
-                          {propositionSolutionError}
-                        </div>
-                        <textarea
-                          name="message-to-send"
-                          id="message-to-send"
-                          placeholder="Entrez son commentaire"
-                          value={propositionCommentaire}
-                          onChange={handlePropositionCommentaire}
-                          rows="2"
-                          className="bg-secondary"
-                          style={{
-                            background: "#f0f0f0 !important",
-                            color: "black",
-                          }}
-                        ></textarea>
-                        <div id="solution-error" className="error">
-                          {propositionCommentaireError}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <textarea
-                          name="message-to-send"
-                          id="message-to-send"
-                          placeholder="Entrez votre message"
-                          value={userData.message}
-                          onChange={handleMessage}
-                          rows="3"
-                        ></textarea>
-                        {/* <div id="solution-error" className="error">
-                          {messageError}
-                        </div> */}
-                      </>
-                    )}
-                    <div className="">
-                      {showVoteField ? (
-                        <button
-                          onClick={handleShowVoteField}
-                          className="btn btn-secondary ml-4"
-                          style={{
-                            float: "right",
-                            color: "white",
-                            fontSize: "16px",
-                            textTransform: "uppercase",
-                            border: "none",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                            backgroundColor: "gray",
-                          }}
-                        >
-                          Annuler
-                        </button>
-                      ) : null}
-                      <button
-                        onClick={showVoteField ? sendVote : sendValue}
-                        className="btn btn-primary"
-                        style={{
-                          float: "right",
-                          color: "white",
-                          fontSize: "16px",
-                          textTransform: "uppercase",
-                          border: "none",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                          backgroundColor: "#84cd3e",
-                        }}
-                      >
-                        {showVoteField ? "Soumettre pour vote" : "Envoyer"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* <div className="send-message">
-                    <input type="text" className="input-message" placeholder="enter the message" value={userData.message} onChange={handleMessage} /> 
-                    <button type="button" className="send-button" onClick={sendValue}>Envoyez</button>
-                </div> */}
-              </div>
-            )}
-          </div>
-        ) : (
-          ""
-        )}
-      </>
-    );
-  } else {
-    tchat = "";
-  }
+  const tchat = showJoinBtn ? (
+    <SessionChat
+      session={props.session}
+      user={user}
+      userData={userData}
+      publicChats={publicChats}
+      guests={guests}
+      codeClient={props.codeClient}
+      isCreator={props.session?.createdBy?.id === user.id}
+      isUserOpenSession={isUserOpenSession}
+      availableToInvite={availableToInvite}
+      showVoteField={showVoteField}
+      showConfirmChooseSolution={showConfirmChooseSolution}
+      propositionSolution={propositionSolution}
+      propositionCommentaire={propositionCommentaire}
+      propositionSolutionError={propositionSolutionError}
+      propositionCommentaireError={propositionCommentaireError}
+      maDivRef={maDivRef}
+      bottomRef={bottomRef}
+      onSearchInvite={invitation}
+      onInvite={handleInvitation}
+      onEject={handleEject}
+      onMessage={handleMessage}
+      onSend={sendValue}
+      onToggleVoteField={handleShowVoteField}
+      onPropositionSolution={handlePropositionSolution}
+      onPropositionCommentaire={handlePropositionCommentaire}
+      onSendVote={sendVote}
+      onVote={handleVote}
+      onChooseVote={handleChooseVote}
+      onChooseVoteConfirm={handleChooseVoteConfirm}
+    />
+  ) : null;
 
   let details;
 
@@ -3076,7 +1779,7 @@ const TraiterReclamation = (props) => {
 
         <button
           type="button"
-          onClick={handleSubmit}
+          onClick={handleSolve}
           className="waves-effect waves-effect-b waves-light btn-small"
         >
           Enregistrer
@@ -3084,225 +1787,6 @@ const TraiterReclamation = (props) => {
       </>
     );
   }
-
-  const handleValidationForAssign = () => {
-    let isValid = true;
-
-    if (
-      props.handled_by === "" ||
-      props.handled_by === undefined ||
-      props.handled_by === null
-    ) {
-      isValid = false;
-      errors["handled_by"] = "Champ incorrect";
-    }
-    if (props.handled_delai <= 0 || props.handled_delai > maxDelai) {
-      isValid = false;
-      errors[
-        "handled_delai"
-      ] = `Le delai doit etre compris entre ${1} à ${maxDelai}`;
-    }
-
-    return isValid;
-  };
-  const handleValidationForReAssign = () => {
-
-    let isValid = true;
-
-    if (
-      props.reaffect === "" ||
-      props.reaffect === undefined ||
-      props.reaffect === null
-    ) {
-      isValid = false;
-      errors["handled_by"] = "Champ incorrect";
-    }
-    if (props.handled_delai <= 0 || props.handled_delai > maxDelai) {
-      isValid = false;
-      errors[
-        "handled_delai"
-      ] = `Le delai doit etre compris entre ${1} à ${maxDelai}`;
-    }
-
-    return isValid;
-  };
-  const handleAssign = (e) => {
-    e.preventDefault();
-    if (handleValidationForAssign()) {
-      let claim = {};
-      // console.log(props.code);
-
-      claim["claimId"] = props.id;
-      claim["affectToId"] = props.handled_by;
-      claim["affectorId"] = user.id;
-      claim["affectedAnonymous"] = anonymat;
-      claim["message"] = props.handled_message;
-      claim["delai"] = props.handled_delai;
-
-      // console.log("anonymaty", anonymat);
-
-      //console.log("props.handled_by",claim);
-      props.etatChanged(true);
-      affectClaimApi(claim, props).then(() => {
-        handleCancel(e);
-        handleClose();
-      });
-    } else {
-    }
-    props.claimHandleErrors(errors);
-  };
-
-  const prepareBeforeAssign = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    props.handledShowModalChanged(true);
-  };
-
-  const handleAssignOrReassign = (e) => {
-    if (props.reaffect) {
-      handleReAssign(e);
-    } else {
-      handleAssign(e);
-    }
-  };
-
-  const handleReAssign = (e) => {
-    e.preventDefault();
-    if (handleValidationForReAssign()) {
-      let claim = {};
-      // let reafect = dataRow.treatmentAffectedTo.id;
-      // console.log(props.code);
-
-      claim["claimId"] = props.id;
-      claim["affectToId"] = props.reaffect;
-      claim["affectorId"] = user.id;
-      claim["affectedAnonymous"] = anonymat;
-      claim["message"] = props.handled_message;
-      claim["delai"] = props.handled_delai;
-
-      props.etatChanged(true);
-      affectClaimApi(claim, props).then(() => {
-        handleCancel(e);
-        handleClose();
-      });
-    } else {
-    }
-    props.claimHandleErrors(errors);
-  };
-
-  const handleSolve = (e) => {
-    e.preventDefault();
-    // console.log("traitementclaim", props);
-    if (handleValidation()) {
-      let claim = {};
-      claim["claimId"] = props.id;
-      claim["treatorId"] = user.id;
-      claim["solution"] =
-        props.solution && typeof props.solution === "string"
-          ? props.solution
-          : "";
-      claim["commentaire"] = props.comment;
-      claim["existingId"] = props.solutionExistant;
-      claim["isExisting"] = props.solutionExistant !== "" ? true : false;
-
-      // console.log("traitementclaim", claim);
-      props.etat2Changed(true);
-      treatClaimApi(claim, props).then(() => {
-        handleCancel(e);
-        handleClose();
-      });
-    } else {
-    }
-    props.claimHandleErrors(errors);
-  };
-
-  const handleReSolve = (e) => {
-    e.preventDefault();
-    if (handleReValidation()) {
-      let claim = {};
-      // claim["claimId"] = props.id;
-      // claim["treatorId"] = user.id;
-      // claim["solution"] = props.new_solution;
-      // claim["commentaire"] = props.new_comment;
-
-      claim["claimId"] = props.id;
-      claim["treatorId"] = user.id;
-      claim["solution"] = props.new_solution;
-      claim["commentaire"] = props.new_comment;
-      claim["existingId"] = props.solutionExistant;
-      claim["isExisting"] = props.solutionExistant !== "" ? true : false;
-
-      // console.log("traitementclaim", claim);
-      props.etat2Changed(true);
-      treatClaimApi(claim, props).then(() => {
-        handleCancel(e);
-        handleClose();
-      });
-    } else {
-    }
-    props.claimHandleErrors(errors);
-  };
-
-  const handleApprove = (e) => {
-    e.preventDefault();
-
-    let claim = {};
-    claim["solutionId"] = props.solutionId;
-    claim["claimId"] = props.id;
-    claim["approuverId"] = user.id;
-    //console.log("aprobation",claim)
-    props.etat2Changed(true);
-    approveClaimSolutionApi(claim, props).then(() => {
-      handleCancel(e);
-      handleClose();
-    });
-
-    props.claimHandleErrors(errors);
-  };
-  const handleValidationForDisapproval = () => {
-    let isValid = true;
-    if (
-      props.motif === "" ||
-      props.motif === undefined ||
-      props.motif === null
-    ) {
-      isValid = false;
-      errors["motif"] = "Champ incorrect";
-    }
-
-    return isValid;
-  };
-  const handleDisapprove = (e) => {
-    e.preventDefault();
-    if (handleValidationForDisapproval()) {
-      let claim = {};
-      claim["solutionId"] = props.solutionId;
-      claim["claimId"] = props.id;
-      claim["unApprouverId"] = user.id;
-      claim["motifDesaprobation"] = props.motif;
-      //  console.log("desaprobation",claim)
-      props.etatChanged(true);
-      unapproveClaimSolutionApi(claim, props).then(() => {
-        handleCancel(e);
-        handleClose();
-      });
-    } else {
-    }
-    props.claimHandleErrors(errors);
-  };
-
-  const handleTransmission = (e) => {
-    e.preventDefault();
-    let info = {
-      claimId: props.id,
-    };
-    props.etat3Changed(true);
-    transmissionClaimApi(info, props).then(() => {
-      handleCancel(e);
-      handleClose();
-    });
-  };
 
   const handleModal = (e) => {
     e.preventDefault();
@@ -3453,15 +1937,7 @@ const TraiterReclamation = (props) => {
                       {
                         //  (actif !== undefined && actif)  ?
                         <LoadingButton
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (handleValidationForAssign()) {
-                              //setShowSelectPrintItem(true);
-                              prepareBeforeAssign(e);
-                              //handleAssign(e);
-                            }
-                            props.claimHandleErrors(errors);
-                          }}
+                          onClick={(e) => { prepareBeforeAssign(e); }}
                           className="waves-effect waves-effect-b waves-light btn-small"
                           loading={props.etat}
                           loadingPosition="end"
@@ -3754,15 +2230,7 @@ const TraiterReclamation = (props) => {
                     </div>
                     <div className="col s12 display-flex justify-content-end mt-3">
                       <LoadingButton
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (handleValidationForReAssign()) {
-                            //setShowSelectPrintItem(true);
-                            prepareBeforeAssign(e);
-                            // handleReAssign(e);
-                          }
-                          props.claimHandleErrors(errors);
-                        }}
+                        onClick={(e) => { prepareBeforeAssign(e); }}
                         className="waves-effect waves-effect-b waves-light btn-small"
                         loading={props.etat}
                         loadingPosition="end"
@@ -3917,22 +2385,12 @@ const TraiterReclamation = (props) => {
             </div>
           );
 
-          if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
-            treatForm = (
-              <>
-                {personAffect}
-                {afForm}
-                {tmp}
-              </>
-            );
-          } else {
-            treatForm = (
-              <>
-                {personAffect}
-                {tmp}
-              </>
-            );
-          }
+          treatForm = (
+            <>
+              {personAffect}
+              {tmp}
+            </>
+          );
         } else {
           if (hbt.includes("H14") || addR !== "MOLDUE" || (user.ra === true && props.transmitted === "false")) {
             tmp = (
@@ -3961,16 +2419,7 @@ const TraiterReclamation = (props) => {
             tmp = "";
           }
 
-          if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) {
-            treatForm = (
-              <>
-                {tmp}
-                {afForm}
-              </>
-            );
-          } else {
-            treatForm = <>{tmp}</>;
-          }
+          treatForm = <>{tmp}</>;
         }
       } else {
         // console.log("props.handle_by",props.handled_by)
@@ -4172,7 +2621,6 @@ const TraiterReclamation = (props) => {
                     </details>
                   </div>
                 </div>
-                {afForm}
               </>
             );
           }
@@ -4579,15 +3027,7 @@ const TraiterReclamation = (props) => {
                       {
                         // (actif !== undefined && actif)  ?
                         <LoadingButton
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (handleValidationForAssign()) {
-                              //setShowSelectPrintItem(true);
-                              prepareBeforeAssign(e);
-                              //handleAssign(e);
-                            }
-                            props.claimHandleErrors(errors);
-                          }}
+                          onClick={(e) => { prepareBeforeAssign(e); }}
                           className="waves-effect waves-effect-b waves-light btn-small"
                           loading={props.etat}
                           loadingPosition="end"
@@ -4681,15 +3121,7 @@ const TraiterReclamation = (props) => {
                       {
                         //  (actif !== undefined && actif)  ?
                         <LoadingButton
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (handleValidationForAssign()) {
-                              //setShowSelectPrintItem(true);
-                              prepareBeforeAssign(e);
-                              //handleAssign(e);
-                            }
-                            props.claimHandleErrors(errors);
-                          }}
+                          onClick={(e) => { prepareBeforeAssign(e); }}
                           className="waves-effect waves-effect-b waves-light btn-small"
                           loading={props.etat}
                           loadingPosition="end"
@@ -4783,15 +3215,7 @@ const TraiterReclamation = (props) => {
                       {
                         // (actif !== undefined && actif)  ?
                         <LoadingButton
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (handleValidationForAssign()) {
-                              //setShowSelectPrintItem(true);
-                              prepareBeforeAssign(e);
-                              //handleAssign(e);
-                            }
-                            props.claimHandleErrors(errors);
-                          }}
+                          onClick={(e) => { prepareBeforeAssign(e); }}
                           className="waves-effect waves-effect-b waves-light btn-small"
                           loading={props.etat}
                           loadingPosition="end"
@@ -5789,18 +4213,29 @@ const TraiterReclamation = (props) => {
         )}
         <audio ref={audioRef} src={currentAudio} hidden />
 
-        <div className="row">
-          <div className="col s12">
-            <div className="container">
-              <section className="tabs-vertical mt-1 section">
-                <div className="row">
-                  <div className="col l12 s12 pb-5">
-                    <div className="card-panel pb-5">
-                      <div className="row">
-                        <div className="col s12">
-                          <h5 className="card-title">Réclamations à traiter</h5>
+        {props.match.params.code === "all" ? (
+          <div className="row">
+            <div className="col s12">
+              <div className="container">
+                <section className="tabs-vertical mt-1 section">
+                  <div className="row">
+                    <div className="col l12 s12 pb-5">
+                      <div style={{ padding: '24px 0' }}>
+
+                        {/* ── List header ── */}
+                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+                          <div>
+                            <h4 style={{ margin: '0 0 4px', fontWeight: 700, color: '#0f172a', fontSize: 20 }}>
+                              Traitement actif
+                            </h4>
+                            <p style={{ margin: 0, color: '#64748b', fontSize: 13 }}>
+                              {content.length} dossier{content.length !== 1 ? 's' : ''} en cours de traitement
+                            </p>
+                          </div>
                         </div>
-                        <div className="col s12">
+
+                        {/* ── Modern table wrapper ── */}
+                        <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
                           <ReactDatatable
                             className={"responsive-table"}
                             config={config}
@@ -5812,507 +4247,96 @@ const TraiterReclamation = (props) => {
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <div>
-                      <Dialog
-                        fullScreen
-                        open={open}
-                        onClose={handleClose}
-                        TransitionComponent={Transition}
-                        id="dialog-parent"
-                      >
-                        <AppBar
-                          sx={{
-                            position: "relative",
-                            backgroundColor: "#1e2188",
-                          }}
-                        >
-                          <Toolbar>
-                            {props?.match?.params?.code === "all" ? (
-                              <IconButton
-                                edge="start"
-                                color="inherit"
-                                onClick={handleClose}
-                                aria-label="close"
-                              >
-                                <CloseIcon />
-                              </IconButton>
-                            ) : (
-                              <IconButton
-                                edge="start"
-                                color="inherit"
-                                // onClick={handleClose}
-                                aria-label="close"
-                              >
-                                <NavLink to="/alertes/reclamations">
-                                  <div className="card-content">
-                                    <CloseIcon />
-                                  </div>
-                                </NavLink>
-                              </IconButton>
-                            )}
-                            <Typography
-                              sx={{ ml: 2, flex: 1 }}
-                              variant="h6"
-                              component="div"
-                            >
-                              Détails de la réclamation
-                            </Typography>
-                          </Toolbar>
-                        </AppBar>
-
-                        <div className="row">
-                          {/* first part */}
-
-                          <div
-                            className="col l6 s12 pb-5"
-                            id="ficheReclamation"
-                          >
-                            <div className="card-panel pb-5">
-                              <div
-                                className="row df align-items-center"
-                                id="ententeFiche"
-                              >
-                                <div className="col l6 s12">
-                                  <h5 className="card-title">
-                                    Fiche de la réclamation
-                                  </h5>
-                                </div>
-                                <div className="col l6 m6 s12 df justify-content-end">
-                                  {btnConversion}
-                                </div>
-                              </div>
-
-                              {infosRec}
-                              <div className="row">
-                                <div className="col s12 m12">
-                                  <div className="row">
-                                    <div className="col s12 pb-2">
-                                      <h6 className="card-title">
-                                        Détails de la réclamation
-                                      </h6>
-                                    </div>
-
-                                    <div className="row">
-                                      <div
-                                        className="col l6 s12 df pb-2"
-                                        id="code"
-                                      >
-                                        <PinIcon sx={{ mr: 2 }} />{" "}
-                                        {props.codeClient}
-                                      </div>
-
-                                      <div
-                                        className="col l6 s12 df pb-2"
-                                        id="recorded_at"
-                                      >
-                                        <CalendarMonthIcon sx={{ mr: 2 }} />{" "}
-                                        {formatDate3(props.recorded_at)}
-                                      </div>
-
-                                      <div
-                                        className="col l6 s12 df pb-2"
-                                        id="collect"
-                                      >
-                                        <RecyclingIcon sx={{ mr: 2 }} />{" "}
-                                        {props.collect}
-                                      </div>
-
-                                      <div
-                                        className="col l6 s12 df pb-2"
-                                        id="underSubject"
-                                      >
-                                        <DataObjectIcon sx={{ mr: 2 }} />{" "}
-                                        {props.underSubject}
-                                      </div>
-
-                                      <div
-                                        className="col l12 s12 df pb-2"
-                                        id="subject"
-                                      >
-                                        <DataObjectIcon sx={{ mr: 2 }} />{" "}
-                                        {props.subject}
-                                      </div>
-
-                                      <div
-                                        className="col l6 s12 df pb-2"
-                                        id="product"
-                                      >
-                                        <CategoryIcon sx={{ mr: 2 }} />{" "}
-                                        {props.product}
-                                      </div>
-
-                                      <div
-                                        className="col l6 s12 df pb-2"
-                                        id="unit"
-                                      >
-                                        <AddBusinessIcon sx={{ mr: 2 }} />{" "}
-                                        {props.unit}
-                                      </div>
-
-                                      <div
-                                        className="col l6 s12 df pb-2"
-                                        id="content"
-                                      >
-                                        <SupportAgentIcon sx={{ mr: 2 }} />{" "}
-                                        {props.created_by}
-                                      </div>
-
-                                      <div
-                                        className="col l6 s12 df pb-2"
-                                        id="content"
-                                      >
-                                        <CalendarTodayIcon sx={{ mr: 2 }} />{" "}
-                                        {creationDate}
-                                      </div>
-
-                                      <div
-                                        className="col l12 s12 pb-2"
-                                        id="content"
-                                      >
-                                        <Box
-                                          sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                          }}
-                                        >
-                                          <div className="df pb-2">
-                                            <RecordVoiceOverIcon
-                                              sx={{ mr: 2 }}
-                                            />{" "}
-                                            {"Contenu"}
-                                          </div>
-                                          <span
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              e.stopPropagation();
-                                              setShowExtraContent(true);
-                                              setExtraContent("");
-                                            }}
-                                            className="pb-2 ml-3 "
-                                            style={{
-                                              cursor: "pointer",
-                                              color: "#1e2188",
-                                            }}
-                                          >
-                                            + Ajouter du contenu
-                                          </span>
-                                        </Box>
-
-                                        <List component="div" role="group">
-                                          <ListItemButton divider>
-                                            <ListItemText
-                                              primary={props.content}
-                                              secondary={
-                                                props.created_by +
-                                                " le " +
-                                                creationDate
-                                              }
-                                            />
-                                          </ListItemButton>
-
-                                          {props.extras?.map((extra) => {
-                                            return extra.contenu ? (
-                                              <ListItemButton
-                                                key={extra.id}
-                                                divider
-                                              >
-                                                <ListItemText
-                                                  primary={extra.contenu}
-                                                  secondary={
-                                                    extra.user
-                                                      ?.firstAndLastName +
-                                                    " le " +
-                                                    formatDate(extra.createdAt)
-                                                  }
-                                                />
-
-                                                <Tooltip
-                                                  title={
-                                                    "Ce contenu a été ajouté ultérieurement par " +
-                                                    extra.user
-                                                      ?.firstAndLastName +
-                                                    " le " +
-                                                    formatDate(
-                                                      extra.createdAt
-                                                    ) +
-                                                    ". la plainte etait en etat: " +
-                                                    getStatusLabel(extra.status)
-                                                  }
-                                                >
-                                                  <Info />
-                                                </Tooltip>
-                                              </ListItemButton>
-                                            ) : (
-                                              <></>
-                                            );
-                                          })}
-                                        </List>
-                                      </div>
-
-                                      {/* {dimf = props.dossierimf !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <FolderSharedIcon sx={{ mr: 2}}/> {props.dossierimf}</div></>:""}
-                                    {crew = props.crew !=="" ? <><div className="col s6 df pb-2" id="dossierimf"> <Diversity3Icon sx={{ mr: 2}}/> {props.crew}</div></>:""} */}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* file part */}
-                            <div className="">
-                              <div className="card-panel pb-5">
-                                <div className="row" id="">
-                                  <div className="col s12 pb-2">
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        flexDirection: "row",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      <Typography
-                                        gutterBottom
-                                        variant="body1"
-                                        component="div"
-                                        sx={{
-                                          fontWeight: "bold",
-                                          mb: 1,
-                                          mr: 1,
-                                        }}
-                                      >
-                                        {" "}
-                                        Fichiers
-                                      </Typography>
-                                      <label
-                                        htmlFor="ile"
-                                        className="btn btn-primary"
-                                      >
-                                        Ajouter un fichier
-                                        <input
-                                          type="file"
-                                          ref={inputRef}
-                                          id="ile"
-                                          multiple
-                                          sx={{ display: "none" }}
-                                          onChange={(e) => {
-                                            setFiles([...e.target.files]);
-                                          }}
-                                          style={{ display: "none" }}
-                                          accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
-                                        />
-                                      </label>
-                                    </Box>
-                                  </div>
-                                  <div className="col s12">
-                                    {attachmentList}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Audio part */}
-                            <div className="">
-                              <div className="card-panel pb-5">
-                                <div className="row" id="">
-                                  <div className="col s12 pb-3">
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        flexDirection: "row",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      <Typography
-                                        gutterBottom
-                                        variant="body1"
-                                        component="div"
-                                        sx={{
-                                          fontWeight: "bold",
-                                          mb: 1,
-                                          mr: 1,
-                                        }}
-                                      >
-                                        {" "}
-                                        Audios
-                                      </Typography>
-                                      <label
-                                        htmlFor="audio"
-                                        onClick={() => {
-                                          setAudioBox(true);
-                                          setOpen2(true);
-                                        }}
-                                        className="btn btn-primary"
-                                      >
-                                        Ajouter un audio
-                                      </label>
-                                    </Box>
-                                  </div>
-                                  <div className="col s12">{audioList}</div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* second part */}
-                          <div
-                            className="col l6 s12 pb-5"
-                            id="ficheReclamation"
-                          >
-                            <div className="card-panel pb-5">
-                              <div className="row" id="ententeFiche">
-                                <div className="row df align-items-center">
-                                  <h5 className="col l6 m6 s12 m-0 card-title">
-                                    Détails du traitement
-                                  </h5>
-
-                                  {transmettre === "" || btnS === "" ? (
-                                    <div className="col l6 m6 s12 m-0 row">
-                                      {transmettre}
-                                      {btnS}
-                                    </div>
-                                  ) : (
-                                    <div className="col l6 m6 s12 m-0 row">
-                                      {transmettre}
-                                      {btnS}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="col s12 input-field">
-                                  Etat: &nbsp;{statusElt}
-                                </div>
-                              </div>
-
-                              {props.status === "PARTIAL_SATISFIED" ||
-                                props.status === "UNSATISFIED" ||
-                                props.status === "CLASSED"
-                                ? historique
-                                : null}
-
-                              <>
-                                {affectForm}
-                                {treatForm}
-                                {tchat}
-                              </>
-                            </div>
-                          </div>
-                        </div>
-                      </Dialog>
-
-                      <Dialog
-                        open={conversionBoxOpen}
-                        onClose={handleConversionBoxClose}
-                        id="dialog-enfant"
-                      >
-                        <DialogTitle>Convertir la réclamation</DialogTitle>
-                        <DialogContent>
-                          <Typography gutterBottom>
-                            Cette conversation doit être convertie en quel type
-                            de plainte ?
-                          </Typography>
-
-                          <div className="row mt-5">
-                            <div className="col s6 mb-1">
-                              <Button
-                                fullWidth
-                                variant="contained"
-                                // color="primary"
-                                onClick={() => handleOpenDialog("dénonciation")}
-                                className="waves-effect waves-light btn-small"
-                              >
-                                Dénonciation
-                              </Button>
-                            </div>
-                            <div className="col s6 mb-1">
-                              <Button
-                                fullWidth
-                                variant="contained"
-                                // color="primary"
-                                onClick={() => handleOpenDialog("suggestion")}
-                                className="waves-effect waves-light btn-small"
-                              >
-                                Suggestion
-                              </Button>
-                            </div>
-                          </div>
-                          {/* <div className="mt-4 right-align">
-                            <Button onClick={() => setConversionBoxOpen(false)} color="inherit">
-                              Annuler
-                            </Button>
-                          </div> */}
-                        </DialogContent>
-                      </Dialog>
-
-                      <Dialog
-                        open={confirmationOpen}
-                        onClose={(_, reason) => {
-                          if (
-                            reason !== "backdropClick" &&
-                            reason !== "escapeKeyDown"
-                          ) {
-                            handleConfirmationClose();
-                          }
-                        }}
-                        id="dialog-confirmation"
-                        disableEscapeKeyDown
-                        disableBackdropClick
-                        sx={{
-                          "& .MuiBackdrop-root": {
-                            background: "transparent !important",
-                          },
-                        }}
-                      >
-                        <DialogTitle className="modal-title red-text text-darken-2">
-                          Confirmer la conversion de la réclamation
-                        </DialogTitle>
-                        <DialogContent>
-                          <Typography gutterBottom>
-                            Une fois convertie en{" "}
-                            <strong>{convertionType}</strong>, cette réclamation
-                            ne pourra plus être modifiée ou restaurée.
-                            Souhaitez-vous vraiment continuer ?
-                          </Typography>
-
-                          <div className="mt-5">
-                            <div className="df justify-content-between">
-                              <Button
-                                disabled={loadingConversion}
-                                onClick={() => setConfirmationOpen(false)}
-                                className="col s6"
-                                color="inherit"
-                              >
-                                Annuler
-                              </Button>
-                              <LoadingButton
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleSubmitConfirmation(e);
-                                }}
-                                className="col s6"
-                                variant="contained"
-                                color="error"
-                                loading={loadingConversion}
-                                loadingPosition="end"
-                              >
-                                <span>Confirmer</span>
-                              </LoadingButton>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      <EmailDialog
-                        handleSubmit={handleAssignOrReassign}
-                        maxDelai={maxDelai}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </section>
+                </section>
+              </div>
+              <div className="content-overlay"></div>
             </div>
-            <div className="content-overlay"></div>
           </div>
-        </div>
+        ) : (
+          /* ── TREATMENT PAGE — TraitementShell ── */
+          <TraitementShell
+            onBack={() => history.push('/reclamations/traitement/all')}
+            codeClient={props.codeClient || props.code}
+            status={props.status}
+            risqueLevel={dataRow?.objet?.risqueLevel}
+
+            lastname={props.lastname}
+            phone={props.phone}
+            email={props.email}
+            address={props.address}
+            language={props.language}
+            gender={props.gender}
+            dossierimf={props.dossierimf}
+
+            recorded_at={props.recorded_at}
+            collect={props.collect}
+            subject={props.subject}
+            underSubject={props.underSubject}
+            product={props.product}
+            unit={props.unit}
+            created_by={props.created_by}
+            creationDate={creationDate}
+            content={props.content}
+            extras={props.extras}
+            onAddContent={() => { setShowExtraContent(true); setExtraContent(''); }}
+
+            visibleActions={[
+              addR === "PILOTE" && props.status === "SAVED" && 'convertir',
+              (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && props.status === "SAVED" && props.transmitted !== "true" && 'affecter',
+              (hbt.includes("H6") || addR === "PILOTE") && ["AFFECTED","UNSATISFIED","PARTIAL_SATISFIED","CLASSED"].includes(props.status) && 'reaffecter',
+              (addR !== "PILOTE" && !hbt.includes("H6")) && props.status === "SAVED" && props.transmitted === "false" && (user.firstAndLastName === props.created_by || user.ra === true) && 'transmettre',
+              (hbt.includes("H6") || addR === "PILOTE") && props.status === "TO_APPROUVED" && 'approuver',
+            ].filter(Boolean)}
+
+            selectedItemFiles={props.selectedItemFiles}
+            selectedItemAudio={props.selectedItemAudio}
+            attachmentList={attachmentList}
+            audioList={audioList}
+            inputRef={inputRef}
+            onFilesChange={(e) => setFiles([...e.target.files])}
+            onAddAudio={() => { setAudioBox(true); setOpen2(true); }}
+
+            transmitted={props.transmitted}
+            transmittedBy={props.transmittedBy}
+            transmittedTo={props.transmittedTo}
+            handled_by={props.handled_by}
+            assigned_by={props.assigned_by}
+            assignedAt={props.assignedAt}
+            solution={props.solution}
+
+            treatForm={treatForm}
+            existingSolutions={props.selectedItem?.objet?.existingSolutions || []}
+            onModifyBeforeSend={(content) => props.newSolutionChanged(content)}
+            onUseAndTreat={(content) => props.newSolutionChanged(content)}
+            btnS={btnS}
+            transmettre={transmettre}
+            session={props.session}
+
+            tchat={tchat}
+
+            agentsOptions={agentsMailOptions}
+            onAgentChange={(e) => { props.handledByChanged(e.value); setAffectEmail(e.email); }}
+            anonymat={anonymat}
+            onAnonymatChange={handleAnonymat}
+            onConfirmAffecter={prepareBeforeAssign}
+            confirmOpen={confirmationOpen}
+            convertionType={convertionType}
+            onSelectType={(type) => { setConvertionType(type); setConfirmationOpen(true); }}
+            onConfirmClose={handleConfirmationClose}
+            onSubmitConfirmation={(e) => { e.preventDefault(); handleSubmitConfirmation(e); }}
+            loadingConversion={loadingConversion}
+            onConfirmTransmettre={handleTransmission}
+            loadingTransmettre={props.etat3}
+            motif={props.motif}
+            onMotifChange={(val) => props.motifChanged(val)}
+            onApprove={handleApprove}
+            onDisapprove={handleDisapprove}
+            loadingApprove={props.etat2}
+            loadingDisapprove={props.etat}
+            modalErrors={props.errors}
+            emailDialogSlot={<EmailDialog handleSubmit={handleAssignOrReassign} maxDelai={maxDelai} />}
+          />
+        )}
       </div>
     </>
   );

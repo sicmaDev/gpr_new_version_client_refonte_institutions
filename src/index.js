@@ -1,11 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
 import App from './App';
 //import 'bootstrap/dist/css/bootstrap.min.css';
 import './assets/css/materialize.css';
 import './assets/css/style.css';
 import './assets/css/custom.css';
+// Tailwind chargé EN DERNIER pour passer au-dessus de Materialize
+import './index.css';
 import reportWebVitals from "./reportWebVitals";
 import swDev from './swDev'
 // import i18n from 'i18next';

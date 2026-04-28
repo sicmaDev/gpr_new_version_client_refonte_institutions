@@ -133,253 +133,188 @@ const Login = (props) => {
 
   return (
     <>
-      {showWelcomeMessage ? (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "#000000ac",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 99,
-          }}
-        >
+      {/* ── Overlay bienvenue ── */}
+      {showWelcomeMessage && (
+        <div className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center z-[99]">
           <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "10px",
-              boxShadow: "1px 1px 10px black",
-              padding: "20px 15px",
-              fontSize: "15px",
-              maxWidth: "400px",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              textAlign: "center",
-              backgroundImage: `url(${successNew})`,
-              backgroundSize: "cover",
-              color: "black",
-            }}
+            className="bg-white rounded-xl shadow-2xl p-5 text-[15px] max-w-[400px] max-h-[90vh] overflow-y-auto text-center text-black"
+            style={{ backgroundImage: `url(${successNew})`, backgroundSize: "cover" }}
           >
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <div className="flex justify-end">
               <img
-                src={closeImg}
-                alt="bravo"
-                style={{ width: "30px", cursor: "pointer" }}
-                onClick={(e) => {
-                  setShowWelcomeMessage(false);
-                  localStorage.removeItem("afterInscription");
-                }}
+                src={closeImg} alt="close" className="w-[30px] cursor-pointer"
+                onClick={() => { setShowWelcomeMessage(false); localStorage.removeItem("afterInscription"); }}
               />
             </div>
-            <img
-              src={bravo}
-              className="mb-2"
-              alt="bravo"
-              style={{ width: "200px" }}
-            />
-            <div
-              style={{ fontSize: "25px", fontWeight: 900, margin: "5px 0px" }}
-            >
-              {"Bienvenue sur GPR"}
+            <img src={bravo} alt="bravo" className="mb-2 w-[200px]" />
+            <div className="text-[25px] font-black my-[5px]">Bienvenue sur GPR</div>
+            <p>Bravo, Votre inscription s'est bien passée. Votre compte est en cours de validation.</p>
+            <p>{"Cliquez sur \" D'accord \" pour continuer !"}</p>
+            <div className="flex justify-center">
+              <div
+                className="bg-[#005081] px-[30px] py-[15px] rounded-full text-white my-2.5 cursor-pointer"
+                onClick={() => { setShowWelcomeMessage(false); localStorage.removeItem("afterInscription"); localStorage.removeItem("CodeInstitution"); }}
+              >
+                D'accord
+              </div>
             </div>
-            <p>                            
-              Bravo, Votre inscription s'est bien passée. Votre compte est en cours de validation.
+          </div>
+        </div>
+      )}
+
+      {/* ── Layout 2 colonnes ── */}
+      <div className="flex min-h-screen">
+
+        {/* ── Colonne gauche — branding ── */}
+        <div
+          className="hide-on-med-and-down w-1/2 flex flex-col items-center justify-center px-12 py-16 relative overflow-hidden"
+          style={{ background: "linear-gradient(160deg, #002e52 0%, #005081 60%, #0077b6 100%)" }}
+        >
+          {/* Cercle décoratif */}
+          <div
+            className="absolute top-[42%] -left-[60px] w-[200px] h-[200px] rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)" }}
+          />
+
+          {/* Carte mockup */}
+          <div className="bg-white/10 border border-white/20 rounded-2xl p-5 w-full max-w-[430px] mb-9 backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-3.5">
+              <div className="bg-white rounded-lg px-2.5 py-1.5 flex items-center">
+                <img src={logo} alt="Logo GPR" className="h-[26px] object-contain" />
+              </div>
+              <div className="flex-1 h-2 bg-white/20 rounded" />
+              <div className="bg-white rounded-lg px-2.5 py-1 text-[13px] font-extrabold text-[#e63b2e] tracking-wide">
+                SICMa
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {[68, 40, 55, 80].map((w, i) => (
+                <div key={i} className="h-1.5 bg-white/20 rounded-sm" style={{ width: `${w}px` }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Texte branding */}
+          <h2 className="text-white text-[26px] font-extrabold text-center mb-2.5 tracking-wide">
+            SICMA ET ASSOCIES
+          </h2>
+          <p className="text-white/70 text-[13.5px] text-center max-w-[340px] leading-relaxed mb-7">
+            Plateforme de Gestion des Plaintes et Réclamations.
+            Efficace, traçable, conforme BCEAO.
+          </p>
+
+          {/* Tags */}
+          <div className="flex flex-wrap gap-2.5 justify-center">
+            {["Réclamations", "Dénonciations", "Suggestions", "Rapports"].map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full px-[18px] py-1.5 text-white text-[12.5px]"
+                style={{ border: '1px solid rgba(255,255,255,0.45)' }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          {/* Bouton créer un compte */}
+          <div className="mt-8 text-center">
+            <h6 className="text-white/75 text-[13px] mb-3">Créer un compte utilisateur</h6>
+            <NavLink to="/SignUser">
+              <Button
+                variant="outlined"
+                style={{ borderColor: "rgba(255,255,255,0.5)", color: "white", borderRadius: "8px", padding: "8px 28px", fontWeight: 600, fontSize: "13px", textTransform: "none" }}
+              >
+                Créer un compte
+              </Button>
+            </NavLink>
+          </div>
+        </div>
+
+        {/* ── Colonne droite — formulaire ── */}
+        <div className="flex-1 flex flex-col items-center justify-center bg-white px-6 py-10 relative">
+          <div className="w-full max-w-[420px]">
+
+            <h2 className="text-[22px] font-bold text-[#1a2b3c] mb-1.5">Connexion</h2>
+            <p className="text-[#8a9bb0] text-[13.5px] mb-7">
+              Entrez vos identifiants pour accéder à la plateforme
             </p>
 
-            <p>{"Cliquez sur \" D'accord \" pour continuer !"}</p>
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <div
-                style={{
-                  width: "fit-content",
-                  backgroundColor: "#005081",
-                  padding: "15px 30px",
-                  borderRadius: "50px",
-                  color: "white",
-                  margin: "10px 0px",
-                  cursor: "pointer",
-                }}
-                onClick={(e) => {
-                  setShowWelcomeMessage(false);
-                  localStorage.removeItem("afterInscription");
-                  localStorage.removeItem("CodeInstitution");
-                }}
+            {/* Toggle Online / Offline */}
+            <div className="flex gap-2.5 mb-5">
+              <button
+                className={`flex-1 py-2.5 rounded-lg font-semibold text-sm border-0 cursor-pointer transition-colors ${online ? 'bg-[#005081] text-white' : 'bg-[#f0f4f8] text-[#8a9bb0]'}`}
+                onClick={handleOnline}
               >
-                {"D'accord"}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <></>
-      )}
-      <div className="row flex-container">
-        <div
-          className="col s6 hide-on-med-and-down"
-          style={{ backgroundColor: "#005081", height: "100%" }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              color: "white",
-              fontSize: "14px",
-            }}
-          >
-            {/* <WestOutlined color="white" />
-            <NavLink to="/">
-              <span style={{ color: "white", cursor: "pointer" }}>
-                {"Retour sur la page d'accueil"}
-              </span>
-            </NavLink> */}
-          </div>
-          <div
-            className=""
-            style={{
-              height: "100vh",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              alignContent: "center",
-              justifyContent: "center",
-            }}
-          >
-            <img
-              className="recent-file"
-              src={loginPhoto}
-              height="60%"
-              width="60%"
-              alt="Login"
-            />
-            <h6 style={{ color: "white" }}>{"Créer un compte utilisateur"}</h6>
-            <div>
-              <NavLink to="/SignUser">
-                {" "}
-                <Button variant="contained"> {"Créer un compte"}</Button>
-              </NavLink>
-            </div>
-          </div>
-        </div>
-
-        <div className="col l6 m12 s12">
-          <div className="container">
-            <div className="row">
-              <h1 className="center-align ">
-                <img className="recent-file" src={logo} alt="Logo GPR" />
-              </h1>
+                Online
+              </button>
+              <button
+                className={`flex-1 py-2.5 rounded-lg font-semibold text-sm border-0 cursor-pointer transition-colors ${!online ? 'bg-[#005081] text-white' : 'bg-[#f0f4f8] text-[#8a9bb0]'}`}
+                onClick={handleControl}
+              >
+                Offline
+              </button>
             </div>
 
-            <div id="login-page" className="row plr-15">
-              <div className="row padding-5">
-                <div className="row mb-5" style={{ display: "flex" }}>
-                  <div className="col l6 m6 s6 flex-item justify-content-center">
-                    <button
-                      className="waves-effect waves-light btn-small activo"
-                      style={{ width: "100%" }}
-                      onClick={handleOnline}
-                    >
-                      Online
-                    </button>
-                  </div>
+            <form onSubmit={handleSubmit}>
 
-                  <div className="col l6 m6 s6 flex-item justify-content-center">
-                    <button
-                      className="waves-effect waves-light btn-small inactivo"
-                      style={{ width: "100%" }}
-                      onClick={handleControl}
-                    >
-                      Offline
-                    </button>
-                  </div>
+              {/* Champ email */}
+              <div className="mb-3.5">
+                <div className="border border-[#d8e3ee] rounded-lg px-3.5 flex items-center h-[50px]">
+                  <input
+                    id="email" type="email"
+                    className="validate border-0 outline-none flex-1 text-sm text-[#1a2b3c] bg-transparent"
+                    placeholder="Adresse électronique"
+                    onChange={(e) => props.emailChanged(e.target.value)}
+                  />
+                  <label htmlFor="email" className="hidden">Adresse électronique</label>
                 </div>
-                <form className="col l12 m12 s12 mt-5" onSubmit={handleSubmit}>
-                  <div className="row">
-                    <div className="input-field col m12 s12 bf">
-                      <input
-                        id="email"
-                        type="email"
-                        className="validate"
-                        placeholder=""
-                        onChange={(e) => props.emailChanged(e.target.value)}
-                      />
-                      <label htmlFor="email" className="active">
-                        Adresse électronique
-                      </label>
-                      <small className="errorTxt4">
-                        <div id="cpassword-error" className="error">
-                          {props.errors.email}
-                        </div>
-                      </small>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="input-field col m12 s12 bf">
-                      <input
-                        id="pass"
-                        type={showPassword ? "text" : "password"}
-                        placeholder=""
-                        className="validate"
-                        onChange={(e) => props.passChanged(e.target.value)}
-                      />
-                      <label htmlFor="pass" className="active">
-                        Mot de passe
-                      </label>
-                      <small className="errorTxt4">
-                        <div id="cpassword-error" className="error">
-                          {props.errors.pass}
-                        </div>
-                      </small>
-                      <span
-                        onClick={toggleShowPassword}
-                        style={{
-                          position: "absolute",
-                          right: "10px",
-                          top: "50%",
-                          transform: "translateY(-50%)",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {showPassword ? (
-                          <VisibilityOffIcon />
-                        ) : (
-                          <VisibilityIcon />
-                        )}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="row">
-                    <div className="col m12 s12 flex-item justify-content-center">
-                      <LoadingButton
-                        className="waves-effect waves-light btn-small mb-1"
-                        style={{
-                          height: "50px",
-                          backgroundColor: "#005081",
-                          width: "100%",
-                          marginTop: "3%",
-                        }}
-                        color="secondary"
-                        onClick={handleSubmit}
-                        loading={props.etat}
-                        loadingPosition="end"
-                        endIcon={<LoginIcon />}
-                        variant="contained"
-                      >
-                        <span>S'authentifier</span>
-                      </LoadingButton>
-                    </div>
-                  </div>
-                </form>
+                <small className="errorTxt4">
+                  <span className="error text-red-500 text-xs ml-0.5 mt-1 block">{props.errors.email}</span>
+                </small>
               </div>
-            </div>
+
+              {/* Champ mot de passe */}
+              <div className="mb-3.5">
+                <div className="border border-[#d8e3ee] rounded-lg px-3.5 flex items-center h-[50px]">
+                  <input
+                    id="pass"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Mot de passe"
+                    className="validate border-0 outline-none flex-1 text-sm text-[#1a2b3c] bg-transparent"
+                    onChange={(e) => props.passChanged(e.target.value)}
+                  />
+                  <label htmlFor="pass" className="hidden">Mot de passe</label>
+                  <span onClick={toggleShowPassword} className="cursor-pointer text-[#8a9bb0] flex">
+                    {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                  </span>
+                </div>
+                <small className="errorTxt4">
+                  <span className="error text-red-500 text-xs ml-0.5 mt-1 block">{props.errors.pass}</span>
+                </small>
+              </div>
+
+              {/* Bouton S'authentifier */}
+              <LoadingButton
+                style={{ width: "100%", height: "50px", backgroundColor: "#005081", borderRadius: "8px", fontSize: "15px", fontWeight: 600, textTransform: "none", marginTop: "8px" }}
+                onClick={handleSubmit}
+                loading={props.etat}
+                loadingPosition="end"
+                endIcon={<LoginIcon />}
+                variant="contained"
+              >
+                <span>S'authentifier</span>
+              </LoadingButton>
+
+            </form>
+
+            <p className="text-center text-[#b0bec8] text-xs mt-11">
+              © {new Date().getFullYear()} SICMA &amp; Associés · Tous droits réservés
+            </p>
           </div>
-          <div className="content-overlay"></div>
+
+          <div className="content-overlay" />
         </div>
+
       </div>
     </>
   );

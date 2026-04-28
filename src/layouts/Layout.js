@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { isAuth } from "../redux/actions/LayoutActions";
+import { isAuth, authenticate } from "../redux/actions/LayoutActions";
 
 // import {claimColorChanged, denunColorChanged} from "../redux/actions/alert/headerActions"
 
@@ -111,13 +111,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    isAuth: (data) => dispatch(isAuth(data)),
-    // updateClaimColor:(item)=>{
-    //   dispatch(claimColorChanged(item))
-    // },
-    // updateDenunColor:(item)=>{
-    //     dispatch(denunColorChanged(item))
-    // }
+    isAuth:       (data) => dispatch(isAuth(data)),
+    authenticate: ()     => dispatch(authenticate()),
   };
 };
 

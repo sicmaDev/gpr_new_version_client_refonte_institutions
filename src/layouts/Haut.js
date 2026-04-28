@@ -37,12 +37,15 @@ const drawerWidth = 250;
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     '& .MuiDrawer-paper': {
-      // position: 'absolute',
       position: 'relative',
       whiteSpace: 'nowrap',
       width: drawerWidth,
-      backgroundColor:"#ffffff",
-      color:"white",
+      height: '100vh',
+      backgroundColor: '#005081',
+      color: 'white',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
       transition: theme.transitions.create('width', {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.enteringScreen,
@@ -291,28 +294,62 @@ export const Haut = (props) => {
 
           <Box sx={{ display: 'flex' }}  >
             <Drawer variant="permanent" open={open} sx={{ ...(!open && { display: 'none' }),position:"absolute",height:"100%" }} >
-                <Toolbar
-                    sx={{
+                {/* ── Header brand ── */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '14px 16px',
+                  minHeight: '64px',
+                  flexShrink: 0,
+                }}>
+                  <div style={{
+                    background: '#005081',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '10px',
+                    width: '38px',
+                    height: '38px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'flex-end',
-                    px: [1],
-                    height:"60px"
-                    }}
-                    style={{ padding:"0px" }}
-                >
-                  <img
-                    src={logo}
-                    height="100%" width="100%"
-                    alt="logo"
-                    loading="lazy"
-                  />
-                    
-                </Toolbar>
-                <Divider />
-                <List component="nav" style={{ height:"100%" }}  >
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    overflow: 'hidden',
+                  }}>
+                    <img src={logo} height="30px" width="30px" alt="logo" style={{ objectFit: 'contain' }} loading="lazy" />
+                  </div>
+                  {open && (
+                    <div style={{ overflow: 'hidden' }}>
+                      <div style={{ color: 'white', fontWeight: 700, fontSize: '15px', lineHeight: 1.2 }}>GPR</div>
+                      <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{APP_OWNER}</div>
+                    </div>
+                  )}
+                </div>
+                <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+
+                {/* ── Nav items ── */}
+                <List component="nav" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '4px 0' }} sx={{ '&::-webkit-scrollbar': { width: '4px' }, '&::-webkit-scrollbar-track': { background: 'transparent' }, '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.2)', borderRadius: '4px' }, '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.35)' } }}>
                     <Items/>
                 </List>
+
+                {/* ── Footer utilisateur ── */}
+                <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                <div style={{ padding: '12px 14px', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Avatar sx={{ width: 36, height: 36, backgroundColor: '#005081', fontSize: '15px', flexShrink: 0 }}>
+                      {user.firstAndLastName[0]}
+                    </Avatar>
+                    {open && (
+                      <div style={{ overflow: 'hidden' }}>
+                        <div style={{ color: 'white', fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {user.firstAndLastName}
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {user.posteDto?.libelle || ''}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
             </Drawer>
             <Contenu/>
             <footer
@@ -454,28 +491,62 @@ export const Haut = (props) => {
 
           <Box sx={{ display: 'flex' }}  >
             <Drawer variant="permanent" open={open} >
-                <Toolbar
-                    sx={{
+                {/* ── Header brand ── */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '14px 16px',
+                  minHeight: '70px',
+                  flexShrink: 0,
+                }}>
+                  <div style={{
+                    background: '#005081',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '10px',
+                    width: '40px',
+                    height: '40px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'flex-end',
-                    px: [1],
-                    height:"70px"
-                    }}
-                    style={{ padding:"0px" }}
-                >
-                  <img
-                    src={logo}
-                    height="100%" width="100%"
-                    alt="logo"
-                    loading="lazy"
-                  />
-                    
-                </Toolbar>
-                <Divider />
-                <List component="nav" style={{height: "100vh", overflowY:"auto", paddingBottom: "20%"}} >
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    overflow: 'hidden',
+                  }}>
+                    <img src={logo} height="32px" width="32px" alt="logo" style={{ objectFit: 'contain' }} loading="lazy" />
+                  </div>
+                  {open && (
+                    <div style={{ overflow: 'hidden' }}>
+                      <div style={{ color: 'white', fontWeight: 700, fontSize: '15px', lineHeight: 1.2 }}>GPR</div>
+                      <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{APP_OWNER}</div>
+                    </div>
+                  )}
+                </div>
+                <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+
+                {/* ── Nav items ── */}
+                <List component="nav" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '4px 0' }} sx={{ '&::-webkit-scrollbar': { width: '4px' }, '&::-webkit-scrollbar-track': { background: 'transparent' }, '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.2)', borderRadius: '4px' }, '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.35)' } }}>
                     <Items/>
                 </List>
+
+                {/* ── Footer utilisateur ── */}
+                <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                <div style={{ padding: '12px 14px', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Avatar sx={{ width: 36, height: 36, backgroundColor: '#005081', fontSize: '15px', flexShrink: 0 }}>
+                      {user.firstAndLastName[0]}
+                    </Avatar>
+                    {open && (
+                      <div style={{ overflow: 'hidden' }}>
+                        <div style={{ color: 'white', fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {user.firstAndLastName}
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {user.posteDto?.libelle || ''}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
             </Drawer>
             <Contenu/>
 

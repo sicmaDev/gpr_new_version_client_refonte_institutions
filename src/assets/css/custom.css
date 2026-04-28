@@ -1,3 +1,66 @@
+/* ── Formulaire de traitement moderne ────────────────────────────── */
+.treat-form-modern details > summary {
+  display: none !important;
+}
+.treat-form-modern details {
+  display: block !important;
+}
+.treat-form-modern .text-details {
+  display: none !important;
+}
+.treat-form-modern textarea.materialize-textarea {
+  border: 1.5px solid #e5e7eb !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  min-height: 110px !important;
+  font-size: 13.5px !important;
+  color: #1f2937 !important;
+  background: #fafafa !important;
+  transition: border-color 0.15s !important;
+  box-sizing: border-box !important;
+  resize: vertical !important;
+}
+.treat-form-modern textarea.materialize-textarea:focus {
+  border-color: #3b82f6 !important;
+  background: white !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.08) !important;
+  outline: none !important;
+}
+.treat-form-modern .input-field {
+  display: flex !important;
+  flex-direction: column !important;
+  margin-top: 16px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.treat-form-modern .input-field > label {
+  order: -1 !important;
+  position: static !important;
+  transform: none !important;
+  display: block !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #6b7280 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 6px !important;
+  margin-top: 0 !important;
+  height: auto !important;
+  line-height: normal !important;
+}
+/* Textarea solution : grande */
+.treat-form-modern .input-field:first-of-type textarea.materialize-textarea {
+  min-height: 110px !important;
+}
+/* Textarea commentaire : plus petite */
+.treat-form-modern .input-field:not(:first-of-type) textarea.materialize-textarea {
+  min-height: 70px !important;
+}
+.treat-form-modern .display-flex.justify-content-end {
+  display: none !important;
+}
+/* ──────────────────────────────────────────────────────────────── */
+
 .flex-container {
     height: 100%;
     padding: 0;
