@@ -15,9 +15,10 @@ const HistoriqueTimeline = ({
   recorded_at, created_by,
   transmitted, transmittedBy, transmittedTo,
   handled_by, assigned_by, assignedAt,
-  solution = [],
+  solution,
   formatDate, formatDate3,
 }) => {
+  const solutionList = Array.isArray(solution) ? solution : [];
   // ── Construire les événements ──────────────────────────────────
   const events = [];
 
@@ -47,7 +48,7 @@ const HistoriqueTimeline = ({
       icon: <AssignmentIndIcon style={{ fontSize: 16, color: '#f59e0b' }} />,
     });
 
-  solution.forEach((sol, i) => {
+  solutionList.forEach((sol, i) => {
     const satDto = sol.satisfactionMeasureDto;
     const satLabel = satDto?.status === 'SATISFIED' ? 'Satisfait'
       : satDto?.status === 'UNSATISFIED' ? 'Non satisfait'
@@ -149,15 +150,13 @@ const HistoriqueTimeline = ({
                   </div>
                 )}
 
-                {/* Approbation */}
-                {ev.approbation && (
-                  <div style={{ margin: '0 14px 10px', borderRadius: 8, padding: '8px 12px', background: ev.approbation.approved ? '#f0fdf4' : '#fef2f2', border: `1px solid ${ev.approbation.approved ? '#bbf7d0' : '#fecaca'}` }}>
+                {/* Désapprobation uniquement */}
+                {ev.approbation && !ev.approbation.approved && (
+                  <div style={{ margin: '0 14px 10px', borderRadius: 8, padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {ev.approbation.approved
-                        ? <CheckCircleOutlineIcon style={{ fontSize: 16, color: '#15803d' }} />
-                        : <HighlightOffIcon style={{ fontSize: 16, color: '#dc2626' }} />}
-                      <span style={{ fontSize: 12.5, fontWeight: 600, color: ev.approbation.approved ? '#15803d' : '#dc2626' }}>
-                        {ev.approbation.approved ? 'Approuvée' : `Désapprouvée${ev.approbation.by ? ` par ${ev.approbation.by}` : ''}`}
+                      <HighlightOffIcon style={{ fontSize: 16, color: '#dc2626' }} />
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: '#dc2626' }}>
+                        {`Désapprouvée${ev.approbation.by ? ` par ${ev.approbation.by}` : ''}`}
                       </span>
                       {ev.approbation.date && <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 'auto' }}>{formatDate3(ev.approbation.date)}</span>}
                     </div>
@@ -184,7 +183,7 @@ const HistoriqueTimeline = ({
                       <span style={{ fontSize: 12.5, fontWeight: 600, color: '#854d0e' }}>
                         {ev.satisfaction.pending ? 'En attente de mesure de satisfaction' : `Client ${ev.satisfaction.label}`}
                       </span>
-                      {ev.satisfaction.date && <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 'auto' }}>{formatDate3(ev.satisfaction.date)}</span>}
+                      {ev.satisfaction.date && <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 'auto' }}>{formatDate(ev.satisfaction.date)}</span>}
                     </div>
                     {ev.satisfaction.commentaire && (
                       <div style={{ fontSize: 12, color: '#92400e', marginTop: 5, paddingTop: 5, borderTop: '1px solid #fef08a', fontStyle: 'italic' }}>

@@ -43,8 +43,11 @@ import {
   showModalChanged,
 } from "../redux/actions/Reclamations/HistoriqueReclamationActions"; 
 
+const FINAL_STATUSES = ["SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "LITIGATION", "CLASSED", "TREAT"];
+
 const HistoriqueAffectation = (props) => {
   const codeClient = props.codeClient || "N/A";
+  const isFinalStatus = FINAL_STATUSES.includes(props.claimStatus);
 
   useEffect(() => {
     if (props.claimId) {
@@ -76,21 +79,21 @@ const HistoriqueAffectation = (props) => {
 
   const getStatusColor = (item) => {
     if (item.estEnRetard) return "error";
-    if (item.dateFinAffectation) return "success";
+    if (item.dateFinAffectation || (isFinalStatus && item.estActif)) return "success";
     if (item.estActif) return "primary";
     return "default";
   };
 
   const getStatusIcon = (item) => {
     if (item.estEnRetard) return <Warning />;
-    if (item.dateFinAffectation) return <CheckCircle />;
+    if (item.dateFinAffectation || (isFinalStatus && item.estActif)) return <CheckCircle />;
     if (item.estActif) return <Assignment />;
     return <Schedule />;
   };
 
   const getStatusLabel = (item) => {
     if (item.estEnRetard) return "En retard";
-    if (item.dateFinAffectation) return "Terminée";
+    if (item.dateFinAffectation || (isFinalStatus && item.estActif)) return "Terminée";
     if (item.estActif) return "Active";
     return "Inactive";
   };
@@ -100,160 +103,110 @@ const HistoriqueAffectation = (props) => {
       open={props.showModal}
       fullWidth={true}
       maxWidth="lg"
-      onClose={(e) => {
-        props.showModalChanged(false);
-      }}
+      onClose={() => props.showModalChanged(false)}
+      PaperProps={{ style: { borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', overflow: 'hidden' } }}
     >
-      <DialogContent id="dialog-history">
-        <DialogContentText>
-          <div className="col l12 s12 pb-1" id="content">
-            <div className="df sb pb-1">
-              <Typography variant="h5" component="h2" gutterBottom>
-                <strong>Historique des affectations</strong>
-              </Typography>
-              <Close
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  props.showModalChanged(false);
-                }}
-              />
-            </div>
+      {/* ── Header harmonisé ── */}
+      <div style={{ background: 'linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Assignment style={{ color: '#fff', fontSize: 20 }} />
           </div>
-        </DialogContentText>
+          <div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>Historique des affectations</div>
+            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12.5, marginTop: 2 }}>Suivi complet des affectations — {codeClient}</div>
+          </div>
+        </div>
+        <button onClick={() => props.showModalChanged(false)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
+          <Close style={{ fontSize: 18 }} />
+        </button>
+      </div>
 
-        <Box sx={{ mt: 2, maxHeight: "70vh", overflowY: "auto", scrollbarColor: "#999 transparent", scrollbarWidth: "thin", }} className="custom-scroll">
-           
-          {props.isLoading ? (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              minHeight="200px"
-            >
-              <CircularProgress />
-              <Typography variant="body1" sx={{ ml: 2 }}>
-                Chargement de l'historique...
-              </Typography>
-            </Box>
-          ) : !props.isSuccess && props.message ? (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {props.message}
-            </Alert>
-          ) : !props.items || props.items.length === 0 ? (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              Aucun historique d'affectation disponible pour cette réclamation.
-            </Alert>
-          ) : (
-            <Box>
-              {props.items.map((item, index) => (
-                <Paper key={index} elevation={3} sx={{ p: 2, mb: 2 }}>
-                      <Box
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        mb={1}
-                      >
-                        <Typography variant="h6" component="h3">
-                          Affectation #{props.items.length -index}
-                        </Typography>
-                        <Chip
-                          label={getStatusLabel(item)}
-                          color={getStatusColor(item)}
-                          size="small"
-                        />
-                      </Box>
-
-                      <Box mb={2}>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          gutterBottom
-                        >
-                          <strong>Code client :</strong> {codeClient}
-                        </Typography>
-                        
-                      </Box>
-
-                      <Box display="flex" alignItems="center" mb={1}>
-                        <Avatar
-                          sx={{
-                            width: 24,
-                            height: 24,
-                            mr: 1,
-                            bgcolor: "primary.main",
-                          }}
-                        >
-                          <Person fontSize="small" />
-                        </Avatar>
-                        <Typography variant="body2">
-                          <strong>Agent :</strong> {item.nomAgent ?? "UNDEFINED"} ({item.emailAgent})
-                        </Typography>
-                      </Box>
-
-                      <Box display="flex" alignItems="center" mb={1}>
-                        <Schedule
-                          fontSize="small"
-                          sx={{ mr: 1, color: "text.secondary" }}
-                        />
-                        <Typography variant="body2">
-                          <strong>Délai accordée :</strong> {item.delaiJours} jour(s)
-                        </Typography>
-                      </Box>
-
-                      <Box display="flex" alignItems="center" mb={1}>
-                        <Typography variant="body2">
-                          <strong>Date limite :</strong>{" "}
-                          {formatDate(item.dateLimite)}
-                        </Typography>
-                      </Box>
-
-                      {item.dateFinAffectation && (
-                        <Box display="flex" alignItems="center" mb={1}>
-                          <CheckCircle
-                            fontSize="small"
-                            sx={{ mr: 1, color: "success.main" }}
-                          />
-                          <Typography variant="body2">
-                            <strong>Terminée le :</strong>{" "}
-                            {formatDate(item.dateFinAffectation)}
-                          </Typography>
-                        </Box>
+      <DialogContent id="dialog-history" sx={{ p: 3 }}>
+        {props.isLoading ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, minHeight: 200 }}>
+            <CircularProgress size={24} />
+            <span style={{ fontSize: 14, color: "#64748b" }}>Chargement de l'historique...</span>
+          </div>
+        ) : !props.isSuccess && props.message ? (
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "14px 16px", fontSize: 13, color: "#991b1b" }}>{props.message}</div>
+        ) : !props.items || props.items.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px 0", fontSize: 13.5, color: "#94a3b8" }}>
+            Aucun historique d'affectation disponible
+          </div>
+        ) : (
+          <div style={{ position: "relative", paddingLeft: 28 }}>
+            <div style={{ position: "absolute", left: 11, top: 4, bottom: 4, width: 2, background: "#e2e8f0", borderRadius: 2 }} />
+            {[...props.items].sort((a, b) => (b.estActif ? 1 : 0) - (a.estActif ? 1 : 0)).map((item, idx) => {
+              const isActive = item.estActif && !isFinalStatus;
+              const isLate = item.estEnRetard;
+              const isDone = !!item.dateFinAffectation || (isFinalStatus && item.estActif);
+              const dotColor = isLate ? "#ef4444" : isActive ? "#3b82f6" : "#10b981";
+              const num = props.items.length - idx;
+              const label = num === 1 ? "1ère affectation" : `Réaffectation #${num - 1}`;
+              return (
+                <div key={idx} style={{ position: "relative", marginBottom: idx === props.items.length - 1 ? 0 : 20 }}>
+                  {/* Dot */}
+                  <div style={{ position: "absolute", left: -22, top: 18, width: 16, height: 16, borderRadius: "50%", background: dotColor, border: "3px solid #fff", boxShadow: `0 0 0 2px ${dotColor}`, zIndex: 1 }} />
+                  {/* Card */}
+                  <div style={{ borderRadius: 14, border: `1.5px solid ${isActive ? dotColor + "55" : "#e5e7eb"}`, background: isActive ? "#f0f9ff" : "#fff", padding: "16px 20px", boxShadow: isActive ? "0 2px 12px rgba(59,130,246,0.08)" : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                    {/* Header */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: dotColor }}>{label}</span>
+                      <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 12px", borderRadius: 20, background: isLate ? "#fee2e2" : isActive ? "#dbeafe" : "#dcfce7", color: isLate ? "#991b1b" : isActive ? "#1d4ed8" : "#166534" }}>
+                        {isLate ? "En retard" : isActive ? "Active" : "Terminée"}
+                      </span>
+                    </div>
+                    {/* Grid infos */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                      <div style={{ background: "#f8fafc", borderRadius: 9, padding: "10px 14px" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Agent</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#1d4ed8" : "#1e293b" }}>{item.nomAgent || "—"}</div>
+                        {item.emailAgent && <div style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 2 }}>{item.emailAgent}</div>}
+                      </div>
+                      <div style={{ background: "#f8fafc", borderRadius: 9, padding: "10px 14px" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Affecté par</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{item.nomAffecteur || "—"}</div>
+                        {item.emailAffecteur && <div style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 2 }}>{item.emailAffecteur}</div>}
+                      </div>
+                      <div style={{ background: "#f8fafc", borderRadius: 9, padding: "10px 14px" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Affectée le</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{formatDate(item.createdAt)}</div>
+                      </div>
+                      <div style={{ background: "#f8fafc", borderRadius: 9, padding: "10px 14px" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Délai accordé</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{item.delaiJours} jour(s)</div>
+                      </div>
+                    </div>
+                    {/* Infos secondaires */}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {item.dateLimite && (
+                        <span style={{ fontSize: 12, color: "#64748b", background: "#f1f5f9", borderRadius: 6, padding: "4px 10px" }}>
+                          Date limite : <strong>{formatDate(item.dateLimite)}</strong>
+                        </span>
                       )}
-
-                      
-
-                      {item.joursRetard > 0 && (
-                        <Alert severity="warning" sx={{ mt: 2 }}>
-                          <Typography variant="body2">
-                            <strong>Retard :</strong> {item.joursRetard} jour(s)
-                            de retard
-                          </Typography>
-                        </Alert>
+                      {isDone && item.dateFinAffectation && (
+                        <span style={{ fontSize: 12, color: "#166534", background: "#dcfce7", borderRadius: 6, padding: "4px 10px", fontWeight: 600 }}>
+                          ✓ Terminée le {formatDateShort(item.dateFinAffectation)}
+                        </span>
                       )}
-
-                      {item.joursRestants > 0 && item.estActif && (
-                        <Alert severity="info" sx={{ mt: 2 }}>
-                          <Typography variant="body2">
-                            <strong>Temps restant :</strong> {item.joursRestants}{" "}
-                            jour(s)
-                          </Typography>
-                        </Alert>
+                      {isLate && item.joursRetard > 0 && (
+                        <span style={{ fontSize: 12, color: "#991b1b", background: "#fee2e2", borderRadius: 6, padding: "4px 10px", fontWeight: 700 }}>
+                          {item.joursRetard}j de retard
+                        </span>
                       )}
-
-                      <Typography
-                        variant="caption"
-                        display="block"
-                        sx={{ mt: 1, color: "text.secondary" }}
-                      >
-                        Affectée par : {item.nomAffecteur ?? "UNDEFINED"} ({item.emailAffecteur}) le{" "}
-                        {formatDate(item.createdAt)}
-                      </Typography>
-                    </Paper>
-              ))}
-            </Box>
-          )}
-        </Box>
+                      {isActive && item.joursRestants > 0 && (
+                        <span style={{ fontSize: 12, color: "#1d4ed8", background: "#dbeafe", borderRadius: 6, padding: "4px 10px", fontWeight: 700 }}>
+                          {item.joursRestants}j restants
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -1,4 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useHistory } from "react-router-dom/cjs/react-router-dom";
+import TraitementShell from "../../components/treatment/TraitementShell";
+import axios from "axios";
+import { HOST } from "../../Utils/globals";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
 import LastPageIcon from "@mui/icons-material/LastPage";
@@ -105,8 +109,35 @@ import { WarningAmber } from '@mui/icons-material';
 import Tooltip from "@mui/material/Tooltip";
 import WarningIcon from '@mui/icons-material/Warning';
 import EmailIcon from '@mui/icons-material/Email';
+import DossierCardView from "../../components/shared/DossierCardView";
+import DossierTable from "../../components/shared/DossierTable";
+import DossierKPIBar from "../../components/shared/DossierKPIBar";
+import DossierFilterChips from "../../components/shared/DossierFilterChips";
+import ClaimStatusBadge from "../Reclamations/components/ClaimStatusBadge";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import GridViewIcon from "@mui/icons-material/GridView";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 // import { downloadAudioApi, getDenunAudioApi } from "../../apis/Denonciations/DenonciationsApi";
 
+
+const SG_KPI_CARDS = [
+  { key: "total",   label: "Total suggestions",     icon: AssignmentIcon,     iconBg: "#EFF6FF", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
+  { key: "pending", label: "En attente",             icon: HourglassEmptyIcon, iconBg: "#FFF7ED", iconColor: "#C2410C", borderColor: "#FB923C", filter: (item) => ["SAVED","TEMP_SAVED"].includes(item.status) },
+  { key: "treated", label: "Traitées",               icon: CheckCircleIcon,    iconBg: "#F0FDF4", iconColor: "#15803D", borderColor: "#4ADE80", filter: (item) => item.status === "TREAT" },
+];
+
+const SG_FILTER_BUTTONS = [
+  { value: "ALL",          label: "Tous" },
+  { value: "SAVED",        label: "Enregistrée" },
+  { value: "TEMP_SAVED",   label: "Sauvegardée" },
+  { value: "AFFECTED",     label: "Affectée" },
+  { value: "TO_APPROUVED", label: "À approuver" },
+  { value: "TREAT",        label: "Traitée" },
+  { value: "SATISFIED",    label: "Satisfait" },
+  { value: "CLASSED",      label: "Classée" },
+];
 
 const styles = {
   control: (base) => ({
@@ -135,11 +166,56 @@ const ListeSuggestions = (props) => {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [viewMode, setViewMode] = useState("list");
+  const [activeFilter, setActiveFilter] = useState("ALL");
 
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  const handleClickOpen = () => { setOpen(true); };
+  const history = useHistory();
+
+  // Chargement depuis l'URL quand on arrive directement sur /suggestions/liste/:code
+  useEffect(() => {
+    const code = props.match?.params?.code;
+    if (code && code !== "all") {
+      axios({
+        method: "get",
+        url: HOST + "api/v1/suggestion/" + code + "/details",
+        headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + loadItemFromSessionStorage("token") },
+      }).then((cc) => {
+        if (cc.status >= 200 && cc.status <= 299) {
+          const data = cc.data.content;
+          clearComponentState();
+          props.lastnameChanged(data.clientFirstAndLastName ?? "");
+          props.addressChanged(data.address ?? "");
+          props.phoneChanged(data.tel ?? "");
+          props.genderChanged(data.gender ?? "");
+          props.languageChanged(data.langue?.libelle ?? "");
+          props.dossierimfChanged(data.folderCode ?? "");
+          props.emailChanged(data.email ?? "");
+          props.codeChanged(data.code ?? "");
+          props.codeClientChanged(data.codeClient ?? "");
+          props.recordedAtChanged(data.receiptDateTime ?? "");
+          props.collectChanged(data.canal?.libelle ?? "");
+          props.productChanged(data.produit?.libelle ?? "");
+          props.unitChanged(data.serviceIndexe?.libelle ?? "");
+          props.contentChanged(data.content ?? "");
+          props.solutionChanged(data.accepted ?? false);
+          props.commentChanged(data.commentaire ?? "");
+          props.statusChanged(data.status ?? "");
+          props.createdByChanged(data.collecteur?.firstAndLastName ?? "");
+          props.createdAtChanged(data.createdAt ?? "");
+          props.handledByChanged(data.traiteur?.firstAndLastName ?? "");
+          props.handledAtChanged(data.treatAt ?? "");
+          props.selectedItemChanged(data);
+          props.extrasChanged(data.extras ?? []);
+          props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
+          props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
+          getFillesApi(data.id, props);
+          getSuggeAudioApi(data.id, props);
+        }
+      }).catch(() => {});
+    }
+  }, []);
 
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
@@ -206,7 +282,8 @@ const ListeSuggestions = (props) => {
     return statusElt
   }
 
-  const warningConvert = (props.convertedBy !== "" && props.convertedAt !== "") && (
+  const warningConvert = props.convertedBy && props.convertedBy !== "" &&
+    props.convertedAt && props.convertedAt !== "" && (
     <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center", fontWeight: '', fontStyle: 'italic', color: '' }}>
       <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
       {`Converti en Suggestion par ${props.convertedBy} le ${formatDate4(props.convertedAt)}`}
@@ -272,7 +349,7 @@ const ListeSuggestions = (props) => {
       align: "left",
       sortable: true,
       cell: (claim, index) => {
-        let nom = (claim.clientFirstAndLastName !== "" && claim.clientFirstAndLastName !== null) ? claim.clientFirstAndLastName : <i>Anonyme</i>;
+        let nom = (claim.clientFirstAndLastName && claim.clientFirstAndLastName.trim() !== "") ? claim.clientFirstAndLastName : <em>Anonyme</em>;
         return nom;
       },
     },
@@ -397,9 +474,8 @@ const ListeSuggestions = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    handleClickOpen();
-
     clearComponentState();
+    history.push("/suggestions/liste/" + data.code);
 
     if (mode === 1) {
       props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");
@@ -1051,6 +1127,81 @@ const ListeSuggestions = (props) => {
     handlePrintAvance(childWindow, toStri);
   }
 
+  const getCardData = (item) => ({
+    code: item.codeClient,
+    client: item.clientFirstAndLastName || "Anonyme",
+    title: item.content || "—",
+    subtitle: item.langue?.libelle || null,
+    status: item.status,
+    gravity: null,
+    date: item.createdAt,
+    slaWarning: item.retardDay !== undefined && item.retardDay <= 0 &&
+      !["SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","CLASSED"].includes(item.status),
+    retardDay: item.retardDay,
+  });
+
+  const tableColumns = [
+    {
+      id: "codeClient", label: "Code client", sortable: true, minWidth: 100,
+      render: (item) => (
+        <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
+          {item.codeClient || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "client", label: "Client", sortable: true, minWidth: 140,
+      render: (item) => (
+        <span style={{ fontWeight: 600, fontSize: "0.82rem" }}>
+          {item.clientFirstAndLastName || <em>Anonyme</em>}
+        </span>
+      ),
+      sortValue: (item) => item.clientFirstAndLastName || "",
+    },
+    {
+      id: "content", label: "Contenu", sortable: false, minWidth: 200,
+      render: (item) => (
+        <span style={{ fontSize: "0.82rem", color: "#334155", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", maxWidth: 280 }}>
+          {item.content || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "langue", label: "Langue", sortable: true, minWidth: 100,
+      render: (item) => (
+        <span style={{ fontSize: "0.80rem", color: "#475569" }}>
+          {item.langue?.libelle || "—"}
+        </span>
+      ),
+      sortValue: (item) => item.langue?.libelle || "",
+    },
+    {
+      id: "status", label: "Statut", sortable: true, minWidth: 120,
+      render: (item) => <ClaimStatusBadge status={item.status} />,
+      sortValue: (item) => item.status || "",
+    },
+    {
+      id: "date", label: "Enregistrée le", sortable: true, minWidth: 130,
+      render: (item) => (
+        <span style={{ fontSize: "0.80rem", color: "#475569", whiteSpace: "nowrap" }}>
+          {item.createdAt ? new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(item.createdAt)) : "—"}
+        </span>
+      ),
+      sortValue: (item) => item.createdAt || "",
+    },
+  ];
+
+  const tableFilterFn = (item, { q, filterStatus }) => {
+    if (activeFilter !== "ALL" && item.status !== activeFilter) return false;
+    if (q && !(
+      item.codeClient?.toLowerCase().includes(q) ||
+      item.clientFirstAndLastName?.toLowerCase().includes(q) ||
+      item.content?.toLowerCase().includes(q)
+    )) return false;
+    if (filterStatus && item.status !== filterStatus) return false;
+    return true;
+  };
+
   let content = [];
   content = props.items;
   //darrell : add custome attribut for search
@@ -1087,6 +1238,214 @@ const ListeSuggestions = (props) => {
 
 
 
+
+  if (props.match?.params?.code && props.match.params.code !== "all") {
+    const filesCount = props.selectedItemFiles?.length ?? 0;
+    const audiosCount = props.selectedItemAudio?.length ?? 0;
+    const extrasCount = props.extras?.filter(e => e.contenu)?.length ?? 0;
+    const contentsCount = (props.content ? 1 : 0) + extrasCount;
+    const decision = props.solution === true ? "Pris en compte" : props.solution === false && props.status === "TREAT" ? "Non pris en compte" : null;
+
+    const AccSection = ({ color, dotColor, icon, title, badge, actionBtn, children }) => {
+      const [isOpen, setIsOpen] = useState(true);
+      return (
+        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden", marginBottom: 12 }}>
+          <button onClick={() => setIsOpen(v => !v)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</div>
+            <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: "#1e293b" }}>{title}</span>
+            {badge !== undefined && <span style={{ fontSize: 11.5, fontWeight: 700, color: "#fff", background: dotColor, borderRadius: 20, padding: "2px 9px", marginRight: 8 }}>{badge}</span>}
+            {actionBtn && <div onClick={e => e.stopPropagation()} style={{ marginRight: 8 }}>{actionBtn}</div>}
+            <span style={{ fontSize: 10, color: "#94a3b8" }}>{isOpen ? "▲" : "▼"}</span>
+          </button>
+          {isOpen && <div style={{ borderTop: "1px solid #f1f5f9", padding: "14px 18px" }}>{children}</div>}
+        </div>
+      );
+    };
+
+    return (
+      <>
+        <audio ref={audioRef} src={currentAudio} hidden />
+        <TraitementShell
+          onBack={() => history.push("/suggestions/liste/all")}
+          codeClient={props.codeClient || props.code}
+          status={props.status}
+          conversionWarning={warningConvert || null}
+          headerActions={
+            <button onClick={(e) => printRecu(e)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "#475569" }}>
+              <PrintIcon style={{ fontSize: 15 }} /> Imprimer
+            </button>
+          }
+          lastname={props.lastname}
+          phone={props.phone}
+          email={props.email}
+          address={props.address}
+          language={props.language}
+          gender={props.gender}
+          dossierimf={props.dossierimf}
+          recorded_at={props.recorded_at}
+          collect={props.collect}
+          product={props.product}
+          unit={props.unit}
+          created_by={props.created_by}
+          creationDate={creationDate}
+          content={props.content}
+          visibleActions={[]}
+          selectedItemFiles={props.selectedItemFiles}
+          selectedItemAudio={props.selectedItemAudio}
+          customTabs={[
+            {
+              key: "traitement",
+              label: "Détails du traitement",
+              content: (() => {
+                const SG_STEPS = [
+                  { label: "Enregistrée" },
+                  { label: "Traitée" },
+                ];
+                const sgAllDone = ["TREAT","SATISFIED","CLASSED"].includes(props.status);
+                const currentStep = sgAllDone ? SG_STEPS.length : 0;
+
+                const SG_HERO = {
+                  SAVED:      { title: "En attente de décision", sub: "Cette suggestion n'a pas encore été traitée", iconColor: "#1d4ed8", iconBg: "#dbeafe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+                  TEMP_SAVED: { title: "Sauvegardée temporairement", sub: "En attente de complétion", iconColor: "#7c3aed", iconBg: "#ede9fe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> },
+                };
+                const hero = SG_HERO[props.status];
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+                    {/* ── Stepper ── */}
+                    <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "16px 20px" }}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        {SG_STEPS.map((step, i) => {
+                          const done = i < currentStep;
+                          const active = i === currentStep;
+                          const dotC = done ? "#10b981" : active ? "#3b82f6" : "#e2e8f0";
+                          const textC = done ? "#10b981" : active ? "#1d4ed8" : "#94a3b8";
+                          return (
+                            <React.Fragment key={i}>
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 1, flex: "0 0 auto" }}>
+                                <div style={{ width: 28, height: 28, borderRadius: "50%", background: done ? "#dcfce7" : active ? "#dbeafe" : "#f1f5f9", border: `2px solid ${dotC}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  {done ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg> : <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotC }} />}
+                                </div>
+                                <span style={{ fontSize: 10.5, fontWeight: active ? 700 : 500, color: textC, marginTop: 5, whiteSpace: "nowrap" }}>{step.label}</span>
+                              </div>
+                              {i < SG_STEPS.length - 1 && <div style={{ flex: 1, height: 2, background: i < currentStep ? "#10b981" : "#e2e8f0", margin: "0 4px", marginBottom: 16, borderRadius: 2 }} />}
+                            </React.Fragment>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* ── Hero card (pas encore traitée) ── */}
+                    {hero && (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "28px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                          <div style={{ width: 60, height: 60, borderRadius: 16, background: hero.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: hero.iconColor }}>{hero.icon}</div>
+                          <div>
+                            <div style={{ fontSize: 17, fontWeight: 800, color: "#1e293b" }}>{hero.title}</div>
+                            {hero.sub && <div style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>{hero.sub}</div>}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>Informations du dossier</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                            {[
+                              { label: "Enregistrée le", value: creationDate },
+                              { label: "Canal", value: props.collect },
+                              { label: "Produit", value: props.product },
+                              { label: "Point de service", value: props.unit },
+                              { label: "Enregistrée par", value: props.created_by },
+                              { label: "Code client", value: props.codeClient },
+                            ].filter(f => f.value).map(({ label, value }) => (
+                              <div key={label} style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 12px" }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{label}</div>
+                                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#1e293b" }}>{value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Résultat décision (TREAT) ── */}
+                    {props.status === "TREAT" && (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 18, display: "flex", alignItems: "center", gap: 8 }}>
+                          <GavelIcon style={{ fontSize: 17, color: "#6366f1" }} /> Résultat du traitement
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: props.solution === true ? "#f0fdf4" : "#fef2f2", borderRadius: 10, border: `1px solid ${props.solution === true ? "#bbf7d0" : "#fecaca"}` }}>
+                            <div style={{ width: 36, height: 36, borderRadius: "50%", background: props.solution === true ? "#dcfce7" : "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              {props.solution === true ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                            </div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: props.solution === true ? "#166534" : "#991b1b" }}>Décision : {decision}</div>
+                          </div>
+                          {props.handled_by && <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#475569" }}><PersonIcon style={{ fontSize: 16, color: "#94a3b8" }} /><span><span style={{ fontWeight: 600, color: "#1e293b" }}>Par : </span>{props.handled_by}</span></div>}
+                          {props.handled_at && <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#475569" }}><CalendarMonthIcon style={{ fontSize: 16, color: "#94a3b8" }} /><span><span style={{ fontWeight: 600, color: "#1e293b" }}>Le : </span>{formatDate(props.handled_at)}</span></div>}
+                          {props.comment && <div style={{ background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0", padding: "12px 16px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>Commentaire</div><div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{props.comment}</div></div>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })(),
+            },
+            {
+              key: "medias",
+              label: "Contenu & Médias",
+              content: (
+                <div>
+                  <AccSection color="#ede9fe" dotColor="#8b5cf6" icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>} title="Contenus" badge={contentsCount}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {props.content && <div style={{ background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0", padding: "12px 16px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 6 }}>Contenu initial</div><div style={{ fontSize: 13.5, color: "#1e293b", whiteSpace: "pre-wrap" }}>{props.content}</div><div style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 8 }}>{props.created_by} · {creationDate}</div></div>}
+                      {props.extras?.filter(e => e.contenu).map((extra, i) => <div key={i} style={{ background: "#faf5ff", borderRadius: 10, border: "1px solid #ede9fe", padding: "12px 16px" }}><div style={{ fontSize: 13.5, color: "#1e293b", marginBottom: 6 }}>{extra.contenu}</div><div style={{ fontSize: 11.5, color: "#7c3aed" }}>{extra.user?.firstAndLastName} · {formatDate(extra.createdAt)}</div></div>)}
+                      {contentsCount === 0 && <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center" }}>Aucun contenu</div>}
+                    </div>
+                  </AccSection>
+                  <AccSection color="#dbeafe" dotColor="#3b82f6" icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>} title="Fichiers joints" badge={filesCount}>
+                    {filesCount > 0 ? attachmentList : <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center" }}>Aucun fichier joint</div>}
+                  </AccSection>
+                  <AccSection color="#dcfce7" dotColor="#22c55e" icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>} title="Audios" badge={audiosCount}>
+                    {audiosCount > 0 ? audioList : <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center" }}>Aucun audio</div>}
+                  </AccSection>
+                </div>
+              ),
+            },
+            {
+              key: "historique",
+              label: "Historique",
+              content: (
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 20px", borderBottom: "1px solid #f1f5f9" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 9, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>Flux du dossier</span>
+                    </div>
+                    <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0369a1" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        </div>
+                        <div style={{ fontSize: 13, color: "#475569" }}><span style={{ fontWeight: 600, color: "#1e293b" }}>Enregistrée par : </span>{props.created_by || "—"}<span style={{ color: "#94a3b8" }}> · {creationDate}</span></div>
+                      </div>
+                      {props.status === "TREAT" && props.handled_by && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                          </div>
+                          <div style={{ fontSize: 13, color: "#475569" }}><span style={{ fontWeight: 600, color: "#1e293b" }}>Traitée par : </span>{props.handled_by}<span style={{ color: "#94a3b8" }}>{props.handled_at ? " · " + formatDate(props.handled_at) : ""}</span></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ),
+            },
+          ]}
+        />
+      </>
+    );
+  }
 
   return (
     // "Liste Suggestions"
@@ -1303,24 +1662,37 @@ const ListeSuggestions = (props) => {
               <div className="row">
                 <div className="col l12 s12 pb-5">
                   <div className="card-panel pb-5">
+                    <DossierKPIBar items={content} kpiCards={SG_KPI_CARDS} />
+                    <DossierFilterChips
+                      items={content}
+                      activeFilter={activeFilter}
+                      onFilterChange={setActiveFilter}
+                      filterButtons={SG_FILTER_BUTTONS}
+                    />
                     <div className="row">
                       <div className="row">
-                        <div className="col l6 m6 s12">
-                          <h5 className="card-title">
-                            Liste des suggestions&nbsp;
+                        <div className="col l6 m6 s12" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <h5 className="card-title" style={{ margin: 0 }}>
+                            Liste des suggestions
                           </h5>
+                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 24, borderRadius: 12, backgroundColor: "#005081", color: "#fff", fontSize: "0.75rem", fontWeight: 700, padding: "0 8px" }}>
+                            {activeFilter === "ALL" ? content.length : content.filter((i) => i.status === activeFilter).length}
+                          </span>
                         </div>
                         <div
                           className="col l6 m6 s12"
-                          style={{ textAlign: "end" }}
+                          style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}
                         >
+                          <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                            <Tooltip title="Vue liste"><Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></Box></Tooltip>
+                            <Tooltip title="Vue cartes"><Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></Box></Tooltip>
+                          </Box>
                           {hbt.includes("H7") ? (
                             <img
                               src={pdf}
                               alt=""
-                              style={{ marginRight: "15px", cursor: "pointer" }}
+                              style={{ marginRight: "4px", cursor: "pointer" }}
                               onClick={(e) => {
-                                // Vérifie si hbt inclut "H8" avant d'exécuter handleImpression
                                 if (hbt.includes("H8")) {
                                   handleImpression();
                                   setChangeButtonPrint(true);
@@ -1330,7 +1702,6 @@ const ListeSuggestions = (props) => {
                               }}
                             />
                           ) : ""}
-
                           {hbt.includes("H9") ? (
                             <img
                               src={excel}
@@ -1342,29 +1713,41 @@ const ListeSuggestions = (props) => {
                                   setChangeButtonPrint(false);
                                 } else {
                                   table3XLS2X(
-                                    "Liste_des_suggestions" +
-                                    today().replaceAll("/", ""),
+                                    "Liste_des_suggestions" + today().replaceAll("/", ""),
                                     "brke",
                                     selectOption,
                                     props.items
                                   );
                                 }
-
                               }}
                             />
                           ) : ""}
-
-
                         </div>
                       </div>
                       <div className="col s12">
-                        <ReactDatatable
-                          className={"responsive-table table-xlsx"}
-                          config={config}
-                          records={content}
-                          columns={columns}
-                          onRowClicked={rowClickedHandler}
-                        />
+                        {viewMode === "card" ? (
+                          <DossierCardView
+                            items={content}
+                            getCardData={getCardData}
+                            onCardClick={(item) => rowClickedHandler(null, item, null)}
+                            filterFn={tableFilterFn}
+                            showStatusFilter={true}
+                            showGravityFilter={false}
+                            searchPlaceholder="Rechercher une suggestion…"
+                            emptyText="Aucune suggestion trouvée"
+                          />
+                        ) : (
+                          <DossierTable
+                            items={content}
+                            columns={tableColumns}
+                            onRowClick={(item) => rowClickedHandler(null, item, null)}
+                            filterFn={tableFilterFn}
+                            showStatusFilter={true}
+                            showGravityFilter={false}
+                            searchPlaceholder="Rechercher par code, contenu, client..."
+                            emptyText="Aucune suggestion trouvée"
+                          />
+                        )}
                         <div id="tab_exl" style={{ display: "none" }}></div>
                       </div>
                     </div>
@@ -1622,7 +2005,7 @@ const ListeSuggestions = (props) => {
                                       mb: 1,
                                       mr: 1
                                     }}
-                                  >  Fichiers
+                                  >  Contenu & Médias
 
                                   </Typography>
                                 </Box>

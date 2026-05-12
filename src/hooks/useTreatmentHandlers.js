@@ -1,3 +1,4 @@
+import { notify } from "../Utils/alert";
 import {
   affectClaimApi,
   approveClaimSolutionApi,
@@ -48,38 +49,32 @@ const useTreatmentHandlers = ({
 
   const handleValidation = () => {
     let isValid = true;
-    if (
-      props.solutionExistant === "" &&
-      (!props.solution || props.solution.length === 0)
-    ) {
+    const hasExisting = props.solutionExistant && props.solutionExistant !== "";
+    if (!hasExisting && (!props.solution || props.solution.length === 0)) {
       isValid = false;
       errors["solution"] = "Champ incorrect";
+      notify("Veuillez renseigner la solution", "error");
     }
-    if (
-      props.solutionExistant === "" &&
-      (!props.comment || props.comment === "")
-    ) {
+    if (!hasExisting && (!props.comment || props.comment === "")) {
       isValid = false;
       errors["comment"] = "Champ incorrect";
+      notify("Veuillez renseigner le commentaire", "error");
     }
     return isValid;
   };
 
   const handleReValidation = () => {
     let isValid = true;
-    if (
-      props.solutionExistant === "" &&
-      (!props.new_solution || props.new_solution.length === 0)
-    ) {
+    const hasExisting = props.solutionExistant && props.solutionExistant !== "";
+    if (!hasExisting && (!props.new_solution || props.new_solution.length === 0)) {
       isValid = false;
       errors["new_solution"] = "Champ incorrect";
+      notify("Veuillez renseigner la solution", "error");
     }
-    if (
-      props.solutionExistant === "" &&
-      (!props.new_comment || props.new_comment === "")
-    ) {
+    if (!hasExisting && (!props.new_comment || props.new_comment === "")) {
       isValid = false;
       errors["new_comment"] = "Champ incorrect";
+      notify("Veuillez renseigner le commentaire", "error");
     }
     return isValid;
   };
@@ -181,7 +176,12 @@ const useTreatmentHandlers = ({
         isExisting: props.solutionExistant !== "",
       };
       props.etat2Changed(true);
-      treatApi(claim, props).then(() => onSuccess(e));
+      treatApi(claim, props)
+        .then(() => onSuccess(e))
+        .catch(() => {
+          props.etat2Changed(false);
+          notify("Erreur lors du traitement", "error");
+        });
     }
     props.claimHandleErrors(errors);
   };
@@ -198,7 +198,12 @@ const useTreatmentHandlers = ({
         isExisting: props.solutionExistant !== "",
       };
       props.etat2Changed(true);
-      treatApi(claim, props).then(() => onSuccess(e));
+      treatApi(claim, props)
+        .then(() => onSuccess(e))
+        .catch(() => {
+          props.etat2Changed(false);
+          notify("Erreur lors du traitement", "error");
+        });
     }
     props.claimHandleErrors(errors);
   };
@@ -237,6 +242,26 @@ const useTreatmentHandlers = ({
     transmitApi(info, props).then(() => onSuccess(e));
   };
 
+  /**
+   * Traite immédiatement sans passer par le formulaire.
+   * Utilisé par "Utiliser et traiter" dans PreEnregistreesTab.
+   * @param {string} content  — texte de la solution
+   * @param {string|number} [existingId=''] — id de la solution pré-enregistrée si applicable
+   * @param {string} [commentaire='']
+   */
+  const handleSolveImmediate = (content, existingId = '', commentaire = '') => {
+    const claim = {
+      claimId: props.id,
+      treatorId: user.id,
+      solution: existingId ? '' : (typeof content === 'string' ? content : ''),
+      commentaire,
+      existingId,
+      isExisting: existingId !== '',
+    };
+    props.etat2Changed(true);
+    treatApi(claim, props).then(() => onSuccess({ preventDefault: () => {} }));
+  };
+
   return {
     errors,
     prepareBeforeAssign,
@@ -245,6 +270,7 @@ const useTreatmentHandlers = ({
     handleAssignOrReassign,
     handleSolve,
     handleReSolve,
+    handleSolveImmediate,
     handleApprove,
     handleDisapprove,
     handleTransmission,

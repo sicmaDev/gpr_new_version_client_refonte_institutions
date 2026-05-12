@@ -1,4 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useHistory } from "react-router-dom/cjs/react-router-dom";
+import TraitementShell from "../../components/treatment/TraitementShell";
+import HistoriqueTimeline from "../../components/treatment/HistoriqueTimeline";
+import FichiersTab from "../../components/treatment/FichiersTab";
+import axios from "axios";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
 import LastPageIcon from "@mui/icons-material/LastPage";
@@ -171,6 +176,7 @@ import {
   INSTITUTION_LOGO,
   INSTITUTION_NAME,
   INSTITUTION_TEL,
+  HOST,
 } from "../../Utils/globals";
 import MoveUpIcon from "@mui/icons-material/MoveUp";
 import SaveIcon from "@mui/icons-material/Save";
@@ -179,6 +185,35 @@ import { notify } from "../../Utils/alert";
 import { showModalChanged } from "../../redux/actions/Reclamations/HistoriqueReclamationActions";
 import HistoriqueAffectation from "../../components/HistoriqueAffectation";
 import { WarningAmber } from "@mui/icons-material";
+import DossierCardView from "../../components/shared/DossierCardView";
+import DossierTable from "../../components/shared/DossierTable";
+import DossierKPIBar from "../../components/shared/DossierKPIBar";
+import DossierFilterChips from "../../components/shared/DossierFilterChips";
+import ClaimStatusBadge from "../Reclamations/components/ClaimStatusBadge";
+import ClaimGravityBadge from "../Reclamations/components/ClaimGravityBadge";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import GridViewIcon from "@mui/icons-material/GridView";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+
+const DEN_KPI_CARDS = [
+  { key: "total",   label: "Total dénonciations",       icon: AssignmentIcon,    iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
+  { key: "pending", label: "En cours de traitement",    icon: HourglassEmptyIcon, iconBg: "#FEF3C7", iconColor: "#92400E", borderColor: "#F59E0B", filter: (c) => ["SAVED","TEMP_SAVED","AFFECTED","TO_APPROUVED","DESAPPROUVED"].includes(c.status) },
+  { key: "treated", label: "Traitées",                  icon: CheckCircleIcon,   iconBg: "#D1FAE5", iconColor: "#065F46", borderColor: "#10B981", filter: (c) => ["TREAT","SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","CLASSED"].includes(c.status) },
+  { key: "overdue", label: "En retard / Alerte",        icon: WarningAmberIcon,  iconBg: "#FEE2E2", iconColor: "#B91C1C", borderColor: "#EF4444", filter: (c) => c.retardDay !== undefined && c.retardDay <= 0 && !["SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION"].includes(c.status) },
+];
+
+const DEN_FILTER_BUTTONS = [
+  { value: "ALL",         label: "Tous" },
+  { value: "SAVED",       label: "Enregistrée" },
+  { value: "AFFECTED",    label: "Affectée" },
+  { value: "TO_APPROUVED",label: "À approuver" },
+  { value: "TREAT",       label: "Traitée" },
+  { value: "SATISFIED",   label: "Satisfait" },
+  { value: "CLASSED",     label: "Classée" },
+];
 
 const styles = {
   control: (base) => ({
@@ -212,6 +247,8 @@ const ListeDenonciations = (props) => {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [viewMode, setViewMode] = useState("list");
+  const [activeFilter, setActiveFilter] = useState("ALL");
 
   const getStatusLabel = (status) => {
     var statusElt = status;
@@ -271,9 +308,58 @@ const ListeDenonciations = (props) => {
   const [audioListForm, setAudioListForm] = useState([]);
   const [audioListUrlForm, setAudioListUrlForm] = useState([]);
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  const handleClickOpen = () => { setOpen(true); };
+  const history = useHistory();
+
+  // Chargement depuis l'URL quand on arrive directement sur /denonciations/liste/:code
+  useEffect(() => {
+    const code = props.match?.params?.code;
+    if (code && code !== "all") {
+      axios({
+        method: "get",
+        url: HOST + "api/v1/denunciation/" + code + "/details",
+        headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + loadItemFromSessionStorage("token") },
+      }).then((cc) => {
+        if (cc.status >= 200 && cc.status <= 299) {
+          const data = cc.data.content;
+          clearComponentState();
+          props.idChanged(data.id ?? "");
+          props.lastnameChanged(data.clientFirstAndLastName ?? "");
+          props.addressChanged(data.address ?? "");
+          props.phoneChanged(data.tel ?? "");
+          props.genderChanged(data.gender ?? "");
+          props.languageChanged(data.language?.libelle ?? "");
+          props.dossierimfChanged(data.folderCode ?? "");
+          props.emailChanged(data.email ?? "");
+          props.codeChanged(data.code ?? "");
+          props.codeClientChanged(data.codeClient ?? "");
+          props.recordedAtChanged(data.receiptDateTime ?? "");
+          props.collectChanged(data.collectionChannel?.libelle ?? "");
+          props.subjectChanged(data.objet?.libelle ?? "");
+          props.underSubjectChanged(data.objet?.categorie?.libelle ?? "");
+          props.productChanged(data.product?.libelle ?? "");
+          props.unitChanged(data.servicePoint?.libelle ?? "");
+          props.contentChanged(data.content ?? "");
+          props.solutionChanged(data.solutionDtos ?? []);
+          props.externalRemediesChanged(data.externalRecourses ?? null);
+          props.statusChanged(data.status ?? "");
+          props.createdByChanged(data.collector?.firstAndLastName ?? "");
+          props.createdAtChanged(data.createdAt ?? "");
+          props.assignedAtChanged(data.affectedAt ?? "");
+          props.assignedByChanged(data.treatmentAffectedBy?.firstAndLastName ?? "");
+          props.handledByChanged(data.treatmentAffectedTo?.firstAndLastName ?? "");
+          props.selectedItemChanged(data);
+          props.extrasChanged(data.extras ?? []);
+          props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
+          props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
+          setClaimId(data.id);
+          getFillesApi(data.id, props);
+          getClaimAudioApi(data.id, props);
+        }
+      }).catch(() => {});
+    }
+  }, []);
+
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
   const [filesForm, setFiles] = useState([]);
@@ -292,8 +378,8 @@ const ListeDenonciations = (props) => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const warningConvert = props.convertedBy !== "" &&
-    props.convertedAt !== "" && (
+  const warningConvert = props.convertedBy && props.convertedBy !== "" &&
+    props.convertedAt && props.convertedAt !== "" && (
       <span
         className="mb-1"
         style={{
@@ -624,9 +710,8 @@ const ListeDenonciations = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    handleClickOpen();
-
     clearComponentState();
+    history.push("/denonciations/liste/" + data.code);
     setClaimId(data.id);
     // setAudios([])
     // setFiles([])
@@ -1743,6 +1828,112 @@ const ListeDenonciations = (props) => {
     handlePrintAvance(childWindow, toStri);
   };
 
+  const getCardData = (item) => {
+    let gravity = null;
+    try {
+      if (mode === 1) {
+        gravity = item.objet?.risqueLevel;
+      } else {
+        gravity = item.objet?.risqueLevel || objets?.find((e) => e.id === item.objetId)?.risqueLevel;
+      }
+    } catch (_) {}
+    return {
+      code: item.codeClient,
+      client: item.clientFirstAndLastName || "Anonyme",
+      title: item.objet?.libelle || "—",
+      subtitle: item.objet?.categorie?.libelle || null,
+      status: item.status,
+      gravity,
+      date: item.createdAt,
+      slaWarning: item.status !== "TREAT" && item.retardDay !== undefined && item.retardDay <= 0,
+      retardDay: item.retardDay,
+    };
+  };
+
+  const getGravityDen = (item) => {
+    try {
+      if (mode === 1) return item.objet?.risqueLevel;
+      return item.objet?.risqueLevel || objets?.find((e) => e.id === item.objetId)?.risqueLevel;
+    } catch (_) { return null; }
+  };
+
+  const tableColumns = [
+    {
+      id: "codeClient", label: "Code client", sortable: true, minWidth: 100,
+      render: (item) => (
+        <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
+          {item.codeClient || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "objet", label: "Objet / Catégorie", sortable: false, minWidth: 160,
+      render: (item) => (
+        <Box>
+          <span style={{ display: "block", fontWeight: 600, fontSize: "0.82rem", color: "#0F172A", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {item.objet?.libelle || "—"}
+          </span>
+          {item.objet?.categorie?.libelle && (
+            <span style={{ fontSize: "0.72rem", color: "#94A3B8" }}>{item.objet.categorie.libelle}</span>
+          )}
+        </Box>
+      ),
+    },
+    {
+      id: "client", label: "Client", sortable: true, minWidth: 140,
+      render: (item) => (
+        <span style={{ fontWeight: 600, fontSize: "0.82rem" }}>
+          {item.clientFirstAndLastName || <em>Anonyme</em>}
+        </span>
+      ),
+      sortValue: (item) => item.clientFirstAndLastName || "",
+    },
+    {
+      id: "status", label: "Statut", sortable: true, minWidth: 120,
+      render: (item) => <ClaimStatusBadge status={item.status} />,
+      sortValue: (item) => item.status || "",
+    },
+    {
+      id: "gravity", label: "Gravité", sortable: true, minWidth: 100,
+      render: (item) => <ClaimGravityBadge gravity={getGravityDen(item)} />,
+      sortValue: (item) => getGravityDen(item) || "",
+    },
+    {
+      id: "date", label: "Enregistrée le", sortable: true, minWidth: 130,
+      render: (item) => (
+        <span style={{ fontSize: "0.80rem", color: "#475569", whiteSpace: "nowrap" }}>
+          {item.createdAt ? new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(item.createdAt)) : "—"}
+        </span>
+      ),
+      sortValue: (item) => item.createdAt || "",
+    },
+    {
+      id: "alert", label: "Délai", sortable: false, minWidth: 90,
+      render: (item) => {
+        if (item.status === "TREAT") return <span style={{ color: "#CBD5E1", fontSize: "0.78rem" }}>—</span>;
+        if (item.retardDay !== undefined && item.retardDay <= 0) return (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
+            <WarningAmberIcon sx={{ fontSize: 14, color: "#EF4444" }} />
+            <span style={{ fontSize: "0.75rem", color: "#EF4444", fontWeight: 700 }}>Retard</span>
+          </Box>
+        );
+        return <span style={{ fontSize: "0.78rem", color: "#475569" }}>{item.declenchedDate || "—"}</span>;
+      },
+    },
+  ];
+
+  const tableFilterFn = (item, { q, filterStatus, filterGravity }) => {
+    if (activeFilter !== "ALL" && item.status !== activeFilter) return false;
+    if (q && !(
+      item.codeClient?.toLowerCase().includes(q) ||
+      item.clientFirstAndLastName?.toLowerCase().includes(q) ||
+      item.objet?.libelle?.toLowerCase().includes(q)
+    )) return false;
+    if (filterStatus && item.status !== filterStatus) return false;
+    if (filterGravity && getGravityDen(item) !== filterGravity) return false;
+    return true;
+  };
+
   let content = [];
   content = props.items;
   //darrell : add custome attribut for search
@@ -2171,284 +2362,500 @@ const ListeDenonciations = (props) => {
       });
   };
 
+  if (props.match?.params?.code && props.match.params.code !== "all") {
+    const solutions = Array.isArray(props.solution) ? props.solution : [];
+    const hasH14 = hbt.includes("H14") || addR === "PILOTE" || addR === "DE";
+
+
+    const filesCount = props.selectedItemFiles?.length ?? 0;
+    const audiosCount = props.selectedItemAudio?.length ?? 0;
+    const extrasCount = props.extras?.filter(e => e.contenu)?.length ?? 0;
+    const contentsCount = (props.content ? 1 : 0) + extrasCount;
+
+    return (
+      <>
+        <audio ref={audioRef} src={currentAudio} hidden />
+        <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} claimStatus={props.status} />
+
+        {showExtraContent && (
+          <Dialog open={showExtraContent} fullWidth maxWidth="sm" onClose={() => setShowExtraContent(false)}
+            PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
+            <DialogContent>
+              <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Ajouter un contenu</div>
+              </div>
+              <TextField fullWidth multiline minRows={4} value={extraContent}
+                onChange={(e) => { e.stopPropagation(); setExtraContent(e.target.value); }}
+                placeholder="Saisissez le contenu..." sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }} />
+            </DialogContent>
+            {extraContent?.trim() && (
+              <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
+                <LoadingButton onClick={() => { setExtraContent(""); setShowExtraContent(false); }} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
+                <LoadingButton onClick={(e) => handleContentSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#7c3aed' }}><span>Enregistrer</span></LoadingButton>
+              </DialogActions>
+            )}
+          </Dialog>
+        )}
+
+        {filesForm.length > 0 && (
+          <Dialog open fullWidth maxWidth="sm" onClose={() => setFiles([])}
+            PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
+            <DialogContent>
+              <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Ajouter des fichiers</div>
+              </div>
+              {filesForm.map((f, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', marginBottom: 6 }}>
+                  <span style={{ flex: 1, fontSize: 13, color: '#1e293b' }}>{f.name}</span>
+                  <span style={{ fontSize: 11.5, color: '#94a3b8' }}>{Math.round((f.size / 1024) * 100) / 100} Ko</span>
+                </div>
+              ))}
+            </DialogContent>
+            <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
+              <LoadingButton onClick={() => setFiles([])} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
+              <LoadingButton onClick={(e) => handleFileSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#1d4ed8' }}><span>Enregistrer</span></LoadingButton>
+            </DialogActions>
+          </Dialog>
+        )}
+
+        {showAudioBox && (
+          <Dialog open={open2} onClose={() => { setOpen2(false); setAudioBox(false); }} fullWidth maxWidth="sm"
+            PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
+            <DialogContent>
+              <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>+ Audio</div>
+              </div>
+              <section className="voice-recorder"><div className="recorder-container">
+                {audioListUrlForm.map((url, i) => (
+                  <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, pt: 2 }}>
+                    <audio src={url} controls style={{ flex: 1, marginRight: 8 }} />
+                    <CloseIcon sx={{ cursor: 'pointer', color: '#ef4444' }} onClick={() => {
+                      setAudioListForm(audioListForm.filter((_, ind) => ind !== i));
+                      setAudioListUrlForm(audioListUrlForm.filter((_, ind) => ind !== i));
+                    }} />
+                  </Box>
+                ))}
+                <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={() => {}} />
+              </div></section>
+            </DialogContent>
+            {audioListUrlForm.length > 0 && (
+              <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
+                <LoadingButton onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
+                <LoadingButton onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#166534' }}><span>Enregistrer</span></LoadingButton>
+              </DialogActions>
+            )}
+          </Dialog>
+        )}
+
+        <TraitementShell
+          onBack={() => history.push("/denonciations/liste/all")}
+          hideClientInfo={true}
+          codeClient={props.codeClient || props.code}
+          status={props.status}
+          risqueLevel={props.selectedItem?.objet?.risqueLevel}
+          conversionWarning={warningConvert || null}
+          headerActions={
+            <>
+              <button onClick={(e) => printRecu(e)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "#475569" }}>
+                <PrintIcon style={{ fontSize: 15 }} /> Imprimer
+              </button>
+              {props.status !== "SAVED" && props.status !== "TEMP_SAVED" && (
+                <button onClick={() => props.showModalHistoriqueChanged(true)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "#475569" }}>
+                  <History style={{ fontSize: 15 }} /> Historique
+                </button>
+              )}
+            </>
+          }
+          lastname={props.lastname}
+          phone={props.phone}
+          email={props.email}
+          address={props.address}
+          language={props.language}
+          gender={props.gender}
+          dossierimf={props.dossierimf}
+          recorded_at={props.recorded_at}
+          collect={props.collect}
+          subject={props.subject}
+          underSubject={props.underSubject}
+          product={props.product}
+          unit={props.unit}
+          created_by={props.created_by}
+          creationDate={creationDate}
+          handled_by={props.handled_by}
+          assigned_by={props.assigned_by}
+          assignedAt={props.assigned_at}
+          visibleActions={[]}
+          selectedItemFiles={props.selectedItemFiles}
+          selectedItemAudio={props.selectedItemAudio}
+          attachmentList={attachmentList}
+          audioList={audioList}
+          inputRef={inputRef}
+          onFilesChange={(e) => setFiles([...e.target.files])}
+          onAddAudio={() => { setAudioBox(true); setOpen2(true); }}
+          solution={props.solution}
+          customTabs={[
+            {
+              key: "traitement",
+              label: "Détails du traitement",
+              content: (() => {
+                const displayedSolutions = hasH14
+                  ? (interne ? solutions : solutions.filter(s => s.status === "APPROVED" && s.satisfactionMeasureDto !== null))
+                  : (solutions.length > 0 ? [solutions[0]] : []);
+
+                const DEN_STEPS = [
+                  { label: "Enregistrée" },
+                  { label: "Affectée" },
+                  { label: "Traitée" },
+                  { label: "Clôturée" },
+                ];
+                const DEN_STATUS_STEP = {
+                  SAVED: 0, TEMP_SAVED: 0,
+                  AFFECTED: 1,
+                  TO_APPROUVED: 2, DESAPPROUVED: 2,
+                  TREAT: 3,
+                };
+                const denAllDone = ["TREAT","SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION","CLASSED"].includes(props.status);
+                const currentStep = denAllDone ? DEN_STEPS.length : (DEN_STATUS_STEP[props.status] ?? 0);
+                const isError = props.status === "DESAPPROUVED";
+
+                const DEN_HERO = {
+                  SAVED:       { title: "En attente d'affectation", sub: "Aucun agent assigné pour le moment", iconColor: "#1d4ed8", iconBg: "#dbeafe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+                  TEMP_SAVED:  { title: "Sauvegardée temporairement", sub: "En attente de complétion", iconColor: "#7c3aed", iconBg: "#ede9fe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> },
+                  AFFECTED:    { title: "Affectée à un agent", sub: null, iconColor: "#1d4ed8", iconBg: "#dbeafe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
+                  TO_APPROUVED:{ title: "En attente d'approbation", sub: "La solution proposée doit être approuvée", iconColor: "#92400e", iconBg: "#fef3c7", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+                  DESAPPROUVED:{ title: "Solution désapprouvée", sub: "Une nouvelle solution doit être proposée", iconColor: "#991b1b", iconBg: "#fee2e2", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> },
+                  TREAT:       { title: "En traitement", sub: "Une solution a été proposée", iconColor: "#166534", iconBg: "#dcfce7", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="20 6 9 17 4 12"/></svg> },
+                  SATISFIED:   { title: "Clôturée — Satisfait", sub: null, iconColor: "#166534", iconBg: "#dcfce7", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+                  CLASSED:     { title: "Classée", sub: "Le dossier est définitivement clos", iconColor: "#475569", iconBg: "#f1f5f9", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> },
+                };
+                const hero = DEN_HERO[props.status] || DEN_HERO["SAVED"];
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+                    {/* ── Stepper ── */}
+                    <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "16px 20px" }}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        {DEN_STEPS.map((step, i) => {
+                          const done = i < currentStep;
+                          const active = i === currentStep;
+                          const dotC = done ? "#10b981" : active ? (isError ? "#ef4444" : "#3b82f6") : "#e2e8f0";
+                          const textC = done ? "#10b981" : active ? (isError ? "#ef4444" : "#1d4ed8") : "#94a3b8";
+                          return (
+                            <React.Fragment key={i}>
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 1, flex: "0 0 auto" }}>
+                                <div style={{ width: 28, height: 28, borderRadius: "50%", background: done ? "#dcfce7" : active ? (isError ? "#fee2e2" : "#dbeafe") : "#f1f5f9", border: `2px solid ${dotC}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  {done ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                       : active && isError ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                       : <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotC }} />}
+                                </div>
+                                <span style={{ fontSize: 10.5, fontWeight: active ? 700 : 500, color: textC, marginTop: 5, whiteSpace: "nowrap" }}>{step.label}</span>
+                              </div>
+                              {i < DEN_STEPS.length - 1 && <div style={{ flex: 1, height: 2, background: i < currentStep ? "#10b981" : "#e2e8f0", margin: "0 4px", marginBottom: 16, borderRadius: 2 }} />}
+                            </React.Fragment>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* ── Hero card (aucune solution) ── */}
+                    {solutions.length === 0 && (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "28px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                          <div style={{ width: 60, height: 60, borderRadius: 16, background: hero.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: hero.iconColor }}>{hero.icon}</div>
+                          <div>
+                            <div style={{ fontSize: 17, fontWeight: 800, color: "#1e293b" }}>{hero.title}</div>
+                            {hero.sub && <div style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>{hero.sub}</div>}
+                          </div>
+                        </div>
+                        {props.status === "AFFECTED" && (
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            {[
+                              { label: "Affecté à", value: props.handled_by || "—", color: "#1d4ed8" },
+                              { label: "Par", value: props.assigned_by || "—", color: "#1e293b" },
+                              { label: "Le", value: props.assigned_at ? formatDate(props.assigned_at) : "—", color: "#1e293b" },
+                              { label: "Délai", value: props.selectedItem?.retardDay != null ? `${props.selectedItem.retardDay} jour(s)` : "—", color: props.selectedItem?.retardDay < 0 ? "#ef4444" : "#1e293b" },
+                            ].map(({ label, value, color }) => (
+                              <div key={label} style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 14px" }}>
+                                <div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{label}</div>
+                                <div style={{ fontSize: 13.5, fontWeight: 700, color }}>{value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>Informations du dossier</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                            {[
+                              { label: "Enregistrée le", value: creationDate },
+                              { label: "Canal", value: props.collect },
+                              { label: "Objet", value: props.subject },
+                              { label: "Catégorie", value: props.underSubject },
+                              { label: "Produit", value: props.product },
+                              { label: "Point de service", value: props.unit },
+                            ].filter(f => f.value).map(({ label, value }) => (
+                              <div key={label} style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 12px" }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{label}</div>
+                                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#1e293b" }}>{value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Onglets filtre H14 ── */}
+                    {hasH14 && solutions.length > 0 && (
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {[{ key: false, label: "Interactions avec le client", icon: <PersonIcon style={{ fontSize: 16 }} /> }, { key: true, label: "Traitement en interne", icon: <Diversity3Icon style={{ fontSize: 16 }} /> }].map(({ key, label, icon }) => (
+                          <button key={String(key)} onClick={() => setInterne(key)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: interne === key ? 700 : 500, cursor: "pointer", border: interne === key ? "1.5px solid #6366f1" : "1.5px solid #e5e7eb", background: interne === key ? "#eff6ff" : "#f8fafc", color: interne === key ? "#1d4ed8" : "#6b7280" }}>
+                            {icon}{label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* ── Solutions ── */}
+                    {displayedSolutions.length > 0 ? (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                          Solutions proposées <span style={{ background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, padding: "1px 9px", fontSize: 11.5, fontWeight: 700 }}>{displayedSolutions.length}</span>
+                        </div>
+                        <div style={{ position: "relative", paddingLeft: 28 }}>
+                          <div style={{ position: "absolute", left: 11, top: 6, bottom: 6, width: 2, background: "#e2e8f0", borderRadius: 2 }} />
+                          {displayedSolutions.map((sol, idx) => {
+                            const isLast = idx === displayedSolutions.length - 1;
+                            const sat = sol.satisfactionMeasureDto?.status;
+                            const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : "#6366f1";
+                            const satLabel = sat === "SATISFIED" ? "Satisfait" : sat === "UNSATISFIED" ? "Non satisfait" : sat === "PARTIAL" ? "Partiellement satisfait" : null;
+                            return (
+                              <div key={sol.id ?? idx} style={{ position: "relative", marginBottom: isLast ? 0 : 20 }}>
+                                <div style={{ position: "absolute", left: -22, top: 14, width: 16, height: 16, borderRadius: "50%", background: dotColor, border: "3px solid #fff", boxShadow: `0 0 0 2px ${dotColor}`, zIndex: 1 }} />
+                                <div style={{ border: `1px solid ${isLast ? dotColor + "44" : "#e5e7eb"}`, borderRadius: 12, overflow: "hidden" }}>
+                                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
+                                    <span style={{ fontSize: 13, fontWeight: 700, color: dotColor }}>Solution {idx + 1}</span>
+                                    <div style={{ display: "flex", gap: 8 }}>
+                                      {sol.author?.firstAndLastName && <span style={{ fontSize: 11.5, color: "#64748b" }}>{sol.author.firstAndLastName}</span>}
+                                      {sol.createdAt && <span style={{ fontSize: 11, color: "#94a3b8" }}>· {formatDate(sol.createdAt)}</span>}
+                                    </div>
+                                  </div>
+                                  <div style={{ padding: "12px 14px", borderLeft: `3px solid ${dotColor}`, margin: "10px 14px 0" }}>
+                                    <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "—"}</div>
+                                  </div>
+                                  {sol.commentaire && <div style={{ padding: "8px 14px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Commentaire</div><div style={{ fontSize: 12.5, color: "#64748b", fontStyle: "italic" }}>{sol.commentaire}</div></div>}
+                                  {sol.satisfactionMeasureDto?.commentaire && <div style={{ margin: "0 14px 10px", background: "#e0f2fe", borderRadius: 8, padding: "8px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#0369a1", textTransform: "uppercase" }}>Commentaire du client</div><div style={{ fontSize: 12.5, color: "#0369a1", marginTop: 4 }}>{sol.satisfactionMeasureDto.commentaire}</div></div>}
+                                  {satLabel && <div style={{ padding: "0 14px 12px" }}><span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: dotColor + "18", color: dotColor }}>{satLabel}</span></div>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : solutions.length > 0 && hasH14 ? (
+                      <div style={{ background: "#f5f9ff", borderLeft: "4px solid #1976d2", borderRadius: 8, padding: "14px 16px", fontSize: 13, color: "#64748b" }}>Aucune donnée dans cette vue</div>
+                    ) : null}
+
+                    {props.external_remedies?.length > 0 && (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "18px 22px" }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                          <GavelIcon style={{ fontSize: 16, color: "#f59e0b" }} /> Recours externes
+                        </div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                          {props.external_remedies.map((rec, i) => (
+                            <span key={i} style={{ padding: "5px 14px", borderRadius: 20, background: "#fffbeb", color: "#b45309", border: "1px solid #fed7aa", fontSize: 13, fontWeight: 600 }}>{rec.libelle}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })(),
+            },
+            {
+              key: "medias",
+              label: "Médias & Contenu",
+              content: (
+                <FichiersTab
+                  selectedItemFiles={props.selectedItemFiles}
+                  selectedItemAudio={props.selectedItemAudio}
+                  attachmentList={attachmentList}
+                  audioList={audioList}
+                  inputRef={inputRef}
+                  onFilesChange={(e) => setFiles([...e.target.files])}
+                  onAddAudio={() => { setAudioBox(true); setOpen2(true); }}
+                  content={props.content}
+                  extras={props.extras}
+                  onAddContent={() => { setShowExtraContent(true); setExtraContent(""); }}
+                />
+              ),
+            },
+            {
+              key: "historique",
+              label: "Historique",
+              content: (
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {solutions.length > 0 && (
+                    <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 20px", borderBottom: "1px solid #f1f5f9" }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 9, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                        <span style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>Historique des solutions</span>
+                        <span style={{ background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, padding: "2px 10px", fontSize: 11.5, fontWeight: 700 }}>{solutions.length}</span>
+                      </div>
+                      <div style={{ padding: "16px 20px", position: "relative", paddingLeft: 48 }}>
+                        <div style={{ position: "absolute", left: 36, top: 20, bottom: 20, width: 2, background: "#e2e8f0", borderRadius: 2 }} />
+                        {solutions.map((sol, idx) => {
+                          const sat = sol.satisfactionMeasureDto?.status;
+                          const dc = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : "#6366f1";
+                          return (
+                            <div key={sol.id ?? idx} style={{ position: "relative", marginBottom: idx < solutions.length - 1 ? 16 : 0 }}>
+                              <div style={{ position: "absolute", left: -22, top: 12, width: 14, height: 14, borderRadius: "50%", background: dc, border: "2px solid #fff", boxShadow: `0 0 0 2px ${dc}`, zIndex: 1 }} />
+                              <div style={{ border: `1px solid ${dc}33`, borderRadius: 10, padding: "10px 14px", background: "#fff" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                                  <span style={{ fontSize: 12.5, fontWeight: 700, color: dc }}>Solution {idx + 1}</span>
+                                  {sol.author?.firstAndLastName && <span style={{ fontSize: 11, color: "#94a3b8" }}>{sol.author.firstAndLastName} · {sol.createdAt ? formatDate(sol.createdAt) : ""}</span>}
+                                </div>
+                                <div style={{ fontSize: 13, color: "#1e293b", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "—"}</div>
+                                {sol.satisfactionMeasureDto?.status && <div style={{ marginTop: 6 }}><span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 20, background: dc + "18", color: dc }}>{sat === "SATISFIED" ? "Satisfait" : sat === "UNSATISFIED" ? "Non satisfait" : "Partiellement satisfait"}</span></div>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 20px", borderBottom: "1px solid #f1f5f9" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 9, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>Flux du dossier</span>
+                    </div>
+                    <div style={{ padding: "8px 12px" }}>
+                      <HistoriqueTimeline
+                        recorded_at={props.recorded_at}
+                        created_by={props.created_by}
+                        transmitted={props.selectedItem?.transmitted != null ? "" + props.selectedItem.transmitted : ""}
+                        transmittedBy={props.selectedItem?.transmittedBy?.firstAndLastName}
+                        transmittedTo={props.selectedItem?.transmittedTo?.firstAndLastName}
+                        handled_by={props.handled_by}
+                        assigned_by={props.selectedItem?.treatmentAffectedBy?.firstAndLastName}
+                        assignedAt={props.selectedItem?.affectedAt}
+                        solution={solutions}
+                        formatDate={formatDate}
+                        formatDate3={formatDate3}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ),
+            },
+          ]}
+        />
+      </>
+    );
+  }
+
   return (
     // "Liste Dénonciations"
     <div id="main">
-      <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} />
+      <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} claimStatus={props.status} />
 
+      {/* ── Modal Contenu ── */}
       {showExtraContent && (
-        <div>
-          <Dialog
-            open={showExtraContent}
-            fullWidth={true}
-            maxWidth="md"
-            onClose={(e) => {
-              setShowExtraContent(false);
-            }}
-            overflowX="hidden"
-            id="dialog-contenu"
-          >
-            <DialogTitle>Ajouter un contenu</DialogTitle>
-            <DialogContent sx={{ overflowX: "hidden" }}>
-              <TextField
-                fullWidth
-                multiline
-                minRows={4}
-                value={extraContent}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setExtraContent(e.target.value);
-                }}
-                placeholder="Saisissez le contenu..."
-              />
-            </DialogContent>
-            {extraContent && extraContent?.trim() !== "" ? (
-              <DialogActions sx={{ overflowX: "hidden" }}>
-                <LoadingButton
-                  onClick={(e) => {
-                    setExtraContent("");
-                    setShowExtraContent(false);
-                  }}
-                  className="waves-effect waves-effect-b waves-light btn-small"
-                  loadingPosition="end"
-                  // loading={extraFileLoading}
-                  endIcon={<CloseIcon />}
-                  variant="contained"
-                  sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  color="secondary"
-                >
-                  Annuler
-                </LoadingButton>
-                <LoadingButton
-                  onClick={(e) => {
-                    handleContentSubmit(e);
-                  }}
-                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                  loading={extraFileLoading}
-                  loadingPosition="end"
-                  endIcon={<SaveIcon />}
-                  variant="contained"
-                  sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-                  color="primary"
-                >
-                  Enregistrer
-                </LoadingButton>
-              </DialogActions>
-            ) : (
-              <></>
-            )}
-          </Dialog>
-        </div>
-      )}
-      {filesForm.length ? (
-        <div>
-          <Dialog
-            open={filesForm.length ? true : false}
-            fullWidth={true}
-            maxWidth="sm"
-            onClose={(e) => {
-              setFiles([]);
-            }}
-            id="dialog-addFile"
-          >
-            <DialogContent>
-              <DialogContentText>
-                <div className="col l12 s12 pb-2" id="content">
-                  <div className="df sb pb-2">
-                    <b>Ajout de fichier</b>
-                    <CloseIcon
-                      style={{ cursor: "pointer" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    />
-                  </div>
-                </div>
-              </DialogContentText>
-
-              <div className="col l12 m12 s12 file-field input-field">
-                <List component="div" role="group">
-                  {filesForm.map((file, i) => {
-                    return (
-                      <ListItemButton key={i} divider>
-                        <ListItemText
-                          primary={file.name}
-                          secondary={
-                            Math.round((file.size / 1024) * 100) / 100 +
-                            " " +
-                            "Ko"
-                          }
-                        />
-                      </ListItemButton>
-                    );
-                  })}
-                </List>
-                <div
-                  style={{ display: "flex", alignItems: "center" }}
-                  htmlFor="ile"
-                >
-                  <LoadingButton
-                    onClick={(e) => {
-                      handleFileSubmit(e);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                    loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<SaveIcon />}
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#1e2188",
-                      textTransform: "initial",
-                    }}
-                  >
-                    <span>Enregistrer</span>
-                  </LoadingButton>
-
-                  <LoadingButton
-                    onClick={(e) => {
-                      setFiles([]);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small"
-                    // loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<CloseIcon />}
-                    variant="contained"
-                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  >
-                    <span>Annuler</span>
-                  </LoadingButton>
-                </div>
+        <Dialog open={showExtraContent} fullWidth maxWidth="sm" onClose={() => setShowExtraContent(false)} id="dialog-contenu"
+          PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
+          <DialogContent>
+            <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      ) : (
-        <></>
+              <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Ajouter un contenu</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 20 }}>Ce contenu sera joint à la dénonciation</div>
+            </div>
+            <TextField fullWidth multiline minRows={4} value={extraContent}
+              onChange={(e) => { e.stopPropagation(); e.preventDefault(); setExtraContent(e.target.value); }}
+              placeholder="Saisissez le contenu..." sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }} />
+          </DialogContent>
+          {extraContent?.trim() !== "" && (
+            <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
+              <LoadingButton onClick={() => { setExtraContent(""); setShowExtraContent(false); }} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
+              <LoadingButton onClick={(e) => handleContentSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#7c3aed', '&:hover': { background: '#6d28d9' } }}><span>Enregistrer</span></LoadingButton>
+            </DialogActions>
+          )}
+        </Dialog>
       )}
-      {showAudioBox && (
-        <div>
-          <Dialog
-            open={open2}
-            onClose={() => {
-              setOpen2(false);
-            }}
-            style={{ padding: "16px" }}
-            id="dialog-audio"
-          >
-            <DialogTitle
-              align="center"
-              color={"#1E2188"}
-              fontSize={"23px"}
-              fontWeight={"bold"}
-            >
-              {"Enregistreur vocal Réclamations"}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText
-                align="center"
-                fontSize={"14px"}
-                textAlign={"center"}
-              >
-                {
-                  "Cliquez sur le bouton ci-dessous et parler dans le micro de votre téléphone, ou branchez un casque ou des écouteurs"
-                }
-              </DialogContentText>
 
-              <section className="voice-recorder">
-                <div className="recorder-container">
-                  {audioListUrlForm.map((url, i) => {
-                    return (
-                      <Box
-                        key={i}
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          pb: 2,
-                          pt: 2,
-                        }}
-                      >
-                        <audio
-                          src={url}
-                          controls
-                          sx={{ flex: "1", mr: 2, width: "100%" }}
-                        />
-                        <CloseIcon
-                          color="red"
-                          onClick={() => {
-                            setAudioListForm(() => {
-                              return audioListForm.filter(
-                                (va, ind) => ind !== i
-                              );
-                            });
-                            setAudioListUrlForm(() => {
-                              return audioListUrlForm.filter(
-                                (va, inde) => inde !== i
-                              );
-                            });
-                          }}
-                        />
-                      </Box>
-                    );
-                  })}
-                  <RecorderControls
-                    recorderState={recorderState}
-                    handlers={handlers}
-                    closeAction={() => { }}
-                  />
+      {/* ── Modal Fichiers ── */}
+      {filesForm.length > 0 && (
+        <Dialog open fullWidth maxWidth="sm" onClose={() => setFiles([])} id="dialog-addFile"
+          PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
+          <DialogContent>
+            <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Ajouter des fichiers</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>{filesForm.length} fichier(s) sélectionné(s)</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {filesForm.map((file, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                  <span style={{ flex: 1, fontSize: 13, color: '#1e293b' }}>{file.name}</span>
+                  <span style={{ fontSize: 11.5, color: '#94a3b8' }}>{Math.round((file.size / 1024) * 100) / 100} Ko</span>
                 </div>
-              </section>
-            </DialogContent>
-            {audioListUrlForm.length ? (
-              <DialogActions>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "end",
-                    alignItems: "center",
-                  }}
-                >
-                  <LoadingButton
-                    onClick={(e) => {
-                      handleFileSubmit(e, false);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                    loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<SaveIcon />}
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#1e2188",
-                      textTransform: "initial",
-                    }}
-                  >
-                    <span>Enregistrer</span>
-                  </LoadingButton>
+              ))}
+            </div>
+          </DialogContent>
+          <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
+            <LoadingButton onClick={() => setFiles([])} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
+            <LoadingButton onClick={(e) => handleFileSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#1d4ed8' }}><span>Enregistrer</span></LoadingButton>
+          </DialogActions>
+        </Dialog>
+      )}
 
-                  <LoadingButton
-                    onClick={(e) => {
-                      setAudioListForm([]);
-                      setAudioListUrlForm([]);
-                      setAudioBox(false);
-                      setOpen2(false);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small"
-                    loadingPosition="end"
-                    // loading={extraFileLoading}
-                    endIcon={<CloseIcon />}
-                    variant="contained"
-                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  >
-                    <span>Annuler</span>
-                  </LoadingButton>
-                </Box>
-              </DialogActions>
-            ) : (
-              <></>
-            )}
-          </Dialog>
-        </div>
+      {/* ── Modal Audio ── */}
+      {showAudioBox && (
+        <Dialog open={open2} onClose={() => { setOpen2(false); setAudioBox(false); }} fullWidth maxWidth="sm" id="dialog-audio"
+          PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
+          <DialogContent>
+            <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>+ Audio</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Enregistrez ou importez un audio</div>
+            </div>
+            <section className="voice-recorder">
+              <div className="recorder-container">
+                {audioListUrlForm.map((url, i) => (
+                  <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, pt: 2 }}>
+                    <audio src={url} controls style={{ flex: 1, marginRight: 8 }} />
+                    <CloseIcon sx={{ cursor: 'pointer', color: '#ef4444' }} onClick={() => {
+                      setAudioListForm(audioListForm.filter((_, ind) => ind !== i));
+                      setAudioListUrlForm(audioListUrlForm.filter((_, ind) => ind !== i));
+                    }} />
+                  </Box>
+                ))}
+                <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={() => { }} />
+              </div>
+            </section>
+          </DialogContent>
+          {audioListUrlForm.length > 0 && (
+            <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
+              <LoadingButton onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
+              <LoadingButton onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#166534' }}><span>Enregistrer</span></LoadingButton>
+            </DialogActions>
+          )}
+        </Dialog>
       )}
       <audio ref={audioRef} src={currentAudio} hidden />
 
@@ -2655,17 +3062,31 @@ const ListeDenonciations = (props) => {
               <div className="row">
                 <div className="col l12 s12 pb-5">
                   <div className="card-panel pb-5">
+                    <DossierKPIBar items={props.items} kpiCards={DEN_KPI_CARDS} />
+                    <DossierFilterChips
+                      items={props.items}
+                      activeFilter={activeFilter}
+                      onFilterChange={(val) => setActiveFilter(val)}
+                      filterButtons={DEN_FILTER_BUTTONS}
+                    />
                     <div className="row">
                       <div className="row">
                         <div className="col l6 m6 s12">
-                          <h5 className="card-title">
-                            Liste des dénonciations&nbsp;
+                          <h5 className="card-title" style={{ fontWeight: 700, color: "#0F172A", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: 8 }}>
+                            Liste des dénonciations
+                            <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748B", background: "#F1F5F9", borderRadius: 8, padding: "2px 10px" }}>
+                              {content.length} résultat{content.length !== 1 ? "s" : ""}
+                            </span>
                           </h5>
                         </div>
                         <div
                           className="col l6 m6 s12"
-                          style={{ textAlign: "end" }}
+                          style={{ textAlign: "end", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}
                         >
+                          <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                            <Tooltip title="Vue liste"><Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></Box></Tooltip>
+                            <Tooltip title="Vue cartes"><Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></Box></Tooltip>
+                          </Box>
                           {hbt.includes("H7") ? (
                             <img
                               src={pdf}
@@ -2715,13 +3136,29 @@ const ListeDenonciations = (props) => {
                         </div>
                       </div>
                       <div className="col s12">
-                        <ReactDatatable
-                          className={"responsive-table table-xlsx"}
-                          config={config}
-                          records={content}
-                          columns={columns}
-                          onRowClicked={rowClickedHandler}
-                        />
+                        {viewMode === "card" ? (
+                          <DossierCardView
+                            items={content}
+                            getCardData={getCardData}
+                            onCardClick={(item) => rowClickedHandler(null, item, null)}
+                            filterFn={tableFilterFn}
+                            showStatusFilter={true}
+                            showGravityFilter={true}
+                            searchPlaceholder="Rechercher une dénonciation…"
+                            emptyText="Aucune dénonciation trouvée"
+                          />
+                        ) : (
+                          <DossierTable
+                            items={content}
+                            columns={tableColumns}
+                            onRowClick={(item) => rowClickedHandler(null, item, null)}
+                            filterFn={tableFilterFn}
+                            showStatusFilter={true}
+                            showGravityFilter={true}
+                            searchPlaceholder="Rechercher par code, objet, client..."
+                            emptyText="Aucune dénonciation trouvée"
+                          />
+                        )}
                         <div id="tab_exl" style={{ display: "none" }}></div>
                       </div>
                     </div>
@@ -2965,7 +3402,7 @@ const ListeDenonciations = (props) => {
                                     }}
                                   >
                                     {" "}
-                                    Fichiers
+                                    Contenu & Médias
                                   </Typography>
                                   <label
                                     htmlFor="ile"

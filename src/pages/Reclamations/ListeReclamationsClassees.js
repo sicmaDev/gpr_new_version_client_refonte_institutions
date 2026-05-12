@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { KTApp } from "../../Utils/blockui";
 import {
@@ -44,8 +44,19 @@ import {
   createdAtChanged,
 } from "../../redux/actions/Reclamations/AssuranceReclamationActions";
 import ReactDatatable from "@ashvin27/react-datatable";
+import { ButtonBase } from "@mui/material";
+import DossierKPIBar from "../../components/shared/DossierKPIBar";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ClaimsTable from "./components/ClaimsTable";
+import ClaimsCardView from "./components/ClaimsCardView";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import Select from "react-select";
+import TraitementShell from "../../components/treatment/TraitementShell";
+import HistoriqueTimeline from "../../components/treatment/HistoriqueTimeline";
+import { STATUS_CONFIG } from "./components/ClaimStatusBadge";
+import axios from "axios";
+import { HOST } from "../../Utils/globals";
 import {
   formatDate,
   formatDate2,
@@ -143,6 +154,33 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
+const CLS_KPI_CARDS = [
+  {
+    key: "total",
+    label: "Total",
+    icon: AssignmentIcon,
+    iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6",
+    filter: () => true,
+  },
+  {
+    key: "classed",
+    label: "Classées",
+    icon: CheckCircleIcon,
+    iconBg: "#F3F4F6", iconColor: "#374151", borderColor: "#D1D5DB",
+    filter: (c) => c.status === "CLASSED",
+  },
+];
+
+const CLS_STATUS_OPTIONS = [
+  { value: "",        label: "Tous les statuts" },
+  { value: "CLASSED", label: "Classée" },
+];
+
+const CLS_CHIPS = [
+  { value: "ALL",     label: "Tous",    filter: () => true },
+  { value: "CLASSED", label: "Classée", filter: (c) => c.status === "CLASSED" },
+];
+
 const ListeReclamationsClassees = (props) => {
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
@@ -151,17 +189,61 @@ const ListeReclamationsClassees = (props) => {
   let hbt = user.posteDto.habilitations.split(",");
 
   const [open, setOpen] = React.useState(false);
+  const [viewMode, setViewMode] = useState("list");
+  const [activeFilter, setActiveFilter] = useState("ALL");
 
-  const [isLoading, setIsLoading] = useState(false)
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  const [isLoading, setIsLoading] = useState(false);
+  const handleClickOpen = () => { setOpen(true); };
 
   const [currentAudioId, setCurrentAudioId] = useState("");
   const audioRef = useRef(null);
 
   const history = useHistory();
+
+  useEffect(() => {
+    if (props.match.params.code !== "all") {
+      async function details() {
+        let cc = await axios({
+          method: "get",
+          url: HOST + "api/v1/claim/" + props.match.params.code + "/details",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + loadItemFromSessionStorage("token"),
+          },
+        });
+        if (cc.status >= 200 && cc.status <= 299) {
+          let data = cc.data.content;
+          props.idChanged(data.id ?? "");
+          props.lastnameChanged(data.clientFirstAndLastName ?? "");
+          props.addressChanged(data.address ?? "");
+          props.phoneChanged(data.tel ?? "");
+          props.genderChanged(data.gender ?? "");
+          props.languageChanged(data.language?.libelle ?? "");
+          props.dossierimfChanged(data.folderCode ?? "");
+          props.emailChanged(data.email ?? "");
+          props.codeChanged(data.code ?? "");
+          props.codeClientChanged(data.codeClient ?? "");
+          props.recordedAtChanged(data.receiptDateTime ?? "");
+          props.createdAtChanged(data.createdAt ?? "");
+          props.collectChanged(data.collectionChannel?.libelle ?? "");
+          props.subjectChanged(data.objet?.libelle ?? "");
+          props.underSubjectChanged(data.objet?.categorie?.libelle ?? "");
+          props.productChanged(data.product?.libelle ?? "");
+          props.unitChanged(data.servicePoint?.libelle ?? "");
+          props.contentChanged(data.content ?? "");
+          props.solutionChanged(data.solutionDtos ?? []);
+          props.createdByChanged(data.collector?.firstAndLastName ?? "");
+          props.statusChanged(data.status ?? "");
+          props.selectedItemChanged(data);
+          props.extrasChanged(data.extras ?? []);
+          getFillesApi(data.id, props);
+          getClaimAudioApi(data.id, props);
+        }
+      }
+      details();
+    }
+  }, []);
   const handleClose = () => {
     setOpen(false);
   };
@@ -256,6 +338,12 @@ const ListeReclamationsClassees = (props) => {
   let content = [];
   content = props.items;
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const filteredContent = useMemo(() => {
+    const chip = CLS_CHIPS.find((c) => c.value === activeFilter);
+    return chip ? content.filter(chip.filter) : content;
+  }, [content, activeFilter]);
+
   //darrell : add custome attribut for search
   content.forEach((element) => {
     //status
@@ -273,7 +361,7 @@ const ListeReclamationsClassees = (props) => {
     element.statusStr = statusElt;
 
     let graviteElt;
-    switch (element.objet.risqueLevel) {
+    switch (element.objet?.risqueLevel) {
       case "MINEUR":
         graviteElt = "Mineur";
         break;
@@ -429,9 +517,9 @@ const ListeReclamationsClassees = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    handleClickOpen();
+    history.push("/reclamations/classees/" + data.code);
 
-    switch (data.objet.risqueLevel) {
+    switch (data.objet?.risqueLevel) {
       case "MINEUR":
         if (hbt.includes("H2")) {
           props.authorizeChanged(true);
@@ -1141,7 +1229,199 @@ const ListeReclamationsClassees = (props) => {
     </>
   );
 
-  let creationDate = props.created_at ? formatDate(props.created_at) : "";
+  let creationDate = props.created_at ? formatDate(props.created_at) : null;
+
+  if (props.match.params.code !== "all") {
+    const solutions = Array.isArray(props.solution) ? props.solution : [];
+    const statusCfg = STATUS_CONFIG[props.status] || { label: props.status || "—", bg: "#f1f5f9", color: "#64748b", border: "#e2e8f0" };
+
+    return (
+      <TraitementShell
+        onBack={() => history.push("/reclamations/classees/all")}
+        codeClient={props.codeClient || props.code}
+        status={props.status}
+        risqueLevel={props.selectedItem?.objet?.risqueLevel}
+        lastname={props.lastname}
+        phone={props.phone}
+        email={props.email}
+        address={props.address}
+        language={props.language}
+        gender={props.gender}
+        dossierimf={props.dossierimf}
+        recorded_at={props.recorded_at}
+        collect={props.collect}
+        subject={props.subject}
+        underSubject={props.underSubject}
+        product={props.product}
+        unit={props.unit}
+        created_by={props.created_by}
+        creationDate={creationDate}
+        visibleActions={[]}
+        selectedItemFiles={props.selectedItemFiles}
+        selectedItemAudio={props.selectedItemAudio}
+        attachmentList={attachmentList}
+        audioList={audioList}
+        solution={props.solution}
+        customTabs={[
+          /* ── Tab 1 : Dossier classé ── */
+          {
+            key: "classe",
+            label: "Dossier classé",
+            content: (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {/* Statut */}
+                <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 14 }}>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6b21a8" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Statut du dossier
+                  </div>
+                  <span style={{ padding: "5px 14px", borderRadius: 20, fontSize: 12.5, fontWeight: 700, background: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.border}` }}>
+                    {statusCfg.label}
+                  </span>
+                </div>
+
+                {/* Solutions proposées — timeline */}
+                {solutions.length > 0 && (
+                  <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 20 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      Solutions proposées
+                      <span style={{ marginLeft: 4, background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, padding: "1px 9px", fontSize: 11.5, fontWeight: 700 }}>{solutions.length}</span>
+                    </div>
+                    <div style={{ position: "relative", paddingLeft: 28 }}>
+                      <div style={{ position: "absolute", left: 11, top: 6, bottom: 6, width: 2, background: "#e2e8f0", borderRadius: 2 }} />
+                      {solutions.map((sol, idx) => {
+                        const isLast = idx === solutions.length - 1;
+                        const m = sol.satisfactionMeasureDto;
+                        const MMAP = { SATISFIED: { label: "Satisfait", bg: "#f0fdf4", color: "#166534", dot: "#22c55e" }, PARTIAL: { label: "Partiellement satisfait", bg: "#fffbeb", color: "#92400e", dot: "#f59e0b" }, UNSATISFIED: { label: "Non satisfait", bg: "#fef2f2", color: "#991b1b", dot: "#ef4444" } };
+                        const mc = m ? (MMAP[m.status] || { label: m.status, bg: "#f1f5f9", color: "#64748b", dot: "#94a3b8" }) : null;
+                        const dotColor = mc ? mc.dot : "#10b981";
+                        return (
+                          <div key={sol.id ?? idx} style={{ position: "relative", marginBottom: isLast ? 0 : 20 }}>
+                            <div style={{ position: "absolute", left: -22, top: 14, width: 16, height: 16, borderRadius: "50%", background: dotColor, border: "3px solid #fff", boxShadow: `0 0 0 2px ${dotColor}`, zIndex: 1 }} />
+                            <div style={{ background: "#fff", border: isLast ? `1.5px solid ${dotColor}` : "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", boxShadow: isLast ? `0 2px 12px ${dotColor}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: isLast && mc ? mc.bg : "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: dotColor }}>Solution {idx + 1}</div>
+                                {sol.author?.firstAndLastName && (
+                                  <div style={{ fontSize: 11.5, color: "#64748b" }}>{sol.author.firstAndLastName}</div>
+                                )}
+                              </div>
+                              <div style={{ padding: "12px 14px" }}>
+                                <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap", borderLeft: `3px solid ${dotColor}`, paddingLeft: 10 }}>
+                                  {sol.content || sol.solution || "—"}
+                                </div>
+                              </div>
+                              {sol.commentaire && (
+                                <div style={{ padding: "0 14px 12px" }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Commentaire</div>
+                                  <div style={{ fontSize: 12.5, color: "#64748b", fontStyle: "italic", lineHeight: 1.6 }}>{sol.commentaire}</div>
+                                </div>
+                              )}
+                              {mc && (
+                                <div style={{ margin: "0 14px 12px", borderRadius: 8, padding: "8px 12px", background: mc.bg, border: `1px solid ${mc.dot}33` }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: mc.dot, flexShrink: 0 }} />
+                                    <span style={{ fontSize: 12.5, fontWeight: 600, color: mc.color }}>{mc.label}</span>
+                                  </div>
+                                  {m.commentaire && <div style={{ fontSize: 12, color: "#64748b", marginTop: 4, paddingLeft: 14, fontStyle: "italic" }}>{m.commentaire}</div>}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ),
+          },
+
+          /* ── Tab 2 : Médias & Contenu ── */
+          {
+            key: "medias",
+            label: "Médias & Contenu",
+            content: (() => {
+              const filesCount = props.selectedItemFiles?.length ?? 0;
+              const audiosCount = props.selectedItemAudio?.length ?? 0;
+              const extrasCount = props.extras?.filter(e => e.contenu)?.length ?? 0;
+              const contentsCount = (props.content ? 1 : 0) + extrasCount;
+
+              const AccordionSection = ({ color, dotColor, icon, title, count, children }) => {
+                const [isOpen, setIsOpen] = useState(true);
+                return (
+                  <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                    <button onClick={() => setIsOpen(v => !v)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
+                      <div style={{ width: 30, height: 30, borderRadius: 8, background: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</div>
+                      <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: "#1e293b" }}>{title}</span>
+                      <span style={{ fontSize: 11.5, fontWeight: 700, color: "#fff", background: dotColor, borderRadius: 20, padding: "2px 9px", marginRight: 8 }}>{count}</span>
+                      <span style={{ fontSize: 10, color: "#94a3b8" }}>{isOpen ? "▲" : "▼"}</span>
+                    </button>
+                    {isOpen && <div style={{ borderTop: "1px solid #f1f5f9", padding: "14px 18px" }}>{children}</div>}
+                  </div>
+                );
+              };
+
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <AccordionSection color="#ede9fe" dotColor="#8b5cf6" icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>} title="Contenus" count={contentsCount}>
+                    {contentsCount > 0 ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {props.content && (
+                          <div style={{ background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0", padding: "12px 16px" }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Contenu initial</div>
+                            <div style={{ fontSize: 13.5, color: "#1e293b", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{props.content}</div>
+                          </div>
+                        )}
+                        {props.extras?.filter(e => e.contenu).map((extra, idx) => (
+                          <div key={extra.id ?? idx} style={{ background: "#faf5ff", borderRadius: 10, border: "1px solid #ede9fe", padding: "12px 16px" }}>
+                            <div style={{ fontSize: 13.5, color: "#1e293b", whiteSpace: "pre-wrap", lineHeight: 1.6, marginBottom: 6 }}>{extra.contenu}</div>
+                            <div style={{ fontSize: 11.5, color: "#94a3b8" }}>
+                              {extra.user?.firstAndLastName && <span>User {extra.user.firstAndLastName}</span>}
+                              {extra.createdAt && <span> le {formatDate(extra.createdAt)}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "8px 0" }}>Aucun contenu</div>}
+                  </AccordionSection>
+
+                  <AccordionSection color="#dbeafe" dotColor="#3b82f6" icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>} title="Fichiers joints" count={filesCount}>
+                    {filesCount > 0 ? attachmentList : <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "8px 0" }}>Aucun fichier joint</div>}
+                  </AccordionSection>
+
+                  <AccordionSection color="#dcfce7" dotColor="#22c55e" icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>} title="Audios" count={audiosCount}>
+                    {audiosCount > 0 ? audioList : <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "8px 0" }}>Aucun audio</div>}
+                  </AccordionSection>
+                </div>
+              );
+            })(),
+          },
+
+          /* ── Tab 3 : Historique ── */
+          {
+            key: "historique",
+            label: "Historique",
+            content: (
+              <HistoriqueTimeline
+                recorded_at={props.recorded_at}
+                created_by={props.created_by}
+                transmitted={props.selectedItem?.transmitted != null ? "" + props.selectedItem.transmitted : ""}
+                transmittedBy={props.selectedItem?.transmittedBy?.firstAndLastName}
+                transmittedTo={props.selectedItem?.transmittedTo?.firstAndLastName}
+                handled_by={props.handled_by}
+                assigned_by={props.selectedItem?.treatmentAffectedBy?.firstAndLastName}
+                assignedAt={props.selectedItem?.affectedAt}
+                solution={Array.isArray(props.solution) ? props.solution : []}
+                formatDate={formatDate}
+                formatDate3={formatDate3}
+              />
+            ),
+          },
+        ]}
+      />
+    );
+  }
 
   return (
     <div id="main">
@@ -1153,19 +1433,56 @@ const ListeReclamationsClassees = (props) => {
               <div className="row">
                 <div className="col l12 s12 pb-5">
                   <div className="card-panel pb-5">
-                    <div className="row">
-                      <div className="col s12">
-                        <h6 className="card-title">Réclamations Classées</h6>
-                      </div>
-                      <div className="col s12">
-                        <ReactDatatable
-                          className={"responsive-table"}
-                          config={config}
-                          records={content}
-                          columns={columns}
-                          onRowClicked={rowClickedHandler}
+                    <DossierKPIBar items={content} kpiCards={CLS_KPI_CARDS} />
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2, pb: 2, borderBottom: "1px solid #F1F5F9" }}>
+                      {CLS_CHIPS.map((chip) => {
+                        const count = content.filter(chip.filter).length;
+                        const isActive = activeFilter === chip.value;
+                        return (
+                          <ButtonBase key={chip.value} onClick={() => setActiveFilter(chip.value)} sx={{ borderRadius: "20px", px: 1.5, py: 0.5, border: isActive ? "1.5px solid #93C5FD" : "1.5px solid #E2E8F0", backgroundColor: isActive ? "#EFF6FF" : "#FAFAFA", color: isActive ? "#1D4ED8" : "#64748B", fontWeight: isActive ? 700 : 500, fontSize: "0.78rem", transition: "all 0.18s", display: "flex", alignItems: "center", gap: 0.8, "&:hover": { backgroundColor: "#EFF6FF", color: "#1D4ED8", borderColor: "#93C5FD" } }}>
+                            <span style={{ fontSize: "inherit", fontWeight: "inherit", lineHeight: 1.4 }}>{chip.label}</span>
+                            <Box sx={{ minWidth: 20, height: 20, borderRadius: "10px", backgroundColor: isActive ? "#1D4ED8" : "#E2E8F0", color: isActive ? "#fff" : "#64748B", fontSize: "0.65rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", px: 0.6 }}>{count}</Box>
+                          </ButtonBase>
+                        );
+                      })}
+                    </Box>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                      <h5 className="card-title" style={{ fontWeight: 700, color: "#0F172A", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: 8, margin: 0 }}>
+                        Réclamations classées
+                        <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748B", background: "#F1F5F9", borderRadius: 8, padding: "2px 10px" }}>
+                          {filteredContent.length} résultat{filteredContent.length !== 1 ? "s" : ""}
+                        </span>
+                      </h5>
+                      <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                        <Tooltip title="Vue liste">
+                          <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                          </Box>
+                        </Tooltip>
+                        <Tooltip title="Vue cartes">
+                          <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                          </Box>
+                        </Tooltip>
+                      </Box>
+                    </div>
+                    <div>
+                      {viewMode === "list" ? (
+                        <ClaimsTable
+                          items={filteredContent}
+                          mode={1}
+                          objets={[]}
+                          onRowClick={(data) => rowClickedHandler(null, data, 0)}
+                          statusOptions={CLS_STATUS_OPTIONS}
                         />
-                      </div>
+                      ) : (
+                        <ClaimsCardView
+                          items={filteredContent}
+                          mode={1}
+                          objets={[]}
+                          onCardClick={(data) => rowClickedHandler(null, data, 0)}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>

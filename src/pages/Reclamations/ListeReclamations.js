@@ -1,4 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import ClaimStatusBadge from "./components/ClaimStatusBadge";
+import ClaimGravityBadge from "./components/ClaimGravityBadge";
+import ClaimsKPIBar from "./components/ClaimsKPIBar";
+import ClaimsFilterBar from "./components/ClaimsFilterBar";
+import ClaimsTable from "./components/ClaimsTable";
+import ClaimsCardView from "./components/ClaimsCardView";
+import TraitementShell from "../../components/treatment/TraitementShell";
+import HistoriqueTimeline from "../../components/treatment/HistoriqueTimeline";
+import FichiersTab from "../../components/treatment/FichiersTab";
+import axios from "axios";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
@@ -168,6 +178,7 @@ import StopIcon from "@mui/icons-material/Stop";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 
 import {
+  HOST,
   INSTITUTION_ADDRESS,
   INSTITUTION_AGREMENT,
   INSTITUTION_EMAIL,
@@ -204,6 +215,8 @@ const ListeReclamations = (props) => {
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
   const [fond_, setFond] = useState("");
+  const [activeFilter, setActiveFilter] = useState("ALL");
+  const [viewMode, setViewMode] = useState("list"); // "list" | "card"
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteReason, setDeleteReason] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -277,6 +290,23 @@ const ListeReclamations = (props) => {
   const [currentData, setCurrentData] = useState(null);
   const [audioListForm, setAudioListForm] = useState([]);
   const [audioListUrlForm, setAudioListUrlForm] = useState([]);
+  const [historiqueItems, setHistoriqueItems] = useState([]);
+  const [historiqueLoading, setHistoriqueLoading] = useState(false);
+  const [histAccordions, setHistAccordions] = useState({ affectations: false, solutions: false, flux: true });
+  const toggleHistAcc = (key) => setHistAccordions(prev => ({ affectations: false, solutions: false, flux: false, [key]: !prev[key] }));
+
+  const loadHistorique = (claimId) => {
+    if (!claimId) return;
+    setHistoriqueLoading(true);
+    setHistoriqueItems([]);
+    axios({
+      method: "get",
+      url: HOST + "api/v1/historique-affectation/list/" + claimId,
+      headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + loadItemFromSessionStorage("token") },
+    }).then(({ data }) => {
+      setHistoriqueItems(data.content || []);
+    }).catch(() => {}).finally(() => setHistoriqueLoading(false));
+  };
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -298,11 +328,67 @@ const ListeReclamations = (props) => {
   };
 
   const history = useHistory();
+
+  // Chargement depuis l'URL quand on arrive directement sur /reclamations/liste/:code
+  useEffect(() => {
+    const code = props.match?.params?.code;
+    if (code && code !== "all") {
+      axios({
+        method: "get",
+        url: HOST + "api/v1/claim/" + code + "/details",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + loadItemFromSessionStorage("token"),
+        },
+      }).then((cc) => {
+        if (cc.status >= 200 && cc.status <= 299) {
+          const data = cc.data.content;
+          props.lastnameChanged(data.clientFirstAndLastName ?? "");
+          props.firstnameChanged(data.clientFirstAndLastName ?? "");
+          props.addressChanged(data.address ?? "");
+          props.phoneChanged(data.tel ?? "");
+          props.genderChanged(data.gender ?? "");
+          props.languageChanged(data.language?.libelle ?? "");
+          props.dossierimfChanged(data.folderCode ?? "");
+          props.emailChanged(data.email ?? "");
+          props.codeChanged(data.code ?? "");
+          props.codeClientChanged(data.codeClient ?? "");
+          props.recordedAtChanged(data.receiptDateTime ?? "");
+          props.collectChanged(data.collectionChannel?.libelle ?? "");
+          props.subjectChanged(data.objet?.libelle ?? "");
+          props.underSubjectChanged(data.objet?.categorie?.libelle ?? "");
+          props.productChanged(data.product?.libelle ?? "");
+          props.unitChanged(data.servicePoint?.libelle ?? "");
+          props.contentChanged(data.content ?? "");
+          props.solutionChanged(data.solutionDtos ?? []);
+          props.externalRemediesChanged(data.externalRecourses ?? null);
+          props.statusChanged(data.status ?? "");
+          props.createdByChanged(data.collector?.firstAndLastName ?? "");
+          props.createdAtChanged(data.createdAt ?? "");
+          props.assignedAtChanged(data.affectedAt ?? "");
+          props.assignedByChanged(data.treatmentAffectedBy?.firstAndLastName ?? "");
+          props.handledByChanged(data.treatmentAffectedTo?.firstAndLastName ?? "");
+          props.idChanged(data.id ?? "");
+          props.sessionChanged(data.session ?? "");
+          props.selectedItemChanged(data);
+          setCurrentData(data);
+          props.extrasChanged(data.extras ?? []);
+          setClaimId(data.id);
+          getFillesApi(data.id, props);
+          getClaimAudioApi(data.id, props);
+          loadHistorique(data.id);
+        }
+      }).catch(() => {});
+    }
+  }, []);
+
   const handleClose = () => {
     setOpen(false);
     setInterne(false);
     clearComponentState();
   };
+
 
   const handleInterne = () => {
     setInterne(true);
@@ -690,8 +776,8 @@ const ListeReclamations = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    handleClickOpen();
     clearComponentState();
+    history.push("/reclamations/liste/" + data.code);
     setClaimId(data.id);
 
     if (mode === 1) {
@@ -752,6 +838,7 @@ const ListeReclamations = (props) => {
       getFillesApi(data.id, props);
       getClaimAudioApi(data.id, props);
       props.extrasChanged(data.extras ?? []);
+      loadHistorique(data.id);
     } else {
       if (data.id && data.collectionChannel) {
         props.lastnameChanged(
@@ -814,6 +901,7 @@ const ListeReclamations = (props) => {
         getFillesApi(data.id, props);
         getClaimAudioApi(data.id, props);
         props.extrasChanged(data.extras ?? []);
+        loadHistorique(data.id);
       } else {
         // props.idChanged(data.id ? data.id : "")
         props.lastnameChanged(
@@ -2005,7 +2093,9 @@ const ListeReclamations = (props) => {
   };
 
   let content = [];
-  content = props.items;
+  content = activeFilter === "ALL"
+    ? props.items
+    : props.items.filter((item) => item.status === activeFilter);
   //darrell : add custome attribut for search
   content.forEach((element) => {
     //status
@@ -2448,11 +2538,500 @@ const ListeReclamations = (props) => {
       });
   };
 
+  /* ══════════════════════════════════════════════════════
+     VUE DÉTAIL — quand l'URL contient un code réclamation
+     Tout la logique métier existante est préservée :
+     details, attachmentList, audioList, recoursList,
+     printRecu, printToWord, handleInterne/Externe,
+     conditions H14/PILOTE/DE, session PV, etc.
+  ══════════════════════════════════════════════════════ */
+  if (props.match?.params?.code && props.match.params.code !== "all") {
+
+    /* ─ Boutons d'en-tête ─ */
+    const headerActionsBtns = (
+      <>
+        <button
+          onClick={(e) => printRecu(e)}
+          title="Imprimer le reçu"
+          style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "#475569" }}
+        >
+          <PrintIcon style={{ fontSize: 15 }} />
+          Imprimer
+        </button>
+        {props.status !== "SAVED" && props.status !== "TEMP_SAVED" && (
+          <button
+            onClick={() => props.showModalHistoriqueChanged(true)}
+            title="Historique des affectations"
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "#475569" }}
+          >
+            <History style={{ fontSize: 15 }} />
+            Historique
+          </button>
+        )}
+        {props.session !== "" && (addR === "PILOTE" || addR === "DE") && (
+          <LoadingButton
+            onClick={() => mode === 1 ? printToWord() : notify("Passez en mode Online pour télécharger le PV", "info")}
+            loading={props.etat3}
+            loadingPosition="end"
+            endIcon={<SaveIcon />}
+            size="small"
+            variant="outlined"
+            sx={{ textTransform: "none", borderRadius: 2, fontSize: 12, borderColor: "#1e2188", color: "#1e2188" }}
+          >
+            <span>PV de session</span>
+          </LoadingButton>
+        )}
+      </>
+    );
+
+
+    return (
+      <>
+        <audio ref={audioRef} src={currentAudio} hidden />
+        <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} claimStatus={props.status} />
+
+        {/* Dialog ajout contenu */}
+        {showExtraContent && (
+          <Dialog open={showExtraContent} fullWidth maxWidth="md" onClose={() => setShowExtraContent(false)} id="dialog-contenu">
+            <DialogTitle>Ajouter un contenu</DialogTitle>
+            <DialogContent sx={{ overflowX: "hidden" }}>
+              <TextField fullWidth multiline minRows={4} value={extraContent}
+                onChange={(e) => { e.stopPropagation(); setExtraContent(e.target.value); }}
+                placeholder="Saisissez le contenu..." />
+            </DialogContent>
+            {extraContent?.trim() && (
+              <DialogActions>
+                <LoadingButton onClick={() => { setExtraContent(""); setShowExtraContent(false); }} endIcon={<CloseIcon />} variant="contained" sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary">Annuler</LoadingButton>
+                <LoadingButton onClick={(e) => handleContentSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}>Enregistrer</LoadingButton>
+              </DialogActions>
+            )}
+          </Dialog>
+        )}
+
+        {/* Dialog upload fichiers */}
+        {filesForm.length > 0 && (
+          <Dialog open fullWidth maxWidth="sm" onClose={clearFiles} id="dialog-addFile">
+            <DialogTitle>Ajouter des fichiers</DialogTitle>
+            <DialogContent>
+              {filesForm.map((f, i) => <div key={i} style={{ padding: "4px 0", fontSize: 13 }}>{f.name}</div>)}
+            </DialogContent>
+            <DialogActions>
+              <LoadingButton onClick={clearFiles} endIcon={<CloseIcon />} variant="contained" sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary">Annuler</LoadingButton>
+              <LoadingButton onClick={(e) => handleFileSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}>Enregistrer</LoadingButton>
+            </DialogActions>
+          </Dialog>
+        )}
+
+        {/* Dialog enregistrement audio */}
+        {open2 && (
+          <Dialog open={open2} fullWidth maxWidth="sm" onClose={() => { setOpen2(false); setAudioBox(false); }} id="dialog-audio">
+            <DialogTitle>Ajouter un audio</DialogTitle>
+            <DialogContent>
+              <section className="voice-recorder">
+                <div className="recorder-container">
+                  {audioListUrlForm.map((url, i) => (
+                    <Box key={i} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 2, pt: 2 }}>
+                      <audio src={url} controls />
+                      <CloseIcon sx={{ cursor: "pointer" }} onClick={() => {
+                        setAudioListForm(audioListForm.filter((_, idx) => idx !== i));
+                        setAudioListUrlForm(audioListUrlForm.filter((_, idx) => idx !== i));
+                      }} />
+                    </Box>
+                  ))}
+                  <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={() => {}} />
+                </div>
+              </section>
+            </DialogContent>
+            {audioListUrlForm.length > 0 && (
+              <DialogActions>
+                <LoadingButton onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} endIcon={<CloseIcon />} variant="contained" sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary">Annuler</LoadingButton>
+                <LoadingButton onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}>Enregistrer</LoadingButton>
+              </DialogActions>
+            )}
+          </Dialog>
+        )}
+
+        <TraitementShell
+          onBack={() => history.push("/reclamations/liste/all")}
+          codeClient={props.codeClient || props.code}
+          status={props.status}
+          risqueLevel={props.selectedItem?.objet?.risqueLevel}
+          headerActions={headerActionsBtns}
+          lastname={props.lastname}
+          phone={props.phone}
+          email={props.email}
+          address={props.address}
+          language={props.language}
+          gender={props.gender}
+          dossierimf={props.dossierimf}
+          recorded_at={props.recorded_at}
+          collect={props.collect}
+          subject={props.subject}
+          underSubject={props.underSubject}
+          product={props.product}
+          unit={props.unit}
+          created_by={props.created_by}
+          creationDate={creationDate}
+          handled_by={props.handled_by}
+          assigned_by={props.assigned_by}
+          assignedAt={props.assigned_at}
+          visibleActions={[]}
+          selectedItemFiles={props.selectedItemFiles}
+          selectedItemAudio={props.selectedItemAudio}
+          attachmentList={attachmentList}
+          audioList={audioList}
+          inputRef={inputRef}
+          onFilesChange={(e) => setFiles([...e.target.files])}
+          onAddAudio={() => { setAudioBox(true); setOpen2(true); }}
+          solution={props.solution}
+          customTabs={[
+            {
+              key: "traitement",
+              label: "Détails du traitement",
+              content: (() => {
+                const hasH14 = hbt.includes("H14") || addR === "PILOTE" || addR === "DE";
+                const solutions = Array.isArray(props.solution) ? props.solution : [];
+                const displayedSolutions = hasH14
+                  ? (interne ? solutions : solutions.filter(s => s.status === "APPROVED" && s.satisfactionMeasureDto !== null))
+                  : (solutions.length > 0 ? [solutions[0]] : []);
+
+                /* ── Stepper config ── */
+                const STEPS = [
+                  { label: "Enregistrée" },
+                  { label: "Affectée" },
+                  { label: "Traitée" },
+                  { label: "Mesure satisfaction" },
+                ];
+                const STATUS_STEP = {
+                  SAVED: 0, TEMP_SAVED: 0,
+                  AFFECTED: 1,
+                  TO_APPROUVED: 2, DESAPPROUVED: 2,
+                  TREAT: 3,
+                };
+                const allMeasured = ["SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION","CLASSED"].includes(props.status);
+                const currentStep = allMeasured ? STEPS.length : (STATUS_STEP[props.status] ?? 0);
+                const isError = props.status === "DESAPPROUVED";
+
+                /* ── Hero config par statut ── */
+                const HERO_CFG = {
+                  SAVED:             { bg: "#eff6ff", border: "#bfdbfe", iconBg: "#dbeafe", iconColor: "#1d4ed8", title: "En attente d'affectation", sub: "Aucun agent assigné pour le moment", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+                  TEMP_SAVED:        { bg: "#f5f3ff", border: "#ddd6fe", iconBg: "#ede9fe", iconColor: "#7c3aed", title: "Sauvegardée temporairement", sub: "En attente de complétion", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> },
+                  AFFECTED:          { bg: "#eff6ff", border: "#93c5fd", iconBg: "#dbeafe", iconColor: "#1d4ed8", title: "Affectée à un agent", sub: null, icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
+                  TO_APPROUVED:      { bg: "#fffbeb", border: "#fcd34d", iconBg: "#fef3c7", iconColor: "#92400e", title: "En attente d'approbation", sub: "La solution proposée doit être approuvée", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+                  DESAPPROUVED:      { bg: "#fef2f2", border: "#fca5a5", iconBg: "#fee2e2", iconColor: "#991b1b", title: "Solution désapprouvée", sub: "Une nouvelle solution doit être proposée", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> },
+                  TREAT:             { bg: "#f0fdf4", border: "#86efac", iconBg: "#dcfce7", iconColor: "#166534", title: "En traitement", sub: "Une solution a été proposée", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="20 6 9 17 4 12"/></svg> },
+                  SATISFIED:         { bg: "#f0fdf4", border: "#86efac", iconBg: "#dcfce7", iconColor: "#166534", title: "Client satisfait", sub: "La réclamation est résolue", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+                  UNSATISFIED:       { bg: "#fef2f2", border: "#fca5a5", iconBg: "#fee2e2", iconColor: "#991b1b", title: "Client non satisfait", sub: "Le client n'est pas satisfait de la solution", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+                  PARTIAL_SATISFIED: { bg: "#fffbeb", border: "#fcd34d", iconBg: "#fef3c7", iconColor: "#92400e", title: "Partiellement satisfait", sub: "Le client est partiellement satisfait", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+                  LITIGATION:        { bg: "#fffbeb", border: "#fcd34d", iconBg: "#fef3c7", iconColor: "#b45309", title: "Contentieux", sub: "La réclamation est en recours externe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="11" y2="17"/></svg> },
+                  CLASSED:           { bg: "#f8fafc", border: "#cbd5e1", iconBg: "#f1f5f9", iconColor: "#475569", title: "Classée", sub: "Le dossier est définitivement clos", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> },
+                };
+                const hero = HERO_CFG[props.status] || HERO_CFG["SAVED"];
+
+                /* ── Render solution ── */
+                const renderSolution = (sol, idx, total) => {
+                  const isLast = idx === total - 1;
+                  const sat = sol.satisfactionMeasureDto?.status;
+                  const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : "#6366f1";
+                  const satLabel = sat === "SATISFIED" ? "Satisfait" : sat === "UNSATISFIED" ? "Non satisfait" : sat === "PARTIAL" ? "Partiellement satisfait" : null;
+                  const clientComment = sol.satisfactionMeasureDto?.commentaire;
+                  const approb = sol.status === "UNAPPROVED";
+                  return (
+                    <div key={sol.id ?? idx} style={{ position: "relative", marginBottom: isLast ? 0 : 20 }}>
+                      <div style={{ position: "absolute", left: -22, top: 14, width: 16, height: 16, borderRadius: "50%", background: dotColor, border: "3px solid #fff", boxShadow: `0 0 0 2px ${dotColor}`, zIndex: 1 }} />
+                      <div style={{ background: "#fff", border: `1px solid ${isLast ? dotColor + "44" : "#e5e7eb"}`, borderRadius: 12, overflow: "hidden", boxShadow: isLast ? `0 2px 12px ${dotColor}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: dotColor }}>Solution {idx + 1}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            {sol.author?.firstAndLastName && <span style={{ fontSize: 11.5, color: "#64748b" }}>{sol.author.firstAndLastName}</span>}
+                            {sol.createdAt && <span style={{ fontSize: 11, color: "#94a3b8" }}>· {formatDate(sol.createdAt)}</span>}
+                          </div>
+                        </div>
+                        <div style={{ padding: "12px 14px", borderLeft: `3px solid ${dotColor}`, margin: "0 14px 0 14px", marginTop: 12 }}>
+                          <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "—"}</div>
+                        </div>
+                        {sol.commentaire && <div style={{ padding: "0 14px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4, marginTop: 10 }}>Commentaire</div><div style={{ fontSize: 12.5, color: "#64748b", fontStyle: "italic", lineHeight: 1.6 }}>{sol.commentaire}</div></div>}
+                        {clientComment && clientComment.trim() !== "" && <div style={{ padding: "0 14px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Commentaire du client</div><div style={{ fontSize: 12.5, color: "#0369a1", lineHeight: 1.6, background: "#e0f2fe", borderRadius: 6, padding: "6px 10px" }}>{clientComment}</div></div>}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: "0 14px 12px" }}>
+                          {satLabel && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: dotColor + "18", color: dotColor }}>{satLabel}</span>}
+                          {approb && !sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fef3c7", color: "#92400e" }}>En attente d'approbation</span>}
+                          {approb && sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fee2e2", color: "#991b1b" }}>Désapprouvée</span>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                };
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+                    {/* ══ STEPPER ══ */}
+                    <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "16px 20px" }}>
+                      <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
+                        {STEPS.map((step, i) => {
+                          const done = i < currentStep;
+                          const active = i === currentStep;
+                          const dotC = done ? "#10b981" : active ? (isError ? "#ef4444" : "#3b82f6") : "#e2e8f0";
+                          const textC = done ? "#10b981" : active ? (isError ? "#ef4444" : "#1d4ed8") : "#94a3b8";
+                          return (
+                            <React.Fragment key={i}>
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 1, flex: "0 0 auto" }}>
+                                <div style={{ width: 28, height: 28, borderRadius: "50%", background: done ? "#dcfce7" : active ? (isError ? "#fee2e2" : "#dbeafe") : "#f1f5f9", border: `2px solid ${dotC}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  {done
+                                    ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                    : active && isError
+                                    ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    : <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotC }} />}
+                                </div>
+                                <span style={{ fontSize: 10.5, fontWeight: active ? 700 : 500, color: textC, marginTop: 5, whiteSpace: "nowrap" }}>{step.label}</span>
+                              </div>
+                              {i < STEPS.length - 1 && (
+                                <div style={{ flex: 1, height: 2, background: i < currentStep ? "#10b981" : "#e2e8f0", margin: "0 4px", marginBottom: 16, borderRadius: 2 }} />
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* ══ HERO CARD (quand aucune solution) ══ */}
+                    {solutions.length === 0 && (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "28px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
+                        {/* Icône + titre */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                          <div style={{ width: 60, height: 60, borderRadius: 16, background: hero.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: hero.iconColor }}>
+                            {hero.icon}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 17, fontWeight: 800, color: "#1e293b" }}>{hero.title}</div>
+                            {hero.sub && <div style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>{hero.sub}</div>}
+                          </div>
+                        </div>
+
+                        {/* Détails affectation si AFFECTED */}
+                        {props.status === "AFFECTED" && (
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            {[
+                              { label: "Affecté à", value: props.handled_by || "—", color: "#1d4ed8" },
+                              { label: "Par", value: props.assigned_by || "—", color: "#1e293b" },
+                              { label: "Le", value: props.assigned_at ? formatDate(props.assigned_at) : "—", color: "#1e293b" },
+                              { label: "Délai", value: props.selectedItem?.retardDay != null ? `${props.selectedItem.retardDay} jour(s)` : "—", color: props.selectedItem?.retardDay < 0 ? "#ef4444" : "#1e293b" },
+                            ].map(({ label, value, color }) => (
+                              <div key={label} style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 14px" }}>
+                                <div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{label}</div>
+                                <div style={{ fontSize: 13.5, fontWeight: 700, color }}>{value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Grille infos clés du dossier */}
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>Informations du dossier</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                            {[
+                              { label: "Enregistrée le", value: props.created_at ? formatDate(props.created_at) : "—" },
+                              { label: "Canal", value: props.collect || "—" },
+                              { label: "Objet", value: props.subject || "—" },
+                              { label: "Catégorie", value: props.underSubject || "—" },
+                              { label: "Produit", value: props.product || "—" },
+                              { label: "Point de service", value: props.unit || "—" },
+                            ].map(({ label, value }) => (
+                              <div key={label} style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 12px" }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{label}</div>
+                                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#1e293b" }}>{value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Onglets filtre (H14 uniquement) ── */}
+                    {hasH14 && solutions.length > 0 && (
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {[
+                          { key: false, label: "Interactions avec le client", icon: <PersonIcon style={{ fontSize: 16 }} /> },
+                          { key: true,  label: "Traitement en interne",       icon: <Diversity3Icon style={{ fontSize: 16 }} /> },
+                        ].map(({ key, label, icon }) => (
+                          <button key={String(key)} onClick={() => setInterne(key)}
+                            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, fontSize: 13, fontWeight: interne === key ? 700 : 500, cursor: "pointer",
+                              border: interne === key ? "1.5px solid #6366f1" : "1.5px solid #e5e7eb",
+                              background: interne === key ? "#eff6ff" : "#f8fafc",
+                              color: interne === key ? "#1d4ed8" : "#6b7280",
+                              boxShadow: interne === key ? "0 1px 6px rgba(99,102,241,0.15)" : "none" }}
+                          >
+                            {icon}{label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* ── Timeline solutions ── */}
+                    {displayedSolutions.length > 0 ? (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, fontWeight: 700, color: "#1e293b", marginBottom: 20 }}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                          Solutions proposées
+                          <span style={{ background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, padding: "1px 9px", fontSize: 11.5, fontWeight: 700 }}>{displayedSolutions.length}</span>
+                        </div>
+                        <div style={{ position: "relative", paddingLeft: 28 }}>
+                          <div style={{ position: "absolute", left: 11, top: 6, bottom: 6, width: 2, background: "#e2e8f0", borderRadius: 2 }} />
+                          {displayedSolutions.map((sol, idx) => renderSolution(sol, idx, displayedSolutions.length))}
+                        </div>
+                      </div>
+                    ) : solutions.length > 0 && hasH14 ? (
+                      <div style={{ background: "#f5f9ff", borderLeft: "4px solid #1976d2", borderRadius: 8, padding: "14px 16px", fontSize: 13, color: "#64748b" }}>
+                        Aucune donnée dans cette vue
+                      </div>
+                    ) : null}
+
+                    {/* ── Recours externes ── */}
+                    {props.external_remedies?.length > 0 && (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "18px 22px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, fontWeight: 700, color: "#1e293b", marginBottom: 12 }}>
+                          <GavelIcon style={{ fontSize: 16, color: "#f59e0b" }} />
+                          Recours externes
+                        </div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                          {props.external_remedies.map((rec, i) => (
+                            <span key={i} style={{ padding: "5px 14px", borderRadius: 20, background: "#fffbeb", color: "#b45309", border: "1px solid #fed7aa", fontSize: 13, fontWeight: 600 }}>{rec.libelle}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })(),
+            },
+            {
+              key: "medias",
+              label: "Médias & Contenu",
+              content: (
+                <FichiersTab
+                  selectedItemFiles={props.selectedItemFiles}
+                  selectedItemAudio={props.selectedItemAudio}
+                  attachmentList={attachmentList}
+                  audioList={audioList}
+                  inputRef={inputRef}
+                  onFilesChange={(e) => setFiles([...e.target.files])}
+                  onAddAudio={() => { setAudioBox(true); setOpen2(true); }}
+                  content={props.content}
+                  extras={props.extras}
+                  onAddContent={() => { setShowExtraContent(true); setExtraContent(""); }}
+                />
+              ),
+            },
+            {
+              key: "historique",
+              label: "Historique",
+              content: (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+
+                  {/* ══ BLOC 2 : Solutions ══ */}
+                  {(() => {
+                    const allSolutions = Array.isArray(props.solution) ? props.solution : [];
+                    return (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                        <button onClick={() => toggleHistAcc("solutions")} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
+                          <div style={{ width: 30, height: 30, borderRadius: 8, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                          </div>
+                          <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: "#1e293b" }}>Historique des solutions</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: allSolutions.length > 0 ? "#fff" : "#94a3b8", background: allSolutions.length > 0 ? "#6366f1" : "#e2e8f0", borderRadius: 20, padding: "2px 9px", marginRight: 8 }}>{allSolutions.length}</span>
+                          <span style={{ fontSize: 10, color: "#94a3b8" }}>{histAccordions.solutions ? "▲" : "▼"}</span>
+                        </button>
+                        {histAccordions.solutions && (
+                          <div style={{ borderTop: "1px solid #f1f5f9", padding: "14px 18px" }}>
+                            {allSolutions.length === 0 ? (
+                              <div style={{ fontSize: 13, color: "#94a3b8", fontStyle: "italic", textAlign: "center", padding: "10px 0" }}>Aucune solution proposée</div>
+                            ) : (
+                              <div style={{ position: "relative", paddingLeft: 28 }}>
+                                <div style={{ position: "absolute", left: 11, top: 4, bottom: 4, width: 2, background: "#e2e8f0", borderRadius: 2 }} />
+                                {allSolutions.map((sol, idx) => {
+                                  const isLast = idx === allSolutions.length - 1;
+                                  const sat = sol.satisfactionMeasureDto?.status;
+                                  const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : sol.status === "UNAPPROVED" ? "#f97316" : "#6366f1";
+                                  const satLabel = sat === "SATISFIED" ? "Satisfait" : sat === "UNSATISFIED" ? "Non satisfait" : sat === "PARTIAL" ? "Partiellement satisfait" : null;
+                                  const clientComment = sol.satisfactionMeasureDto?.commentaire;
+                                  return (
+                                    <div key={sol.id ?? idx} style={{ position: "relative", marginBottom: isLast ? 0 : 18 }}>
+                                      <div style={{ position: "absolute", left: -22, top: 12, width: 16, height: 16, borderRadius: "50%", background: dotColor, border: "3px solid #fff", boxShadow: `0 0 0 2px ${dotColor}`, zIndex: 1 }} />
+                                      <div style={{ border: `1px solid ${isLast ? dotColor + "55" : "#e5e7eb"}`, borderRadius: 12, overflow: "hidden", background: "#fff", boxShadow: isLast ? `0 2px 12px ${dotColor}22` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
+                                          <span style={{ fontSize: 13, fontWeight: 700, color: dotColor }}>Solution {idx + 1}</span>
+                                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                            {sol.author?.firstAndLastName && <span style={{ fontSize: 11.5, color: "#64748b" }}>{sol.author.firstAndLastName}</span>}
+                                            {sol.createdAt && <span style={{ fontSize: 11, color: "#94a3b8" }}>· {formatDate(sol.createdAt)}</span>}
+                                          </div>
+                                        </div>
+                                        <div style={{ padding: "10px 14px 0", borderLeft: `3px solid ${dotColor}`, margin: "10px 14px 0" }}>
+                                          <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "—"}</div>
+                                        </div>
+                                        {sol.commentaire && <div style={{ padding: "8px 14px" }}><span style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Commentaire</span><div style={{ fontSize: 12.5, color: "#64748b", fontStyle: "italic", marginTop: 4 }}>{sol.commentaire}</div></div>}
+                                        {clientComment && clientComment.trim() !== "" && <div style={{ margin: "0 14px 10px", background: "#e0f2fe", borderRadius: 8, padding: "8px 12px" }}><span style={{ fontSize: 10.5, fontWeight: 700, color: "#0369a1", textTransform: "uppercase" }}>Commentaire du client</span><div style={{ fontSize: 12.5, color: "#0369a1", marginTop: 4 }}>{clientComment}</div></div>}
+                                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "0 14px 12px", marginTop: 4 }}>
+                                          {satLabel && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: dotColor + "18", color: dotColor }}>{satLabel}</span>}
+                                          {!satLabel && sol.status === "APPROVED" && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fef3c7", color: "#92400e" }}>En attente de mesure</span>}
+                                          {sol.status === "UNAPPROVED" && sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fee2e2", color: "#991b1b" }}>Désapprouvée — {sol.motifDesaprobation}</span>}
+                                          {sol.status === "UNAPPROVED" && !sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fef3c7", color: "#92400e" }}>En attente d'approbation</span>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* ══ BLOC 3 : Flux du dossier ══ */}
+                  <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                    <button onClick={() => toggleHistAcc("flux")} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
+                      <div style={{ width: 30, height: 30, borderRadius: 8, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                      </div>
+                      <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: "#1e293b" }}>Flux du dossier</span>
+                      <span style={{ fontSize: 10, color: "#94a3b8" }}>{histAccordions.flux ? "▲" : "▼"}</span>
+                    </button>
+                    {histAccordions.flux && (
+                      <div style={{ borderTop: "1px solid #f1f5f9", padding: "8px 12px" }}>
+                        <HistoriqueTimeline
+                          recorded_at={props.recorded_at}
+                          created_by={props.created_by}
+                          transmitted={props.selectedItem?.transmitted != null ? "" + props.selectedItem.transmitted : ""}
+                          transmittedBy={props.selectedItem?.transmittedBy?.firstAndLastName}
+                          transmittedTo={props.selectedItem?.transmittedTo?.firstAndLastName}
+                          handled_by={props.handled_by}
+                          assigned_by={props.selectedItem?.treatmentAffectedBy?.firstAndLastName}
+                          assignedAt={props.selectedItem?.affectedAt}
+                          solution={Array.isArray(props.solution) ? props.solution : []}
+                          formatDate={formatDate}
+                          formatDate3={formatDate3}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              ),
+            },
+          ]}
+        />
+      </>
+    );
+  }
+
   return (
     // "Liste Réclamations"
     <div id="main">
       {/* {props.showSelectPrintItem && ( */}
-      <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} />
+      <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} claimStatus={props.status} />
       {showExtraContent && (
         <div>
           <Dialog
@@ -2941,73 +3520,62 @@ const ListeReclamations = (props) => {
               <div className="row">
                 <div className="col l12 s12 pb-5">
                   <div className="card-panel pb-5">
+                    <ClaimsKPIBar items={props.items} />
+                    <ClaimsFilterBar
+                      items={props.items}
+                      activeFilter={activeFilter}
+                      onFilterChange={(val) => setActiveFilter(val)}
+                    />
                     <div className="row">
                       <div className="row">
                         <div className="col l6 m6 s12">
-                          <h5 className="card-title">
-                            Liste des réclamations&nbsp;
+                          <h5 className="card-title" style={{ fontWeight: 700, color: "#0F172A", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: 8 }}>
+                            Liste des réclamations
+                            <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748B", background: "#F1F5F9", borderRadius: 8, padding: "2px 10px" }}>
+                              {content.length} résultat{content.length !== 1 ? "s" : ""}
+                            </span>
                           </h5>
                         </div>
-                        <div
-                          className="col l6 m6 s12"
-                          style={{ textAlign: "end" }}
-                        >
+                        <div className="col l6 m6 s12" style={{ textAlign: "end", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
+                          {/* Toggle Vue liste / cartes */}
+                          <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                            <Tooltip title="Vue liste"><Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></Box></Tooltip>
+                            <Tooltip title="Vue cartes"><Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></Box></Tooltip>
+                          </Box>
                           {hbt.includes("H7") ? (
-                            <img
-                              src={pdf}
-                              alt=""
-                              style={{ marginRight: "15px", cursor: "pointer" }}
+                            <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }}
                               onClick={(e) => {
-                                // Vérifie si hbt inclut "H8" avant d'exécuter handleImpression
-                                if (hbt.includes("H8")) {
-                                  handleImpression();
-                                  setChangeButtonPrint(true);
-                                } else {
-                                  handlePrint2(
-                                    config,
-                                    selectOption,
-                                    props.items
-                                  );
-                                }
+                                if (hbt.includes("H8")) { handleImpression(); setChangeButtonPrint(true); }
+                                else { handlePrint2(config, selectOption, props.items); }
                               }}
                             />
-                          ) : (
-                            ""
-                          )}
-
+                          ) : ""}
                           {hbt.includes("H9") ? (
-                            <img
-                              src={excel}
-                              alt=""
-                              style={{ cursor: "pointer" }}
+                            <img src={excel} alt="" style={{ cursor: "pointer" }}
                               onClick={(e) => {
-                                if (hbt.includes("H10")) {
-                                  handleImpression();
-                                  setChangeButtonPrint(false);
-                                } else {
-                                  table2XLS2X(
-                                    "Liste_des_réclamations" +
-                                    today().replaceAll("/", ""),
-                                    "brke",
-                                    selectOption,
-                                    props.items
-                                  );
-                                }
+                                if (hbt.includes("H10")) { handleImpression(); setChangeButtonPrint(false); }
+                                else { table2XLS2X("Liste_des_réclamations" + today().replaceAll("/", ""), "brke", selectOption, props.items); }
                               }}
                             />
-                          ) : (
-                            ""
-                          )}
+                          ) : ""}
                         </div>
                       </div>
                       <div className="col s12">
-                        <ReactDatatable
-                          className={"responsive-table table-xlsx"}
-                          config={config}
-                          records={content}
-                          columns={columns}
-                          onRowClicked={rowClickedHandler}
-                        />
+                        {viewMode === "list" ? (
+                          <ClaimsTable
+                            items={content}
+                            mode={mode}
+                            objets={objets}
+                            onRowClick={(data) => rowClickedHandler(null, data, 0)}
+                          />
+                        ) : (
+                          <ClaimsCardView
+                            items={content}
+                            mode={mode}
+                            objets={objets}
+                            onCardClick={(data) => rowClickedHandler(null, data, 0)}
+                          />
+                        )}
                         <div id="tab_exl" style={{ display: "none" }}></div>
                       </div>
                     </div>
@@ -3360,7 +3928,7 @@ const ListeReclamations = (props) => {
                                     }}
                                   >
                                     {" "}
-                                    Fichiers
+                                    Contenu & Médias
                                   </Typography>
                                   <label
                                     htmlFor="ile"

@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import BoltIcon from "@mui/icons-material/Bolt";
+import LightbulbIcon from "@mui/icons-material/Lightbulb";
+import GroupsIcon from "@mui/icons-material/Groups";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 
 import SidebarInfosClient from "./SidebarInfosClient";
 import SidebarDetailsDossier from "./SidebarDetailsDossier";
@@ -16,6 +20,8 @@ import TransmettreModal from "../../pages/Reclamations/modals/TransmettreModal";
 import ApprouverModal from "../../pages/Reclamations/modals/ApprouverModal";
 
 import { formatDate, formatDate3 } from "../../Utils/utils";
+import { LoadingButton } from "@mui/lab";
+import SaveIcon from "@mui/icons-material/Save";
 
 /**
  * Shared treatment detail shell: header + sidebar + tabs + modals.
@@ -75,7 +81,7 @@ const TraitementShell = ({
   onBack,
 
   // Identity
-  codeClient, status, risqueLevel,
+  codeClient, status, statusLabel, risqueLevel,
 
   // Sidebar — client
   lastname, phone, email, address, language, gender, dossierimf,
@@ -86,6 +92,10 @@ const TraitementShell = ({
 
   // Sidebar — actions
   visibleActions = [],
+  onActionOverride,
+
+  // Custom tabs override — [{ key, label, content }]
+  customTabs,
 
   // Fichiers
   selectedItemFiles, selectedItemAudio,
@@ -98,6 +108,9 @@ const TraitementShell = ({
 
   // Traitement tab
   treatForm,
+  onTreat,         // handler du bouton "Traiter"
+  loadingTreat,    // boolean loading state
+  canTreat,        // boolean — si false, boutons solutions grisés
   existingSolutions = [],
   onModifyBeforeSend,
   onUseAndTreat,
@@ -119,24 +132,32 @@ const TraitementShell = ({
   loadingApprove, loadingDisapprove,
   modalErrors,
   emailDialogSlot,
+  headerActions,
+  conversionWarning,
+  conversionTypes,
+  dossierLabel,
+  hideClientInfo = false,
 }) => {
-  const [activeTab, setActiveTab] = useState('traitement');
-  const [openAccordion, setOpenAccordion] = useState('client');
+  const [activeTab, setActiveTab] = useState(customTabs ? customTabs[0]?.key : 'traitement');
+  const [openAccordions, setOpenAccordions] = useState({ client: false, details: false, actions: true });
   const [treatSubTab, setTreatSubTab] = useState('classique');
   const [openModal, setOpenModal] = useState(null);
 
   const toggleAccordion = (key) =>
-    setOpenAccordion((v) => (v === key ? '' : key));
+    setOpenAccordions(prev => ({ client: false, details: false, actions: false, [key]: !prev[key] }));
 
   const STATUS_MAP = {
     SAVED:             ['#e0f2fe', '#0369a1', 'A traiter'],
+    TEMP_SAVED:        ['#ede9fe', '#6d28d9', 'Sauvegardée'],
     AFFECTED:          ['#fef9c3', '#854d0e', 'Affectée'],
     TO_APPROUVED:      ['#fef3c7', '#92400e', 'À approuver'],
     DESAPPROUVED:      ['#fee2e2', '#991b1b', 'Désapprouvée'],
     TREAT:             ['#dcfce7', '#166534', 'En traitement'],
+    SATISFIED:         ['#dcfce7', '#166534', 'Satisfait'],
     CLASSED:           ['#f3e8ff', '#6b21a8', 'Classée'],
     UNSATISFIED:       ['#fee2e2', '#991b1b', 'Non satisfait'],
     PARTIAL_SATISFIED: ['#fef3c7', '#92400e', 'Part. satisfait'],
+    LITIGATION:        ['#fef3c7', '#b45309', 'Contentieux'],
   };
   const GRAVITY_MAP = {
     MINEUR: ['#dcfce7', '#166534', 'Mineur'],
@@ -144,10 +165,13 @@ const TraitementShell = ({
     GRAVE:  ['#fee2e2', '#991b1b', 'Grave'],
   };
 
-  const [bgS, colS, lblS] = STATUS_MAP[status]  || ['#f1f5f9', '#64748b', status || ''];
+  const [bgS, colS, lblS_] = STATUS_MAP[status]  || ['#f1f5f9', '#64748b', status || ''];
+  const lblS = statusLabel ?? lblS_;
   const [bgG, colG, lblG] = GRAVITY_MAP[risqueLevel] || [];
 
-  const handleActionClick = (key) => setOpenModal(key);
+  const handleActionClick = (key) => {
+    if (onActionOverride) { onActionOverride(key); } else { setOpenModal(key); }
+  };
 
   return (
     <>
@@ -169,6 +193,11 @@ const TraitementShell = ({
               {lblG}
             </span>
           )}
+          {headerActions && (
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+              {headerActions}
+            </div>
+          )}
         </div>
 
         {/* ════ MAIN GRID ════ */}
@@ -179,20 +208,22 @@ const TraitementShell = ({
             className="overflow-y-auto overflow-x-hidden flex flex-col gap-3 p-3 bg-[#f5f5f5]"
             style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.1) transparent' }}
           >
-            <SidebarInfosClient
-              isOpen={openAccordion === 'client'}
-              onToggle={() => toggleAccordion('client')}
-              lastname={lastname}
-              phone={phone}
-              email={email}
-              address={address}
-              language={language}
-              gender={gender}
-              dossierimf={dossierimf}
-            />
+            {!hideClientInfo && (
+              <SidebarInfosClient
+                isOpen={openAccordions.client}
+                onToggle={() => toggleAccordion('client')}
+                lastname={lastname}
+                phone={phone}
+                email={email}
+                address={address}
+                language={language}
+                gender={gender}
+                dossierimf={dossierimf}
+              />
+            )}
 
             <SidebarDetailsDossier
-              isOpen={openAccordion === 'details'}
+              isOpen={openAccordions.details}
               onToggle={() => toggleAccordion('details')}
               codeClient={codeClient}
               recorded_at={recorded_at}
@@ -206,17 +237,23 @@ const TraitementShell = ({
               content={content}
               extras={extras}
               onAddContent={onAddContent}
+              handled_by={handled_by}
+              assigned_by={assigned_by}
+              assignedAt={assignedAt}
+              transmittedTo={transmittedTo}
               formatDate={formatDate}
               formatDate3={formatDate3}
               getStatusLabel={(s) => STATUS_MAP[s]?.[2] ?? s}
             />
 
-            <ActionsDisponibles
-              isOpen={openAccordion === 'actions'}
-              onToggle={() => toggleAccordion('actions')}
-              visibleActions={visibleActions}
-              onAction={handleActionClick}
-            />
+            {visibleActions.length > 0 && (
+              <ActionsDisponibles
+                isOpen={openAccordions.actions}
+                onToggle={() => toggleAccordion('actions')}
+                visibleActions={visibleActions}
+                onAction={handleActionClick}
+              />
+            )}
           </div>
 
           {/* ─── RIGHT: TABS ─── */}
@@ -226,12 +263,12 @@ const TraitementShell = ({
             <div className="flex-shrink-0 px-3 pt-3">
               <div className="bg-white rounded-2xl px-2" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
                 <div className="flex">
-                  {[
+                  {(customTabs || [
                     { key: 'traitement', label: 'Traitement' },
-                    { key: 'fichiers',   label: 'Fichiers' },
+                    { key: 'fichiers',   label: 'Contenu & Médias' },
                     { key: 'historique', label: 'Historique' },
                     { key: 'chat',       label: 'Chat' },
-                  ].map((tab) => (
+                  ]).map((tab) => (
                     <button
                       key={tab.key}
                       onClick={() => setActiveTab(tab.key)}
@@ -248,19 +285,47 @@ const TraitementShell = ({
               </div>
             </div>
 
+            {/* Bannière conversion */}
+            {conversionWarning && (
+              <div className="flex-shrink-0 px-3 pt-2">
+                <div style={{
+                  background: '#fff7ed',
+                  border: '1px solid #fed7aa',
+                  borderLeft: '4px solid #f97316',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  fontSize: '0.82rem',
+                  color: '#9a3412',
+                  fontWeight: 500,
+                }}>
+                  {conversionWarning}
+                </div>
+              </div>
+            )}
+
             {/* Tab content */}
             <div className="flex-1 overflow-y-auto bg-[#f5f5f5]">
 
+              {/* ── CUSTOM TABS ── */}
+              {customTabs && customTabs.map((tab) => (
+                activeTab === tab.key ? (
+                  <div key={tab.key} className="p-3">{tab.content}</div>
+                ) : null
+              ))}
+
               {/* ── TRAITEMENT ── */}
-              {activeTab === 'traitement' && (
+              {!customTabs && activeTab === 'traitement' && (
                 <div className="p-3">
 
                   {/* Sub-tab bar */}
                   <div className="flex gap-2.5 mb-5">
                     {[
-                      { key: 'classique',        label: 'Classique',                   icon: '⚡' },
-                      { key: 'pre_enregistrees', label: 'Solutions pré-enregistrées',  icon: '💡' },
-                      { key: 'collaboratif',     label: 'Collaboratif',                icon: '👥' },
+                      { key: 'classique',        label: 'Classique',                   icon: <BoltIcon style={{ fontSize: 16 }} /> },
+                      { key: 'pre_enregistrees', label: 'Solutions pré-enregistrées',  icon: <LightbulbIcon style={{ fontSize: 16 }} /> },
+                      { key: 'collaboratif',     label: 'Collaboratif',                icon: <GroupsIcon style={{ fontSize: 16 }} /> },
                     ].map((sub) => {
                       const active = treatSubTab === sub.key;
                       return (
@@ -278,7 +343,7 @@ const TraitementShell = ({
                             transition: 'all 0.15s', whiteSpace: 'nowrap',
                           }}
                         >
-                          <span style={{ fontSize: 14 }}>{sub.icon}</span>
+                          {sub.icon}
                           {sub.label}
                         </button>
                       );
@@ -291,7 +356,7 @@ const TraitementShell = ({
                     <div className="bg-white rounded-xl" style={{ border: '1px solid #e5e7eb', overflow: 'hidden' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: '1px solid #f1f5f9' }}>
                         <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <span style={{ fontSize: 17 }}>💡</span>
+                          <EditNoteIcon style={{ fontSize: 20, color: '#1d4ed8' }} />
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>Proposition de solution</div>
@@ -304,6 +369,29 @@ const TraitementShell = ({
                       <div className="treat-form-modern" style={{ padding: '16px 18px' }}>
                         {treatForm}
                       </div>
+                      {onTreat && (
+                        <div style={{ padding: '12px 18px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
+                          <LoadingButton
+                            onClick={onTreat}
+                            loading={loadingTreat}
+                            loadingPosition="end"
+                            endIcon={<SaveIcon />}
+                            variant="contained"
+                            sx={{
+                              background: 'linear-gradient(135deg, #10b981, #059669)',
+                              textTransform: 'initial',
+                              fontWeight: 700,
+                              fontSize: 13,
+                              borderRadius: 9,
+                              px: 3,
+                              boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
+                              '&:hover': { background: 'linear-gradient(135deg, #059669, #047857)' },
+                            }}
+                          >
+                            Traiter
+                          </LoadingButton>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -311,8 +399,12 @@ const TraitementShell = ({
                   {treatSubTab === 'pre_enregistrees' && (
                     <PreEnregistreesTab
                       solutions={existingSolutions}
-                      onModifyBeforeSend={onModifyBeforeSend}
-                      onUseAndTreat={onUseAndTreat}
+                      disabled={canTreat === false}
+                      onModifyBeforeSend={(content) => {
+                        onModifyBeforeSend?.(content);
+                        setTreatSubTab('classique');
+                      }}
+                      onUseAndTreat={(content, id) => onUseAndTreat?.(content, id)}
                     />
                   )}
 
@@ -343,7 +435,7 @@ const TraitementShell = ({
               )}
 
               {/* ── FICHIERS ── */}
-              {activeTab === 'fichiers' && (
+              {!customTabs && activeTab === 'fichiers' && (
                 <FichiersTab
                   selectedItemFiles={selectedItemFiles}
                   selectedItemAudio={selectedItemAudio}
@@ -352,11 +444,14 @@ const TraitementShell = ({
                   inputRef={inputRef}
                   onFilesChange={onFilesChange}
                   onAddAudio={onAddAudio}
+                  content={content}
+                  extras={extras}
+                  onAddContent={onAddContent}
                 />
               )}
 
               {/* ── HISTORIQUE ── */}
-              {activeTab === 'historique' && (
+              {!customTabs && activeTab === 'historique' && (
                 <div className="p-3">
                   <HistoriqueTimeline
                     recorded_at={recorded_at}
@@ -375,7 +470,7 @@ const TraitementShell = ({
               )}
 
               {/* ── CHAT — always mounted ── */}
-              <div className={`flex-col p-3 min-h-full ${activeTab === 'chat' ? 'flex' : 'hidden'}`}>
+              <div className={`flex-col p-3 min-h-full ${!customTabs && activeTab === 'chat' ? 'flex' : 'hidden'}`}>
                 {tchat ? (
                   <div className="bg-white rounded-xl border border-gray-200 flex-1 overflow-hidden">
                     {tchat}
@@ -384,10 +479,9 @@ const TraitementShell = ({
                   <div className="bg-white rounded-xl border border-gray-200 flex-1 flex flex-col items-center justify-center p-10 min-h-[300px]">
                     <div className="text-[36px] mb-3.5">💬</div>
                     <div className="text-sm font-semibold text-slate-900 mb-1.5">Aucun message</div>
-                    <div className="text-[12.5px] text-slate-400 mb-5 text-center max-w-[280px]">
+                    <div className="text-[12.5px] text-slate-400 text-center max-w-[280px]">
                       Démarrez la conversation pour collaborer sur ce dossier
                     </div>
-                    {btnS && <div>{btnS}</div>}
                   </div>
                 )}
               </div>
@@ -421,6 +515,8 @@ const TraitementShell = ({
         onConfirmClose={onConfirmClose}
         onSubmitConfirmation={onSubmitConfirmation}
         loading={loadingConversion}
+        types={conversionTypes}
+        dossierLabel={dossierLabel}
       />
 
       <TransmettreModal

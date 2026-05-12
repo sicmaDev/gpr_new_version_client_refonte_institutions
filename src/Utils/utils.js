@@ -264,20 +264,20 @@ export const formatDate2 = (date) => {
 };
 
 export const formatDate3 = (dateString) => {
-  if (!dateString) return "date inconnue";
+  if (!dateString) return null;
 
   // séparer date et heure
   const [datePart, timePart] = dateString.split(" ");
-  if (!datePart || !timePart) return "date invalide";
+  if (!datePart || !timePart) return null;
 
   const [day, month, year] = datePart.split("-");
-  if (!day || !month || !year) return "date invalide";
+  if (!day || !month || !year) return null;
 
   // reconstruire en format ISO
   const isoDate = `${year}-${month}-${day}T${timePart}`;
 
   const date = new Date(isoDate);
-  if (isNaN(date.getTime())) return "date invalide";
+  if (isNaN(date.getTime())) return null;
 
   return new Intl.DateTimeFormat("fr-FR", {
     year: "numeric",
@@ -292,7 +292,7 @@ export const formatDate4 = (dateString) => {
   if (!dateString) return "date inconnue"; 
 
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return "date invalide";
+  if (isNaN(date.getTime())) return null;
 
   return new Intl.DateTimeFormat("fr-FR", {
     year: "numeric",

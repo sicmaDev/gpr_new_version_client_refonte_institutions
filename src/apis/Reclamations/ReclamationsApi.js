@@ -849,17 +849,15 @@ export const convertClaimApi = async (data, props) => {
         },
         data: data
     };
-    await axios(config)
+    return axios(config)
         .then(function (response) {
             notify("Bravo - Réclamation convertie avec succès", "success");
+            return response.data;
         })
         .catch(function (error) {
             notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreursessionadd",error)
-        }
-        );
-
-
+            return null;
+        });
 }
 
 

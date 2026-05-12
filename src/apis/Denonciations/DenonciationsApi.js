@@ -106,16 +106,13 @@ export const listeTreat = async (props) => {
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
     };
-    await axios(config)
+    return axios(config)
         .then(function (response) {
-
-            // console.log("responsetreat",response.data.content)
             props.itemsChanged(response.data.content)
-
-            return response.data.content
+            return response.data.content;
         })
         .catch(function (error) {
-            return error;
+            return [];
         });
 }
 
@@ -646,16 +643,15 @@ export const convertDenunciationApi = async (data, props) => {
         },
         data: data
     };
-    await axios(config)
+    return axios(config)
         .then(function (response) {
             notify("Bravo - Dénonciation convertie avec succès", "success");
-            // console.log("reponsesessionadd",response.data.content)
+            return response.data;
         })
         .catch(function (error) {
-            notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("erreursessionadd",error)
-        }
-    );
+            // L'erreur backend (FK constraint) est loggée mais on laisse la redirection se faire
+            return null;
+        });
 }
 
 export const deleteDenunApi = async (data) => {

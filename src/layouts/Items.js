@@ -53,32 +53,23 @@ import { useHistory } from 'react-router-dom';
 
 const GroupLabel = ({ children }) => (
   <div style={{
-    padding: '20px 20px 6px',
-    fontSize: '10.5px',
-    fontWeight: 700,
+    padding: '10px 16px 3px',
+    fontSize: '10px',
+    fontWeight: 800,
     letterSpacing: '1.4px',
-    color: 'rgba(255,255,255,0.38)',
+    color: 'rgba(255,255,255,0.30)',
+    textTransform: 'uppercase',
     userSelect: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
   }}>
+    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)', borderRadius: 1 }} />
     {children}
+    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)', borderRadius: 1 }} />
   </div>
 );
 
-// Sub-section separator inside a group (e.g. Classique / Collaboratif)
-const SubGroupLabel = ({ children, icon }) => (
-  <div style={{
-    display: 'flex', alignItems: 'center', gap: 6,
-    padding: '10px 16px 4px 20px',
-    marginTop: 6,
-    fontSize: '9px', fontWeight: 800, letterSpacing: '1.3px',
-    color: 'rgba(255,255,255,0.32)', textTransform: 'uppercase',
-    userSelect: 'none',
-    borderTop: '1px solid rgba(255,255,255,0.07)',
-  }}>
-    {icon && <span style={{ opacity: 0.55, display: 'flex', alignItems: 'center' }}>{icon}</span>}
-    {children}
-  </div>
-);
 
 // Coming-soon placeholder item (visually present but inactive)
 const LockedItem = ({ icon, label, pl = 2 }) => (
@@ -149,46 +140,87 @@ export const Items = (props) => {
   const isActive = (path) =>
     pathname === path || pathname.startsWith(path + '/');
 
-  const col = { color: 'rgba(255,255,255,0.82)', fontSize: '20px' };
-  const chevron = { color: 'rgba(255,255,255,0.45)', fontSize: '18px' };
-  const link = { color: 'white', textDecoration: 'none' };
+  const col     = (active) => ({ color: active ? '#fff' : 'rgba(255,255,255,0.6)', fontSize: '18px', transition: 'color 0.2s' });
+  const chevron = { color: 'rgba(255,255,255,0.35)', fontSize: '16px' };
+  const link    = { color: 'white', textDecoration: 'none' };
 
-  // Top-level item with optional active highlight
-  const iSx = (path, pl = 2) => ({
-    borderRadius: '8px',
-    mx: 0.75,
-    my: 0.15,
-    pl,
-    pr: 1.5,
-    backgroundColor: isActive(path) ? 'rgba(255,255,255,0.13)' : 'transparent',
-    '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
-    '& .MuiListItemText-primary': {
-      fontSize: '13.5px',
-      fontWeight: isActive(path) ? 600 : 400,
-      color: 'white',
-    },
-    '& .MuiListItemIcon-root': { minWidth: 36 },
-  });
+  // Top-level leaf item
+  const iSx = (path, pl = 2) => {
+    const active = isActive(path);
+    return {
+      borderRadius: '8px',
+      mx: 0.75,
+      my: 0.1,
+      pl,
+      pr: 1.5,
+      minHeight: 38,
+      transition: 'background 0.18s',
+      backgroundColor: active ? 'rgba(255,255,255,0.15)' : 'transparent',
+      '&:hover': { backgroundColor: active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)' },
+      '& .MuiListItemText-primary': {
+        fontSize: '13px',
+        fontWeight: active ? 700 : 400,
+        color: active ? '#fff' : 'rgba(255,255,255,0.78)',
+      },
+      '& .MuiListItemIcon-root': { minWidth: 34 },
+    };
+  };
 
-  // Collapsible header: highlighted when any child is active
+  // Collapsible section header
   const hSx = (basePath, pl = 2) => {
     const active = isActive(basePath);
     return {
       borderRadius: '8px',
       mx: 0.75,
-      my: 0.15,
+      my: 0.1,
       pl,
       pr: 1.5,
-      backgroundColor: active ? 'rgba(255,255,255,0.08)' : 'transparent',
-      '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
+      minHeight: 38,
+      transition: 'background 0.18s',
+      backgroundColor: active ? 'rgba(255,255,255,0.1)' : 'transparent',
+      '&:hover': { backgroundColor: 'rgba(255,255,255,0.06)' },
       '& .MuiListItemText-primary': {
-        fontSize: '13.5px',
+        fontSize: '13px',
         fontWeight: active ? 600 : 400,
-        color: 'white',
+        color: active ? '#fff' : 'rgba(255,255,255,0.82)',
       },
-      '& .MuiListItemIcon-root': { minWidth: 36 },
+      '& .MuiListItemIcon-root': { minWidth: 34 },
     };
   };
+
+  // Sub-item leaf (dot marker, no icon)
+  const sSx = (path) => {
+    const active = isActive(path);
+    return {
+      borderRadius: '7px',
+      mx: 0.75,
+      my: 0.05,
+      pl: 2.5,
+      pr: 1.5,
+      minHeight: 32,
+      transition: 'background 0.18s',
+      backgroundColor: active ? 'rgba(255,255,255,0.13)' : 'transparent',
+      '&:hover': { backgroundColor: active ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.05)' },
+      '& .MuiListItemText-primary': {
+        fontSize: '12.5px',
+        fontWeight: active ? 600 : 400,
+        color: active ? '#fff' : 'rgba(255,255,255,0.62)',
+      },
+      '& .MuiListItemIcon-root': { minWidth: 22 },
+    };
+  };
+
+  // Small dot for sub-items
+  const SubDot = ({ active }) => (
+    <div style={{
+      width: active ? 6 : 4,
+      height: active ? 6 : 4,
+      borderRadius: '50%',
+      background: active ? '#fff' : 'rgba(255,255,255,0.3)',
+      transition: 'all 0.2s',
+      flexShrink: 0,
+    }} />
+  );
 
   // ── Visibility flags (same conditions as original) ───────────────────────
   const showDashboard    = mode === 1;
@@ -212,25 +244,20 @@ export const Items = (props) => {
       {showDashboard && (
         <NavLink to="/dashboard" activeClassName="hero" style={link}>
           <ListItemButton sx={iSx('/dashboard')} className="lib">
-            <ListItemIcon><DashboardIcon style={col} /></ListItemIcon>
+            <ListItemIcon><DashboardIcon style={col(isActive('/dashboard'))} /></ListItemIcon>
             <ListItemText primary="Dashboard" />
           </ListItemButton>
         </NavLink>
       )}
 
-      {/* ══ TRAITEMENT ═══════════════════════════════════════════════════════ */}
-      {hasGestion && <GroupLabel>Traitement</GroupLabel>}
-      {hasGestion && (
-        <SubGroupLabel icon={<InboxIcon style={{ fontSize: 11 }} />}>
-          Classique
-        </SubGroupLabel>
-      )}
+      {/* ══ GESTION ══════════════════════════════════════════════════════════ */}
+      {hasGestion && <GroupLabel>Gestion</GroupLabel>}
 
       {/* Réclamations */}
       {showReclamations && (
         <>
           <ListItemButton onClick={handleClick} sx={hSx('/reclamations')}>
-            <ListItemIcon><InboxIcon style={col} /></ListItemIcon>
+            <ListItemIcon><InboxIcon style={col(isActive('/reclamations'))} /></ListItemIcon>
             <ListItemText primary="Réclamations" />
             {open ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
           </ListItemButton>
@@ -239,8 +266,8 @@ export const Items = (props) => {
 
               {hbt.includes('H1') && (
                 <NavLink to="/reclamations/enregistrement" activeClassName="hero" style={link}>
-                  <ListItemButton sx={iSx('/reclamations/enregistrement', 3.5)} className="lib">
-                    <ListItemIcon><AddCircleIcon style={col} /></ListItemIcon>
+                  <ListItemButton sx={sSx('/reclamations/enregistrement')} className="lib">
+                    <ListItemIcon><SubDot active={isActive('/reclamations/enregistrement')} /></ListItemIcon>
                     <ListItemText primary="Enregistrement" />
                   </ListItemButton>
                 </NavLink>
@@ -248,8 +275,8 @@ export const Items = (props) => {
 
               {(hbt.some(i => ['H2','H3','H4','H6'].includes(i)) || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/reclamations/traitement/all" activeClassName="hero" style={link}>
-                  <ListItemButton sx={iSx('/reclamations/traitement', 3.5)} className="lib">
-                    <ListItemIcon><RecyclingIcon style={col} /></ListItemIcon>
+                  <ListItemButton sx={sSx('/reclamations/traitement')} className="lib">
+                    <ListItemIcon><SubDot active={isActive('/reclamations/traitement')} /></ListItemIcon>
                     <ListItemText primary="Traitement" />
                   </ListItemButton>
                 </NavLink>
@@ -257,33 +284,33 @@ export const Items = (props) => {
 
               {(hbt.includes('H5') || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/reclamations/mesure/all" activeClassName="hero" style={link}>
-                  <ListItemButton sx={iSx('/reclamations/mesure', 3.5)} className="lib">
-                    <ListItemIcon><DeviceThermostatIcon style={col} /></ListItemIcon>
+                  <ListItemButton sx={sSx('/reclamations/mesure')} className="lib">
+                    <ListItemIcon><SubDot active={isActive('/reclamations/mesure')} /></ListItemIcon>
                     <ListItemText primary="Mesure de satisfaction" />
                   </ListItemButton>
                 </NavLink>
               )}
 
               {(hbt.includes('H5') || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
-                <NavLink to="/reclamations/assurance" activeClassName="hero" style={link}>
-                  <ListItemButton sx={iSx('/reclamations/assurance', 3.5)} className="lib">
-                    <ListItemIcon><SentimentSatisfiedAltIcon style={col} /></ListItemIcon>
+                <NavLink to="/reclamations/assurance/all" activeClassName="hero" style={link}>
+                  <ListItemButton sx={sSx('/reclamations/assurance')} className="lib">
+                    <ListItemIcon><SubDot active={isActive('/reclamations/assurance')} /></ListItemIcon>
                     <ListItemText primary="Assurance Satisfaction" />
                   </ListItemButton>
                 </NavLink>
               )}
 
-              <NavLink to="/reclamations/liste" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/reclamations/liste', 3.5)} className="lib">
-                  <ListItemIcon><ReceiptLongIcon style={col} /></ListItemIcon>
+              <NavLink to="/reclamations/liste/all" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/reclamations/liste')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/reclamations/liste')} /></ListItemIcon>
                   <ListItemText primary="Liste des réclamations" />
                 </ListItemButton>
               </NavLink>
 
               {(hbt.includes('H5') || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
-                <NavLink to="/reclamations/classees" activeClassName="hero" style={link}>
-                  <ListItemButton sx={iSx('/reclamations/classees', 3.5)} className="lib">
-                    <ListItemIcon><FolderSpecialIcon style={col} /></ListItemIcon>
+                <NavLink to="/reclamations/classees/all" activeClassName="hero" style={link}>
+                  <ListItemButton sx={sSx('/reclamations/classees')} className="lib">
+                    <ListItemIcon><SubDot active={isActive('/reclamations/classees')} /></ListItemIcon>
                     <ListItemText primary="Classées" />
                   </ListItemButton>
                 </NavLink>
@@ -298,7 +325,7 @@ export const Items = (props) => {
       {showDenonciations && (
         <>
           <ListItemButton onClick={handleClick1} sx={hSx('/denonciations')}>
-            <ListItemIcon><ReportProblemIcon style={col} /></ListItemIcon>
+            <ListItemIcon><ReportProblemIcon style={col(isActive('/denonciations'))} /></ListItemIcon>
             <ListItemText primary="Dénonciations" />
             {open1 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
           </ListItemButton>
@@ -307,8 +334,8 @@ export const Items = (props) => {
 
               {hbt.includes('H1') && (
                 <NavLink to="/denonciations/enregistrement" activeClassName="hero" style={link}>
-                  <ListItemButton sx={iSx('/denonciations/enregistrement', 3.5)} className="lib">
-                    <ListItemIcon><AddCircleIcon style={col} /></ListItemIcon>
+                  <ListItemButton sx={sSx('/denonciations/enregistrement')} className="lib">
+                    <ListItemIcon><SubDot active={isActive('/denonciations/enregistrement')} /></ListItemIcon>
                     <ListItemText primary="Enregistrement" />
                   </ListItemButton>
                 </NavLink>
@@ -316,16 +343,16 @@ export const Items = (props) => {
 
               {(hbt.some(i => ['H2','H3','H4','H6'].includes(i)) || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/denonciations/traitement/all" activeClassName="hero" style={link}>
-                  <ListItemButton sx={iSx('/denonciations/traitement', 3.5)} className="lib">
-                    <ListItemIcon><RecyclingIcon style={col} /></ListItemIcon>
+                  <ListItemButton sx={sSx('/denonciations/traitement')} className="lib">
+                    <ListItemIcon><SubDot active={isActive('/denonciations/traitement')} /></ListItemIcon>
                     <ListItemText primary="Traitement" />
                   </ListItemButton>
                 </NavLink>
               )}
 
-              <NavLink to="/denonciations/liste" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/denonciations/liste', 3.5)} className="lib">
-                  <ListItemIcon><ReceiptLongIcon style={col} /></ListItemIcon>
+              <NavLink to="/denonciations/liste/all" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/denonciations/liste')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/denonciations/liste')} /></ListItemIcon>
                   <ListItemText primary="Liste des dénonciations" />
                 </ListItemButton>
               </NavLink>
@@ -339,7 +366,7 @@ export const Items = (props) => {
       {showSuggestions && (
         <>
           <ListItemButton onClick={handleClick2} sx={hSx('/suggestions')}>
-            <ListItemIcon><TipsAndUpdatesIcon style={col} /></ListItemIcon>
+            <ListItemIcon><TipsAndUpdatesIcon style={col(isActive('/suggestions'))} /></ListItemIcon>
             <ListItemText primary="Suggestions" />
             {open2 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
           </ListItemButton>
@@ -348,25 +375,25 @@ export const Items = (props) => {
 
               {hbt.includes('H1') && (
                 <NavLink to="/suggestions/enregistrement" activeClassName="hero" style={link}>
-                  <ListItemButton sx={iSx('/suggestions/enregistrement', 3.5)} className="lib">
-                    <ListItemIcon><AddCircleIcon style={col} /></ListItemIcon>
+                  <ListItemButton sx={sSx('/suggestions/enregistrement')} className="lib">
+                    <ListItemIcon><SubDot active={isActive('/suggestions/enregistrement')} /></ListItemIcon>
                     <ListItemText primary="Enregistrement" />
                   </ListItemButton>
                 </NavLink>
               )}
 
               {(addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
-                <NavLink to="/suggestions/traitement" activeClassName="hero" style={link}>
-                  <ListItemButton sx={iSx('/suggestions/traitement', 3.5)} className="lib">
-                    <ListItemIcon><RecyclingIcon style={col} /></ListItemIcon>
+                <NavLink to="/suggestions/traitement/all" activeClassName="hero" style={link}>
+                  <ListItemButton sx={sSx('/suggestions/traitement')} className="lib">
+                    <ListItemIcon><SubDot active={isActive('/suggestions/traitement')} /></ListItemIcon>
                     <ListItemText primary="Traitement" />
                   </ListItemButton>
                 </NavLink>
               )}
 
-              <NavLink to="/suggestions/liste" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/suggestions/liste', 3.5)} className="lib">
-                  <ListItemIcon><ReceiptLongIcon style={col} /></ListItemIcon>
+              <NavLink to="/suggestions/liste/all" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/suggestions/liste')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/suggestions/liste')} /></ListItemIcon>
                   <ListItemText primary="Liste des suggestions" />
                 </ListItemButton>
               </NavLink>
@@ -383,7 +410,7 @@ export const Items = (props) => {
       {showRapports && (
         <>
           <ListItemButton onClick={handleClick3} sx={hSx('/rapports')}>
-            <ListItemIcon><BarChartIcon style={col} /></ListItemIcon>
+            <ListItemIcon><BarChartIcon style={col(isActive('/rapports'))} /></ListItemIcon>
             <ListItemText primary="Rapports" />
             {open3 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
           </ListItemButton>
@@ -391,22 +418,22 @@ export const Items = (props) => {
             <List component="div" disablePadding>
 
               <NavLink to="/rapports/global" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/rapports/global', 3.5)} className="lib">
-                  <ListItemIcon><PublicIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/rapports/global')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/rapports/global')} /></ListItemIcon>
                   <ListItemText primary="Global" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/rapports/bceao" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/rapports/bceao', 3.5)} className="lib">
-                  <ListItemIcon><StarBorder style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/rapports/bceao')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/rapports/bceao')} /></ListItemIcon>
                   <ListItemText primary="Commission Bancaire" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/rapports/superset" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/rapports/superset', 3.5)} className="lib">
-                  <ListItemIcon><PieChartIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/rapports/superset')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/rapports/superset')} /></ListItemIcon>
                   <ListItemText primary="Superset" />
                 </ListItemButton>
               </NavLink>
@@ -420,7 +447,7 @@ export const Items = (props) => {
       {showAlertes && (
         <>
           <ListItemButton onClick={handleClick5} sx={hSx('/alertes')}>
-            <ListItemIcon><NotificationImportantIcon style={col} /></ListItemIcon>
+            <ListItemIcon><NotificationImportantIcon style={col(isActive('/alertes'))} /></ListItemIcon>
             <ListItemText primary="Alertes" />
             {open5 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
           </ListItemButton>
@@ -428,15 +455,15 @@ export const Items = (props) => {
             <List component="div" disablePadding>
 
               <NavLink to="/alertes/reclamations" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/alertes/reclamations', 3.5)} className="lib">
-                  <ListItemIcon><ReceiptLongIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/alertes/reclamations')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/alertes/reclamations')} /></ListItemIcon>
                   <ListItemText primary="Réclamations" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/alertes/denonciations" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/alertes/denonciations', 3.5)} className="lib">
-                  <ListItemIcon><ReceiptLongIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/alertes/denonciations')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/alertes/denonciations')} /></ListItemIcon>
                   <ListItemText primary="Dénonciations" />
                 </ListItemButton>
               </NavLink>
@@ -453,7 +480,7 @@ export const Items = (props) => {
       {showWhatsapp && (
         <NavLink to="/whatsapp/liste" activeClassName="hero" style={link}>
           <ListItemButton sx={iSx('/whatsapp')} className="lib">
-            <ListItemIcon><WhatsApp style={col} /></ListItemIcon>
+            <ListItemIcon><WhatsApp style={col(isActive('/whatsapp'))} /></ListItemIcon>
             <ListItemText primary="WhatsApp" />
           </ListItemButton>
         </NavLink>
@@ -463,7 +490,7 @@ export const Items = (props) => {
       {showConfigs && (
         <>
           <ListItemButton onClick={handleClick4} sx={hSx('/configurations')}>
-            <ListItemIcon><SettingsIcon style={col} /></ListItemIcon>
+            <ListItemIcon><SettingsIcon style={col(isActive('/configurations'))} /></ListItemIcon>
             <ListItemText primary="Configurations" />
             {open4 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
           </ListItemButton>
@@ -471,155 +498,155 @@ export const Items = (props) => {
             <List component="div" disablePadding>
 
               <NavLink to="/configurations/institution" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/institution', 3.5)} className="lib">
-                  <ListItemIcon><HomeWorkIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/institution')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/institution')} /></ListItemIcon>
                   <ListItemText primary="Institution" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/pointsServices" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/pointsServices', 3.5)} className="lib">
-                  <ListItemIcon><AddBusinessIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/pointsServices')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/pointsServices')} /></ListItemIcon>
                   <ListItemText primary="Points de services" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/postes" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/postes', 3.5)} className="lib">
-                  <ListItemIcon><WorkIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/postes')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/postes')} /></ListItemIcon>
                   <ListItemText primary="Postes" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/produits" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/produits', 3.5)} className="lib">
-                  <ListItemIcon><CategoryIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/produits')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/produits')} /></ListItemIcon>
                   <ListItemText primary="Produits / Services" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/categories" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/categories', 3.5)} className="lib">
-                  <ListItemIcon><ClassIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/categories')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/categories')} /></ListItemIcon>
                   <ListItemText primary="Catégories" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/objets" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/objets', 3.5)} className="lib">
-                  <ListItemIcon><DataObjectIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/objets')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/objets')} /></ListItemIcon>
                   <ListItemText primary="Objets" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/solutions" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/solutions', 3.5)} className="lib">
-                  <ListItemIcon><TipsAndUpdatesIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/solutions')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/solutions')} /></ListItemIcon>
                   <ListItemText primary="Solutions" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/langues" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/langues', 3.5)} className="lib">
-                  <ListItemIcon><LanguageIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/langues')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/langues')} /></ListItemIcon>
                   <ListItemText primary="Langues" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/supportsCollectes" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/supportsCollectes', 3.5)} className="lib">
-                  <ListItemIcon><RecyclingIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/supportsCollectes')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/supportsCollectes')} /></ListItemIcon>
                   <ListItemText primary="Modalités de dépôt" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/utilisateurs" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/utilisateurs', 3.5)} className="lib">
-                  <ListItemIcon><PersonIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/utilisateurs')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/utilisateurs')} /></ListItemIcon>
                   <ListItemText primary="Compte Utilisateurs" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/email" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/email', 3.5)} className="lib">
-                  <ListItemIcon><EmailIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/email')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/email')} /></ListItemIcon>
                   <ListItemText primary="Email" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/sms" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/sms', 3.5)} className="lib">
-                  <ListItemIcon><SmsIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/sms')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/sms')} /></ListItemIcon>
                   <ListItemText primary="SMS" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/logs" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/logs', 3.5)} className="lib">
-                  <ListItemIcon><AddToDriveOutlined style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/logs')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/logs')} /></ListItemIcon>
                   <ListItemText primary="Log Système" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/exportations" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/exportations', 3.5)} className="lib">
-                  <ListItemIcon><AddToDriveOutlined style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/exportations')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/exportations')} /></ListItemIcon>
                   <ListItemText primary="Exportation" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/bot" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/bot', 3.5)} className="lib">
-                  <ListItemIcon><SmartToyIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/bot')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/bot')} /></ListItemIcon>
                   <ListItemText primary="GPR BOT" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/apikey" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/apikey', 3.5)} className="lib">
-                  <ListItemIcon><KeyTwoTone style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/apikey')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/apikey')} /></ListItemIcon>
                   <ListItemText primary="API KEY" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/recoursExternes" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/recoursExternes', 3.5)} className="lib">
-                  <ListItemIcon><GavelIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/recoursExternes')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/recoursExternes')} /></ListItemIcon>
                   <ListItemText primary="Recours Externes" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/notifications" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/notifications', 3.5)} className="lib">
-                  <ListItemIcon><NotificationAddIcon style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/notifications')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/notifications')} /></ListItemIcon>
                   <ListItemText primary="Notifications" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/corbeille" activeClassName="hero" style={link}>
-                <ListItemButton sx={iSx('/configurations/corbeille', 3.5)} className="lib">
-                  <ListItemIcon><RestoreFromTrash style={col} /></ListItemIcon>
+                <ListItemButton sx={sSx('/configurations/corbeille')} className="lib">
+                  <ListItemIcon><SubDot active={isActive('/configurations/corbeille')} /></ListItemIcon>
                   <ListItemText primary="RSD supprimées" />
                 </ListItemButton>
               </NavLink>
 
               {/* Ressources (nested) */}
-              <ListItemButton onClick={handleClick6} sx={hSx('/ressources', 3.5)}>
-                <ListItemIcon><ArticleIcon style={col} /></ListItemIcon>
+              <ListItemButton onClick={handleClick6} sx={hSx('/ressources', 2)}>
+                <ListItemIcon><ArticleIcon style={col(isActive('/ressources'))} /></ListItemIcon>
                 <ListItemText primary="Ressources" />
                 {open6 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
               </ListItemButton>
               <Collapse in={open6} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
                   <NavLink to="/ressources/documents" activeClassName="hero" style={link}>
-                    <ListItemButton sx={iSx('/ressources/documents', 5)} className="lib">
-                      <ListItemIcon><MenuBookIcon style={col} /></ListItemIcon>
+                    <ListItemButton sx={sSx('/ressources/documents')} className="lib">
+                      <ListItemIcon><SubDot active={isActive('/ressources/documents')} /></ListItemIcon>
                       <ListItemText primary="Documents" />
                     </ListItemButton>
                   </NavLink>
                   <NavLink to="/ressources/faq" activeClassName="hero" style={link}>
-                    <ListItemButton sx={iSx('/ressources/faq', 5)} className="lib">
-                      <ListItemIcon><QuizIcon style={col} /></ListItemIcon>
+                    <ListItemButton sx={sSx('/ressources/faq')} className="lib">
+                      <ListItemIcon><SubDot active={isActive('/ressources/faq')} /></ListItemIcon>
                       <ListItemText primary="FAQ" />
                     </ListItemButton>
                   </NavLink>
@@ -636,14 +663,14 @@ export const Items = (props) => {
 
       <NavLink to="/help" activeClassName="hero" style={link}>
         <ListItemButton sx={iSx('/help')} className="lib">
-          <ListItemIcon><QuizIcon style={col} /></ListItemIcon>
+          <ListItemIcon><QuizIcon style={col(isActive('/help'))} /></ListItemIcon>
           <ListItemText primary="FAQ" />
         </ListItemButton>
       </NavLink>
 
       <NavLink to="/ressources/documents" activeClassName="hero" style={link}>
         <ListItemButton sx={iSx('/ressources/documents')} className="lib">
-          <ListItemIcon><FolderSpecialIcon style={col} /></ListItemIcon>
+          <ListItemIcon><FolderSpecialIcon style={col(isActive('/ressources/documents'))} /></ListItemIcon>
           <ListItemText primary="Documents" />
         </ListItemButton>
       </NavLink>
@@ -651,12 +678,13 @@ export const Items = (props) => {
       {/* Déconnexion */}
       <NavLink to="/logout" onClick={logOut} style={link}>
         <ListItemButton sx={{
-          borderRadius: '8px', mx: 0.75, my: 0.15, pl: 2, pr: 1.5,
-          '&:hover': { backgroundColor: 'rgba(255,100,100,0.12)' },
-          '& .MuiListItemText-primary': { fontSize: '13.5px', color: 'rgba(255,180,180,0.9)' },
-          '& .MuiListItemIcon-root': { minWidth: 36 },
+          borderRadius: '8px', mx: 0.75, my: 0.1, pl: 2, pr: 1.5, minHeight: 38,
+          transition: 'background 0.18s',
+          '&:hover': { backgroundColor: 'rgba(255,80,80,0.14)' },
+          '& .MuiListItemText-primary': { fontSize: '13px', fontWeight: 500, color: 'rgba(255,160,160,0.9)' },
+          '& .MuiListItemIcon-root': { minWidth: 34 },
         }}>
-          <ListItemIcon><LogoutIcon style={{ color: 'rgba(255,180,180,0.85)', fontSize: '20px' }} /></ListItemIcon>
+          <ListItemIcon><LogoutIcon style={{ color: 'rgba(255,160,160,0.8)', fontSize: '18px' }} /></ListItemIcon>
           <ListItemText primary="Déconnexion" />
         </ListItemButton>
       </NavLink>

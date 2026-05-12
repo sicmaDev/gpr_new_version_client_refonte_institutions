@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Link, NavLink } from "react-router-dom";
 import {
   addressChanged,
@@ -43,6 +43,12 @@ import {
   codeClientChanged,
 } from "../../redux/actions/Reclamations/MesureReclamationActions";
 import ReactDatatable from "@ashvin27/react-datatable";
+import { ButtonBase } from "@mui/material";
+import DossierKPIBar from "../../components/shared/DossierKPIBar";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import ClaimsTable from "./components/ClaimsTable";
+import ClaimsCardView from "./components/ClaimsCardView";
 import Select from "react-select";
 import EmailIcon from '@mui/icons-material/Email';
 // import partiel_icon from "../../assets/images/mesure/partial.svg"
@@ -53,6 +59,8 @@ import satisfaire_icon from "../../assets/images/mesure/emo3.svg";
 import unsatisfaire_icon from "../../assets/images/mesure/emo1.svg";
 import TextField from "@mui/material/TextField";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
+import TraitementShell from "../../components/treatment/TraitementShell";
+import HistoriqueTimeline from "../../components/treatment/HistoriqueTimeline";
 import {
   formatDate,
   formatDate3,
@@ -141,6 +149,7 @@ import axios from "axios";
 import { HOST } from "../../Utils/globals";
 import { sendEmail } from "../../apis/Configurations/MailApi";
 import WarningIcon from "@mui/icons-material/Warning";
+import { STATUS_CONFIG } from "./components/ClaimStatusBadge";
 
 const styles = {
   control: (base) => ({
@@ -154,10 +163,38 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
+const MES_KPI_CARDS = [
+  {
+    key: "total",
+    label: "Total",
+    icon: AssignmentIcon,
+    iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6",
+    filter: () => true,
+  },
+  {
+    key: "treat",
+    label: "Traitée",
+    icon: AccessTimeIcon,
+    iconBg: "#D1FAE5", iconColor: "#065F46", borderColor: "#10B981",
+    filter: (c) => c.status === "TREAT",
+  },
+];
+
+const MES_STATUS_OPTIONS = [
+  { value: "",       label: "Tous les statuts" },
+  { value: "TREAT",  label: "Traitée" },
+];
+
+const MES_CHIPS = [
+  { value: "ALL",   label: "Tous",    filter: () => true },
+  { value: "TREAT", label: "Traitée", filter: (c) => c.status === "TREAT" },
+];
+
 const MesurerReclamation = (props) => {
   let dimf, crew, emailDisplay;
 
   const [open, setOpen] = React.useState(false);
+  const [openModal, setOpenModal] = useState(null);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -184,6 +221,8 @@ const MesurerReclamation = (props) => {
   const [claim_id, setClaimId] = useState(null);
   const [showMailModal, setShowMailModal] = useState(false);
   const [loadingMail, setLoadingMail] = useState(false);
+  const [mediaAccordion, setMediaAccordion] = useState({ files: true, audios: true, contents: true });
+  const mesureFormRef = useRef(null);
   const clearFiles = () => {
     if (inputRef.current) {
       inputRef.current.value = null;
@@ -196,12 +235,7 @@ const MesurerReclamation = (props) => {
     setOpen(false);
     clearComponentState();
 
-    // Rediriger selon la provenance
-    if (props?.match?.params?.code === "all") {
-      history.push("/reclamations/mesure/all");
-    } else {
-      history.push("/alertes/reclamations");
-    }
+    history.push("/reclamations/mesure/all");
   };
 
   let user =
@@ -216,6 +250,8 @@ const MesurerReclamation = (props) => {
 
   const [open2, setOpen2] = useState(false);
   const [showAudioBox, setAudioBox] = useState(false);
+  const [viewMode, setViewMode] = useState("list");
+  const [activeFilter, setActiveFilter] = useState("ALL");
 
   const getStatusLabel = (status) => {
     var statusElt = status;
@@ -688,7 +724,8 @@ const MesurerReclamation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    handleClickOpen();
+    props.appraisalChanged("");
+    history.push("/reclamations/mesure/" + data.code, { from: 'mesure' });
     props.idChanged(data.id ? data.id : "");
     props.lastnameChanged(
       data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -727,6 +764,7 @@ const MesurerReclamation = (props) => {
     );
     // props.commentChanged(data.comment ? data.comment : "");
     props.statusChanged(data.status ? data.status : "");
+    props.handledByChanged(data.treatmentAffectedTo?.firstAndLastName ?? "");
     props.selectedItemChanged(data);
     setCurrentData(data);
     props.extrasChanged(data.extras ?? []);
@@ -814,14 +852,14 @@ const MesurerReclamation = (props) => {
     if (handleValidationForAppraise()) {
       let claim = {};
       claim["claimId"] = props.id;
-      claim["solutionId"] = props.solutionId;
+      claim["solutionId"] = props.solutionId || null;
       claim["satisfactionStatus"] = props.appraisal;
-      claim["commentaire"] = props.commenta;
+      claim["commentaire"] = props.commenta || "";
       claim["measurerId"] = user.id;
-      // console.log("claimmesure", claim);
+      console.log("[handleAppraise] payload envoyé:", claim);
       props.etatChanged(true);
       mesurerClaimSolutionApi(claim, props).then(() => {
-        handleCancel(e);
+        clearComponentState();
         handleClose();
       });
     } else {
@@ -1345,6 +1383,11 @@ const MesurerReclamation = (props) => {
 
   let content = [];
   content = props.items;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const filteredContent = useMemo(() => {
+    const chip = MES_CHIPS.find((c) => c.value === activeFilter);
+    return chip ? content.filter(chip.filter) : content;
+  }, [content, activeFilter]);
 
   //darrell : add custome attribut for search
   content.forEach((element) => {
@@ -1366,7 +1409,7 @@ const MesurerReclamation = (props) => {
     element.statusStr = statusElt;
 
     let graviteElt;
-    switch (element.objet.risqueLevel) {
+    switch (element.objet?.risqueLevel) {
       case "MINEUR":
         graviteElt = "Mineur";
         break;
@@ -1394,7 +1437,7 @@ const MesurerReclamation = (props) => {
     element.createdAtFormated = createdAt;
   });
   // console.log("props created at", props.created_at);
-  let creationDate = props.created_at ? formatDate(props.created_at) : "";
+  let creationDate = props.created_at ? formatDate(props.created_at) : null;
 
   const enfant = document.querySelector("#dialog-enfant");
   const confirmation = document.querySelector("#dialog-confirmation");
@@ -1541,6 +1584,577 @@ const MesurerReclamation = (props) => {
         setExtraFileLoading(false);
       });
   };
+
+  if (props.match.params.code !== "all") {
+    return (
+      <>
+        <TraitementShell
+          onBack={() => history.push("/reclamations/mesure/all")}
+          codeClient={props.codeClient || props.code}
+          status={props.status}
+          statusLabel="En attente de satisfaction"
+          risqueLevel={props.selectedItem?.objet?.risqueLevel}
+          lastname={props.lastname}
+          phone={props.phone}
+          email={props.email}
+          address={props.address}
+          language={props.language}
+          gender={props.gender}
+          dossierimf={props.dossierimf}
+          recorded_at={props.recorded_at}
+          collect={props.collect}
+          subject={props.subject}
+          underSubject={props.underSubject}
+          product={props.product}
+          unit={props.unit}
+          created_by={props.created_by}
+          creationDate={creationDate}
+          content={props.content}
+          extras={props.extras}
+          onAddContent={() => { setShowExtraContent(true); setExtraContent(""); }}
+          visibleActions={(hbt.includes("H5") || addR === "PILOTE") ? ["mesurer"] : []}
+          onActionOverride={(key) => {
+            if (key === "mesurer" && mesureFormRef.current) {
+              mesureFormRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+              mesureFormRef.current.style.transition = "box-shadow 0.4s, border-color 0.4s";
+              mesureFormRef.current.style.boxShadow = "0 0 0 4px rgba(14, 165, 233, 0.4), 0 8px 32px rgba(14,165,233,0.2)";
+              mesureFormRef.current.style.borderColor = "#0ea5e9";
+              setTimeout(() => {
+                if (mesureFormRef.current) {
+                  mesureFormRef.current.style.boxShadow = "";
+                  mesureFormRef.current.style.borderColor = "#e5e7eb";
+                }
+              }, 10000);
+            }
+          }}
+          selectedItemFiles={props.selectedItemFiles}
+          selectedItemAudio={props.selectedItemAudio}
+          attachmentList={attachmentList}
+          audioList={audioList}
+          inputRef={inputRef}
+          onFilesChange={(e) => setFiles([...e.target.files])}
+          onAddAudio={() => { setAudioBox(true); setOpen2(true); }}
+          transmitted={props.transmitted}
+          transmittedBy={props.transmittedBy}
+          transmittedTo={props.selectedItem?.transmittedTo?.firstAndLastName}
+          handled_by={props.handled_by}
+          assigned_by={props.selectedItem?.treatmentAffectedBy?.firstAndLastName}
+          assignedAt={props.selectedItem?.affectedAt}
+          solution={props.solution}
+          customTabs={[
+            /* ── Tab 1 : Solution transmise ── */
+            {
+              key: "solution",
+              label: "Mesure de satisfaction",
+              content: (() => {
+                const sol = Array.isArray(props.solution) && props.solution.length > 0 ? props.solution[0] : null;
+                const statusCfg = STATUS_CONFIG[props.status] || { label: props.status || "—", bg: "#f1f5f9", color: "#64748b", border: "#e2e8f0" };
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    {/* ── Solution / Réponse ── */}
+                    <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
+                      <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 15, fontWeight: 700, color: "#1e293b" }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                          Solution / Réponse de traitement
+                        </div>
+                      </div>
+                      {sol ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          <div style={{ padding: "14px 18px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fafafa" }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Solution</div>
+                            <div style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                              {sol.content || sol.solution || "—"}
+                            </div>
+                          </div>
+                          {sol.commentaire && (
+                            <div style={{ padding: "14px 18px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fafafa" }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Commentaire</div>
+                              <div style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                                {sol.commentaire}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ textAlign: "center", color: "#94a3b8", fontSize: 13, padding: "28px 0" }}>Aucune solution transmise</div>
+                      )}
+
+                    </div>
+
+                    {/* ── Contacter le client ── */}
+                    {(props.email || props.phone) && (
+                      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "18px 24px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 14 }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                          Contacter le client
+                        </div>
+                        {/* Infos destinataire */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, padding: "10px 14px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                          <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || <em style={{ fontStyle: "italic", color: "#94a3b8" }}>Anonyme</em>}</div>
+                            {props.email && <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.email}</div>}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                          {props.email && sol?.content && (
+                            <button onClick={handleShowModalMail} style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 16px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", cursor: "pointer", fontSize: 13, color: "#374151", fontWeight: 500 }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                              Envoyer par email
+                            </button>
+                          )}
+                          {props.phone && (
+                            <button onClick={handleShowModalSms} style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 16px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", cursor: "pointer", fontSize: 13, color: "#374151", fontWeight: 500 }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.4 19.79 19.79 0 0 1 1.61 4.83 2 2 0 0 1 3.6 2.63h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.1a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.62 17.5z"/></svg>
+                              {props.phone}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Formulaire mesure de satisfaction ── */}
+                    {(hbt.includes("H5") || addR === "PILOTE") && (() => {
+                      const OPTIONS = [
+                        { val: "SATISFIED",   icon: satisfaire_icon,   label: "Satisfait",   accent: "#22c55e", color: "#166534", bg: "#f0fdf4", circleBg: "#dcfce7", dots: 5 },
+                        { val: "PARTIAL",     icon: partiel_icon,      label: "Partiel",     accent: "#f59e0b", color: "#92400e", bg: "#fffbeb", circleBg: "#fef3c7", dots: 3 },
+                        { val: "UNSATISFIED", icon: unsatisfaire_icon, label: "Insatisfait", accent: "#ef4444", color: "#991b1b", bg: "#fef2f2", circleBg: "#fee2e2", dots: 1 },
+                      ];
+                      const selected = OPTIONS.find(o => o.val === props.appraisal);
+                      return (
+                        <div ref={mesureFormRef} style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 16 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0369a1" strokeWidth="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                            Mesure de satisfaction
+                          </div>
+                          {/* Carte preview */}
+                          <div style={{ borderRadius: 12, border: `2px solid ${selected ? selected.accent : "#e2e8f0"}`, background: selected ? selected.bg : "#f8fafc", padding: "16px", textAlign: "center", marginBottom: 14, transition: "all 0.2s" }}>
+                            {selected ? (
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+                                <div style={{ width: 52, height: 52, borderRadius: "50%", background: selected.circleBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <img src={selected.icon} alt={selected.label} style={{ width: 36 }} />
+                                </div>
+                                <div style={{ fontSize: 18, fontWeight: 800, color: selected.color }}>{selected.label}</div>
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: 12.5, color: "#94a3b8" }}>Sélectionnez le niveau de satisfaction</div>
+                            )}
+                          </div>
+                          {/* Sélection */}
+                          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                            {OPTIONS.map(({ val, icon, label, accent, color, bg, dots }) => {
+                              const isActive = props.appraisal === val;
+                              return (
+                                <div key={val} onClick={() => props.appraisalChanged(val)} style={{ flex: 1, position: "relative", cursor: "pointer", borderRadius: 12, border: isActive ? `2px solid ${accent}` : "2px solid #e2e8f0", background: isActive ? bg : "#fff", padding: "12px 8px", textAlign: "center", transition: "all 0.15s" }}>
+                                  {isActive && (
+                                    <div style={{ position: "absolute", top: -7, right: -7, width: 18, height: 18, borderRadius: "50%", background: accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                    </div>
+                                  )}
+                                  <img src={icon} alt={label} style={{ width: 34, marginBottom: 4 }} />
+                                  <div style={{ fontSize: 11.5, fontWeight: 700, color: isActive ? color : "#374151" }}>{label}</div>
+                                  <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 4 }}>
+                                    {[1,2,3,4,5].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= dots ? accent : "#e2e8f0" }} />)}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {/* Commentaire */}
+                          <div style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 12 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ marginTop: 2, flexShrink: 0 }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <textarea value={props.commenta || ""} onChange={(e) => props.commentaChanged(e.target.value)} placeholder="Commentaire (optionnel)..." rows={2} style={{ flex: 1, border: "none", outline: "none", resize: "none", fontSize: 13, color: "#374151", background: "transparent", fontFamily: "inherit", lineHeight: 1.5 }} />
+                          </div>
+                          {props.errors?.appraisal && <div style={{ color: "#ef4444", fontSize: 12, marginBottom: 8 }}>{props.errors.appraisal}</div>}
+                          {props.errors?.commenta && <div style={{ color: "#ef4444", fontSize: 12, marginBottom: 8 }}>{props.errors.commenta}</div>}
+                          <button onClick={handleAppraise} disabled={props.etat} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: selected ? selected.accent : "#e2e8f0", color: "#fff", fontSize: 14, fontWeight: 700, cursor: props.etat ? "not-allowed" : "pointer", opacity: props.etat ? 0.7 : 1, transition: "all 0.15s" }}>
+                            {props.etat ? "En cours..." : selected ? `Valider — ${selected.label}` : "Valider la mesure"}
+                          </button>
+                        </div>
+                      );
+                    })()}
+
+                  </div>
+                );
+              })(),
+            },
+
+            /* ── Tab 2 : Médias & Contenu ── */
+            {
+              key: "medias",
+              label: "Médias & Contenu",
+              content: (() => {
+                const filesCount = props.selectedItemFiles?.length ?? 0;
+                const audiosCount = props.selectedItemAudio?.length ?? 0;
+                const extrasCount = props.extras?.filter(e => e.contenu)?.length ?? 0;
+                const contentsCount = (props.content ? 1 : 0) + extrasCount;
+
+                const AccordionSection = ({ sectionKey, color, dotColor, icon, title, count, children }) => {
+                  const isOpen = mediaAccordion[sectionKey];
+                  return (
+                    <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                      <button
+                        onClick={() => setMediaAccordion(prev => ({ ...prev, [sectionKey]: !prev[sectionKey] }))}
+                        style={{
+                          width: "100%", display: "flex", alignItems: "center", gap: 10,
+                          padding: "13px 18px", background: "transparent", border: "none",
+                          cursor: "pointer", textAlign: "left",
+                        }}
+                      >
+                        <div style={{
+                          width: 30, height: 30, borderRadius: 8, background: color,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 15, flexShrink: 0,
+                        }}>{icon}</div>
+                        <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: "#1e293b" }}>{title}</span>
+                        <span style={{
+                          fontSize: 11.5, fontWeight: 700, color: "#fff",
+                          background: dotColor, borderRadius: 20,
+                          padding: "2px 9px", marginRight: 8,
+                        }}>{count}</span>
+                        <span style={{ fontSize: 10, color: "#94a3b8" }}>{isOpen ? "▲" : "▼"}</span>
+                      </button>
+                      {isOpen && (
+                        <div style={{ borderTop: "1px solid #f1f5f9", padding: "14px 18px" }}>
+                          {children}
+                        </div>
+                      )}
+                    </div>
+                  );
+                };
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {/* Barre d'actions compacte */}
+                    <div style={{
+                      background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb",
+                      padding: "14px 18px", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+                    }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: "#94a3b8", marginRight: 4 }}>Ajouter :</span>
+                      <button
+                        onClick={() => { setAudioBox(true); setOpen2(true); }}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 6,
+                          padding: "6px 14px", borderRadius: 20, border: "1.5px solid #bfdbfe",
+                          background: "#eff6ff", color: "#1d4ed8", fontSize: 12.5, fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                        + Audio
+                      </button>
+                      <label htmlFor="fileInputMesure2" style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        padding: "6px 14px", borderRadius: 20, border: "1.5px solid #bbf7d0",
+                        background: "#f0fdf4", color: "#15803d", fontSize: 12.5, fontWeight: 600,
+                        cursor: "pointer",
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                        </svg>
+                        + Fichier
+                        <input id="fileInputMesure2" type="file" multiple hidden ref={inputRef} onChange={(e) => setFiles([...e.target.files])} />
+                      </label>
+                      <button
+                        onClick={() => { setShowExtraContent(true); setExtraContent(""); }}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 6,
+                          padding: "6px 14px", borderRadius: 20, border: "1.5px solid #ddd6fe",
+                          background: "#faf5ff", color: "#7c3aed", fontSize: 12.5, fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        + Contenu
+                      </button>
+                    </div>
+
+                    {/* Contenus */}
+                    <AccordionSection sectionKey="contents" color="#ede9fe" dotColor="#8b5cf6"
+                      icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>}
+                      title="Contenus" count={contentsCount}>
+                      {contentsCount > 0 ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {props.content && (
+                            <div style={{ background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0", padding: "12px 16px" }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Contenu initial</div>
+                              <div style={{ fontSize: 13.5, color: "#1e293b", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{props.content}</div>
+                            </div>
+                          )}
+                          {props.extras?.filter(e => e.contenu).map((extra, idx) => (
+                            <div key={extra.id ?? idx} style={{ background: "#faf5ff", borderRadius: 10, border: "1px solid #ede9fe", padding: "12px 16px" }}>
+                              <div style={{ fontSize: 13.5, color: "#1e293b", whiteSpace: "pre-wrap", lineHeight: 1.6, marginBottom: 6 }}>{extra.contenu}</div>
+                              <div style={{ fontSize: 11.5, color: "#94a3b8" }}>
+                                {extra.user?.firstAndLastName && <span>User {extra.user.firstAndLastName}</span>}
+                                {extra.createdAt && <span> le {formatDate(extra.createdAt)}</span>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "8px 0" }}>Aucun contenu</div>
+                      )}
+                    </AccordionSection>
+
+                    {/* Fichiers joints */}
+                    <AccordionSection sectionKey="files" color="#dbeafe" dotColor="#3b82f6"
+                      icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
+                      title="Fichiers joints" count={filesCount}>
+                      {filesCount > 0 ? attachmentList : (
+                        <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "8px 0" }}>Aucun fichier joint</div>
+                      )}
+                    </AccordionSection>
+
+                    {/* Audios */}
+                    <AccordionSection sectionKey="audios" color="#dcfce7" dotColor="#22c55e"
+                      icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>}
+                      title="Audios" count={audiosCount}>
+                      {audiosCount > 0 ? audioList : (
+                        <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "8px 0" }}>Aucun audio enregistré</div>
+                      )}
+                    </AccordionSection>
+                  </div>
+                );
+              })(),
+            },
+
+            /* ── Tab 3 : Historique ── */
+            {
+              key: "historique",
+              label: "Historique",
+              content: (
+                <HistoriqueTimeline
+                  recorded_at={props.recorded_at}
+                  created_by={props.created_by}
+                  transmitted={props.selectedItem?.transmitted != null ? "" + props.selectedItem.transmitted : ""}
+                  transmittedBy={props.selectedItem?.transmittedBy?.firstAndLastName}
+                  transmittedTo={props.selectedItem?.transmittedTo?.firstAndLastName}
+                  handled_by={props.handled_by}
+                  assigned_by={props.selectedItem?.treatmentAffectedBy?.firstAndLastName}
+                  assignedAt={props.selectedItem?.affectedAt}
+                  solution={Array.isArray(props.solution) ? props.solution : []}
+                  formatDate={formatDate}
+                  formatDate3={formatDate3}
+                />
+              ),
+            },
+          ]}
+        />
+        {/* Modal mesure de satisfaction */}
+        {openModal === "mesurer" && (
+          <Dialog open fullWidth maxWidth="sm" onClose={() => setOpenModal(null)}>
+            <DialogTitle>Mesure de satisfaction</DialogTitle>
+            <DialogContent>
+              <div style={{ display: "flex", justifyContent: "center", gap: 24, my: 2, padding: "16px 0" }}>
+                <div onClick={() => props.appraisalChanged("SATISFIED")} style={{ cursor: "pointer", textAlign: "center", padding: 12, borderRadius: 12, border: props.appraisal === "SATISFIED" ? "2px solid #22c55e" : "2px solid #e2e8f0", background: props.appraisal === "SATISFIED" ? "#f0fdf4" : "#fff" }}>
+                  <img src={satisfaire_icon} alt="satisfait" style={{ width: 56 }} />
+                  <div style={{ fontSize: 12, fontWeight: 600, marginTop: 6, color: "#166534" }}>Satisfait</div>
+                </div>
+                <div onClick={() => props.appraisalChanged("PARTIAL")} style={{ cursor: "pointer", textAlign: "center", padding: 12, borderRadius: 12, border: props.appraisal === "PARTIAL" ? "2px solid #f59e0b" : "2px solid #e2e8f0", background: props.appraisal === "PARTIAL" ? "#fffbeb" : "#fff" }}>
+                  <img src={partiel_icon} alt="partiel" style={{ width: 56 }} />
+                  <div style={{ fontSize: 12, fontWeight: 600, marginTop: 6, color: "#92400e" }}>Partiel</div>
+                </div>
+                <div onClick={() => props.appraisalChanged("UNSATISFIED")} style={{ cursor: "pointer", textAlign: "center", padding: 12, borderRadius: 12, border: props.appraisal === "UNSATISFIED" ? "2px solid #ef4444" : "2px solid #e2e8f0", background: props.appraisal === "UNSATISFIED" ? "#fef2f2" : "#fff" }}>
+                  <img src={unsatisfaire_icon} alt="insatisfait" style={{ width: 56 }} />
+                  <div style={{ fontSize: 12, fontWeight: 600, marginTop: 6, color: "#991b1b" }}>Non satisfait</div>
+                </div>
+              </div>
+              {props.errors?.appraisal && <div style={{ color: "#ef4444", fontSize: 12, textAlign: "center", marginBottom: 8 }}>{props.errors.appraisal}</div>}
+              {(props.appraisal === "PARTIAL" || props.appraisal === "UNSATISFIED") && (
+                <TextField
+                  fullWidth size="small" multiline rows={3}
+                  label="Commentaire"
+                  value={props.commenta || ""}
+                  onChange={(e) => props.commentaChanged(e.target.value)}
+                  sx={{ mt: 1 }}
+                />
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setOpenModal(null)}>Annuler</Button>
+              <Button variant="contained" onClick={handleAppraise} disabled={props.etat}>
+                {props.etat ? "En cours..." : "Valider"}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
+
+        {/* ── Modal SMS ── */}
+        <Dialog open={showUploadModal} onClose={() => setShowUploadModal(false)}>
+          <DialogTitle>Envoyer la solution au Client</DialogTitle>
+          <DialogContent>
+            <div style={{ marginBottom: 12 }}>
+              <h6 style={{ fontWeight: 700, marginBottom: 6 }}>Prévisualisation SMS</h6>
+              <p style={{ fontSize: 13, color: "#64748b" }}>Le message sera envoyé en <strong>{smsSegments.length}</strong> SMS.</p>
+              <div style={{ maxHeight: 200, overflowY: "auto", marginTop: 10 }}>
+                {smsSegments.map((seg, i) => (
+                  <div key={i} style={{ border: "1px solid #e2e8f0", padding: 8, marginBottom: 6, borderRadius: 6, fontSize: 13 }}>
+                    <strong>SMS {i + 1} :</strong> {seg}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <DialogContentText sx={{ fontSize: 13 }}>
+              Nom client : {props.lastname || "—"}<br />Téléphone : {props.phone || "—"}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button color="error" variant="contained" onClick={() => setShowUploadModal(false)}>Fermer</Button>
+            <Button variant="contained" onClick={handleSms}>Envoyer par SMS</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* ── Modal Mail ── */}
+        <Dialog open={showMailModal} onClose={() => setShowMailModal(false)}>
+          <DialogTitle>Envoyer la solution au Client par Mail</DialogTitle>
+          <DialogContent>
+            <div style={{ marginBottom: 12 }}>
+              <h6 style={{ fontWeight: 700, marginBottom: 6 }}>Prévisualisation Mail</h6>
+              <div style={{ maxHeight: 200, overflowY: "auto", marginTop: 10 }}>
+                {smsSegments.map((seg, i) => (
+                  <div key={i} style={{ border: "1px solid #e2e8f0", padding: 8, marginBottom: 6, borderRadius: 6, fontSize: 13 }}>
+                    <strong>Partie {i + 1} :</strong> {seg}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <DialogContentText sx={{ fontSize: 13 }}>
+              Nom client : {props.lastname || "—"}<br />Email : {props.email || "—"}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button color="error" variant="contained" onClick={() => setShowMailModal(false)}>Fermer</Button>
+            <Button variant="contained" onClick={handleMail} disabled={loadingMail}>Envoyer par Mail</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* ── Modal Contenu ── */}
+        {showExtraContent && (
+          <Dialog open={showExtraContent} fullWidth maxWidth="sm" onClose={() => setShowExtraContent(false)} id="dialog-contenu"
+            PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
+            <DialogContent>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingTop: 8 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#faf5ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Ajouter un contenu</div>
+                  <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>Ce contenu sera attaché au dossier</div>
+                </div>
+              </div>
+              <TextField
+                fullWidth multiline minRows={5}
+                value={extraContent}
+                onChange={(e) => { e.stopPropagation(); e.preventDefault(); setExtraContent(e.target.value); }}
+                placeholder="Saisissez le contenu..."
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 } }}
+              />
+            </DialogContent>
+            <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
+              <LoadingButton fullWidth onClick={() => { setExtraContent(""); setShowExtraContent(false); }} variant="outlined"
+                sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+                Annuler
+              </LoadingButton>
+              <LoadingButton fullWidth onClick={handleContentSubmit} loading={extraFileLoading}
+                disabled={!extraContent?.trim()} loadingPosition="end" endIcon={<SaveIcon />} variant="contained"
+                sx={{ textTransform: "none", borderRadius: 2, background: "#7c3aed", "&:hover": { background: "#6d28d9" } }}>
+                <span>Enregistrer</span>
+              </LoadingButton>
+            </DialogActions>
+          </Dialog>
+        )}
+
+        {/* ── Modal Fichier ── */}
+        {filesForm.length > 0 && (
+          <Dialog open fullWidth maxWidth="sm" onClose={() => setFiles([])} id="dialog-addFile"
+            PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
+            <DialogContent>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingTop: 8 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Ajouter des fichiers</div>
+                  <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>{filesForm.length} fichier{filesForm.length > 1 ? "s" : ""} sélectionné{filesForm.length > 1 ? "s" : ""}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {filesForm.map((file, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
+                      <div style={{ fontSize: 11.5, color: "#94a3b8" }}>{Math.round((file.size / 1024) * 100) / 100} Ko</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </DialogContent>
+            <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
+              <LoadingButton fullWidth onClick={() => setFiles([])} variant="outlined"
+                sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+                Annuler
+              </LoadingButton>
+              <LoadingButton fullWidth onClick={handleFileSubmit} loading={extraFileLoading}
+                loadingPosition="end" endIcon={<SaveIcon />} variant="contained"
+                sx={{ textTransform: "none", borderRadius: 2, background: "#15803d", "&:hover": { background: "#166534" } }}>
+                <span>Enregistrer</span>
+              </LoadingButton>
+            </DialogActions>
+          </Dialog>
+        )}
+
+        {/* ── Modal Audio ── */}
+        {showAudioBox && (
+          <Dialog open={open2} onClose={() => setOpen2(false)} id="dialog-audio" fullWidth maxWidth="sm"
+            PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
+            <DialogContent>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingTop: 8 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Enregistrement audio</div>
+                  <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>Cliquez sur le micro et parlez</div>
+                </div>
+              </div>
+              <section className="voice-recorder">
+                <div className="recorder-container">
+                  {audioListUrlForm.map((url, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
+                      <audio src={url} controls style={{ flex: 1, height: 36 }} />
+                      <CloseIcon style={{ cursor: "pointer", color: "#94a3b8", fontSize: 18 }} onClick={() => { setAudioListForm(audioListForm.filter((_, idx) => idx !== i)); setAudioListUrlForm(audioListUrlForm.filter((_, idx) => idx !== i)); }} />
+                    </div>
+                  ))}
+                  <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={() => {}} />
+                </div>
+              </section>
+            </DialogContent>
+            {audioListUrlForm.length > 0 && (
+              <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
+                <LoadingButton fullWidth onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} variant="outlined"
+                  sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+                  Annuler
+                </LoadingButton>
+                <LoadingButton fullWidth onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading}
+                  loadingPosition="end" endIcon={<SaveIcon />} variant="contained"
+                  sx={{ textTransform: "none", borderRadius: 2, background: "#1d4ed8", "&:hover": { background: "#1e40af" } }}>
+                  <span>Enregistrer</span>
+                </LoadingButton>
+              </DialogActions>
+            )}
+          </Dialog>
+        )}
+      </>
+    );
+  }
 
   return (
     <div id="main">
@@ -1825,21 +2439,57 @@ const MesurerReclamation = (props) => {
               <div className="row">
                 <div className="col l12 s12 pb-5">
                   <div className="card-panel pb-5">
-                    <div className="row">
-                      <div className="col s12">
-                        <h5 className="card-title">
-                          Réclamations en attente de mesure de satisfaction
-                        </h5>
-                      </div>
-                      <div className="col s12">
-                        <ReactDatatable
-                          className={"responsive-table"}
-                          config={config}
-                          records={content}
-                          columns={columns}
-                          onRowClicked={rowClickedHandler}
+                    <DossierKPIBar items={content} kpiCards={MES_KPI_CARDS} />
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2, pb: 2, borderBottom: "1px solid #F1F5F9" }}>
+                      {MES_CHIPS.map((chip) => {
+                        const count = content.filter(chip.filter).length;
+                        const isActive = activeFilter === chip.value;
+                        if (chip.value !== "ALL" && count === 0) return null;
+                        return (
+                          <ButtonBase key={chip.value} onClick={() => setActiveFilter(chip.value)} sx={{ borderRadius: "20px", px: 1.5, py: 0.5, border: isActive ? "1.5px solid #93C5FD" : "1.5px solid #E2E8F0", backgroundColor: isActive ? "#EFF6FF" : "#FAFAFA", color: isActive ? "#1D4ED8" : "#64748B", fontWeight: isActive ? 700 : 500, fontSize: "0.78rem", transition: "all 0.18s", display: "flex", alignItems: "center", gap: 0.8, "&:hover": { backgroundColor: "#EFF6FF", color: "#1D4ED8", borderColor: "#93C5FD" } }}>
+                            <span style={{ fontSize: "inherit", fontWeight: "inherit", lineHeight: 1.4 }}>{chip.label}</span>
+                            <Box sx={{ minWidth: 20, height: 20, borderRadius: "10px", backgroundColor: isActive ? "#1D4ED8" : "#E2E8F0", color: isActive ? "#fff" : "#64748B", fontSize: "0.65rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", px: 0.6 }}>{count}</Box>
+                          </ButtonBase>
+                        );
+                      })}
+                    </Box>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                      <h5 className="card-title" style={{ fontWeight: 700, color: "#0F172A", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: 8, margin: 0 }}>
+                        Réclamations en attente de mesure de satisfaction
+                        <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748B", background: "#F1F5F9", borderRadius: 8, padding: "2px 10px" }}>
+                          {filteredContent.length} résultat{filteredContent.length !== 1 ? "s" : ""}
+                        </span>
+                      </h5>
+                      <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                        <Tooltip title="Vue liste">
+                          <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                          </Box>
+                        </Tooltip>
+                        <Tooltip title="Vue cartes">
+                          <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                          </Box>
+                        </Tooltip>
+                      </Box>
+                    </div>
+                    <div>
+                      {viewMode === "list" ? (
+                        <ClaimsTable
+                          items={filteredContent}
+                          mode={1}
+                          objets={[]}
+                          onRowClick={(data) => rowClickedHandler(null, data, 0)}
+                          statusOptions={MES_STATUS_OPTIONS}
                         />
-                      </div>
+                      ) : (
+                        <ClaimsCardView
+                          items={filteredContent}
+                          mode={1}
+                          objets={[]}
+                          onCardClick={(data) => rowClickedHandler(null, data, 0)}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>

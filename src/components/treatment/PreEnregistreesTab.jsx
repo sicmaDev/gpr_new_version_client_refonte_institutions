@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const PreEnregistreesTab = ({ solutions = [], onUseAndTreat, onModifyBeforeSend }) => {
+const PreEnregistreesTab = ({ solutions = [], onUseAndTreat, onModifyBeforeSend, disabled = false }) => {
   const [selected, setSelected] = useState(null);
 
   const toggle = (sol) => setSelected(prev => prev?.id === sol.id ? null : sol);
@@ -57,22 +57,43 @@ const PreEnregistreesTab = ({ solutions = [], onUseAndTreat, onModifyBeforeSend 
 
       {/* Boutons d'action */}
       {selected && (
-        <div className="flex gap-2 pt-1">
-          <button
-            onClick={() => onModifyBeforeSend(selected.content)}
-            className="flex-1 py-2.5 rounded-lg text-[12.5px] font-medium cursor-pointer transition-colors"
-            style={{ background: '#f0faf5', color: '#0d6e3f', border: '1px solid #c6ead8' }}
-          >
-            Modifier avant envoi
-          </button>
-          <button
-            onClick={() => onUseAndTreat(selected.content)}
-            className="flex-1 py-2.5 rounded-lg text-[12.5px] font-semibold cursor-pointer transition-colors text-white border-0"
-            style={{ background: '#2db673' }}
-          >
-            Utiliser et traiter
-          </button>
-        </div>
+        <>
+          {disabled && (
+            <div className="rounded-lg px-3 py-2 text-[12px] font-medium text-center"
+              style={{ background: '#fef9c3', border: '1px solid #fde047', color: '#92400e' }}>
+              Vous n'avez pas les droits pour traiter ce dossier
+            </div>
+          )}
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => !disabled && onModifyBeforeSend(selected.content)}
+              disabled={disabled}
+              className="flex-1 py-2.5 rounded-lg text-[12.5px] font-medium transition-colors"
+              style={{
+                background: disabled ? '#f1f5f9' : '#f0faf5',
+                color: disabled ? '#94a3b8' : '#0d6e3f',
+                border: `1px solid ${disabled ? '#e2e8f0' : '#c6ead8'}`,
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.7 : 1,
+              }}
+            >
+              Modifier avant envoi
+            </button>
+            <button
+              onClick={() => !disabled && onUseAndTreat(selected.content, selected.id)}
+              disabled={disabled}
+              className="flex-1 py-2.5 rounded-lg text-[12.5px] font-semibold transition-colors border-0"
+              style={{
+                background: disabled ? '#cbd5e1' : '#2db673',
+                color: '#fff',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.7 : 1,
+              }}
+            >
+              Utiliser et traiter
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

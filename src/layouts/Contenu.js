@@ -128,22 +128,22 @@ export default function Contenu() {
                     <Route path="/reclamations/enregistrement" component={EnregistrerReclamation} />
                     <Route path="/reclamations/traitement/:code" component={TraiterReclamation} />
                     <Route path="/reclamations/mesure/:code" component={MesurerReclamation} />
-                    <Route path="/reclamations/assurance" component={AssuranceReclamation} />
-                    <Route path="/reclamations/liste" component={ListeReclamations} />
-                    <Route path="/reclamations/classees" component={ListeReclamationsClassees} />
+                    <Route path="/reclamations/assurance/:code" component={AssuranceReclamation} />
+                    <Route path="/reclamations/liste/:code" component={ListeReclamations} />
+                    <Route path="/reclamations/classees/:code" component={ListeReclamationsClassees} />
 
                     {/* denonciations */}
                     <Route path="/denonciations/enregistrement" component={EnregistrerDenonciation} />
                     <Route path="/denonciations/traitement/:code" component={TraiterDenonciation} />
                     {/* <Route path="/denonciations/mesure" component={MesurerDenonciation} />
                     <Route path="/denonciations/assurance" component={AssuranceDenonciation} /> */}
-                    <Route path="/denonciations/liste" component={ListeDenonciations} />
+                    <Route path="/denonciations/liste/:code" component={ListeDenonciations} />
                     {/* <Route path="/denonciations/classees" component={ListeDenonciationsClassees} /> */}
 
                     {/* suggestions */}
                     <Route path="/suggestions/enregistrement" component={EnregistrerSuggestion} />
-                    <Route path="/suggestions/traitement" component={TraiterSuggestion} />
-                    <Route path="/suggestions/liste" component={ListeSuggestions} />
+                    <Route path="/suggestions/traitement/:code" component={TraiterSuggestion} />
+                    <Route path="/suggestions/liste/:code" component={ListeSuggestions} />
 
 
                     {/* whatsapp */}

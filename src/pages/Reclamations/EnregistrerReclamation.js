@@ -5,12 +5,14 @@ import DatePicker, { registerLocale, setDefaultLocale } from "react-datepicker";
 import fr from "date-fns/locale/fr";
 import "react-datepicker/dist/react-datepicker.css";
 import HelpIcon from "@mui/icons-material/Help";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import { useHistory } from "react-router-dom";
 import { connect } from "react-redux";
 import Fab from "@mui/material/Fab";
 import MicIcon from "@mui/icons-material/Mic";
@@ -80,6 +82,7 @@ import {
   listeByStatutOffline,
   downloadAudioApi,
   deleteClaimApi,
+  deleteOnlyClaimApi,
   checkPhoneApi,
 } from "../../apis/Reclamations/ReclamationsApi";
 import http from "../../apis/http-common";
@@ -135,8 +138,16 @@ import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import WarningIcon from '@mui/icons-material/Warning';
 import PersonIcon from "@mui/icons-material/Person";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import SmsOutlinedIcon from "@mui/icons-material/SmsOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { sendEmail } from "../../apis/Configurations/MailApi";
 import "moment/locale/fr";
+import WizardLayout from "../../components/shared/WizardLayout";
 moment.locale("fr");
 registerLocale("fr", fr);
 
@@ -152,6 +163,10 @@ const EnregistrerReclamation = (props) => {
   const [open, setOpen] = React.useState(false);
   const [open2, setOpen2] = React.useState(false);
   const [value, setValue] = React.useState("");
+  const [currentStep, setCurrentStep] = useState(0);
+  const [activeTab, setActiveTab] = useState("new");
+  const [isDragging, setIsDragging] = useState(false);
+  const history = useHistory();
   const [files, setFiles] = React.useState([]);
   const { recorderState, ...handlers } = useRecorder();
   let { audio } = recorderState;
@@ -359,16 +374,7 @@ const EnregistrerReclamation = (props) => {
                     </div>
                     <div className="app-file-size"></div>
                     <div className="app-file-last-access">
-                      <span
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          // downloadFillesApi(attachment.id, attachment.name);
-                          downloadFilesApi(msg.content);
-                        }}
-                      >
-                        Télécharger
-                      </span>
+                      <span onClick={(e) => { e.preventDefault(); downloadFilesApi(msg.content); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</span>
                     </div>
                   </div>
                 </div>
@@ -398,7 +404,17 @@ const EnregistrerReclamation = (props) => {
   const [currentAudio, setCurrentAudio] = useState("");
   const [underSubjectOptions, setUnderSubjectOptions] = useState([]);
   const [clearAudio, setClearAudio] = useState(0);
+  const [audioRecordings, setAudioRecordings] = useState([]);
+  const prevAudioRef = useRef(null);
   useEffect(() => { }, [showAudioPlayer, currentAudio]);
+
+  // Accumulate each completed recording — audio changes each time the user stops recording
+  useEffect(() => {
+    if (audio != null && audio !== prevAudioRef.current) {
+      prevAudioRef.current = audio;
+      setAudioRecordings(prev => [...prev, audio]);
+    }
+  }, [audio]);
 
   const [loadingDelete, setLoadingDelete] = useState(false);
 
@@ -509,11 +525,10 @@ const EnregistrerReclamation = (props) => {
     e.preventDefault();
 
     setLoadingId(claim.id);
-    deleteClaimApi(claim.id, props).then(() => {
+    deleteOnlyClaimApi(claim.id, props).then(() => {
+      notify("Brouillon supprimé avec succès", "success");
       listeByStatut(props, "TEMP_SAVED").then(() => { });
-
       handleCancel(e);
-      notify("Suppression effectuée avec succès", "success");
       setTimeout(() => setLoadingId(null), 500);
     });
   };
@@ -580,13 +595,19 @@ const EnregistrerReclamation = (props) => {
     props.dossierimfChanged("");
     props.emailChanged("");
     props.subjectChanged("");
+    props.subjectLibelleChanged("");
     props.underSubjectChanged("");
+    props.underSubjectLibelleChanged("");
     props.collectChanged("");
+    props.collectLibelleChanged("");
     props.codeChanged("");
     props.recordedAtChanged("");
     props.recordedAtDPChanged("");
     props.productChanged("");
+    props.productLibelleChanged("");
     props.unitChanged("");
+    props.unitLibelleChanged("");
+    props.languageLibelleChanged("");
     props.contentChanged("");
     props.claimRecordErrors("");
     props.selectedFilesReset([]);
@@ -595,6 +616,8 @@ const EnregistrerReclamation = (props) => {
     props.selectedItemAudioChanged([]);
     setClearAudio(clearAudio + 1);
     handlers.cancelRecording();
+    setAudioRecordings([]);
+    prevAudioRef.current = null;
     setFiles([]);
   };
 
@@ -792,23 +815,27 @@ const EnregistrerReclamation = (props) => {
         formData.append("files", files[index]);
       }
 
-      if (audio != null) {
-        const audioFile = new File([audio], "claim_record_" + uuid() + ".ogg", {
+      audioRecordings.forEach(audioBlob => {
+        const audioFile = new File([audioBlob], "claim_record_" + uuid() + ".ogg", {
           type: "audio/ogg; codecs=opus",
         });
         formData.append("audios", audioFile);
-      }
+      });
 
       props.etat2Changed(true);
       if (mode === 1) {
         addClaimApi(formData, props).then(() => {
           handleCancel(e);
           props.resetWhatsapp();
+          setCurrentStep(0);
+          setActiveTab("new");
         });
       } else {
         addClaimApiOffline(claim, props).then(() => {
           handleCancel(e);
           props.resetWhatsapp();
+          setCurrentStep(0);
+          setActiveTab("new");
         });
       }
     } else {
@@ -851,21 +878,24 @@ const EnregistrerReclamation = (props) => {
     // console.log(formData);
     //HERE
     // console.log(audio);
-    if (audio != null) {
-      const audioFile = new File([audio], "claim_record_" + uuid() + ".ogg", {
+    audioRecordings.forEach(audioBlob => {
+      const audioFile = new File([audioBlob], "claim_record_" + uuid() + ".ogg", {
         type: "audio/ogg; codecs=opus",
       });
       formData.append("audios", audioFile);
-    }
-    // console.log("phoneee",props)
+    });
     props.etatChanged(true);
     if (mode === 1) {
       addTempClaimApi(formData, props).then(() => {
         handleCancel(e);
+        setCurrentStep(0);
+        setActiveTab("new");
       });
     } else {
       addTempClaimApiOffline(claim, props).then(() => {
         handleCancel(e);
+        setCurrentStep(0);
+        setActiveTab("new");
       });
     }
 
@@ -923,7 +953,7 @@ const EnregistrerReclamation = (props) => {
             loadingPosition="end"
             endIcon={<SaveIcon />}
             variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+            sx={{ backgroundColor: "#005081", textTransform: "initial" }}
           >
             <span>Enregistrer</span>
           </LoadingButton>
@@ -983,7 +1013,7 @@ const EnregistrerReclamation = (props) => {
             loadingPosition="end"
             endIcon={<SaveIcon />}
             variant="contained"
-            sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+            sx={{ backgroundColor: "#005081", textTransform: "initial" }}
           >
             <span>Enregistrer</span>
           </LoadingButton>
@@ -1269,8 +1299,7 @@ const EnregistrerReclamation = (props) => {
         );
 
         props.selectedItemChanged(data ? data : "");
-        //fetch attachments for selected claim
-        // getFillesApi(data.id, props);
+        getFillesApi(data.id, props);
       }
     }
   };
@@ -1290,15 +1319,23 @@ const EnregistrerReclamation = (props) => {
   };
 
   const handleFile = (e) => {
-    // KTApp.blockPage({
-    //     overlayColor: '#000000',
-    //     type: 'v2',
-    //     state: 'danger',
-    //     message: 'Téléchargement en cours...'
-    // })
     setFiles(e.target.files);
     let filesArray = Array.prototype.slice.call(e.target.files);
     return Promise.all(filesArray.map(fileToDataURL));
+  };
+
+  // Accumulates files instead of replacing (used by the dropzone)
+  const handleDropzoneFiles = (newFilesInput) => {
+    const newArr = Array.from(newFilesInput);
+    setFiles(prev => {
+      const prevArr = prev ? Array.from(prev) : [];
+      return [...prevArr, ...newArr];
+    });
+    return Promise.all(newArr.map(fileToDataURL));
+  };
+
+  const removeFile = (indexToRemove) => {
+    setFiles(prev => Array.from(prev).filter((_, i) => i !== indexToRemove));
   };
 
   let jfichiers;
@@ -1371,14 +1408,7 @@ const EnregistrerReclamation = (props) => {
                       Ko
                     </div>
                     <div className="app-file-last-access">
-                      <a
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          downloadFillesApi(attachment.id, attachment.name);
-                        }}
-                      >
-                        Télécharger
-                      </a>
+                      <a onClick={(e) => { downloadFillesApi(attachment.id, attachment.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600, textDecoration: "none" }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
                     </div>
                   </div>
                 </div>
@@ -1559,6 +1589,104 @@ const EnregistrerReclamation = (props) => {
     formAudio = "";
   }
 
+  // ── Wizard config ──────────────────────────────────────────────────────────
+  // Steps: Client first, then Informations
+  const STEPS = [
+    { key: "client", label: "Client", sublabel: "Coordonnées du réclamant", icon: <PersonIcon /> },
+    { key: "infos", label: "Informations", sublabel: "Objet, canal, contenu", icon: <AssignmentOutlinedIcon /> },
+    { key: "fichiers", label: "Pièces jointes", sublabel: "Documents et audio", icon: <AttachFileIcon /> },
+    { key: "recap", label: "Récapitulatif", sublabel: "Vérification avant envoi", icon: <TaskAltIcon /> },
+  ];
+
+  const apercu = {
+    "Client": props.lastname,
+    "Tél": props.phone ? cleanPhoneNumber(props.phone) : "",
+    "Motif": props.underSubjectLibelle,
+    "Canal": props.collectLibelle,
+    "Produit": props.productLibelle,
+  };
+
+  // Completion: count filled required fields out of 12
+  const filledCount = [
+    props.lastname, props.address, (props.phone && isValidPhone(props.phone)) ? props.phone : "",
+    props.gender, props.language,
+    isValidDate(props.recorded_at) ? props.recorded_at : "", props.collect,
+    props.subject, props.underSubject, props.product, props.unit,
+    props.content || (audio !== null),
+  ].filter(Boolean).length;
+  const completionPercent = Math.round((filledCount / 12) * 100);
+
+  // Step 0 = Client validation
+  const validateStep0 = () => {
+    let isValid = true;
+    errors = {};
+    if (!props.lastname) {
+      isValid = false; errors["lastname"] = "Champ incorrect";
+    }
+    if (!props.address) {
+      isValid = false; errors["address"] = "Champ incorrect";
+    }
+    if (!props.phone || !isValidPhone(props.phone)) {
+      isValid = false; errors["phone"] = "Champ incorrect";
+    }
+    if (!props.gender) {
+      isValid = false; errors["gender"] = "Champ incorrect";
+    }
+    if (!props.language) {
+      isValid = false; errors["language"] = "Champ incorrect";
+    }
+    props.claimRecordErrors(errors);
+    return isValid;
+  };
+
+  // Step 1 = Informations validation
+  const validateStep1 = () => {
+    let isValid = true;
+    errors = {};
+    if (!props.recorded_at || !isValidDate(props.recorded_at)) {
+      isValid = false; errors["recorded_at"] = "Champ incorrect";
+    }
+    if (!props.collect) {
+      isValid = false; errors["collect"] = "Champ incorrect";
+    }
+    if (!props.subject) {
+      isValid = false; errors["subject"] = "Champ incorrect";
+    }
+    if (!props.underSubject) {
+      isValid = false; errors["underSubject"] = "Champ incorrect";
+    }
+    if (!props.content && audio === null && (!props.selectedItemAudio || props.selectedItemAudio.length === 0)) {
+      isValid = false; errors["content"] = "Champ incorrect";
+    }
+    if (!props.product) {
+      isValid = false; errors["product"] = "Champ incorrect";
+    }
+    if (!props.unit) {
+      isValid = false; errors["unit"] = "Champ incorrect";
+    }
+    props.claimRecordErrors(errors);
+    return isValid;
+  };
+
+  const handleNext = () => {
+    if (currentStep === 0 && !validateStep0()) return;
+    if (currentStep === 1 && !validateStep1()) return;
+    setCurrentStep(s => s + 1);
+  };
+
+  const handleFinalSubmit = () => {
+    if (mode === 1) {
+      setShowSmsBox(true);
+      setOpen(true);
+    } else {
+      handleSubmit({ preventDefault: () => { } });
+    }
+  };
+
+  const handleSaveDraft = () => {
+    handleSave({ preventDefault: () => { } });
+  };
+
   const getStatusChip = (status) => {
     switch (status) {
       case "SAVED":
@@ -1635,247 +1763,92 @@ const EnregistrerReclamation = (props) => {
   };
 
   return (
-    //  'Enregistrer réclamation'
-    <div id="main">
+    <>
       {showSmsBox && (
         <div>
-          <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+          <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm" PaperProps={{
+            style: { borderRadius: 20, overflow: "hidden", margin: "16px" }
+          }}>
 
-            <DialogTitle style={{ borderBottom: "1px solid #e0e0e0", fontSize: "15px", fontWeight: "600", padding: "12px 16px" }}>
-              Confirmation de la réclamation
-            </DialogTitle>
+            <DialogContent style={{ padding: 0 }}>
 
-            <DialogContent style={{ padding: "16px", maxHeight: "65vh", overflowY: "auto" }}>
-
-
-              <div style={{ border: "1px solid #e0e0e0", borderRadius: "6px", marginBottom: "16px" }}>
-
-                <div style={{ backgroundColor: "#f5f5f5", padding: "8px 14px", borderBottom: "1px solid #e0e0e0", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <SupportAgentIcon style={{ fontSize: "18px", color: "#616161" }} />
-                  <span style={{ color: "#424242", fontWeight: "600", fontSize: "14px" }}>
-                    Résumé de la réclamation
-                  </span>
+              {/* Header gradient */}
+              <div style={{
+                background: "linear-gradient(135deg, #005081, #005081)",
+                padding: "32px 28px 24px", textAlign: "center",
+              }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.2)", backdropFilter: "blur(8px)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 12px",
+                }}>
+                  <CheckCircleOutlineIcon style={{ fontSize: 32, color: "white" }} />
                 </div>
-
-                <div style={{ padding: "4px 14px" }}>
-                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Client</span>
-                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.lastname}</span>
-                  </div>
-                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Téléphone</span>
-                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{cleanPhoneNumber(props.phone)}</span>
-                  </div>
-                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Genre</span>
-                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.gender}</span>
-                  </div>
-                  {props.email && props.email !== "" && (
-                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                      <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Email</span>
-                      <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.email}</span>
-                    </div>
-                  )}
-                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Produit</span>
-                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.productLibelle}</span>
-                  </div>
-                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Catégorie</span>
-                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.subjectLibelle}</span>
-                  </div>
-                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Motif</span>
-                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.underSubjectLibelle}</span>
-                  </div>
-                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Point de service</span>
-                    <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.unitLibelle}</span>
-                  </div>
-                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Date de réception</span>
-                    <span style={{ fontWeight: "500", fontSize: "13px" }}>
-                      {props.recorded_at
-                        ? moment(props.recorded_at, "DD-MM-YYYY HH:mm").format("DD MMMM YYYY [à] HH:mm")
-                        : "—"}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                    <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
-                      Contenu
-                    </span>
-                    <span style={{ fontWeight: "500", fontSize: "13px", flex: 1 }}>
-
-                      {/* Cas 1 : contenu texte normal */}
-                      {props.content && props.content !== "#ReclamationAudio" && (
-                        <span>{props.content}</span>
-                      )}
-
-                      {/* Cas 2 : audio nouveau (enregistré maintenant) */}
-                      {audio != null && (
-                        <div style={{ marginTop: "4px" }}>
-                          <span style={{ fontSize: "12px", color: "#757575", display: "block", marginBottom: "4px" }}>
-                            Audio enregistré
-                          </span>
-                          <audio controls style={{ width: "100%", height: "36px" }}>
-                            <source src={URL.createObjectURL(audio)} type="audio/ogg" />
-                          </audio>
-                        </div>
-                      )}
-
-                      {/* Cas 3 : audio existant (déjà sauvegardé) */}
-                      {props.selectedItemAudio && props.selectedItemAudio.length > 0 && (
-                        <div style={{ marginTop: "4px" }}>
-                          <span style={{ fontSize: "12px", color: "#757575", display: "block", marginBottom: "4px" }}>
-                            Audio enregistré
-                          </span>
-                          <audio controls style={{ width: "100%", height: "36px" }}>
-                            <source src={URL.createObjectURL(new Blob([props.selectedItemAudio[0]], { type: "audio/ogg" }))} type="audio/ogg" />
-                          </audio>
-                        </div>
-                      )}
-
-                      {/* Cas 4 : rien du tout */}
-                      {!props.content && audio == null && (!props.selectedItemAudio || props.selectedItemAudio.length === 0) && (
-                        <span style={{ color: "#bdbdbd" }}>—</span>
-                      )}
-
-                    </span>
-                  </div>
-
-                  {files && files.length > 0 && (
-                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                      <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
-                        Fichiers joints
-                      </span>
-                      <div style={{ flex: 1 }}>
-                        {Array.from(files).map((file, index) => (
-                          <div key={index} style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "4px 8px",
-                            marginBottom: "4px",
-                            backgroundColor: "#f9f9f9",
-                            borderRadius: "4px",
-                            border: "1px solid #eeeeee"
-                          }}>
-                            <span style={{ fontSize: "12px", color: "#424242", flex: 1, marginRight: "8px" }}>
-                              {file.name}
-                            </span>
-                            <a
-                              href={URL.createObjectURL(file)}
-                              download={file.name}
-                              style={{
-                                fontSize: "12px",
-                                color: "#1e2188",
-                                textDecoration: "none",
-                                whiteSpace: "nowrap"
-                              }}
-                            >
-                              Télécharger
-                            </a>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Fichiers déjà sauvegardés */}
-                  {props.selectedItemFiles && props.selectedItemFiles.length > 0 && (
-                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                      <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
-                        Fichiers joints
-                      </span>
-                      <div style={{ flex: 1 }}>
-                        {props.selectedItemFiles.map((file, index) => (
-                          <div key={index} style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "4px 8px",
-                            marginBottom: "4px",
-                            backgroundColor: "#f9f9f9",
-                            borderRadius: "4px",
-                            border: "1px solid #eeeeee"
-                          }}>
-                            <span style={{ fontSize: "12px", color: "#424242", flex: 1, marginRight: "8px" }}>
-                              {file.name}
-                            </span>
-                            <a
-                              onClick={(e) => {
-                                e.preventDefault();
-                                downloadFillesApi(file.id, file.name);
-                              }}
-                              style={{
-                                fontSize: "12px",
-                                color: "#1e2188",
-                                textDecoration: "none",
-                                whiteSpace: "nowrap",
-                                cursor: "pointer"
-                              }}
-                            >
-                              Télécharger
-                            </a>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
+                <div style={{ fontSize: 17, fontWeight: 800, color: "white", marginBottom: 4 }}>
+                  Dossier prêt à soumettre
                 </div>
-
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)" }}>
+                  Souhaitez-vous notifier le client par SMS ?
+                </div>
               </div>
 
-
-              <div style={{ border: "1px solid #e0e0e0", borderRadius: "6px", padding: "12px 14px" }}>
-                <span style={{ fontSize: "13px", color: "#424242", fontWeight: "600" }}>
-                  Envoyez un sms de notification au client
-                </span>
-                <div style={{ marginTop: "8px", marginBottom: "8px", fontSize: "13px" }}>
-                  <span style={{ color: "#757575" }}>Envoie à :  <b>{props.lastname}</b></span>
-
-                  <br />
-                  <span style={{ color: "#757575" }}>au : {cleanPhoneNumber(props.phone)} </span>
-
+              {/* SMS section */}
+              <div style={{ padding: "20px 28px 0" }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  background: "#f8fafc", borderRadius: 10, padding: "10px 14px", marginBottom: 12,
+                }}>
+                  <SmsOutlinedIcon style={{ fontSize: 18, color: "#005081", flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>{props.lastname}</div>
+                    <div style={{ fontSize: 11, color: "#64748b" }}>{cleanPhoneNumber(props.phone)}</div>
+                  </div>
                 </div>
-                <label htmlFor="comment3" style={{ fontSize: "12px", color: "#757575" }}>Message :</label>
                 <textarea
-                  id="comment3"
-                  name="comment1"
-                  placeholder=""
                   value={smsToSend}
-                  className="materialize-textarea"
-                  style={{ minHeight: "80px", resize: "none" }}
                   onChange={(e) => setSmsToSend(e.target.value)}
+                  style={{
+                    width: "100%", boxSizing: "border-box",
+                    minHeight: 90, resize: "vertical",
+                    border: "1.5px solid #e2e8f0", borderRadius: 10,
+                    padding: "10px 14px", fontSize: 13, fontWeight: 500,
+                    color: "#374151", fontFamily: "inherit",
+                    background: "white", outline: "none", lineHeight: 1.6,
+                  }}
                 />
               </div>
 
             </DialogContent>
 
-
-            <DialogActions style={{ borderTop: "1px solid #e0e0e0", padding: "10px 16px", gap: "8px" }}>
-              <form onSubmit={handleSubmit} style={{ flex: 1, margin: 0 }}>
+            {/* Modern action buttons */}
+            <div style={{ padding: "16px 28px 28px", display: "flex", flexDirection: "column", gap: 10 }}>
+              <button
+                onClick={(e) => { e.preventDefault(); setShowSmsBox(false); sendSms(e); }}
+                style={{
+                  width: "100%", padding: "14px", borderRadius: 12, border: "none",
+                  background: "linear-gradient(135deg, #005081, #005081)",
+                  color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  boxShadow: "0 4px 14px rgba(0,80,129,0.35)",
+                }}
+              >
+                <SmsOutlinedIcon style={{ fontSize: 18 }} />
+                Enregistrer et notifier
+              </button>
+              <form onSubmit={handleSubmit} style={{ margin: 0 }}>
                 <button
                   type="submit"
-                  className="btn waves-effect waves-light btn-small red-text red lighten-4"
-                  style={{ width: "100%" }}
+                  style={{
+                    width: "100%", padding: "11px", borderRadius: 12,
+                    border: "1.5px solid #e2e8f0", background: "white",
+                    color: "#374151", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  }}
                 >
-                  Enregistrer Uniquement
+                  Enregistrer sans notifier
                 </button>
               </form>
-              <span
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowSmsBox(false);
-                  sendSms(e);
-                }}
-                className="waves-effect waves-effect-b waves-light btn-small"
-                style={{ flex: 1, textAlign: "center", display: "block", cursor: "pointer" }}
-              >
-                Enregistrer et Notifier
-              </span>
-            </DialogActions>
+            </div>
 
           </Dialog>
 
@@ -1922,680 +1895,697 @@ const EnregistrerReclamation = (props) => {
       )}
 
       {props.modalVisible && props.existingClaims.length > 0 && (
-        <div>
-          <Dialog
-            open={props.modalVisible}
-            fullWidth
-            maxWidth="sm"
-            disableEscapeKeyDown
-            onClose={(event, reason) => {
-              if (reason === "backdropClick") return;
-              props.setModalVisible(false);
-            }}
-          >
-            <DialogTitle>
-              <span className="mb-1" style={{ width: "100%", display: "flex", alignItems: "center" }}>
-                <WarningIcon fontSize="medium" sx={{ mr: 1, color: 'orange' }} />
-                Vérification des doublons
-              </span>
-              <DialogContentText sx={{ mb: 2 }}>
-                {props.existingClaims.length === 1 ?
-                  `Ce numéro est déjà associé à une réclamation en cours.` :
-                  `Ce numéro est déjà associé à ${props.existingClaims.length} réclamations en cours.`}
-              </DialogContentText>
-            </DialogTitle>
-
-            <DialogContent sx={{ maxHeight: 400, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#999 transparent' }}>
-              {props.existingClaims.map((claim, index) => (
-                <>
-                  <div className="claim-details" style={{ marginBottom: "40px", paddingBottom: "5px", borderBottom: "1px solid #ccc" }}>
-                    <p className="claim-item">
-                      <strong style={{ marginRight: "5px" }}>Etat :&nbsp;</strong>
-                      {getStatusChip(claim.status)}
-                    </p>
-
-                    <p className="claim-item">
-                      <strong style={{ marginRight: "5px" }}><PinIcon style={{ marginBottom: "-5px" }} /> Code : </strong>
-                      <span>{claim.code}</span>
-                    </p>
-
-                    <p className="claim-item">
-                      <strong style={{ marginRight: "5px" }}><PersonIcon style={{ marginBottom: "-5px" }} /> Client : </strong>
-                      <span>{claim.clientFirstAndLastName}</span>
-                    </p>
-
-                    <p className="claim-item">
-                      <strong style={{ marginRight: "5px" }}><CallIcon style={{ marginBottom: "-5px" }} /> Téléphone : </strong>
-                      <span>{claim.tel}</span>
-                    </p>
-
-                    <p className="claim-item">
-                      <strong style={{ marginRight: "5px" }}><AddBusinessIcon style={{ marginBottom: "-5px" }} /> Point de service indexé : </strong>
-                      <span>{claim.servicePoint?.libelle}</span>
-                    </p>
-
-                    <p className="claim-item">
-                      <strong style={{ marginRight: "5px" }}><DataObjectIcon style={{ marginBottom: "-5px" }} /> Objet : </strong>
-                      <span>{claim.objet?.libelle}</span>
-                    </p>
-
-                    <p className="claim-item">
-                      <strong style={{ marginRight: "5px" }}><CategoryIcon style={{ marginBottom: "-5px" }} /> Produit : </strong>
-                      <span>{claim.product?.libelle}</span>
-                    </p>
-
-                    <p className="claim-item">
-                      <strong style={{ marginRight: "5px" }}><CalendarMonthIcon style={{ marginBottom: "-5px" }} /> Date de réception : </strong>
-                      <span>{claim.receiptDateTime}</span>
-                    </p>
-
-                    {/* <Divider sx={{ my: 2 }} /> */}
-
-                    <p className="claim-description">
-                      <strong style={{ marginRight: "5px" }}><RecordVoiceOverIcon style={{ marginBottom: "-5px" }} /> Contenu : </strong>
-                      {claim.content}
-                    </p>
-                  </div>
-                </>
-              ))}
-            </DialogContent>
-
-            <DialogActions>
-              <Button onClick={() => props.setModalVisible(false)} color="error">
-                Fermer
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </div>
-      )}
-
-      <div className="row">
-        <div className="col s12">
-          <div className="container">
-            <section className="tabs-vertical mt-1 section">
-              <div className="row">
-                <div className="col l5 m12 s12 pb-5">
-                  <div className="card-panel pb-5">
-                    <div className="row">
-                      <div className="col s12">
-                        <h5 className="card-title">Réclamations à compléter</h5>
-                      </div>
-                      <div className="col s12">
-                        <ReactDatatable
-                          className={"responsive-table no-hover"}
-                          config={config}
-                          records={content}
-                          columns={columns}
-                        // onRowClicked={rowClickedHandler}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="col l7 m12 s12 pb-5">
-                  <div className="card-panel pb-5">
-                    <form id="claimForm">
-                      <div className="row">
-                        <div className="col l12 m12 s12">
-                          <h5 className="card-title">
-                            Enregistrer une réclamation
-                          </h5>
-                          <span>
-                            (<span className="red-text darken-2 ">*</span>)
-                            Champs requis
-                          </span>
-                        </div>
-                      </div>
-                      <div className="row">
-                        <div className="col l12 s12 m12">
-                          <div className="row">
-                            <div className="col l12 m12 s12">
-                              <h6 className="card-title">
-                                Informations du réclamant
-                              </h6>
-                            </div>
-                            <input
-                              type="hidden"
-                              value={JSON.stringify(props.selectedItem)}
-                            />
-                            <div className="col l12 m12 s12 input-field" ref={lastnameRef}>
-                              <input
-                                id="lastname"
-                                name="lastname"
-                                type="text"
-                                className="validate"
-                                placeholder=""
-                                value={props.lastname}
-                                data-error=".errorTxt2"
-                                onChange={(e) =>
-                                  props.lastnameChanged(e.target.value)
-                                }
-                              />
-                              <label htmlFor="lastname" className={"active"}>
-                                Nom et Prénoms
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.lastname
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-                            <div className="col l6 m12 s12 input-field" ref={addressRef}>
-                              <input
-                                id="address"
-                                name="address"
-                                type="text"
-                                className="validate"
-                                placeholder=""
-                                value={props.address}
-                                data-error=".errorTxt2"
-                                onChange={(e) =>
-                                  props.addressChanged(e.target.value)
-                                }
-                              />
-                              <label htmlFor="address" className={"active"}>
-                                Adresse Physique
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.address
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-
-                            <div className="col l6 m12 s12 input-field" ref={phoneRef}>
-                              <PhoneInput
-                                international
-                                countryCallingCodeEditable={false}
-                                defaultCountry={navigator.language.split('-')[1] || undefined}
-                                value={props.phone}
-                                onChange={handlePhoneChange}
-                                onBlur={handleBlur}
-                              />
-                              {/* <input
-                                type="tel"
-                                placeholder=""
-                                value={props.phone}
-                                onChange={(e) =>
-                                  props.phoneChanged(e.target.value)
-                                }
-                              /> */}
-
-                              <label htmlFor="phone" className={"active"}>
-                                Téléphone
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                                &nbsp;
-                                <a
-                                  className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text"
-                                  data-position="bottom"
-                                  data-tooltip="Exemple: 22890909090 ou +22890909090"
-                                >
-                                  <HelpIcon />
-                                </a>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.phone
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-
-                            <div className="col l12 m12 s12 input-field">
-                              <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                className="validate"
-                                placeholder=""
-                                value={props.email}
-                                data-error=".errorTxt2"
-                                onChange={(e) =>
-                                  props.emailChanged(e.target.value)
-                                }
-                              />
-                              <label htmlFor="lastname" className={"active"}>
-                                Email
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.email
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-
-                            <div style={{ clear: "both" }}></div>
-                            <div className="col l6 m12 s12 input-field" ref={genderRef}>
-                              <Select
-                                value={
-                                  props.gender
-                                    ? {
-                                      label: props.gender,
-                                      value: props.gender,
-                                    }
-                                    : {
-                                      label: "Sélectionner le genre",
-                                      value: "",
-                                    }
-                                }
-                                options={genderOptions}
-                                className="react-select-container mt-4"
-                                classNamePrefix="react-select"
-                                style={styles}
-                                placeholder="Sélectionner le genre"
-                                onChange={(e) => props.genderChanged(e.value)}
-                              />
-                              <label htmlFor="gender" className={"active"}>
-                                Genre
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.gender
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-
-                            <div className="col l6 m12 s12 input-field" ref={languageRef}>
-                              <Select
-                                value={
-                                  props.language
-                                    ? {
-                                      label: props.languageLibelle,
-                                      value: props.language,
-                                    }
-                                    : "Sélectionner la langue"
-                                }
-                                options={languageOptions}
-                                className="react-select-container mt-4"
-                                classNamePrefix="react-select"
-                                style={styles}
-                                placeholder="Sélectionner la langue"
-                                onChange={handleChange4}
-                              />
-                              <label htmlFor="gender" className={"active"}>
-                                Langue parlée
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.language
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-                            <div className="col l6 m12 s12 input-field">
-                              <input
-                                id="dossierimf"
-                                name="dossierimf"
-                                type="text"
-                                className="validate"
-                                placeholder=""
-                                value={props.dossierimf}
-                                data-error=".errorTxt2"
-                                onChange={(e) =>
-                                  props.dossierimfChanged(e.target.value)
-                                }
-                              />
-                              <label htmlFor="dossierimf" className={"active"}>
-                                Dossier IMF
-                                <span>
-                                  <span className="red-text darken-2 "></span>
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.dossierimf
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-                          </div>
-                        </div>
-                        <br />
-                        <div className="col l12 m12 s12">
-                          <div className="row">
-                            <div className="col l12 m12 s12">
-                              <h6 className="card-title">
-                                Détails de la réclamation
-                              </h6>
-                            </div>
-                            <div
-                              className="col l6 m12 s12 input-field"
-                              style={{ display: "none" }}
-                            >
-                              <input
-                                id="code"
-                                name="code"
-                                type="text"
-                                placeholder=""
-                                className="validate"
-                                value={props.code}
-                                disabled
-                              />
-                              <label htmlFor="code" className={"active"}>
-                                Code
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.code
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-                            <div className="col l12 m12 s12 input-field" ref={recordedAtRef}>
-                              <DatePicker
-                                // placeholderText="Date et Heure de réception"
-                                withPortal
-                                closeOnScroll={true}
-                                isClearable
-                                showTimeInput
-                                showMonthDropdown
-                                value={props.recorded_at}
-                                timeInputLabel="Heure :"
-                                todayButton="Aujourd'hui"
-                                selected={props.recorded_at_dp}
-                                onChange={(date) =>
-                                  handleDatePicker(date, props)
-                                }
-                                dateFormat="dd-MM-yyyy HH:mm"
-                                locale="fr"
-                              />
-                              <label htmlFor="recorded_at" className={"active"}>
-                                Date de réception
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.recorded_at
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-                            <div className="col l6 m12 s12 input-field" ref={collectRef}>
-                              <Select
-                                value={
-                                  props.collect
-                                    ? {
-                                      label: props.collectLibelle,
-                                      value: props.collect,
-                                    }
-                                    : "Sélectionner la modalité de dépôt"
-                                }
-                                options={collectOptions}
-                                className="react-select-container mt-4"
-                                classNamePrefix="react-select"
-                                style={styles}
-                                placeholder="Sélectionner la modalité de dépôt"
-                                onChange={handleChange3}
-                              />
-                              <label htmlFor="gender" className={"active"}>
-                                Modalité de dépôt
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.collect
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-                            <div className="input-field">
-                              <input
-                                id="recorded_by"
-                                name="recorded_by"
-                                type="hidden"
-                                className=""
-                                value=""
-                              />
-                            </div>
-                            <div className="col l6 m12 s12 input-field" ref={subjectRef}>
-                              <Select
-                                value={
-                                  props.subject
-                                    ? {
-                                      label: props.subjectLibelle,
-                                      value: props.subject,
-                                    }
-                                    : "Sélectionner la catégorie de l'objet"
-                                }
-                                options={subjectOptions}
-                                className="react-select-container mt-4"
-                                classNamePrefix="react-select"
-                                style={styles}
-                                placeholder="Sélectionner la catégorie de l'objet"
-                                onChange={handleChange2}
-                              />
-
-                              <label htmlFor="subject" className={"active"}>
-                                Catégorie d'objet
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.subject
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-
-                            <div className="col l12 m12 s12 input-field" ref={underSubjectRef}>
-                              <Select
-                                value={
-                                  props.underSubject
-                                    ? {
-                                      label: props.underSubjectLibelle,
-                                      value: props.underSubject,
-                                    }
-                                    : "Sélectionner le motif de réclamation"
-                                }
-                                options={underSubjectOptions}
-                                className="react-select-container mt-4"
-                                classNamePrefix="react-select"
-                                style={styles}
-                                placeholder="Sélectionner le motif de réclamation"
-                                onChange={handleChange5}
-                              />
-
-                              <label htmlFor="subject" className={"active"}>
-                                Motif de réclamation
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.underSubject
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-
-                            <div className="col l6 m12 s12 input-field" ref={productRef}>
-                              <Select
-                                value={
-                                  props.product
-                                    ? {
-                                      label: props.productLibelle,
-                                      value: props.product,
-                                    }
-                                    : "Sélectionner le produit"
-                                }
-                                options={productOptions}
-                                className="react-select-container mt-4"
-                                classNamePrefix="react-select"
-                                style={styles}
-                                placeholder="Sélectionner le produit"
-                                onChange={handleChange1}
-                              />
-                              <label htmlFor="product" className={"active"}>
-                                Produit ou service concerné
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.product
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-                            <div className="col l6 m12 s12 input-field" ref={unitRef}>
-                              <Select
-                                value={
-                                  props.unit
-                                    ? {
-                                      label: props.unitLibelle,
-                                      value: props.unit,
-                                    }
-                                    : "Sélectionner le point de service"
-                                }
-                                options={unitOptions}
-                                className="react-select-container mt-4"
-                                classNamePrefix="react-select"
-                                style={styles}
-                                placeholder="Sélectionner le point de service"
-                                onChange={handleChange}
-                              />
-                              <label htmlFor="unit" className={"active"}>
-                                Point de service indexé(
-                                <span className="red-text darken-2 ">*</span>)
-                              </label>
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.unit
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-                            <div className="col l12 m12 s12 input-field" ref={contentRef}>
-                              {/* <div
-                                style={{
-                                  position: "absolute",
-                                  right: "0px",
-                                  top: "-16px",
-                                }}
-                              >
-                                <Fab
-                                  color="primary"
-                                  aria-label="audio"
-                                  size="small"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    setAudioBox(true);
-                                    setOpen2(true);
-                                  }}
-                                >
-                                  <MicIcon />
-                                </Fab>
-                              </div>  */}
-                              {formAudio}
-
-                              <textarea
-                                id="content"
-                                name="content"
-                                placeholder=""
-                                rows={"2"}
-                                className="materialize-textarea"
-                                value={props.content}
-                                onChange={(e) =>
-                                  props.contentChanged(e.target.value)
-                                }
-                              ></textarea>
-                              <label htmlFor="content" className={"active"}>
-                                Contenu
-                                <span>
-                                  (<span className="red-text darken-2 ">*</span>
-                                  )
-                                </span>
-                              </label>
-
-                              <small className="errorTxt4">
-                                <div id="cpassword-error" className="error">
-                                  {props.errors !== undefined
-                                    ? props.errors.content
-                                    : ""}
-                                </div>
-                              </small>
-                            </div>
-                            <div className="col l12 m12 s12 mb-3">
-                              <RecordingsList
-                                audio={audio}
-                                persistAll={clearAudio}
-                              />
-                            </div>
-                            <div className="row">{audioList}</div>
-                            {jfichiers}
-                            <div className="row">{attachmentList}</div>
-                            <div className="row">{whatsappAttachmentList}</div>
-                          </div>
-                        </div>
-
-                        <div className="col s12 display-flex justify-content-end mt-3">
-                          {formButtons}
-                        </div>
-                      </div>
-                    </form>
-                  </div>
+        <Dialog
+          open={props.modalVisible}
+          fullWidth
+          maxWidth="sm"
+          disableEscapeKeyDown
+          onClose={(event, reason) => { if (reason === "backdropClick") return; }}
+          PaperProps={{ style: { borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' } }}
+        >
+          {/* Header */}
+          <div style={{ background: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <WarningIcon style={{ color: '#fff', fontSize: 22 }} />
+              </div>
+              <div>
+                <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>Doublon détecté</div>
+                <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12.5, marginTop: 2 }}>
+                  {props.existingClaims.length === 1
+                    ? 'Ce numéro est déjà associé à 1 réclamation en cours'
+                    : `Ce numéro est déjà associé à ${props.existingClaims.length} réclamations en cours`}
                 </div>
               </div>
-            </section>
+            </div>
           </div>
-          <div className="content-overlay"></div>
-        </div>
-      </div>
-    </div>
+
+          {/* Content */}
+          <DialogContent sx={{ p: 2.5, maxHeight: 420, overflowY: 'auto' }}>
+            <div style={{ fontSize: 13, color: '#64748b', marginBottom: 14 }}>
+              Vérifiez les réclamations existantes ci-dessous avant de continuer.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {props.existingClaims.map((claim, index) => {
+                const STATUS_CFG = {
+                  SAVED:        { bg: '#dbeafe', color: '#1d4ed8', label: 'À traiter' },
+                  AFFECTED:     { bg: '#fef9c3', color: '#854d0e', label: 'Affectée' },
+                  TO_APPROUVED: { bg: '#fef3c7', color: '#92400e', label: 'À approuver' },
+                  DESAPPROUVED: { bg: '#fee2e2', color: '#991b1b', label: 'Désapprouvée' },
+                  TREAT:        { bg: '#dcfce7', color: '#166534', label: 'Traitée' },
+                  SATISFIED:    { bg: '#dcfce7', color: '#166534', label: 'Satisfait' },
+                  UNSATISFIED:  { bg: '#fee2e2', color: '#991b1b', label: 'Non satisfait' },
+                  CLASSED:      { bg: '#f3e8ff', color: '#6b21a8', label: 'Classée' },
+                };
+                const sc = STATUS_CFG[claim.status] || { bg: '#f1f5f9', color: '#475569', label: claim.status };
+                return (
+                  <div key={index} style={{ background: '#fff', borderRadius: 12, border: '1.5px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                    {/* Card header */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{claim.code}</span>
+                      <span style={{ fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color }}>{sc.label}</span>
+                    </div>
+                    {/* Card body — grid 2 col */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '12px 14px' }}>
+                      {[
+                        { label: 'Client',          value: claim.clientFirstAndLastName },
+                        { label: 'Téléphone',        value: claim.tel },
+                        { label: 'Objet',            value: claim.objet?.libelle },
+                        { label: 'Produit',          value: claim.product?.libelle },
+                        { label: 'Point de service', value: claim.servicePoint?.libelle },
+                        { label: 'Date réception',   value: claim.receiptDateTime },
+                      ].map(({ label, value }) => (
+                        <div key={label} style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px' }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 3 }}>{label}</div>
+                          <div style={{ fontSize: 12.5, fontWeight: 600, color: '#1e293b' }}>{value || '—'}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Contenu */}
+                    {claim.content && (
+                      <div style={{ margin: '0 14px 12px', background: '#f8fafc', borderRadius: 8, padding: '8px 10px', borderLeft: '3px solid #f59e0b' }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 3 }}>Contenu</div>
+                        <div style={{ fontSize: 12.5, color: '#374151', lineHeight: 1.5 }}>{claim.content}</div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </DialogContent>
+
+          {/* Actions */}
+          <DialogActions style={{ padding: '12px 20px 20px', gap: 10, borderTop: '1px solid #f1f5f9' }}>
+            <Button
+              onClick={() => props.setModalVisible(false)}
+              variant="outlined"
+              sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b', fontWeight: 600, px: 3 }}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={() => { props.setModalVisible(false); }}
+              variant="contained"
+              sx={{ textTransform: 'none', borderRadius: 2, fontWeight: 700, px: 3, background: 'linear-gradient(135deg, #d97706, #f59e0b)', color: '#fff', '&:hover': { background: 'linear-gradient(135deg, #b45309, #d97706)' } }}
+            >
+              Enregistrer quand même
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      <WizardLayout
+        title="Enregistrer une réclamation"
+        subtitle="Formulaire d'enregistrement"
+        onBack={() => history.goBack()}
+        hasDraft={props.items.length > 0}
+        draftCount={props.items.length}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        steps={STEPS}
+        currentStep={currentStep}
+        completionPercent={completionPercent}
+        apercu={apercu}
+        onSaveDraft={handleSaveDraft}
+        onNext={handleNext}
+        onPrev={() => setCurrentStep(s => s - 1)}
+        isLastStep={currentStep === 3}
+        onSubmit={handleFinalSubmit}
+        loadingSave={props.etat}
+        loadingSubmit={props.etat2}
+        draftsContent={
+          <div>
+            {content.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 24px", color: "#94a3b8" }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>Aucun brouillon enregistré</div>
+                <div style={{ fontSize: 12, marginTop: 4 }}>Utilisez "Sauvegarder brouillon" pour retrouver un dossier ici</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {content.map((draft) => (
+                  <div
+                    key={draft.id || draft.code}
+                    onClick={(e) => {
+                      rowClickedHandler(e, draft, null);
+                      setCurrentStep(0);
+                      setActiveTab("new");
+                    }}
+                    style={{
+                      background: "white", borderRadius: 14, border: "1.5px solid #e5e7eb",
+                      padding: "14px 18px", cursor: "pointer",
+                      display: "flex", alignItems: "center", gap: 14,
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                      transition: "box-shadow 0.15s, border-color 0.15s",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#99cde8"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,80,129,0.1)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)"; }}
+                  >
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                      background: "#e8f4fc", display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <AssignmentOutlinedIcon style={{ fontSize: 20, color: "#005081" }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 2 }}>
+                        {draft.clientFirstAndLastName || <em>Anonyme</em>}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#64748b" }}>
+                        {draft.createdAtFormated || "—"}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }} onClick={e => e.stopPropagation()}>
+                      <Tooltip title="Modifier">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => { e.stopPropagation(); rowClickedHandler(e, draft, null); setCurrentStep(0); setActiveTab("new"); }}
+                          sx={{ color: "#005081", "&:hover": { background: "#e8f4fc" } }}
+                        >
+                          <EditIcon style={{ fontSize: 18 }} />
+                        </IconButton>
+                      </Tooltip>
+                      {mode === 1 && (
+                        <Tooltip title="Supprimer">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => { e.stopPropagation(); handleModal(e, draft); }}
+                            sx={{ color: "#ef4444", "&:hover": { background: "#fee2e2" } }}
+                          >
+                            <DeleteIcon style={{ fontSize: 18 }} />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        }
+      >
+        {/* ── Step 1 – Informations ───────────────────────────── */}
+        {currentStep === 1 && (
+          <div className="row">
+            <div className="col l12 m12 s12 input-field" ref={recordedAtRef}>
+              <DatePicker
+                withPortal
+                closeOnScroll={true}
+                isClearable
+                showTimeInput
+                showMonthDropdown
+                value={props.recorded_at}
+                timeInputLabel="Heure :"
+                todayButton="Aujourd'hui"
+                selected={props.recorded_at_dp}
+                onChange={(date) => handleDatePicker(date, props)}
+                dateFormat="dd-MM-yyyy HH:mm"
+                locale="fr"
+              />
+              <label htmlFor="recorded_at" className="active">
+                Date de réception <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.recorded_at}</div></small>
+            </div>
+
+            <div className="col l6 m12 s12 input-field" ref={collectRef}>
+              <Select
+                value={props.collect ? { label: props.collectLibelle, value: props.collect } : "Sélectionner la modalité de dépôt"}
+                options={collectOptions}
+                className="react-select-container mt-4"
+                classNamePrefix="react-select"
+                style={styles}
+                placeholder="Sélectionner la modalité de dépôt"
+                onChange={handleChange3}
+              />
+              <label className="active">
+                Modalité de dépôt <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.collect}</div></small>
+            </div>
+
+            <div className="col l6 m12 s12 input-field" ref={subjectRef}>
+              <Select
+                value={props.subject ? { label: props.subjectLibelle, value: props.subject } : "Sélectionner la catégorie de l'objet"}
+                options={subjectOptions}
+                className="react-select-container mt-4"
+                classNamePrefix="react-select"
+                style={styles}
+                placeholder="Sélectionner la catégorie de l'objet"
+                onChange={handleChange2}
+              />
+              <label className="active">
+                Catégorie d'objet <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.subject}</div></small>
+            </div>
+
+            <div className="col l12 m12 s12 input-field" ref={underSubjectRef}>
+              <Select
+                value={props.underSubject ? { label: props.underSubjectLibelle, value: props.underSubject } : "Sélectionner le motif de réclamation"}
+                options={underSubjectOptions}
+                className="react-select-container mt-4"
+                classNamePrefix="react-select"
+                style={styles}
+                placeholder="Sélectionner le motif de réclamation"
+                onChange={handleChange5}
+              />
+              <label className="active">
+                Motif de réclamation <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.underSubject}</div></small>
+            </div>
+
+            <div className="col l6 m12 s12 input-field" ref={productRef}>
+              <Select
+                value={props.product ? { label: props.productLibelle, value: props.product } : "Sélectionner le produit"}
+                options={productOptions}
+                className="react-select-container mt-4"
+                classNamePrefix="react-select"
+                style={styles}
+                placeholder="Sélectionner le produit"
+                onChange={handleChange1}
+              />
+              <label className="active">
+                Produit ou service concerné <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.product}</div></small>
+            </div>
+
+            <div className="col l6 m12 s12 input-field" ref={unitRef}>
+              <Select
+                value={props.unit ? { label: props.unitLibelle, value: props.unit } : "Sélectionner le point de service"}
+                options={unitOptions}
+                className="react-select-container mt-4"
+                classNamePrefix="react-select"
+                style={styles}
+                placeholder="Sélectionner le point de service"
+                onChange={handleChange}
+              />
+              <label className="active">
+                Point de service (<span className="red-text darken-2">*</span>)
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.unit}</div></small>
+            </div>
+
+            <div className="col l12 m12 s12 input-field" ref={contentRef} style={{ position: "relative" }}>
+              {formAudio}
+              <textarea
+                id="content"
+                name="content"
+                placeholder=""
+                rows="3"
+                className="materialize-textarea"
+                value={props.content}
+                onChange={(e) => props.contentChanged(e.target.value)}
+              />
+              <label htmlFor="content" className="active">
+                Contenu <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.content}</div></small>
+            </div>
+
+            {/* Audio feedback — visible immédiatement après l'enregistrement */}
+            {(audioRecordings.length > 0 || props.selectedItemAudio?.length > 0) && (
+              <div className="col l12 m12 s12" style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                  <MicIcon style={{ fontSize: 15, color: "#005081" }} />
+                  Audio enregistré ({audioRecordings.length + (props.selectedItemAudio?.length ?? 0)})
+                </div>
+
+                {audioRecordings.map((audioBlob, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
+                    <MicIcon style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                    <audio controls style={{ flex: 1, height: 30 }}>
+                      <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
+                    </audio>
+                    <button onClick={() => setAudioRecordings(prev => prev.filter((_, j) => j !== i))}
+                      title="Supprimer" style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
+                  </div>
+                ))}
+
+                {props.selectedItemAudio?.map((audioItem, i) => (
+                  <div key={"saved-" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
+                    <MicIcon style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                    <audio controls style={{ flex: 1, height: 30 }}>
+                      <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
+                    </audio>
+                    <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
+                      title="Supprimer" style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* ── Step 0 – Client ─────────────────────────────────── */}
+        {currentStep === 0 && (
+          <div className="row">
+            <div className="col l12 m12 s12 input-field" ref={lastnameRef}>
+              <input
+                id="lastname"
+                name="lastname"
+                type="text"
+                className="validate"
+                value={props.lastname}
+                onChange={(e) => props.lastnameChanged(e.target.value)}
+              />
+              <label htmlFor="lastname" className="active">
+                Nom et Prénoms <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.lastname}</div></small>
+            </div>
+
+            <div className="col l6 m12 s12 input-field" ref={addressRef}>
+              <input
+                id="address"
+                name="address"
+                type="text"
+                className="validate"
+                value={props.address}
+                onChange={(e) => props.addressChanged(e.target.value)}
+              />
+              <label htmlFor="address" className="active">
+                Adresse Physique <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.address}</div></small>
+            </div>
+
+            <div className="col l6 m12 s12 input-field" ref={phoneRef}>
+              <PhoneInput
+                international
+                countryCallingCodeEditable={false}
+                defaultCountry={navigator.language.split('-')[1] || undefined}
+                value={props.phone}
+                onChange={handlePhoneChange}
+                onBlur={handleBlur}
+              />
+              <label htmlFor="phone" className="active">
+                Téléphone <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.phone}</div></small>
+            </div>
+
+            <div className="col l12 m12 s12 input-field">
+              <input
+                id="email"
+                name="email"
+                type="email"
+                className="validate"
+                value={props.email}
+                onChange={(e) => props.emailChanged(e.target.value)}
+              />
+              <label htmlFor="email" className="active">Email</label>
+              <small className="errorTxt4"><div className="error">{props.errors?.email}</div></small>
+            </div>
+
+            <div className="col l6 m12 s12 input-field" ref={genderRef}>
+              <Select
+                value={props.gender ? { label: props.gender, value: props.gender } : { label: "Sélectionner le genre", value: "" }}
+                options={genderOptions}
+                className="react-select-container mt-4"
+                classNamePrefix="react-select"
+                style={styles}
+                placeholder="Sélectionner le genre"
+                onChange={(e) => props.genderChanged(e.value)}
+              />
+              <label className="active">
+                Genre <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.gender}</div></small>
+            </div>
+
+            <div className="col l6 m12 s12 input-field" ref={languageRef}>
+              <Select
+                value={props.language ? { label: props.languageLibelle, value: props.language } : "Sélectionner la langue"}
+                options={languageOptions}
+                className="react-select-container mt-4"
+                classNamePrefix="react-select"
+                style={styles}
+                placeholder="Sélectionner la langue"
+                onChange={handleChange4}
+              />
+              <label className="active">
+                Langue parlée <span>(<span className="red-text darken-2">*</span>)</span>
+              </label>
+              <small className="errorTxt4"><div className="error">{props.errors?.language}</div></small>
+            </div>
+
+            <div className="col l6 m12 s12 input-field">
+              <input
+                id="dossierimf"
+                name="dossierimf"
+                type="text"
+                className="validate"
+                value={props.dossierimf}
+                onChange={(e) => props.dossierimfChanged(e.target.value)}
+              />
+              <label htmlFor="dossierimf" className="active">Dossier IMF</label>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 2 – Pièces jointes ─────────────────────────── */}
+        {currentStep === 2 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+
+            {/* ── Dropzone fichiers ── */}
+            {mode === 1 && (
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                  <InsertDriveFileOutlinedIcon style={{ fontSize: 17, color: "#005081" }} />
+                  Documents joints
+                </div>
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleDropzoneFiles(e.dataTransfer.files); }}
+                  onClick={() => document.getElementById("wz-file-input").click()}
+                  style={{
+                    border: `2px dashed ${isDragging ? "#005081" : "#cbd5e1"}`,
+                    borderRadius: 14, padding: "32px 20px", textAlign: "center",
+                    background: isDragging ? "#e8f4fc" : "#f8fafc",
+                    cursor: "pointer", transition: "all 0.2s",
+                  }}
+                >
+                  <CloudUploadOutlinedIcon style={{ fontSize: 44, color: isDragging ? "#005081" : "#94a3b8", marginBottom: 10 }} />
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>
+                    Glissez vos fichiers ici
+                  </div>
+                  <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>
+                    ou <span style={{ color: "#005081", fontWeight: 700 }}>parcourez</span> depuis votre appareil
+                  </div>
+                  <div style={{ fontSize: 11, color: "#cbd5e1", marginTop: 8 }}>
+                    PDF · Word · Excel · Images · Audio · Vidéo
+                  </div>
+                  <input
+                    id="wz-file-input" type="file" multiple style={{ display: "none" }}
+                    onChange={(e) => handleDropzoneFiles(e.target.files)}
+                    accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
+                  />
+                </div>
+
+                {/* Files list */}
+                {files && Array.from(files).length > 0 && (
+                  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+                    {Array.from(files).map((file, i) => (
+                      <div key={i} style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "10px 14px", background: "white", borderRadius: 10,
+                        border: "1.5px solid #e2e8f0",
+                      }}>
+                        <InsertDriveFileOutlinedIcon style={{ fontSize: 18, color: "#005081", flexShrink: 0 }} />
+                        <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8", flexShrink: 0, marginRight: 8 }}>{(file.size / 1024).toFixed(0)} Ko</div>
+                        <button
+                          onClick={() => removeFile(i)}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 18, lineHeight: 1, padding: "0 2px", flexShrink: 0 }}
+                          title="Retirer"
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Already saved files */}
+                {props.selectedItemFiles?.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginBottom: 6 }}>Fichiers déjà enregistrés</div>
+                    {props.selectedItemFiles.map((file, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0", marginBottom: 4 }}>
+                        <InsertDriveFileOutlinedIcon style={{ fontSize: 16, color: "#64748b", flexShrink: 0 }} />
+                        <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: "#64748b" }}>{file.name}</div>
+                        <a onClick={(e) => { e.preventDefault(); downloadFillesApi(file.id, file.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Enregistrement audio ── */}
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                <MicIcon style={{ fontSize: 17, color: "#005081" }} />
+                Enregistrement vocal
+              </div>
+
+              {audioRecordings.length === 0 && !props.selectedItemAudio?.length ? (
+                <div style={{ background: "#f8fafc", borderRadius: 12, border: "1.5px dashed #e2e8f0", padding: "20px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
+                  <MicIcon style={{ fontSize: 28, opacity: 0.3, display: "block", margin: "0 auto 6px" }} />
+                  Aucun audio enregistré
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {audioRecordings.map((audioBlob, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "white", borderRadius: 10, border: "1.5px solid #99cde8" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "#e8f4fc", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <MicIcon style={{ fontSize: 16, color: "#005081" }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Enregistrement {i + 1}</div>
+                        <audio controls style={{ width: "100%", height: 30 }}>
+                          <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
+                        </audio>
+                      </div>
+                      <button onClick={() => setAudioRecordings(prev => prev.filter((_, j) => j !== i))}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, flexShrink: 0 }}>×</button>
+                    </div>
+                  ))}
+                  {props.selectedItemAudio?.map((audioItem, i) => (
+                    <div key={"s" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "white", borderRadius: 10, border: "1.5px solid #e2e8f0" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <MicIcon style={{ fontSize: 16, color: "#005081" }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Sauvegardé {i + 1}</div>
+                        <audio controls style={{ width: "100%", height: 30 }}>
+                          <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
+                        </audio>
+                      </div>
+                      <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, flexShrink: 0 }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {whatsappAttachmentList && <div>{whatsappAttachmentList}</div>}
+          </div>
+        )}
+
+        {/* ── Step 3 – Récapitulatif ──────────────────────────── */}
+        {currentStep === 3 && (
+          <div style={{ border: "1px solid #e0e0e0", borderRadius: "6px" }}>
+            <div style={{ backgroundColor: "#f5f5f5", padding: "8px 14px", borderBottom: "1px solid #e0e0e0", display: "flex", alignItems: "center", gap: "8px" }}>
+              <SupportAgentIcon style={{ fontSize: "18px", color: "#616161" }} />
+              <span style={{ color: "#424242", fontWeight: "600", fontSize: "14px" }}>Résumé de la réclamation</span>
+            </div>
+            <div style={{ padding: "4px 14px" }}>
+              <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Client</span>
+                <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.lastname}</span>
+              </div>
+              <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Téléphone</span>
+                <span style={{ fontWeight: "500", fontSize: "13px" }}>{cleanPhoneNumber(props.phone)}</span>
+              </div>
+              <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Genre</span>
+                <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.gender}</span>
+              </div>
+              {props.email && (
+                <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                  <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Email</span>
+                  <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.email}</span>
+                </div>
+              )}
+              <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Produit</span>
+                <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.productLibelle}</span>
+              </div>
+              <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Catégorie</span>
+                <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.subjectLibelle}</span>
+              </div>
+              <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Motif</span>
+                <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.underSubjectLibelle}</span>
+              </div>
+              <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Point de service</span>
+                <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.unitLibelle}</span>
+              </div>
+              <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Date de réception</span>
+                <span style={{ fontWeight: "500", fontSize: "13px" }}>
+                  {props.recorded_at ? moment(props.recorded_at, "DD-MM-YYYY HH:mm").format("DD MMMM YYYY [à] HH:mm") : "—"}
+                </span>
+              </div>
+              <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Contenu</span>
+                <span style={{ fontWeight: "500", fontSize: "13px", flex: 1 }}>
+                  {props.content && props.content !== "#ReclamationAudio" && <span>{props.content}</span>}
+                  {!props.content && audio == null && (!props.selectedItemAudio || props.selectedItemAudio.length === 0) && (
+                    <span style={{ color: "#bdbdbd" }}>—</span>
+                  )}
+                </span>
+              </div>
+
+              {/* All audios */}
+              {(audioRecordings.length > 0 || props.selectedItemAudio?.length > 0) && (
+                <div style={{ padding: "10px 0", borderBottom: "1px solid #f5f5f5" }}>
+                  <span style={{ color: "#757575", fontSize: "12px", fontWeight: 600, display: "block", marginBottom: 8 }}>
+                    Audios ({audioRecordings.length + (props.selectedItemAudio?.length ?? 0)})
+                  </span>
+                  {audioRecordings.map((audioBlob, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 8, marginBottom: 6, border: "1px solid #99cde8" }}>
+                      <MicIcon style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                      <audio controls style={{ flex: 1, height: 30 }}>
+                        <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
+                      </audio>
+                    </div>
+                  ))}
+                  {props.selectedItemAudio?.map((audioItem, i) => (
+                    <div key={"s" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#f8fafc", borderRadius: 8, marginBottom: 6, border: "1px solid #e2e8f0" }}>
+                      <MicIcon style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                      <audio controls style={{ flex: 1, height: 30 }}>
+                        <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
+                      </audio>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Files */}
+              {((files && Array.from(files).length > 0) || props.selectedItemFiles?.length > 0) && (
+                <div style={{ padding: "10px 0", borderBottom: "1px solid #f5f5f5" }}>
+                  <span style={{ color: "#757575", fontSize: "12px", fontWeight: 600, display: "block", marginBottom: 8 }}>
+                    Fichiers joints ({Array.from(files || []).length + (props.selectedItemFiles?.length ?? 0)})
+                  </span>
+                  {props.selectedItemFiles?.map((file, i) => (
+                    <div key={"saved-" + i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", marginBottom: 4, background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
+                      <InsertDriveFileOutlinedIcon style={{ fontSize: 15, color: "#16a34a", flexShrink: 0 }} />
+                      <span style={{ fontSize: "12px", color: "#374151", fontWeight: 600, flex: 1 }}>{file.name}</span>
+                      <a onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadFillesApi(file.id, file.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                    </div>
+                  ))}
+                  {Array.from(files || []).map((file, index) => (
+                    <div key={"new-" + index} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", marginBottom: 4, background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                      <InsertDriveFileOutlinedIcon style={{ fontSize: 15, color: "#64748b", flexShrink: 0 }} />
+                      <span style={{ fontSize: "12px", color: "#374151", fontWeight: 600, flex: 1 }}>{file.name}</span>
+                      <a href={URL.createObjectURL(file)} download={file.name} onClick={(e) => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </WizardLayout>
+    </>
   );
 };
 

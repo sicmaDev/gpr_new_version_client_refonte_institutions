@@ -1,5 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
+import DossierDataTable from "../../components/shared/DossierDataTable";
+import ClaimsKPIBar from "./components/ClaimsKPIBar";
+import { ButtonBase } from "@mui/material";
+import ClaimsTable from "./components/ClaimsTable";
+import ClaimsCardView from "./components/ClaimsCardView";
+import excel from "../../assets/images/excel.svg";
+import pdf from "../../assets/images/pdf.svg";
 import Select from "react-select";
 import { Link, NavLink } from "react-router-dom";
 import { KTApp } from "../../Utils/blockui";
@@ -113,8 +120,6 @@ import {
 } from "../../apis/Denonciations/DenonciationsApi";
 
 import Dialog from "@mui/material/Dialog";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
@@ -138,8 +143,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { TransitionProps } from "@mui/material/transitions";
-import timelineOppositeContentClasses from "@mui/lab/TimelineOppositeContent";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import Timeline from "@mui/lab/Timeline";
 import TimelineItem from "@mui/lab/TimelineItem";
 import TimelineSeparator from "@mui/lab/TimelineSeparator";
@@ -147,7 +151,6 @@ import TimelineConnector from "@mui/lab/TimelineConnector";
 import TimelineContent from "@mui/lab/TimelineContent";
 import TimelineOppositeContent from "@mui/lab/TimelineOppositeContent";
 import TimelineDot from "@mui/lab/TimelineDot";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import {
@@ -246,9 +249,6 @@ const styles = {
   menu: (provided) => ({ ...provided, zIndex: 9999 }),
 };
 
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
@@ -263,6 +263,28 @@ const ExpandMore = styled((props) => {
   }),
 }));
 
+const TREAT_STATUS_OPTIONS = [
+  { value: "",                  label: "Tous les statuts" },
+  { value: "SAVED",             label: "Enregistrée" },
+  { value: "AFFECTED",          label: "Affectée" },
+  { value: "DESAPPROUVED",      label: "Désapprouvée" },
+  { value: "SATISFIED",         label: "Satisfait" },
+  { value: "UNSATISFIED",       label: "Non satisfait" },
+  { value: "PARTIAL_SATISFIED", label: "Part. satisfait" },
+  { value: "LITIGATION",        label: "Contentieux" },
+  { value: "CLASSED",           label: "Classée" },
+];
+
+const TREAT_CHIPS = [
+  { value: "ALL",               label: "Tous",                    filter: () => true },
+  { value: "TO_TREAT",          label: "À traiter",               filter: (c) => ["SAVED","TEMP_SAVED","TO_APPROUVED","DESAPPROUVED"].includes(c.status) },
+  { value: "AFFECTED",          label: "Affectée",                filter: (c) => c.status === "AFFECTED" },
+  { value: "PARTIAL_SATISFIED", label: "Partiellement satisfait", filter: (c) => c.status === "PARTIAL_SATISFIED" },
+  { value: "UNSATISFIED",       label: "Non satisfait",           filter: (c) => c.status === "UNSATISFIED" },
+  { value: "CLASSED",           label: "Classée",                 filter: (c) => c.status === "CLASSED" },
+  { value: "OVERDUE",           label: "En retard",               filter: (c) => c.retardDay !== undefined && c.retardDay <= 0 && !["SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION"].includes(c.status) },
+];
+
 const TraiterReclamation = (props) => {
   const [expanded, setExpanded] = React.useState(false);
   const [checked, setChecked] = React.useState(false);
@@ -274,6 +296,8 @@ const TraiterReclamation = (props) => {
 
   const [openParent, setOpenParent] = useState(false);
   const [openChild, setOpenChild] = useState(false);
+  const [viewMode, setViewMode] = useState("list");
+  const [activeFilter, setActiveFilter] = useState("ALL");
   const handleOpenParent = () => setOpenParent(true);
   const handleCloseParent = () => setOpenParent(false);
   const handleOpenChild = () => setOpenChild(true);
@@ -377,12 +401,7 @@ const TraiterReclamation = (props) => {
 
     setOpen(false);
     setConversionBoxOpen(false);
-    // Rediriger selon la provenance
-    if (props?.match?.params?.code === "all") {
-      history.push("/reclamations/traitement/all");
-    } else {
-      history.push("/alertes/reclamations");
-    }
+    history.push("/reclamations/traitement/all");
   };
   const handleConversionBoxClose = () => {
     if (confirmationOpen) return;
@@ -429,16 +448,17 @@ const TraiterReclamation = (props) => {
 
       if (mode === 1) {
         addSuggestionApi(formData, props).then((response) => {
-
+          const suggestionCode = response.data.content.code;
           const data = {
-            code: response.data.content.code,
+            code: suggestionCode,
             claimId: dataRow.id,
           };
 
           convertClaimApi(data, props)
             .then(() => {
               setLoadingConversion(false);
-              history.push("/suggestions/traitement");
+              sessionStorage.setItem('pendingSuggestionConversion', JSON.stringify({ code: suggestionCode, convertedByName: user?.firstAndLastName || "", convertedAtTime: new Date().toISOString() }));
+              history.push("/suggestions/traitement/all", { justConverted: true, convertedCode: suggestionCode });
             })
             .finally(() => {
               setLoadingConversion(false);
@@ -454,12 +474,11 @@ const TraiterReclamation = (props) => {
           code: dataRow.code,
           claimId: dataRow.id,
         };
-        // console.log("data for conversion", data);
 
         convertClaimApi(data, props)
           .then(() => {
             setLoadingConversion(false);
-            history.push("/denonciations/traitement/all");
+            history.push("/denonciations/traitement/all", { justConverted: true });
           })
           .finally(() => {
             setLoadingConversion(false);
@@ -499,6 +518,7 @@ const TraiterReclamation = (props) => {
     handleAssignOrReassign,
     handleSolve,
     handleReSolve,
+    handleSolveImmediate,
     handleApprove,
     handleDisapprove,
     handleTransmission,
@@ -723,7 +743,7 @@ const TraiterReclamation = (props) => {
             data.servicePoint.libelle ? data.servicePoint.libelle : ""
           );
           props.contentChanged(data.content ? data.content : "");
-          props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
+          props.solutionChanged(Array.isArray(data.solutionDtos) ? data.solutionDtos : []);
           props.statusChanged(data.status ? data.status : "");
           props.createdAtChanged(data.createdAt ? data.createdAt : "");
           props.createdByChanged(
@@ -833,40 +853,15 @@ const TraiterReclamation = (props) => {
   const maDivRef = useRef(null);
 
   const invitation = (event) => {
-    let ids = props?.session?.guests?.map((e) => {
-      return e.id;
-    });
-
-    let princ = users.filter((e) => {
-      return !ids.includes(e.id);
-    });
-    // console.log("idssssss",princ)
     const { value } = event.target;
+    const ids = props?.session?.guests?.map((e) => e.id) ?? [];
+    const princ = users.filter((e) => !ids.includes(e.id));
     if (value !== "") {
-      let coco = [];
-      coco = princ.filter((e) => {
-        return e.firstAndLastName.toLowerCase().includes(value.toLowerCase());
-      });
-
-      setUsersCGR((prevList) => {
-        const newList = coco;
-        return newList;
-      });
-
-      // setUsersCGR(coco)
-      if (usersCGR.length !== 0) {
-        maDivRef.current.style.display = "block";
-      } else {
-        setUsersCGR((prevList) => {
-          const newList = coco;
-          return princ;
-        });
-        // setUsersCGR(princ)
-        maDivRef.current.style.display = "none";
-      }
-      // console.log("cg",usersCGR)
+      setUsersCGR(princ.filter((e) =>
+        e.firstAndLastName.toLowerCase().includes(value.toLowerCase())
+      ));
     } else {
-      maDivRef.current.style.display = "none";
+      setUsersCGR(princ);
     }
 
     // console.log("valeur",value)
@@ -964,7 +959,8 @@ const TraiterReclamation = (props) => {
       sortable: true,
       cell: (claim, index) => {
         let codi;
-        if (claim.session !== null && claim.session !== "") {
+        const _isFinal = ["TREAT","SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION","CLASSED"].includes(claim.status);
+        if (claim.session !== null && claim.session !== "" && !_isFinal) {
           if (
             claim.status === "AFFECTED" &&
             claim.treatmentAffectedTo !== null &&
@@ -1235,7 +1231,7 @@ const TraiterReclamation = (props) => {
 
     setDataRow(data);
     console.log(data)
-    history.push('/reclamations/traitement/' + data.code);
+    history.push('/reclamations/traitement/' + data.code, { from: 'traitement' });
     clearComponentState();
     // console.log("donnees",data)
     //console.log("level",data.objet.risqueLevel)
@@ -1374,7 +1370,7 @@ const TraiterReclamation = (props) => {
       data.servicePoint.libelle ? data.servicePoint.libelle : ""
     );
     props.contentChanged(data.content ? data.content : "");
-    props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
+    props.solutionChanged(Array.isArray(data.solutionDtos) ? data.solutionDtos : []);
     props.statusChanged(data.status ? data.status : "");
     props.createdAtChanged(data.createdAt ? data.createdAt : "");
     props.createdByChanged(
@@ -1974,7 +1970,7 @@ const TraiterReclamation = (props) => {
           props.transmitted === "false") ||
           (props.transmittedTo === user.firstAndLastName &&
             props.transmitted === "true" &&
-            addR === "MOLDUE") || (user.ra === true && props.transmitted === "false"))
+            addR === "MOLDUE"))
       ) {
         treatForm = (
           <>
@@ -2105,6 +2101,14 @@ const TraiterReclamation = (props) => {
               </div>
             )}
           </>
+        );
+      } else if (props.created_by !== user.firstAndLastName) {
+        treatForm = (
+          <div className="card-alert card orange lighten-5">
+            <div className="card-content orange-text" style={{ textAlign: "center" }}>
+              <ul>Seul l'agent qui a enregistré cette réclamation peut la traiter. Vous pouvez l'affecter à un agent.</ul>
+            </div>
+          </div>
         );
       } else {
         treatForm = "";
@@ -3532,7 +3536,11 @@ const TraiterReclamation = (props) => {
   };
 
   let content = props.items;
-  let creationDate = props.created_at ? formatDate(props.created_at) : "";
+  const filteredContent = useMemo(() => {
+    const chip = TREAT_CHIPS.find((c) => c.value === activeFilter);
+    return chip ? content.filter(chip.filter) : content;
+  }, [content, activeFilter]);
+  let creationDate = props.created_at ? formatDate(props.created_at) : null;
 
   //Ajout de l'attribut "client" afin de permettre le filtrage dans le datatable
   content.forEach((element) => {
@@ -3939,277 +3947,121 @@ const TraiterReclamation = (props) => {
       <div id="main">
         {showExtraContent && (
           <div>
-            <Dialog
-              open={showExtraContent}
-              fullWidth={true}
-              maxWidth="md"
-              onClose={(e) => {
-                setShowExtraContent(false);
-              }}
-              overflowX="hidden"
-              id="dialog-contenu"
-            >
-              <DialogTitle>Ajouter un contenu</DialogTitle>
-              <DialogContent sx={{ overflowX: "hidden" }}>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={4}
-                  value={extraContent}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setExtraContent(e.target.value);
-                  }}
-                  placeholder="Saisissez le contenu..."
-                />
-              </DialogContent>
-              {extraContent && extraContent?.trim() !== "" ? (
-                <DialogActions sx={{ overflowX: "hidden" }}>
-                  <LoadingButton
-                    onClick={(e) => {
-                      setExtraContent("");
-                      setShowExtraContent(false);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small"
-                    loadingPosition="end"
-                    // loading={extraFileLoading}
-                    endIcon={<CloseIcon />}
-                    variant="contained"
-                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                    color="secondary"
-                  >
-                    Annuler
-                  </LoadingButton>
-                  <LoadingButton
-                    onClick={(e) => {
-                      handleContentSubmit(e);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                    loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<SaveIcon />}
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#1e2188",
-                      textTransform: "initial",
-                    }}
-                    color="primary"
-                  >
-                    Enregistrer
-                  </LoadingButton>
-                </DialogActions>
-              ) : (
-                <></>
-              )}
-            </Dialog>
-          </div>
-        )}
-        {filesForm.length ? (
-          <div>
-            <Dialog
-              open={filesForm.length ? true : false}
-              fullWidth={true}
-              maxWidth="sm"
-              onClose={(e) => {
-                setFiles([]);
-              }}
-              id="dialog-addFile"
-            >
+            {/* ── Modal Contenu ── */}
+            <Dialog open={showExtraContent} fullWidth maxWidth="sm"
+              onClose={() => setShowExtraContent(false)} id="dialog-contenu"
+              PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
               <DialogContent>
-                <DialogContentText>
-                  <div className="col l12 s12 pb-2" id="content">
-                    <div className="df sb pb-2">
-                      <b>Ajout de fichier</b>
-                      <CloseIcon
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      />
-                    </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingTop: 8 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#faf5ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                   </div>
-                </DialogContentText>
-
-                <div className="col l12 m12 s12 file-field input-field">
-                  <List component="div" role="group">
-                    {filesForm.map((file, i) => {
-                      return (
-                        <ListItemButton key={i} divider>
-                          <ListItemText
-                            primary={file.name}
-                            secondary={
-                              Math.round((file.size / 1024) * 100) / 100 +
-                              " " +
-                              "Ko"
-                            }
-                          />
-                        </ListItemButton>
-                      );
-                    })}
-                  </List>
-                  <div style={{ display: 'flex', alignItems: 'center', }} htmlFor="ile" >
-                    <LoadingButton
-                      onClick={(e) => {
-                        handleFileSubmit(e);
-                      }}
-                      className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                      loading={extraFileLoading}
-                      loadingPosition="end"
-                      endIcon={<SaveIcon />}
-                      variant="contained"
-                      sx={{
-                        backgroundColor: "#1e2188",
-                        textTransform: "initial",
-                      }}
-                    >
-                      <span>Enregistrer</span>
-                    </LoadingButton>
-
-                    <LoadingButton
-                      onClick={(e) => {
-                        setFiles([]);
-                      }}
-                      className="waves-effect waves-effect-b waves-light btn-small"
-                      // loading={extraFileLoading}
-                      loadingPosition="end"
-                      endIcon={<CloseIcon />}
-                      variant="contained"
-                      sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                    >
-                      <span>Annuler</span>
-                    </LoadingButton>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Ajouter un contenu</div>
+                    <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>Ce contenu sera attaché au dossier</div>
                   </div>
                 </div>
+                <TextField fullWidth multiline minRows={5} value={extraContent}
+                  onChange={(e) => { e.stopPropagation(); e.preventDefault(); setExtraContent(e.target.value); }}
+                  placeholder="Saisissez le contenu..."
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 } }} />
               </DialogContent>
+              <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
+                <LoadingButton fullWidth onClick={() => { setExtraContent(""); setShowExtraContent(false); }} variant="outlined"
+                  sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+                  Annuler
+                </LoadingButton>
+                <LoadingButton fullWidth onClick={handleContentSubmit} loading={extraFileLoading}
+                  disabled={!extraContent?.trim()} loadingPosition="end" endIcon={<SaveIcon />} variant="contained"
+                  sx={{ textTransform: "none", borderRadius: 2, background: "#7c3aed", "&:hover": { background: "#6d28d9" } }}>
+                  <span>Enregistrer</span>
+                </LoadingButton>
+              </DialogActions>
             </Dialog>
           </div>
-        ) : (
-          <></>
         )}
-        {showAudioBox && (
-          <div>
-            <Dialog
-              open={open2}
-              onClose={() => {
-                setOpen2(false);
-              }}
-              style={{ padding: "16px" }}
-              id="dialog-audio"
-            >
-              <DialogTitle
-                align="center"
-                color={"#1E2188"}
-                fontSize={"23px"}
-                fontWeight={"bold"}
-              >
-                {"Enregistreur vocal Réclamations"}
-              </DialogTitle>
-              <DialogContent>
-                <DialogContentText
-                  align="center"
-                  fontSize={"14px"}
-                  textAlign={"center"}
-                >
-                  {
-                    "Cliquez sur le bouton ci-dessous et parler dans le micro de votre téléphone, ou branchez un casque ou des écouteurs"
-                  }
-                </DialogContentText>
 
-                <section className="voice-recorder">
-                  <div className="recorder-container">
-                    {audioListUrlForm.map((url, i) => {
-                      return (
-                        <Box
-                          key={i}
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            pb: 2,
-                            pt: 2,
-                          }}
-                        >
-                          <audio
-                            src={url}
-                            controls
-                            sx={{ flex: "1", mr: 2, width: "100%" }}
-                          />
-                          <CloseIcon
-                            color="red"
-                            onClick={() => {
-                              setAudioListForm(() => {
-                                return audioListForm.filter(
-                                  (va, ind) => ind !== i
-                                );
-                              });
-                              setAudioListUrlForm(() => {
-                                return audioListUrlForm.filter(
-                                  (va, inde) => inde !== i
-                                );
-                              });
-                            }}
-                          />
-                        </Box>
-                      );
-                    })}
-                    <RecorderControls
-                      recorderState={recorderState}
-                      handlers={handlers}
-                      closeAction={() => { }}
-                    />
+        {/* ── Modal Fichier ── */}
+        {filesForm.length > 0 && (
+          <Dialog open fullWidth maxWidth="sm" onClose={() => setFiles([])} id="dialog-addFile"
+            PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
+            <DialogContent>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingTop: 8 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Ajouter des fichiers</div>
+                  <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>{filesForm.length} fichier{filesForm.length > 1 ? "s" : ""} sélectionné{filesForm.length > 1 ? "s" : ""}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {filesForm.map((file, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
+                      <div style={{ fontSize: 11.5, color: "#94a3b8" }}>{Math.round((file.size / 1024) * 100) / 100} Ko</div>
+                    </div>
                   </div>
-                </section>
-              </DialogContent>
-              {audioListUrlForm.length ? (
-                <DialogActions>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "end",
-                      alignItems: "center",
-                    }}
-                  >
-                    <LoadingButton
-                      onClick={(e) => {
-                        handleFileSubmit(e, false);
-                      }}
-                      className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                      loading={extraFileLoading}
-                      loadingPosition="end"
-                      endIcon={<SaveIcon />}
-                      variant="contained"
-                      sx={{
-                        backgroundColor: "#1e2188",
-                        textTransform: "initial",
-                      }}
-                    >
-                      <span>Enregistrer</span>
-                    </LoadingButton>
+                ))}
+              </div>
+            </DialogContent>
+            <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
+              <LoadingButton fullWidth onClick={() => setFiles([])} variant="outlined"
+                sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+                Annuler
+              </LoadingButton>
+              <LoadingButton fullWidth onClick={handleFileSubmit} loading={extraFileLoading}
+                loadingPosition="end" endIcon={<SaveIcon />} variant="contained"
+                sx={{ textTransform: "none", borderRadius: 2, background: "#15803d", "&:hover": { background: "#166534" } }}>
+                <span>Enregistrer</span>
+              </LoadingButton>
+            </DialogActions>
+          </Dialog>
+        )}
 
-                    <LoadingButton
-                      onClick={(e) => {
-                        setAudioListForm([]);
-                        setAudioListUrlForm([]);
-                        setAudioBox(false);
-                        setOpen2(false);
-                      }}
-                      className="waves-effect waves-effect-b waves-light btn-small"
-                      loadingPosition="end"
-                      // loading={extraFileLoading}
-                      endIcon={<CloseIcon />}
-                      variant="contained"
-                      sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                    >
-                      <span>Annuler</span>
-                    </LoadingButton>
-                  </Box>
-                </DialogActions>
-              ) : (
-                <></>
-              )}
-            </Dialog>
-          </div>
+        {/* ── Modal Audio ── */}
+        {showAudioBox && (
+          <Dialog open={open2} onClose={() => setOpen2(false)} id="dialog-audio" fullWidth maxWidth="sm"
+            PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
+            <DialogContent>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingTop: 8 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Enregistrement audio</div>
+                  <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>Cliquez sur le micro et parlez</div>
+                </div>
+              </div>
+              <section className="voice-recorder">
+                <div className="recorder-container">
+                  {audioListUrlForm.map((url, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
+                      <audio src={url} controls style={{ flex: 1, height: 36 }} />
+                      <CloseIcon style={{ cursor: "pointer", color: "#94a3b8", fontSize: 18 }}
+                        onClick={() => { setAudioListForm(audioListForm.filter((_, ind) => ind !== i)); setAudioListUrlForm(audioListUrlForm.filter((_, ind) => ind !== i)); }} />
+                    </div>
+                  ))}
+                  <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={() => {}} />
+                </div>
+              </section>
+            </DialogContent>
+            {audioListUrlForm.length > 0 && (
+              <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
+                <LoadingButton fullWidth onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} variant="outlined"
+                  sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+                  Annuler
+                </LoadingButton>
+                <LoadingButton fullWidth onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading}
+                  loadingPosition="end" endIcon={<SaveIcon />} variant="contained"
+                  sx={{ textTransform: "none", borderRadius: 2, background: "#1d4ed8", "&:hover": { background: "#1e40af" } }}>
+                  <span>Enregistrer</span>
+                </LoadingButton>
+              </DialogActions>
+            )}
+          </Dialog>
         )}
         <audio ref={audioRef} src={currentAudio} hidden />
 
@@ -4220,29 +4072,62 @@ const TraiterReclamation = (props) => {
                 <section className="tabs-vertical mt-1 section">
                   <div className="row">
                     <div className="col l12 s12 pb-5">
-                      <div style={{ padding: '24px 0' }}>
-
-                        {/* ── List header ── */}
-                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
-                          <div>
-                            <h4 style={{ margin: '0 0 4px', fontWeight: 700, color: '#0f172a', fontSize: 20 }}>
-                              Traitement actif
-                            </h4>
-                            <p style={{ margin: 0, color: '#64748b', fontSize: 13 }}>
-                              {content.length} dossier{content.length !== 1 ? 's' : ''} en cours de traitement
-                            </p>
-                          </div>
+                      <div className="card-panel pb-5">
+                        <ClaimsKPIBar items={content} />
+                        {/* ── Chips de filtre ── */}
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2, pb: 2, borderBottom: "1px solid #F1F5F9" }}>
+                          {TREAT_CHIPS.map((chip) => {
+                            const count = content.filter(chip.filter).length;
+                            const isActive = activeFilter === chip.value;
+                            if (chip.value !== "ALL" && count === 0) return null;
+                            return (
+                              <ButtonBase key={chip.value} onClick={() => setActiveFilter(chip.value)} sx={{ borderRadius: "20px", px: 1.5, py: 0.5, border: isActive ? "1.5px solid #93C5FD" : "1.5px solid #E2E8F0", backgroundColor: isActive ? "#EFF6FF" : "#FAFAFA", color: isActive ? "#1D4ED8" : "#64748B", fontWeight: isActive ? 700 : 500, fontSize: "0.78rem", transition: "all 0.18s", display: "flex", alignItems: "center", gap: 0.8, "&:hover": { backgroundColor: "#EFF6FF", color: "#1D4ED8", borderColor: "#93C5FD" } }}>
+                                <Typography component="span" sx={{ fontSize: "inherit", fontWeight: "inherit", lineHeight: 1.4 }}>{chip.label}</Typography>
+                                <Box sx={{ minWidth: 20, height: 20, borderRadius: "10px", backgroundColor: isActive ? "#1D4ED8" : "#E2E8F0", color: isActive ? "#fff" : "#64748B", fontSize: "0.65rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", px: 0.6 }}>{count}</Box>
+                              </ButtonBase>
+                            );
+                          })}
+                        </Box>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                          <h5 className="card-title" style={{ fontWeight: 700, color: "#0F172A", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: 8, margin: 0 }}>
+                            Réclamations à traiter
+                            <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748B", background: "#F1F5F9", borderRadius: 8, padding: "2px 10px" }}>
+                              {filteredContent.length} résultat{filteredContent.length !== 1 ? "s" : ""}
+                            </span>
+                          </h5>
+                          <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                            <Tooltip title="Vue liste">
+                              <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                              </Box>
+                            </Tooltip>
+                            <Tooltip title="Vue cartes">
+                              <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                              </Box>
+                            </Tooltip>
+                          </Box>
                         </div>
-
-                        {/* ── Modern table wrapper ── */}
-                        <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
-                          <ReactDatatable
-                            className={"responsive-table"}
-                            config={config}
-                            records={content}
-                            columns={columns}
-                            onRowClicked={rowClickedHandler}
-                          />
+                        <div>
+                          {viewMode === "list" ? (
+                            <ClaimsTable
+                              items={filteredContent}
+                              mode={1}
+                              objets={[]}
+                              onRowClick={(data) => rowClickedHandler(null, data, 0)}
+                              statusOptions={TREAT_STATUS_OPTIONS}
+                              currentUser={user}
+                            />
+                          ) : (
+                            <ClaimsCardView
+                              items={filteredContent}
+                              mode={1}
+                              objets={[]}
+                              onCardClick={(data) => rowClickedHandler(null, data, 0)}
+                              currentUser={user}
+                            />
+                          )}
+                          <div id="tab_exl" style={{ display: "none" }}></div>
                         </div>
                       </div>
                     </div>
@@ -4283,7 +4168,7 @@ const TraiterReclamation = (props) => {
             visibleActions={[
               addR === "PILOTE" && props.status === "SAVED" && 'convertir',
               (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && props.status === "SAVED" && props.transmitted !== "true" && 'affecter',
-              (hbt.includes("H6") || addR === "PILOTE") && ["AFFECTED","UNSATISFIED","PARTIAL_SATISFIED","CLASSED"].includes(props.status) && 'reaffecter',
+              (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && ["AFFECTED","UNSATISFIED","PARTIAL_SATISFIED","CLASSED"].includes(props.status) && 'reaffecter',
               (addR !== "PILOTE" && !hbt.includes("H6")) && props.status === "SAVED" && props.transmitted === "false" && (user.firstAndLastName === props.created_by || user.ra === true) && 'transmettre',
               (hbt.includes("H6") || addR === "PILOTE") && props.status === "TO_APPROUVED" && 'approuver',
             ].filter(Boolean)}
@@ -4305,9 +4190,21 @@ const TraiterReclamation = (props) => {
             solution={props.solution}
 
             treatForm={treatForm}
+            onTreat={handleReSolve}
+            loadingTreat={props.etat2}
+            canTreat={
+              (props.handled_by === user.firstAndLastName && Boolean(props.authorize)) ||
+              (props.created_by === user.firstAndLastName && props.unit && user?.servicePointDto?.libelle && props.unit === user.servicePointDto.libelle)
+            }
             existingSolutions={props.selectedItem?.objet?.existingSolutions || []}
-            onModifyBeforeSend={(content) => props.newSolutionChanged(content)}
-            onUseAndTreat={(content) => props.newSolutionChanged(content)}
+            onModifyBeforeSend={(content) => {
+              props.solutionChanged(content);
+              props.newSolutionChanged(content);
+              // Pré-remplir aussi le commentaire pour que la validation passe
+              if (!props.comment) props.commentChanged("Solution pré-enregistrée");
+              if (!props.new_comment) props.newCommentChanged("Solution pré-enregistrée");
+            }}
+            onUseAndTreat={(content, id) => handleSolveImmediate(content, id)}
             btnS={btnS}
             transmettre={transmettre}
             session={props.session}

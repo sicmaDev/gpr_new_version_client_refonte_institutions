@@ -49,16 +49,13 @@ export const listeByStatut = async (props, state) => {
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
     };
-    await axios(config)
+    return axios(config)
         .then(function (response) {
-
-            // console.log("response",response.data.content)
             props.itemsChanged(response.data.content)
-
-            return response.data.content
+            return response.data.content;
         })
         .catch(function (error) {
-            return error;
+            return [];
         });
 }
 

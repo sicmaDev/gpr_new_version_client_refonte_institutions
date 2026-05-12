@@ -7,13 +7,21 @@ import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CloseIcon from "@mui/icons-material/Close";
 
+const ALL_TYPES = [
+  { type: "dénonciation", label: "Dénonciation", desc: "Signalement d'un abus ou d'une infraction", icon: <AnnouncementIcon style={{ fontSize: 22, color: "#dc2626" }} />, bg: "#fef2f2", border: "#fecaca" },
+  { type: "suggestion",   label: "Suggestion",   desc: "Proposition d'amélioration d'un service",  icon: <LightbulbIcon   style={{ fontSize: 22, color: "#d97706" }} />, bg: "#fffbeb", border: "#fde68a" },
+];
+
 const ConvertirModal = ({
   open, onClose,
   onSelectType,
   confirmOpen, convertionType,
   onConfirmClose, onSubmitConfirmation,
   loading,
+  types,        // ex: ["suggestion"] pour n'afficher que Suggestion
+  dossierLabel, // ex: "dénonciation" pour adapter le texte
 }) => {
+  const visibleTypes = types ? ALL_TYPES.filter(o => types.includes(o.type)) : ALL_TYPES;
   return (
     <>
       {/* Étape 1 : choix du type */}
@@ -37,13 +45,10 @@ const ConvertirModal = ({
 
         <DialogContent style={{ padding: "24px", background: "#fafafa" }}>
           <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 20, marginTop: 0 }}>
-            Cette réclamation sera convertie et transférée vers la section correspondante.
+            Ce{dossierLabel ? "tte " + dossierLabel : "tte réclamation"} sera convertie et transférée vers la section correspondante.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {[
-              { type: "dénonciation", label: "Dénonciation", desc: "Signalement d'un abus ou d'une infraction", icon: <AnnouncementIcon style={{ fontSize: 22, color: "#dc2626" }} />, bg: "#fef2f2", border: "#fecaca" },
-              { type: "suggestion",   label: "Suggestion",   desc: "Proposition d'amélioration d'un service",  icon: <LightbulbIcon   style={{ fontSize: 22, color: "#d97706" }} />, bg: "#fffbeb", border: "#fde68a" },
-            ].map(opt => (
+            {visibleTypes.map(opt => (
               <button
                 key={opt.type}
                 onClick={() => onSelectType(opt.type)}

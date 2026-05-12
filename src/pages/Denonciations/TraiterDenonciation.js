@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
+import DossierDataTable from "../../components/shared/DossierDataTable";
 import Select from "react-select";
 import { Link, NavLink } from "react-router-dom";
 import TextField from "@mui/material/TextField";
@@ -86,8 +87,6 @@ import {
 } from "../../Utils/utils";
 import { connect } from "react-redux";
 import Dialog from "@mui/material/Dialog";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
@@ -102,8 +101,6 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { TransitionProps } from "@mui/material/transitions";
-import timelineOppositeContentClasses from "@mui/lab/TimelineOppositeContent";
 import Timeline from "@mui/lab/Timeline";
 import TimelineItem from "@mui/lab/TimelineItem";
 import TimelineSeparator from "@mui/lab/TimelineSeparator";
@@ -170,7 +167,7 @@ import {
   addSuggestionApi,
   addSuggestionApiOffline,
 } from "../../apis/Suggestions/SuggestionsApi";
-import { useHistory } from "react-router-dom/cjs/react-router-dom";
+import { useHistory, useLocation } from "react-router-dom/cjs/react-router-dom";
 import { modalify } from "../../Utils/modal";
 import SendIcon from "@mui/icons-material/Send";
 import useWebSocketSession from "../../hooks/useWebSocketSession";
@@ -198,6 +195,10 @@ import EmailDialog from "./widgets/EmailDialog";
 import { WarningAmber } from "@mui/icons-material";
 import { usePermissions } from "../Reclamations/widgets/usePermissions";
 //import { KTApp } from "../../Utils/blockui";
+import { ButtonBase } from "@mui/material";
+import ClaimsKPIBar from "../Reclamations/components/ClaimsKPIBar";
+import ClaimsTable from "../Reclamations/components/ClaimsTable";
+import ClaimsCardView from "../Reclamations/components/ClaimsCardView";
 
 const styles = {
   control: (base) => ({
@@ -208,12 +209,20 @@ const styles = {
   menu: (provided) => ({ ...provided, zIndex: 9999 }),
 };
 
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
+
+const DEN_TREAT_CHIPS = [
+  { value: "ALL",               label: "Tous",                    filter: () => true },
+  { value: "TO_TREAT",          label: "À traiter",               filter: (c) => ["SAVED","TEMP_SAVED","TO_APPROUVED","DESAPPROUVED"].includes(c.status) },
+  { value: "AFFECTED",          label: "Affectée",                filter: (c) => c.status === "AFFECTED" },
+  { value: "PARTIAL_SATISFIED", label: "Partiellement satisfait", filter: (c) => c.status === "PARTIAL_SATISFIED" },
+  { value: "UNSATISFIED",       label: "Non satisfait",           filter: (c) => c.status === "UNSATISFIED" },
+  { value: "CLASSED",           label: "Classée",                 filter: (c) => c.status === "CLASSED" },
+  { value: "OVERDUE",           label: "En retard",               filter: (c) => c.retardDay !== undefined && c.retardDay <= 0 && !["SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION"].includes(c.status) },
+];
+
 const TraiterDenonciation = (props) => {
   let dimf, crew;
   let user =
@@ -254,8 +263,8 @@ const TraiterDenonciation = (props) => {
   const [usersCGR, setUsersCGR] = React.useState([]);
   const [reafect, setReacfect] = useState(false);
 
-  const warningConvert = props.convertedBy !== "" &&
-    props.convertedAt !== "" && (
+  const warningConvert = props.convertedBy && props.convertedBy !== "" &&
+    props.convertedAt && props.convertedAt !== "" && (
       <span
         className="mb-1"
         style={{
@@ -431,6 +440,8 @@ const TraiterDenonciation = (props) => {
   };
 
   const history = useHistory();
+  const location = useLocation();
+  const [shouldAutoSelect, setShouldAutoSelect] = useState(false);
   const handleClose = () => {
     history.push("/denonciations/traitement/all");
   };
@@ -478,15 +489,17 @@ const TraiterDenonciation = (props) => {
     if (mode === 1) {
       addSuggestionApi(formData, props)
         .then((response) => {
+          const suggestionCode = response.data.content.code;
           const data = {
-            code: response.data.content.code,
+            code: suggestionCode,
             claimId: dataRow.id,
           };
 
           convertDenunciationApi(data, props)
             .then(() => {
               setLoadingConversion(false);
-              history.push("/suggestions/traitement");
+              sessionStorage.setItem('pendingSuggestionConversion', JSON.stringify({ code: suggestionCode, convertedByName: user?.firstAndLastName || "", convertedAtTime: new Date().toISOString() }));
+              history.push("/suggestions/traitement/all", { justConverted: true, convertedCode: suggestionCode });
             })
             .finally(() => {
               setLoadingConversion(false);
@@ -520,7 +533,17 @@ const TraiterDenonciation = (props) => {
     if (props.match.params.code === "all") {
       props.itemsChanged([]);
       listeTreat(props)
-        .then((r) => { })
+        .then((items) => {
+          if (location.state?.justConverted && Array.isArray(items) && items.length > 0) {
+            history.replace(location.pathname, {});
+            const newest = [...items].sort((a, b) =>
+              new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+            )[0];
+            if (newest) {
+              setTimeout(() => rowClickedHandler(null, newest, 0), 100);
+            }
+          }
+        })
         .finally(() => {
           setIsLoading(false);
           KTApp.unblockPage();
@@ -673,7 +696,7 @@ const TraiterDenonciation = (props) => {
             data.servicePoint.libelle ? data.servicePoint.libelle : ""
           );
           props.contentChanged(data.content ? data.content : "");
-          props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
+          props.solutionChanged(Array.isArray(data.solutionDtos) ? data.solutionDtos : []);
           props.statusChanged(data.status ? data.status : "");
           props.createdAtChanged(data.createdAt ? data.createdAt : "");
           props.createdByChanged(
@@ -694,8 +717,11 @@ const TraiterDenonciation = (props) => {
           );
           props.selectedItemChanged(data);
           setCurrentData(data);
+          props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
+          props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
           //fetch attachments for selected claim
           getFillesApi(data.id, props);
+          getClaimAudioApi(data.id, props);
         });
       }
 
@@ -736,47 +762,20 @@ const TraiterDenonciation = (props) => {
   }, [audio]);
 
   const invitation = (event) => {
-    let ids = props?.session?.guests?.map((e) => {
-      return e.id;
-    });
-
-    let princ = users.filter((e) => {
-      return (
-        e.additionalRole !== "MEMBRE_CGR" &&
-        e.additionalRole !== "PR_CGR" &&
-        !ids.includes(e.id)
-      );
-    });
-
     const { value } = event.target;
+    const ids = props?.session?.guests?.map((e) => e.id) ?? [];
+    const princ = users.filter((e) =>
+      e.additionalRole !== "MEMBRE_CGR" &&
+      e.additionalRole !== "PR_CGR" &&
+      !ids.includes(e.id)
+    );
     if (value !== "") {
-      let coco = [];
-      coco = princ.filter((e) => {
-        return e.firstAndLastName.toLowerCase().includes(value.toLowerCase());
-      });
-
-      setUsersCGR((prevList) => {
-        const newList = coco;
-        return newList;
-      });
-
-      // setUsersCGR(coco)
-      if (usersCGR.length !== 0) {
-        maDivRef.current.style.display = "block";
-      } else {
-        setUsersCGR((prevList) => {
-          const newList = coco;
-          return princ;
-        });
-
-        maDivRef.current.style.display = "none";
-      }
-      // console.log("cg",usersCGR)
+      setUsersCGR(princ.filter((e) =>
+        e.firstAndLastName.toLowerCase().includes(value.toLowerCase())
+      ));
     } else {
-      maDivRef.current.style.display = "none";
+      setUsersCGR(princ);
     }
-
-    // console.log("valeur",value)
   };
 
   const memberIds = props?.session?.members?.map((m) => m.id) || [];
@@ -854,6 +853,7 @@ const TraiterDenonciation = (props) => {
     handleAssignOrReassign,
     handleSolve,
     handleReSolve,
+    handleSolveImmediate,
     handleApprove,
     handleDisapprove,
     handleTransmission,
@@ -883,7 +883,8 @@ const TraiterDenonciation = (props) => {
       sortable: true,
       cell: (claim, index) => {
         let codi;
-        if (claim.session !== null && claim.session !== "") {
+        const _isFinal = ["TREAT","SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION","CLASSED"].includes(claim.status);
+        if (claim.session !== null && claim.session !== "" && !_isFinal) {
           if (
             claim.status === "AFFECTED" &&
             claim.treatmentAffectedTo !== null &&
@@ -1123,7 +1124,7 @@ const TraiterDenonciation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
-    history.push('/denonciations/traitement/' + data.code);
+    history.push('/denonciations/traitement/' + data.code, { from: 'traitement' });
   };
 
 
@@ -1609,7 +1610,7 @@ const TraiterDenonciation = (props) => {
           props.transmitted === "false") ||
           (props.transmittedTo === user.firstAndLastName &&
             props.transmitted === "true" &&
-            addR === "MOLDUE") || (user.ra === true && props.transmitted === "false"))
+            addR === "MOLDUE"))
       ) {
         treatForm = (
           <>
@@ -1644,9 +1645,9 @@ const TraiterDenonciation = (props) => {
                             name="solution"
                             placeholder=""
                             className="materialize-textarea textarea-size"
-                            value={props.solution}
+                            value={props.new_solution}
                             onChange={(e) =>
-                              props.solutionChanged(e.target.value)
+                              props.newSolutionChanged(e.target.value)
                             }
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
@@ -1658,7 +1659,7 @@ const TraiterDenonciation = (props) => {
                           <small className="errorTxt4">
                             <div id="cpassword-error" className="error">
                               {props.errors !== undefined
-                                ? props.errors.solution
+                                ? props.errors.new_solution
                                 : ""}
                             </div>
                           </small>
@@ -1669,9 +1670,9 @@ const TraiterDenonciation = (props) => {
                             name="comment"
                             placeholder=""
                             className="materialize-textarea textarea-size"
-                            value={props.comment}
+                            value={props.new_comment}
                             onChange={(e) =>
-                              props.commentChanged(e.target.value)
+                              props.newCommentChanged(e.target.value)
                             }
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
@@ -1683,7 +1684,7 @@ const TraiterDenonciation = (props) => {
                           <small className="errorTxt4">
                             <div id="cpassword-error" className="error">
                               {props.errors !== undefined
-                                ? props.errors.comment
+                                ? props.errors.new_comment
                                 : ""}
                             </div>
                           </small>
@@ -1692,9 +1693,8 @@ const TraiterDenonciation = (props) => {
                     </div>
                     <div className="col s12 display-flex justify-content-end">
                       {
-                        // (actif !== undefined && actif)  ?
                         <LoadingButton
-                          onClick={handleSolve}
+                          onClick={handleReSolve}
                           className="waves-effect waves-effect-b waves-light btn-small"
                           loading={props.etat2}
                           loadingPosition="end"
@@ -1740,6 +1740,14 @@ const TraiterDenonciation = (props) => {
               </div>
             )}
           </>
+        );
+      } else if (props.created_by !== user.firstAndLastName) {
+        treatForm = (
+          <div className="card-alert card orange lighten-5">
+            <div className="card-content orange-text" style={{ textAlign: "center" }}>
+              <ul>Seul l'agent qui a enregistré cette dénonciation peut la traiter. Vous pouvez l'affecter à un agent.</ul>
+            </div>
+          </div>
         );
       } else {
         treatForm = "";
@@ -1910,9 +1918,9 @@ const TraiterDenonciation = (props) => {
                             name="solution"
                             placeholder=""
                             className="materialize-textarea textarea-size"
-                            value={props.solution}
+                            value={props.new_solution}
                             onChange={(e) =>
-                              props.solutionChanged(e.target.value)
+                              props.newSolutionChanged(e.target.value)
                             }
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
@@ -1924,7 +1932,7 @@ const TraiterDenonciation = (props) => {
                           <small className="errorTxt4">
                             <div id="cpassword-error" className="error">
                               {props.errors !== undefined
-                                ? props.errors.solution
+                                ? props.errors.new_solution
                                 : ""}
                             </div>
                           </small>
@@ -1935,9 +1943,9 @@ const TraiterDenonciation = (props) => {
                             name="comment"
                             placeholder=""
                             className="materialize-textarea textarea-size"
-                            value={props.comment}
+                            value={props.new_comment}
                             onChange={(e) =>
-                              props.commentChanged(e.target.value)
+                              props.newCommentChanged(e.target.value)
                             }
                           ></textarea>
                           <label htmlFor="content" className={"active"}>
@@ -1949,16 +1957,15 @@ const TraiterDenonciation = (props) => {
                           <small className="errorTxt4">
                             <div id="cpassword-error" className="error">
                               {props.errors !== undefined
-                                ? props.errors.comment
+                                ? props.errors.new_comment
                                 : ""}
                             </div>
                           </small>
                         </div>
                         <div className="col s12 display-flex justify-content-end mt-3">
                           {
-                            //  (actif !== undefined && actif)  ?
                             <LoadingButton
-                              onClick={handleSolve}
+                              onClick={handleReSolve}
                               className="waves-effect waves-effect-b waves-light btn-small"
                               loading={props.etat2}
                               loadingPosition="end"
@@ -2603,8 +2610,14 @@ const TraiterDenonciation = (props) => {
   const [showSelectPrintItem, setShowSelectPrintItem] = useState(false);
   const [emailSender, setEmailSender] = useState([]);
   const [affectEmail, setAffectEmail] = useState("");
+  const [viewMode, setViewMode] = useState("list");
+  const [activeFilter, setActiveFilter] = useState("ALL");
 
   let content = props.items;
+  const filteredContent = useMemo(() => {
+    const chip = DEN_TREAT_CHIPS.find((c) => c.value === activeFilter);
+    return chip ? content.filter(chip.filter) : content;
+  }, [content, activeFilter]);
   let creationDate = props.created_at ? formatDate(props.created_at) : "";
 
   //Ajout de l'attribut "client" afin de permettre le filtrage dans le datatable
@@ -2912,278 +2925,94 @@ const TraiterDenonciation = (props) => {
 
   return (
     <div id="main">
+      {/* ── Modal Contenu ── */}
       {showExtraContent && (
-        <div>
-          <Dialog
-            open={showExtraContent}
-            fullWidth={true}
-            maxWidth="md"
-            onClose={(e) => {
-              setShowExtraContent(false);
-            }}
-            overflowX="hidden"
-            id="dialog-contenu"
-          >
-            <DialogTitle>Ajouter un contenu</DialogTitle>
-            <DialogContent sx={{ overflowX: "hidden" }}>
-              <TextField
-                fullWidth
-                multiline
-                minRows={4}
-                value={extraContent}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setExtraContent(e.target.value);
-                }}
-                placeholder="Saisissez le contenu..."
-              />
-            </DialogContent>
-            {extraContent && extraContent?.trim() !== "" ? (
-              <DialogActions sx={{ overflowX: "hidden" }}>
-                <LoadingButton
-                  onClick={(e) => {
-                    setExtraContent("");
-                    setShowExtraContent(false);
-                  }}
-                  className="waves-effect waves-effect-b waves-light btn-small"
-                  loadingPosition="end"
-                  // loading={extraFileLoading}
-                  endIcon={<CloseIcon />}
-                  variant="contained"
-                  sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  color="secondary"
-                >
-                  Annuler
-                </LoadingButton>
-                <LoadingButton
-                  onClick={(e) => {
-                    handleContentSubmit(e);
-                  }}
-                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                  loading={extraFileLoading}
-                  loadingPosition="end"
-                  endIcon={<SaveIcon />}
-                  variant="contained"
-                  sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-                  color="primary"
-                >
-                  Enregistrer
-                </LoadingButton>
-              </DialogActions>
-            ) : (
-              <></>
-            )}
-          </Dialog>
-        </div>
-      )}
-      {filesForm.length ? (
-        <div>
-          <Dialog
-            open={filesForm.length ? true : false}
-            fullWidth={true}
-            maxWidth="sm"
-            onClose={(e) => {
-              setFiles([]);
-            }}
-            id="dialog-addFile"
-          >
-            <DialogContent>
-              <DialogContentText>
-                <div className="col l12 s12 pb-2" id="content">
-                  <div className="df sb pb-2">
-                    <b>Ajout de fichier</b>
-                    <CloseIcon
-                      style={{ cursor: "pointer" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    />
-                  </div>
-                </div>
-              </DialogContentText>
-
-              <div className="col l12 m12 s12 file-field input-field">
-                <List component="div" role="group">
-                  {filesForm.map((file, i) => {
-                    return (
-                      <ListItemButton key={i} divider>
-                        <ListItemText
-                          primary={file.name}
-                          secondary={
-                            Math.round((file.size / 1024) * 100) / 100 +
-                            " " +
-                            "Ko"
-                          }
-                        />
-                      </ListItemButton>
-                    );
-                  })}
-                </List>
-                <div
-                  style={{ display: "flex", alignItems: "center" }}
-                  htmlFor="ile">
-                  <LoadingButton
-                    onClick={(e) => {
-                      handleFileSubmit(e);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                    loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<SaveIcon />}
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#1e2188",
-                      textTransform: "initial",
-                    }}
-                  >
-                    <span>Enregistrer</span>
-                  </LoadingButton>
-
-                  <LoadingButton
-                    onClick={(e) => {
-                      setFiles([]);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small"
-                    // loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<CloseIcon />}
-                    variant="contained"
-                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  >
-                    <span>Annuler</span>
-                  </LoadingButton>
-                </div>
+        <Dialog open={showExtraContent} fullWidth maxWidth="sm" onClose={() => setShowExtraContent(false)} id="dialog-contenu"
+          PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
+          <DialogContent>
+            <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      ) : (
-        <></>
+              <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Ajouter un contenu</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 20 }}>Ce contenu sera joint à la dénonciation</div>
+            </div>
+            <TextField fullWidth multiline minRows={4} value={extraContent}
+              onChange={(e) => { e.stopPropagation(); e.preventDefault(); setExtraContent(e.target.value); }}
+              placeholder="Saisissez le contenu..." sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }} />
+          </DialogContent>
+          {extraContent?.trim() !== "" && (
+            <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
+              <LoadingButton onClick={() => { setExtraContent(""); setShowExtraContent(false); }} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
+              <LoadingButton onClick={(e) => handleContentSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#7c3aed', '&:hover': { background: '#6d28d9' } }}><span>Enregistrer</span></LoadingButton>
+            </DialogActions>
+          )}
+        </Dialog>
       )}
-      {showAudioBox && (
-        <div>
-          <Dialog
-            open={open2}
-            onClose={() => {
-              setOpen2(false);
-            }}
-            style={{ padding: "16px" }}
-            id="dialog-audio"
-          >
-            <DialogTitle
-              align="center"
-              color={"#1E2188"}
-              fontSize={"23px"}
-              fontWeight={"bold"}
-            >
-              {"Enregistreur vocal dénonciations"}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText
-                align="center"
-                fontSize={"14px"}
-                textAlign={"center"}
-              >
-                {
-                  "Cliquez sur le bouton ci-dessous et parler dans le micro de votre téléphone, ou branchez un casque ou des écouteurs"
-                }
-              </DialogContentText>
 
+      {/* ── Modal Fichiers ── */}
+      {filesForm.length > 0 && (
+        <Dialog open fullWidth maxWidth="sm" onClose={() => setFiles([])} id="dialog-addFile"
+          PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
+          <DialogContent>
+            <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Ajouter des fichiers</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>{filesForm.length} fichier(s) sélectionné(s)</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {filesForm.map((file, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                  <span style={{ flex: 1, fontSize: 13, color: '#1e293b' }}>{file.name}</span>
+                  <span style={{ fontSize: 11.5, color: '#94a3b8' }}>{Math.round((file.size / 1024) * 100) / 100} Ko</span>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+          <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
+            <LoadingButton onClick={() => setFiles([])} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
+            <LoadingButton onClick={(e) => handleFileSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#1d4ed8', '&:hover': { background: '#1e40af' } }}><span>Enregistrer</span></LoadingButton>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* ── Modal Audio ── */}
+      {showAudioBox && (
+        <Dialog open={open2} onClose={() => { setOpen2(false); setAudioBox(false); }} fullWidth maxWidth="sm" id="dialog-audio"
+          PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
+          <DialogContent>
+            <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>+ Audio</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Enregistrez ou importez un audio</div>
+            </div>
               <section className="voice-recorder">
                 <div className="recorder-container">
-                  {audioListUrlForm.map((url, i) => {
-                    return (
-                      <Box
-                        key={i}
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          pb: 2,
-                          pt: 2,
-                        }}
-                      >
-                        <audio
-                          src={url}
-                          controls
-                          sx={{ flex: "1", mr: 2, width: "100%" }}
-                        />
-                        <CloseIcon
-                          color="red"
-                          onClick={() => {
-                            setAudioListForm(() => {
-                              return audioListForm.filter(
-                                (va, ind) => ind !== i
-                              );
-                            });
-                            setAudioListUrlForm(() => {
-                              return audioListUrlForm.filter(
-                                (va, inde) => inde !== i
-                              );
-                            });
-                          }}
-                        />
-                      </Box>
-                    );
-                  })}
-                  <RecorderControls
-                    recorderState={recorderState}
-                    handlers={handlers}
-                    closeAction={() => { }}
-                  />
+                  {audioListUrlForm.map((url, i) => (
+                    <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, pt: 2 }}>
+                      <audio src={url} controls style={{ flex: 1, marginRight: 8 }} />
+                      <CloseIcon sx={{ cursor: 'pointer', color: '#ef4444' }} onClick={() => {
+                        setAudioListForm(audioListForm.filter((_, ind) => ind !== i));
+                        setAudioListUrlForm(audioListUrlForm.filter((_, ind) => ind !== i));
+                      }} />
+                    </Box>
+                  ))}
+                  <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={() => { }} />
                 </div>
               </section>
             </DialogContent>
-            {audioListUrlForm.length ? (
-              <DialogActions>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "end",
-                    alignItems: "center",
-                  }}
-                >
-                  <LoadingButton
-                    onClick={(e) => {
-                      handleFileSubmit(e, false);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                    loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<SaveIcon />}
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#1e2188",
-                      textTransform: "initial",
-                    }}
-                  >
-                    <span>Enregistrer</span>
-                  </LoadingButton>
-
-                  <LoadingButton
-                    onClick={(e) => {
-                      setAudioListForm([]);
-                      setAudioListUrlForm([]);
-                      setAudioBox(false);
-                      setOpen2(false);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small"
-                    loadingPosition="end"
-                    // loading={extraFileLoading}
-                    endIcon={<CloseIcon />}
-                    variant="contained"
-                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  >
-                    <span>Annuler</span>
-                  </LoadingButton>
-                </Box>
+            {audioListUrlForm.length > 0 && (
+              <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
+                <LoadingButton onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
+                <LoadingButton onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#166534', '&:hover': { background: '#14532d' } }}><span>Enregistrer</span></LoadingButton>
               </DialogActions>
-            ) : (
-              <></>
             )}
           </Dialog>
-        </div>
       )}
       <audio ref={audioRef} src={currentAudio} hidden />
 
@@ -3195,19 +3024,59 @@ const TraiterDenonciation = (props) => {
                 <div className="row">
                   <div className="col l12 s12 pb-5">
                     <div className="card-panel pb-5">
-                      <div className="row">
-                        <div className="col s12">
-                          <h5 className="card-title">Dénonciations à traiter</h5>
-                        </div>
-                        <div className="col s12">
-                          <ReactDatatable
-                            className={"responsive-table"}
-                            config={config}
-                            records={content}
-                            columns={columns}
-                            onRowClicked={rowClickedHandler}
+                      <ClaimsKPIBar items={content} />
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2, pb: 2, borderBottom: "1px solid #F1F5F9" }}>
+                        {DEN_TREAT_CHIPS.map((chip) => {
+                          const count = content.filter(chip.filter).length;
+                          const isActive = activeFilter === chip.value;
+                          if (chip.value !== "ALL" && count === 0) return null;
+                          return (
+                            <ButtonBase key={chip.value} onClick={() => setActiveFilter(chip.value)} sx={{ borderRadius: "20px", px: 1.5, py: 0.5, border: isActive ? "1.5px solid #93C5FD" : "1.5px solid #E2E8F0", backgroundColor: isActive ? "#EFF6FF" : "#FAFAFA", color: isActive ? "#1D4ED8" : "#64748B", fontWeight: isActive ? 700 : 500, fontSize: "0.78rem", transition: "all 0.18s", display: "flex", alignItems: "center", gap: 0.8, "&:hover": { backgroundColor: "#EFF6FF", color: "#1D4ED8", borderColor: "#93C5FD" } }}>
+                              <Typography component="span" sx={{ fontSize: "inherit", fontWeight: "inherit", lineHeight: 1.4 }}>{chip.label}</Typography>
+                              <Box sx={{ minWidth: 20, height: 20, borderRadius: "10px", backgroundColor: isActive ? "#1D4ED8" : "#E2E8F0", color: isActive ? "#fff" : "#64748B", fontSize: "0.65rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", px: 0.6 }}>{count}</Box>
+                            </ButtonBase>
+                          );
+                        })}
+                      </Box>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                        <h5 className="card-title" style={{ fontWeight: 700, color: "#0F172A", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: 8, margin: 0 }}>
+                          Dénonciations à traiter
+                          <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748B", background: "#F1F5F9", borderRadius: 8, padding: "2px 10px" }}>
+                            {filteredContent.length} résultat{filteredContent.length !== 1 ? "s" : ""}
+                          </span>
+                        </h5>
+                        <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
+                          <Tooltip title="Vue liste">
+                            <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                            </Box>
+                          </Tooltip>
+                          <Tooltip title="Vue cartes">
+                            <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                            </Box>
+                          </Tooltip>
+                        </Box>
+                      </div>
+                      <div>
+                        {viewMode === "list" ? (
+                          <ClaimsTable
+                            items={filteredContent}
+                            mode={1}
+                            objets={[]}
+                            onRowClick={(data) => rowClickedHandler(null, data, 0)}
+                            currentUser={user}
                           />
-                        </div>
+                        ) : (
+                          <ClaimsCardView
+                            items={filteredContent}
+                            mode={1}
+                            objets={[]}
+                            onCardClick={(data) => rowClickedHandler(null, data, 0)}
+                            currentUser={user}
+                          />
+                        )}
+                        <div id="tab_exl" style={{ display: "none" }}></div>
                       </div>
                     </div>
                   </div>
@@ -3246,7 +3115,7 @@ const TraiterDenonciation = (props) => {
           visibleActions={[
             addR === "PILOTE" && props.status === "SAVED" && 'convertir',
             (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && props.status === "SAVED" && props.transmitted !== "true" && 'affecter',
-            (hbt.includes("H6") || addR === "PILOTE") && ["AFFECTED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(props.status) && 'reaffecter',
+            (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && ["AFFECTED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(props.status) && 'reaffecter',
             (addR !== "PILOTE" && !hbt.includes("H6")) && props.status === "SAVED" && props.transmitted === "false" && (user.firstAndLastName === props.created_by || user.ra === true) && 'transmettre',
             (hbt.includes("H6") || addR === "PILOTE") && props.status === "TO_APPROUVED" && 'approuver',
           ].filter(Boolean)}
@@ -3268,9 +3137,21 @@ const TraiterDenonciation = (props) => {
           solution={props.solution}
 
           treatForm={treatForm}
+          onTreat={handleReSolve}
+          loadingTreat={props.etat2}
+          canTreat={
+            (props.handled_by === user.firstAndLastName && Boolean(props.authorize)) ||
+            (props.created_by === user.firstAndLastName && props.unit && user?.servicePointDto?.libelle && props.unit === user.servicePointDto.libelle)
+          }
+          conversionWarning={warningConvert || null}
           existingSolutions={props.selectedItem?.objet?.existingSolutions || []}
-          onModifyBeforeSend={(content) => props.newSolutionChanged(content)}
-          onUseAndTreat={(content) => props.newSolutionChanged(content)}
+          onModifyBeforeSend={(content) => {
+            props.solutionChanged(content);
+            props.newSolutionChanged(content);
+            if (!props.comment) props.commentChanged("Solution pré-enregistrée");
+            if (!props.new_comment) props.newCommentChanged("Solution pré-enregistrée");
+          }}
+          onUseAndTreat={(content, id) => handleSolveImmediate(content, id)}
           btnS={btnS}
           transmettre={transmettre}
           session={props.session}
@@ -3284,6 +3165,9 @@ const TraiterDenonciation = (props) => {
           convertionType={convertionType}
           onSelectType={(type) => { setConvertionType(type); setConfirmationOpen(true); }}
           onConfirmClose={handleConfirmationClose}
+          conversionTypes={["suggestion"]}
+          dossierLabel="dénonciation"
+          hideClientInfo={true}
           onSubmitConfirmation={(e) => { e.preventDefault(); handleSubmitConfirmation(e); }}
           loadingConversion={loadingConversion}
           onConfirmTransmettre={handleTransmission}
@@ -3503,7 +3387,18 @@ const mapDispatchToProps = (dispatch) => {
     codeClientChanged: (codeClient) => {
       dispatch(codeClientChanged(codeClient));
     },
-
+    newSolutionChanged: (newSolution) => {
+      dispatch(newSolutionChanged(newSolution));
+    },
+    newCommentChanged: (newComment) => {
+      dispatch(newCommentChanged(newComment));
+    },
+    solutionChanged: (solution) => {
+      dispatch(solutionChanged(solution));
+    },
+    commentChanged: (comment) => {
+      dispatch(commentChanged(comment));
+    },
     setReaffect: (reaffect) => {
       dispatch(setReaffect(reaffect));
     },

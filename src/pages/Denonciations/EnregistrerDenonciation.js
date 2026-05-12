@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DatePicker, { registerLocale, setDefaultLocale } from "react-datepicker";
@@ -8,17 +8,24 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import "react-datepicker/dist/react-datepicker.css";
 import HelpIcon from '@mui/icons-material/Help';
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import { useHistory } from "react-router-dom";
 import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
 import { modalify } from "../../Utils/modal";
 import moment from "moment";
 import "moment/locale/fr";
-
+import WizardLayout from "../../components/shared/WizardLayout";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import {
     addressChanged,
     claimRecordErrors,
@@ -90,8 +97,11 @@ const styles = {
 
 
 const EnregistrerDenonciation = (props) => {
-    const [open, setOpen] = React.useState(false)
     const [files, setFiles] = React.useState([]);
+    const [currentStep, setCurrentStep] = useState(0);
+    const [activeTab, setActiveTab] = useState("new");
+    const [isDragging, setIsDragging] = useState(false);
+    const history = useHistory();
     const [underSubjectOptions, setUnderSubjectOptions] = useState([]);
 
     const [isLoading, setIsLoading] = useState(false)
@@ -102,9 +112,6 @@ const EnregistrerDenonciation = (props) => {
     let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
     let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
 
-    const handleClose = () => {
-        setOpen(false);
-    };
 
     const [actif, setActif] = useState();
 
@@ -180,8 +187,17 @@ const EnregistrerDenonciation = (props) => {
     const [showAudioPlayer, setAudioPlayer] = useState("");
     const [currentAudio, setCurrentAudio] = useState("");
     const [clearAudio, setClearAudio] = useState(0)
-    const [showSmsBox, setShowSmsBox] = useState(false);
+    const [audioRecordings, setAudioRecordings] = useState([]);
+    const prevAudioRef = useRef(null);
     // whatsapp
+
+    // Accumulate each completed audio recording
+    useEffect(() => {
+        if (audio != null && audio !== prevAudioRef.current) {
+            prevAudioRef.current = audio;
+            setAudioRecordings(prev => [...prev, audio]);
+        }
+    }, [audio]);
 
     useEffect(() => {
 
@@ -248,7 +264,7 @@ const EnregistrerDenonciation = (props) => {
                                                     downloadFilesApi(msg.content)
                                                 }}
                                             >
-                                                Télécharger
+                                                <FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger
                                             </span>
                                         </div>
                                     </div>
@@ -457,6 +473,8 @@ const EnregistrerDenonciation = (props) => {
         props.selectedItemFilesChanged([])
         setClearAudio(clearAudio + 1);
         handlers.cancelRecording();
+        setAudioRecordings([]);
+        prevAudioRef.current = null;
         setFiles([]);
     }
 
@@ -518,8 +536,6 @@ const EnregistrerDenonciation = (props) => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        setShowSmsBox(false);
-        setOpen(false);
         if (handleValidation()) {
             const formData = new FormData();
 
@@ -545,23 +561,26 @@ const EnregistrerDenonciation = (props) => {
             //console.log("claimenregistrer",formData);
             //HERE
             // console.log("etattttttttttttt",props.etat2)
-            if (audio != null) {
-                const audioFile = new File([audio], "denonciation_record_" + uuid() + ".ogg", {
+            audioRecordings.forEach(audioBlob => {
+                const audioFile = new File([audioBlob], "denonciation_record_" + uuid() + ".ogg", {
                     type: "audio/ogg; codecs=opus",
                 });
                 formData.append("audios", audioFile);
-            }
+            });
             props.etat2Changed(true)
             if (mode === 1) {
                 addDenunciationApi(formData, props).then(() => {
                     handleCancel(e)
                     props.resetWhatsapp()
+                    setCurrentStep(0)
+                    setActiveTab("new")
                 })
             } else {
-                // console.log("dataden",claim)
                 addDenunciationApiOffline(claim, props).then(() => {
                     handleCancel(e)
                     props.resetWhatsapp()
+                    setCurrentStep(0)
+                    setActiveTab("new")
                 })
             }
 
@@ -591,12 +610,12 @@ const EnregistrerDenonciation = (props) => {
         for (let index = 0; index < files.length; index++) {
             formData.append("files", files[index]);
         }
-        if (audio != null) {
-            const audioFile = new File([audio], "denonciation_record_" + uuid() + ".ogg", {
+        audioRecordings.forEach(audioBlob => {
+            const audioFile = new File([audioBlob], "denonciation_record_" + uuid() + ".ogg", {
                 type: "audio/ogg; codecs=opus",
             });
             formData.append("audios", audioFile);
-        }
+        });
 
         // console.log(formData);
         //HERE
@@ -605,11 +624,15 @@ const EnregistrerDenonciation = (props) => {
             addTempDenunciationApi(formData, props).then(() => {
                 handleCancel(e)
                 props.resetWhatsapp()
+                setCurrentStep(0)
+                setActiveTab("new")
             })
         } else {
             addTempDenunciationApiOffline(claim, props).then(() => {
                 handleCancel(e)
                 props.resetWhatsapp()
+                setCurrentStep(0)
+                setActiveTab("new")
             })
         }
 
@@ -653,13 +676,7 @@ const EnregistrerDenonciation = (props) => {
                         onClick={(e) => {
                             e.preventDefault();
                             if (handleValidation()) {
-                                // console.log("mode",mode)
-                                if (mode === 1) {
-                                    setShowSmsBox(true);
-                                    setOpen(true);
-                                } else {
-                                    handleSubmit();
-                                }
+                                handleSubmit(e);
                             }
                             props.claimRecordErrors(errors);
                         }}
@@ -668,7 +685,7 @@ const EnregistrerDenonciation = (props) => {
                         loadingPosition="end"
                         endIcon={<SaveIcon />}
                         variant="contained"
-                        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                        sx={{ backgroundColor: "#005081", textTransform: "initial" }}
                     >
                         <span>Enregistrer</span>
                     </LoadingButton>
@@ -717,12 +734,7 @@ const EnregistrerDenonciation = (props) => {
                         onClick={(e) => {
                             e.preventDefault();
                             if (handleValidation()) {
-                                if (mode === 1) {
-                                    setShowSmsBox(true);
-                                    setOpen(true);
-                                } else {
-                                    handleSubmit(e);
-                                }
+                                handleSubmit(e);
                             }
                             props.claimRecordErrors(errors);
                         }}
@@ -731,7 +743,7 @@ const EnregistrerDenonciation = (props) => {
                         loadingPosition="end"
                         endIcon={<SaveIcon />}
                         variant="contained"
-                        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                        sx={{ backgroundColor: "#005081", textTransform: "initial" }}
                     >
                         <span>Enregistrer</span>
                     </LoadingButton>
@@ -939,16 +951,23 @@ const EnregistrerDenonciation = (props) => {
     }
 
     const handleFile = (e) => {
-        // KTApp.blockPage({
-        //     overlayColor: '#000000',
-        //     type: 'v2',
-        //     state: 'danger',
-        //     message: 'Téléchargement en cours...'
-        // })
         setFiles(e.target.files)
         let filesArray = Array.prototype.slice.call(e.target.files)
         return Promise.all(filesArray.map(fileToDataURL))
     }
+
+    const handleDropzoneFiles = (newFilesInput) => {
+        const newArr = Array.from(newFilesInput);
+        setFiles(prev => {
+            const prevArr = prev ? Array.from(prev) : [];
+            return [...prevArr, ...newArr];
+        });
+        return Promise.all(newArr.map(fileToDataURL));
+    };
+
+    const removeFile = (indexToRemove) => {
+        setFiles(prev => Array.from(prev).filter((_, i) => i !== indexToRemove));
+    };
     const handleClose2 = () => {
         setOpen2(false);
     };
@@ -1012,11 +1031,7 @@ const EnregistrerDenonciation = (props) => {
                                         <div
                                             className="app-file-size">{Math.round(((attachment.size / 1024) + Number.EPSILON) * 100) / 100} Ko
                                         </div>
-                                        <div
-                                            className="app-file-last-access"><span style={{ cursor: "pointer" }} onClick={(e) => {
-                                                downloadFillesApi(attachment.id, attachment.name)
-                                            }}>Télécharger</span>
-                                        </div>
+                                        <div className="app-file-last-access"><span onClick={(e) => { downloadFillesApi(attachment.id, attachment.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -1141,207 +1156,73 @@ const EnregistrerDenonciation = (props) => {
         formAudio = ""
     }
 
-    //   default sms notification
+    // ── Wizard config ────────────────────────────────────────────────────────
+    const STEPS = [
+        { key: "infos", label: "Informations", sublabel: "Objet, canal, contenu", icon: <AssignmentOutlinedIcon /> },
+        { key: "fichiers", label: "Pièces jointes", sublabel: "Documents et audio", icon: <AttachFileIcon /> },
+        { key: "recap", label: "Récapitulatif", sublabel: "Vérification avant envoi", icon: <TaskAltIcon /> },
+    ];
 
+    const apercu = {
+        "Motif": props.underSubjectLibelle,
+        "Canal": props.collectLibelle,
+        "Produit": props.productLibelle,
+    };
+
+    // Completion: count filled required fields out of 7
+    const filledCount = [
+        isValidDate(props.recorded_at) ? props.recorded_at : "",
+        props.collect, props.subject, props.underSubject, props.product, props.unit,
+        props.content || (audio !== null),
+    ].filter(Boolean).length;
+    const completionPercent = Math.round((filledCount / 7) * 100);
+
+    const validateStep0 = () => {
+        let isValid = true;
+        errors = {};
+        if (!props.recorded_at || !isValidDate(props.recorded_at)) {
+            isValid = false; errors["recorded_at"] = "Champ incorrect";
+        }
+        if (!props.collect) {
+            isValid = false; errors["collect"] = "Champ incorrect";
+        }
+        if (!props.subject) {
+            isValid = false; errors["subject"] = "Champ incorrect";
+        }
+        if (!props.underSubject) {
+            isValid = false; errors["underSubject"] = "Champ incorrect";
+        }
+        if (!props.content && audio === null && (!props.selectedItemAudio || props.selectedItemAudio.length === 0)) {
+            isValid = false; errors["content"] = "Champ incorrect";
+        }
+        if (!props.product) {
+            isValid = false; errors["product"] = "Champ incorrect";
+        }
+        if (!props.unit) {
+            isValid = false; errors["unit"] = "Champ incorrect";
+        }
+        props.claimRecordErrors(errors);
+        return isValid;
+    };
+
+    const handleNext = () => {
+        if (currentStep === 0 && !validateStep0()) return;
+        setCurrentStep(s => s + 1);
+    };
+
+    const handleFinalSubmit = () => {
+        handleSubmit({ preventDefault: () => { } });
+    };
+
+    const handleSaveDraft = () => {
+        handleSave({ preventDefault: () => { } });
+    };
 
     return (
-        //  'Enregistrer dénonciation'
-        <div id="main">
-
-            {showSmsBox && (
-                <div>
-                    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-
-                        <DialogTitle style={{ borderBottom: "1px solid #e0e0e0", fontSize: "15px", fontWeight: "600", padding: "12px 16px" }}>
-                            Confirmation de la Dénonciation
-                        </DialogTitle>
-
-                        <DialogContent style={{ padding: "16px", maxHeight: "65vh", overflowY: "auto" }}>
-
-
-                            <div style={{ border: "1px solid #e0e0e0", borderRadius: "6px", marginBottom: "16px" }}>
-
-                                <div style={{ backgroundColor: "#f5f5f5", padding: "8px 14px", borderBottom: "1px solid #e0e0e0", display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <SupportAgentIcon style={{ fontSize: "18px", color: "#616161" }} />
-                                    <span style={{ color: "#424242", fontWeight: "600", fontSize: "14px" }}>
-                                        Résumé de la dénonciation
-                                    </span>
-                                </div>
-
-                                <div style={{ padding: "4px 14px" }}>
-
-                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Produit</span>
-                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.productLibelle}</span>
-                                    </div>
-                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Catégorie</span>
-                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.subjectLibelle}</span>
-                                    </div>
-                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Motif</span>
-                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.underSubjectLibelle}</span>
-                                    </div>
-                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Point de service</span>
-                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>{props.unitLibelle}</span>
-                                    </div>
-                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>Date de réception</span>
-                                        <span style={{ fontWeight: "500", fontSize: "13px" }}>
-                                            {props.recorded_at
-                                                ? moment(props.recorded_at, "DD-MM-YYYY HH:mm").format("DD MMMM YYYY [à] HH:mm")
-                                                : "—"}
-                                        </span>
-                                    </div>
-                                    <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                                        <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
-                                            Contenu
-                                        </span>
-                                        <span style={{ fontWeight: "500", fontSize: "13px", flex: 1 }}>
-                                            {props.content && props.content !== "#ReclamationAudio" && (
-                                                <span>{props.content}</span>
-                                            )}
-
-                                            {audio != null && (
-                                                <div style={{ marginTop: "4px" }}>
-                                                    <span style={{ fontSize: "12px", color: "#757575", display: "block", marginBottom: "4px" }}>
-                                                        Audio enregistré
-                                                    </span>
-                                                    <audio controls style={{ width: "100%", height: "36px" }}>
-                                                        <source src={URL.createObjectURL(audio)} type="audio/ogg" />
-                                                    </audio>
-                                                </div>
-                                            )}
-
-                                            {props.selectedItemAudio && props.selectedItemAudio.length > 0 && (
-                                                props.selectedItemAudio.map((audioItem, index) => (
-                                                    <div key={index} style={{ marginTop: "4px" }}>
-                                                        <span style={{ fontSize: "12px", color: "#757575", display: "block", marginBottom: "4px" }}>
-                                                            Audio sauvegardé {index + 1}
-                                                        </span>
-                                                        <audio controls style={{ width: "100%", height: "36px" }}>
-                                                            <source
-                                                                src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))}
-                                                                type="audio/ogg"
-                                                            />
-                                                        </audio>
-                                                    </div>
-                                                ))
-                                            )}
-
-
-                                            {!props.content && audio == null && (!props.selectedItemAudio || props.selectedItemAudio.length === 0) && (
-                                                <span style={{ color: "#bdbdbd" }}>—</span>
-                                            )}
-
-                                        </span>
-                                    </div>
+        <>
 
 
 
-                                    {files && files.length > 0 && (
-                                        <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                                            <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
-                                                Fichiers joints
-                                            </span>
-                                            <div style={{ flex: 1 }}>
-                                                {Array.from(files).map((file, index) => (
-                                                    <div key={index} style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "space-between",
-                                                        padding: "4px 8px",
-                                                        marginBottom: "4px",
-                                                        backgroundColor: "#f9f9f9",
-                                                        borderRadius: "4px",
-                                                        border: "1px solid #eeeeee"
-                                                    }}>
-                                                        <span style={{ fontSize: "12px", color: "#424242", flex: 1, marginRight: "8px" }}>
-                                                            {file.name}
-                                                        </span>
-                                                        <a
-                                                            href={URL.createObjectURL(file)}
-                                                            download={file.name}
-                                                            style={{
-                                                                fontSize: "12px",
-                                                                color: "#1e2188",
-                                                                textDecoration: "none",
-                                                                whiteSpace: "nowrap"
-                                                            }}
-                                                        >
-                                                            Télécharger
-                                                        </a>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-
-                                    {props.selectedItemFiles && props.selectedItemFiles.length > 0 && (
-                                        <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
-                                            <span style={{ color: "#757575", width: "150px", fontSize: "13px", flexShrink: 0 }}>
-                                                Fichiers joints
-                                            </span>
-                                            <div style={{ flex: 1 }}>
-                                                {props.selectedItemFiles.map((file, index) => (
-                                                    <div key={index} style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "space-between",
-                                                        padding: "4px 8px",
-                                                        marginBottom: "4px",
-                                                        backgroundColor: "#f9f9f9",
-                                                        borderRadius: "4px",
-                                                        border: "1px solid #eeeeee"
-                                                    }}>
-                                                        <span style={{ fontSize: "12px", color: "#424242", flex: 1, marginRight: "8px" }}>
-                                                            {file.name}
-                                                        </span>
-                                                        <a
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                downloadFillesApi(file.id, file.name);
-                                                            }}
-                                                            style={{
-                                                                fontSize: "12px",
-                                                                color: "#1e2188",
-                                                                textDecoration: "none",
-                                                                whiteSpace: "nowrap",
-                                                                cursor: "pointer"
-                                                            }}
-                                                        >
-                                                            Télécharger
-                                                        </a>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                </div>
-
-                            </div>
-                        </DialogContent>
-
-
-                        <DialogActions style={{ borderTop: "1px solid #e0e0e0", padding: "10px 16px", gap: "8px" }}>
-                            <form onSubmit={handleSubmit} style={{ flex: 1, margin: 0 }}>
-                                <button
-                                    type="submit"
-                                    className="btn waves-effect waves-light btn-small red-text red lighten-4"
-                                    style={{ width: "100%" }}
-                                >
-                                    Enregistrer
-                                </button>
-                            </form>
-                        </DialogActions>
-
-                    </Dialog>
-
-                </div>
-            )}
 
             {showAudioBox && (
                 <div>
@@ -1383,270 +1264,409 @@ const EnregistrerDenonciation = (props) => {
                 </div>
             )}
 
-            <div className="row">
-
-                <div className="col s12">
-                    <div className="container">
-                        <section className="tabs-vertical mt-1 section">
-                            <div className="row">
-                                <div className="col l5 m12 s12 pb-5">
-
-                                    <div className="card-panel pb-5">
-                                        <div className="row">
-                                            <div className="col s12"><h5 className="card-title">Dénonciations à
-                                                compléter</h5></div>
-                                            <div className="col s12">
-                                                <ReactDatatable
-                                                    className={"responsive-table no-hover"}
-                                                    config={config}
-                                                    records={content}
-                                                    columns={columns}
-                                                // onRowClicked={rowClickedHandler}
-                                                />
+            <WizardLayout
+                title="Enregistrer une dénonciation"
+                subtitle="Formulaire d'enregistrement"
+                onBack={() => history.goBack()}
+                hasDraft={props.items.length > 0}
+                draftCount={props.items.length}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                steps={STEPS}
+                currentStep={currentStep}
+                completionPercent={completionPercent}
+                apercu={apercu}
+                onSaveDraft={handleSaveDraft}
+                onNext={handleNext}
+                onPrev={() => setCurrentStep(s => s - 1)}
+                isLastStep={currentStep === 2}
+                onSubmit={handleFinalSubmit}
+                loadingSave={props.etat}
+                loadingSubmit={props.etat2}
+                draftsContent={
+                    <div>
+                        {content.length === 0 ? (
+                            <div style={{ textAlign: "center", padding: "60px 24px", color: "#94a3b8" }}>
+                                <div style={{ fontSize: 14, fontWeight: 600 }}>Aucun brouillon enregistré</div>
+                                <div style={{ fontSize: 12, marginTop: 4 }}>Utilisez "Sauvegarder brouillon" pour retrouver un dossier ici</div>
+                            </div>
+                        ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                {content.map((draft) => (
+                                    <div
+                                        key={draft.id || draft.code}
+                                        onClick={(e) => {
+                                            rowClickedHandler(e, draft, null);
+                                            setCurrentStep(0);
+                                            setActiveTab("new");
+                                        }}
+                                        style={{
+                                            background: "white", borderRadius: 14, border: "1.5px solid #e5e7eb",
+                                            padding: "14px 18px", cursor: "pointer",
+                                            display: "flex", alignItems: "center", gap: 14,
+                                            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                                            transition: "box-shadow 0.15s, border-color 0.15s",
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.borderColor = "#99cde8"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,80,129,0.1)"; }}
+                                        onMouseLeave={e => { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)"; }}
+                                    >
+                                        <div style={{
+                                            width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                                            background: "#e8f4fc", display: "flex", alignItems: "center", justifyContent: "center",
+                                        }}>
+                                            <AssignmentOutlinedIcon style={{ fontSize: 20, color: "#005081" }} />
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 2 }}>
+                                                {draft.code || "Brouillon sans code"}
+                                            </div>
+                                            <div style={{ fontSize: 11, color: "#64748b" }}>
+                                                {draft.createdAtFormated || "—"}
                                             </div>
                                         </div>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 4 }} onClick={e => e.stopPropagation()}>
+                                            <Tooltip title="Modifier">
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={(e) => { e.stopPropagation(); rowClickedHandler(e, draft, null); setCurrentStep(0); setActiveTab("new"); }}
+                                                    sx={{ color: "#005081", "&:hover": { background: "#e8f4fc" } }}
+                                                >
+                                                    <EditIcon style={{ fontSize: 18 }} />
+                                                </IconButton>
+                                            </Tooltip>
+                                            {mode === 1 && (
+                                                <Tooltip title="Supprimer">
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={(e) => { e.stopPropagation(); handleModal(e, draft); }}
+                                                        sx={{ color: "#ef4444", "&:hover": { background: "#fee2e2" } }}
+                                                        disabled={loadingId === draft.id}
+                                                    >
+                                                        {loadingId === draft.id ? <CircularProgress size={14} /> : <DeleteIcon style={{ fontSize: 18 }} />}
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="col l7  m12 s12 pb-5">
-                                    <div className="card-panel pb-5">
-                                        <form id="claimForm">
-                                            <div className="row">
-                                                <div className="col s12">
-                                                    <h5 className="card-title">Enregistrer une dénonciation</h5>
-                                                    <span>(<span className="red-text darken-2 ">*</span>) Champs requis</span>
-                                                </div>
-                                            </div>
-                                            <div className="row">
-
-                                                <div className="col l12 m12 s12">
-                                                    <div className="row">
-                                                        <div className="col l12 m12 s12"><h6 className="card-title">Détails de la dénonciation</h6></div>
-                                                        <div className="col l6 m12 s12 input-field" style={{ display: 'none' }}>
-                                                            <input id="code" name="code" type="text" placeholder=""
-                                                                className="validate"
-                                                                value={props.code}
-                                                                disabled />
-                                                            <label htmlFor="code" className={"active"}>Code<span>(<span
-                                                                className="red-text darken-2 ">*</span>)</span></label>
-                                                            <small className="errorTxt4">
-                                                                <div id="cpassword-error"
-                                                                    className="error">{(props.errors !== undefined) ? props.errors.code : ""}</div>
-                                                            </small>
-                                                        </div>
-                                                        <div className="col l12 m12 s12 input-field" ref={recordedAtRef}>
-                                                            <DatePicker
-                                                                // placeholderText="Date et Heure de réception"
-                                                                withPortal
-                                                                closeOnScroll={true}
-                                                                isClearable
-                                                                showTimeInput
-                                                                showMonthDropdown
-                                                                value={props.recorded_at}
-                                                                timeInputLabel="Heure :"
-                                                                todayButton="Aujourd'hui"
-                                                                selected={props.recorded_at_dp}
-                                                                onChange={(date) => handleDatePicker(date, props)}
-                                                                dateFormat="dd-MM-yyyy HH:mm"
-                                                                locale="fr" />
-                                                            <label htmlFor="recorded_at" className={"active"}>Date de
-                                                                réception<span>(<span
-                                                                    className="red-text darken-2 ">*</span>)</span></label>
-                                                            <small className="errorTxt4">
-                                                                <div id="cpassword-error"
-                                                                    className="error">{(props.errors !== undefined) ? props.errors.recorded_at : ""}</div>
-                                                            </small>
-                                                        </div>
-                                                        <div className="col l6 m12 s12 input-field" ref={collectRef}>
-                                                            <Select
-                                                                value={props.collect ? { "label": props.collectLibelle, "value": props.collect } : "Sélectionner la modalité de dépôt"}
-                                                                options={collectOptions}
-                                                                className='react-select-container mt-4'
-                                                                classNamePrefix="react-select"
-                                                                style={styles}
-                                                                placeholder="Sélectionner la modalité de dépôt"
-                                                                onChange={handleChange3}
-                                                            />
-                                                            <label htmlFor="gender" className={"active"}>Modalité de dépôt<span>(<span
-                                                                className="red-text darken-2 ">*</span>)</span></label>
-                                                            <small className="errorTxt4">
-                                                                <div id="cpassword-error"
-                                                                    className="error">{(props.errors !== undefined) ? props.errors.collect : ""}</div>
-                                                            </small>
-                                                        </div>
-                                                        <div className="input-field">
-                                                            <input id="recorded_by" name="recorded_by" type="hidden"
-                                                                className="" value="" />
-                                                        </div>
-                                                        {/* <div className="col l6 m12 s12 input-field">
-                                                            <Select
-                                                                 value={props.subject ? {"label": props.subjectLibelle, "value": props.subject } : "Sélectionner l'objet" }
-                                                                options={subjectOptions}
-                                                                className='react-select-container mt-4'
-                                                                classNamePrefix="react-select"
-                                                                style={styles}
-                                                                placeholder="Sélectionner l'objet"
-                                                                onChange={handleChange2}
-                                                            />
-
-                                                            <label htmlFor="subject"
-                                                                   className={"active"}>Objet<span>(<span
-                                                                className="red-text darken-2 ">*</span>)</span></label>
-                                                            <small className="errorTxt4">
-                                                                <div id="cpassword-error"
-                                                                     className="error">{(props.errors !== undefined) ? props.errors.subject : ""}</div>
-                                                            </small>
-                                                        </div> */}
-
-                                                        <div className="col l6 m12 s12 input-field" ref={subjectRef}>
-                                                            <Select
-                                                                value={
-                                                                    props.subject
-                                                                        ? {
-                                                                            label: props.subjectLibelle,
-                                                                            value: props.subject,
-                                                                        }
-                                                                        : "Sélectionner la catégorie de l'objet"
-                                                                }
-                                                                options={subjectOptions}
-                                                                className="react-select-container mt-4"
-                                                                classNamePrefix="react-select"
-                                                                style={styles}
-                                                                placeholder="Sélectionner la catégorie de l'objet"
-                                                                onChange={handleChange2}
-                                                            />
-
-                                                            <label htmlFor="subject" className={"active"}>
-                                                                Catégorie d'objet
-                                                                <span>
-                                                                    (<span className="red-text darken-2 ">*</span>
-                                                                    )
-                                                                </span>
-                                                            </label>
-                                                            <small className="errorTxt4">
-                                                                <div id="cpassword-error" className="error">
-                                                                    {props.errors !== undefined
-                                                                        ? props.errors.subject
-                                                                        : ""}
-                                                                </div>
-                                                            </small>
-                                                        </div>
-
-                                                        <div className="col l12 m12 s12 input-field" ref={underSubjectRef}>
-                                                            <Select
-                                                                value={
-                                                                    props.underSubject
-                                                                        ? {
-                                                                            label: props.underSubjectLibelle,
-                                                                            value: props.underSubject,
-                                                                        }
-                                                                        : "Sélectionner le motif de dénonciation"
-                                                                }
-                                                                options={underSubjectOptions}
-                                                                className="react-select-container mt-4"
-                                                                classNamePrefix="react-select"
-                                                                style={styles}
-                                                                placeholder="Sélectionner le motif de dénonciation"
-                                                                onChange={handleChange5}
-                                                            />
-
-                                                            <label htmlFor="subject" className={"active"}>
-                                                                Motif de dénonciation
-                                                                <span>
-                                                                    (<span className="red-text darken-2 ">*</span>
-                                                                    )
-                                                                </span>
-                                                            </label>
-                                                            <small className="errorTxt4">
-                                                                <div id="cpassword-error" className="error">
-                                                                    {props.errors !== undefined
-                                                                        ? props.errors.underSubject
-                                                                        : ""}
-                                                                </div>
-                                                            </small>
-                                                        </div>
-
-                                                        <div className="col l6 m12 s12 input-field" ref={productRef}>
-
-                                                            <Select
-                                                                value={props.product ? { "label": props.productLibelle, "value": props.product } : "Sélectionner le produit"}
-                                                                options={productOptions}
-                                                                className='react-select-container mt-4'
-                                                                classNamePrefix="react-select"
-                                                                style={styles}
-                                                                placeholder="Sélectionner le produit"
-                                                                onChange={handleChange1}
-                                                            />
-                                                            <label htmlFor="product" className={"active"}>Produit ou
-                                                                service concerné<span>(<span
-                                                                    className="red-text darken-2 ">*</span>)</span></label>
-                                                            <small className="errorTxt4">
-                                                                <div id="cpassword-error"
-                                                                    className="error">{(props.errors !== undefined) ? props.errors.product : ""}</div>
-                                                            </small>
-
-                                                        </div>
-                                                        <div className="col l6 m12 s12 input-field" ref={unitRef}>
-                                                            <Select
-                                                                value={props.unit ? { "label": props.unitLibelle, "value": props.unit } : "Sélectionner le point de service"}
-                                                                options={unitOptions}
-                                                                className='react-select-container mt-4'
-                                                                classNamePrefix="react-select"
-                                                                style={styles}
-                                                                placeholder="Sélectionner le point de service"
-                                                                onChange={handleChange}
-                                                            />
-                                                            <label htmlFor="unit" className={"active"}>Point de service
-                                                                indexé(<span
-                                                                    className="red-text darken-2 ">*</span>)</label>
-                                                            <small className="errorTxt4">
-                                                                <div id="cpassword-error"
-                                                                    className="error">{(props.errors !== undefined) ? props.errors.unit : ""}</div>
-                                                            </small>
-                                                        </div>
-                                                        <div className="col l12 m12 s12 input-field" ref={contentRef}>
-                                                            {formAudio}
-                                                            <textarea id="content" name="content" placeholder="" rows={"2"}
-                                                                className="materialize-textarea"
-                                                                value={props.content}
-                                                                onChange={(e) => props.contentChanged(e.target.value)}>
-
-                                                            </textarea>
-                                                            <label htmlFor="content" className={"active"}>Contenu<span>(<span
-                                                                className="red-text darken-2 ">*</span>)</span></label>
-                                                            <small className="errorTxt4">
-                                                                <div id="cpassword-error"
-                                                                    className="error">{(props.errors !== undefined) ? props.errors.content : ""}</div>
-                                                            </small>
-                                                        </div>
-                                                        <div className="col l12 m12 s12 mb-3">
-                                                            <RecordingsList audio={audio} persistAll={clearAudio} />
-
-                                                        </div>
-                                                        <div className="row">{audioList}</div>
-                                                        {jfichiers}
-                                                        <div className="row">
-                                                            {attachmentList}
-                                                        </div>
-                                                        <div className="row">{whatsappAttachmentList}</div>
-
-                                                    </div>
-                                                </div>
-
-                                                <div className="col s12 display-flex justify-content-end mt-3">
-                                                    {formButtons}
-                                                </div>
-                                            </div>
-                                        </form>
-
-                                    </div>
-                                </div>
+                                ))}
                             </div>
-                        </section>
+                        )}
                     </div>
-                    <div className="content-overlay"></div>
-                </div>
-            </div>
-        </div>
+                }
+            >
+                {/* ?? Step 0 — Informations ??????????????????????????? */}
+                {currentStep === 0 && (
+                    <div className="row">
+                        <div className="col l12 m12 s12 input-field" ref={recordedAtRef}>
+                            <DatePicker
+                                withPortal closeOnScroll={true} isClearable showTimeInput showMonthDropdown
+                                value={props.recorded_at}
+                                timeInputLabel="Heure :" todayButton="Aujourd'hui"
+                                selected={props.recorded_at_dp}
+                                onChange={(date) => handleDatePicker(date, props)}
+                                dateFormat="dd-MM-yyyy HH:mm" locale="fr"
+                            />
+                            <label htmlFor="recorded_at" className="active">
+                                Date de réception <span>(<span className="red-text darken-2">*</span>)</span>
+                            </label>
+                            <small className="errorTxt4"><div className="error">{props.errors?.recorded_at}</div></small>
+                        </div>
+
+                        <div className="col l6 m12 s12 input-field" ref={collectRef}>
+                            <Select
+                                value={props.collect ? { label: props.collectLibelle, value: props.collect } : "Sélectionner la modalité de dépôt"}
+                                options={collectOptions} className="react-select-container mt-4" classNamePrefix="react-select"
+                                style={styles} placeholder="Sélectionner la modalité de dépôt" onChange={handleChange3}
+                            />
+                            <label className="active">Modalité de dépôt <span>(<span className="red-text darken-2">*</span>)</span></label>
+                            <small className="errorTxt4"><div className="error">{props.errors?.collect}</div></small>
+                        </div>
+
+                        <div className="col l6 m12 s12 input-field" ref={subjectRef}>
+                            <Select
+                                value={props.subject ? { label: props.subjectLibelle, value: props.subject } : "Sélectionner la catégorie de l'objet"}
+                                options={subjectOptions} className="react-select-container mt-4" classNamePrefix="react-select"
+                                style={styles} placeholder="Sélectionner la catégorie de l'objet" onChange={handleChange2}
+                            />
+                            <label className="active">Catégorie d'objet <span>(<span className="red-text darken-2">*</span>)</span></label>
+                            <small className="errorTxt4"><div className="error">{props.errors?.subject}</div></small>
+                        </div>
+
+                        <div className="col l12 m12 s12 input-field" ref={underSubjectRef}>
+                            <Select
+                                value={props.underSubject ? { label: props.underSubjectLibelle, value: props.underSubject } : "Sélectionner le motif de dénonciation"}
+                                options={underSubjectOptions} className="react-select-container mt-4" classNamePrefix="react-select"
+                                style={styles} placeholder="Sélectionner le motif de dénonciation" onChange={handleChange5}
+                            />
+                            <label className="active">Motif de dénonciation <span>(<span className="red-text darken-2">*</span>)</span></label>
+                            <small className="errorTxt4"><div className="error">{props.errors?.underSubject}</div></small>
+                        </div>
+
+                        <div className="col l6 m12 s12 input-field" ref={productRef}>
+                            <Select
+                                value={props.product ? { label: props.productLibelle, value: props.product } : "Sélectionner le produit"}
+                                options={productOptions} className="react-select-container mt-4" classNamePrefix="react-select"
+                                style={styles} placeholder="Sélectionner le produit" onChange={handleChange1}
+                            />
+                            <label className="active">Produit ou service <span>(<span className="red-text darken-2">*</span>)</span></label>
+                            <small className="errorTxt4"><div className="error">{props.errors?.product}</div></small>
+                        </div>
+
+                        <div className="col l6 m12 s12 input-field" ref={unitRef}>
+                            <Select
+                                value={props.unit ? { label: props.unitLibelle, value: props.unit } : "Sélectionner le point de service"}
+                                options={unitOptions} className="react-select-container mt-4" classNamePrefix="react-select"
+                                style={styles} placeholder="Sélectionner le point de service" onChange={handleChange}
+                            />
+                            <label className="active">Point de service indexé (<span className="red-text darken-2">*</span>)</label>
+                            <small className="errorTxt4"><div className="error">{props.errors?.unit}</div></small>
+                        </div>
+
+                        <div className="col l12 m12 s12 input-field" ref={contentRef} style={{ position: "relative" }}>
+                            {formAudio}
+                            <textarea id="content" name="content" placeholder="" rows="3"
+                                className="materialize-textarea" value={props.content}
+                                onChange={(e) => props.contentChanged(e.target.value)}
+                            />
+                            <label htmlFor="content" className="active">
+                                Contenu <span>(<span className="red-text darken-2">*</span>)</span>
+                            </label>
+                            <small className="errorTxt4"><div className="error">{props.errors?.content}</div></small>
+                        </div>
+
+                        {/* Audio feedback — visible immédiatement après l'enregistrement */}
+                        {(audioRecordings.length > 0 || props.selectedItemAudio?.length > 0) && (
+                            <div className="col l12 m12 s12" style={{ marginTop: 8 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                                    <Mic style={{ fontSize: 15, color: "#005081" }} />
+                                    Audio enregistré
+                                </div>
+
+                                {audioRecordings.map((audioBlob, i) => (
+                                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
+                                        <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                                        <audio controls style={{ flex: 1, height: 30 }}>
+                                            <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
+                                        </audio>
+                                        <button onClick={() => setAudioRecordings(prev => prev.filter((_, j) => j !== i))}
+                                            style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
+                                    </div>
+                                ))}
+                                {props.selectedItemAudio?.map((audioItem, i) => (
+                                    <div key={"s" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
+                                        <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                                        <audio controls style={{ flex: 1, height: 30 }}>
+                                            <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
+                                        </audio>
+                                        <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
+                                            style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                    </div>
+                )}
+
+                {/* ── Step 1 – Pièces jointes ─────────────────────────── */}
+                {currentStep === 1 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+                        {mode === 1 && (
+                            <div>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                                    <InsertDriveFileOutlinedIcon style={{ fontSize: 17, color: "#005081" }} />
+                                    Documents joints
+                                </div>
+                                <div
+                                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                    onDragLeave={() => setIsDragging(false)}
+                                    onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleDropzoneFiles(e.dataTransfer.files); }}
+                                    onClick={() => document.getElementById("wz-den-file-input").click()}
+                                    style={{
+                                        border: `2px dashed ${isDragging ? "#005081" : "#cbd5e1"}`,
+                                        borderRadius: 14, padding: "32px 20px", textAlign: "center",
+                                        background: isDragging ? "#e8f4fc" : "#f8fafc",
+                                        cursor: "pointer", transition: "all 0.2s",
+                                    }}
+                                >
+                                    <CloudUploadOutlinedIcon style={{ fontSize: 44, color: isDragging ? "#005081" : "#94a3b8", marginBottom: 10 }} />
+                                    <div style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>Glissez vos fichiers ici</div>
+                                    <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>
+                                        ou <span style={{ color: "#005081", fontWeight: 700 }}>parcourez</span> depuis votre appareil
+                                    </div>
+                                    <div style={{ fontSize: 11, color: "#cbd5e1", marginTop: 8 }}>PDF · Word · Excel · Images · Audio · Vidéo</div>
+                                    <input id="wz-den-file-input" type="file" multiple style={{ display: "none" }}
+                                        onChange={(e) => handleDropzoneFiles(e.target.files)}
+                                        accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
+                                    />
+                                </div>
+                                {files && Array.from(files).length > 0 && (
+                                    <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+                                        {Array.from(files).map((file, i) => (
+                                            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "white", borderRadius: 10, border: "1.5px solid #e2e8f0" }}>
+                                                <InsertDriveFileOutlinedIcon style={{ fontSize: 18, color: "#005081", flexShrink: 0 }} />
+                                                <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
+                                                <div style={{ fontSize: 11, color: "#94a3b8", flexShrink: 0, marginRight: 6 }}>{(file.size / 1024).toFixed(0)} Ko</div>
+                                                <button onClick={() => removeFile(i)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 18, lineHeight: 1, padding: "0 2px", flexShrink: 0 }} title="Retirer">×</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {props.selectedItemFiles?.length > 0 && (
+                                    <div style={{ marginTop: 10 }}>
+                                        <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600, marginBottom: 6 }}>Fichiers déjà enregistrés</div>
+                                        {props.selectedItemFiles.map((file, i) => (
+                                            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0", marginBottom: 4 }}>
+                                                <InsertDriveFileOutlinedIcon style={{ fontSize: 15, color: "#64748b", flexShrink: 0 }} />
+                                                <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: "#64748b" }}>{file.name}</div>
+                                                <a onClick={(e) => { e.preventDefault(); downloadFillesApi(file.id, file.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                                <Mic style={{ fontSize: 17, color: "#005081" }} />
+                                Enregistrement vocal
+                            </div>
+                            {audioRecordings.length === 0 && !props.selectedItemAudio?.length ? (
+                                <div style={{ background: "#f8fafc", borderRadius: 12, border: "1.5px dashed #e2e8f0", padding: "20px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
+                                    <Mic style={{ fontSize: 28, opacity: 0.3, display: "block", margin: "0 auto 6px" }} />
+                                    Aucun audio enregistré
+                                </div>
+                            ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                    {audioRecordings.map((audioBlob, i) => (
+                                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "white", borderRadius: 10, border: "1.5px solid #99cde8" }}>
+                                            <div style={{ width: 32, height: 32, borderRadius: 8, background: "#e8f4fc", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                <Mic style={{ fontSize: 16, color: "#005081" }} />
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Enregistrement {i + 1}</div>
+                                                <audio controls style={{ width: "100%", height: 30 }}>
+                                                    <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
+                                                </audio>
+                                            </div>
+                                            <button onClick={() => setAudioRecordings(prev => prev.filter((_, j) => j !== i))}
+                                                style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, flexShrink: 0 }}>×</button>
+                                        </div>
+                                    ))}
+                                    {props.selectedItemAudio?.map((audioItem, i) => (
+                                        <div key={"s" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "white", borderRadius: 10, border: "1.5px solid #e2e8f0" }}>
+                                            <div style={{ width: 32, height: 32, borderRadius: 8, background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                <Mic style={{ fontSize: 16, color: "#005081" }} />
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Sauvegardé {i + 1}</div>
+                                                <audio controls style={{ width: "100%", height: 30 }}>
+                                                    <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
+                                                </audio>
+                                            </div>
+                                            <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
+                                                style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, flexShrink: 0 }}>×</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        {whatsappAttachmentList && <div>{whatsappAttachmentList}</div>}
+                    </div>
+                )}
+
+                {/* ── Step 2 – Récapitulatif ─────────────────────────── */}
+                {currentStep === 2 && (
+                    <div style={{ border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+                        <div style={{ backgroundColor: '#f5f5f5', padding: '8px 14px', borderBottom: '1px solid #e0e0e0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <SupportAgentIcon style={{ fontSize: '18px', color: '#616161' }} />
+                            <span style={{ color: '#424242', fontWeight: '600', fontSize: '14px' }}>Résumé de la dénonciation</span>
+                        </div>
+                        <div style={{ padding: '4px 14px' }}>
+                            <div style={{ display: 'flex', padding: '7px 0', borderBottom: '1px solid #f5f5f5' }}>
+                                <span style={{ color: '#757575', width: '160px', fontSize: '13px', flexShrink: 0 }}>Produit</span>
+                                <span style={{ fontWeight: '600', fontSize: '13px' }}>{props.productLibelle}</span>
+                            </div>
+                            <div style={{ display: 'flex', padding: '7px 0', borderBottom: '1px solid #f5f5f5' }}>
+                                <span style={{ color: '#757575', width: '160px', fontSize: '13px', flexShrink: 0 }}>Catégorie</span>
+                                <span style={{ fontWeight: '600', fontSize: '13px' }}>{props.subjectLibelle}</span>
+                            </div>
+                            <div style={{ display: 'flex', padding: '7px 0', borderBottom: '1px solid #f5f5f5' }}>
+                                <span style={{ color: '#757575', width: '160px', fontSize: '13px', flexShrink: 0 }}>Motif</span>
+                                <span style={{ fontWeight: '600', fontSize: '13px' }}>{props.underSubjectLibelle}</span>
+                            </div>
+                            <div style={{ display: 'flex', padding: '7px 0', borderBottom: '1px solid #f5f5f5' }}>
+                                <span style={{ color: '#757575', width: '160px', fontSize: '13px', flexShrink: 0 }}>Point de service</span>
+                                <span style={{ fontWeight: '600', fontSize: '13px' }}>{props.unitLibelle}</span>
+                            </div>
+                            <div style={{ display: 'flex', padding: '7px 0', borderBottom: '1px solid #f5f5f5' }}>
+                                <span style={{ color: '#757575', width: '160px', fontSize: '13px', flexShrink: 0 }}>Date de réception</span>
+                                <span style={{ fontWeight: '600', fontSize: '13px' }}>
+                                    {props.recorded_at ? moment(props.recorded_at, 'DD-MM-YYYY HH:mm').format('DD MMMM YYYY [à] HH:mm') : '—'}
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', padding: '7px 0', borderBottom: '1px solid #f5f5f5' }}>
+                                <span style={{ color: '#757575', width: '160px', fontSize: '13px', flexShrink: 0 }}>Contenu</span>
+                                <span style={{ fontWeight: '600', fontSize: '13px', flex: 1 }}>
+                                    {props.content && props.content !== '#ReclamationAudio' ? props.content : (!props.content && audioRecordings.length === 0 && !props.selectedItemAudio?.length ? '—' : null)}
+                                </span>
+                            </div>
+
+                            {/* Audios */}
+                            {(audioRecordings.length > 0 || props.selectedItemAudio?.length > 0) && (
+                                <div style={{ padding: '10px 0', borderBottom: '1px solid #f5f5f5' }}>
+                                    <span style={{ color: '#757575', fontSize: '12px', fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                                        Audios ({audioRecordings.length + (props.selectedItemAudio?.length ?? 0)})
+                                    </span>
+                                    {audioRecordings.map((audioBlob, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#e8f4fc', borderRadius: 8, marginBottom: 6, border: '1px solid #99cde8' }}>
+                                            <Mic style={{ fontSize: 16, color: '#005081', flexShrink: 0 }} />
+                                            <audio controls style={{ flex: 1, height: 30 }}>
+                                                <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
+                                            </audio>
+                                        </div>
+                                    ))}
+                                    {props.selectedItemAudio?.map((audioItem, i) => (
+                                        <div key={'s' + i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, marginBottom: 6, border: '1px solid #e2e8f0' }}>
+                                            <Mic style={{ fontSize: 16, color: '#005081', flexShrink: 0 }} />
+                                            <audio controls style={{ flex: 1, height: 30 }}>
+                                                <source src={URL.createObjectURL(new Blob([audioItem], { type: 'audio/ogg' }))} type="audio/ogg" />
+                                            </audio>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Fichiers */}
+                            {((files && Array.from(files).length > 0) || props.selectedItemFiles?.length > 0) && (
+                                <div style={{ padding: '10px 0', borderBottom: '1px solid #f5f5f5' }}>
+                                    <span style={{ color: '#757575', fontSize: '12px', fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                                        Fichiers joints ({Array.from(files || []).length + (props.selectedItemFiles?.length ?? 0)})
+                                    </span>
+                                    {props.selectedItemFiles?.map((file, i) => (
+                                        <div key={'saved-' + i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 4, background: '#f0fdf4', borderRadius: 8, border: '1px solid #bbf7d0' }}>
+                                            <InsertDriveFileOutlinedIcon style={{ fontSize: 15, color: '#16a34a', flexShrink: 0 }} />
+                                            <span style={{ fontSize: '12px', color: '#374151', fontWeight: 600, flex: 1 }}>{file.name}</span>
+                                            <a onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadFillesApi(file.id, file.name); }} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#005081', cursor: 'pointer', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                                        </div>
+                                    ))}
+                                    {Array.from(files || []).map((file, i) => (
+                                        <div key={'new-' + i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 4, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                            <InsertDriveFileOutlinedIcon style={{ fontSize: 15, color: '#64748b', flexShrink: 0 }} />
+                                            <span style={{ fontSize: '12px', color: '#374151', fontWeight: 600, flex: 1 }}>{file.name}</span>
+                                            <a href={URL.createObjectURL(file)} download={file.name} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#005081', cursor: 'pointer', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+            </WizardLayout>
+        </>
     )
 };
 

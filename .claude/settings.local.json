@@ -11,7 +11,9 @@
       "Bash(awk 'NR==1304{start=NR} NR==2263{print \"tchat JSX:\", NR-start, \"lines\"; exit}' \"c:/xampp/htdocs/GPR/test_projet/gpr_client_sicma_new_version/src/pages/Denonciations/TraiterDenonciation.js\")",
       "Bash(grep -n \"TREATMENT PAGE\\\\|EmailDialog\\\\|<\\\\/div>$\" \"c:/xampp/htdocs/GPR/test_projet/gpr_client_sicma_new_version/src/pages/Reclamations/TraiterReclamation.js\")",
       "Bash(grep -n \"TREATMENT PAGE\\\\|<EmailDialog\\\\|^      </div>$\" \"c:/xampp/htdocs/GPR/test_projet/gpr_client_sicma_new_version/src/pages/Reclamations/TraiterReclamation.js\")",
-      "Bash(awk -F: '$2>1635{print; exit}')"
+      "Bash(awk -F: '$2>1635{print; exit}')",
+      "Bash(python -c ' *)",
+      "Bash(grep -v \"node_modules\\\\|//\")"
     ]
   }
 }

@@ -84,7 +84,16 @@ const useWebSocketSession = ({ code, claimId, session, user }) => {
       }
       case "CONFIRME_SOLUTION":
         notify("Bravo - Réclamation traitée", "success");
-        setTimeout(() => window.location.reload(), 3000);
+        setTimeout(() => {
+          const path = window.location.pathname;
+          if (path.includes('/reclamations/traitement')) {
+            window.location.href = '/reclamations/traitement/all';
+          } else if (path.includes('/denonciations/traitement')) {
+            window.location.href = '/denonciations/traitement/all';
+          } else {
+            window.location.reload();
+          }
+        }, 3000);
         break;
       default:
         break;
