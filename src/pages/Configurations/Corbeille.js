@@ -1,5 +1,5 @@
 import { itemsChanged, loading } from "../../redux/actions/Alertes/AlertesActions";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import { loadItemFromSessionStorage, today } from "../../Utils/utils";
 import { connect } from "react-redux";
@@ -7,8 +7,8 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import { IconButton, Tooltip } from "@mui/material";
-import { modalify } from "../../Utils/modal";
+import { IconButton, Tooltip, Box, Typography, Chip, Dialog, DialogContent, DialogActions, Button } from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
 import SettingsBackupRestoreIcon from '@mui/icons-material/SettingsBackupRestore';
 import { deleteClaimApi, listeRSDDelete, restoreClaimApi } from "../../apis/Reclamations/ReclamationsApi";
 import { deleteDenunApi, restoreDenunApi } from "../../apis/Denonciations/DenonciationsApi";
@@ -17,6 +17,15 @@ import { KTApp } from "../../Utils/blockui";
 import { LoadingButton } from "@mui/lab";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "./DeleteModal";
+import ConfigKPIBar from "../../components/shared/ConfigKPIBar";
+import ConfigTable from "../../components/shared/ConfigTable";
+import ConfigCardView from "../../components/shared/ConfigCardView";
+
+import ViewModeToggle from "../../components/shared/ViewModeToggle";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import GavelIcon from "@mui/icons-material/Gavel";
+import AnnouncementIcon from "@mui/icons-material/Announcement";
+import LightbulbIcon from "@mui/icons-material/Lightbulb";
 const Corbeille = (props) => {
 
     const clearComponentState = () => {
@@ -27,6 +36,7 @@ const Corbeille = (props) => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteReason, setDeleteReason] = useState("");
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [restoreConfirm, setRestoreConfirm] = useState({ open: false, claim: null, loading: false });
     useEffect(() => {
         KTApp.blockPage({
             overlayColor: '#000000',
@@ -55,6 +65,28 @@ const Corbeille = (props) => {
         //cleanup
         return clearComponentState();
     }, []);
+
+    const KPI_CONFIG = [
+        { key: "total",   label: "Total supprim\u00e9s",   icon: AssignmentIcon,   iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
+        { key: "claim",   label: "R\u00e9clamations",      icon: GavelIcon,        iconBg: "#FEE2E2", iconColor: "#B91C1C", borderColor: "#EF4444", filter: (i) => i.type === "CLAIM" },
+        { key: "denun",   label: "D\u00e9nonciations",     icon: AnnouncementIcon, iconBg: "#FEF3C7", iconColor: "#B45309", borderColor: "#F59E0B", filter: (i) => i.type === "DENUNCIACION" },
+        { key: "suggest", label: "Suggestions",           icon: LightbulbIcon,    iconBg: "#D1FAE5", iconColor: "#065F46", borderColor: "#10B981", filter: (i) => i.type === "SUGGESTION" },
+    ];
+    const CHIPS_CONFIG = [
+        { value: "ALL",          label: "Tous",         filter: () => true },
+        { value: "CLAIM",        label: "R\u00e9clamations",  filter: (i) => i.type === "CLAIM" },
+        { value: "DENUNCIACION", label: "D\u00e9nonciations", filter: (i) => i.type === "DENUNCIACION" },
+        { value: "SUGGESTION",   label: "Suggestions",  filter: (i) => i.type === "SUGGESTION" },
+    ];
+    const [activeChip, setActiveChip] = useState("ALL");
+    const [viewMode, setViewMode] = useState("list");
+    const TYPE_LABELS = { CLAIM: "Réclamation", DENUNCIACION: "Dénonciation", SUGGESTION: "Suggestion" };
+    const filteredItems = useMemo(() => {
+        const c = CHIPS_CONFIG.find(x => x.value === activeChip);
+        const items = c ? props.items.filter(c.filter) : props.items;
+        return items.map(it => ({ ...it, typeLabel: TYPE_LABELS[it.type] || it.type }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.items, activeChip]);
 
     let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
     let hbt = (user.posteDto.habilitations).split(',');
@@ -164,7 +196,15 @@ const Corbeille = (props) => {
 
     const handleModal = (e, claim) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la restauration de cet élément ?", "confirm", (e) => handleRestoreClaim(e, claim))
+        setRestoreConfirm({ open: true, claim, loading: false });
+    }
+
+    const handleConfirmRestore = (e) => {
+        const { claim } = restoreConfirm;
+        if (!claim) return;
+        setRestoreConfirm(p => ({ ...p, loading: true }));
+        handleRestoreClaim(e, claim);
+        setRestoreConfirm({ open: false, claim: null, loading: false });
     }
 
     const handleRestoreClaim = (e, claim) => {
@@ -291,31 +331,26 @@ const Corbeille = (props) => {
     let btnDelete;
     if (hbt.includes("H12")) {
         btnDelete = (
-            <>
-                <div className="col l6 m6 s12 justify-content-end">
-                    <LoadingButton
-                        onClick={(e) => {
-                            e.preventDefault();
-                            prepareBeforeDelete(e);
-                        }}
-                        className="waves-effect waves-effect-b waves-light btn-small"
-                        // loading={props.etat3}
-                        loadingPosition="end"
-                        endIcon={<DeleteIcon />}
-                        variant="contained"
-                        sx={{
-                            backgroundColor: "#ef6c00",
-                            textTransform: "initial",
-                            transition: "background-color 0.3s ease",
-                            '&:hover': {
-                                backgroundColor: '#fda321',
-                            },
-                        }}
-                    >
-                        <span>Supprimer</span>
-                    </LoadingButton>
-                </div>
-            </>
+            <LoadingButton
+                onClick={(e) => {
+                    e.preventDefault();
+                    prepareBeforeDelete(e);
+                }}
+                loadingPosition="start"
+                startIcon={<DeleteIcon style={{ fontSize: 15 }} />}
+                variant="contained"
+                sx={{
+                    textTransform: "none",
+                    borderRadius: 2,
+                    fontWeight: 700,
+                    px: 2.5,
+                    background: "linear-gradient(135deg, #991b1b, #ef4444)",
+                    "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" },
+                    "&.Mui-disabled": { opacity: 0.6 },
+                }}
+            >
+                Supprimer définitivement
+            </LoadingButton>
         );
     }
 
@@ -372,6 +407,26 @@ const Corbeille = (props) => {
                     onConfirm={handleDeleteSubmit}
                 />
             )}
+
+            <Dialog open={restoreConfirm.open} onClose={() => { if (!restoreConfirm.loading) setRestoreConfirm({ open: false, claim: null, loading: false }); }} fullWidth maxWidth="xs" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
+                <div style={{ background: "linear-gradient(135deg, #065f46, #10b981)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><SettingsBackupRestoreIcon style={{ color: "#fff", fontSize: 20 }} /></div>
+                        <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Restaurer l'élément</div>
+                    </div>
+                    <IconButton onClick={() => setRestoreConfirm({ open: false, claim: null, loading: false })} disabled={restoreConfirm.loading} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}><CloseIcon style={{ fontSize: 16 }} /></IconButton>
+                </div>
+                <DialogContent sx={{ p: 3 }}>
+                    <Typography sx={{ fontSize: 14, color: "#475569" }}>Confirmez-vous la restauration de cet élément ?</Typography>
+                </DialogContent>
+                <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
+                    <Button onClick={() => setRestoreConfirm({ open: false, claim: null, loading: false })} disabled={restoreConfirm.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
+                    <LoadingButton onClick={handleConfirmRestore} loading={restoreConfirm.loading} loadingPosition="start" startIcon={<SettingsBackupRestoreIcon style={{ fontSize: 15 }} />} variant="contained"
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #065f46, #10b981)", "&:hover": { background: "linear-gradient(135deg, #064e3b, #059669)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
+                        Restaurer
+                    </LoadingButton>
+                </DialogActions>
+            </Dialog>
             <div className="row">
 
                 <div className="col l12 m12 s12">
@@ -379,33 +434,50 @@ const Corbeille = (props) => {
 
 
                         <section className="tabs-vertical mt-1 section">
-
-                            <div className="row">
-                                <div className="col s12">
-                                    <div className="card">
-                                        <div className="card-content">
-                                            <div className="row">
-                                                <div className="col l6 m6 s12">
-                                                    <h4 className="card-title">Liste des RSD supprimées&nbsp;</h4>
-                                                </div>
-                                                {btnDelete}
-
-                                            </div>
-                                            <div className="row">
-                                                <div className="col s12">
-                                                    <ReactDatatable
-                                                        className={"responsive-table table-xlsx app-langues no-hover"}
-                                                        config={config}
-                                                        records={props.items}
-                                                        columns={columns}
-                                                        // onRowClicked={rowClickedHandler}
-                                                        onChange={tableChangeHandler}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div className="card-panel pb-5">
+                                <ConfigKPIBar items={props.items} kpis={KPI_CONFIG} />
+                                <Box sx={{ display: "flex", gap: 1, mb: 2.5, alignItems: "center", flexWrap: "wrap" }}>
+                                    <Box sx={{ flex: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
+                                        {CHIPS_CONFIG.map(chip => (<Chip key={chip.value} label={chip.label} onClick={() => setActiveChip(chip.value)} color={activeChip === chip.value ? "primary" : "default"} variant={activeChip === chip.value ? "filled" : "outlined"} size="small" sx={{ borderRadius: "8px", fontWeight: activeChip === chip.value ? 700 : 400 }} />))}
+                                    </Box>
+                                    {btnDelete}
+                                </Box>
+                                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                                    <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Liste des RSD supprimées</Typography>
+                                    <Box sx={{ display: "flex", gap: 0.5 }}>
+                                        <ViewModeToggle value={viewMode} onChange={setViewMode} />
+                                    </Box>
+                                </Box>
+                                {viewMode === "list" ? (
+                                    <ConfigTable
+                                        items={filteredItems}
+                                        columns={[
+                                            { id: "codeClient",            label: "Code Client",         sortable: true,  minWidth: 120 },
+                                            { id: "clientFirstAndLastName", label: "Bénéficiaire",        sortable: true,  minWidth: 170, render: (c) => c.clientFirstAndLastName?.trim() || "Anonyme" },
+                                            { id: "type",                  label: "Type",                sortable: true,  minWidth: 130, render: (c) => {
+                                                const map = { CLAIM: { label: "Réclamation", color: "#EF4444" }, DENUNCIACION: { label: "Dénonciation", color: "#F59E0B" }, SUGGESTION: { label: "Suggestion", color: "#10B981" } };
+                                                const t = map[c.type] || { label: c.type, color: "#64748B" };
+                                                return <Chip label={t.label} size="small" sx={{ backgroundColor: t.color, color: "#fff", fontWeight: 700, fontSize: "0.72rem" }} />;
+                                            }},
+                                            { id: "delete_reason",         label: "Motif",               sortable: true,  minWidth: 180 },
+                                            { id: "deletedAtFormated",     label: "Supprimé le",         sortable: true,  minWidth: 180 },
+                                            { id: "actions",               label: "Actions",             sortable: false, minWidth: 90,  render: (claim) => (
+                                                <Tooltip title="Restaurer"><IconButton onClick={(e) => handleModal(e, claim)} color="error"><SettingsBackupRestoreIcon /></IconButton></Tooltip>
+                                            )},
+                                        ]}
+                                        searchFields={["codeClient", "clientFirstAndLastName", "delete_reason"]}
+                                        defaultSort="deletedAtFormated"
+                                    />
+                                ) : (
+                                    <ConfigCardView items={filteredItems} titleField="codeClient" subtitleField="clientFirstAndLastName" badgeField="typeLabel"
+                                        badgeColorMap={{ "Réclamation": "#EF4444", "Dénonciation": "#F59E0B", "Suggestion": "#10B981" }}
+                                        searchFields={["codeClient", "clientFirstAndLastName", "delete_reason"]}
+                                        extraFields={[
+                                            { label: "Motif", render: (c) => c.delete_reason || "-" },
+                                            { label: "Supprimé le", render: (c) => c.deletedAtFormated },
+                                            { label: "Restaurer", render: (c) => (<Tooltip title="Restaurer"><IconButton size="small" onClick={(e) => handleModal(e, c)} color="error"><SettingsBackupRestoreIcon fontSize="small" /></IconButton></Tooltip>) },
+                                        ]} />
+                                )}
                             </div>
                         </section>
                     </div>

@@ -1,27 +1,34 @@
 import React, {useEffect, useMemo, useState} from "react";
-import ReactDatatable from '@ashvin27/react-datatable';
-import HelpIcon from '@mui/icons-material/Help';
-import LastPageIcon from '@mui/icons-material/LastPage';
-import FirstPageIcon from '@mui/icons-material/FirstPage';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { v4 as uuidv4 } from 'uuid';
+import { Box, Typography, Tooltip } from "@mui/material";
 
 import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
 import { connect } from "react-redux";
-import {modalify} from "../../Utils/modal";
 import { ajout } from "../../apis/Configurations/InstitutionApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CancelIcon from '@mui/icons-material/Cancel';
+import BusinessIcon from '@mui/icons-material/Business';
 import { LOGO_SUPPORTED_SIZE } from "../../Utils/globals";
 import { licenseControl } from "../../Utils/license";
 import { addressChanged, denominationChanged, emailChanged, idChanged, institutionErrors, logoChanged, phoneChanged, referenceChanged, etatChanged, paysChanged, paysCodeChanged } from "../../redux/actions/Configurations/InstitutionActions";
 import countryList from 'react-select-country-list'
 import Select from "react-select";
 
+const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" };
+const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 });
+const textareaStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", minHeight: 80, fontFamily: "inherit", resize: "vertical" });
+
+const selectStyles = (hasError) => ({
+    control: (base, state) => ({ ...base, minHeight: 40, borderRadius: 9, borderColor: hasError ? "#ef4444" : (state.isFocused ? "#3b3fd8" : "#e2e8f0"), borderWidth: 1.5, boxShadow: "none", "&:hover": { borderColor: hasError ? "#ef4444" : "#3b3fd8" } }),
+    valueContainer: base => ({ ...base, padding: "2px 14px" }),
+    placeholder: base => ({ ...base, fontSize: 14, color: "#94a3b8" }),
+    singleValue: base => ({ ...base, fontSize: 14, color: "#1e293b" }),
+    input: base => ({ ...base, margin: 0, padding: 0 }),
+    indicatorSeparator: () => ({ display: "none" }),
+    menu: provided => ({ ...provided, zIndex: 9999 }),
+});
 
 
 const Institution = (props) => {
@@ -163,166 +170,111 @@ const Institution = (props) => {
     }
 
     let companyLogo = (props.logo)?
-        (<img src={props.logo} alt="Logo de l'institution" className="responsive-img"/>)
+        (<img src={props.logo} alt="Logo de l'institution" style={{ maxWidth: 220, maxHeight: 120, objectFit: "contain" }}/>)
         :
-        (<div className={"img-placeholder"}></div>)
+        (<Box sx={{ width: 220, height: 120, border: "1.5px dashed #e2e8f0", borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: 12 }}>Aucun logo</Box>)
 
     return (
-        <>
-            <div className="card-panel">
+        <div className="card-panel pb-5">
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
+                <Box sx={{ width: 38, height: 38, borderRadius: 2, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <BusinessIcon sx={{ color: "#6366F1", fontSize: 20 }} />
+                </Box>
+                <Box>
+                    <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Configurer les informations de l'institution</Typography>
+                    <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.3 }}>Il s'agit de configurer les informations (Dénomination, Email, etc..) de votre institution</Typography>
+                </Box>
+            </Box>
 
-                <form id="accountForm" >
-                    <div className="row mb-2">
-                        <div className="col s12"><h6 className="card-title">Configurer les informations de l'institution</h6>
-                            <p>Il s'agit de configurer les informations(Dénomination, Email, etc..)  de votre institution</p>
-                        </div>
-                    </div>
-                    <div className="row">
-                        <div className="col s12 m6">
-                            <div className="row">
-                                <div className="col s12 input-field">
-                                    <input id="denomination" placeholder="" name="denomination" type="text"
-                                           className="validate" value={props.denomination}
-                                           onChange={(e) => props.denominationChanged(e.target.value)}
-                                           data-error=".errorTxt1"/>
-                                    <label htmlFor="denomination" className={"active"}>Raison / Dénomination</label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.errors.denomination}</div>
-                                    </small>
-                                </div>
-                                <div className="col s12 input-field">
-                                    <input id="reference" placeholder="" name="reference" type="text"
-                                           className="validate" value={props.reference}
-                                           onChange={(e) => props.referenceChanged(e.target.value)}
-                                           data-error=".errorTxt1"/>
-                                    <label htmlFor="reference" className={"active"}>Numéro d'agrément</label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.errors.reference}</div>
-                                    </small>
-                                </div>
-                                <div className="col s12 input-field">
-                                    <textarea id="address" placeholder="" name="address" type="text"
-                                              className="validate materialize-textarea" value={props.address}
-                                              onChange={(e) => props.addressChanged(e.target.value)}
-                                              data-error=".errorTxt2"/>
-                                    <label htmlFor="address" className={"active"}>Adresse</label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.errors.address}</div>
-                                    </small>
-                                </div>
-                               
-                               
-                                <div className="col s12 file-field input-field">
-                                    <div className="btn btn-small file-small brand-blue">
-                                        <span>Logo</span>
-                                        <input type="file" onChange={(e) => handleFile(e)}/>
-                                    </div>
-                                    <div className="file-path-wrapper">
-                                        <input className="file-path validate" type="text" value={props.logo}/>
-                                        <span className="helper-text" data-error="" data-success="">Dimensions supportées: {LOGO_SUPPORTED_SIZE}</span>
-                                    </div>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.errors.logo}</div>
-                                    </small>
-                                    {/*<div>*/}
-                                    {/*    <ImageCropper*/}
-                                    {/*        imageToCrop={imageToCrop}*/}
-                                    {/*        onImageCropped={(croppedImage) => setCroppedImage(croppedImage)}*/}
-                                    {/*    />*/}
-                                    {/*</div>*/}
-                                    {/*{*/}
-                                    {/*    croppedImage &&*/}
-                                    {/*    <div>*/}
-                                    {/*        <h2>Cropped Image</h2>*/}
-                                    {/*        <img*/}
-                                    {/*            alt="Cropped Image"*/}
-                                    {/*            src={croppedImage}*/}
-                                    {/*        />*/}
-                                    {/*    </div>*/}
-                                    {/*}*/}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col s12 m6">
-                            <div className="row">
-                                <div className="col s12 input-field">
-                                    <input id="email" name="email" placeholder="" type="email"
-                                           onChange={(e) => props.emailChanged(e.target.value)}
-                                           className=""
-                                           value={props.email}/>
-                                    <label htmlFor="email" className={"active"}>Adresse électronique</label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.errors.email}</div>
-                                    </small>
+            <Box component="form" id="accountForm" sx={{ mt: 3 }}>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2.5 }}>
 
-                                </div>
-                                <div className="col s12 input-field">
-                                    <input type="tel" placeholder="" value={props.phone} onChange={(e) => props.phoneChanged(e.target.value)} />
+                    {/* Colonne gauche */}
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <Box>
+                            <label style={labelStyle}>Raison / Dénomination</label>
+                            <input value={props.denomination || ""} onChange={(e) => props.denominationChanged(e.target.value)} placeholder="Ex: SICMA ET ASSOCIES"
+                                style={inputStyle(props.errors.denomination)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.denomination ? "#ef4444" : "#e2e8f0"; }} />
+                            {props.errors.denomination && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.denomination}</div>}
+                        </Box>
+                        <Box>
+                            <label style={labelStyle}>Numéro d'agrément</label>
+                            <input value={props.reference || ""} onChange={(e) => props.referenceChanged(e.target.value)} placeholder="Ex: RCCM RB/ABC/20 B 3215"
+                                style={inputStyle(props.errors.reference)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.reference ? "#ef4444" : "#e2e8f0"; }} />
+                            {props.errors.reference && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.reference}</div>}
+                        </Box>
+                        <Box>
+                            <label style={labelStyle}>Adresse</label>
+                            <textarea value={props.address || ""} onChange={(e) => props.addressChanged(e.target.value)} placeholder="Ex: Calavi-Kpota, 2ème étage Immeuble Tankaya-Banque Atlantique"
+                                style={textareaStyle(props.errors.address)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.address ? "#ef4444" : "#e2e8f0"; }} />
+                            {props.errors.address && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.address}</div>}
+                        </Box>
+                        <Box>
+                            <label style={labelStyle}>Logo</label>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                                <LoadingButton component="label" variant="contained"
+                                    sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, height: 40, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" } }}>
+                                    Choisir un fichier
+                                    <input type="file" hidden accept="image/*" onChange={(e) => handleFile(e)} />
+                                </LoadingButton>
+                                <Typography sx={{ fontSize: 12, color: "#64748b" }}>Dimensions supportées: {LOGO_SUPPORTED_SIZE}</Typography>
+                            </Box>
+                            {props.errors.logo && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.logo}</div>}
+                        </Box>
+                    </Box>
 
-                                    <label htmlFor="phone" className={"active"}>Téléphone&nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: 22990909090 ou +22990909090">
-                                            <HelpIcon/>
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.errors.phone}</div>
-                                    </small>
-                                </div>
-                                <div className="col s12">
-                                    <div className="input-field">
-                                        <Select
+                    {/* Colonne droite */}
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <Box>
+                            <label style={labelStyle}>Adresse électronique</label>
+                            <input type="email" value={props.email || ""} onChange={(e) => props.emailChanged(e.target.value)} placeholder="Ex: info@sicmagroup.com"
+                                style={inputStyle(props.errors.email)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.email ? "#ef4444" : "#e2e8f0"; }} />
+                            {props.errors.email && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.email}</div>}
+                        </Box>
+                        <Box>
+                            <label style={labelStyle}>
+                                Téléphone{" "}
+                                <Tooltip title="Exemple: 22990909090 ou +22990909090">
+                                    <HelpOutlineIcon sx={{ fontSize: 14, color: "#94a3b8", verticalAlign: "middle" }} />
+                                </Tooltip>
+                            </label>
+                            <input type="tel" value={props.phone || ""} onChange={(e) => props.phoneChanged(e.target.value)} placeholder="Ex: 22990909090"
+                                style={inputStyle(props.errors.phone)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.phone ? "#ef4444" : "#e2e8f0"; }} />
+                            {props.errors.phone && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.phone}</div>}
+                        </Box>
+                        <Box>
+                            <label style={labelStyle}>Pays</label>
+                            <Select
+                                id="slevel"
+                                value={props.pays ? { value: props.paysCode, label: props.pays } : null}
+                                placeholder="Sélectionner le pays"
+                                options={options}
+                                onChange={changeHandler}
+                                styles={selectStyles(props.errors.pays)}
+                            />
+                            {props.errors.pays && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.pays}</div>}
+                        </Box>
+                        <Box>
+                            <label style={labelStyle}>Aperçu du logo</label>
+                            {companyLogo}
+                        </Box>
+                    </Box>
+                </Box>
 
-                                            id="slevel"
-                                            value={{"value": props.paysCode ,"label": props.pays}}
-                                            // value={valueP}
-                                            className='react-select-container mt-2'
-                                            classNamePrefix="react-select"
-                                            // style={styles}
-                                            placeholder="Sélectionner le pays"
-                                            options={options}
-                                            // onChange={(e) => props.risqueLevelChanged(e.value)}
-                                            onChange={changeHandler}
-                                        />
-                                        <label htmlFor="slevel" className={"active"} style={{top:'-14%'}}>Pays</label>
-                                        <small className="errorTxt4">
-                                            <div id="cpassword-error" className="error">{props.errors.pays}</div>
-                                        </small>
-                                    </div>
-                                </div>
-                                <div className="col s12">
-                                    {companyLogo}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col s12 display-flex justify-content-end mt-3">
-                            {/* {!licenseControl? */}
-                                {/* ( */}
-                                    <LoadingButton
-                                    className="btn waves-effect waves-light mr-1 btn-small"
-                                    onClick={(e) => handleSubmit(e)}
-                                    loading={props.etat}
-                                    loadingPosition="end"
-                                    endIcon={<SaveIcon />}
-                                    variant="contained"
-                                    sx={{ textTransform:"initial" }}
-                                    >
-                                        <span>Enregistrer</span>
-                                    </LoadingButton>
-                                {/* ) */}
-                            {/* :
-                                (<div className="card-alert card red lighten-5">
-                                    <div className="card-content red-text">
-                                        <ul>
-                                            Veuillez activer une licence.
-                                        </ul>
-                                    </div>
-                                </div>)} */}
-                        </div>
-                    </div>
-                </form>
-
-            </div>
-        </>
+                <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+                    <LoadingButton
+                        onClick={(e) => handleSubmit(e)}
+                        loading={props.etat}
+                        loadingPosition="start"
+                        startIcon={<SaveIcon style={{ fontSize: 16 }} />}
+                        variant="contained"
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}
+                    >
+                        Enregistrer
+                    </LoadingButton>
+                </Box>
+            </Box>
+        </div>
     )
 }
 const mapStateToProps = (state) => {

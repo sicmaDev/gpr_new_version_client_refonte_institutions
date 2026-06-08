@@ -3,8 +3,10 @@ import { cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromS
 import { connect } from "react-redux";
 
 import ReactDatatable from '@ashvin27/react-datatable';
-import HelpIcon from '@mui/icons-material/Help';
-import { modalify } from "../../Utils/modal";
+import { Dialog, DialogContent, DialogActions, IconButton } from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { ajout, apiKeyTokenDelete, apiKeyTokenGenerator, apiKeyTokenReGenerator, apiKeyTokens, genererToken } from "../../apis/Configurations/BotApi";
 import {
     apiKeyChanged, apiSecretChanged, gprbotErrors, etatChanged, etat1Changed, qrcodeChanged
@@ -14,7 +16,6 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import SaveIcon from '@mui/icons-material/Save';
 
 import { notify } from "../../Utils/alert";
 import axios from "axios";
@@ -23,7 +24,17 @@ import { QRCode } from 'react-qrcode-logo';
 import logo from '../../assets/images/GPR_192.png';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Button, Chip } from "@mui/material";
+import { Button, Chip, Box, Typography, Tooltip } from "@mui/material";
+import ConfigKPIBar from "../../components/shared/ConfigKPIBar";
+import ConfigTable from "../../components/shared/ConfigTable";
+import ConfigCardView from "../../components/shared/ConfigCardView";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import AddIcon from "@mui/icons-material/Add";
+
+import ViewModeToggle from "../../components/shared/ViewModeToggle";
+
+const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" };
+const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 });
 
 const ApiKey = (props) => {
     let appBot;
@@ -33,24 +44,20 @@ const ApiKey = (props) => {
         setShowPassword(!showPassword);
     };
     const [apiKeyList, setApiKeyList] = useState([])
+    const [confirmModal, setConfirmModal] = useState({ open: false, id: null, isDeleted: false, loading: false });
+    const [viewMode, setViewMode] = useState("list");
+    const [addModalOpen, setAddModalOpen] = useState(false);
 
     const handleDisabledModal = (e, spId, isDeleted = false) => {
         e.stopPropagation();
-        var message = "Voulez-vous vraiment regénérer ce api key ?"
+        setConfirmModal({ open: true, id: spId, isDeleted, loading: false });
+    }
 
-        if (isDeleted) {
-            message = "Voulez-vous vraiment supprimer ce api key ?";
-
-        }
-
-        modalify("Confirmation", message, "confirm", (e) => {
-            if (isDeleted) {
-
-                deleteTokenApi(spId)
-            } else {
-                regenerateTokenApi(spId)
-            }
-        })
+    const handleConfirmAction = () => {
+        const { id, isDeleted } = confirmModal;
+        setConfirmModal(p => ({ ...p, loading: true }));
+        const action = isDeleted ? deleteTokenApi(id) : regenerateTokenApi(id);
+        Promise.resolve(action).finally(() => setConfirmModal({ open: false, id: null, isDeleted: false, loading: false }));
     }
 
 
@@ -231,136 +238,159 @@ const ApiKey = (props) => {
     return (
         <>
 
-            <div className="card-panel">
-                <div className="row">
-                    <div className="col s12"><h6 className="card-title">API KEY </h6>
-                        <p>Il s'agit de générer une clé d'authentification pour l'enregistrement</p></div>
-                </div>
-                <form id="accountForm" >
-                    <div className="row">
-
-
-                        <div className="col s12 m12">
-                            <div className="row">
-
-                                <div className="col s6 input-field">
-                                    <input id="Nom" placeholder="" name="nom" type="text"
-                                        className="validate" value={keyField.libelle}
-                                        onChange={(e) => setKeyField({ ...keyField, libelle: e.target.value })} maxLength="36"
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="apikey" className={"active"}>
-                                        Libelle
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="API_KEY fourni par SICMA ET ASSOCIES pour utiliser GPR BOT">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.gprbotErrors.apiKey}</div>
-                                    </small>
-                                </div>
-
-                                <div className="col s6 input-field">
-                                    <input id="apisecret" placeholder="" name="apisecret" type={showPassword ? "text" : "password"}
-                                        className="validate" value={keyField.secret}
-                                        maxLength="36"
-                                        data-error=".errorTxt1" readOnly disabled />
-                                    <label htmlFor="apisecret" className={"active"}>API SECRET &nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="API_SECRET fourni par SICMA ET ASSOCIES  pour utiliser GPR BOT">
-                                            <HelpIcon />
-                                        </a></label>
-
-                                    <span
-                                        onClick={toggleShowPassword}
-                                        style={{
-                                            position: 'absolute',
-                                            right: '10px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                    </span>
-                                </div>
-                                <div className="col s6 input-field">
-                                    <input id="Description" placeholder="" name="description" type="text"
-                                        className="validate" value={keyField.description}
-                                        onChange={(e) => setKeyField({ ...keyField, description: e.target.value })} maxLength="36"
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="apikey" className={"active"}>
-                                        Description
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="API_KEY fourni par SICMA ET ASSOCIES pour utiliser GPR BOT">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.gprbotErrors.apiKey}</div>
-                                    </small>
-                                </div>
-                                <div className="col s6 input-field">
-                                    <input id="apikey" placeholder="" name="apikey" type="text"
-                                        className="validate" value={keyField.key} maxLength="36"
-                                        data-error=".errorTxt1" readOnly disabled />
-                                    <label htmlFor="apikey" className={"active"}>API KEY &nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="API_KEY fourni par SICMA ET ASSOCIES pour utiliser GPR BOT">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.gprbotErrors.apiKey}</div>
-                                    </small>
-                                </div>
-
-
-                                <div className="col s12 display-flex justify-content-start mt-3">
-
-
-
-                                    <LoadingButton
-                                        className="btn waves-effect waves-light mr-1 btn-small"
-                                        onClick={(e) => createTokenApi(e)}
-                                        loading={props.etat}
-                                        loadingPosition="end"
-                                        endIcon={<SaveIcon />}
-                                        variant="contained"
-                                        sx={{ textTransform: "initial" }}
-                                    >
-                                        <span>Générer</span>
-                                    </LoadingButton>
-                                </div>
-                            </div>
-
-
+            {/* ── Modal génération / ajout ── */}
+            <Dialog
+                open={addModalOpen}
+                onClose={() => { if (!props.etat) { setAddModalOpen(false); setKeyField({ libelle: "", description: "", secret: null, key: null }); } }}
+                fullWidth
+                maxWidth="sm"
+                PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}
+            >
+                {/* Header */}
+                <div style={{
+                    background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)",
+                    padding: "18px 24px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{
+                            width: 36, height: 36, borderRadius: 9,
+                            background: "rgba(255,255,255,0.15)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                            <VpnKeyIcon style={{ color: "#fff", fontSize: 20 }} />
                         </div>
-
-
-
+                        <div>
+                            <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Générer une clé API</div>
+                            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>
+                                Utilisée par GPR BOT pour l'authentification
+                            </div>
+                        </div>
                     </div>
-                </form>
-
-            </div>
-
-            <div className="card-panel">
-                <div className="row">
-                    <div className="col l6 m6 s12">
-                        <h6 className="card-title">Liste des API KEY&nbsp;</h6>
-                    </div>
-
-                </div>
-                <div className="row">
-                    <div className="col s12">
-                        <ReactDatatable
-                            className={"responsive-table table-xlsx app-categories no-hover"}
-                            config={config}
-                            records={apiKeyList}
-                            columns={columns}
-                            onRowClicked={rowClickedHandler}
-                        />
-                    </div>
+                    <IconButton
+                        onClick={() => { if (!props.etat) { setAddModalOpen(false); setKeyField({ libelle: "", description: "", secret: null, key: null }); } }}
+                        disabled={props.etat} size="small"
+                        style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}
+                    >
+                        <CloseIcon style={{ fontSize: 16 }} />
+                    </IconButton>
                 </div>
 
+                {/* Contenu */}
+                <DialogContent sx={{ p: 3 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
+                        <Box>
+                            <label style={labelStyle}>Libellé <span style={{ color: "#ef4444" }}>*</span></label>
+                            <input value={keyField.libelle} onChange={(e) => setKeyField({ ...keyField, libelle: e.target.value })} maxLength={36} placeholder="Ex: Clé du module BOT"
+                                style={inputStyle(props.gprbotErrors.apiKey)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                            {props.gprbotErrors.apiKey && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.gprbotErrors.apiKey}</div>}
+                        </Box>
+                        <Box>
+                            <label style={labelStyle}>Description</label>
+                            <input value={keyField.description} onChange={(e) => setKeyField({ ...keyField, description: e.target.value })} maxLength={36} placeholder="Ex: Clé pour les notifications BOT"
+                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                        </Box>
+                        <Box>
+                            <label style={labelStyle}>API Secret</label>
+                            <Box sx={{ position: "relative" }}>
+                                <input value={keyField.secret || ""} type={showPassword ? "text" : "password"} readOnly disabled style={{ ...inputStyle(false), background: "#f8fafc", color: "#94a3b8", paddingRight: 40 }} />
+                                <IconButton onClick={toggleShowPassword} size="small" sx={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)" }}>
+                                    {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                                </IconButton>
+                            </Box>
+                        </Box>
+                        <Box>
+                            <label style={labelStyle}>API Key</label>
+                            <input value={keyField.key || ""} readOnly disabled style={{ ...inputStyle(false), background: "#f8fafc", color: "#94a3b8" }} />
+                        </Box>
+                    </Box>
+                </DialogContent>
+
+                {/* Footer */}
+                <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
+                    <Button
+                        onClick={() => { setAddModalOpen(false); setKeyField({ libelle: "", description: "", secret: null, key: null }); }}
+                        disabled={props.etat}
+                        variant="outlined"
+                        sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}
+                    >
+                        Fermer
+                    </Button>
+                    <LoadingButton onClick={(e) => createTokenApi(e)} loading={props.etat} loadingPosition="start" startIcon={<VpnKeyIcon style={{ fontSize: 16 }} />} variant="contained"
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
+                        Générer
+                    </LoadingButton>
+                </DialogActions>
+            </Dialog>
+
+            <div className="card-panel pb-5">
+                <ConfigKPIBar items={apiKeyList} kpis={[{ key: "total", label: "Total API Keys", icon: VpnKeyIcon, iconBg: "#EDE9FE", iconColor: "#6D28D9", borderColor: "#8B5CF6", filter: () => true }]} />
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Liste des API KEY</Typography>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                        <ViewModeToggle value={viewMode} onChange={setViewMode} />
+                        <LoadingButton
+                            onClick={() => setAddModalOpen(true)}
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            sx={{
+                                textTransform: "none", borderRadius: 2, fontWeight: 700,
+                                background: "linear-gradient(135deg, #1e2188, #3b3fd8)",
+                                "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" },
+                                fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap",
+                            }}
+                        >
+                            Ajouter
+                        </LoadingButton>
+                    </Box>
+                </Box>
+                {viewMode === "list" ? (
+                    <ConfigTable
+                        items={apiKeyList}
+                        columns={[
+                            { id: "name",        label: "Intitul\u00e9",    sortable: true,  minWidth: 180 },
+                            { id: "description", label: "Description",  sortable: true,  minWidth: 200 },
+                            { id: "cle",         label: "API KEY",      sortable: false, minWidth: 220 },
+                            { id: "actions",     label: "Actions",     sortable: false, minWidth: 200, render: (user) => (
+                                <div style={{ display: "flex", gap: "6px" }}>
+                                    <Chip label="Régénérer" size="small" onClick={(e) => handleDisabledModal(e, user.id)} />
+                                    <Chip label="Supprimer" size="small" color="error" onClick={(e) => handleDisabledModal(e, user.id, true)} />
+                                </div>
+                            )},
+                        ]}
+                        searchFields={["name", "description", "cle"]}
+                        defaultSort="name"
+                    />
+                ) : (
+                    <ConfigCardView items={apiKeyList} titleField="name" subtitleField="description" searchFields={["name", "description", "cle"]}
+                        extraFields={[{ label: "API Key", render: (k) => k.cle || "-" }]}
+                        onDelete={(user) => handleDisabledModal({ stopPropagation: () => {} }, user.id, true)} />
+                )}
             </div>
+
+            <Dialog open={confirmModal.open} onClose={() => { if (!confirmModal.loading) setConfirmModal({ open: false, id: null, isDeleted: false, loading: false }); }} fullWidth maxWidth="xs" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
+                <div style={{ background: confirmModal.isDeleted ? "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)" : "linear-gradient(135deg, #b45309, #f59e0b)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            {confirmModal.isDeleted ? <DeleteIcon style={{ color: "#fff", fontSize: 20 }} /> : <AutorenewIcon style={{ color: "#fff", fontSize: 20 }} />}
+                        </div>
+                        <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{confirmModal.isDeleted ? "Supprimer la clé API" : "Régénérer la clé API"}</div>
+                    </div>
+                    <IconButton onClick={() => setConfirmModal({ open: false, id: null, isDeleted: false, loading: false })} disabled={confirmModal.loading} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}><CloseIcon style={{ fontSize: 16 }} /></IconButton>
+                </div>
+                <DialogContent sx={{ p: 3 }}>
+                    <Typography sx={{ fontSize: 14, color: "#475569" }}>
+                        {confirmModal.isDeleted ? "Voulez-vous vraiment supprimer cette clé API ? Cette action est irréversible." : "Voulez-vous vraiment régénérer cette clé API ? La clé actuelle sera invalidée."}
+                    </Typography>
+                </DialogContent>
+                <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
+                    <Button onClick={() => setConfirmModal({ open: false, id: null, isDeleted: false, loading: false })} disabled={confirmModal.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
+                    <LoadingButton onClick={handleConfirmAction} loading={confirmModal.loading} loadingPosition="start" startIcon={confirmModal.isDeleted ? <DeleteIcon style={{ fontSize: 15 }} /> : <AutorenewIcon style={{ fontSize: 15 }} />} variant="contained"
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: confirmModal.isDeleted ? "linear-gradient(135deg, #991b1b, #ef4444)" : "linear-gradient(135deg, #b45309, #f59e0b)", "&:hover": { background: confirmModal.isDeleted ? "linear-gradient(135deg, #7f1d1d, #dc2626)" : "linear-gradient(135deg, #92400e, #d97706)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
+                        {confirmModal.isDeleted ? "Supprimer" : "Régénérer"}
+                    </LoadingButton>
+                </DialogActions>
+            </Dialog>
 
         </>
     )

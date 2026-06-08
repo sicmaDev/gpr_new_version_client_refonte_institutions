@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import FileTypeIcon from "../../components/shared/FileTypeIcon";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import TraitementShell from "../../components/treatment/TraitementShell";
 import HistoriqueTimeline from "../../components/treatment/HistoriqueTimeline";
@@ -1459,7 +1460,6 @@ const ListeDenonciations = (props) => {
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
-      let icon = guessExtension(attachment);
       return (
         <Grid item xs={12} sm={6} key={attachment.id}>
           <Card
@@ -1478,23 +1478,13 @@ const ListeDenonciations = (props) => {
           >
             <Box
               sx={{
-                backgroundColor: "grey.100",
-                borderRadius: "6px",
-                padding: "10px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: "12px",
-                minWidth: "56px",
               }}
             >
-              <img
-                src={icon}
-                height="28"
-                width="22"
-                alt=""
-                style={{ objectFit: "contain" }}
-              />
+              <FileTypeIcon attachment={attachment} />
             </Box>
 
             <CardContent sx={{ flex: 1, minWidth: 0, py: 1 }}>

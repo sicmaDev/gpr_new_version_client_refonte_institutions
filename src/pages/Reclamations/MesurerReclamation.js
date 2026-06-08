@@ -962,8 +962,7 @@ const MesurerReclamation = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName
-                      } le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName ?? ""} le ${attachment.extra?.createdAt && isFinite(new Date(attachment.extra.createdAt)) ? formatDate(attachment.extra.createdAt) : "date invalide"}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1025,6 +1024,10 @@ const MesurerReclamation = (props) => {
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
     let audioListChild = props.selectedItemAudio.map((audioItem) => {
+      const isWhatsappAudio = audioItem.name && audioItem.name.startsWith("[WhatsApp]");
+      const displayName = isWhatsappAudio
+        ? audioItem.name.replace(/^\[WhatsApp\]\s*/, "")
+        : audioItem.name;
       return (
         <Grid item xs={12} sm={6} key={audioItem.id}>
           <Card
@@ -1033,13 +1036,16 @@ const MesurerReclamation = (props) => {
               alignItems: "center",
               borderRadius: 2,
               p: 1.5,
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              boxShadow: isWhatsappAudio
+                ? "0 2px 8px rgba(37,211,102,0.25)"
+                : "0 2px 4px rgba(0,0,0,0.05)",
+              border: isWhatsappAudio ? "1px solid #25d366" : "1px solid transparent",
               height: "100%",
             }}
           >
             <Box
               sx={{
-                bgcolor: "primary.light",
+                bgcolor: isWhatsappAudio ? "#25d366" : "primary.light",
                 borderRadius: "6px",
                 p: 1.5,
                 display: "flex",
@@ -1051,15 +1057,34 @@ const MesurerReclamation = (props) => {
               }}
             >
               <VolumeUp
-                sx={{ color: "primary.contrastText", fontSize: "28px" }}
+                sx={{
+                  color: "primary.contrastText",
+                  fontSize: "28px",
+                  display: isWhatsappAudio ? "none" : "block",
+                }}
               />
+              <span style={{ display: isWhatsappAudio ? "inline" : "none", fontSize: "22px" }}>🎙</span>
             </Box>
 
             <CardContent sx={{ flex: 1, minWidth: 0, p: "8px !important" }}>
               <Box
+                component="span"
+                sx={{
+                  display: isWhatsappAudio ? "inline-flex" : "none",
+                  alignItems: "center", gap: 0.5,
+                  bgcolor: "#dcfce7", color: "#15803d",
+                  fontSize: "10px", fontWeight: 700, px: 0.8, py: 0.2,
+                  borderRadius: "4px", border: "1px solid #86efac",
+                  whiteSpace: "nowrap", mb: 0.5,
+                }}
+              >
+                🎙 Commentaire WhatsApp
+              </Box>
+              <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
+                  mb: 0.5,
                 }}
               >
                 <Typography
@@ -1071,19 +1096,20 @@ const MesurerReclamation = (props) => {
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
-                    mb: 0.5,
                   }}
                 >
-                  {audioItem.name}
+                  {displayName}
                 </Typography>
-                {audioItem._extra && (
-                  <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName
-                      } le ${formatDate(audioItem.extra?.createdAt)}`}
-                  >
-                    <Info fontSize="small" sx={{ ml: 1 }} />
-                  </Tooltip>
-                )}
+                <Tooltip
+                  title={audioItem._extra
+                    ? `Ajouté par ${audioItem.extra?.user?.firstAndLastName ?? ""} le ${audioItem.extra?.createdAt && isFinite(new Date(audioItem.extra.createdAt)) ? formatDate(audioItem.extra.createdAt) : "date invalide"}`
+                    : ""}
+                  disableHoverListener={!audioItem._extra}
+                  disableFocusListener={!audioItem._extra}
+                  disableTouchListener={!audioItem._extra}
+                >
+                  <Info fontSize="small" sx={{ ml: 1, visibility: audioItem._extra ? "visible" : "hidden" }} />
+                </Tooltip>
               </Box>
               <Typography variant="body2" color="text.secondary">
                 {Math.round((audioItem.size / 1024 + Number.EPSILON) * 100) /
@@ -1102,7 +1128,8 @@ const MesurerReclamation = (props) => {
                       : "text.secondary",
                 }}
               >
-                {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
+                <Pause sx={{ display: currentAudioId === audioItem.id ? "block" : "none" }} />
+                <PlayArrow sx={{ display: currentAudioId === audioItem.id ? "none" : "block" }} />
               </IconButton>
             </Box>
           </Card>
@@ -2137,19 +2164,17 @@ const MesurerReclamation = (props) => {
                 </div>
               </section>
             </DialogContent>
-            {audioListUrlForm.length > 0 && (
-              <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
-                <LoadingButton fullWidth onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} variant="outlined"
-                  sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
-                  Annuler
-                </LoadingButton>
-                <LoadingButton fullWidth onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading}
-                  loadingPosition="end" endIcon={<SaveIcon />} variant="contained"
-                  sx={{ textTransform: "none", borderRadius: 2, background: "#1d4ed8", "&:hover": { background: "#1e40af" } }}>
-                  <span>Enregistrer</span>
-                </LoadingButton>
-              </DialogActions>
-            )}
+            <DialogActions style={{ display: audioListUrlForm.length > 0 ? "flex" : "none", padding: "8px 20px 20px", gap: 8 }}>
+              <LoadingButton fullWidth onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} variant="outlined"
+                sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+                Annuler
+              </LoadingButton>
+              <LoadingButton fullWidth onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading}
+                loadingPosition="end" endIcon={<SaveIcon />} variant="contained"
+                sx={{ textTransform: "none", borderRadius: 2, background: "#1d4ed8", "&:hover": { background: "#1e40af" } }}>
+                <span>Enregistrer</span>
+              </LoadingButton>
+            </DialogActions>
           </Dialog>
         )}
       </>
@@ -2185,41 +2210,36 @@ const MesurerReclamation = (props) => {
                 placeholder="Saisissez le contenu..."
               />
             </DialogContent>
-            {extraContent && extraContent?.trim() !== "" ? (
-              <DialogActions sx={{ overflowX: "hidden" }}>
-                <LoadingButton
-                  onClick={(e) => {
-                    setExtraContent("");
-                    setShowExtraContent(false);
-                  }}
-                  className="waves-effect waves-effect-b waves-light btn-small"
-                  loadingPosition="end"
-                  // loading={extraFileLoading}
-                  endIcon={<CloseIcon />}
-                  variant="contained"
-                  sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  color="secondary"
-                >
-                  Annuler
-                </LoadingButton>
-                <LoadingButton
-                  onClick={(e) => {
-                    handleContentSubmit(e);
-                  }}
-                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                  loading={extraFileLoading}
-                  loadingPosition="end"
-                  endIcon={<SaveIcon />}
-                  variant="contained"
-                  sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
-                  color="primary"
-                >
-                  Enregistrer
-                </LoadingButton>
-              </DialogActions>
-            ) : (
-              <></>
-            )}
+            <DialogActions sx={{ display: extraContent && extraContent?.trim() !== "" ? "flex" : "none", overflowX: "hidden" }}>
+              <LoadingButton
+                onClick={(e) => {
+                  setExtraContent("");
+                  setShowExtraContent(false);
+                }}
+                className="waves-effect waves-effect-b waves-light btn-small"
+                loadingPosition="end"
+                endIcon={<CloseIcon />}
+                variant="contained"
+                sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                color="secondary"
+              >
+                Annuler
+              </LoadingButton>
+              <LoadingButton
+                onClick={(e) => {
+                  handleContentSubmit(e);
+                }}
+                className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                loading={extraFileLoading}
+                loadingPosition="end"
+                endIcon={<SaveIcon />}
+                variant="contained"
+                sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                color="primary"
+              >
+                Enregistrer
+              </LoadingButton>
+            </DialogActions>
           </Dialog>
         </div>
       )}
@@ -2380,53 +2400,48 @@ const MesurerReclamation = (props) => {
                 </div>
               </section>
             </DialogContent>
-            {audioListUrlForm.length ? (
-              <DialogActions>
-                <Box
+            <DialogActions sx={{ display: audioListUrlForm.length ? "flex" : "none", justifyContent: "flex-end" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "end",
+                  alignItems: "center",
+                }}
+              >
+                <LoadingButton
+                  onClick={(e) => {
+                    handleFileSubmit(e, false);
+                  }}
+                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
+                  loading={extraFileLoading}
+                  loadingPosition="end"
+                  endIcon={<SaveIcon />}
+                  variant="contained"
                   sx={{
-                    display: "flex",
-                    justifyContent: "end",
-                    alignItems: "center",
+                    backgroundColor: "#1e2188",
+                    textTransform: "initial",
                   }}
                 >
-                  <LoadingButton
-                    onClick={(e) => {
-                      handleFileSubmit(e, false);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                    loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<SaveIcon />}
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#1e2188",
-                      textTransform: "initial",
-                    }}
-                  >
-                    <span>Enregistrer</span>
-                  </LoadingButton>
+                  <span>Enregistrer</span>
+                </LoadingButton>
 
-                  <LoadingButton
-                    onClick={(e) => {
-                      setAudioListForm([]);
-                      setAudioListUrlForm([]);
-                      setAudioBox(false);
-                      setOpen2(false);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small"
-                    loadingPosition="end"
-                    // loading={extraFileLoading}
-                    endIcon={<CloseIcon />}
-                    variant="contained"
-                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  >
-                    <span>Annuler</span>
-                  </LoadingButton>
-                </Box>
-              </DialogActions>
-            ) : (
-              <></>
-            )}
+                <LoadingButton
+                  onClick={(e) => {
+                    setAudioListForm([]);
+                    setAudioListUrlForm([]);
+                    setAudioBox(false);
+                    setOpen2(false);
+                  }}
+                  className="waves-effect waves-effect-b waves-light btn-small"
+                  loadingPosition="end"
+                  endIcon={<CloseIcon />}
+                  variant="contained"
+                  sx={{ backgroundColor: "#000", textTransform: "initial" }}
+                >
+                  <span>Annuler</span>
+                </LoadingButton>
+              </Box>
+            </DialogActions>
           </Dialog>
         </div>
       )}

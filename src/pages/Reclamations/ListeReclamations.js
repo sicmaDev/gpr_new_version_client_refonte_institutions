@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import FileTypeIcon from "../../components/shared/FileTypeIcon";
 import ClaimStatusBadge from "./components/ClaimStatusBadge";
 import ClaimGravityBadge from "./components/ClaimGravityBadge";
 import ClaimsKPIBar from "./components/ClaimsKPIBar";
@@ -1725,7 +1726,6 @@ const ListeReclamations = (props) => {
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
-      let icon = guessExtension(attachment);
       return (
         <Grid item xs={12} sm={6} key={attachment.id}>
           <Card
@@ -1744,23 +1744,13 @@ const ListeReclamations = (props) => {
           >
             <Box
               sx={{
-                backgroundColor: "grey.100",
-                borderRadius: "6px",
-                padding: "10px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: "12px",
-                minWidth: "56px",
               }}
             >
-              <img
-                src={icon}
-                height="28"
-                width="22"
-                alt=""
-                style={{ objectFit: "contain" }}
-              />
+              <FileTypeIcon attachment={attachment} />
             </Box>
 
             <CardContent sx={{ flex: 1, minWidth: 0, py: 1 }}>
@@ -1784,8 +1774,7 @@ const ListeReclamations = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName
-                      } le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName ?? ""} le ${attachment.extra?.createdAt && isFinite(new Date(attachment.extra.createdAt)) ? formatDate(attachment.extra.createdAt) : "date invalide"}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -1901,8 +1890,7 @@ const ListeReclamations = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName
-                      } le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName ?? ""} le ${audioItem.extra?.createdAt && isFinite(new Date(audioItem.extra.createdAt)) ? formatDate(audioItem.extra.createdAt) : "date invalide"}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>

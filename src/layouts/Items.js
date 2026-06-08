@@ -4,7 +4,6 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import List from '@mui/material/List';
 import Collapse from '@mui/material/Collapse';
-import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
@@ -71,6 +70,16 @@ const GroupLabel = ({ children }) => (
 );
 
 
+// Rotating chevron (smooth open/close animation)
+const Chevron = ({ open }) => (
+  <ExpandMore style={{
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: '16px',
+    transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+    transition: 'transform 0.25s ease',
+  }} />
+);
+
 // Coming-soon placeholder item (visually present but inactive)
 const LockedItem = ({ icon, label, pl = 2 }) => (
   <ListItemButton
@@ -102,7 +111,7 @@ export const Items = (props) => {
   const { pathname } = useLocation();
 
   // ── Collapse state (preserved exactly) ──────────────────────────────────
-  const [open, setOpen]   = React.useState(false);
+  const [open, setOpen] = React.useState(false);
   const [open1, setOpen1] = React.useState(false);
   const [open2, setOpen2] = React.useState(false);
   const [open3, setOpen3] = React.useState(false);
@@ -110,7 +119,7 @@ export const Items = (props) => {
   const [open5, setOpen5] = React.useState(false);
   const [open6, setOpen6] = React.useState(false);
 
-  const handleClick  = () => setOpen(!open);
+  const handleClick = () => setOpen(!open);
   const handleClick1 = () => setOpen1(!open1);
   const handleClick2 = () => setOpen2(!open2);
   const handleClick3 = () => setOpen3(!open3);
@@ -133,78 +142,94 @@ export const Items = (props) => {
   let user = loadItemFromSessionStorage('app-user') !== undefined
     ? JSON.parse(loadItemFromSessionStorage('app-user'))
     : undefined;
-  let hbt  = (user.posteDto.habilitations).split(',');
+  let hbt = (user.posteDto.habilitations).split(',');
   let addR = user.additionalRole;
 
   // ── Styling helpers ──────────────────────────────────────────────────────
   const isActive = (path) =>
     pathname === path || pathname.startsWith(path + '/');
 
-  const col     = (active) => ({ color: active ? '#fff' : 'rgba(255,255,255,0.6)', fontSize: '18px', transition: 'color 0.2s' });
+  const col = (active) => ({ color: active ? '#3b3fd8' : 'rgba(255,255,255,0.65)', fontSize: '18px', transition: 'color 0.2s' });
   const chevron = { color: 'rgba(255,255,255,0.35)', fontSize: '16px' };
-  const link    = { color: 'white', textDecoration: 'none' };
+  const link = { color: 'white', textDecoration: 'none' };
 
-  // Top-level leaf item
+  // Top-level leaf item — active = floating white pill with soft shadow
   const iSx = (path, pl = 2) => {
     const active = isActive(path);
     return {
-      borderRadius: '8px',
+      borderRadius: '12px',
       mx: 0.75,
-      my: 0.1,
+      my: 0.25,
       pl,
       pr: 1.5,
       minHeight: 38,
-      transition: 'background 0.18s',
-      backgroundColor: active ? 'rgba(255,255,255,0.15)' : 'transparent',
-      '&:hover': { backgroundColor: active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)' },
+      transition: 'all 0.2s ease',
+      backgroundColor: active ? '#fff' : 'transparent',
+      boxShadow: active ? '0 4px 14px rgba(0,0,0,0.18)' : 'none',
+      transform: active ? 'translateX(2px)' : 'none',
+      '&:hover': { backgroundColor: active ? '#fff' : 'rgba(255,255,255,0.07)' },
       '& .MuiListItemText-primary': {
         fontSize: '13px',
         fontWeight: active ? 700 : 400,
-        color: active ? '#fff' : 'rgba(255,255,255,0.78)',
+        color: active ? '#3b3fd8' : 'rgba(255,255,255,0.78)',
       },
       '& .MuiListItemIcon-root': { minWidth: 34 },
     };
   };
 
-  // Collapsible section header
+  // Collapsible section header — same floating white pill as top-level leaves
   const hSx = (basePath, pl = 2) => {
     const active = isActive(basePath);
     return {
-      borderRadius: '8px',
+      borderRadius: '12px',
       mx: 0.75,
-      my: 0.1,
+      my: 0.25,
       pl,
       pr: 1.5,
       minHeight: 38,
-      transition: 'background 0.18s',
-      backgroundColor: active ? 'rgba(255,255,255,0.1)' : 'transparent',
-      '&:hover': { backgroundColor: 'rgba(255,255,255,0.06)' },
+      transition: 'all 0.2s ease',
+      backgroundColor: active ? '#fff' : 'transparent',
+      boxShadow: active ? '0 4px 14px rgba(0,0,0,0.18)' : 'none',
+      transform: active ? 'translateX(2px)' : 'none',
+      '&:hover': { backgroundColor: active ? '#fff' : 'rgba(255,255,255,0.07)' },
       '& .MuiListItemText-primary': {
         fontSize: '13px',
-        fontWeight: active ? 600 : 400,
-        color: active ? '#fff' : 'rgba(255,255,255,0.82)',
+        fontWeight: active ? 700 : 400,
+        color: active ? '#3b3fd8' : 'rgba(255,255,255,0.82)',
       },
       '& .MuiListItemIcon-root': { minWidth: 34 },
     };
   };
 
-  // Sub-item leaf (dot marker, no icon)
+  // Sub-item leaf — small floating pill + indented connector line
   const sSx = (path) => {
     const active = isActive(path);
     return {
-      borderRadius: '7px',
+      borderRadius: '10px',
       mx: 0.75,
-      my: 0.05,
-      pl: 2.5,
+      my: 0.15,
+      ml: 2.25,
+      pl: 1.5,
       pr: 1.5,
       minHeight: 32,
-      transition: 'background 0.18s',
-      backgroundColor: active ? 'rgba(255,255,255,0.13)' : 'transparent',
-      '&:hover': { backgroundColor: active ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.05)' },
+      position: 'relative',
+      transition: 'all 0.2s ease',
+      backgroundColor: active ? '#fff' : 'transparent',
+      boxShadow: active ? '0 3px 10px rgba(0,0,0,0.14)' : 'none',
+      '&:hover': { backgroundColor: active ? '#fff' : 'rgba(255,255,255,0.05)' },
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        left: -10,
+        top: 0,
+        bottom: 0,
+        width: '1px',
+        background: 'rgba(255,255,255,0.1)',
+      },
       '& .MuiListItemText-primary': {
         fontSize: '12.5px',
-        fontWeight: active ? 600 : 400,
-        color: active ? '#fff' : 'rgba(255,255,255,0.62)',
+        fontWeight: active ? 700 : 400,
+        color: active ? '#3b3fd8' : 'rgba(255,255,255,0.62)',
       },
       '& .MuiListItemIcon-root': { minWidth: 22 },
     };
@@ -216,25 +241,25 @@ export const Items = (props) => {
       width: active ? 6 : 4,
       height: active ? 6 : 4,
       borderRadius: '50%',
-      background: active ? '#fff' : 'rgba(255,255,255,0.3)',
+      background: active ? '#3b3fd8' : 'rgba(255,255,255,0.3)',
       transition: 'all 0.2s',
       flexShrink: 0,
     }} />
   );
 
   // ── Visibility flags (same conditions as original) ───────────────────────
-  const showDashboard    = mode === 1;
-  const showReclamations = hbt.some(i => ['H1','H2','H3','H4','H5','H6','H7','H8','H9','H10','H14'].includes(i));
-  const showDenonciations= hbt.some(i => ['H1','H2','H3','H4','H5','H6','H7','H8','H9','H10','H14'].includes(i));
-  const showSuggestions  = hbt.some(i => ['H1','H7','H8','H9','H10','H14'].includes(i));
-  const showRapports     = hbt.includes('H11') && mode === 1;
-  const showAlertes      = (hbt.includes('H13') || addR === 'PILOTE' || addR === 'DE') && mode === 1;
-  const showWhatsapp     = (addR === 'PILOTE' || addR === 'DE') && mode === 1;
-  const showConfigs      = hbt.includes('H12') && mode === 1;
+  const showDashboard = mode === 1;
+  const showReclamations = hbt.some(i => ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'H14'].includes(i));
+  const showDenonciations = hbt.some(i => ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'H14'].includes(i));
+  const showSuggestions = hbt.some(i => ['H1', 'H7', 'H8', 'H9', 'H10', 'H14'].includes(i));
+  const showRapports = hbt.includes('H11') && mode === 1;
+  const showAlertes = (hbt.includes('H13') || addR === 'PILOTE' || addR === 'DE') && mode === 1;
+  const showWhatsapp = (addR === 'PILOTE' || addR === 'DE') && mode === 1;
+  const showConfigs = hbt.includes('H12') && mode === 1;
 
   const hasGestion = showReclamations || showDenonciations || showSuggestions;
   const hasAnalyse = showRapports || showAlertes;
-  const hasAdmin   = showWhatsapp || showConfigs;
+  const hasAdmin = showWhatsapp || showConfigs;
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -259,7 +284,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick} sx={hSx('/reclamations')}>
             <ListItemIcon><InboxIcon style={col(isActive('/reclamations'))} /></ListItemIcon>
             <ListItemText primary="Réclamations" />
-            {open ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
+            <Chevron open={open} />
           </ListItemButton>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -273,7 +298,7 @@ export const Items = (props) => {
                 </NavLink>
               )}
 
-              {(hbt.some(i => ['H2','H3','H4','H6'].includes(i)) || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
+              {(hbt.some(i => ['H2', 'H3', 'H4', 'H6'].includes(i)) || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/reclamations/traitement/all" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/reclamations/traitement')} className="lib">
                     <ListItemIcon><SubDot active={isActive('/reclamations/traitement')} /></ListItemIcon>
@@ -327,7 +352,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick1} sx={hSx('/denonciations')}>
             <ListItemIcon><ReportProblemIcon style={col(isActive('/denonciations'))} /></ListItemIcon>
             <ListItemText primary="Dénonciations" />
-            {open1 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
+            <Chevron open={open1} />
           </ListItemButton>
           <Collapse in={open1} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -341,7 +366,7 @@ export const Items = (props) => {
                 </NavLink>
               )}
 
-              {(hbt.some(i => ['H2','H3','H4','H6'].includes(i)) || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
+              {(hbt.some(i => ['H2', 'H3', 'H4', 'H6'].includes(i)) || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/denonciations/traitement/all" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/denonciations/traitement')} className="lib">
                     <ListItemIcon><SubDot active={isActive('/denonciations/traitement')} /></ListItemIcon>
@@ -368,7 +393,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick2} sx={hSx('/suggestions')}>
             <ListItemIcon><TipsAndUpdatesIcon style={col(isActive('/suggestions'))} /></ListItemIcon>
             <ListItemText primary="Suggestions" />
-            {open2 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
+            <Chevron open={open2} />
           </ListItemButton>
           <Collapse in={open2} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -412,7 +437,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick3} sx={hSx('/rapports')}>
             <ListItemIcon><BarChartIcon style={col(isActive('/rapports'))} /></ListItemIcon>
             <ListItemText primary="Rapports" />
-            {open3 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
+            <Chevron open={open3} />
           </ListItemButton>
           <Collapse in={open3} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -449,7 +474,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick5} sx={hSx('/alertes')}>
             <ListItemIcon><NotificationImportantIcon style={col(isActive('/alertes'))} /></ListItemIcon>
             <ListItemText primary="Alertes" />
-            {open5 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
+            <Chevron open={open5} />
           </ListItemButton>
           <Collapse in={open5} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -478,7 +503,7 @@ export const Items = (props) => {
 
       {/* WhatsApp */}
       {showWhatsapp && (
-        <NavLink to="/whatsapp/liste" activeClassName="hero" style={link}>
+        <NavLink to="/whatgpr" activeClassName="hero" style={link}>
           <ListItemButton sx={iSx('/whatsapp')} className="lib">
             <ListItemIcon><WhatsApp style={col(isActive('/whatsapp'))} /></ListItemIcon>
             <ListItemText primary="WhatsApp" />
@@ -486,13 +511,22 @@ export const Items = (props) => {
         </NavLink>
       )}
 
+      {/* WhatGPR */}
+      {/* {showWhatsapp && (
+        <NavLink to="/whatgpr" activeClassName="hero" style={link}>
+          <ListItemButton sx={iSx('/whatgpr')} className="lib">
+            <ListItemIcon><WhatsApp style={col(isActive('/whatsapp'))} /></ListItemIcon>
+          </ListItemButton>
+        </NavLink>
+      )} */}
+
       {/* Configurations */}
       {showConfigs && (
         <>
           <ListItemButton onClick={handleClick4} sx={hSx('/configurations')}>
             <ListItemIcon><SettingsIcon style={col(isActive('/configurations'))} /></ListItemIcon>
             <ListItemText primary="Configurations" />
-            {open4 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
+            <Chevron open={open4} />
           </ListItemButton>
           <Collapse in={open4} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -595,12 +629,12 @@ export const Items = (props) => {
                 </ListItemButton>
               </NavLink>
 
-              <NavLink to="/configurations/bot" activeClassName="hero" style={link}>
+              {/* <NavLink to="/configurations/bot" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/bot')} className="lib">
                   <ListItemIcon><SubDot active={isActive('/configurations/bot')} /></ListItemIcon>
                   <ListItemText primary="GPR BOT" />
                 </ListItemButton>
-              </NavLink>
+              </NavLink> */}
 
               <NavLink to="/configurations/apikey" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/apikey')} className="lib">
@@ -634,7 +668,7 @@ export const Items = (props) => {
               <ListItemButton onClick={handleClick6} sx={hSx('/ressources', 2)}>
                 <ListItemIcon><ArticleIcon style={col(isActive('/ressources'))} /></ListItemIcon>
                 <ListItemText primary="Ressources" />
-                {open6 ? <ExpandLess style={chevron} /> : <ExpandMore style={chevron} />}
+                <Chevron open={open6} />
               </ListItemButton>
               <Collapse in={open6} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
@@ -664,17 +698,9 @@ export const Items = (props) => {
       <NavLink to="/help" activeClassName="hero" style={link}>
         <ListItemButton sx={iSx('/help')} className="lib">
           <ListItemIcon><QuizIcon style={col(isActive('/help'))} /></ListItemIcon>
-          <ListItemText primary="FAQ" />
+          <ListItemText primary="Ressources" />
         </ListItemButton>
       </NavLink>
-
-      <NavLink to="/ressources/documents" activeClassName="hero" style={link}>
-        <ListItemButton sx={iSx('/ressources/documents')} className="lib">
-          <ListItemIcon><FolderSpecialIcon style={col(isActive('/ressources/documents'))} /></ListItemIcon>
-          <ListItemText primary="Documents" />
-        </ListItemButton>
-      </NavLink>
-
       {/* Déconnexion */}
       <NavLink to="/logout" onClick={logOut} style={link}>
         <ListItemButton sx={{

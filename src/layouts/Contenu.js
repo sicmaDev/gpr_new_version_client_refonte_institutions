@@ -48,6 +48,10 @@ import Exportation from '../pages/Configurations/Exportation';
 import ApiKey from '../pages/Configurations/ApiKey';
 import Whatsapp from '../pages/Whatsapp';
 import Corbeille from '../pages/Configurations/Corbeille';
+import WgprDashboard from '../whatgpr/pages/WgprDashboard';
+import WgprMessages from '../whatgpr/pages/WgprMessages';
+import WgprComplaints from '../whatgpr/pages/WgprComplaints';
+import WgprComplaintDetail from '../whatgpr/pages/WgprComplaintDetail';
 
 export default function Contenu() {
     let mode = loadItemFromSessionStorage("app-mode") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-mode")) : undefined;
@@ -148,6 +152,12 @@ export default function Contenu() {
 
                     {/* whatsapp */}
                     <Route path="/whatsapp/liste" component={Whatsapp} />
+
+                    {/* whatgpr */}
+                    <Route path="/whatgpr/complaints/:id" component={WgprComplaintDetail} />
+                    <Route path="/whatgpr/complaints" component={WgprComplaints} />
+                    <Route path="/whatgpr/messages" component={WgprMessages} />
+                    <Route path="/whatgpr" component={WgprDashboard} />
 
                     {/* alertes */}
                     <Route path="/alertes/reclamations" component={ReclamationsAlertes} />

@@ -335,8 +335,8 @@ export const Haut = (props) => {
                 <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
                 <div style={{ padding: '12px 14px', flexShrink: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Avatar sx={{ width: 36, height: 36, backgroundColor: '#005081', fontSize: '15px', flexShrink: 0 }}>
-                      {user.firstAndLastName[0]}
+                    <Avatar sx={{ width: 36, height: 36, backgroundColor: '#fff', color: '#1E2188', fontSize: '15px', fontWeight: 700, flexShrink: 0 }}>
+                      {user.firstAndLastName.trim().split(' ')[0][0]}
                     </Avatar>
                     {open && (
                       <div style={{ overflow: 'hidden' }}>
@@ -532,8 +532,8 @@ export const Haut = (props) => {
                 <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
                 <div style={{ padding: '12px 14px', flexShrink: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Avatar sx={{ width: 36, height: 36, backgroundColor: '#005081', fontSize: '15px', flexShrink: 0 }}>
-                      {user.firstAndLastName[0]}
+                    <Avatar sx={{ width: 36, height: 36, backgroundColor: '#fff', color: '#1E2188', fontSize: '15px', fontWeight: 700, flexShrink: 0 }}>
+                      {user.firstAndLastName.trim().split(' ')[0][0]}
                     </Avatar>
                     {open && (
                       <div style={{ overflow: 'hidden' }}>

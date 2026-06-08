@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
-import HelpIcon from '@mui/icons-material/Help';
 import { v4 as uuidv4 } from 'uuid';
 
 import { cleanPhoneNumber, cleanPhoneNumber3, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep, today } from "../../Utils/utils";
 import { connect } from "react-redux";
-import { modalify } from "../../Utils/modal";
 import { ajout, test } from "../../apis/Configurations/SmsApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import SmsOutlinedIcon from '@mui/icons-material/SmsOutlined';
 import {
     urlChange, smsErrors, libelleIdChanged, libelleMessageChanged, valuePwdChanged, libellePwdChanged, libelleReceiverChanged, libelleSenderChanged, valueIdChanged, valueSenderChanged, etatChanged
 } from "../../redux/actions/Configurations/SmsActions";
@@ -16,10 +17,36 @@ import { licenseInfo } from "../../apis/LoginApi";
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { ForwardToInboxOutlined } from "@mui/icons-material";
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Input, TextareaAutosize } from "@mui/material";
+import { Button, Box, Typography, Tooltip, IconButton, Dialog, DialogActions, DialogContent } from "@mui/material";
 import PhoneInput from "react-phone-number-input";
 import { KTApp } from "../../Utils/blockui";
 import { notify } from "../../Utils/alert";
+
+const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" };
+const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 });
+const textareaStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", minHeight: 80, fontFamily: "inherit", resize: "vertical" });
+
+const sectionTitleStyle = { fontSize: 12.5, fontWeight: 700, color: "#1e293b", margin: "4px 0 10px", lineHeight: 1.2 };
+
+const FieldWithHelp = ({ label, tooltip, value, onChange, error, type = "text", showToggle, show, onToggle }) => (
+    <Box>
+        <label style={labelStyle}>
+            {label}{" "}
+            {tooltip && <Tooltip title={tooltip}><HelpOutlineIcon sx={{ fontSize: 14, color: "#94a3b8", verticalAlign: "middle" }} /></Tooltip>}
+        </label>
+        <Box sx={{ position: "relative" }}>
+            <input type={showToggle ? (show ? "text" : "password") : type} value={value || ""} onChange={onChange}
+                style={{ ...inputStyle(error), paddingRight: showToggle ? 40 : 14 }}
+                onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = error ? "#ef4444" : "#e2e8f0"; }} />
+            {showToggle && (
+                <IconButton onClick={onToggle} size="small" sx={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)" }}>
+                    {show ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                </IconButton>
+            )}
+        </Box>
+        {error && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{error}</div>}
+    </Box>
+);
 
 
 const Sms = (props) => {
@@ -231,279 +258,141 @@ const Sms = (props) => {
     }
 
     return (
-        <>
+        <div className="card-panel pb-5">
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
+                <Box sx={{ width: 38, height: 38, borderRadius: 2, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <SmsOutlinedIcon sx={{ color: "#6366F1", fontSize: 20 }} />
+                </Box>
+                <Box>
+                    <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Configuration SMS</Typography>
+                    <Typography sx={{ fontSize: 13, color: "#64748b", mt: 0.3 }}>Il s'agit de configurer GPR pour utiliser l'API de votre fournisseur de SMS Banking</Typography>
+                </Box>
+            </Box>
 
-            <div className="card-panel">
-                <Dialog open={showTestModal} onClose={(e) => { setShowTestModal(false) }}>
-                    <DialogTitle >
-                        Vérification de la configuration
-                    </DialogTitle>
-                    <DialogContent>
-                        <DialogContentText id="alert-dialog-description">
-                            Renseigner les informations nécessaire pour le teste
-                        </DialogContentText>
-                        <div className="row">
-                            <div className="col l12 m12 s12 input-field">
-                                <PhoneInput
-                                    international
-                                    countryCallingCodeEditable={false}
-                                    value={phoneTest}
-                                    onChange={(e) =>
-                                        setPhoneTest(e)
-                                    }
-                                />
-                                <label htmlFor="phone" className={"active"}>
-                                    Téléphone
+            <Box component="form" id="accountForm" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2.5 }}>
 
-                                </label>
+                    {/* Colonne gauche */}
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <Box>
+                            <Typography sx={sectionTitleStyle}>Information générale</Typography>
+                            <label style={labelStyle}>API URL (url)</label>
+                            <input type="url" value={props.url || ""} onChange={(e) => props.urlChange(e.target.value)} placeholder="https://api.fournisseur.com/sms"
+                                style={inputStyle(props.smsErrors.url)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.smsErrors.url ? "#ef4444" : "#e2e8f0"; }} />
+                            {props.smsErrors.url && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.smsErrors.url}</div>}
+                        </Box>
 
-                            </div>
-                            <div className="col l12 m12 s12 input-field">
-                                <Input
-                                    style={{ minWidth: "100%" }}
-                                    defaultValue={messageTest}
-                                    multiline={true}
+                        <Box>
+                            <Typography sx={sectionTitleStyle}>Identification du compte SMS Banking</Typography>
+                            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                                <FieldWithHelp label="Libellé paramètre id" tooltip="Il s'agit du nom du paramètre représentant l'identifiant de votre compte de SMS Banking."
+                                    value={props.libelleId} onChange={(e) => props.libelleIdChanged(e.target.value)} error={props.smsErrors.libelle_id} />
+                                <FieldWithHelp label="Valeur id" tooltip="Il s'agit de la valeur de votre identifiant de votre compte de SMS Banking."
+                                    value={props.valueId} onChange={(e) => props.valueIdChanged(e.target.value)} error={props.smsErrors.value_id} />
+                            </Box>
+                        </Box>
 
-                                    onChange={(e) =>
-                                        setMessageTest(e.target.value)
-                                    }
-                                    minRows={3}
-                                />
-                                <label htmlFor="phone" className={"active"}>
-                                    Message
-                                </label>
+                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                            <FieldWithHelp label="Libellé paramètre mot de passe" tooltip="Il s'agit du nom du paramètre représentant le mot de passe de votre compte de SMS Banking."
+                                value={props.libellePwd} onChange={(e) => props.libellePwdChanged(e.target.value)} error={props.smsErrors.libelle_pwd}
+                                showToggle show={showPassword1} onToggle={toggleShowPassword1} />
+                            <FieldWithHelp label="Valeur mot de passe" tooltip="Il s'agit de la valeur du mot de passe de votre compte de SMS Banking."
+                                value={props.valuePwd} onChange={(e) => props.valuePwdChanged(e.target.value)} error={props.smsErrors.value_pwd}
+                                showToggle show={showPassword} onToggle={toggleShowPassword} />
+                        </Box>
+                    </Box>
 
-                            </div>
+                    {/* Colonne droite */}
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <Box>
+                            <Typography sx={sectionTitleStyle}>Émetteur SMS Banking</Typography>
+                            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                                <FieldWithHelp label="Libellé paramètre émetteur" tooltip="Il s'agit du nom du paramètre représentant le sender de votre compte de SMS Banking."
+                                    value={props.libelleSender} onChange={(e) => props.libelleSenderChanged(e.target.value)} error={props.smsErrors.libelle_sender} />
+                                <FieldWithHelp label="Valeur émetteur" tooltip="Il s'agit de la valeur du sender de vos messages configuré auprès de votre fournisseur de SMS Banking."
+                                    value={props.valueSender} onChange={(e) => props.valueSenderChanged(e.target.value)} error={props.smsErrors.value_sender} />
+                            </Box>
+                        </Box>
+
+                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                            <Box>
+                                <Typography sx={sectionTitleStyle}>Récepteur</Typography>
+                                <FieldWithHelp label="Libellé paramètre destinataire" tooltip="Il s'agit du nom du paramètre représentant le destinataire du message."
+                                    value={props.libelleReceiver} onChange={(e) => props.libelleReceiverChanged(e.target.value)} error={props.smsErrors.libelle_receiver} />
+                            </Box>
+                            <Box>
+                                <Typography sx={sectionTitleStyle}>Message</Typography>
+                                <FieldWithHelp label="Libellé paramètre message" tooltip="Il s'agit du nom du paramètre représentant le message à envoyer au client."
+                                    value={props.libelleMessage} onChange={(e) => props.libelleMessageChanged(e.target.value)} error={props.smsErrors.libelle_message} />
+                            </Box>
+                        </Box>
+                    </Box>
+                </Box>
+
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5, mt: 3 }}>
+                    <LoadingButton
+                        onClick={() => setShowTestModal(true)}
+                        variant="outlined"
+                        startIcon={<ForwardToInboxOutlined style={{ fontSize: 16 }} />}
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, borderColor: "#e2e8f0", color: "#3b3fd8", "&:hover": { borderColor: "#3b3fd8", background: "#eef2ff" } }}
+                    >
+                        Tester
+                    </LoadingButton>
+                    <LoadingButton
+                        onClick={(e) => handleSubmit(e)}
+                        loading={props.etat}
+                        loadingPosition="start"
+                        startIcon={<SaveIcon style={{ fontSize: 16 }} />}
+                        variant="contained"
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}
+                    >
+                        Enregistrer
+                    </LoadingButton>
+                </Box>
+            </Box>
+
+            {/* ── Modal test ── */}
+            <Dialog open={showTestModal} onClose={() => setShowTestModal(false)} fullWidth maxWidth="sm" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
+                <div style={{ background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <ForwardToInboxOutlined style={{ color: "#fff", fontSize: 20 }} />
                         </div>
-
-
-                    </DialogContent>
-                    <DialogActions>
-
-                        <Button variant="contained" color="error" onClick={(e) => {
-                            setShowTestModal(false)
-                        }}>Fermer</Button>
-                        <Button variant="contained" onClick={handleTest}>Envoyez</Button>
-
-                    </DialogActions>
-                </Dialog>
-
-                <div className="row">
-                    <div className="col s12"><h6 className="card-title">Configuration SMS</h6>
-                        <p>Il s'agit de configurer GPR pour utiliser l'API de votre fournisseur de SMS Banking</p></div>
-                </div>
-                <form id="accountForm" onSubmit={handleSubmit}>
-                    <div className="row">
-
-
-                        <div className="col s12 m6">
-                            <div className="row">
-                                <div className="col s12"><p className="">Information Générale</p></div>
-
-                                <div className="col s12 input-field">
-                                    <input id="url" placeholder="" name="url" type="url"
-                                        className="validate" value={props.url}
-                                        onChange={(e) => props.urlChange(e.target.value)}
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="url" className={"active"}>API URL {"(url)"}</label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.smsErrors.url}</div>
-                                    </small>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col s12"><p className="">Informations d'identification de votre compte SMS Banking</p></div>
-
-                                <div className="col s6 input-field">
-                                    <input id="libelle_id" placeholder="" name="libelle_id" type="text"
-                                        className="validate" value={props.libelleId}
-                                        onChange={(e) => props.libelleIdChanged(e.target.value)}
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="libelle_id" className={"active"}>Libelle paramètre id &nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit du nom du paramètre représentant l'identifiant de votre compte de SMS Banking.">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.smsErrors.libelle_id}</div>
-                                    </small>
-                                </div>
-                                <div className="col s6 input-field">
-                                    <input id="value_id" placeholder="" name="value_id" type="text"
-                                        className="validate" value={props.valueId}
-                                        onChange={(e) => props.valueIdChanged(e.target.value)}
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="value_id" className={"active"}>Valeur id &nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit de la valeur de votre identifiant de votre compte de SMS Banking.">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.smsErrors.value_id}</div>
-                                    </small>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col s6 input-field">
-                                    <input id="libelle_pwd" placeholder="" name="libelle_pwd" type={showPassword1 ? "text" : "password"}
-                                        className="validate" value={props.libellePwd}
-                                        onChange={(e) => props.libellePwdChanged(e.target.value)}
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="libelle_pwd" className={"active"}>Libelle paramètre mot de passe &nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit du nom du paramètre représentant le mot de passe de votre compte de SMS Banking.">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.smsErrors.libelle_pwd}</div>
-                                    </small>
-                                    <span
-                                        onClick={toggleShowPassword1}
-                                        style={{
-                                            position: 'absolute',
-                                            right: '10px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {showPassword1 ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                    </span>
-                                </div>
-                                <div className="col s6 input-field">
-                                    <input id="value_pwd" placeholder="" name="value_pwd" type={showPassword ? "text" : "password"}
-                                        className="validate" value={props.valuePwd}
-                                        onChange={(e) => props.valuePwdChanged(e.target.value)}
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="value_pwd" className={"active"}>Valeur mot de passe &nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit de la valeur du mot de passe de votre compte de SMS Banking.">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.smsErrors.value_pwd}</div>
-                                    </small>
-                                    <span
-                                        onClick={toggleShowPassword}
-                                        style={{
-                                            position: 'absolute',
-                                            right: '10px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col s12 m6">
-                            <div className="row">
-                                <div className="col s12"><p className="">Informations sur l'emetteur SMS Banking</p></div>
-
-                                <div className="col s6 input-field">
-                                    <input id="libelle_sender" placeholder="" name="libelle_sender" type="text"
-                                        className="validate" value={props.libelleSender}
-                                        onChange={(e) => props.libelleSenderChanged(e.target.value)}
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="libelle_sender" className={"active"}>Libelle paramètre emetteur &nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit du nom du paramètre représentant le sender de votre compte de SMS Banking.">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.smsErrors.libelle_sender}</div>
-                                    </small>
-                                </div>
-                                <div className="col s6 input-field">
-                                    <input id="value_sender" placeholder="" name="value_sender" type="text"
-                                        className="validate" value={props.valueSender}
-                                        onChange={(e) => props.valueSenderChanged(e.target.value)}
-                                        data-error=".errorTxt1" />
-                                    <label htmlFor="value_sender" className={"active"}>Valeur emetteur &nbsp;
-                                        <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                            data-tooltip="Il s'agit de la valeur du sender de vos messages configurer auprès de votre fournisseur de SMS Banking.">
-                                            <HelpIcon />
-                                        </a></label>
-                                    <small className="errorTxt4">
-                                        <div id="cpassword-error" className="error">{props.smsErrors.value_sender}</div>
-                                    </small>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col s6">
-                                    <div className="col s12"><p className="">Informations sur le récepteur </p></div>
-                                    <div className="col s12 input-field">
-                                        <input id="libelle_receiver" placeholder="" name="libelle_receiver" type="text"
-                                            className="validate" value={props.libelleReceiver}
-                                            onChange={(e) => props.libelleReceiverChanged(e.target.value)}
-                                            data-error=".errorTxt1" />
-                                        <label htmlFor="libelle_receiver" className={"active"}>Libelle paramètre destinataire &nbsp;
-                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                                data-tooltip="Il s'agit du nom du paramètre représentant le destinataire du message.">
-                                                <HelpIcon />
-                                            </a></label>
-                                        <small className="errorTxt4">
-                                            <div id="cpassword-error" className="error">{props.smsErrors.libelle_receiver}</div>
-                                        </small>
-                                    </div>
-                                </div>
-                                <div className="col s6">
-                                    <div className="col s12"><p className="card-title">Informations sur le message </p></div>
-                                    <div className="col s12 input-field">
-                                        <input id="libelle_message" placeholder="" name="libelle_message" type="text"
-                                            className="validate" value={props.libelleMessage}
-                                            onChange={(e) => props.libelleMessageChanged(e.target.value)}
-                                            data-error=".errorTxt1" />
-                                        <label htmlFor="libelle_message" className={"active"}>Libelle paramètre message &nbsp;
-                                            <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom"
-                                                data-tooltip="Il s'agit du nom du paramètre représentant le message à envoyer au client.">
-                                                <HelpIcon />
-                                            </a></label>
-                                        <small className="errorTxt4">
-                                            <div id="cpassword-error" className="error">{props.smsErrors.libelle_message}</div>
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div className="col s12 display-flex justify-content-end mt-3">
-
-                            <>
-                                <LoadingButton
-                                    className="btn  waves-light mr-1 btn-small"
-                                    onClick={(e) => {
-                                        setShowTestModal(true);
-                                    }}
-                                    loadingPosition="end"
-                                    endIcon={<ForwardToInboxOutlined />}
-                                    variant="oulined"
-                                >
-                                    <span>Tester</span>
-                                </LoadingButton>
-                                <LoadingButton
-                                    className="btn  waves-light mr-1 btn-small"
-                                    onClick={(e) => handleSubmit(e)}
-                                    loading={props.etat}
-                                    loadingPosition="end"
-                                    endIcon={<SaveIcon />}
-                                    variant="contained"
-                                    sx={{ textTransform: "initial" }}
-                                >
-                                    <span>Enregistrer</span>
-                                </LoadingButton>
-                            </>
+                        <div>
+                            <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Vérification de la configuration</div>
+                            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>Renseigner les informations nécessaires pour le test</div>
                         </div>
                     </div>
-                </form>
-
-
-
-            </div>
-        </>
+                    <IconButton onClick={() => setShowTestModal(false)} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}>
+                        <CloseIcon style={{ fontSize: 16 }} />
+                    </IconButton>
+                </div>
+                <DialogContent sx={{ p: 3 }}>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <Box>
+                            <label style={labelStyle}>Téléphone</label>
+                            <PhoneInput international countryCallingCodeEditable={false} value={phoneTest} onChange={(e) => setPhoneTest(e)}
+                                style={{ ...inputStyle(false), display: "flex", alignItems: "center" }} />
+                        </Box>
+                        <Box>
+                            <label style={labelStyle}>Message</label>
+                            <textarea defaultValue={messageTest} onChange={(e) => setMessageTest(e.target.value)} placeholder="Contenu du message"
+                                style={textareaStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                        </Box>
+                    </Box>
+                </DialogContent>
+                <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
+                    <Button onClick={() => setShowTestModal(false)} variant="outlined"
+                        sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>
+                        Fermer
+                    </Button>
+                    <LoadingButton onClick={handleTest} variant="contained" startIcon={<ForwardToInboxOutlined style={{ fontSize: 16 }} />}
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" } }}>
+                        Envoyer
+                    </LoadingButton>
+                </DialogActions>
+            </Dialog>
+        </div>
     )
 }
 const mapStateToProps = (state) => {

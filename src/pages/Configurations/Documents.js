@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -7,7 +7,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { connect } from "react-redux";
 import { v4 as uuidv4 } from 'uuid';
-import { Tooltip, IconButton } from "@mui/material";
+import { Tooltip, IconButton, Box, Typography, Dialog, DialogContent, DialogActions, Button } from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
 import {
     documentsErrors,
     etat2Changed,
@@ -18,10 +19,7 @@ import {
     libelleChanged, selectedFilesChanged, selectedFilesReset, selectedItemChanged, selectedItemFilesChanged
 } from "../../redux/actions/Configurations/DocumentsActions";
 import { loadItemFromSessionStorage, today } from "../../Utils/utils";
-import { modalify } from "../../Utils/modal";
-import ee from "event-emitter";
-import excel from '../../assets/images/excel.svg'
-import pdf from '../../assets/images/pdf.svg'
+import { PictureAsPdf, GridOn, Add as AddIcon } from "@mui/icons-material";
 import { handlePrint } from "../../Utils/tables";
 import { table2XLSX } from "../../Utils/tabletoexcel";
 import { KTApp } from "../../Utils/blockui";
@@ -32,9 +30,28 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAutoScroll } from "../../hooks/useAutoScroll";
+import ConfigKPIBar from "../../components/shared/ConfigKPIBar";
+import ConfigTable from "../../components/shared/ConfigTable";
+import ConfigCardView from "../../components/shared/ConfigCardView";
+import FolderIcon from "@mui/icons-material/Folder";
+
+import ViewModeToggle from "../../components/shared/ViewModeToggle";
+
+const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" };
+const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 });
+
 const Documents = (props) => {
     const [files, setFiles] = React.useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState({ open: false, attachment: null, loading: false });
+    const [addModalOpen, setAddModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState("list");
+    const pdfColumns = [{ key: "libelle", text: "Intitulé", align: "left", sortable: true }];
+    const pdfConfig = {
+        page_size: 15, filename: "Documents",
+        language: { length_menu: "Afficher _MENU_ éléments", filter: "Rechercher...", info: "...", zero_records: "Aucun élément", no_data_text: "Aucun élément", loading_text: "Chargement...",
+            pagination: { first: <FirstPageIcon />, previous: <ChevronLeftIcon />, next: <ChevronRightIcon />, last: <LastPageIcon /> } }
+    };
     useEffect(() => {
         KTApp.blockPage({
             overlayColor: "#000000",
@@ -56,6 +73,7 @@ const Documents = (props) => {
     const topRef = useRef(null);
     useAutoScroll(topRef, [props.selectedItem.id], "top");
     const fileInputRef = useRef(null);
+    const KPI_CONFIG = [{ key: "total", label: "Total documents", icon: FolderIcon, iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true }];
     let code;
     let columns = [
         {
@@ -174,7 +192,7 @@ const Documents = (props) => {
         }
     }
     const handleSubmit = (e) => {
-        e.preventDefault()
+        if (e) e.preventDefault()
         if (handleValidation()) {
             const formData = new FormData();
             let item = props.libelle
@@ -188,27 +206,25 @@ const Documents = (props) => {
             // console.log("data",formData)
             props.etatChanged(true)
             ajout(formData, props).then(() => {
-                handleCancel(e)
+                clearComponentState();
+                setAddModalOpen(false);
             })
 
-        } else {
         }
         props.documentsErrors(errors)
     }
 
     const handleModal = (e, attachment) => {
         e.preventDefault()
-        modalify("Confirmation", "Confirmez vous la suppression de cet élément?", "confirm", (e) => handleDelete(e, attachment))
+        setDeleteConfirm({ open: true, attachment, loading: false });
     }
 
-    const handleDelete = (e, attachment) => {
-        e.preventDefault()
-
+    const handleDelete = (attachment) => {
+        setDeleteConfirm(p => ({ ...p, loading: true }));
         props.etat3Changed(true)
-        suppression(props, attachment).then(() => {
-            handleCancel(e)
-        })
-
+        suppression(props, attachment)
+            .then(() => { clearComponentState(); setDeleteConfirm({ open: false, attachment: null, loading: false }); })
+            .finally(() => { props.etat3Changed(false); });
 
         props.documentsErrors(errors)
     }
@@ -221,108 +237,102 @@ const Documents = (props) => {
     const tableChangeHandler = data => {
     }
 
-    let titleText = props.selectedItem.id !== undefined ? "Supprimer" : "Ajouter";
-
-    let buttons = props.selectedItem.id === undefined ? (
-        <LoadingButton
-            className="btn waves-effect waves-light mr-1 btn-small"
-            onClick={(e) => handleSubmit(e)}
-            loading={props.etat}
-            loadingPosition="end"
-            endIcon={<SaveIcon />}
-            variant="contained"
-            sx={{ textTransform: "initial" }}
-        >
-            <span>Ajouter</span>
-        </LoadingButton>
-    ) : null;
-
     return (
         <>
             <div className="card-panel">
-                <form className="paaswordvalidate" onSubmit={handleSubmit}>
-                    <div className="row">
-                        <div className="col s12"><h6 className="card-title">{titleText} Un Document</h6>
-                            <p>Il s'agit d'enregistrer les différents documents utiles aux utilisateurs de la plateforme</p>
-                        </div>
-                    </div>
-
-                    <div className="row">
-                        <div className="col s12">
-                            <div className="input-field">
-                                <input id="uname" name="libelle" type="text"
-                                    data-error=".errorTxt4"
-                                    placeholder=""
-                                    value={props.libelle}
-                                    onChange={(e) => props.libelleChanged(e.target.value)} />
-                                <label htmlFor="uname" className="active">Intitulé&nbsp;
-                                    <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Exemple: Tribunal, etc.. ">
-                                        <HelpIcon />
-                                    </a>
-                                </label>
-                                <small className="errorTxt4">
-                                    <div id="cpassword-error" className="error">{props.errors.libelle}</div>
-                                </small>
+                <Dialog open={addModalOpen} onClose={() => { if (!props.etat) { setAddModalOpen(false); clearComponentState(); } }} fullWidth maxWidth="sm" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
+                    <div style={{ background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><AddIcon style={{ color: "#fff", fontSize: 20 }} /></div>
+                            <div>
+                                <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Ajouter un document</div>
+                                <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>Enregistrer un document utile aux utilisateurs</div>
                             </div>
                         </div>
-                        <div className="col l12 m12 s12 file-field input-field">
-                            <div className="btn btn-small file-small brand-blue">
-                                <span>Fichier</span>
-                                <input type="file"
-                                    ref={fileInputRef}
-                                    onChange={(e) => handleFile(e)}
+                        <IconButton onClick={() => { if (!props.etat) { setAddModalOpen(false); clearComponentState(); } }} disabled={props.etat} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}><CloseIcon style={{ fontSize: 16 }} /></IconButton>
+                    </div>
+                    <DialogContent sx={{ p: 3 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                            <div>
+                                <label style={labelStyle}>Intitulé <span style={{ color: "#ef4444" }}>*</span></label>
+                                <input value={props.libelle} onChange={(e) => props.libelleChanged(e.target.value)} placeholder="Ex: Tribunal, Statuts, etc."
+                                    style={inputStyle(!!props.errors.libelle)} onFocus={(e) => { if (!props.errors.libelle) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!props.errors.libelle) e.target.style.borderColor = "#e2e8f0"; }} />
+                                {props.errors.libelle && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.libelle}</div>}
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Fichier <span style={{ color: "#ef4444" }}>*</span></label>
+                                <input type="file" ref={fileInputRef} onChange={(e) => handleFile(e)}
                                     accept="application/pdf, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, image/jpeg, image/png, audio/*, video/*"
-                                />
+                                    style={{ width: "100%", boxSizing: "border-box", border: props.errors.selectedFiles ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "9px 14px", fontSize: 13, background: "#fff" }} />
+                                {props.errors.selectedFiles && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.selectedFiles}</div>}
                             </div>
-                            <div className="file-path-wrapper">
-                                <input className="file-path validate" type="text"
-                                    value={props.selectedFiles} />
-                            </div>
-                            <small className="errorTxt4">
-                                <div id="cpassword-error"
-                                    className="error">{props.errors.selectedFiles}</div>
-                            </small>
                         </div>
+                    </DialogContent>
+                    <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
+                        <Button onClick={() => { setAddModalOpen(false); clearComponentState(); }} disabled={props.etat} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
+                        <LoadingButton onClick={handleSubmit} loading={props.etat} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained"
+                            sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
+                            Ajouter
+                        </LoadingButton>
+                    </DialogActions>
+                </Dialog>
 
-
-                        <div className="col s12 display-flex justify-content-end form-action">
-                            {buttons}
-                        </div>
-
-                    </div>
-                </form>
-
-                <div className="row">
-                    <div className="col s12">
-                        <div className="card">
-                            <div className="card-content">
-                                <div className="row">
-                                    <div className="col l6 m6 s12">
-                                        <h4 className="card-title">Liste des documents&nbsp;</h4>
-                                    </div>
-                                    {/* <div className="col l6 m6 s12" style={{ textAlign:"end" }}>
-                                        <img src={pdf} alt="" style={{ marginRight:"15px",cursor:"pointer" }} onClick={(e) => {handlePrint(config, columns, props.items, 0)}} />
-                                        <img src={excel} alt="" style={{ cursor:"pointer" }} onClick={(e) => {table2XLSX("Liste_des_recours_externes" + today().replaceAll("/", ""),"app-recours")}} />
-                                    </div> */}
+                <ConfigKPIBar items={props.items} kpis={KPI_CONFIG} />
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5, mb: 1.5 }}>
+                    <ViewModeToggle value={viewMode} onChange={setViewMode} />
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, gap: 1, flexWrap: "wrap" }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Liste des documents</Typography>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                        <Tooltip title="Exporter en PDF"><IconButton onClick={() => handlePrint(pdfConfig, pdfColumns, props.items, 0)} sx={{ border: "1px solid #e2e8f0", borderRadius: 2, color: "#ef4444", "&:hover": { background: "#fee2e2" } }} size="small"><PictureAsPdf fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title="Exporter en Excel"><IconButton onClick={() => table2XLSX("Documents_" + today().replaceAll("/", ""), "app-document")} sx={{ border: "1px solid #e2e8f0", borderRadius: 2, color: "#16a34a", "&:hover": { background: "#dcfce7" } }} size="small"><GridOn fontSize="small" /></IconButton></Tooltip>
+                        <LoadingButton onClick={() => setAddModalOpen(true)} variant="contained" startIcon={<AddIcon />} sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap" }}>Ajouter</LoadingButton>
+                    </Box>
+                </Box>
+                {viewMode === "list" ? (
+                    <ConfigTable
+                        items={props.items}
+                        columns={[
+                            { id: "libelle",  label: "Intitul\u00e9", sortable: true,  minWidth: 260 },
+                            { id: "actions", label: "Actions",  sortable: false, minWidth: 130, render: (att) => (
+                                <div style={{ display: "flex", gap: "5px" }}>
+                                    <Tooltip title="Visualiser"><IconButton onClick={() => downloadFillesApi(att.id, att.name)}><RemoveRedEyeIcon /></IconButton></Tooltip>
+                                    <Tooltip title="Supprimer"><IconButton onClick={(e) => handleModal(e, att)} color="error"><DeleteIcon /></IconButton></Tooltip>
                                 </div>
-                                <div className="row">
-                                    <div className="col s12">
-                                        <ReactDatatable
-                                            className={"responsive-table table-xlsx app-recours no-hover"}
-                                            config={config}
-                                            records={props.items}
-                                            columns={columns}
-                                            // onRowClicked={rowClickedHandler}
-                                            onChange={tableChangeHandler}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            )},
+                        ]}
+                        searchFields={["libelle"]}
+                        defaultSort="libelle"
+                    />
+                ) : (
+                    <ConfigCardView items={props.items} titleField="libelle" searchFields={["libelle"]}
+                        extraFields={[{ label: "Visualiser", render: (att) => (
+                            <Tooltip title="Visualiser"><IconButton size="small" onClick={() => downloadFillesApi(att.id, att.name)}><RemoveRedEyeIcon fontSize="small" /></IconButton></Tooltip>
+                        )}]}
+                        onDelete={(att) => setDeleteConfirm({ open: true, attachment: att, loading: false })} />
+                )}
 
             </div>
+
+            <Dialog open={deleteConfirm.open} onClose={() => { if (!deleteConfirm.loading) setDeleteConfirm({ open: false, attachment: null, loading: false }); }} fullWidth maxWidth="xs" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
+                <div style={{ background: "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><DeleteIcon style={{ color: "#fff", fontSize: 20 }} /></div>
+                        <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Supprimer le document</div>
+                    </div>
+                    <IconButton onClick={() => setDeleteConfirm({ open: false, attachment: null, loading: false })} disabled={deleteConfirm.loading} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}><CloseIcon style={{ fontSize: 16 }} /></IconButton>
+                </div>
+                <DialogContent sx={{ p: 3 }}>
+                    <Typography sx={{ fontSize: 14, color: "#475569" }}>Confirmez-vous la suppression de cet élément ?</Typography>
+                </DialogContent>
+                <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
+                    <Button onClick={() => setDeleteConfirm({ open: false, attachment: null, loading: false })} disabled={deleteConfirm.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
+                    <LoadingButton onClick={() => handleDelete(deleteConfirm.attachment)} loading={deleteConfirm.loading} loadingPosition="start" startIcon={<DeleteIcon style={{ fontSize: 15 }} />} variant="contained"
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #991b1b, #ef4444)", "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
+                        Supprimer
+                    </LoadingButton>
+                </DialogActions>
+            </Dialog>
         </>
     )
 }

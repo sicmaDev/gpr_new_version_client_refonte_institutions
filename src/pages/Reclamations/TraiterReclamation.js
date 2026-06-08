@@ -3325,8 +3325,7 @@ const TraiterReclamation = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName
-                      } le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName ?? ""} le ${attachment.extra?.createdAt && isFinite(new Date(attachment.extra.createdAt)) ? formatDate(attachment.extra.createdAt) : "date invalide"}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -3442,8 +3441,7 @@ const TraiterReclamation = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName
-                      } le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName ?? ""} le ${audioItem.extra?.createdAt && isFinite(new Date(audioItem.extra.createdAt)) ? formatDate(audioItem.extra.createdAt) : "date invalide"}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>

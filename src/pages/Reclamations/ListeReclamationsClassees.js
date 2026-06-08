@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
+import FileTypeIcon from "../../components/shared/FileTypeIcon";
 import { Link, NavLink } from "react-router-dom";
 import { KTApp } from "../../Utils/blockui";
 import {
@@ -651,7 +652,6 @@ const ListeReclamationsClassees = (props) => {
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
-      let icon = guessExtension(attachment);
       return (
         <Grid item xs={12} sm={6} key={attachment.id}>
           <Card
@@ -670,23 +670,13 @@ const ListeReclamationsClassees = (props) => {
           >
             <Box
               sx={{
-                backgroundColor: "grey.100",
-                borderRadius: "6px",
-                padding: "10px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: "12px",
-                minWidth: "56px",
               }}
             >
-              <img
-                src={icon}
-                height="28"
-                width="22"
-                alt=""
-                style={{ objectFit: "contain" }}
-              />
+              <FileTypeIcon attachment={attachment} />
             </Box>
 
             <CardContent sx={{ flex: 1, minWidth: 0, py: 1 }}>
@@ -710,7 +700,7 @@ const ListeReclamationsClassees = (props) => {
                 </Typography>
                 {attachment._extra && (
                   <Tooltip
-                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName} le ${formatDate(attachment.extra?.createdAt)}`}
+                    title={`Ajouté par ${attachment.extra?.user?.firstAndLastName ?? ""} le ${attachment.extra?.createdAt && isFinite(new Date(attachment.extra.createdAt)) ? formatDate(attachment.extra.createdAt) : "date invalide"}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>
@@ -825,7 +815,7 @@ const ListeReclamationsClassees = (props) => {
                 </Typography>
                 {audioItem._extra && (
                   <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName} le ${formatDate(audioItem.extra?.createdAt)}`}
+                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName ?? ""} le ${audioItem.extra?.createdAt && isFinite(new Date(audioItem.extra.createdAt)) ? formatDate(audioItem.extra.createdAt) : "date invalide"}`}
                   >
                     <Info fontSize="small" sx={{ ml: 1 }} />
                   </Tooltip>

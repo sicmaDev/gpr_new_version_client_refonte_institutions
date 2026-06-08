@@ -12,7 +12,11 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import axios from "axios";
 import { licenseInfo } from "../../apis/LoginApi";
 import { QRCode } from 'react-qrcode-logo';
-import { Button, Chip } from "@mui/material";
+import { Button, Chip, Box, Typography } from "@mui/material";
+import ConfigKPIBar from "../../components/shared/ConfigKPIBar";
+import ConfigTable from "../../components/shared/ConfigTable";
+import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { LoadingButton } from "@mui/lab";
 import { QrCode } from "@mui/icons-material";
 import { WPP_CONNECT_LINK, WPP_CONNECT_OPTIONS, WPP_CONNECT_TOKEN } from "../../Utils/globals";
@@ -456,23 +460,34 @@ const Bot = (props) => {
 
                 </div>
                 <div className="col m12 l12 xl8">
-                    <div className="card-panel">
-                        <div className="row">
-                            <div className="col s12"><h6 className="card-title">Liste des appareils connectes</h6>
-                                <p>Il s'agit de la liste des appareils connectes</p></div>
-                        </div>
-                        <div className="row">
-                            <div className="col s12">
-                                <ReactDatatable
-                                    className={"responsive-table table-xlsx app-categories"}
-                                    config={config}
-                                    records={bots}
-                                    columns={columns}
-                                    onRowClicked={rowClickedHandler}
-                                />
-                            </div>
-                        </div>
-
+                    <div className="card-panel pb-5">
+                        <ConfigKPIBar items={bots} kpis={[
+                            { key: "total",  label: "Sessions",   icon: PhoneAndroidIcon,      iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
+                            { key: "actif",  label: "Connect\u00e9es",  icon: CheckCircleOutlineIcon, iconBg: "#D1FAE5", iconColor: "#065F46", borderColor: "#10B981", filter: (s) => s.status === true },
+                        ]} />
+                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                            <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Liste des appareils connect\u00e9s</Typography>
+                        </Box>
+                        <ConfigTable
+                            items={bots}
+                            columns={[
+                                { id: "name",    label: "Intitul\u00e9",           sortable: true,  minWidth: 160 },
+                                { id: "number",  label: "N\u00b0 t\u00e9l\u00e9phone",  sortable: true,  minWidth: 140 },
+                                { id: "message", label: "Status",              sortable: false, minWidth: 130, render: (s) => (
+                                    <Chip label={s.message} size="small" color={s.status ? "success" : "default"} sx={{ fontWeight: 600, fontSize: "0.72rem" }} />
+                                )},
+                                { id: "actions", label: "Actions",             sortable: false, minWidth: 240, render: (sessions) => (
+                                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                                        <Chip label="V\u00e9rifier" size="small" onClick={() => checkConnection(sessions.session)} />
+                                        {sessions.message !== "No check" && (sessions.status
+                                            ? <Chip label="Disconnect" size="small" color="error"  onClick={() => logoutSession(sessions.session)} />
+                                            : <Chip label="Connect"    size="small" color="info"   onClick={(e) => createNewSession(e, sessions.session)} />)}
+                                    </div>
+                                )},
+                            ]}
+                            searchFields={["name", "number"]}
+                            defaultSort="name"
+                        />
                     </div>
                 </div>
 

@@ -36,7 +36,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
       position: 'relative',
       whiteSpace: 'nowrap',
       width: drawerWidth,
-      backgroundColor:"#000000",
+      background: "linear-gradient(180deg, #1e2188 0%, #161a6b 100%)",
       color:"white",
       transition: theme.transitions.create('width', {
         easing: theme.transitions.easing.sharp,
