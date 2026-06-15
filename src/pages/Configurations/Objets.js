@@ -109,7 +109,7 @@ const Objets = (props) => {
 
     const addFields = [
         { key: "libelle", label: "Intitulé de l'objet", required: true, fullWidth: false, placeholder: "Ex: Rançonnement, Discrimination..." },
-        { key: "description", label: "Description", fullWidth: false, placeholder: "Description de l'objet" },
+        { key: "description", label: "Description", type: "textarea", fullWidth: true, placeholder: "Description de l'objet" },
         {
             key: "risqueLevel", label: "Niveau de gravité", required: true, fullWidth: false,
             render: (value, onChange) => (
@@ -200,10 +200,10 @@ const Objets = (props) => {
                                     style={{ ...selectStyle(editErrors.libelle) }} onFocus={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#e2e8f0"; }} />
                                 {editErrors.libelle && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.libelle}</div>}
                             </div>
-                            <div>
+                            <div style={{ gridColumn: "1 / -1" }}>
                                 <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Description</label>
-                                <input value={editForm.description} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Description"
-                                    style={{ ...selectStyle(false) }} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                <textarea value={editForm.description} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" rows={3}
+                                    style={{ width: "100%", boxSizing: "border-box", resize: "vertical", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "9px 12px", fontSize: 13, outline: "none", background: "#fff", color: "#1e293b", whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "inherit" }} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                             </div>
                             <div>
                                 <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Niveau de gravité <span style={{ color: "#ef4444" }}>*</span></label>
@@ -270,7 +270,7 @@ const Objets = (props) => {
                     </Box>
                 </Box>
                 {viewMode === "list" ? (
-                    <ConfigTable items={filteredItems} columns={[
+                    <ConfigTable items={filteredItems} exportClassName="app-objets" columns={[
                         { id: "libelle",        label: "Intitulé",           sortable: true,  minWidth: 160 },
                         { id: "description",    label: "Description",         sortable: true,  minWidth: 180 },
                         { id: "categorie",      label: "Catégorie",           sortable: false, minWidth: 130, render: (sp) => sp?.categorie?.libelle ?? "-" },
@@ -285,7 +285,7 @@ const Objets = (props) => {
                                 <Tooltip title="Supprimer"><IconButton onClick={() => setDeleteConfirm({ open: true, item: sp, loading: false })} color="error"><DeleteIcon /></IconButton></Tooltip>
                             </div>
                         )},
-                    ]} searchFields={["libelle", "description"]}
+                    ]} searchFields={["libelle", "description", "categorie.libelle", "risqueLevel"]}
                     filters={[{ id: "risqueLevel", label: "Tous les niveaux", options: [{ value: "GRAVE", label: "Grave" }, { value: "MOYEN", label: "Moyen" }, { value: "MINEUR", label: "Mineur" }], filterFn: (row, val) => row.risqueLevel === val }]}
                     defaultSort="libelle" />
                 ) : (
@@ -295,7 +295,7 @@ const Objets = (props) => {
                             { label: "Catégorie", render: (sp) => sp?.categorie?.libelle ?? "-" },
                             { label: "Délai",     render: (sp) => sp.processingTime ? `${sp.processingTime} jour(s)` : "-" },
                         ]}
-                        searchFields={["libelle", "description"]}
+                        searchFields={["libelle", "description", "categorie.libelle", "risqueLevel"]}
                         onEdit={(sp) => handleEditClick(sp)}
                         onDelete={(sp) => setDeleteConfirm({ open: true, item: sp, loading: false })}
                     />

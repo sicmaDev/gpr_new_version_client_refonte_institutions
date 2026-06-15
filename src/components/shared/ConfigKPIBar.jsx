@@ -7,13 +7,16 @@ import { Box, Typography, Tooltip } from "@mui/material";
  * Props :
  *   items  : array  — données du module
  *   kpis   : array  — définitions des KPIs :
- *     { key, label, icon: Component, iconBg, iconColor, borderColor, filter: fn }
+ *     { key, label, icon: Component, iconBg, iconColor, borderColor, filter: fn,
+ *       value?: any | (items) => any  — surcharge l'affichage (au lieu du compte filtré) }
  */
 const ConfigKPIBar = ({ items = [], kpis = [] }) => {
   const counts = useMemo(() => {
     const result = {};
     kpis.forEach((k) => {
-      result[k.key] = items.filter(k.filter).length;
+      result[k.key] = k.value !== undefined
+        ? (typeof k.value === "function" ? k.value(items) : k.value)
+        : items.filter(k.filter).length;
     });
     return result;
   }, [items, kpis]);

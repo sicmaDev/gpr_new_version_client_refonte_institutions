@@ -349,7 +349,7 @@ const Corbeille = (props) => {
                     "&.Mui-disabled": { opacity: 0.6 },
                 }}
             >
-                Supprimer définitivement
+                Suppression définitive
             </LoadingButton>
         );
     }
@@ -465,13 +465,13 @@ const Corbeille = (props) => {
                                                 <Tooltip title="Restaurer"><IconButton onClick={(e) => handleModal(e, claim)} color="error"><SettingsBackupRestoreIcon /></IconButton></Tooltip>
                                             )},
                                         ]}
-                                        searchFields={["codeClient", "clientFirstAndLastName", "delete_reason"]}
+                                        searchFields={["codeClient", "clientFirstAndLastName", "delete_reason", "typeLabel"]}
                                         defaultSort="deletedAtFormated"
                                     />
                                 ) : (
                                     <ConfigCardView items={filteredItems} titleField="codeClient" subtitleField="clientFirstAndLastName" badgeField="typeLabel"
                                         badgeColorMap={{ "Réclamation": "#EF4444", "Dénonciation": "#F59E0B", "Suggestion": "#10B981" }}
-                                        searchFields={["codeClient", "clientFirstAndLastName", "delete_reason"]}
+                                        searchFields={["codeClient", "clientFirstAndLastName", "delete_reason", "typeLabel"]}
                                         extraFields={[
                                             { label: "Motif", render: (c) => c.delete_reason || "-" },
                                             { label: "Supprimé le", render: (c) => c.deletedAtFormated },

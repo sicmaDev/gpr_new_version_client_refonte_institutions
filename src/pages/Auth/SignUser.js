@@ -1,11 +1,11 @@
 import React, {useEffect, useRef, useState} from "react";
 import { connect } from "react-redux";
 import logo from "../../assets/images/logo_gpr.jpg";
-import signUpPhoto from "../../assets/images/signup_photo.png";
+import logoSicma from "../../assets/images/logo_sicma.png";
 import LoadingButton from "@mui/lab/LoadingButton";
 import LoginIcon from "@mui/icons-material/Login";
 import { NavLink, useHistory } from "react-router-dom";
-import { Box, Button, Modal, Typography, fabClasses, Grid, FormControl, IconButton, Input, MenuItem, Select, ListSubheader } from "@mui/material";
+import { Box, Button, Modal, Typography, fabClasses, FormControl, IconButton, Input, MenuItem, Select, ListSubheader } from "@mui/material";
 import { EastOutlined, WestOutlined, ArrowBackIos, Visibility, VisibilityOff } from "@mui/icons-material";
 import ReactDatatable from "@ashvin27/react-datatable";
 // import Select from "react-select";
@@ -14,6 +14,18 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
+import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
+import ApartmentOutlinedIcon from "@mui/icons-material/ApartmentOutlined";
+import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
+import HowToRegOutlinedIcon from "@mui/icons-material/HowToRegOutlined";
+import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
+import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
+import AssessmentOutlinedIcon from "@mui/icons-material/AssessmentOutlined";
 
 import {
     userErrors, additionalRoleChanged,emailChanged,
@@ -38,6 +50,20 @@ const styles = {
         minHeight: 35
     }),
     menu: provided => ({...provided, zIndex: 9999})
+};
+
+const MODULES = [
+    { icon: ReportProblemOutlinedIcon, label: "Réclamations", color: "#fb923c" },
+    { icon: LightbulbOutlinedIcon, label: "Suggestions", color: "#60a5fa" },
+    { icon: CampaignOutlinedIcon, label: "Dénonciations", color: "#f87171" },
+    { icon: AssessmentOutlinedIcon, label: "Rapports", color: "#34d399" },
+];
+
+const selectSx = {
+    flex: 1,
+    "& .MuiSelect-select": { padding: 0, fontSize: "0.875rem", color: "#1a2b3c", minHeight: "unset !important", display: "flex", alignItems: "center" },
+    "&:before, &:after": { display: "none" },
+    "&:hover:not(.Mui-disabled):before": { display: "none" },
 };
 const SignCompteUser = (props) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -338,329 +364,372 @@ const SignCompteUser = (props) => {
         // console.log("Started filtering the table")
     };
 
+    const fieldShellClass = "flex items-center gap-2.5 border-2 border-[#e2e8f0] rounded-xl px-4 h-[52px] transition-all duration-200 focus-within:border-[#1E88E5] focus-within:shadow-[0_0_0_4px_rgba(30,136,229,0.1)]";
+    const labelClass = "block text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.6px] mb-1.5";
+    const inputClass = "validate border-0 outline-none flex-1 h-full text-sm text-[#1a2b3c] bg-transparent";
+    const iconSx = { fontSize: 20, color: "#94a3b8" };
+
     return (
-        <>
-            <div className="row">
+        <div className="gpr-auth flex min-h-screen" style={{ background: "#F8FAFC", fontFamily: "'Inter', -apple-system, sans-serif" }}>
+
+            {/* ── Colonne gauche — hero storytelling ── */}
+            <div
+                className="hide-on-med-and-down relative overflow-hidden flex flex-col items-center justify-center px-12 py-16"
+                style={{ width: "40%" }}
+            >
+
+                {/* Couche 1 — fond dégradé */}
                 <div
-                    className="col l7 m12 s12"
-                    style={{ minHeight: "100vh", overflow: "hidden", maxHeight: "100vh" }}
-                >
-                    <div
-                        className=""
-                        style={{ display: "flex", flexDirection: "column", height: "99vh" }}
-                    >
-                        <div>
-                            <div className="row">
-                                <h1 className="center-align ">
-                                    <img className="recent-file" src={logo} alt="Logo GPR" />
-                                </h1>
-                            </div>
-                            <div className="plr-15">
-                                <div className=" mb-1 mt-4">
-                                    <span style={{ fontSize: "15px", fontWeight: 600 }}>
-                                        Information sur l'utilisateur
-                                    </span>
-                                    <div>Renseignez les informations personnelles de connexion qui vont vous permettre plus tard de vous connectez a l'outil</div>
-                                </div>
-                            </div>
-                        </div>
+                    className="absolute inset-0 animate-gradient-bg"
+                    style={{ background: "linear-gradient(135deg, #0B1F4D 0%, #1565C0 100%)" }}
+                />
+
+                {/* Couche 2 — grands cercles semi-transparents */}
+                <div
+                    className="absolute rounded-full animate-blob"
+                    style={{ width: "62vh", height: "62vh", top: "-14%", right: "-24%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }}
+                />
+                <div
+                    className="absolute rounded-full animate-blob"
+                    style={{ width: "44vh", height: "44vh", bottom: "-16%", left: "-18%", background: "rgba(255,255,255,0.05)", animationDelay: "6s" }}
+                />
+
+                {/* Couche 3 — carrés flottants (opacité 10%) */}
+                <div className="absolute top-20 left-28 w-16 h-16 rounded-2xl rotate-12 animate-float" style={{ background: "rgba(255,255,255,0.1)" }} />
+                <div className="absolute bottom-24 right-32 w-20 h-20 rounded-2xl -rotate-12 animate-float" style={{ background: "rgba(255,255,255,0.1)", animationDelay: "1.5s" }} />
+                <div className="absolute top-1/2 right-12 w-10 h-10 rounded-xl rotate-45 animate-float" style={{ background: "rgba(255,255,255,0.1)", animationDelay: "3s" }} />
+
+                {/* Couche 4 — cartes fonctionnelles flottantes, suspendues */}
+                {MODULES.map((mod, i) => {
+                    const Icon = mod.icon;
+                    const positions = [
+                        "top-[9%] left-[5%] -rotate-6",
+                        "top-[16%] right-[4%] rotate-4",
+                        "bottom-[26%] left-[6%] rotate-3",
+                        "bottom-[13%] right-[5%] -rotate-4",
+                    ];
+                    return (
                         <div
-                            id=""
-                            className="row scroll-container plr-8"
-                            // style={{ overflowY: "scroll", flex: 1 }}
+                            key={i}
+                            className={`absolute z-[5] flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-2xl px-4 py-3 backdrop-blur-md shadow-2xl hover:-translate-y-2 hover:rotate-0 hover:bg-white/20 transition-all duration-300 cursor-default ${positions[i]}`}
                         >
-                            <div className="row padding-5">
-                                <form className="col l12 m12 s12 mt-1" >
-                                    <div className="row">
-                                        <div className="input-field col m6 s12 bf">
-                                            <input
-                                                id="name"
-                                                type="text"
-                                                className="validate"
-                                                placeholder=""
-                                                value={props.name || ""}
-                                                // defaultValue={props.name}
-                                                onChange={(e) => props.nameChanged(e.target.value)}
-                                                data-error=".errorTxt1"
-                                                style={{ marginTop: "5px" }}
-                                            />
-                                            <label htmlFor="name" className="active">
-                                                Nom et Prénom(s)
-                                            </label>
-                                            <small className="errorTxt4">
-                                                <div id="name-error" className="error">
-                                                    {props.errors.name}
-                                                </div>
-                                            </small>
-                                        </div>
-                                        <div className="input-field col m6 s12 bf">
-                                            <FormControl variant='standard' style={{ width: "100%", }}>
-                                                <Select
-                                                    id='poste'
-                                                    className="validate"
-                                                    style={{ width: "100%", marginTop: "20px" }}
-                                                    options={titleOptions}
-                                                    value={props.poste || ""}
-                                                    onChange={handleChange}
-                                                    displayEmpty                                                
-                                                >
-                                                    <MenuItem value="" disabled>
-                                                        Sélectionner le poste
-                                                    </MenuItem>
-                                                    {titleOptions.map((option) => (
-                                                        <MenuItem key={option.value} value={option.value}>
-                                                            {option.label}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </FormControl>
-                                            <label htmlFor="poste" className="active">
-                                                Poste
-                                            </label>
-                                            <small className="errorTxt4">
-                                                <div id="cpassword-error" className="error">
-                                                    {props.errors.poste}
-                                                </div>
-                                            </small>
-                                        </div>
-                                    </div>
-                                    <div className="row">
-                                        <div className="input-field col m6 s12 bf">
-                                            <input
-                                                id="name"
-                                                name="email"
-                                                type="text"
-                                                className="validate"
-                                                placeholder=""
-                                                // defaultValue={props.email}
-                                                value={props.email || ""}
-                                                onChange={(e) => props.emailChanged(e.target.value)}
-                                                data-error=".errorTxt1"
-                                                style={{ marginTop: "5px" }}
-                                            />
-                                            <label htmlFor="name" className="active">
-                                                Adresse électronique
-                                            </label>
-                                            <small className="errorTxt4">
-                                                <div id="email-error" className="error">
-                                                    {props.errors.email}
-                                                </div>
-                                            </small>
-                                        </div>
-                                        <div className="input-field col m6 s12 bf">
-                                            <FormControl variant='standard' style={{ width: "100%", }}>
-                                                <Select
-                                                    id=''
-                                                    className="validate"
-                                                    style={{ width: "100%", marginTop: "20px" }}
-                                                    value={props.unit || ""}
-                                                    onChange={handleChange1}
-                                                    displayEmpty
-                                                >
-                                                    <MenuItem value="" disabled>
-                                                        Sélectionner l'unité organisationnelle
-                                                    </MenuItem>
-                                                    {unitOptions.map((group) => [
-                                                        <ListSubheader key={`group-${group.label}`}>
-                                                            {group.label}
-                                                        </ListSubheader>,
-                                                        group.options.map((option) => (
-                                                            <MenuItem key={option.value} value={option.value}>
-                                                                {option.label}
-                                                            </MenuItem>
-                                                        ))
-                                                    ])}
-                                                </Select>
-                                            </FormControl>
-                                            <label htmlFor="poste" className="active">
-                                                Point de Service
-                                            </label>
-                                            <small className="errorTxt4">
-                                                <div id="unit-error" className="error">
-                                                    {props.errors.unit}
-                                                </div>
-                                            </small>
-                                        </div>
-                                    </div>
-                                    <div className="row">
-                                        <div className="input-field col m6 s12 bf">
-                                            <input
-                                                id="name"
-                                                type="tel"
-                                                className="validate"
-                                                placeholder=""
-                                                // defaultValue={props.phone}
-                                                value={props.phone || ""}
-                                                onChange={(e) => props.phoneChanged(e.target.value)}
-                                                data-error=".errorTxt1"
-                                                style={{ marginTop: "5px" }}
-                                            />
-                                            <label htmlFor="name" className="active">
-                                                Téléphone&nbsp;
-                                            </label>
-                                            <small className="errorTxt4">
-                                                <div id="phone-error" className="error">
-                                                    {props.errors.phone}
-                                                </div>
-                                            </small>
-                                        </div>
-                                        <div className="input-field col m6 s12 bf">
-                                            <FormControl variant='standard' style={{ width: "100%", }}>
-                                                <Select
-                                                    id='poste'
-                                                    className="validate"
-                                                    style={{ width: "100%", marginTop: "20px" }}
-                                                    value={ca}
-                                                    onChange={handleChange12}
-                                                    displayEmpty
-                                                >
-                                                    <MenuItem value="" disabled>
-                                                        Sélectionner une réponse
-                                                    </MenuItem>
-                                                    {caOptions.map((option) => (
-                                                        <MenuItem key={option.label} value={option.value}>
-                                                            {option.label}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </FormControl>
-                                            <label htmlFor="poste" className="active">
-                                                Etes-vous gérant du point de service ?&nbsp;
-                                            </label>
-                                            <small className="errorTxt4">
-                                                <div id="cpassword-error" className="error">
-                                                    {/* {props.errors.additionalRole} */}
-                                                </div>
-                                            </small>
-                                        </div>
-                                    </div>
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: mod.color + "33" }}>
+                                <Icon style={{ fontSize: 18, color: mod.color }} />
+                            </div>
+                            <span className="text-white text-[13px] font-semibold whitespace-nowrap">{mod.label}</span>
+                        </div>
+                    );
+                })}
 
-                                    <div className="row">
-                                        <div className="input-field col m12 s12 bf">
-                                            <div style={{ display: "flex" }}>
-                                                <input
-                                                    style={{ flex: "1 auto" }}
-                                                    id="pass"
-                                                    type={showPassword ? "text" : "password"}
-                                                    placeholder=""
-                                                    className="validate"
-                                                    value={props.pass}
-                                                    onChange={(e) => props.passwordChanged(e.target.value)}
-                                                />
-                                                {showPassword ? <VisibilityOff onClick={(e) => { setShowPassword(false) }} /> : <Visibility onClick={(e) => { setShowPassword(true) }} />}
-                                            </div>
-                                            <label htmlFor="pass" className="active">
-                                                Mot de passe
-                                                <span style={{ color: "#007bff", cursor: "pointer", margin: "0px 15px" }} onClick={generateCode}>Générer un mot de passe</span>
-                                            </label>
-                                            <small className="errorTxt4">
-                                                <div id="cpassword-error" className="error">
-                                                    {props.errors.pass}
-                                                </div>
-                                            </small>     
-                                        </div>
-                                    </div>
-                                    <div className="row">
-                                        <div className="input-field col m12 s12 bf">
-                                            <div style={{ display: "flex" }}>
-                                                <input
-                                                    style={{ flex: "1 auto" }}
-                                                    id="confirm"
-                                                    type={showPassword ? "text" : "password"}
-                                                    placeholder=""
-                                                    className="validate"
-                                                    value={props.pass_again}
-                                                    onChange={(e) => props.passwordAgainChanged(e.target.value)}
-                                                />
-                                                {showPassword ? <VisibilityOff onClick={(e) => { setShowPassword(false) }} /> : <Visibility onClick={(e) => { setShowPassword(true) }} />}
-                                            </div>
+                {/* Couche 5 — contenu central */}
+                <div className="relative z-10 flex flex-col items-center text-center max-w-md">
 
-                                            <label htmlFor="confirm" className="active">
-                                                Confirmer de passe
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div className='m12'>
-                                        <Grid container spacing={3} direction="row"
-                                            justifyContent="center"
-                                            alignItems="center" >
-                                            <Grid xs={11}>
-                                                <LoadingButton
-                                                    style={{
-                                                        height: "50px",
-                                                        backgroundColor: "#005081",
-                                                        width: "100%",
-                                                    }}
-                                                    className='waves-effect waves-light btn-small mb-1'
-                                                    color="secondary"
-                                                    loading={props.etat}
-                                                    loadingPosition="end"
-                                                    onClick={(e) => handleSubmit(e)}
-                                                    variant="contained"
-                                                    type="submit"
-                                                >
-                                                    <span>S'INSCRIRE</span>
-                                                </LoadingButton>
-                                            </Grid>
-                                        </Grid>
-                                    </div>
-                                </form>
-                            </div >
-                        </div >
-                    </div>
-                    <div className="content-overlay"></div>
-                </div>
-                
-                <div
-                    className="col s5 hide-on-med-and-down"
-                    style={{ backgroundColor: "#005081", height: "100%" }}
-                >
-                    <div
-                        style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        alignItems: "center",
-                        color: "white",
-                        fontSize: "14px",
-                        }}
-                    >
-                        {/* <WestOutlined color="white" />
-                        <NavLink to="/">
-                            <span style={{ color: "white", cursor: "pointer" }}>
-                                {"Retour sur la page d'accueil"}
-                            </span>
-                        </NavLink> */}
-                    </div>
-                    <div
-                        className=""
-                        style={{
-                        height: "100vh",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        alignContent: "center",
-                        justifyContent: "center",
-                        }}
-                    >
-                        <img
-                        className="recent-file"
-                        src={signUpPhoto}
-                        height="60%"
-                        width="60%"
-                        alt="Sign Up"
-                        />
-                        <h6 style={{ color: "white" }}>{"Vous avez déjà un compte ?"}</h6>
-                        <div>
-                        <NavLink to="/login">
-                            {" "}
-                            <Button variant="contained"> {"Se connecter"}</Button>
-                        </NavLink>
+                    {/* Badge plateforme */}
+                    <div className="bg-white rounded-2xl p-3 w-full max-w-[300px] mb-7 shadow-xl flex items-center gap-3 animate-fade-up">
+                        <div className="bg-[#f4f7fb] rounded-xl w-11 h-11 flex-shrink-0 overflow-hidden">
+                            <img src={logo} alt="Logo GPR" className="h-11 w-auto object-cover object-left" />
+                        </div>
+                        <div className="flex-1 text-left">
+                            <div className="text-[#1a2b3c] font-bold text-[12.5px] leading-tight">Gestion des plaintes</div>
+                            <div className="text-[#1a2b3c] font-bold text-[12.5px] leading-tight">ou des réclamations</div>
+                        </div>
+                        <div className="bg-[#f4f7fb] rounded-xl w-11 h-11 flex-shrink-0 flex items-center justify-center p-1.5">
+                            <img src={logoSicma} alt="Logo Institution" className="h-full w-full object-contain" />
                         </div>
                     </div>
+
+                    <h1 className="text-white text-[42px] leading-[1.12] font-extrabold mb-4 animate-fade-up" style={{ animationDelay: "0.1s" }}>
+                        Créez votre <br /> <span style={{ color: "#7dd3fc" }}>compte</span>
+                    </h1>
+                    <p className="text-white/70 text-[14px] leading-relaxed mb-10 animate-fade-up" style={{ animationDelay: "0.2s" }}>
+                        Renseignez vos informations personnelles pour accéder à la
+                        plateforme et suivre vos réclamations, dénonciations et
+                        suggestions en toute transparence.
+                    </p>
+
+                    <div className="flex items-center gap-2 text-white/70 text-xs animate-fade-up" style={{ animationDelay: "0.3s" }}>
+                        <VerifiedUserOutlinedIcon style={{ fontSize: 16 }} />
+                        <span>Plateforme certifiée &amp; conforme BCEAO</span>
+                    </div>
+                </div>
+
+                {/* Couche 6 — CTA déjà inscrit */}
+                <div className="relative z-10 mt-10 text-center animate-fade-up" style={{ animationDelay: "0.4s" }}>
+                    <h6 className="text-white/70 text-[13px] mb-3">Vous avez déjà un compte ?</h6>
+                    <NavLink to="/login">
+                        <Button
+                            variant="outlined"
+                            style={{ borderColor: "rgba(255,255,255,0.5)", color: "white", borderRadius: "10px", padding: "9px 30px", fontWeight: 600, fontSize: "13px", textTransform: "none" }}
+                            className="transition-all duration-300 hover:bg-white/10 hover:shadow-[0_0_24px_rgba(255,255,255,0.35)]"
+                        >
+                            Se connecter
+                        </Button>
+                    </NavLink>
                 </div>
             </div>
-        </>
+
+            {/* ── Colonne droite — formulaire ── */}
+            <div className="flex-1 flex justify-center bg-[#F8FAFC] px-6 py-10 relative overflow-y-auto overflow-x-hidden">
+
+                {/* Cercles flous & effets lumineux */}
+                <div className="absolute -top-28 -right-28 w-96 h-96 bg-[#1565C0]/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-[-80px] left-[-80px] w-96 h-96 bg-[#0B1F4D]/8 rounded-full blur-3xl" />
+                <div className="absolute top-1/3 left-1/4 w-48 h-48 bg-[#FFC107]/10 rounded-full blur-3xl" />
+
+                {/* Carte premium glassmorphism */}
+                <div
+                    className="w-full max-w-[680px] bg-white/70 backdrop-blur-xl border border-white/60 rounded-[24px] p-8 sm:p-10 relative z-10 animate-fade-up my-auto"
+                    style={{ boxShadow: "0 30px 80px -20px rgba(11,31,77,0.25)" }}
+                >
+
+                    {/* Logos visibles sur petits écrans */}
+                    <div className="hide-on-large-only flex items-center justify-center gap-4 mb-7">
+                        <img src={logo} alt="Logo GPR" className="h-9 object-contain" />
+                        <div className="w-px h-8 bg-[#e2e8f0]" />
+                        <img src={logoSicma} alt="Logo Institution" className="h-9 object-contain" />
+                    </div>
+
+                    <h2 className="text-[24px] font-extrabold text-[#1a2b3c] mb-1.5">Informations sur l'utilisateur</h2>
+                    <p className="text-[#8a9bb0] text-[13.5px] mb-7">
+                        Renseignez les informations personnelles de connexion qui vous permettront plus tard de vous connecter à l'outil
+                    </p>
+
+                    <form className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
+
+                        {/* Nom et Prénom(s) */}
+                        <div>
+                            <label htmlFor="name" className={labelClass}>Nom et Prénom(s)</label>
+                            <div className={fieldShellClass}>
+                                <PersonOutlineOutlinedIcon style={iconSx} />
+                                <input
+                                    id="name"
+                                    type="text"
+                                    className={inputClass}
+                                    value={props.name || ""}
+                                    onChange={(e) => props.nameChanged(e.target.value)}
+                                />
+                            </div>
+                            <small className="errorTxt4">
+                                <span className="error text-red-500 text-xs ml-0.5 mt-1 block">{props.errors.name}</span>
+                            </small>
+                        </div>
+
+                        {/* Poste */}
+                        <div>
+                            <label htmlFor="poste" className={labelClass}>Poste</label>
+                            <div className={fieldShellClass}>
+                                <WorkOutlineOutlinedIcon style={iconSx} />
+                                <FormControl variant="standard" sx={{ flex: 1 }}>
+                                    <Select
+                                        id="poste"
+                                        sx={selectSx}
+                                        disableUnderline
+                                        fullWidth
+                                        value={props.poste || ""}
+                                        onChange={handleChange}
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="" disabled>
+                                            Sélectionner le poste
+                                        </MenuItem>
+                                        {titleOptions.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </div>
+                            <small className="errorTxt4">
+                                <span className="error text-red-500 text-xs ml-0.5 mt-1 block">{props.errors.poste}</span>
+                            </small>
+                        </div>
+
+                        {/* Adresse électronique */}
+                        <div>
+                            <label htmlFor="email" className={labelClass}>Adresse électronique</label>
+                            <div className={fieldShellClass}>
+                                <EmailOutlinedIcon style={iconSx} />
+                                <input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    className={inputClass}
+                                    placeholder="exemple@domaine.com"
+                                    value={props.email || ""}
+                                    onChange={(e) => props.emailChanged(e.target.value)}
+                                />
+                            </div>
+                            <small className="errorTxt4">
+                                <span className="error text-red-500 text-xs ml-0.5 mt-1 block">{props.errors.email}</span>
+                            </small>
+                        </div>
+
+                        {/* Point de service */}
+                        <div>
+                            <label htmlFor="unit" className={labelClass}>Point de Service</label>
+                            <div className={fieldShellClass}>
+                                <ApartmentOutlinedIcon style={iconSx} />
+                                <FormControl variant="standard" sx={{ flex: 1 }}>
+                                    <Select
+                                        id="unit"
+                                        sx={selectSx}
+                                        disableUnderline
+                                        fullWidth
+                                        value={props.unit || ""}
+                                        onChange={handleChange1}
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="" disabled>
+                                            Sélectionner l'unité organisationnelle
+                                        </MenuItem>
+                                        {unitOptions.map((group) => [
+                                            <ListSubheader key={`group-${group.label}`}>
+                                                {group.label}
+                                            </ListSubheader>,
+                                            group.options.map((option) => (
+                                                <MenuItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </MenuItem>
+                                            ))
+                                        ])}
+                                    </Select>
+                                </FormControl>
+                            </div>
+                            <small className="errorTxt4">
+                                <span className="error text-red-500 text-xs ml-0.5 mt-1 block">{props.errors.unit}</span>
+                            </small>
+                        </div>
+
+                        {/* Téléphone */}
+                        <div>
+                            <label htmlFor="phone" className={labelClass}>Téléphone</label>
+                            <div className={fieldShellClass}>
+                                <PhoneOutlinedIcon style={iconSx} />
+                                <input
+                                    id="phone"
+                                    type="tel"
+                                    className={inputClass}
+                                    value={props.phone || ""}
+                                    onChange={(e) => props.phoneChanged(e.target.value)}
+                                />
+                            </div>
+                            <small className="errorTxt4">
+                                <span className="error text-red-500 text-xs ml-0.5 mt-1 block">{props.errors.phone}</span>
+                            </small>
+                        </div>
+
+                        {/* Gérant du point de service */}
+                        <div>
+                            <label htmlFor="ca" className={labelClass}>Etes-vous gérant du point de service ?</label>
+                            <div className={fieldShellClass}>
+                                <HowToRegOutlinedIcon style={iconSx} />
+                                <FormControl variant="standard" sx={{ flex: 1 }}>
+                                    <Select
+                                        id="ca"
+                                        sx={selectSx}
+                                        disableUnderline
+                                        fullWidth
+                                        value={ca}
+                                        onChange={handleChange12}
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="" disabled>
+                                            Sélectionner une réponse
+                                        </MenuItem>
+                                        {caOptions.map((option) => (
+                                            <MenuItem key={option.label} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </div>
+                        </div>
+
+                        {/* Mot de passe */}
+                        <div className="sm:col-span-2">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label htmlFor="pass" className={labelClass + " mb-0"}>Mot de passe</label>
+                                <span
+                                    className="text-[#1E88E5] text-[13px] font-semibold cursor-pointer hover:underline"
+                                    onClick={generateCode}
+                                >
+                                    Générer un mot de passe
+                                </span>
+                            </div>
+                            <div className={fieldShellClass}>
+                                <LockOutlinedIcon style={iconSx} />
+                                <input
+                                    id="pass"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    className={inputClass}
+                                    value={props.pass || ""}
+                                    onChange={(e) => props.passwordChanged(e.target.value)}
+                                />
+                                <span onClick={toggleShowPassword} className="cursor-pointer text-[#94a3b8] flex flex-shrink-0">
+                                    {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                </span>
+                            </div>
+                            <small className="errorTxt4">
+                                <span className="error text-red-500 text-xs ml-0.5 mt-1 block">{props.errors.pass}</span>
+                            </small>
+                        </div>
+
+                        {/* Confirmer le mot de passe */}
+                        <div className="sm:col-span-2">
+                            <label htmlFor="confirm" className={labelClass}>Confirmer le mot de passe</label>
+                            <div className={fieldShellClass}>
+                                <LockOutlinedIcon style={iconSx} />
+                                <input
+                                    id="confirm"
+                                    type={showPassword1 ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    className={inputClass}
+                                    value={props.pass_again || ""}
+                                    onChange={(e) => props.passwordAgainChanged(e.target.value)}
+                                />
+                                <span onClick={toggleShowPassword1} className="cursor-pointer text-[#94a3b8] flex flex-shrink-0">
+                                    {showPassword1 ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                </span>
+                            </div>
+                            <small className="errorTxt4">
+                                <span className="error text-red-500 text-xs ml-0.5 mt-1 block">{props.errors.pass_again}</span>
+                            </small>
+                        </div>
+
+                        {/* Bouton S'inscrire */}
+                        <div className="sm:col-span-2">
+                            <LoadingButton
+                                style={{
+                                    width: "100%", height: "52px", borderRadius: "12px", fontSize: "15px", fontWeight: 700,
+                                    textTransform: "none", marginTop: "8px", color: "white",
+                                    background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
+                                    boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
+                                }}
+                                className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
+                                loading={props.etat}
+                                loadingPosition="end"
+                                onClick={(e) => handleSubmit(e)}
+                                endIcon={<LoginIcon />}
+                                variant="contained"
+                                type="submit"
+                            >
+                                <span>S'inscrire</span>
+                            </LoadingButton>
+                        </div>
+                    </form>
+
+                    <p className="text-center text-[#b0bec8] text-xs mt-9">
+                        © {new Date().getFullYear()} SICMA &amp; Associés · Tous droits réservés
+                    </p>
+                </div>
+
+                <div className="content-overlay" />
+            </div>
+
+        </div>
     );
 };
 

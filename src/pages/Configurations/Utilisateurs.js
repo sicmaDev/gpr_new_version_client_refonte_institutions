@@ -40,12 +40,23 @@ import ViewModeToggle from "../../components/shared/ViewModeToggle";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 
 const ROLE_OPTIONS = [
     { label: "Directeur / Directrice (Exécutif, Général)", value: "DE" },
     { label: "Pilote", value: "PILOTE" },
     { label: "Aucun", value: "MOLDUE" },
 ];
+
+// Badges de rôle mis en évidence dans la liste des utilisateurs
+const getRoleBadges = (u) => {
+    const badges = [];
+    if (u.additionalRole === "DE") badges.push({ label: "Directeur", bg: "#EDE9FE", color: "#6D28D9" });
+    else if (u.additionalRole === "PILOTE") badges.push({ label: "Pilote", bg: "#DBEAFE", color: "#1D4ED8" });
+    if (u.ra) badges.push({ label: "Resp. d'agence", bg: "#FEF3C7", color: "#B45309" });
+    if (badges.length === 0) badges.push({ label: "Utilisateur", bg: "#F1F5F9", color: "#64748B" });
+    return badges;
+};
 const CA_OPTIONS = [
     { label: "Sélectionnez votre réponse", value: "" },
     { label: "Non", value: false },
@@ -138,6 +149,12 @@ const Utilisateurs = (props) => {
         { key: "actif",  label: "Actifs",              icon: PeopleAltIcon,      iconBg: "#D1FAE5", iconColor: "#065F46", borderColor: "#10B981", filter: (u) => !u.deleted },
         { key: "desact", label: "Désactivés",          icon: PersonOffIcon,      iconBg: "#FEE2E2", iconColor: "#B91C1C", borderColor: "#EF4444", filter: (u) => u.deleted && !u.rattached },
         { key: "attente",label: "En attente",          icon: HourglassEmptyIcon, iconBg: "#FEF3C7", iconColor: "#B45309", borderColor: "#F59E0B", filter: (u) => u.deleted && u.rattached },
+        ...(max !== undefined ? [{
+            key: "quota", label: "Comptes créés / autorisés", icon: WorkspacePremiumIcon,
+            iconBg: nba >= max ? "#FEE2E2" : "#EDE9FE", iconColor: nba >= max ? "#B91C1C" : "#6D28D9",
+            borderColor: nba >= max ? "#EF4444" : "#8B5CF6",
+            value: `${nba} / ${max}`, filter: () => true,
+        }] : []),
     ];
     const CHIPS_CONFIG = [
         { value: "ALL",     label: "Tous",        filter: () => true },
@@ -509,19 +526,24 @@ const Utilisateurs = (props) => {
                     </Box>
                 </Box>
                 {viewMode === "list" ? (
-                    <ConfigTable items={filteredUsers} columns={[
+                    <ConfigTable items={filteredUsers} exportClassName="app-users" columns={[
                         { id: "identity",  label: "Identité",   sortable: true,  minWidth: 190, render: (u) => (
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                 {u.deleted && <Block color="error" style={{ fontSize: 14 }} />}
-                                <div><span style={{ color: u.deleted ? "#bbb" : undefined, fontStyle: u.deleted ? "italic" : undefined }}>{u.code}</span><br /><span style={{ color: u.deleted ? "#bbb" : undefined, fontStyle: u.deleted ? "italic" : undefined }}>{u.firstAndLastName}</span></div>
+                                <div><span style={{ fontWeight: 700, color: u.deleted ? "#bbb" : "#0F172A", fontStyle: u.deleted ? "italic" : undefined }}>{u.firstAndLastName}</span><br /><span style={{ color: u.deleted ? "#bbb" : undefined, fontStyle: u.deleted ? "italic" : undefined }}>{u.code}</span></div>
                             </div>
                         )},
                         { id: "poste",     label: "Poste",      sortable: true,  minWidth: 190, render: (u) => {
-                            let role = ""; if (u.additionalRole === "DE") role = "Directeur"; else if (u.additionalRole === "PILOTE") role = "Pilote";
-                            const ra = u.ra ? "Responsable d'agence" : "";
                             const s = u.deleted ? { color: "#bbb", fontStyle: "italic" } : {};
-                            return <div style={s}><div>{u.posteDto?.libelle}</div><div>{u.servicePointDto?.libelle}</div>{role && <div>{role}</div>}{ra && <div>{ra}</div>}</div>;
+                            return <div style={s}><div>{u.posteDto?.libelle}</div><div>{u.servicePointDto?.libelle}</div></div>;
                         }},
+                        { id: "role",      label: "Rôle",       sortable: false, minWidth: 160, render: (u) => (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 4, opacity: u.deleted ? 0.5 : 1 }}>
+                                {getRoleBadges(u).map((b, i) => (
+                                    <Chip key={i} label={b.label} size="small" sx={{ backgroundColor: b.bg, color: b.color, fontWeight: 700, fontSize: "0.72rem", height: 22 }} />
+                                ))}
+                            </div>
+                        )},
                         { id: "contacts",  label: "Contacts",   sortable: true,  minWidth: 200, render: (u) => { const s = u.deleted ? { color: "#bbb", fontStyle: "italic" } : {}; return <div style={s}><div>{u.email}</div><div>{u.tel}</div></div>; }},
                         { id: "createdAt", label: "Ajouté le",  sortable: true,  minWidth: 140, render: (u) => { const d = u.createdAt ? new Intl.DateTimeFormat("fr-FR", { year: "numeric", month: "long", day: "2-digit" }).format(new Date(u.createdAt)) : "-"; return <span style={u.deleted ? { color: "#bbb", fontStyle: "italic" } : {}}>{d}</span>; }},
                         { id: "actions",   label: "Actions",    sortable: false, minWidth: 150, render: (u) => (
@@ -546,15 +568,22 @@ const Utilisateurs = (props) => {
                                 </div>
                             )
                         )},
-                    ]} searchFields={["firstAndLastName", "email", "code"]} defaultSort="firstAndLastName" />
+                    ]} searchFields={["firstAndLastName", "email", "code", "tel", "posteDto.libelle", "servicePointDto.libelle"]} defaultSort="firstAndLastName" />
                 ) : (
                     <ConfigCardView items={filteredUsers} titleField="firstAndLastName" subtitleField="email"
-                        searchFields={["firstAndLastName", "email", "code"]}
+                        searchFields={["firstAndLastName", "email", "code", "tel", "posteDto.libelle", "servicePointDto.libelle"]}
                         onEdit={(u) => handleEditClick(u)}
                         onDelete={(u) => setDeleteConfirm({ open: true, item: u, loading: false })}
                         extraFields={[
                             { label: "Code",   render: (u) => <span>{u.code}</span> },
                             { label: "Poste",  render: (u) => <span>{u.posteDto?.libelle}</span> },
+                            { label: "Rôle",   render: (u) => (
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                                    {getRoleBadges(u).map((b, i) => (
+                                        <Chip key={i} label={b.label} size="small" sx={{ backgroundColor: b.bg, color: b.color, fontWeight: 700, fontSize: "0.72rem", height: 22 }} />
+                                    ))}
+                                </div>
+                            )},
                             { label: "Statut", render: (u) => <Chip label={u.deleted ? (u.rattached ? "En attente" : "Désactivé") : "Actif"} size="small" color={u.deleted ? (u.rattached ? "warning" : "error") : "success"} /> },
                         ]}
                     />

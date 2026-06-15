@@ -454,7 +454,7 @@ const PointsServices = (props) => {
             placeholder: "Ex: Agence de Tokoin",
         },
         {
-            key: "description", label: "Description", fullWidth: false,
+            key: "description", label: "Description", type: "textarea", fullWidth: true,
             placeholder: "Description du point de service",
         },
         {
@@ -573,19 +573,21 @@ const PointsServices = (props) => {
                             </div>
 
                             {/* Description */}
-                            <div>
+                            <div style={{ gridColumn: "1 / -1" }}>
                                 <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>
                                     Description
                                 </label>
-                                <input
+                                <textarea
                                     value={editForm.description}
                                     onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))}
                                     placeholder="Description du point de service"
+                                    rows={3}
                                     style={{
-                                        width: "100%", boxSizing: "border-box",
+                                        width: "100%", boxSizing: "border-box", resize: "vertical",
                                         border: "1.5px solid #e2e8f0",
-                                        borderRadius: 9, padding: "10.5px 14px",
-                                        fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40,
+                                        borderRadius: 9, padding: "9px 12px",
+                                        fontSize: 13, outline: "none", background: "#fff", color: "#1e293b",
+                                        whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "inherit",
                                     }}
                                     onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }}
                                     onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }}
@@ -888,6 +890,7 @@ const PointsServices = (props) => {
                 {viewMode === "list" ? (
                     <ConfigTable
                         items={filteredItems}
+                        exportClassName="app-ps"
                         columns={[
                             { id: "libelle",      label: "Intitulé",    sortable: true,  minWidth: 150, render: (sp) => sp.deleted ? <i style={{ color: "lightgray" }}>{sp.libelle}</i> : sp.libelle },
                             { id: "description",  label: "Description", sortable: true,  minWidth: 180, render: (sp) => sp.deleted ? <i style={{ color: "lightgray" }}>{sp.description}</i> : sp.description },
@@ -918,7 +921,8 @@ const PointsServices = (props) => {
                         subtitleField="description"
                         badgeField="type"
                         badgeColorMap={{ DIRECTION: "#6D28D9", AGENCE: "#065F46", GUICHET: "#B45309" }}
-                        searchFields={["libelle", "description"]}
+                        searchFields={["libelle", "description", "type"]}
+                        filters={[{ id: "type", label: "Tous les types", options: [{ value: "DIRECTION", label: "Direction" }, { value: "AGENCE", label: "Agence" }, { value: "GUICHET", label: "Guichet" }], filterFn: (row, val) => row.type === val }]}
                         onEdit={(sp) => handleEditClick(sp)({ preventDefault: () => {} })}
                         onDelete={(sp) => handleModal({ preventDefault: () => {} }, sp)}
                         extraFields={[{ label: "Lié à", render: (sp) => directionsMap[sp.direction_id] ?? "-" }]}

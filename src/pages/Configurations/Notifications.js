@@ -318,6 +318,7 @@ const Notifications = (props) => {
                 </Box>
                 {viewMode === "list" ? (
                     <ConfigTable items={filteredItems}
+                        exportClassName="app-notification"
                         columns={[
                             { id: "firstAndLastName", label: "Nom et Prénoms", sortable: true,  minWidth: 180 },
                             { id: "email",            label: "Email",          sortable: true,  minWidth: 180 },

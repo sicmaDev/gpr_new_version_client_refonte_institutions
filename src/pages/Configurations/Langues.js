@@ -83,7 +83,7 @@ const Langues = (props) => {
     // ── Ajout multiple ────────────────────────────────────────────────────
     const addFields = [
         { key: "libelle",     label: "Intitulé",    required: true, fullWidth: false, placeholder: "Ex: Français, Fon, Goun..." },
-        { key: "description", label: "Description", fullWidth: false, placeholder: "Description de la langue" },
+        { key: "description", label: "Description", type: "textarea", fullWidth: true, placeholder: "Description de la langue" },
     ];
     const handleModalSubmit = async (items) => {
         setAddLoading(true);
@@ -157,9 +157,9 @@ const Langues = (props) => {
                                 <input value={editForm.libelle} onChange={(e) => { setEditForm(p => ({ ...p, libelle: e.target.value })); setEditErrors(p => ({ ...p, libelle: "" })); }} placeholder="Ex: Français" style={{ width: "100%", boxSizing: "border-box", border: editErrors.libelle ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 }} onFocus={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#e2e8f0"; }} />
                                 {editErrors.libelle && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.libelle}</div>}
                             </div>
-                            <div>
+                            <div style={{ gridColumn: "1 / -1" }}>
                                 <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Description</label>
-                                <input value={editForm.description} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Description de la langue" style={{ width: "100%", boxSizing: "border-box", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 }} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                <textarea value={editForm.description} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Description de la langue" rows={3} style={{ width: "100%", boxSizing: "border-box", resize: "vertical", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "9px 12px", fontSize: 13, outline: "none", background: "#fff", color: "#1e293b", whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "inherit" }} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                             </div>
                         </div>
                     </DialogContent>
@@ -230,6 +230,7 @@ const Langues = (props) => {
                 {/* ── Vue tableau / cartes ── */}
                 {viewMode === "list" ? (
                     <ConfigTable items={filteredItems}
+                        exportClassName="app-langues"
                         columns={[
                             { id: "libelle",     label: "Intitulé",    sortable: true,  minWidth: 180 },
                             { id: "description", label: "Description", sortable: true,  minWidth: 220 },

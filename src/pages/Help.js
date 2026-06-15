@@ -1,12 +1,10 @@
 import React, { useState } from 'react'
-import { Button, Card, CardActions, CardContent, Typography } from '@mui/material';
-import doc from "../assets/images/guide_web_provisoire.pdf"
+import { Box, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import { connect } from "react-redux";
-import Faq from "react-faq-component";
 import { helpChanged } from '../redux/actions/HelpActions';
 import { HelpApi, downloadFillesApi } from '../apis/HelpApi';
 import { useEffect } from 'react';
-import { guessExtension, loadItemFromSessionStorage } from '../Utils/utils';
+import { loadItemFromSessionStorage } from '../Utils/utils';
 import { notify } from '../Utils/alert';
 import CloseIcon from "@mui/icons-material/Close";
 import AppBar from "@mui/material/AppBar";
@@ -14,27 +12,31 @@ import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Dialog from "@mui/material/Dialog";
 import Slide from "@mui/material/Slide";
-import DownloadIcon from '@mui/icons-material/Download';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import FileTypeIcon from '../components/shared/FileTypeIcon';
 import { KTApp } from "../Utils/blockui";
 
-const styles = {
-    // bgColor: 'white',
-    titleTextSize: '24px',
-    titleTextColor: "#1e2188",
-    rowTitleColor: "black",
-    rowTitleTextSize: '18px',
-    rowContentTextSize: '14px',
-    // rowContentColor: 'grey',
-    // arrowColor: "red",
+const sectionHeaderSx = {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "16px 20px",
+    borderRadius: "12px",
+    background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)",
+    color: "#fff",
+    marginBottom: "20px",
 };
 
-const config = {
-    // animate: true,
-    // arrowIcon: "V",
-    // tabFocus: true
+const cardPanelSx = {
+    background: "#fff",
+    borderRadius: "14px",
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 2px 10px rgba(15,23,42,0.05)",
+    padding: "20px",
+    marginBottom: "24px",
 };
-
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
@@ -58,9 +60,6 @@ const Help = (props) => {
     }, []);
     let mode = loadItemFromSessionStorage("app-mode") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-mode")) : undefined;
 
-    function getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-    }
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -73,72 +72,43 @@ const Help = (props) => {
     let faqs = props.help?.faqs ? props.help.faqs : [];
     let docs = props.help?.faqs ? props.help.docs : [];
 
-    var lignes = []
-    for (let i = 0; i < faqs.length; i++) {
-        lignes.push({ title: faqs[i]["libelle"], content: faqs[i]["answer"], })
-    }
-    const data = {
-        title: "FAQ (Comment ça marche ? )",
-        rows: lignes
-    };
-
     let documents = docs.map((doc) => {
-        let couleurs = ["#333300", "#00cc00", "#99003d", "#3333ff", "#666666", "#253858", "#00875A", "#36B37E", "#FFC400", "#FF8B00", "#FF5630", "#5243AA", "#0052CC", "#00B8D9"]
-        let fond = couleurs[getRandomInt(couleurs.length)];
-        // let fond = couleurs[index % couleurs.length];
-        let icon = guessExtension(doc);
         return (
-
-            <div className='col l3 s12 m6 df mt-1' style={{}}>
-                <img
-                    className="recent-file"
-                    src={icon}
-                    height="28"
-                    width="24"
-                    alt=""
-                />
-                <Typography style={{ fontWeight: "normal", color: "#0052CC", cursor: "pointer", marginLeft: "8px", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", height: "35px", width: "200px" }}
-                    onClick={(e) => {
-                        if (mode === 1) {
-                            downloadFillesApi(doc.id, doc.name)
-                        } else {
-                            notify("Passez en mode Online pour télécharger ", "info")
-                        }
-
-                    }}>
+            <Box
+                key={doc.id}
+                onClick={() => {
+                    if (mode === 1) {
+                        downloadFillesApi(doc.id, doc.name)
+                    } else {
+                        notify("Passez en mode Online pour télécharger ", "info")
+                    }
+                }}
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    border: "1px solid #e2e8f0",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    "&:hover": { background: "#f8fafc", borderColor: "#3b3fd8" },
+                }}
+            >
+                <FileTypeIcon attachment={doc} size={36} />
+                <Typography
+                    sx={{
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "#1e2188",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                    }}
+                >
                     {doc.libelle}
                 </Typography>
-                {/* <Card>
-                    {/* <CardContent style={{ borderLeft:"70px solid "+fond }}> */}
-                {/* <CardContent style={{ borderLeft:"70px solid "+fond }}>
-                    
-                        <Typography  style={{fontWeight:"bold" }}>
-                            {doc.libelle}
-                        </Typography>
-
-                        <Typography className='mt-15'  style={{display:"flex" }}> */}
-                {/* <VisibilityIcon 
-                                className='mr-10'
-                                onClick={(e) => {
-                      
-                                    if (mode === 1) {
-                                        handleClickOpen();
-                                    } else {
-                                        notify("Passez en mode Online pour télécharger ","info")
-                                    }
-                                      
-                                }}
-                            /> */}
-                {/* <DownloadIcon
-                               
-                            />  
-                        </Typography>
-                    
-                    </CardContent>
-                    
-                </Card>  */}
-            </div>
-
+            </Box>
         );
     });
 
@@ -148,34 +118,58 @@ const Help = (props) => {
         <>
             <div className="col s12">
                 <div className="container">
-                    <section className="tabs-vertical mt-1 section">
-                        <div className="row">
-                            <div className="col l12 s12 pb-5">
-                                <div className="card-panel pb-5">
-                                    <div className="row">
-                                        <div className="col s12">
-                                            <h6 className="card-title text-bold">
-                                                Ressources disponibles
-                                            </h6>
-                                        </div>
+                    <Box sx={sectionHeaderSx}>
+                        <FolderOpenIcon />
+                        <Typography sx={{ fontSize: "18px", fontWeight: 700 }}>
+                            Ressources disponibles
+                        </Typography>
+                    </Box>
 
-                                        {documents}
-                                        <div className="col s12 mt-4">
-                                            <div>
-                                                <Faq
-                                                    data={data}
-                                                    styles={styles}
-                                                    config={config}
-                                                />
-                                            </div>
-                                        </div>
+                    <Box sx={cardPanelSx}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" }, gap: "14px" }}>
+                            {documents}
+                        </Box>
+                    </Box>
 
-                                    </div>
-                                </div>
-                            </div>
+                    <Box sx={sectionHeaderSx}>
+                        <HelpOutlineIcon />
+                        <Typography sx={{ fontSize: "18px", fontWeight: 700 }}>
+                            FAQ (Comment ça marche ?)
+                        </Typography>
+                    </Box>
 
-                        </div>
-                    </section>
+                    <Box sx={cardPanelSx}>
+                        {faqs.map((faq, index) => (
+                            <Accordion
+                                key={index}
+                                disableGutters
+                                elevation={0}
+                                sx={{
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "10px !important",
+                                    marginBottom: "10px",
+                                    "&:before": { display: "none" },
+                                    "&.Mui-expanded": { borderColor: "#3b3fd8" },
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon sx={{ color: "#3b3fd8" }} />}
+                                    sx={{
+                                        "& .MuiAccordionSummary-content": { margin: "10px 0" },
+                                    }}
+                                >
+                                    <Typography sx={{ fontSize: "15px", fontWeight: 600, color: "#1e2188" }}>
+                                        {faq.libelle}
+                                    </Typography>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <Typography sx={{ fontSize: "14px", color: "#475569" }}>
+                                        {faq.answer}
+                                    </Typography>
+                                </AccordionDetails>
+                            </Accordion>
+                        ))}
+                    </Box>
                 </div>
 
             </div>

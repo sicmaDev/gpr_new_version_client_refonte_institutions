@@ -485,7 +485,7 @@ const Bot = (props) => {
                                     </div>
                                 )},
                             ]}
-                            searchFields={["name", "number"]}
+                            searchFields={["name", "number", "message"]}
                             defaultSort="name"
                         />
                     </div>

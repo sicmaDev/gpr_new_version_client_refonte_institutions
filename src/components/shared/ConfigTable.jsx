@@ -19,7 +19,12 @@ import FilterListIcon from "@mui/icons-material/FilterList";
  *     { id, label, options: [{value, label}], filterFn: (row, value) => bool }
  *   defaultSort  : string — id de la colonne de tri par défaut
  *   rowsPerPageOptions : array — options de pagination (défaut: [10,15,25,50])
+ *   exportClassName : string — classe à poser sur le <table> pour l'export Excel (table2XLSX)
  */
+// Supporte les chemins imbriqués type "posteDto.libelle"
+const getFieldValue = (row, field) =>
+  field.split(".").reduce((acc, key) => (acc == null ? acc : acc[key]), row);
+
 const selectSx = {
   height: 38,
   fontSize: "0.85rem",
@@ -38,6 +43,7 @@ const ConfigTable = ({
   filters = [],
   defaultSort = "",
   rowsPerPageOptions = [10, 15, 25, 50],
+  exportClassName = "",
 }) => {
   const [search, setSearch]       = useState("");
   const [filterValues, setFilterValues] = useState(
@@ -54,7 +60,7 @@ const ConfigTable = ({
       // Recherche texte
       if (q && searchFields.length > 0) {
         const match = searchFields.some((field) =>
-          String(row[field] ?? "").toLowerCase().includes(q)
+          String(getFieldValue(row, field) ?? "").toLowerCase().includes(q)
         );
         if (!match) return false;
       }
@@ -144,7 +150,7 @@ const ConfigTable = ({
         elevation={0}
         sx={{ border: "1px solid #F1F5F9", borderRadius: "14px", overflow: "hidden" }}
       >
-        <Table size="small" stickyHeader>
+        <Table size="small" stickyHeader {...(exportClassName ? { id: "as-react-datatable", className: exportClassName } : {})}>
           <TableHead>
             <TableRow>
               {columns.map((col) => (

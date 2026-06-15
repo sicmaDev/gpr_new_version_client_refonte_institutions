@@ -144,3 +144,64 @@ table.responsive-table tbody::-webkit-scrollbar {
   0% { transform: translateX(0); }
   100% { transform: translateX(-100%); }
 }
+
+/* ── Animations page de connexion ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-16px) rotate(2deg); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes blobMove {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.15); }
+  66% { transform: translate(-25px, 25px) scale(0.92); }
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+.animate-fade-up {
+  animation: fadeInUp 0.7s ease-out both;
+}
+.animate-blob {
+  animation: blobMove 18s ease-in-out infinite;
+}
+.animate-gradient-bg {
+  background-size: 250% 250%;
+  animation: gradientShift 14s ease infinite;
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes spinSlowReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+.animate-spin-slow {
+  animation: spinSlow 28s linear infinite;
+}
+.animate-spin-slow-reverse {
+  animation: spinSlowReverse 22s linear infinite;
+}
+
+/* ── Neutralise le style Materialize (bordure inférieure grise) sur les champs des pages d'authentification ── */
+.gpr-auth input[type="text"].validate,
+.gpr-auth input[type="email"].validate,
+.gpr-auth input[type="password"].validate,
+.gpr-auth input[type="tel"].validate {
+  border: none !important;
+  box-sizing: border-box !important;
+  height: 100% !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}

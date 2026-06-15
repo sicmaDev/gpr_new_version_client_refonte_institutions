@@ -10,6 +10,11 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SmsOutlinedIcon from '@mui/icons-material/SmsOutlined';
+import LinkIcon from '@mui/icons-material/Link';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import SendIcon from '@mui/icons-material/Send';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import {
     urlChange, smsErrors, libelleIdChanged, libelleMessageChanged, valuePwdChanged, libellePwdChanged, libelleReceiverChanged, libelleSenderChanged, valueIdChanged, valueSenderChanged, etatChanged
 } from "../../redux/actions/Configurations/SmsActions";
@@ -26,12 +31,23 @@ const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#4
 const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 });
 const textareaStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", minHeight: 80, fontFamily: "inherit", resize: "vertical" });
 
-const sectionTitleStyle = { fontSize: 12.5, fontWeight: 700, color: "#1e293b", margin: "4px 0 10px", lineHeight: 1.2 };
+const SectionTitle = ({ icon: Icon, title, subtitle }) => (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+        <Icon sx={{ fontSize: 16, color: "#3b3fd8" }} />
+        <Typography sx={{ fontSize: 12, fontWeight: 800, color: "#3b3fd8", textTransform: "uppercase", letterSpacing: "0.6px" }}>{title}</Typography>
+        {subtitle && <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{subtitle}</Typography>}
+    </Box>
+);
 
-const FieldWithHelp = ({ label, tooltip, value, onChange, error, type = "text", showToggle, show, onToggle }) => (
+const FieldCheck = ({ valid }) => valid
+    ? <CheckCircleIcon sx={{ fontSize: 14, color: "#16a34a", verticalAlign: "middle", ml: 0.6 }} />
+    : null;
+
+const FieldWithHelp = ({ label, tooltip, value, onChange, error, valid, type = "text", showToggle, show, onToggle }) => (
     <Box>
         <label style={labelStyle}>
-            {label}{" "}
+            {label}
+            <FieldCheck valid={valid} />{" "}
             {tooltip && <Tooltip title={tooltip}><HelpOutlineIcon sx={{ fontSize: 14, color: "#94a3b8", verticalAlign: "middle" }} /></Tooltip>}
         </label>
         <Box sx={{ position: "relative" }}>
@@ -257,6 +273,16 @@ const Sms = (props) => {
 
     }
 
+    const validUrl = !!props.url;
+    const validLibelleId = !!props.libelleId;
+    const validValueId = !!props.valueId;
+    const validLibellePwd = !!props.libellePwd;
+    const validValuePwd = !!props.valuePwd;
+    const validLibelleSender = !!props.libelleSender;
+    const validValueSender = !!props.valueSender;
+    const validLibelleReceiver = !!props.libelleReceiver;
+    const validLibelleMessage = !!props.libelleMessage;
+
     return (
         <div className="card-panel pb-5">
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
@@ -274,62 +300,63 @@ const Sms = (props) => {
 
                     {/* Colonne gauche */}
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <SectionTitle icon={LinkIcon} title="Information Générale" />
                         <Box>
-                            <Typography sx={sectionTitleStyle}>Information générale</Typography>
-                            <label style={labelStyle}>API URL (url)</label>
+                            <label style={labelStyle}>API URL (url) <FieldCheck valid={validUrl} /></label>
                             <input type="url" value={props.url || ""} onChange={(e) => props.urlChange(e.target.value)} placeholder="https://api.fournisseur.com/sms"
                                 style={inputStyle(props.smsErrors.url)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.smsErrors.url ? "#ef4444" : "#e2e8f0"; }} />
                             {props.smsErrors.url && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.smsErrors.url}</div>}
                         </Box>
 
-                        <Box>
-                            <Typography sx={sectionTitleStyle}>Identification du compte SMS Banking</Typography>
-                            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-                                <FieldWithHelp label="Libellé paramètre id" tooltip="Il s'agit du nom du paramètre représentant l'identifiant de votre compte de SMS Banking."
-                                    value={props.libelleId} onChange={(e) => props.libelleIdChanged(e.target.value)} error={props.smsErrors.libelle_id} />
-                                <FieldWithHelp label="Valeur id" tooltip="Il s'agit de la valeur de votre identifiant de votre compte de SMS Banking."
-                                    value={props.valueId} onChange={(e) => props.valueIdChanged(e.target.value)} error={props.smsErrors.value_id} />
-                            </Box>
-                        </Box>
-
+                        <SectionTitle icon={VpnKeyIcon} title="Informations d'identification de votre compte SMS Banking" />
                         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-                            <FieldWithHelp label="Libellé paramètre mot de passe" tooltip="Il s'agit du nom du paramètre représentant le mot de passe de votre compte de SMS Banking."
-                                value={props.libellePwd} onChange={(e) => props.libellePwdChanged(e.target.value)} error={props.smsErrors.libelle_pwd}
+                            <FieldWithHelp label="Libellé paramètre id" tooltip="Nom du paramètre représentant l'identifiant de votre compte SMS Banking."
+                                value={props.libelleId} onChange={(e) => props.libelleIdChanged(e.target.value)} error={props.smsErrors.libelle_id} valid={validLibelleId} />
+                            <FieldWithHelp label="Valeur id" tooltip="Valeur de l'identifiant de votre compte SMS Banking."
+                                value={props.valueId} onChange={(e) => props.valueIdChanged(e.target.value)} error={props.smsErrors.value_id} valid={validValueId} />
+                        </Box>
+                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                            <FieldWithHelp label="Libellé paramètre mot de passe" tooltip="(Nom du paramètre représentant le mot de passe de votre compte SMS Banking.)"
+                                value={props.libellePwd} onChange={(e) => props.libellePwdChanged(e.target.value)} error={props.smsErrors.libelle_pwd} valid={validLibellePwd}
                                 showToggle show={showPassword1} onToggle={toggleShowPassword1} />
-                            <FieldWithHelp label="Valeur mot de passe" tooltip="Il s'agit de la valeur du mot de passe de votre compte de SMS Banking."
-                                value={props.valuePwd} onChange={(e) => props.valuePwdChanged(e.target.value)} error={props.smsErrors.value_pwd}
+                            <FieldWithHelp label="Valeur mot de passe" tooltip="(Valeur du mot de passe de votre compte SMS Banking.)"
+                                value={props.valuePwd} onChange={(e) => props.valuePwdChanged(e.target.value)} error={props.smsErrors.value_pwd} valid={validValuePwd}
                                 showToggle show={showPassword} onToggle={toggleShowPassword} />
                         </Box>
                     </Box>
 
                     {/* Colonne droite */}
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <Box>
-                            <Typography sx={sectionTitleStyle}>Émetteur SMS Banking</Typography>
-                            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-                                <FieldWithHelp label="Libellé paramètre émetteur" tooltip="Il s'agit du nom du paramètre représentant le sender de votre compte de SMS Banking."
-                                    value={props.libelleSender} onChange={(e) => props.libelleSenderChanged(e.target.value)} error={props.smsErrors.libelle_sender} />
-                                <FieldWithHelp label="Valeur émetteur" tooltip="Il s'agit de la valeur du sender de vos messages configuré auprès de votre fournisseur de SMS Banking."
-                                    value={props.valueSender} onChange={(e) => props.valueSenderChanged(e.target.value)} error={props.smsErrors.value_sender} />
-                            </Box>
+                        <SectionTitle icon={SendIcon} title="Informations sur l'émetteur SMS Banking" />
+                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                            <FieldWithHelp label="Libellé paramètre émetteur" tooltip="Nom du paramètre représentant le sender de votre compte SMS Banking."
+                                value={props.libelleSender} onChange={(e) => props.libelleSenderChanged(e.target.value)} error={props.smsErrors.libelle_sender} valid={validLibelleSender} />
+                            <FieldWithHelp label="Valeur émetteur" tooltip="Valeur du sender configuré auprès de votre fournisseur SMS Banking."
+                                value={props.valueSender} onChange={(e) => props.valueSenderChanged(e.target.value)} error={props.smsErrors.value_sender} valid={validValueSender} />
                         </Box>
 
-                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-                            <Box>
-                                <Typography sx={sectionTitleStyle}>Récepteur</Typography>
-                                <FieldWithHelp label="Libellé paramètre destinataire" tooltip="Il s'agit du nom du paramètre représentant le destinataire du message."
-                                    value={props.libelleReceiver} onChange={(e) => props.libelleReceiverChanged(e.target.value)} error={props.smsErrors.libelle_receiver} />
-                            </Box>
-                            <Box>
-                                <Typography sx={sectionTitleStyle}>Message</Typography>
-                                <FieldWithHelp label="Libellé paramètre message" tooltip="Il s'agit du nom du paramètre représentant le message à envoyer au client."
-                                    value={props.libelleMessage} onChange={(e) => props.libelleMessageChanged(e.target.value)} error={props.smsErrors.libelle_message} />
-                            </Box>
+                        <SectionTitle icon={ChatBubbleOutlineIcon} title="Informations sur le récepteur" />
+                        <Box>
+                            <FieldWithHelp label="Libellé paramètre destinataire" tooltip="Nom du paramètre représentant le destinataire du message."
+                                value={props.libelleReceiver} onChange={(e) => props.libelleReceiverChanged(e.target.value)} error={props.smsErrors.libelle_receiver} valid={validLibelleReceiver} />
+                        </Box>
+
+                        <SectionTitle icon={ChatBubbleOutlineIcon} title="Informations sur le message" />
+                        <Box>
+                            <FieldWithHelp label="Libellé paramètre message" tooltip="Nom du paramètre représentant le message à envoyer au client."
+                                value={props.libelleMessage} onChange={(e) => props.libelleMessageChanged(e.target.value)} error={props.smsErrors.libelle_message} valid={validLibelleMessage} />
                         </Box>
                     </Box>
                 </Box>
 
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5, mt: 3 }}>
+                <Box sx={{
+                    position: "sticky", bottom: 0, zIndex: 5, mt: 3, pt: 2, pb: 1,
+                    display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 2,
+                    background: "rgba(255,255,255,0.92)", backdropFilter: "blur(6px)", borderTop: "1px solid #e2e8f0",
+                }}>
+                    <Typography sx={{ fontSize: 12, color: "#94a3b8", mr: "auto" }}>
+                        Les champs marqués d'un <CheckCircleIcon sx={{ fontSize: 12, color: "#16a34a", verticalAlign: "middle" }} /> sont valides
+                    </Typography>
                     <LoadingButton
                         onClick={() => setShowTestModal(true)}
                         variant="outlined"

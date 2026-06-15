@@ -103,7 +103,7 @@ const ReclamationsAlertes = (props) => {
                     onClick={(e) => { e.stopPropagation(); history.push(getUrl(item)); }}
                     style={{ fontSize: "0.80rem", color: "#005081", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
                 >
-                    Traiter
+                    {item.status === "TREAT" ? "Mesurer" : "Traiter"}
                 </span>
             ),
         },

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import ReactDatatable from '@ashvin27/react-datatable';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -21,20 +21,27 @@ import { dashboardChanged, etat1Changed } from '../redux/actions/DashboardAction
 import { connect } from 'react-redux';
 import { DashboardApi } from '../apis/DahboardApi';
 import GaugeChart from 'react-gauge-chart';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SummarizeIcon from '@mui/icons-material/Summarize';
 import RedoIcon from '@mui/icons-material/Redo';
 import MenuIcon from '@mui/icons-material/Menu';
 import CircularProgress from '@mui/material/CircularProgress';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
-import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SettingsIcon from '@mui/icons-material/Settings';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import DnsIcon from '@mui/icons-material/Dns';
+import MemoryIcon from '@mui/icons-material/Memory';
+import SdStorageIcon from '@mui/icons-material/SdStorage';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { logs } from '../apis/Configurations/LogApi';
+import { systemPerformance } from '../apis/Configurations/ReportApi';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VISUAL CONSTANTS
@@ -51,6 +58,12 @@ const STATUS_MAP = {
   DESAPPROUVED:      { label: 'Désapprouvée',  color: '#dc2626', bg: '#fef2f2' },
 };
 
+const TYPE_BADGE_MAP = {
+  CLAIM:      { label: 'Réclamation',  color: '#f97316', bg: '#fff3e8' },
+  SUGGESTION: { label: 'Suggestion',   color: '#3b82f6', bg: '#eaebff' },
+};
+const typeBadge = (type) => TYPE_BADGE_MAP[type] || { label: 'Dénonciation', color: '#ef4444', bg: '#ffe8f0' };
+
 const gravityFromDays = (days) => {
   if (days > 5) return { label: 'Critique', color: '#dc2626', bg: '#fee2e2' };
   if (days > 3) return { label: 'Haute',    color: '#ea580c', bg: '#fff7ed' };
@@ -58,25 +71,179 @@ const gravityFromDays = (days) => {
   return             { label: 'Faible',   color: '#059669', bg: '#ecfdf5' };
 };
 
+// ── Performance du système — données simulées en attendant une API serveur ──
+
+// Anneau de progression circulaire (style "VUE D'ENSEMBLE")
+const RingGauge = ({ value, color, size = 110, thickness = 5 }) => (
+  <div style={{ position: 'relative', width: size, height: size }}>
+    <CircularProgress variant="determinate" value={100} size={size} thickness={thickness} style={{ color: '#f1f5f9', position: 'absolute', top: 0, left: 0 }} />
+    <CircularProgress variant="determinate" value={value} size={size} thickness={thickness} style={{ color, position: 'absolute', top: 0, left: 0 }} />
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ fontSize: 22, fontWeight: 800, color: '#0f172a' }}>{value}%</span>
+    </div>
+  </div>
+);
+
+// Statut (badge) déduit du taux d'utilisation
+const perfStatus = (pct) => (
+  pct >= 90 ? { label: 'Critique', color: '#dc2626', bg: '#fee2e2' } :
+  pct >= 70 ? { label: 'Élevé',    color: '#d97706', bg: '#fffbeb' } :
+              { label: 'Normal',   color: '#059669', bg: '#ecfdf5' }
+);
+
+const SystemPerformanceCard = () => {
+  const [perf, setPerf] = useState({
+    cpu: 0,
+    ramUsedGo: 0,
+    ramTotalGo: 0,
+    diskUsedGo: 0,
+    diskTotalGo: 0,
+  });
+
+  const refresh = () => {
+    systemPerformance()
+      .then((response) => setPerf(response.data))
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const ramPct = perf.ramTotalGo ? Math.round((perf.ramUsedGo / perf.ramTotalGo) * 100) : 0;
+  const diskPct = perf.diskTotalGo ? Math.round((perf.diskUsedGo / perf.diskTotalGo) * 100) : 0;
+
+  const metrics = [
+    { key: 'cpu',  label: 'Utilisation CPU', pct: perf.cpu,  sub: `${perf.cpu} % / 100 %`,                              color: '#06b6d4', Icon: SettingsIcon },
+    { key: 'ram',  label: 'Mémoire (RAM)',   pct: ramPct,    sub: `${perf.ramUsedGo} Go / ${perf.ramTotalGo} Go`,        color: '#8b5cf6', Icon: MemoryIcon },
+    { key: 'disk', label: 'Espace disque',   pct: diskPct,   sub: `${perf.diskUsedGo} Go / ${perf.diskTotalGo} Go`,      color: '#f59e0b', Icon: SdStorageIcon },
+  ];
+
+  return (
+    <div style={{ marginBottom: 16, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* En-tête */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <MonitorHeartIcon style={{ color: '#10b981', fontSize: 20 }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>Performance du système</div>
+            <div style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 2 }}>Suivi des ressources serveur en temps réel</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#059669', background: '#ecfdf5', padding: '6px 14px', borderRadius: 20 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981' }} /> En direct
+          </span>
+          <button
+            onClick={refresh}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#334155', background: '#fff', border: '1px solid #e2e8f0', padding: '7px 14px', borderRadius: 10, cursor: 'pointer' }}
+          >
+            <RefreshIcon style={{ fontSize: 16 }} /> Actualiser
+          </button>
+        </div>
+      </div>
+
+      {/* Vue d'ensemble — anneaux */}
+      <Card style={{ padding: 24, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 24 }}>
+          <DnsIcon style={{ fontSize: 16 }} /> Vue d'ensemble
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: 24 }}>
+          {metrics.map((m) => (
+            <div key={m.key} style={{ textAlign: 'center' }}>
+              <RingGauge value={m.pct} color={m.color} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12, fontSize: 13.5, fontWeight: 700, color: '#0f172a' }}>
+                <m.Icon style={{ fontSize: 16, color: m.color }} /> {m.label}
+              </div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{m.sub}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Détails des ressources */}
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', flex: 1 }}>
+        <div style={{ flex: '1 1 420px', display: 'flex' }}>
+          <Card style={{ padding: 24, flex: 1 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 20 }}>
+              Détails des ressources
+            </div>
+            {metrics.map((m, i) => {
+              const status = perfStatus(m.pct);
+              return (
+                <div key={m.key} style={{ marginBottom: i < metrics.length - 1 ? 22 : 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: `${m.color}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <m.Icon style={{ fontSize: 16, color: m.color }} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a' }}>{m.label}</div>
+                        <div style={{ fontSize: 11.5, color: '#94a3b8' }}>{m.sub}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: status.color, background: status.bg, padding: '3px 10px', borderRadius: 20 }}>{status.label}</span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', minWidth: 36, textAlign: 'right' }}>{m.pct}%</span>
+                    </div>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 6, background: '#f1f5f9', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${m.pct}%`, background: m.color, borderRadius: 6, transition: 'width 0.6s ease' }} />
+                  </div>
+                </div>
+              );
+            })}
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const LOG_TYPE_STYLE = {
+  ERROR:   { color: '#dc2626', bg: '#fee2e2', icon: ErrorOutlineIcon },
+  WARNING: { color: '#d97706', bg: '#fffbeb', icon: WarningAmberIcon },
+  INFO:    { color: '#0891b2', bg: '#ecfeff', icon: InfoOutlinedIcon },
+};
+
+const timeAgo = (dateStr) => {
+  if (!dateStr) return '-';
+  const diffMin = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+  if (diffMin < 1)  return "à l'instant";
+  if (diffMin < 60) return `il y a ${diffMin} min`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24)   return `il y a ${diffH} h`;
+  const diffJ = Math.floor(diffH / 24);
+  return `il y a ${diffJ} j`;
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // VISUAL SUB-COMPONENTS  (zero business logic)
 // ─────────────────────────────────────────────────────────────────────────────
 
 // KPI Card
-const StatCard = ({ value, label, sub, IconComp, iconColor, iconBg, loading }) => (
+const StatCard = ({ value, label, sub, inlineSub, IconComp, iconColor, iconBg, loading, progress }) => (
   <div className="bg-white rounded-xl p-5 border border-slate-100 flex-1 flex flex-col justify-between gap-3"
     style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.04)' }}>
     <div className="flex items-start justify-between">
       <div className="text-[11px] font-bold text-slate-400 tracking-[0.8px] uppercase">{label}</div>
-      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: iconBg }}>
-        <IconComp style={{ color: iconColor, fontSize: 18 }} />
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: iconBg || iconColor }}>
+        <IconComp style={{ color: iconBg ? iconColor : '#fff', fontSize: 18 }} />
       </div>
     </div>
     <div>
       <div className="text-[34px] font-bold text-slate-900 leading-none">
         {loading ? <CircularProgress size={24} style={{ color: iconColor }} /> : (value ?? '—')}
+        {!loading && inlineSub && <span className="text-sm font-semibold text-slate-400 ml-1.5">{inlineSub}</span>}
       </div>
       {sub && <div className="text-xs text-slate-400 mt-1.5">{sub}</div>}
+      {progress != null && !loading && (
+        <div className="w-full h-1.5 rounded-full bg-slate-100 mt-2.5 overflow-hidden">
+          <div className="h-full rounded-full transition-[width] duration-700 ease-in-out" style={{ width: `${Math.min(100, Math.max(0, progress))}%`, background: iconColor }} />
+        </div>
+      )}
     </div>
   </div>
 );
@@ -107,9 +274,12 @@ const Card = ({ children, style }) => (
   </div>
 );
 
-const CardHeader = ({ title, action }) => (
-  <div className="flex items-center justify-between mb-4">
-    <span className="text-sm font-bold text-slate-900">{title}</span>
+const CardHeader = ({ title, subtitle, action }) => (
+  <div className="flex items-start justify-between mb-4">
+    <div>
+      <div className="text-sm font-bold text-slate-900">{title}</div>
+      {subtitle && <div className="text-xs text-slate-400 mt-0.5">{subtitle}</div>}
+    </div>
     {action}
   </div>
 );
@@ -165,12 +335,18 @@ const DonutChart = ({ segments, loading }) => {
   );
 };
 
-const ChartLegend = ({ segments }) => (
-  <div className="flex flex-wrap gap-x-3.5 gap-y-1.5 justify-center">
-    {segments.filter(s => s.value > 0).map((s, i) => (
-      <div key={i} className="flex items-center gap-1.5">
-        <span className="w-2 h-2 rounded-full inline-block flex-shrink-0" style={{ background: s.color }} />
-        <span className="text-[11px] text-slate-500">{s.label}</span>
+// Légende latérale avec pourcentages ou effectifs (style "Traffic Sources")
+const SideLegend = ({ segments, total, showCount }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1, minWidth: 0 }}>
+    {segments.map((s, i) => (
+      <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <span style={{ width: 11, height: 11, borderRadius: '50%', background: s.color, display: 'inline-block', flexShrink: 0 }} />
+          <span style={{ fontSize: 13.5, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</span>
+        </div>
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', flexShrink: 0 }}>
+          {showCount ? s.value : `${total > 0 ? Math.round((s.value / total) * 100) : 0}%`}
+        </span>
       </div>
     ))}
   </div>
@@ -204,14 +380,19 @@ const HorizontalBars = ({ data, loading }) => {
     <div className="flex flex-col gap-3 pt-2">
       {data.map((item, i) => (
         <div key={i} className="flex items-center gap-2.5">
-          <div className="w-14 text-xs text-gray-700 text-right flex-shrink-0 font-medium">{item.label}</div>
-          <div className="flex-1 h-[18px] rounded bg-slate-100 overflow-hidden">
+          <span
+            className="text-[11px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0 text-center"
+            style={{ background: item.color + '1A', color: item.color }}
+          >
+            {item.label}
+          </span>
+          <div className="flex-1 h-[8px] rounded-full bg-slate-100 overflow-hidden">
             <div
-              className="h-full rounded transition-[width] duration-700 ease-in-out"
+              className="h-full rounded-full transition-[width] duration-700 ease-in-out"
               style={{ background: item.color, width: `${(item.value / max) * 100}%` }}
             />
           </div>
-          <div className="w-6 text-xs text-gray-500 text-right font-semibold">{item.value}</div>
+          <div className="w-6 text-xs text-gray-700 text-right font-bold">{item.value}</div>
         </div>
       ))}
     </div>
@@ -221,7 +402,7 @@ const HorizontalBars = ({ data, loading }) => {
 // Claim list row (récents + en retard)
 const ClaimRow = ({ item, showGravity }) => {
   const prefix = item.type === 'CLAIM' ? 'REC' : 'DEN';
-  const code   = `${prefix}-${item.claimCode}`;
+  const code   = item.claimCodeClient || `${prefix}-${item.claimCode}`;
   const st     = STATUS_MAP[item.status] || { label: item.status || '—', color: '#64748b', bg: '#f8fafc' };
   const grav   = gravityFromDays(item.retardDay || 0);
   const date   = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short' }).format(new Date(item.receiptDateTime));
@@ -291,20 +472,28 @@ const Dashboard = (props) => {
   const hbt  = (user.posteDto.habilitations).split(',');
   const addR = user.additionalRole;
 
+  // ── Activité récente (logs système) — vue admin H12 ────────────────────
+  const [recentLogs, setRecentLogs] = useState([]);
+  useEffect(() => {
+    if (hbt.includes('H12')) {
+      logs().then(({ data }) => setRecentLogs((data.content || []).slice(0, 6)))
+        .catch(() => setRecentLogs([]));
+    }
+  }, []);
+
   // ── Config localStorage data (preserved exactly) ───────────────────────
-  let ps, postes, langues, objets, recours, utilisateurs, supports, produits;
+  let ps, postes, langues, objets, utilisateurs, supports, produits;
   try {
     postes       = JSON.parse(loadItemFromLocalStorage('app-postes'));
     ps           = JSON.parse(loadItemFromLocalStorage('app-ps'));
     langues      = JSON.parse(loadItemFromLocalStorage('app-langues'));
     objets       = JSON.parse(loadItemFromLocalStorage('app-objets'));
-    recours      = JSON.parse(loadItemFromLocalStorage('app-recours'));
     utilisateurs = JSON.parse(loadItemFromLocalStorage('app-users'));
     supports     = JSON.parse(loadItemFromLocalStorage('app-supports'));
     produits     = JSON.parse(loadItemFromLocalStorage('app-produits'));
   } catch {
     postes = []; ps = []; langues = []; objets = [];
-    recours = []; utilisateurs = []; supports = []; produits = [];
+    utilisateurs = []; supports = []; produits = [];
   }
 
   // ── Gauge computation (preserved exactly) ──────────────────────────────
@@ -347,9 +536,10 @@ const Dashboard = (props) => {
   // ── Derived display values (from props.dashboard.* only — no invention) ─
   const loading     = props.etat1 === false;
   const total       = props.dashboard?.plainteSuggest        ?? 0;
-  const treated     = props.dashboard?.claimsTreat           ?? 0;
-  const affected    = props.dashboard?.claimsAffected        ?? 0;
+  const treated     = props.dashboard?.totalTreat            ?? 0;
+  const affected    = props.dashboard?.totalAffected         ?? 0;
   const overdue     = props.dashboard?.TotalclaimDenunRetard ?? 0;
+  const awaitingMeasure = props.dashboard?.claimsAwaitingMeasure ?? 0;
   const claimsCount = props.dashboard?.claims                ?? 0;
   const denUnsCount = props.dashboard?.denuns                ?? 0;
   const suggestCount= props.dashboard?.suggest               ?? 0;
@@ -378,8 +568,6 @@ const Dashboard = (props) => {
   const gMoyen  = content.filter(i => i.gravity === 'Moyen' || i.gravity === 'medium' || (!i.gravity && (i.retardDay || 0) > 2 && (i.retardDay || 0) <= 5)).length;
   const gGrave  = content.filter(i => i.gravity === 'Grave' || i.gravity === 'high' || i.gravity === 'critical' || (!i.gravity && (i.retardDay || 0) > 5)).length;
 
-  // Recent items — claimDenunRetard sorted by receiptDateTime desc, first 6
-  const recentItems  = [...content].sort((a, b) => new Date(b.receiptDateTime) - new Date(a.receiptDateTime)).slice(0, 6);
   // Overdue items — sorted by retardDay desc, first 5
   const overdueItems = [...content].sort((a, b) => (b.retardDay || 0) - (a.retardDay || 0)).slice(0, 5);
 
@@ -421,7 +609,8 @@ const Dashboard = (props) => {
     </Card>
   );
 
-  const page = { padding: '24px 24px 48px', background: '#f8fafc', minHeight: '100vh' };
+  const page = { background: '#f8fafc', minHeight: '100vh' };
+  const pageClass = 'px-3 pt-3 pb-8 sm:px-6 sm:pt-6 sm:pb-12';
   const seeAll = (to, label = 'Voir tout') => (
     <NavLink to={to} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: '#005081', fontWeight: 600 }}>
       {label} <ArrowForwardIcon style={{ fontSize: 14 }} />
@@ -444,7 +633,7 @@ const Dashboard = (props) => {
   return hbt.includes('H12') ? (
 
     /* ════════════════════════════ VUE ADMINISTRATION ════════════════════ */
-    <div style={page}>
+    <div className={pageClass} style={page}>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 28 }}>
@@ -455,7 +644,7 @@ const Dashboard = (props) => {
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
         <StatCard value={`${compte} / 7`}                 label="Modules configurés"    sub="modules requis"    IconComp={SettingsIcon}             iconColor="#005081"  iconBg="#e0f0ff" loading={false} />
         <StatCard value={utilisateurs.length}              label="Utilisateurs"          sub="comptes déclarés"  IconComp={PersonOutlineOutlinedIcon} iconColor="#0891b2"  iconBg="#ecfeff" loading={false} />
         <StatCard value={Math.round((compte / 7) * 100) + '%'} label="Taux de config"  sub="progression totale" IconComp={TrendingUpIcon}           iconColor="#059669"  iconBg="#d1fae5" loading={false} />
@@ -470,120 +659,177 @@ const Dashboard = (props) => {
         />
       </div>
 
-      {/* Charts */}
-      <div className="row" style={{ marginBottom: 4 }}>
+      {/* Section : Configuration / Paramètres métier & Performance du système */}
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
 
-        {/* Donut état configuration */}
-        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
-          <Card>
-            <CardHeader title="État de configuration" />
-            <DonutChart segments={[
-              { label: 'Configuré',  value: compte,     color: '#10b981' },
-              { label: 'Manquant',   value: 7 - compte, color: '#ef4444' },
-            ]} loading={false} />
-            <ChartLegend segments={[
-              { label: 'Configuré',  value: compte,     color: '#10b981' },
-              { label: 'Manquant',   value: 7 - compte, color: '#ef4444' },
-            ]} />
+        {/* Configuration & Paramètres métier */}
+        <div style={{ flex: '1 1 480px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Donut état configuration */}
+          <Card style={{ padding: 28 }}>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>État de configuration</div>
+              <div style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 3 }}>Répartition des modules configurés</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ flex: '0 0 50%', minWidth: 0 }}>
+                <DonutChart segments={[
+                  { label: 'Configuré',  value: compte,     color: '#10b981' },
+                  { label: 'Manquant',   value: 7 - compte, color: '#ef4444' },
+                ]} loading={false} />
+              </div>
+              <SideLegend segments={[
+                { label: 'Configuré',  value: compte,     color: '#10b981' },
+                { label: 'Manquant',   value: 7 - compte, color: '#ef4444' },
+              ]} total={7} />
+            </div>
           </Card>
+
+          {/* Tableau configurations manquantes */}
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: '#e0f0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <SettingsIcon style={{ color: '#005081', fontSize: 18 }} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>Configurations à compléter</div>
+                <div style={{ fontSize: 12, color: '#64748b', marginTop: 1 }}>
+                  {pendingConfigs.length === 0
+                    ? 'Toutes les configurations sont complètes ✓'
+                    : `${pendingConfigs.length} module${pendingConfigs.length > 1 ? 's' : ''} en attente de configuration`}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', minWidth: 480, borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
+                  {['Module', 'Éléments', 'Statut', 'Action'].map(h => (
+                    <th key={h} style={{ textAlign: 'left', padding: '8px 12px', fontSize: 11, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {allConfigItems.map((item, i) => {
+                  const done = item.data.length > 0;
+                  return (
+                    <tr key={i} style={{ borderBottom: '1px solid #f8fafc', background: done ? 'transparent' : '#fffbf0' }}>
+                      <td style={{ padding: '11px 12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 6, background: item.color + '1a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <item.IconComp style={{ color: item.color, fontSize: 15 }} />
+                          </div>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>{item.label}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '11px 12px', fontSize: 13, color: '#64748b' }}>
+                        {item.data.length} élément{item.data.length !== 1 ? 's' : ''}
+                      </td>
+                      <td style={{ padding: '11px 12px' }}>
+                        <span style={{
+                          fontSize: 11, padding: '3px 9px', borderRadius: 20, fontWeight: 600,
+                          background: done ? '#d1fae5' : '#fee2e2',
+                          color:      done ? '#065f46' : '#dc2626',
+                        }}>
+                          {done ? '✓ Configuré' : '⚠ Manquant'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '11px 12px' }}>
+                        {!done && (
+                          <NavLink to={item.route} style={{ textDecoration: 'none' }}>
+                            <span style={{
+                              fontSize: 12, padding: '5px 12px', borderRadius: 7, fontWeight: 600,
+                              background: '#005081', color: 'white', cursor: 'pointer',
+                              display: 'inline-flex', alignItems: 'center', gap: 4,
+                            }}>
+                              Configurer <ArrowForwardIcon style={{ fontSize: 13 }} />
+                            </span>
+                          </NavLink>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            </div>
+          </Card>
+
         </div>
 
-        {/* Barres verticales — Ressources système */}
-        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
-          <Card>
-            <CardHeader title="Ressources système" />
-            <VerticalBars loading={false} data={[
-              { label: 'Postes',    value: postes.length,    color: '#3b82f6' },
-              { label: 'Langues',   value: langues.length,   color: '#8b5cf6' },
-              { label: 'Supports',  value: supports.length,  color: '#10b981' },
-              { label: 'Produits',  value: produits.length,  color: '#f59e0b' },
-            ]} />
-          </Card>
-        </div>
-
-        {/* Barres horizontales — Paramètres métier */}
-        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
-          <Card>
-            <CardHeader title="Paramètres métier" />
-            <HorizontalBars loading={false} data={[
-              { label: 'Utilisateurs', value: utilisateurs.length, color: '#3b82f6' },
-              { label: 'Points srv.',  value: ps.length,           color: '#8b5cf6' },
-              { label: 'Objets',       value: objets.length,       color: '#f59e0b' },
-              { label: 'Recours',      value: recours.length,      color: '#ef4444' },
-            ]} />
-          </Card>
+        {/* Performance du système (données simulées en attendant l'API serveur) */}
+        <div style={{ flex: '2 1 600px' }}>
+          <SystemPerformanceCard />
         </div>
 
       </div>
 
-      {/* Tableau configurations manquantes */}
-      <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+      {/* Activité récente & Alertes */}
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 8, background: '#e0f0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <SettingsIcon style={{ color: '#005081', fontSize: 18 }} />
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>Configurations à compléter</div>
-            <div style={{ fontSize: 12, color: '#64748b', marginTop: 1 }}>
-              {pendingConfigs.length === 0
-                ? 'Toutes les configurations sont complètes ✓'
-                : `${pendingConfigs.length} module${pendingConfigs.length > 1 ? 's' : ''} en attente de configuration`}
-            </div>
-          </div>
+        {/* Activité récente — derniers logs système */}
+        <div style={{ flex: '1 1 480px', display: 'flex' }}>
+          <Card style={{ flex: 1 }}>
+            <CardHeader title="Activité récente" action={seeAll('/configurations/logs')} />
+            {recentLogs.length === 0 ? (
+              <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
+                Aucune activité récente
+              </div>
+            ) : (
+              recentLogs.map((log, i) => {
+                const style = LOG_TYPE_STYLE[(log.type || '').toUpperCase()] || LOG_TYPE_STYLE.INFO;
+                const Icon  = style.icon;
+                return (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0',
+                    borderBottom: i < recentLogs.length - 1 ? '1px solid #f8fafc' : 'none',
+                  }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8, background: style.bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    }}>
+                      <Icon style={{ color: style.color, fontSize: 15 }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {log.libelle || log.content || '—'}
+                      </div>
+                      {log.target && (
+                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{log.target}</div>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                      {timeAgo(log.createdAt)}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </Card>
         </div>
 
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-              {['Module', 'Éléments', 'Statut', 'Action'].map(h => (
-                <th key={h} style={{ textAlign: 'left', padding: '8px 12px', fontSize: 11, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {allConfigItems.map((item, i) => {
-              const done = item.data.length > 0;
-              return (
-                <tr key={i} style={{ borderBottom: '1px solid #f8fafc', background: done ? 'transparent' : '#fffbf0' }}>
-                  <td style={{ padding: '11px 12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 6, background: item.color + '1a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <item.IconComp style={{ color: item.color, fontSize: 15 }} />
-                      </div>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>{item.label}</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '11px 12px', fontSize: 13, color: '#64748b' }}>
-                    {item.data.length} élément{item.data.length !== 1 ? 's' : ''}
-                  </td>
-                  <td style={{ padding: '11px 12px' }}>
-                    <span style={{
-                      fontSize: 11, padding: '3px 9px', borderRadius: 20, fontWeight: 600,
-                      background: done ? '#d1fae5' : '#fee2e2',
-                      color:      done ? '#065f46' : '#dc2626',
-                    }}>
-                      {done ? '✓ Configuré' : '⚠ Manquant'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '11px 12px' }}>
-                    {!done && (
-                      <NavLink to={item.route} style={{ textDecoration: 'none' }}>
-                        <span style={{
-                          fontSize: 12, padding: '5px 12px', borderRadius: 7, fontWeight: 600,
-                          background: '#005081', color: 'white', cursor: 'pointer',
-                          display: 'inline-flex', alignItems: 'center', gap: 4,
-                        }}>
-                          Configurer <ArrowForwardIcon style={{ fontSize: 13 }} />
-                        </span>
-                      </NavLink>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {/* Alertes — dossiers en retard de traitement */}
+        <div style={{ flex: '2 1 600px', display: 'flex' }}>
+          <Card style={{ flex: 1 }}>
+            <CardHeader
+              title="Alertes (Dossiers en retard)"
+              action={overdue > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', background: '#fee2e2', padding: '3px 10px', borderRadius: 20 }}>
+                  {overdue}
+                </span>
+              )}
+            />
+            {overdueItems.length === 0 ? (
+              <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
+                Aucun dossier en retard ✓
+              </div>
+            ) : (
+              overdueItems.map((item, i) => <ClaimRow key={i} item={item} showGravity />)
+            )}
+          </Card>
+        </div>
+
       </div>
 
     </div>
@@ -591,62 +837,31 @@ const Dashboard = (props) => {
   ) : (
 
     /* ════════════════════════════ TABLEAU DE BORD ═══════════════════════ */
-    <div style={page}>
+    <div className={pageClass} style={page}>
 
       {/* ── Section 1 : Header ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
-        <div>
-          <h4 style={{ margin: '0 0 4px', fontWeight: 700, color: '#0f172a', fontSize: 22 }}>Tableau de bord</h4>
-          <p style={{ margin: 0, color: '#64748b', fontSize: 13.5 }}>Vue d'ensemble des dossiers et indicateurs clés</p>
-        </div>
-        {hbt.includes('H1') && (
-          <NavLink to="/reclamations/enregistrement" style={{ textDecoration: 'none' }}>
-            <div
-              style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: '#0f172a', color: 'white', padding: '10px 20px', borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'opacity 0.2s' }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-            >
-              <AddCircleOutlineIcon style={{ fontSize: 17 }} />
-              Nouveau dossier
-            </div>
-          </NavLink>
-        )}
+      <div style={{ marginBottom: 24 }}>
+        <h4 style={{ margin: '0 0 4px', fontWeight: 700, color: '#0f172a', fontSize: 22 }}>Tableau de bord</h4>
+        <p style={{ margin: 0, color: '#64748b', fontSize: 13.5 }}>Vue d'ensemble des dossiers et indicateurs clés</p>
       </div>
 
-      {/* ── Section 2 : 8 KPI cards (données exactes du dashboard) ── */}
-      <div className="row" style={{ marginBottom: 4 }}>
+      {/* ── Section 2 : KPI cards (données exactes du dashboard) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
 
-        <div className="col l3 m6 s12" style={{ marginBottom: 14 }}>
-          <StatCard value={total}       label="Réclamations, Dénonciations et Suggestions" sub="total dossiers"      IconComp={SummarizeIcon}             iconColor="#059db1" iconBg="#e0f8fa" loading={loading} />
-        </div>
-        <div className="col l3 m6 s12" style={{ marginBottom: 14 }}>
-          <StatCard value={claimsCount} label="Réclamations"                               IconComp={ReceiptLongIcon}            iconColor="#f96f00" iconBg="#fff3e8" loading={loading} />
-        </div>
-        <div className="col l3 m6 s12" style={{ marginBottom: 14 }}>
-          <StatCard value={treated}     label="Réclamations Traitées"                      IconComp={RecyclingIcon}              iconColor="#f96f00" iconBg="#fff3e8" loading={loading} />
-        </div>
-        <div className="col l3 m6 s12" style={{ marginBottom: 14 }}>
-          <StatCard value={affected}    label="Réclamations affectées"                     IconComp={RedoIcon}                  iconColor="#059db1" iconBg="#e0f8fa" loading={loading} />
-        </div>
-
-        <div className="col l3 m6 s12" style={{ marginBottom: 14 }}>
-          <StatCard value={denUnsCount} label="Dénonciations"                              IconComp={ReceiptLongIcon}            iconColor="#f9005e" iconBg="#ffe8f0" loading={loading} />
-        </div>
-        <div className="col l3 m6 s12" style={{ marginBottom: 14 }}>
-          <StatCard value={suggestCount}label="Suggestions"                               IconComp={InboxOutlinedIcon}          iconColor="#1e2188" iconBg="#eaebff" loading={loading} />
-        </div>
-        <div className="col l3 m6 s12" style={{ marginBottom: 14 }}>
-          <StatCard value={overdue}     label="En retard de traitement"                    IconComp={AssignmentLateIcon}         iconColor="#f9005e" iconBg="#ffe8f0" loading={loading} />
-        </div>
-        <div className="col l3 m6 s12" style={{ marginBottom: 14 }}>
-          <StatCard
-            value={props.dashboard?.tauxSatisfaction != null ? props.dashboard.tauxSatisfaction + ' %' : undefined}
-            label="Satisfaction cliente"
-            IconComp={SentimentSatisfiedAltIcon}
-            iconColor="#1e2188" iconBg="#eaebff"
-            loading={loading}
-          />
-        </div>
+        <StatCard value={total}          label="RSD enregistrées" sub={`${claimsCount} réc. · ${denUnsCount} dén. · ${suggestCount} sug.`} IconComp={SummarizeIcon} iconColor="#6366f1" loading={loading} />
+        <StatCard value={affected}        label="Affectés"                                   IconComp={RedoIcon}                  iconColor="#8b5cf6" loading={loading} />
+        <StatCard value={overdue}         label="En retard de traitement"                    IconComp={AssignmentLateIcon}        iconColor="#f43f5e" loading={loading} />
+        <StatCard value={treated}         label="Traités"                                    IconComp={RecyclingIcon}             iconColor="#10b981" loading={loading} />
+        <StatCard value={awaitingMeasure} label="En attente de mesure"                       IconComp={AccessTimeIcon}            iconColor="#f59e0b" loading={loading} />
+        <StatCard
+          value={props.dashboard?.tauxSatisfaction != null ? Number(props.dashboard.tauxSatisfaction).toFixed(1) + ' %' : undefined}
+          inlineSub={props.dashboard?.tauxSatisfaction != null ? `(${(Number(props.dashboard.tauxSatisfaction) / 100 * 5).toFixed(1)}/5)` : undefined}
+          progress={props.dashboard?.tauxSatisfaction != null ? Number(props.dashboard.tauxSatisfaction) : undefined}
+          label="Satisfaction réclamations"
+          IconComp={SentimentSatisfiedAltIcon}
+          iconColor="#0ea5e9"
+          loading={loading}
+        />
 
       </div>
 
@@ -655,30 +870,34 @@ const Dashboard = (props) => {
 
         <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
           <Card>
-            <CardHeader title="Par statut" />
-            <DonutChart segments={donutSegments} loading={loading} />
-            <ChartLegend segments={donutSegments} />
+            <CardHeader title="Par statut" subtitle="Répartition des dossiers" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ flex: '0 0 45%', minWidth: 0 }}>
+                <DonutChart segments={donutSegments} loading={loading} />
+              </div>
+              <SideLegend segments={donutSegments} total={donutSegments.reduce((s, i) => s + (i.value || 0), 0)} showCount />
+            </div>
           </Card>
         </div>
 
         <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
           <Card>
-            <CardHeader title="Par catégorie" />
+            <CardHeader title="Par catégorie" subtitle="Types de dossiers" />
             <VerticalBars loading={loading} data={[
-              { label: 'Réclamations',  value: claimsCount,  color: '#f96f00' },
-              { label: 'Dénonciations', value: denUnsCount,  color: '#f9005e' },
-              { label: 'Suggestions',   value: suggestCount, color: '#1e2188' },
+              { label: 'Réclamations',  value: claimsCount,  color: '#f97316' },
+              { label: 'Dénonciations', value: denUnsCount,  color: '#ef4444' },
+              { label: 'Suggestions',   value: suggestCount, color: '#3b82f6' },
             ]} />
           </Card>
         </div>
 
         <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
           <Card>
-            <CardHeader title="Par gravité (retards)" />
+            <CardHeader title="Par gravité" subtitle="Niveaux de criticité" />
             <HorizontalBars loading={loading} data={[
+              { label: 'Grave', value: gGrave,  color: '#dc2626' },
+              { label: 'Moyen', value: gMoyen,  color: '#f59e0b' },
               { label: 'Mineur', value: gMineur, color: '#10b981' },
-              { label: 'Moyen',  value: gMoyen,  color: '#f59e0b' },
-              { label: 'Grave',  value: gGrave,  color: '#dc2626' },
             ]} />
           </Card>
         </div>
@@ -688,72 +907,8 @@ const Dashboard = (props) => {
       {/* ── Section 4 : Listes dossiers ── */}
       <div className="row">
 
-        {/* ── Dossiers récents ── */}
-        <div className="col l6 m12 s12" style={{ marginBottom: 16 }}>
-          <Card>
-            <CardHeader
-              title="Dossiers récents"
-              action={
-                <NavLink to="/reclamations/liste" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: '#005081', fontWeight: 600 }}>
-                  Voir tout <ArrowForwardIcon style={{ fontSize: 14 }} />
-                </NavLink>
-              }
-            />
-            {loading ? (
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
-                <CircularProgress size={24} />
-              </div>
-            ) : recentItems.length === 0 ? (
-              <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
-                Aucun dossier récent
-              </div>
-            ) : (
-              recentItems.map((item, i) => {
-                const isRec = item.type === 'CLAIM';
-                const url   = isRec
-                  ? (item.status === 'TREAT' ? `/reclamations/mesure/${item.claimCode}` : `/reclamations/traitement/${item.claimCode}`)
-                  : `/denonciations/traitement/${item.claimCode}`;
-                const dateStr = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(item.receiptDateTime));
-                return (
-                  <NavLink key={i} to={url} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                    <div
-                      style={{ padding: '11px 0', borderBottom: i < recentItems.length - 1 ? '1px solid #f8fafc' : 'none', transition: 'background 0.15s', borderRadius: 6 }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                          <span style={{
-                            fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 700, flexShrink: 0,
-                            background: isRec ? '#fff3e8' : '#ffe8f0',
-                            color:      isRec ? '#f96f00' : '#f9005e',
-                          }}>
-                            {isRec ? 'Réclamation' : 'Dénonciation'}
-                          </span>
-                          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: '#005081', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {item.claimCodeClient}
-                            </span>
-                            <span style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '250px' }}>
-                              {item.objet?.libelle || item.objet || item.subject || item.content || "Non fourni par l'API"}
-                            </span>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                          <span style={{ fontSize: 11, color: '#94a3b8' }}>{dateStr}</span>
-                          <ArrowForwardIcon style={{ fontSize: 14, color: '#005081' }} />
-                        </div>
-                      </div>
-                    </div>
-                  </NavLink>
-                );
-              })
-            )}
-          </Card>
-        </div>
-
         {/* ── Dossiers en retard ── */}
-        <div className="col l6 m12 s12" style={{ marginBottom: 16 }}>
+        <div className="col l12 m12 s12" style={{ marginBottom: 16 }}>
           <Card>
             <CardHeader
               title={
@@ -778,11 +933,10 @@ const Dashboard = (props) => {
               </div>
             ) : (
               overdueItems.map((item, i) => {
-                const isRec = item.type === 'CLAIM';
-                const url   = isRec
+                const badge = typeBadge(item.type);
+                const url   = item.type === 'CLAIM'
                   ? (item.status === 'TREAT' ? `/reclamations/mesure/${item.claimCode}` : `/reclamations/traitement/${item.claimCode}`)
                   : `/denonciations/traitement/${item.claimCode}`;
-                const reçuStr = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(item.receiptDateTime));
                 return (
                   <NavLink key={i} to={url} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                     <div
@@ -794,10 +948,9 @@ const Dashboard = (props) => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                           <span style={{
                             fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 700, flexShrink: 0,
-                            background: isRec ? '#fff3e8' : '#ffe8f0',
-                            color:      isRec ? '#f96f00' : '#f9005e',
+                            background: badge.bg, color: badge.color,
                           }}>
-                            {isRec ? 'Réclamation' : 'Dénonciation'}
+                            {badge.label}
                           </span>
                           <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                             <span style={{ fontSize: 13, fontWeight: 600, color: '#005081', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -809,10 +962,10 @@ const Dashboard = (props) => {
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: '#f9005e', background: '#ffe8f0', padding: '2px 8px', borderRadius: 20 }}>
-                            {item.retardDay}
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: '#f9005e', background: '#ffe8f0', padding: '2px 8px', borderRadius: 20 }}>
+                            <AccessTimeIcon style={{ fontSize: 12 }} />
+                            {item.retardDay}j retard
                           </span>
-                          <span style={{ fontSize: 10, color: '#94a3b8' }}>{reçuStr}</span>
                           <ArrowForwardIcon style={{ fontSize: 14, color: '#005081' }} />
                         </div>
                       </div>

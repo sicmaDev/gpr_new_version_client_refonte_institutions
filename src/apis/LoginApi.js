@@ -9,6 +9,20 @@ const LOGIN_API = HOST + "api/v1/auth/authenticate"
 const RECEIVE_DATA_API = HOST + "api/v1/sync/allList"
 const SYNCHRON_DATA_API = HOST + "api/v1/sync/claim"
 const READ_LICENSE_INFO = HOST + "api/v1/auth/infoLicense";
+const FORGET_PASSWORD_API = HOST + "api/v1/auth/forget/password";
+
+export const forgetPassword = (email) => {
+    const config = {
+        method: 'post',
+        url: FORGET_PASSWORD_API,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        data: { email }
+    };
+    return axios(config);
+}
 
 export const LoginApi = (credentials, props,isLocked =false) => {
     const config = {

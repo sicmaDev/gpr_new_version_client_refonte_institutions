@@ -8,7 +8,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import {
     Tooltip, IconButton, Box, Typography, Dialog, DialogContent, DialogActions,
-    Button, Chip, FormControl, Select as MuiSelect, MenuItem, Checkbox, ListItemText, OutlinedInput
+    Button, Chip
 } from "@mui/material";
 import Stack from '@mui/material/Stack';
 import { PictureAsPdf, GridOn } from "@mui/icons-material";
@@ -33,7 +33,7 @@ import AddDuplicateFormModal from "../../components/shared/AddDuplicateFormModal
 
 import ViewModeToggle from "../../components/shared/ViewModeToggle";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import BadgeIcon from "@mui/icons-material/Badge";
+import Select from "react-select";
 
 const HAB_KEYS = ["H1","H2","H3","H4","H5","H6","H7","H8","H9","H10","H11","H12","H13","H14"];
 
@@ -66,6 +66,43 @@ const toHabArray = (habs) => {
     return [];
 };
 
+const HAB_OPTIONS = HAB_KEYS.map(h => ({ value: h, label: h, description: HAB_DESCRIPTIONS[h], color: getHabilitationColor(h) }));
+
+const habSelectStyles = {
+    control: (base, state) => ({ ...base, minHeight: 40, borderRadius: 9, borderColor: state.isFocused ? "#3b3fd8" : "#e2e8f0", borderWidth: 1.5, boxShadow: "none", "&:hover": { borderColor: "#3b3fd8" } }),
+    valueContainer: base => ({ ...base, padding: "4px 8px", gap: 4 }),
+    placeholder: base => ({ ...base, fontSize: 14, color: "#94a3b8" }),
+    input: base => ({ ...base, margin: 0, padding: 0 }),
+    indicatorSeparator: () => ({ display: "none" }),
+    menuPortal: base => ({ ...base, zIndex: 9999 }),
+    menu: base => ({ ...base, zIndex: 9999, borderRadius: 8, overflow: "hidden", boxShadow: "0 8px 24px rgba(15,23,42,0.12)" }),
+    menuList: base => ({ ...base, padding: 4, maxHeight: 280 }),
+};
+
+const HabMultiValue = ({ data, removeProps }) => (
+    <div style={{
+        display: "flex", alignItems: "center", gap: 4, margin: 2, padding: "2px 6px 2px 8px",
+        borderRadius: 6, backgroundColor: `${data.color}1a`, color: data.color, fontWeight: 700, fontSize: 12,
+    }}>
+        <span>{data.label}</span>
+        <span {...removeProps} style={{ cursor: "pointer", fontSize: 14, lineHeight: 1, color: `${data.color}99` }}>×</span>
+    </div>
+);
+
+const HabOption = ({ data, innerProps, innerRef, isSelected, isFocused }) => (
+    <div ref={innerRef} {...innerProps} style={{
+        display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 10px", cursor: "pointer", borderRadius: 6,
+        backgroundColor: isFocused ? "#f8fafc" : "#fff",
+        borderLeft: isSelected ? `3px solid ${data.color}` : "3px solid transparent",
+    }}>
+        <input type="checkbox" checked={isSelected} readOnly style={{ marginTop: 3, accentColor: data.color }} />
+        <div>
+            <div style={{ fontWeight: 700, fontSize: 12.5, color: data.color }}>{data.label}</div>
+            <div style={{ fontSize: 11.5, color: "#64748b" }}>{data.description}</div>
+        </div>
+    </div>
+);
+
 const Postes = (props) => {
     const [isLoading, setIsLoading]         = useState(false);
     const [addModalOpen, setAddModalOpen]   = useState(false);
@@ -89,7 +126,6 @@ const Postes = (props) => {
 
     const KPI_CONFIG = [
         { key: "total", label: "Total postes",       icon: AssignmentIcon, iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
-        { key: "habs",  label: "Avec habilitations", icon: BadgeIcon,      iconBg: "#EDE9FE", iconColor: "#6D28D9", borderColor: "#8B5CF6", filter: (i) => i.habilitations && i.habilitations.length > 0 },
     ];
     const CHIPS_CONFIG = [
         { value: "ALL", label: "Tous", filter: () => true },
@@ -122,27 +158,27 @@ const Postes = (props) => {
 
     const renderHabSelect = (value, onChange) => {
         const selected = Array.isArray(value) ? value : [];
+        const selectedOptions = HAB_OPTIONS.filter(o => selected.includes(o.value));
         return (
-            <FormControl fullWidth size="small" sx={{ mt: 0.5 }}>
-                <MuiSelect multiple value={selected} onChange={(e) => onChange(e.target.value)}
-                    input={<OutlinedInput />} displayEmpty
-                    renderValue={(sel) => sel.length === 0 ? <em style={{ color: "#94a3b8" }}>Sélectionner les habilitations</em> : sel.join(', ')}
-                    sx={{ borderRadius: 2, fontSize: 13 }}>
-                    {HAB_KEYS.map(h => (
-                        <MenuItem key={h} value={h} dense>
-                            <Checkbox checked={selected.includes(h)} size="small" sx={{ color: getHabilitationColor(h), '&.Mui-checked': { color: getHabilitationColor(h) } }} />
-                            <ListItemText primary={<span style={{ fontWeight: 700, color: getHabilitationColor(h) }}>{h}</span>} secondary={<span style={{ fontSize: 11 }}>{HAB_DESCRIPTIONS[h]}</span>} />
-                        </MenuItem>
-                    ))}
-                </MuiSelect>
-            </FormControl>
+            <Select
+                isMulti
+                options={HAB_OPTIONS}
+                value={selectedOptions}
+                onChange={(opts) => onChange((opts || []).map(o => o.value))}
+                closeMenuOnSelect={false}
+                placeholder="Sélectionner les habilitations"
+                noOptionsMessage={() => "Aucune habilitation"}
+                components={{ Option: HabOption, MultiValue: HabMultiValue }}
+                styles={habSelectStyles}
+                menuPortalTarget={document.body}
+            />
         );
     };
 
     const addFields = [
         { key: "libelle", label: "Intitulé du poste", required: true, fullWidth: false, placeholder: "Ex: Directeur Général, RA..." },
-        { key: "description", label: "Description", fullWidth: false, placeholder: "Description du poste" },
-        { key: "habilitations", label: "Habilitations", fullWidth: true, render: renderHabSelect },
+        { key: "description", label: "Description", type: "textarea", fullWidth: true, placeholder: "Description du poste" },
+        { key: "habilitations", label: "Habilitations", required: true, fullWidth: true, render: renderHabSelect },
     ];
     const handleModalSubmit = async (items) => {
         setAddLoading(true);
@@ -160,7 +196,10 @@ const Postes = (props) => {
         setEditErrors({}); setEditModalOpen(true);
     };
     const handleEditFormSubmit = () => {
-        if (!editForm.libelle.trim()) { setEditErrors({ libelle: "Champ requis" }); return; }
+        const errs = {};
+        if (!editForm.libelle.trim()) errs.libelle = "Champ requis";
+        if (editForm.habilitations.length === 0) errs.habilitations = "Champ requis";
+        if (Object.keys(errs).length > 0) { setEditErrors(errs); return; }
         setEditLoading(true); props.etat2Changed(true);
         modification({ id: props.id, libelle: editForm.libelle, description: editForm.description, habilitations: editForm.habilitations.join(',') }, props)
             .then(() => { setEditModalOpen(false); clearComponentState(); })
@@ -204,33 +243,33 @@ const Postes = (props) => {
                                         onFocus={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#e2e8f0"; }} />
                                     {editErrors.libelle && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.libelle}</div>}
                                 </div>
-                                <div>
+                                <div style={{ gridColumn: "1 / -1" }}>
                                     <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Description</label>
-                                    <input value={editForm.description} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Description"
-                                        style={{ width: "100%", boxSizing: "border-box", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 }}
+                                    <textarea value={editForm.description} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" rows={3}
+                                        style={{ width: "100%", boxSizing: "border-box", resize: "vertical", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "9px 12px", fontSize: 13, outline: "none", background: "#fff", color: "#1e293b", whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "inherit" }}
                                         onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                                 </div>
                             </div>
                             <div>
-                                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Habilitations</label>
-                                <FormControl fullWidth size="small">
-                                    <MuiSelect multiple value={editForm.habilitations}
-                                        onChange={(e) => setEditForm(p => ({ ...p, habilitations: e.target.value }))}
-                                        input={<OutlinedInput sx={{ borderRadius: 2 }} />}
-                                        renderValue={(sel) => sel.length === 0 ? <em style={{ color: "#94a3b8" }}>Aucune habilitation</em> : (
-                                            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                                                {sel.map(h => <Chip key={h} label={h} size="small" sx={{ backgroundColor: getHabilitationColor(h), color: "#fff", fontWeight: 700, fontSize: "0.7rem" }} />)}
-                                            </Box>
+                                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+                                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.4px" }}>
+                                        Habilitations
+                                        <span style={{ color: "#ef4444", marginLeft: 2 }}>*</span>
+                                        {editForm.habilitations.length > 0 && (
+                                            <span style={{ marginLeft: 8, background: "#3b3fd8", color: "#fff", borderRadius: 20, padding: "1px 8px", fontSize: 11 }}>
+                                                {editForm.habilitations.length} sélectionnée{editForm.habilitations.length > 1 ? "s" : ""}
+                                            </span>
                                         )}
-                                        sx={{ borderRadius: 2, fontSize: 13 }}>
-                                        {HAB_KEYS.map(h => (
-                                            <MenuItem key={h} value={h} dense>
-                                                <Checkbox checked={editForm.habilitations.includes(h)} size="small" sx={{ color: getHabilitationColor(h), '&.Mui-checked': { color: getHabilitationColor(h) } }} />
-                                                <ListItemText primary={<span style={{ fontWeight: 700, color: getHabilitationColor(h) }}>{h}</span>} secondary={<span style={{ fontSize: 11 }}>{HAB_DESCRIPTIONS[h]}</span>} />
-                                            </MenuItem>
-                                        ))}
-                                    </MuiSelect>
-                                </FormControl>
+                                    </label>
+                                    {editForm.habilitations.length > 0 && (
+                                        <span onClick={() => setEditForm(p => ({ ...p, habilitations: [] }))}
+                                            style={{ fontSize: 11, color: "#ef4444", cursor: "pointer", fontWeight: 600 }}>
+                                            Tout désélectionner
+                                        </span>
+                                    )}
+                                </Box>
+                                {renderHabSelect(editForm.habilitations, (val) => { setEditForm(p => ({ ...p, habilitations: val })); setEditErrors(p => ({ ...p, habilitations: "" })); })}
+                                {editErrors.habilitations && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.habilitations}</div>}
                             </div>
                         </div>
                     </DialogContent>
@@ -280,7 +319,7 @@ const Postes = (props) => {
                     </Box>
                 </Box>
                 {viewMode === "list" ? (
-                    <ConfigTable items={filteredItems} columns={[
+                    <ConfigTable items={filteredItems} exportClassName="app-postes" columns={[
                         { id: "libelle",       label: "Intitulé",      sortable: true,  minWidth: 160 },
                         { id: "description",   label: "Description",    sortable: true,  minWidth: 200 },
                         { id: "habilitations", label: "Habilitations",  sortable: false, minWidth: 220, render: renderHabChips },
@@ -290,10 +329,10 @@ const Postes = (props) => {
                                 <Tooltip title="Supprimer"><IconButton onClick={() => setDeleteConfirm({ open: true, item: sp, loading: false })} color="error"><DeleteIcon /></IconButton></Tooltip>
                             </div>
                         )},
-                    ]} searchFields={["libelle", "description"]} defaultSort="libelle" />
+                    ]} searchFields={["libelle", "description", "habilitations"]} defaultSort="libelle" />
                 ) : (
                     <ConfigCardView items={filteredItems} titleField="libelle" subtitleField="description"
-                        searchFields={["libelle", "description"]}
+                        searchFields={["libelle", "description", "habilitations"]}
                         onEdit={(sp) => handleEditClick(sp)}
                         onDelete={(sp) => setDeleteConfirm({ open: true, item: sp, loading: false })}
                         extraFields={[{ label: "Habilitations", render: (sp) => {

@@ -1,8 +1,4 @@
 import React, { useEffect, useState, useMemo } from "react";
-import LastPageIcon from '@mui/icons-material/LastPage';
-import FirstPageIcon from '@mui/icons-material/FirstPage';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { connect } from "react-redux";
 import { Tooltip, IconButton, Box, Typography, Dialog, DialogContent, DialogActions, Button, Chip } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
@@ -16,10 +12,6 @@ import AddDuplicateFormModal from "../../components/shared/AddDuplicateFormModal
 
 import ViewModeToggle from "../../components/shared/ViewModeToggle";
 import QuizIcon from "@mui/icons-material/Quiz";
-import { today } from "../../Utils/utils";
-import { PictureAsPdf, GridOn } from "@mui/icons-material";
-import { handlePrint } from "../../Utils/tables";
-import { table2XLSX } from "../../Utils/tabletoexcel";
 import { contenuChanged, etat2Changed, etat3Changed, etatChanged, faqErrors, idChanged, itemsChanged, libelleChanged, selectedItemChanged } from "../../redux/actions/Configurations/FaqActions";
 import { ajout, liste, modification, suppression } from "../../apis/Configurations/FaqApi";
 import { LoadingButton } from "@mui/lab";
@@ -56,16 +48,6 @@ const Faq = (props) => {
         return chip ? props.items.filter(chip.filter) : props.items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeChip]);
-
-    const pdfColumns = [
-        { key: "libelle", text: "Intitulé", align: "left", sortable: true },
-        { key: "answer",  text: "Réponse",  align: "left", sortable: true },
-    ];
-    const pdfConfig = {
-        page_size: 15, filename: "FAQ",
-        language: { length_menu: "Afficher _MENU_ éléments", filter: "Rechercher...", info: "...", zero_records: "Aucun élément", no_data_text: "Aucun élément", loading_text: "Chargement...",
-            pagination: { first: <FirstPageIcon />, previous: <ChevronLeftIcon />, next: <ChevronRightIcon />, last: <LastPageIcon /> } }
-    };
 
     function clearComponentState() {
         props.idChanged("");
@@ -179,13 +161,12 @@ const Faq = (props) => {
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, flexWrap: "nowrap", gap: 1 }}>
                     <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A", flexShrink: 0 }}>Liste de la FAQ</Typography>
                     <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexShrink: 0 }}>
-                        <Tooltip title="Exporter en PDF"><IconButton onClick={() => handlePrint(pdfConfig, pdfColumns, props.items, 0)} sx={{ border: "1px solid #e2e8f0", borderRadius: 2, color: "#ef4444", "&:hover": { background: "#fee2e2" } }} size="small"><PictureAsPdf fontSize="small" /></IconButton></Tooltip>
-                        <Tooltip title="Exporter en Excel"><IconButton onClick={() => table2XLSX("Liste_de_la_faq" + today().replaceAll("/", ""), "app-faq")} sx={{ border: "1px solid #e2e8f0", borderRadius: 2, color: "#16a34a", "&:hover": { background: "#dcfce7" } }} size="small"><GridOn fontSize="small" /></IconButton></Tooltip>
                         <LoadingButton onClick={() => setAddModalOpen(true)} variant="contained" startIcon={<AddIcon />} sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap" }}>Ajouter</LoadingButton>
                     </Box>
                 </Box>
                 {viewMode === "list" ? (
                     <ConfigTable items={filteredItems}
+                        exportClassName="app-faq"
                         columns={[
                             { id: "libelle", label: "Intitulé",  sortable: true,  minWidth: 200 },
                             { id: "answer",  label: "Réponse",   sortable: true,  minWidth: 250 },

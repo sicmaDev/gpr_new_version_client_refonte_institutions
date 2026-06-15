@@ -2,11 +2,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { KTApp } from "../../Utils/blockui";
 import { logs } from "../../apis/Configurations/LogApi";
-import { handlePrint } from "../../Utils/tables";
-import { table2XLSX } from "../../Utils/tabletoexcel";
-import { Chip, Box, Typography, IconButton, Tooltip } from "@mui/material";
-import { PictureAsPdf, GridOn } from "@mui/icons-material";
-import { today } from "../../Utils/utils";
+import { Chip, Box, Typography } from "@mui/material";
 import ConfigKPIBar from "../../components/shared/ConfigKPIBar";
 import ConfigTable from "../../components/shared/ConfigTable";
 import ConfigCardView from "../../components/shared/ConfigCardView";
@@ -79,14 +75,13 @@ const Log = () => {
                 <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Logs du serveur</Typography>
                 <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                     <ViewModeToggle value={viewMode} onChange={setViewMode} />
-                    <Tooltip title="Exporter en PDF"><IconButton onClick={() => handlePrint({}, [], filteredData, 0)} sx={{ border: "1px solid #e2e8f0", borderRadius: 2, color: "#ef4444", "&:hover": { background: "#fee2e2" } }} size="small"><PictureAsPdf fontSize="small" /></IconButton></Tooltip>
-                    <Tooltip title="Exporter en Excel"><IconButton onClick={() => table2XLSX("Logs_" + today().replaceAll("/", ""), "app-log")} sx={{ border: "1px solid #e2e8f0", borderRadius: 2, color: "#16a34a", "&:hover": { background: "#dcfce7" } }} size="small"><GridOn fontSize="small" /></IconButton></Tooltip>
                 </Box>
             </Box>
 
             {viewMode === "list" ? (
                 <ConfigTable
                     items={filteredData}
+                    exportClassName="app-log"
                     columns={[
                         { id: "libelle",       label: "Libellé",       sortable: true,  minWidth: 200 },
                         { id: "content",       label: "Contenu",       sortable: true,  minWidth: 200 },
@@ -103,7 +98,7 @@ const Log = () => {
                                 : "-"
                         },
                     ]}
-                    searchFields={["libelle", "content", "target", "type"]}
+                    searchFields={["libelle", "content", "target", "type", "userIpAddress"]}
                     defaultSort="createdAt"
                 />
             ) : (
@@ -113,7 +108,7 @@ const Log = () => {
                     subtitleField="content"
                     badgeField="typeLabel"
                     badgeColorMap={{ ERROR: "#EF4444", WARNING: "#F59E0B", INFO: "#10B981" }}
-                    searchFields={["libelle", "content", "target", "type"]}
+                    searchFields={["libelle", "content", "target", "type", "userIpAddress"]}
                     extraFields={[
                         { label: "Target", render: (lo) => lo.target || "-" },
                         { label: "Adresse IP", render: (lo) => lo.userIpAddress || "-" },

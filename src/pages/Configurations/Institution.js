@@ -1,15 +1,18 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { v4 as uuidv4 } from 'uuid';
 import { Box, Typography, Tooltip } from "@mui/material";
 
-import {cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today} from "../../Utils/utils";
+import { cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import { connect } from "react-redux";
 import { ajout } from "../../apis/Configurations/InstitutionApi";
 
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import BusinessIcon from '@mui/icons-material/Business';
+import BadgeIcon from '@mui/icons-material/Badge';
+import ContactMailIcon from '@mui/icons-material/ContactMail';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { LOGO_SUPPORTED_SIZE } from "../../Utils/globals";
 import { licenseControl } from "../../Utils/license";
 import { addressChanged, denominationChanged, emailChanged, idChanged, institutionErrors, logoChanged, phoneChanged, referenceChanged, etatChanged, paysChanged, paysCodeChanged } from "../../redux/actions/Configurations/InstitutionActions";
@@ -18,7 +21,6 @@ import Select from "react-select";
 
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" };
 const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 });
-const textareaStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", minHeight: 80, fontFamily: "inherit", resize: "vertical" });
 
 const selectStyles = (hasError) => ({
     control: (base, state) => ({ ...base, minHeight: 40, borderRadius: 9, borderColor: hasError ? "#ef4444" : (state.isFocused ? "#3b3fd8" : "#e2e8f0"), borderWidth: 1.5, boxShadow: "none", "&:hover": { borderColor: hasError ? "#ef4444" : "#3b3fd8" } }),
@@ -30,26 +32,38 @@ const selectStyles = (hasError) => ({
     menu: provided => ({ ...provided, zIndex: 9999 }),
 });
 
+const SectionTitle = ({ icon: Icon, title, subtitle }) => (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+        <Icon sx={{ fontSize: 16, color: "#3b3fd8" }} />
+        <Typography sx={{ fontSize: 12, fontWeight: 800, color: "#3b3fd8", textTransform: "uppercase", letterSpacing: "0.6px" }}>{title}</Typography>
+        {subtitle && <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{subtitle}</Typography>}
+    </Box>
+);
+
+const FieldCheck = ({ valid }) => valid
+    ? <CheckCircleIcon sx={{ fontSize: 14, color: "#16a34a", verticalAlign: "middle", ml: 0.6 }} />
+    : null;
+
 
 const Institution = (props) => {
     const [valueP, setValueP] = useState('')
     const [valueC, setValueC] = useState('')
     const options = useMemo(() => countryList().getData(), [])
-  
+
     const changeHandler = valueP => {
-      setValueP(valueP)
-      props.paysChanged(valueP.label)
-      props.paysCodeChanged(valueP.value)
-      setValueC(valueC)
-    //   console.log("payssss",valueP.label)
+        setValueP(valueP)
+        props.paysChanged(valueP.label)
+        props.paysCodeChanged(valueP.value)
+        setValueC(valueC)
+        //   console.log("payssss",valueP.label)
     }
-  
+
 
     useEffect(() => {
 
         try {
-            let appInstitution =  loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
-           
+            let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+
             if (appInstitution !== undefined || appInstitution !== "") {
                 props.denominationChanged(appInstitution.denomination)
                 props.referenceChanged(appInstitution.numAgrement)
@@ -64,25 +78,25 @@ const Institution = (props) => {
             }
         } catch (e) {
         }
-       
-       
+
+
         //UI Fixes
-       
+
         window.$('.dropdown-trigger').dropdown({
-                inDuration: 300,
-                outDuration: 225,
-                constrainWidth: false, // Does not change width of dropdown to that of the activator
-                click: true, // Activate on hover
-                gutter: 0, // Spacing from edge
-                coverTrigger: false, // Displays dropdown below the button
-                alignment: 'left', // Displays dropdown with edge aligned to the left of button
-                stopPropagation: false // Stops event propagation
-            }
+            inDuration: 300,
+            outDuration: 225,
+            constrainWidth: false, // Does not change width of dropdown to that of the activator
+            click: true, // Activate on hover
+            gutter: 0, // Spacing from edge
+            coverTrigger: false, // Displays dropdown below the button
+            alignment: 'left', // Displays dropdown with edge aligned to the left of button
+            stopPropagation: false // Stops event propagation
+        }
         );
-       
+
         window.$('.buttons-excel').html('<span><i class="fa fa-file-excel"></i></span>')
-        window.$('ul.pagination').parent().parent().css({marginTop:"1%", boxShadow:"none"})
-        window.$('ul.pagination').parent().css({boxShadow:"none"})
+        window.$('ul.pagination').parent().parent().css({ marginTop: "1%", boxShadow: "none" })
+        window.$('ul.pagination').parent().css({ boxShadow: "none" })
         window.$('ul.pagination').parent().addClass('white')
         window.$('ul.pagination').addClass('right-align')
         window.$('a.page-link input').addClass('indigo-text bold-text')
@@ -92,7 +106,7 @@ const Institution = (props) => {
         window.$('#as-react-datatable tr').addClass('cursor-pointer')
         window.$('.tooltipped').tooltip();
         //cleanup
-       
+
     }, []);
 
     let isLicenseControl = licenseControl()
@@ -101,21 +115,32 @@ const Institution = (props) => {
 
     const [imageToCrop, setImageToCrop] = useState(undefined);
     const [croppedImage, setCroppedImage] = useState(undefined);
+    const [isDragging, setIsDragging] = useState(false);
 
-    const handleFile = (e) => {
+    const readLogoFile = (file) => {
+        if (!file) return;
         let reader = new FileReader();
         reader.addEventListener('load', () =>
             setImageToCrop(reader.result)
         );
-
-        reader.readAsDataURL(e.target.files[0]);
+        reader.readAsDataURL(file);
         reader.onload = (e) => {
             props.logoChanged(e.target.result)
         }
     }
+
+    const handleFile = (e) => {
+        readLogoFile(e.target.files[0]);
+    }
+
+    const handleLogoDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        readLogoFile(e.dataTransfer.files[0]);
+    }
     const handleValidation = () => {
         let isValid = true;
-      
+
         if ((props.denomination === "" || props.denomination === undefined || props.denomination === null)) {
             isValid = false;
             errors["denomination"] = "Champ incorrect";
@@ -144,7 +169,7 @@ const Institution = (props) => {
             isValid = false;
             errors["logo"] = "Champ incorrect";
         }
-        
+
         return isValid
     }
     const handleSubmit = (e) => {
@@ -159,7 +184,7 @@ const Institution = (props) => {
             item["logo"] = props.logo;
             item["pays"] = props.pays;
             item["paysCode"] = props.paysCode;
-           
+
             props.etatChanged(true)
             ajout(item, props).then(() => {
                 // handleCancel(e)
@@ -169,10 +194,13 @@ const Institution = (props) => {
         props.institutionErrors(errors)
     }
 
-    let companyLogo = (props.logo)?
-        (<img src={props.logo} alt="Logo de l'institution" style={{ maxWidth: 220, maxHeight: 120, objectFit: "contain" }}/>)
-        :
-        (<Box sx={{ width: 220, height: 120, border: "1.5px dashed #e2e8f0", borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: 12 }}>Aucun logo</Box>)
+    const validDenomination = !!props.denomination;
+    const validReference = !!props.reference;
+    const validAddress = !!props.address;
+    const validEmail = !!props.email && /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(props.email);
+    const validPhone = !!props.phone && isValidPhone(props.phone);
+    const validPays = !!props.pays;
+    const validLogo = !!props.logo;
 
     return (
         <div className="card-panel pb-5">
@@ -191,33 +219,51 @@ const Institution = (props) => {
 
                     {/* Colonne gauche */}
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <SectionTitle icon={BadgeIcon} title="Identité" subtitle="(dénomination, agrément, logo)" />
                         <Box>
-                            <label style={labelStyle}>Raison / Dénomination</label>
+                            <label style={labelStyle}>Raison / Dénomination <FieldCheck valid={validDenomination} /></label>
                             <input value={props.denomination || ""} onChange={(e) => props.denominationChanged(e.target.value)} placeholder="Ex: SICMA ET ASSOCIES"
                                 style={inputStyle(props.errors.denomination)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.denomination ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.denomination && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.denomination}</div>}
                         </Box>
                         <Box>
-                            <label style={labelStyle}>Numéro d'agrément</label>
+                            <label style={labelStyle}>Numéro d'agrément <FieldCheck valid={validReference} /></label>
                             <input value={props.reference || ""} onChange={(e) => props.referenceChanged(e.target.value)} placeholder="Ex: RCCM RB/ABC/20 B 3215"
                                 style={inputStyle(props.errors.reference)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.reference ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.reference && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.reference}</div>}
                         </Box>
                         <Box>
-                            <label style={labelStyle}>Adresse</label>
-                            <textarea value={props.address || ""} onChange={(e) => props.addressChanged(e.target.value)} placeholder="Ex: Calavi-Kpota, 2ème étage Immeuble Tankaya-Banque Atlantique"
-                                style={textareaStyle(props.errors.address)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.address ? "#ef4444" : "#e2e8f0"; }} />
+                            <label style={labelStyle}>Adresse <FieldCheck valid={validAddress} /></label>
+                            <input value={props.address || ""} onChange={(e) => props.addressChanged(e.target.value)} placeholder="Ex: Calavi-Kpota, 2ème étage Immeuble Tankaya-Banque Atlantique"
+                                style={inputStyle(props.errors.address)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.address ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.address && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.address}</div>}
                         </Box>
                         <Box>
-                            <label style={labelStyle}>Logo</label>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                                <LoadingButton component="label" variant="contained"
-                                    sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, height: 40, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" } }}>
-                                    Choisir un fichier
-                                    <input type="file" hidden accept="image/*" onChange={(e) => handleFile(e)} />
-                                </LoadingButton>
-                                <Typography sx={{ fontSize: 12, color: "#64748b" }}>Dimensions supportées: {LOGO_SUPPORTED_SIZE}</Typography>
+                            <label style={labelStyle}>Logo de l'institution <FieldCheck valid={validLogo} /></label>
+                            <Box
+                                component="label"
+                                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                onDragLeave={() => setIsDragging(false)}
+                                onDrop={handleLogoDrop}
+                                sx={{
+                                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1,
+                                    width: "100%", minHeight: 150, borderRadius: 2.5, cursor: "pointer", textAlign: "center", padding: "16px",
+                                    border: isDragging ? "2px dashed #3b3fd8" : (props.errors.logo ? "1.5px dashed #ef4444" : "1.5px dashed #cbd5e1"),
+                                    background: isDragging ? "#EEF2FF" : "#f8fafc",
+                                    transition: "all 0.15s ease",
+                                    "&:hover": { borderColor: "#3b3fd8", background: "#EEF2FF" },
+                                }}
+                            >
+                                <input type="file" hidden accept="image/*" onChange={handleFile} />
+                                {props.logo ? (
+                                    <img src={props.logo} alt="Logo de l'institution" style={{ maxWidth: 180, maxHeight: 90, objectFit: "contain" }} />
+                                ) : (
+                                    <BusinessIcon sx={{ color: "#94a3b8", fontSize: 28 }} />
+                                )}
+                                <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>
+                                    {props.logo ? "Cliquez ou glissez pour remplacer le logo" : "Glissez votre logo ici ou cliquez pour parcourir"}
+                                </Typography>
+                                <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>Dimensions supportées: {LOGO_SUPPORTED_SIZE}</Typography>
                             </Box>
                             {props.errors.logo && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.logo}</div>}
                         </Box>
@@ -225,15 +271,16 @@ const Institution = (props) => {
 
                     {/* Colonne droite */}
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <SectionTitle icon={ContactMailIcon} title="Coordonnées" subtitle="(email, téléphone, pays)" />
                         <Box>
-                            <label style={labelStyle}>Adresse électronique</label>
+                            <label style={labelStyle}>Adresse électronique <FieldCheck valid={validEmail} /></label>
                             <input type="email" value={props.email || ""} onChange={(e) => props.emailChanged(e.target.value)} placeholder="Ex: info@sicmagroup.com"
                                 style={inputStyle(props.errors.email)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.email ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.email && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.email}</div>}
                         </Box>
                         <Box>
                             <label style={labelStyle}>
-                                Téléphone{" "}
+                                Téléphone <FieldCheck valid={validPhone} />{" "}
                                 <Tooltip title="Exemple: 22990909090 ou +22990909090">
                                     <HelpOutlineIcon sx={{ fontSize: 14, color: "#94a3b8", verticalAlign: "middle" }} />
                                 </Tooltip>
@@ -243,7 +290,7 @@ const Institution = (props) => {
                             {props.errors.phone && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.phone}</div>}
                         </Box>
                         <Box>
-                            <label style={labelStyle}>Pays</label>
+                            <label style={labelStyle}>Pays <FieldCheck valid={validPays} /></label>
                             <Select
                                 id="slevel"
                                 value={props.pays ? { value: props.paysCode, label: props.pays } : null}
@@ -254,14 +301,17 @@ const Institution = (props) => {
                             />
                             {props.errors.pays && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.pays}</div>}
                         </Box>
-                        <Box>
-                            <label style={labelStyle}>Aperçu du logo</label>
-                            {companyLogo}
-                        </Box>
                     </Box>
                 </Box>
 
-                <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+                <Box sx={{
+                    position: "sticky", bottom: 0, zIndex: 5, mt: 3, pt: 2, pb: 1,
+                    display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 2,
+                    background: "rgba(255,255,255,0.92)", backdropFilter: "blur(6px)", borderTop: "1px solid #e2e8f0",
+                }}>
+                    <Typography sx={{ fontSize: 12, color: "#94a3b8", mr: "auto" }}>
+                        Les champs marqués d'un <CheckCircleIcon sx={{ fontSize: 12, color: "#16a34a", verticalAlign: "middle" }} /> sont valides
+                    </Typography>
                     <LoadingButton
                         onClick={(e) => handleSubmit(e)}
                         loading={props.etat}

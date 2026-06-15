@@ -35,6 +35,7 @@ import ViewModeToggle from "../../components/shared/ViewModeToggle";
 
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" };
 const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 });
+const textareaStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", resize: "vertical", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "9px 12px", fontSize: 13, outline: "none", background: "#fff", color: "#1e293b", whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "inherit" });
 
 const ApiKey = (props) => {
     let appBot;
@@ -285,10 +286,10 @@ const ApiKey = (props) => {
                                 style={inputStyle(props.gprbotErrors.apiKey)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                             {props.gprbotErrors.apiKey && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.gprbotErrors.apiKey}</div>}
                         </Box>
-                        <Box>
+                        <Box sx={{ gridColumn: "1 / -1" }}>
                             <label style={labelStyle}>Description</label>
-                            <input value={keyField.description} onChange={(e) => setKeyField({ ...keyField, description: e.target.value })} maxLength={36} placeholder="Ex: Clé pour les notifications BOT"
-                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                            <textarea value={keyField.description} onChange={(e) => setKeyField({ ...keyField, description: e.target.value })} rows={3} placeholder="Ex: Clé pour les notifications BOT"
+                                style={textareaStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                         <Box>
                             <label style={labelStyle}>API Secret</label>

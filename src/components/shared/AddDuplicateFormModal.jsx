@@ -235,6 +235,7 @@ const AddDuplicateFormModal = ({
                           borderRadius: 9, padding: "9px 12px",
                           fontSize: 13, outline: "none",
                           background: "#fff", color: "#1e293b",
+                          whiteSpace: "pre-wrap", wordBreak: "break-word",
                           fontFamily: "inherit",
                         }}
                         onFocus={(e) => { if (!errors[formIdx]?.[f.key]) e.target.style.borderColor = "#3b3fd8"; }}

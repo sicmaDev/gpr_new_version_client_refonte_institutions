@@ -42,6 +42,21 @@ import ArticleIcon from '@mui/icons-material/Article';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import QuizIcon from '@mui/icons-material/Quiz';
 import LogoutIcon from '@mui/icons-material/Logout';
+import NoteAddIcon from '@mui/icons-material/NoteAdd';
+import BuildCircleIcon from '@mui/icons-material/BuildCircle';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import ArchiveIcon from '@mui/icons-material/Archive';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import MultilineChartIcon from '@mui/icons-material/MultilineChart';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import UploadIcon from '@mui/icons-material/Upload';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import GroupIcon from '@mui/icons-material/Group';
+import BusinessIcon from '@mui/icons-material/Business';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import TerminalIcon from '@mui/icons-material/Terminal';
+import BackupIcon from '@mui/icons-material/Backup';
 import { NavLink, useLocation } from 'react-router-dom';
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from '../Utils/utils';
 import { connect } from 'react-redux';
@@ -118,6 +133,7 @@ export const Items = (props) => {
   const [open4, setOpen4] = React.useState(false);
   const [open5, setOpen5] = React.useState(false);
   const [open6, setOpen6] = React.useState(false);
+  const [open7, setOpen7] = React.useState(false);
 
   const handleClick = () => setOpen(!open);
   const handleClick1 = () => setOpen1(!open1);
@@ -126,6 +142,7 @@ export const Items = (props) => {
   const handleClick4 = () => setOpen4(!open4);
   const handleClick5 = () => setOpen5(!open5);
   const handleClick6 = () => setOpen6(!open6);
+  const handleClick7 = () => setOpen7(!open7);
 
   // ── Auth / user (preserved exactly) ─────────────────────────────────────
   const history = useHistory();
@@ -169,7 +186,7 @@ export const Items = (props) => {
       transform: active ? 'translateX(2px)' : 'none',
       '&:hover': { backgroundColor: active ? '#fff' : 'rgba(255,255,255,0.07)' },
       '& .MuiListItemText-primary': {
-        fontSize: '13px',
+        fontSize: '14.5px',
         fontWeight: active ? 700 : 400,
         color: active ? '#3b3fd8' : 'rgba(255,255,255,0.78)',
       },
@@ -193,7 +210,7 @@ export const Items = (props) => {
       transform: active ? 'translateX(2px)' : 'none',
       '&:hover': { backgroundColor: active ? '#fff' : 'rgba(255,255,255,0.07)' },
       '& .MuiListItemText-primary': {
-        fontSize: '13px',
+        fontSize: '14.5px',
         fontWeight: active ? 700 : 400,
         color: active ? '#3b3fd8' : 'rgba(255,255,255,0.82)',
       },
@@ -217,6 +234,7 @@ export const Items = (props) => {
       backgroundColor: active ? '#fff' : 'transparent',
       boxShadow: active ? '0 3px 10px rgba(0,0,0,0.14)' : 'none',
       '&:hover': { backgroundColor: active ? '#fff' : 'rgba(255,255,255,0.05)' },
+      '&:hover .MuiListItemText-primary': { color: '#fff' },
       '&::before': {
         content: '""',
         position: 'absolute',
@@ -227,24 +245,16 @@ export const Items = (props) => {
         background: 'rgba(255,255,255,0.1)',
       },
       '& .MuiListItemText-primary': {
-        fontSize: '12.5px',
+        fontSize: '13.5px',
         fontWeight: active ? 700 : 400,
-        color: active ? '#3b3fd8' : 'rgba(255,255,255,0.62)',
+        color: active ? '#fff' : 'rgba(255,255,255,0.62)',
       },
-      '& .MuiListItemIcon-root': { minWidth: 22 },
+      '& .MuiListItemIcon-root': { minWidth: 30 },
     };
   };
 
-  // Small dot for sub-items
-  const SubDot = ({ active }) => (
-    <div style={{
-      width: active ? 6 : 4,
-      height: active ? 6 : 4,
-      borderRadius: '50%',
-      background: active ? '#3b3fd8' : 'rgba(255,255,255,0.3)',
-      transition: 'all 0.2s',
-      flexShrink: 0,
-    }} />
+  const si = (Icon, active) => (
+    <Icon sx={{ fontSize: 17, color: active ? '#3b3fd8' : 'rgba(255,255,255,0.45)' }} />
   );
 
   // ── Visibility flags (same conditions as original) ───────────────────────
@@ -292,7 +302,7 @@ export const Items = (props) => {
               {hbt.includes('H1') && (
                 <NavLink to="/reclamations/enregistrement" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/reclamations/enregistrement')} className="lib">
-                    <ListItemIcon><SubDot active={isActive('/reclamations/enregistrement')} /></ListItemIcon>
+                    <ListItemIcon>{si(NoteAddIcon, isActive('/reclamations/enregistrement'))}</ListItemIcon>
                     <ListItemText primary="Enregistrement" />
                   </ListItemButton>
                 </NavLink>
@@ -301,7 +311,7 @@ export const Items = (props) => {
               {(hbt.some(i => ['H2', 'H3', 'H4', 'H6'].includes(i)) || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/reclamations/traitement/all" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/reclamations/traitement')} className="lib">
-                    <ListItemIcon><SubDot active={isActive('/reclamations/traitement')} /></ListItemIcon>
+                    <ListItemIcon>{si(BuildCircleIcon, isActive('/reclamations/traitement'))}</ListItemIcon>
                     <ListItemText primary="Traitement" />
                   </ListItemButton>
                 </NavLink>
@@ -310,7 +320,7 @@ export const Items = (props) => {
               {(hbt.includes('H5') || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/reclamations/mesure/all" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/reclamations/mesure')} className="lib">
-                    <ListItemIcon><SubDot active={isActive('/reclamations/mesure')} /></ListItemIcon>
+                    <ListItemIcon>{si(SentimentSatisfiedAltIcon, isActive('/reclamations/mesure'))}</ListItemIcon>
                     <ListItemText primary="Mesure de satisfaction" />
                   </ListItemButton>
                 </NavLink>
@@ -319,7 +329,7 @@ export const Items = (props) => {
               {(hbt.includes('H5') || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/reclamations/assurance/all" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/reclamations/assurance')} className="lib">
-                    <ListItemIcon><SubDot active={isActive('/reclamations/assurance')} /></ListItemIcon>
+                    <ListItemIcon>{si(TaskAltIcon, isActive('/reclamations/assurance'))}</ListItemIcon>
                     <ListItemText primary="Assurance Satisfaction" />
                   </ListItemButton>
                 </NavLink>
@@ -327,7 +337,7 @@ export const Items = (props) => {
 
               <NavLink to="/reclamations/liste/all" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/reclamations/liste')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/reclamations/liste')} /></ListItemIcon>
+                  <ListItemIcon>{si(FormatListBulletedIcon, isActive('/reclamations/liste'))}</ListItemIcon>
                   <ListItemText primary="Liste des réclamations" />
                 </ListItemButton>
               </NavLink>
@@ -335,7 +345,7 @@ export const Items = (props) => {
               {(hbt.includes('H5') || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/reclamations/classees/all" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/reclamations/classees')} className="lib">
-                    <ListItemIcon><SubDot active={isActive('/reclamations/classees')} /></ListItemIcon>
+                    <ListItemIcon>{si(ArchiveIcon, isActive('/reclamations/classees'))}</ListItemIcon>
                     <ListItemText primary="Classées" />
                   </ListItemButton>
                 </NavLink>
@@ -360,7 +370,7 @@ export const Items = (props) => {
               {hbt.includes('H1') && (
                 <NavLink to="/denonciations/enregistrement" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/denonciations/enregistrement')} className="lib">
-                    <ListItemIcon><SubDot active={isActive('/denonciations/enregistrement')} /></ListItemIcon>
+                    <ListItemIcon>{si(NoteAddIcon, isActive('/denonciations/enregistrement'))}</ListItemIcon>
                     <ListItemText primary="Enregistrement" />
                   </ListItemButton>
                 </NavLink>
@@ -369,7 +379,7 @@ export const Items = (props) => {
               {(hbt.some(i => ['H2', 'H3', 'H4', 'H6'].includes(i)) || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/denonciations/traitement/all" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/denonciations/traitement')} className="lib">
-                    <ListItemIcon><SubDot active={isActive('/denonciations/traitement')} /></ListItemIcon>
+                    <ListItemIcon>{si(BuildCircleIcon, isActive('/denonciations/traitement'))}</ListItemIcon>
                     <ListItemText primary="Traitement" />
                   </ListItemButton>
                 </NavLink>
@@ -377,7 +387,7 @@ export const Items = (props) => {
 
               <NavLink to="/denonciations/liste/all" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/denonciations/liste')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/denonciations/liste')} /></ListItemIcon>
+                  <ListItemIcon>{si(FormatListBulletedIcon, isActive('/denonciations/liste'))}</ListItemIcon>
                   <ListItemText primary="Liste des dénonciations" />
                 </ListItemButton>
               </NavLink>
@@ -401,7 +411,7 @@ export const Items = (props) => {
               {hbt.includes('H1') && (
                 <NavLink to="/suggestions/enregistrement" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/suggestions/enregistrement')} className="lib">
-                    <ListItemIcon><SubDot active={isActive('/suggestions/enregistrement')} /></ListItemIcon>
+                    <ListItemIcon>{si(NoteAddIcon, isActive('/suggestions/enregistrement'))}</ListItemIcon>
                     <ListItemText primary="Enregistrement" />
                   </ListItemButton>
                 </NavLink>
@@ -410,7 +420,7 @@ export const Items = (props) => {
               {(addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
                 <NavLink to="/suggestions/traitement/all" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/suggestions/traitement')} className="lib">
-                    <ListItemIcon><SubDot active={isActive('/suggestions/traitement')} /></ListItemIcon>
+                    <ListItemIcon>{si(BuildCircleIcon, isActive('/suggestions/traitement'))}</ListItemIcon>
                     <ListItemText primary="Traitement" />
                   </ListItemButton>
                 </NavLink>
@@ -418,7 +428,7 @@ export const Items = (props) => {
 
               <NavLink to="/suggestions/liste/all" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/suggestions/liste')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/suggestions/liste')} /></ListItemIcon>
+                  <ListItemIcon>{si(FormatListBulletedIcon, isActive('/suggestions/liste'))}</ListItemIcon>
                   <ListItemText primary="Liste des suggestions" />
                 </ListItemButton>
               </NavLink>
@@ -444,21 +454,21 @@ export const Items = (props) => {
 
               <NavLink to="/rapports/global" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/rapports/global')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/rapports/global')} /></ListItemIcon>
+                  <ListItemIcon>{si(PieChartIcon, isActive('/rapports/global'))}</ListItemIcon>
                   <ListItemText primary="Global" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/rapports/bceao" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/rapports/bceao')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/rapports/bceao')} /></ListItemIcon>
+                  <ListItemIcon>{si(AccountBalanceIcon, isActive('/rapports/bceao'))}</ListItemIcon>
                   <ListItemText primary="Commission Bancaire" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/rapports/superset" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/rapports/superset')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/rapports/superset')} /></ListItemIcon>
+                  <ListItemIcon>{si(MultilineChartIcon, isActive('/rapports/superset'))}</ListItemIcon>
                   <ListItemText primary="Superset" />
                 </ListItemButton>
               </NavLink>
@@ -481,14 +491,14 @@ export const Items = (props) => {
 
               <NavLink to="/alertes/reclamations" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/alertes/reclamations')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/alertes/reclamations')} /></ListItemIcon>
+                  <ListItemIcon>{si(NotificationImportantIcon, isActive('/alertes/reclamations'))}</ListItemIcon>
                   <ListItemText primary="Réclamations" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/alertes/denonciations" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/alertes/denonciations')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/alertes/denonciations')} /></ListItemIcon>
+                  <ListItemIcon>{si(NotificationAddIcon, isActive('/alertes/denonciations'))}</ListItemIcon>
                   <ListItemText primary="Dénonciations" />
                 </ListItemButton>
               </NavLink>
@@ -533,133 +543,112 @@ export const Items = (props) => {
 
               <NavLink to="/configurations/institution" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/institution')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/institution')} /></ListItemIcon>
+                  <ListItemIcon>{si(BusinessIcon, isActive('/configurations/institution'))}</ListItemIcon>
                   <ListItemText primary="Institution" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/pointsServices" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/pointsServices')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/pointsServices')} /></ListItemIcon>
+                  <ListItemIcon>{si(StorefrontIcon, isActive('/configurations/pointsServices'))}</ListItemIcon>
                   <ListItemText primary="Points de services" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/postes" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/postes')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/postes')} /></ListItemIcon>
+                  <ListItemIcon>{si(WorkIcon, isActive('/configurations/postes'))}</ListItemIcon>
                   <ListItemText primary="Postes" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/produits" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/produits')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/produits')} /></ListItemIcon>
+                  <ListItemIcon>{si(CategoryIcon, isActive('/configurations/produits'))}</ListItemIcon>
                   <ListItemText primary="Produits / Services" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/categories" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/categories')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/categories')} /></ListItemIcon>
+                  <ListItemIcon>{si(ClassIcon, isActive('/configurations/categories'))}</ListItemIcon>
                   <ListItemText primary="Catégories" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/objets" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/objets')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/objets')} /></ListItemIcon>
+                  <ListItemIcon>{si(DataObjectIcon, isActive('/configurations/objets'))}</ListItemIcon>
                   <ListItemText primary="Objets" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/solutions" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/solutions')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/solutions')} /></ListItemIcon>
+                  <ListItemIcon>{si(LightbulbIcon, isActive('/configurations/solutions'))}</ListItemIcon>
                   <ListItemText primary="Solutions" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/langues" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/langues')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/langues')} /></ListItemIcon>
+                  <ListItemIcon>{si(LanguageIcon, isActive('/configurations/langues'))}</ListItemIcon>
                   <ListItemText primary="Langues" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/supportsCollectes" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/supportsCollectes')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/supportsCollectes')} /></ListItemIcon>
+                  <ListItemIcon>{si(UploadIcon, isActive('/configurations/supportsCollectes'))}</ListItemIcon>
                   <ListItemText primary="Modalités de dépôt" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/utilisateurs" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/utilisateurs')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/utilisateurs')} /></ListItemIcon>
+                  <ListItemIcon>{si(GroupIcon, isActive('/configurations/utilisateurs'))}</ListItemIcon>
                   <ListItemText primary="Compte Utilisateurs" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/email" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/email')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/email')} /></ListItemIcon>
+                  <ListItemIcon>{si(EmailIcon, isActive('/configurations/email'))}</ListItemIcon>
                   <ListItemText primary="Email" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/sms" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/sms')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/sms')} /></ListItemIcon>
+                  <ListItemIcon>{si(SmsIcon, isActive('/configurations/sms'))}</ListItemIcon>
                   <ListItemText primary="SMS" />
                 </ListItemButton>
               </NavLink>
 
-              <NavLink to="/configurations/logs" activeClassName="hero" style={link}>
-                <ListItemButton sx={sSx('/configurations/logs')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/logs')} /></ListItemIcon>
-                  <ListItemText primary="Log Système" />
-                </ListItemButton>
-              </NavLink>
-
-              <NavLink to="/configurations/exportations" activeClassName="hero" style={link}>
-                <ListItemButton sx={sSx('/configurations/exportations')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/exportations')} /></ListItemIcon>
-                  <ListItemText primary="Exportation" />
-                </ListItemButton>
-              </NavLink>
-
-              {/* <NavLink to="/configurations/bot" activeClassName="hero" style={link}>
-                <ListItemButton sx={sSx('/configurations/bot')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/bot')} /></ListItemIcon>
-                  <ListItemText primary="GPR BOT" />
-                </ListItemButton>
-              </NavLink> */}
-
               <NavLink to="/configurations/apikey" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/apikey')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/apikey')} /></ListItemIcon>
-                  <ListItemText primary="API KEY" />
+                  <ListItemIcon>{si(KeyTwoTone, isActive('/configurations/apikey'))}</ListItemIcon>
+                  <ListItemText primary="API" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/recoursExternes" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/recoursExternes')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/recoursExternes')} /></ListItemIcon>
+                  <ListItemIcon>{si(GavelIcon, isActive('/configurations/recoursExternes'))}</ListItemIcon>
                   <ListItemText primary="Recours Externes" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/notifications" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/notifications')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/notifications')} /></ListItemIcon>
+                  <ListItemIcon>{si(NotificationAddIcon, isActive('/configurations/notifications'))}</ListItemIcon>
                   <ListItemText primary="Notifications" />
                 </ListItemButton>
               </NavLink>
 
               <NavLink to="/configurations/corbeille" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/corbeille')} className="lib">
-                  <ListItemIcon><SubDot active={isActive('/configurations/corbeille')} /></ListItemIcon>
+                  <ListItemIcon>{si(RestoreFromTrash, isActive('/configurations/corbeille'))}</ListItemIcon>
                   <ListItemText primary="RSD supprimées" />
                 </ListItemButton>
               </NavLink>
@@ -674,18 +663,48 @@ export const Items = (props) => {
                 <List component="div" disablePadding>
                   <NavLink to="/ressources/documents" activeClassName="hero" style={link}>
                     <ListItemButton sx={sSx('/ressources/documents')} className="lib">
-                      <ListItemIcon><SubDot active={isActive('/ressources/documents')} /></ListItemIcon>
+                      <ListItemIcon>{si(MenuBookIcon, isActive('/ressources/documents'))}</ListItemIcon>
                       <ListItemText primary="Documents" />
                     </ListItemButton>
                   </NavLink>
                   <NavLink to="/ressources/faq" activeClassName="hero" style={link}>
                     <ListItemButton sx={sSx('/ressources/faq')} className="lib">
-                      <ListItemIcon><SubDot active={isActive('/ressources/faq')} /></ListItemIcon>
+                      <ListItemIcon>{si(QuizIcon, isActive('/ressources/faq'))}</ListItemIcon>
                       <ListItemText primary="FAQ" />
                     </ListItemButton>
                   </NavLink>
                 </List>
               </Collapse>
+
+            </List>
+          </Collapse>
+        </>
+      )}
+
+      {/* Sauvegarde et surveillance */}
+      {showConfigs && (
+        <>
+          <ListItemButton onClick={handleClick7} sx={hSx('/sauvegarde')}>
+            <ListItemIcon><BackupIcon style={col(isActive('/sauvegarde'))} /></ListItemIcon>
+            <ListItemText primary="Sauvegarde et surveillance" />
+            <Chevron open={open7} />
+          </ListItemButton>
+          <Collapse in={open7} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+
+              <NavLink to="/configurations/exportations" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/configurations/exportations')} className="lib">
+                  <ListItemIcon>{si(FileDownloadIcon, isActive('/configurations/exportations'))}</ListItemIcon>
+                  <ListItemText primary="Exportation" />
+                </ListItemButton>
+              </NavLink>
+
+              <NavLink to="/configurations/logs" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/configurations/logs')} className="lib">
+                  <ListItemIcon>{si(TerminalIcon, isActive('/configurations/logs'))}</ListItemIcon>
+                  <ListItemText primary="Log Système" />
+                </ListItemButton>
+              </NavLink>
 
             </List>
           </Collapse>
@@ -707,7 +726,7 @@ export const Items = (props) => {
           borderRadius: '8px', mx: 0.75, my: 0.1, pl: 2, pr: 1.5, minHeight: 38,
           transition: 'background 0.18s',
           '&:hover': { backgroundColor: 'rgba(255,80,80,0.14)' },
-          '& .MuiListItemText-primary': { fontSize: '13px', fontWeight: 500, color: 'rgba(255,160,160,0.9)' },
+          '& .MuiListItemText-primary': { fontSize: '14.5px', fontWeight: 500, color: 'rgba(255,160,160,0.9)' },
           '& .MuiListItemIcon-root': { minWidth: 34 },
         }}>
           <ListItemIcon><LogoutIcon style={{ color: 'rgba(255,160,160,0.8)', fontSize: '18px' }} /></ListItemIcon>

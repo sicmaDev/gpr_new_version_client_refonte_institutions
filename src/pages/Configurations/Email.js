@@ -9,6 +9,9 @@ import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import DnsIcon from '@mui/icons-material/Dns';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { LOGO_SUPPORTED_SIZE } from "../../Utils/globals";
 import {
     portChanged, hostChanged, passwordChanged, userChanged, loadingChanged, etatChanged
@@ -24,6 +27,18 @@ import { ForwardToInboxOutlined } from "@mui/icons-material";
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" };
 const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 });
 const textareaStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", minHeight: 80, fontFamily: "inherit", resize: "vertical" });
+
+const SectionTitle = ({ icon: Icon, title, subtitle }) => (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+        <Icon sx={{ fontSize: 16, color: "#3b3fd8" }} />
+        <Typography sx={{ fontSize: 12, fontWeight: 800, color: "#3b3fd8", textTransform: "uppercase", letterSpacing: "0.6px" }}>{title}</Typography>
+        {subtitle && <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{subtitle}</Typography>}
+    </Box>
+);
+
+const FieldCheck = ({ valid }) => valid
+    ? <CheckCircleIcon sx={{ fontSize: 14, color: "#16a34a", verticalAlign: "middle", ml: 0.6 }} />
+    : null;
 
 const Email = (props) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -181,6 +196,11 @@ const Email = (props) => {
 
     }
 
+    const validHost = !!props.host;
+    const validUser = !!props.user && /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(props.user);
+    const validPort = !!props.port;
+    const validPassword = !!props.password;
+
     return (
         <div className="card-panel pb-5">
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
@@ -196,25 +216,27 @@ const Email = (props) => {
             <Box component="form" id="accountForm" onSubmit={handleSubmit} sx={{ mt: 3 }}>
                 <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2.5 }}>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <SectionTitle icon={DnsIcon} title="Serveur" subtitle="host, port" />
                         <Box>
-                            <label style={labelStyle}>Serveur (Host)</label>
+                            <label style={labelStyle}>Serveur (Host) <FieldCheck valid={validHost} /></label>
                             <input value={props.host || ""} onChange={(e) => props.hostChanged(e.target.value)} placeholder="Ex: smtp.gmail.com"
                                 style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                         <Box>
-                            <label style={labelStyle}>Utilisateur mail (User)</label>
-                            <input value={props.user || ""} onChange={(e) => props.userChanged(e.target.value)} placeholder="Ex: contact@domaine.com"
+                            <label style={labelStyle}>Port <FieldCheck valid={validPort} /></label>
+                            <input value={props.port || ""} onChange={(e) => props.portChanged(e.target.value)} placeholder="Ex: 465"
                                 style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                     </Box>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <SectionTitle icon={LockOutlinedIcon} title="Authentification" subtitle="utilisateur, mot de passe" />
                         <Box>
-                            <label style={labelStyle}>Port</label>
-                            <input value={props.port || ""} onChange={(e) => props.portChanged(e.target.value)} placeholder="Ex: 465"
+                            <label style={labelStyle}>Utilisateur mail (User) <FieldCheck valid={validUser} /></label>
+                            <input value={props.user || ""} onChange={(e) => props.userChanged(e.target.value)} placeholder="Ex: contact@domaine.com"
                                 style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                         <Box>
-                            <label style={labelStyle}>Mot de passe (Password)</label>
+                            <label style={labelStyle}>Mot de Passe (Password) <FieldCheck valid={validPassword} /></label>
                             <Box sx={{ position: "relative" }}>
                                 <input type={showPassword ? "text" : "password"} value={props.password || ""} onChange={(e) => props.passwordChanged(e.target.value)} placeholder="••••••••"
                                     style={{ ...inputStyle(false), paddingRight: 40 }} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
@@ -226,7 +248,14 @@ const Email = (props) => {
                     </Box>
                 </Box>
 
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5, mt: 3 }}>
+                <Box sx={{
+                    position: "sticky", bottom: 0, zIndex: 5, mt: 3, pt: 2, pb: 1,
+                    display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 2,
+                    background: "rgba(255,255,255,0.92)", backdropFilter: "blur(6px)", borderTop: "1px solid #e2e8f0",
+                }}>
+                    <Typography sx={{ fontSize: 12, color: "#94a3b8", mr: "auto" }}>
+                        Les champs marqués d'un <CheckCircleIcon sx={{ fontSize: 12, color: "#16a34a", verticalAlign: "middle" }} /> sont valides
+                    </Typography>
                     <LoadingButton
                         onClick={() => setShowTestModal(true)}
                         variant="outlined"

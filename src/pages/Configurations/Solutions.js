@@ -202,7 +202,7 @@ const Solutions = (props) => {
                     </Box>
                 </Box>
                 {viewMode === "list" ? (
-                    <ConfigTable items={filteredItems} columns={[
+                    <ConfigTable items={filteredItems} exportClassName="app-solutions" columns={[
                         { id: "objet",   label: "Objet",    sortable: true,  minWidth: 180, render: (sp) => sp.objetDto?.libelle ?? "-" },
                         { id: "content", label: "Solution", sortable: true,  minWidth: 220 },
                         { id: "actions", label: "Actions",  sortable: false, minWidth: 110, render: (sp) => (
@@ -211,7 +211,7 @@ const Solutions = (props) => {
                                 <Tooltip title="Supprimer"><IconButton onClick={() => setDeleteConfirm({ open: true, item: sp, loading: false })} color="error"><DeleteIcon /></IconButton></Tooltip>
                             </div>
                         )},
-                    ]} searchFields={["content"]} defaultSort="content" />
+                    ]} searchFields={["content", "objetLibelle"]} defaultSort="content" />
                 ) : (
                     <ConfigCardView items={filteredItems}
                         titleField="objetLibelle"
