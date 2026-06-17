@@ -2,7 +2,8 @@ import axios from "axios";
 import { HOST } from "../Utils/globals";
 import { notify } from "../Utils/alert";
 
-const CREATE_PUBLIC_REGISTER_API = HOST + "api/v1/config/user/publicRegister"
+// const CREATE_PUBLIC_REGISTER_API = HOST + "api/v1/config/user/publicRegister"
+const CREATE_PUBLIC_REGISTER_API = HOST + "api/v1/config/user/register"
 
 export const createUserPublic = (data) => {
     // console.log('createUserPublic', data);

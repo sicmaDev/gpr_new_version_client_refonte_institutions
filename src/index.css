@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Scrollbar fin pour le menu de navigation */
+.MuiDrawer-paper::-webkit-scrollbar,
+.MuiDrawer-paper > *::-webkit-scrollbar {
+  width: 3px !important;
+}
+.MuiDrawer-paper::-webkit-scrollbar-track,
+.MuiDrawer-paper > *::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.MuiDrawer-paper::-webkit-scrollbar-thumb,
+.MuiDrawer-paper > *::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-radius: 3px !important;
+}
+.MuiDrawer-paper,
+.MuiDrawer-paper > * {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent !important;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

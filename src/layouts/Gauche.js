@@ -43,6 +43,12 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
         duration: theme.transitions.duration.enteringScreen,
       }),
       boxSizing: 'border-box',
+      scrollbarWidth: 'thin',
+      scrollbarColor: 'rgba(255,255,255,0.2) transparent',
+      '&::-webkit-scrollbar': { width: '4px' },
+      '&::-webkit-scrollbar-track': { background: 'transparent' },
+      '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.2)', borderRadius: '4px' },
+      '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.35)' },
       ...(!open && {
         overflowX: 'hidden',
         transition: theme.transitions.create('width', {
@@ -85,9 +91,23 @@ export default function Gauche() {
                 </IconButton>
             </Toolbar>
             <Divider />
-            <List component="nav" >
-                <Items/>
-            </List>
+            <Box
+                sx={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    '&::-webkit-scrollbar': { width: '3px' },
+                    '&::-webkit-scrollbar-track': { background: 'transparent' },
+                    '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.25)', borderRadius: '3px' },
+                    '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.45)' },
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(255,255,255,0.25) transparent',
+                }}
+            >
+                <List component="nav">
+                    <Items/>
+                </List>
+            </Box>
         </Drawer>
         <Contenu/>
     </Box>

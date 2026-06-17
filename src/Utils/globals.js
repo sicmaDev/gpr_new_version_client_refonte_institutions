@@ -27,7 +27,7 @@ function reportHost(){
     return "https://api.rapport.gprserver.com/"
 }
 
-export const LOCKSCREEN_TIMEOUT = 300000; //5min
+export const LOCKSCREEN_TIMEOUT = 10000; // 10sec — TEST (remettre 300000 après)
 export const WPP_CONNECT_IS_DEV = true;
 export const  WPP_CONNECT_TOKEN = "THISISMYSECURETOKEN"
 export const  WPP_CONNECT_OPTIONS = {waitQrCode:true,webhook:HOST+"api/v1/webhook/save"}
