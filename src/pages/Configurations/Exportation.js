@@ -1,12 +1,15 @@
 import { Save } from "@mui/icons-material"
 import { LoadingButton } from "@mui/lab"
 import Select from "react-select"
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { exportConfigs } from "../../apis/Configurations/ExportationApi";
+import { exportLogs } from "../../apis/Configurations/LogApi";
 import { generateString } from "../../Utils/utils";
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Chip, Divider } from "@mui/material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import HistoryIcon from "@mui/icons-material/History";
+import ConfigTable from "../../components/shared/ConfigTable";
 
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" };
 
@@ -20,20 +23,77 @@ const selectStyles = {
     menu: provided => ({ ...provided, zIndex: 9999 }),
 };
 
+const TYPE_LABELS = {
+    claims: "Réclamations",
+    denunciations: "Dénonciations",
+    suggestions: "Suggestions",
+    configs: "Configurations",
+};
+
 const Exportation = () => {
 
-    const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [typeExport, setTypeExport] = useState({
-        value: "configs",
-        label: ""
-    });
+    const [typeExport, setTypeExport] = useState({ value: "configs", label: "Configurations" });
+    const [history, setHistory] = useState([]);
 
-    const handleSubmit = (e) => {
-        const jsonFile = `Exportation_${typeExport.label}_${generateString(5)}.json`
-        exportConfigs(typeExport.value, jsonFile)
+    const loadHistory = () => {
+        exportLogs().then(({ data }) => {
+            setHistory(data.content || []);
+        }).catch(() => {
+            setHistory([]);
+        });
+    };
 
-    }
+    useEffect(() => {
+        loadHistory();
+    }, []);
+
+    const handleSubmit = () => {
+        const jsonFile = `Exportation_${typeExport.label}_${generateString(5)}.json`;
+        exportConfigs(typeExport.value, jsonFile, loadHistory);
+    };
+
+    const historyColumns = useMemo(() => [
+        {
+            id: "content",
+            label: "Type exporté",
+            sortable: true,
+            minWidth: 160,
+            render: (row) => {
+                const label = TYPE_LABELS[row.content] || row.content || "—";
+                const colorMap = { claims: "#3B82F6", denunciations: "#F59E0B", suggestions: "#10B981", configs: "#8B5CF6" };
+                const bg = colorMap[row.content] || "#64748B";
+                return <Chip label={label} size="small" sx={{ backgroundColor: bg, color: "#fff", fontWeight: 700, fontSize: "0.72rem" }} />;
+            }
+        },
+        {
+            id: "userIpAddress",
+            label: "Exporté par",
+            sortable: true,
+            minWidth: 200,
+            render: (row) => (
+                <span style={{ paddingLeft: 8 }}>{row.userIpAddress || "—"}</span>
+            )
+        },
+        {
+            id: "createdAt",
+            label: "Date",
+            sortable: true,
+            minWidth: 120,
+            render: (row) => row.createdAt
+                ? new Intl.DateTimeFormat("fr-FR", { year: "numeric", month: "long", day: "2-digit" }).format(new Date(row.createdAt))
+                : "—"
+        },
+        {
+            id: "createdAtHour",
+            label: "Heure",
+            sortable: false,
+            minWidth: 100,
+            render: (row) => row.createdAt
+                ? new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(new Date(row.createdAt))
+                : "—"
+        },
+    ], []);
 
     return (
         <div className="card-panel pb-5">
@@ -67,7 +127,7 @@ const Exportation = () => {
 
             <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
                 <LoadingButton
-                    onClick={(e) => handleSubmit(e)}
+                    onClick={handleSubmit}
                     loading={isLoading}
                     loadingPosition="start"
                     startIcon={<Save style={{ fontSize: 16 }} />}
@@ -77,8 +137,28 @@ const Exportation = () => {
                     Exporter
                 </LoadingButton>
             </Box>
-        </div>
-    )
-}
 
-export default Exportation
+            <Divider sx={{ my: 4 }} />
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
+                <Box sx={{ width: 34, height: 34, borderRadius: 2, background: "#F0FDF4", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <HistoryIcon sx={{ color: "#16A34A", fontSize: 18 }} />
+                </Box>
+                <Box>
+                    <Typography sx={{ fontWeight: 700, fontSize: "0.92rem", color: "#0F172A" }}>Historique des exportations</Typography>
+                    <Typography sx={{ fontSize: 12, color: "#64748b" }}>{history.length} téléchargement{history.length !== 1 ? "s" : ""} enregistré{history.length !== 1 ? "s" : ""}</Typography>
+                </Box>
+            </Box>
+
+            <ConfigTable
+                items={history}
+                exportClassName="export-history"
+                columns={historyColumns}
+                searchFields={["content", "userIpAddress"]}
+                defaultSort="createdAt"
+            />
+        </div>
+    );
+};
+
+export default Exportation;

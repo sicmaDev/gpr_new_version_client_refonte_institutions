@@ -339,7 +339,7 @@ export const Haut = (props) => {
                       {user.firstAndLastName.trim().split(' ')[0][0]}
                     </Avatar>
                     {open && (
-                      <div style={{ overflow: 'hidden' }}>
+                      <div style={{ overflow: 'hidden', flex: 1 }}>
                         <div style={{ color: 'white', fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {user.firstAndLastName}
                         </div>
@@ -349,21 +349,34 @@ export const Haut = (props) => {
                       </div>
                     )}
                   </div>
+                  {open && (
+                    <NavLink to="/logout" onClick={(e) => logOut(e)} style={{ textDecoration: 'none' }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 0,
+                        borderRadius: 12, margin: '4px 0 0', padding: '8px 12px',
+                        minHeight: 38, cursor: 'pointer',
+                        background: 'transparent', transition: 'background 0.2s ease',
+                      }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,80,80,0.14)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ minWidth: 34, display: 'flex', alignItems: 'center' }}>
+                          <Logout style={{ color: 'rgba(255,255,255,0.65)', fontSize: 18 }} />
+                        </div>
+                        <span style={{ fontSize: 14.5, fontWeight: 400, color: 'rgba(255,255,255,0.78)' }}>Déconnexion</span>
+                      </div>
+                    </NavLink>
+                  )}
                 </div>
             </Drawer>
             <Contenu/>
-            <footer
-              className="page-footer footer footer-static footer-light footer-bottom white navbar-border navbar-shadow">
-              <div className="footer-copyright" style={{ ...(open && { marginLeft: "12%" }) }}>
-                  <div className="container"><span>&copy; {(new Date().getFullYear())} <a href={APP_OWNER_WEBSITE} target="_blank">{APP_OWNER}</a> Tous droits réservés.</span>
-                  <span className="right hide-on-small-only hide"> <a href="#"></a></span></div>
-                  {message !== undefined && 
-                    (<div className="" style={{color:"red",width:"500px",fontSize:"18px",textAlign:"center",fontStyle:"bold",fontWeight:"700"}} >
-                      {message}
-                    </div>)
-                  } 
-              </div>
-           
+            <footer style={{ padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', ...(open && { marginLeft: 0 }) }}>
+              <span style={{ fontSize: 11, color: '#cbd5e1' }}>
+                &copy; {new Date().getFullYear()} <a href={APP_OWNER_WEBSITE} target="_blank" rel="noreferrer" style={{ color: '#94a3b8', textDecoration: 'none' }}>{APP_OWNER}</a>
+              </span>
+              {message !== undefined && (
+                <span style={{ fontSize: 12, color: '#EF4444', fontWeight: 600 }}>{message}</span>
+              )}
             </footer>
           </Box>
       
@@ -415,15 +428,14 @@ export const Haut = (props) => {
 
                   
                 
-                  <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
-                    {contenuMode} 
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textAlign: 'center' }}>
+                    {contenuMode}
 
-                   
-                    <Tooltip title="Compte">
+                    <Tooltip title="Mon compte">
                       <IconButton
                         onClick={handleClick}
                         size="small"
-                        sx={{ ml: 2 }}
+                        sx={{ ml: 0.5 }}
                         aria-controls={opena ? 'account-menu' : undefined}
                         aria-haspopup="true"
                         aria-expanded={opena ? 'true' : undefined}
@@ -536,7 +548,7 @@ export const Haut = (props) => {
                       {user.firstAndLastName.trim().split(' ')[0][0]}
                     </Avatar>
                     {open && (
-                      <div style={{ overflow: 'hidden' }}>
+                      <div style={{ overflow: 'hidden', flex: 1 }}>
                         <div style={{ color: 'white', fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {user.firstAndLastName}
                         </div>
@@ -546,6 +558,24 @@ export const Haut = (props) => {
                       </div>
                     )}
                   </div>
+                  {open && (
+                    <NavLink to="/logout" onClick={(e) => logOut(e)} style={{ textDecoration: 'none' }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 0,
+                        borderRadius: 12, margin: '4px 0 0', padding: '8px 12px',
+                        minHeight: 38, cursor: 'pointer',
+                        background: 'transparent', transition: 'background 0.2s ease',
+                      }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,80,80,0.14)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ minWidth: 34, display: 'flex', alignItems: 'center' }}>
+                          <Logout style={{ color: 'rgba(255,255,255,0.65)', fontSize: 18 }} />
+                        </div>
+                        <span style={{ fontSize: 14.5, fontWeight: 400, color: 'rgba(255,255,255,0.78)' }}>Déconnexion</span>
+                      </div>
+                    </NavLink>
+                  )}
                 </div>
             </Drawer>
             <Contenu/>

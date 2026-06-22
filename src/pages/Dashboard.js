@@ -40,7 +40,7 @@ import DnsIcon from '@mui/icons-material/Dns';
 import MemoryIcon from '@mui/icons-material/Memory';
 import SdStorageIcon from '@mui/icons-material/SdStorage';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
-import { logs } from '../apis/Configurations/LogApi';
+import { logs, exportLogs } from '../apis/Configurations/LogApi';
 import { systemPerformance } from '../apis/Configurations/ReportApi';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -302,34 +302,37 @@ const DonutChart = ({ segments, loading }) => {
     );
   };
 
+  const SIZE = 180;
+
   return (
-    <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 14, height: 180 }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={segments.filter(s => s.value > 0)}
-            cx="50%"
-            cy="50%"
-            innerRadius={50}
-            outerRadius={80}
-            dataKey="value"
-            stroke="none"
-            labelLine={false}
-            label={renderCustomizedLabel}
-          >
-            {segments.filter(s => s.value > 0).map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
-          <RechartsTooltip formatter={(value, name, props) => [value, props.payload.label]} />
-        </PieChart>
-      </ResponsiveContainer>
+    <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+      <PieChart width={SIZE} height={SIZE}>
+        <Pie
+          data={segments.filter(s => s.value > 0)}
+          cx={SIZE / 2}
+          cy={SIZE / 2}
+          innerRadius={52}
+          outerRadius={82}
+          dataKey="value"
+          stroke="none"
+          labelLine={false}
+          label={renderCustomizedLabel}
+        >
+          {segments.filter(s => s.value > 0).map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
+          ))}
+        </Pie>
+        <RechartsTooltip
+          formatter={(value, name, props) => [value, props.payload.label]}
+          wrapperStyle={{ zIndex: 10 }}
+        />
+      </PieChart>
       <div style={{
-          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none'
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none'
       }}>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{total}</div>
-          <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.4px' }}>total</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>{total}</div>
+        <div style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.4px', marginTop: 3 }}>total</div>
       </div>
     </div>
   );
@@ -466,18 +469,24 @@ const Dashboard = (props) => {
     },
   };
 
-  // ── User / habilitations (preserved exactly) ───────────────────────────
+  // ── User / habilitations ───────────────────────────────────────────────
   const user = loadItemFromSessionStorage('app-user') !== undefined
     ? JSON.parse(loadItemFromSessionStorage('app-user')) : undefined;
-  const hbt  = (user.posteDto.habilitations).split(',');
-  const addR = user.additionalRole;
+  const hbt     = (user.posteDto.habilitations).split(',');
+  const addR    = user.additionalRole;
+  const isRA    = user.ra === true;
+  const isPilote = addR === 'PILOTE';
+  const agenceName = user.servicePointDto?.libelle || 'Mon agence';
 
   // ── Activité récente (logs système) — vue admin H12 ────────────────────
   const [recentLogs, setRecentLogs] = useState([]);
+  const [exportHistory, setExportHistory] = useState([]);
   useEffect(() => {
     if (hbt.includes('H12')) {
       logs().then(({ data }) => setRecentLogs((data.content || []).slice(0, 6)))
         .catch(() => setRecentLogs([]));
+      exportLogs().then(({ data }) => setExportHistory((data.content || []).slice(0, 6)))
+        .catch(() => setExportHistory([]));
     }
   }, []);
 
@@ -564,9 +573,9 @@ const Dashboard = (props) => {
   ];
 
   // Gravity distribution — mapping Mineur, Moyen, Grave (en retard)
-  const gMineur = content.filter(i => i.gravity === 'Mineur' || i.gravity === 'low' || (!i.gravity && (i.retardDay || 0) <= 2)).length;
-  const gMoyen  = content.filter(i => i.gravity === 'Moyen' || i.gravity === 'medium' || (!i.gravity && (i.retardDay || 0) > 2 && (i.retardDay || 0) <= 5)).length;
-  const gGrave  = content.filter(i => i.gravity === 'Grave' || i.gravity === 'high' || i.gravity === 'critical' || (!i.gravity && (i.retardDay || 0) > 5)).length;
+  const gMineur = content.filter(i => i.gravity === 'MINEUR').length;
+  const gMoyen  = content.filter(i => i.gravity === 'MOYEN').length;
+  const gGrave  = content.filter(i => i.gravity === 'GRAVE').length;
 
   // Overdue items — sorted by retardDay desc, first 5
   const overdueItems = [...content].sort((a, b) => (b.retardDay || 0) - (a.retardDay || 0)).slice(0, 5);
@@ -629,6 +638,149 @@ const Dashboard = (props) => {
   ];
   const pendingConfigs = allConfigItems.filter(c => c.data.length === 0);
 
+  // ── Vue opérationnelle partagée (données déjà filtrées côté backend) ──────
+  const vueOperationnelle = (
+    /* ════════════════════════════ TABLEAU DE BORD ═══════════════════════ */
+    <div className={pageClass} style={page}>
+
+      {/* ── Section 1 : Header ── */}
+      <div style={{ marginBottom: 24 }}>
+        <h4 style={{ margin: '0 0 4px', fontWeight: 700, color: '#0f172a', fontSize: 22 }}>Tableau de bord</h4>
+        <p style={{ margin: 0, color: '#64748b', fontSize: 13.5 }}>Vue d'ensemble des dossiers et indicateurs clés</p>
+      </div>
+
+      {/* ── Section 2 : KPI cards ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
+
+        <StatCard value={total}          label="RSD enregistrées" sub={`${claimsCount} réc. · ${denUnsCount} dén. · ${suggestCount} sug.`} IconComp={SummarizeIcon} iconColor="#6366f1" loading={loading} />
+        <StatCard value={affected}        label="Affectés"                                   IconComp={RedoIcon}                  iconColor="#8b5cf6" loading={loading} />
+        <StatCard value={overdue}         label="En retard de traitement"                    IconComp={AssignmentLateIcon}        iconColor="#f43f5e" loading={loading} />
+        <StatCard value={treated}         label="Traités"                                    IconComp={RecyclingIcon}             iconColor="#10b981" loading={loading} />
+        <StatCard value={awaitingMeasure} label="En attente de mesure"                       IconComp={AccessTimeIcon}            iconColor="#f59e0b" loading={loading} />
+        <StatCard
+          value={(() => { const v = Number(props.dashboard?.tauxSatisfaction); return (!isNaN(v) && v > 0) ? v.toFixed(1) + ' %' : '0.0 %'; })()}
+          inlineSub={(() => { const v = Number(props.dashboard?.tauxSatisfaction); return (!isNaN(v) && v > 0) ? `(${(v / 100 * 5).toFixed(1)}/5)` : '(0.0/5)'; })()}
+          progress={(() => { const v = Number(props.dashboard?.tauxSatisfaction); return !isNaN(v) ? v : 0; })()}
+          label="Satisfaction réclamations"
+          IconComp={SentimentSatisfiedAltIcon}
+          iconColor="#0ea5e9"
+          loading={loading}
+        />
+
+      </div>
+
+      {/* ── Section 3 : Charts ── */}
+      <div className="row" style={{ marginBottom: 4 }}>
+
+        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
+          <Card>
+            <CardHeader title="Par statut" subtitle="Répartition des dossiers" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ flex: '0 0 45%', minWidth: 0 }}>
+                <DonutChart segments={donutSegments} loading={loading} />
+              </div>
+              <SideLegend segments={donutSegments} total={donutSegments.reduce((s, i) => s + (i.value || 0), 0)} showCount />
+            </div>
+          </Card>
+        </div>
+
+        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
+          <Card>
+            <CardHeader title="Par catégorie" subtitle="Types de dossiers" />
+            <VerticalBars loading={loading} data={[
+              { label: 'Réclamations',  value: claimsCount,  color: '#f97316' },
+              { label: 'Dénonciations', value: denUnsCount,  color: '#ef4444' },
+              { label: 'Suggestions',   value: suggestCount, color: '#3b82f6' },
+            ]} />
+          </Card>
+        </div>
+
+        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
+          <Card>
+            <CardHeader title="Par gravité" subtitle="Niveaux de criticité" />
+            <HorizontalBars loading={loading} data={[
+              { label: 'Grave',  value: gGrave,  color: '#dc2626' },
+              { label: 'Moyen',  value: gMoyen,  color: '#f59e0b' },
+              { label: 'Mineur', value: gMineur, color: '#10b981' },
+            ]} />
+          </Card>
+        </div>
+
+      </div>
+
+      {/* ── Section 4 : Dossiers en retard ── */}
+      <div className="row">
+        <div className="col l12 m12 s12" style={{ marginBottom: 16 }}>
+          <Card>
+            <CardHeader
+              title={
+                <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <AssignmentLateIcon style={{ fontSize: 16, color: '#f9005e' }} />
+                  Dossiers en retard
+                </span>
+              }
+              action={
+                <NavLink to="/alertes/reclamations" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: '#005081', fontWeight: 600 }}>
+                  Voir tout <ArrowForwardIcon style={{ fontSize: 14 }} />
+                </NavLink>
+              }
+            />
+            {loading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+                <CircularProgress size={24} />
+              </div>
+            ) : overdueItems.length === 0 ? (
+              <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
+                Aucun dossier en retard
+              </div>
+            ) : (
+              overdueItems.map((item, i) => {
+                const badge = typeBadge(item.type);
+                const url   = item.type === 'CLAIM'
+                  ? (item.status === 'TREAT' ? `/reclamations/mesure/${item.claimCode}` : `/reclamations/traitement/${item.claimCode}`)
+                  : `/denonciations/traitement/${item.claimCode}`;
+                return (
+                  <NavLink key={i} to={url} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                    <div
+                      style={{ padding: '11px 0', borderBottom: i < overdueItems.length - 1 ? '1px solid #f8fafc' : 'none', transition: 'background 0.15s', borderRadius: 6 }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 700, flexShrink: 0, background: badge.bg, color: badge.color }}>
+                            {badge.label}
+                          </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: '#005081', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {item.claimCodeClient}
+                            </span>
+                            <span style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '250px' }}>
+                              {item.objetLibelle || item.objet?.libelle || item.content || '—'}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: '#f9005e', background: '#ffe8f0', padding: '2px 8px', borderRadius: 20 }}>
+                            <AccessTimeIcon style={{ fontSize: 12 }} />
+                            {item.retardDay} retard
+                          </span>
+                          <ArrowForwardIcon style={{ fontSize: 14, color: '#005081' }} />
+                        </div>
+                      </div>
+                    </div>
+                  </NavLink>
+                );
+              })
+            )}
+          </Card>
+        </div>
+      </div>
+
+      <div className="content-overlay" />
+    </div>
+  );
+
   // ══════════════════════════════════════════════════════════════════════════
   return hbt.includes('H12') ? (
 
@@ -646,7 +798,6 @@ const Dashboard = (props) => {
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
         <StatCard value={`${compte} / 7`}                 label="Modules configurés"    sub="modules requis"    IconComp={SettingsIcon}             iconColor="#005081"  iconBg="#e0f0ff" loading={false} />
-        <StatCard value={utilisateurs.length}              label="Utilisateurs"          sub="comptes déclarés"  IconComp={PersonOutlineOutlinedIcon} iconColor="#0891b2"  iconBg="#ecfeff" loading={false} />
         <StatCard value={Math.round((compte / 7) * 100) + '%'} label="Taux de config"  sub="progression totale" IconComp={TrendingUpIcon}           iconColor="#059669"  iconBg="#d1fae5" loading={false} />
         <StatCard
           value={pendingConfigs.length}
@@ -657,6 +808,7 @@ const Dashboard = (props) => {
           iconBg={pendingConfigs.length > 0 ? '#fee2e2' : '#d1fae5'}
           loading={false}
         />
+        <StatCard value={utilisateurs.length}              label="Utilisateurs"          sub="comptes créés"  IconComp={PersonOutlineOutlinedIcon} iconColor="#0891b2"  iconBg="#ecfeff" loading={false} />
       </div>
 
       {/* Section : Configuration / Paramètres métier & Performance du système */}
@@ -795,9 +947,6 @@ const Dashboard = (props) => {
                       <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {log.libelle || log.content || '—'}
                       </div>
-                      {log.target && (
-                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{log.target}</div>
-                      )}
                     </div>
                     <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0, whiteSpace: 'nowrap' }}>
                       {timeAgo(log.createdAt)}
@@ -809,168 +958,38 @@ const Dashboard = (props) => {
           </Card>
         </div>
 
-        {/* Alertes — dossiers en retard de traitement */}
+        {/* Historique des exportations */}
         <div style={{ flex: '2 1 600px', display: 'flex' }}>
           <Card style={{ flex: 1 }}>
-            <CardHeader
-              title="Alertes (Dossiers en retard)"
-              action={overdue > 0 && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', background: '#fee2e2', padding: '3px 10px', borderRadius: 20 }}>
-                  {overdue}
-                </span>
-              )}
-            />
-            {overdueItems.length === 0 ? (
+            <CardHeader title="Historique des exportations" action={seeAll('/configurations/exportation')} />
+            {exportHistory.length === 0 ? (
               <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
-                Aucun dossier en retard ✓
+                Aucun export effectué
               </div>
             ) : (
-              overdueItems.map((item, i) => <ClaimRow key={i} item={item} showGravity />)
-            )}
-          </Card>
-        </div>
-
-      </div>
-
-    </div>
-
-  ) : (
-
-    /* ════════════════════════════ TABLEAU DE BORD ═══════════════════════ */
-    <div className={pageClass} style={page}>
-
-      {/* ── Section 1 : Header ── */}
-      <div style={{ marginBottom: 24 }}>
-        <h4 style={{ margin: '0 0 4px', fontWeight: 700, color: '#0f172a', fontSize: 22 }}>Tableau de bord</h4>
-        <p style={{ margin: 0, color: '#64748b', fontSize: 13.5 }}>Vue d'ensemble des dossiers et indicateurs clés</p>
-      </div>
-
-      {/* ── Section 2 : KPI cards (données exactes du dashboard) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
-
-        <StatCard value={total}          label="RSD enregistrées" sub={`${claimsCount} réc. · ${denUnsCount} dén. · ${suggestCount} sug.`} IconComp={SummarizeIcon} iconColor="#6366f1" loading={loading} />
-        <StatCard value={affected}        label="Affectés"                                   IconComp={RedoIcon}                  iconColor="#8b5cf6" loading={loading} />
-        <StatCard value={overdue}         label="En retard de traitement"                    IconComp={AssignmentLateIcon}        iconColor="#f43f5e" loading={loading} />
-        <StatCard value={treated}         label="Traités"                                    IconComp={RecyclingIcon}             iconColor="#10b981" loading={loading} />
-        <StatCard value={awaitingMeasure} label="En attente de mesure"                       IconComp={AccessTimeIcon}            iconColor="#f59e0b" loading={loading} />
-        <StatCard
-          value={props.dashboard?.tauxSatisfaction != null ? Number(props.dashboard.tauxSatisfaction).toFixed(1) + ' %' : undefined}
-          inlineSub={props.dashboard?.tauxSatisfaction != null ? `(${(Number(props.dashboard.tauxSatisfaction) / 100 * 5).toFixed(1)}/5)` : undefined}
-          progress={props.dashboard?.tauxSatisfaction != null ? Number(props.dashboard.tauxSatisfaction) : undefined}
-          label="Satisfaction réclamations"
-          IconComp={SentimentSatisfiedAltIcon}
-          iconColor="#0ea5e9"
-          loading={loading}
-        />
-
-      </div>
-
-      {/* ── Section 3 : Charts (dérivés des 8 KPI) ── */}
-      <div className="row" style={{ marginBottom: 4 }}>
-
-        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
-          <Card>
-            <CardHeader title="Par statut" subtitle="Répartition des dossiers" />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ flex: '0 0 45%', minWidth: 0 }}>
-                <DonutChart segments={donutSegments} loading={loading} />
-              </div>
-              <SideLegend segments={donutSegments} total={donutSegments.reduce((s, i) => s + (i.value || 0), 0)} showCount />
-            </div>
-          </Card>
-        </div>
-
-        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
-          <Card>
-            <CardHeader title="Par catégorie" subtitle="Types de dossiers" />
-            <VerticalBars loading={loading} data={[
-              { label: 'Réclamations',  value: claimsCount,  color: '#f97316' },
-              { label: 'Dénonciations', value: denUnsCount,  color: '#ef4444' },
-              { label: 'Suggestions',   value: suggestCount, color: '#3b82f6' },
-            ]} />
-          </Card>
-        </div>
-
-        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
-          <Card>
-            <CardHeader title="Par gravité" subtitle="Niveaux de criticité" />
-            <HorizontalBars loading={loading} data={[
-              { label: 'Grave', value: gGrave,  color: '#dc2626' },
-              { label: 'Moyen', value: gMoyen,  color: '#f59e0b' },
-              { label: 'Mineur', value: gMineur, color: '#10b981' },
-            ]} />
-          </Card>
-        </div>
-
-      </div>
-
-      {/* ── Section 4 : Listes dossiers ── */}
-      <div className="row">
-
-        {/* ── Dossiers en retard ── */}
-        <div className="col l12 m12 s12" style={{ marginBottom: 16 }}>
-          <Card>
-            <CardHeader
-              title={
-                <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <AssignmentLateIcon style={{ fontSize: 16, color: '#f9005e' }} />
-                  Dossiers en retard
-                </span>
-              }
-              action={
-                <NavLink to="/alertes/reclamations" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: '#005081', fontWeight: 600 }}>
-                  Voir tout <ArrowForwardIcon style={{ fontSize: 14 }} />
-                </NavLink>
-              }
-            />
-            {loading ? (
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
-                <CircularProgress size={24} />
-              </div>
-            ) : overdueItems.length === 0 ? (
-              <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
-                Aucun dossier en retard
-              </div>
-            ) : (
-              overdueItems.map((item, i) => {
-                const badge = typeBadge(item.type);
-                const url   = item.type === 'CLAIM'
-                  ? (item.status === 'TREAT' ? `/reclamations/mesure/${item.claimCode}` : `/reclamations/traitement/${item.claimCode}`)
-                  : `/denonciations/traitement/${item.claimCode}`;
+              exportHistory.map((exp, i) => {
+                const TYPE_COLORS = { claims: '#3B82F6', denunciations: '#F59E0B', suggestions: '#10B981', configs: '#8B5CF6' };
+                const TYPE_LABELS = { claims: 'Réclamations', denunciations: 'Dénonciations', suggestions: 'Suggestions', configs: 'Configurations' };
+                const bg    = TYPE_COLORS[exp.content] || '#64748B';
+                const label = TYPE_LABELS[exp.content] || exp.content || '—';
+                const date  = exp.createdAt
+                  ? new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(exp.createdAt))
+                  : '—';
                 return (
-                  <NavLink key={i} to={url} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                    <div
-                      style={{ padding: '11px 0', borderBottom: i < overdueItems.length - 1 ? '1px solid #f8fafc' : 'none', transition: 'background 0.15s', borderRadius: 6 }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                          <span style={{
-                            fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 700, flexShrink: 0,
-                            background: badge.bg, color: badge.color,
-                          }}>
-                            {badge.label}
-                          </span>
-                          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: '#005081', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {item.claimCodeClient}
-                            </span>
-                            <span style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '250px' }}>
-                              {item.objet?.libelle || item.objet || item.subject || item.content || "Non fourni par l'API"}
-                            </span>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: '#f9005e', background: '#ffe8f0', padding: '2px 8px', borderRadius: 20 }}>
-                            <AccessTimeIcon style={{ fontSize: 12 }} />
-                            {item.retardDay}j retard
-                          </span>
-                          <ArrowForwardIcon style={{ fontSize: 14, color: '#005081' }} />
-                        </div>
-                      </div>
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0',
+                    borderBottom: i < exportHistory.length - 1 ? '1px solid #f8fafc' : 'none',
+                  }}>
+                    <span style={{ background: bg, color: '#fff', fontWeight: 700, fontSize: 11, borderRadius: 6, padding: '3px 10px', whiteSpace: 'nowrap' }}>
+                      {label}
+                    </span>
+                    <div style={{ flex: 1, fontSize: 12.5, color: '#334155', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {exp.userIpAddress || '—'}
                     </div>
-                  </NavLink>
+                    <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                      {date}
+                    </div>
+                  </div>
                 );
               })
             )}
@@ -979,8 +998,23 @@ const Dashboard = (props) => {
 
       </div>
 
-      <div className="content-overlay" />
     </div>
+
+  ) : isPilote ? (
+
+    /* ════════════════ VUE PILOTE ════════════════ */
+    vueOperationnelle
+
+  ) : isRA ? (
+
+    /* ════════════════ VUE RA ════════════════ */
+    vueOperationnelle
+
+  ) : (
+
+    /* ════════════════ VUE USER SIMPLE ════════════════ */
+    vueOperationnelle
+
   );
 };
 

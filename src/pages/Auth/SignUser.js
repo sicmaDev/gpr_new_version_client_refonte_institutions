@@ -488,17 +488,17 @@ const SignCompteUser = (props) => {
 
             {/* ── Colonne droite — formulaire ── */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white flex flex-col">
-              <div className="flex flex-col items-center px-6 sm:px-10 lg:px-4 pt-4 sm:pt-6 flex-1">
+              <div className="flex flex-col items-center px-6 sm:px-10 lg:px-4 pt-10 sm:pt-14 flex-1">
                 <div className="w-full max-w-[680px] animate-fade-up">
 
                     {/* Logos header — toujours visible */}
                     <div className="mb-4">
-                        <div className="flex items-center justify-center gap-3 mb-2">
-                            <div className="bg-[#f4f7fb] rounded-xl w-8 h-8 flex-shrink-0 overflow-hidden">
-                                <img src={logo} alt="Logo GPR" className="h-full w-auto object-cover object-left" />
+                        <div className="flex items-center justify-center gap-4 mb-2">
+                            <div className="bg-[#f4f7fb] rounded-xl w-12 h-12 flex-shrink-0 overflow-hidden">
+                                <img src={logo} alt="Logo GPR" className="h-12 w-auto object-cover object-left" />
                             </div>
-                            <div className="w-px h-6 bg-[#e2e8f0]" />
-                            <img src={logoSicma} alt="Logo Institution" className="h-8 object-contain" />
+                            <div className="w-px h-8 bg-[#e2e8f0]" />
+                            <img src={logoSicma} alt="Logo Institution" className="h-10 object-contain" />
                         </div>
                         {/* Titre visible uniquement quand le panneau gauche est masqué */}
                         <div className="md:hidden text-center">

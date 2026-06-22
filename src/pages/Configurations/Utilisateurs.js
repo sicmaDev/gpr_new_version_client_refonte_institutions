@@ -527,10 +527,13 @@ const Utilisateurs = (props) => {
                 </Box>
                 {viewMode === "list" ? (
                     <ConfigTable items={filteredUsers} exportClassName="app-users" columns={[
-                        { id: "identity",  label: "Identité",   sortable: true,  minWidth: 190, render: (u) => (
+                        { id: "identity",  label: "Identité",   sortable: true,  minWidth: 200, render: (u) => (
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                 {u.deleted && <Block color="error" style={{ fontSize: 14 }} />}
-                                <div><span style={{ fontWeight: 700, color: u.deleted ? "#bbb" : "#0F172A", fontStyle: u.deleted ? "italic" : undefined }}>{u.firstAndLastName}</span><br /><span style={{ color: u.deleted ? "#bbb" : undefined, fontStyle: u.deleted ? "italic" : undefined }}>{u.code}</span></div>
+                                <div>
+                                    <div style={{ fontWeight: 700, color: u.deleted ? "#bbb" : "#0F172A", fontStyle: u.deleted ? "italic" : undefined, lineHeight: 1.5 }}>{u.firstAndLastName}</div>
+                                    <div style={{ color: u.deleted ? "#bbb" : "#64748b", fontStyle: u.deleted ? "italic" : undefined, fontSize: 12, marginTop: 2 }}>{u.code}</div>
+                                </div>
                             </div>
                         )},
                         { id: "poste",     label: "Poste",      sortable: true,  minWidth: 190, render: (u) => {

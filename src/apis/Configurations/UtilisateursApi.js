@@ -60,7 +60,7 @@ export let all = async (props) => {
                 saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
                 saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
                 props.itemsChanged(response.data.content);
-                // console.log("reponseuser", response.data.content)
+                console.log("USERS API:", response.data.content);
             }
 
         })

@@ -71,16 +71,16 @@ const GroupLabel = ({ children }) => (
     fontSize: '10px',
     fontWeight: 800,
     letterSpacing: '1.4px',
-    color: 'rgba(255,255,255,0.30)',
+    color: 'rgba(255,255,255,0.52)',
     textTransform: 'uppercase',
     userSelect: 'none',
     display: 'flex',
     alignItems: 'center',
     gap: 8,
   }}>
-    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)', borderRadius: 1 }} />
+    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.14)', borderRadius: 1 }} />
     {children}
-    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)', borderRadius: 1 }} />
+    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.14)', borderRadius: 1 }} />
   </div>
 );
 
@@ -177,8 +177,8 @@ export const Items = (props) => {
       borderRadius: '12px',
       mx: 0.75,
       my: 0.25,
-      pl,
-      pr: 1.5,
+      pl: active ? pl + 0.75 : pl,
+      pr: active ? 2.25 : 1.5,
       minHeight: 38,
       transition: 'all 0.2s ease',
       backgroundColor: active ? '#fff' : 'transparent',
@@ -201,8 +201,8 @@ export const Items = (props) => {
       borderRadius: '12px',
       mx: 0.75,
       my: 0.25,
-      pl,
-      pr: 1.5,
+      pl: active ? pl + 0.75 : pl,
+      pr: active ? 2.25 : 1.5,
       minHeight: 38,
       transition: 'all 0.2s ease',
       backgroundColor: active ? '#fff' : 'transparent',
@@ -226,8 +226,8 @@ export const Items = (props) => {
       mx: 0.75,
       my: 0.15,
       ml: 2.25,
-      pl: 1.5,
-      pr: 1.5,
+      pl: active ? 2.25 : 1.5,
+      pr: active ? 2.25 : 1.5,
       minHeight: 32,
       position: 'relative',
       transition: 'all 0.2s ease',
@@ -681,12 +681,12 @@ export const Items = (props) => {
         </>
       )}
 
-      {/* Sauvegarde et surveillance */}
+      {/* Backup surveillance */}
       {showConfigs && (
         <>
           <ListItemButton onClick={handleClick7} sx={hSx('/sauvegarde')}>
             <ListItemIcon><BackupIcon style={col(isActive('/sauvegarde'))} /></ListItemIcon>
-            <ListItemText primary="Sauvegarde et surveillance" />
+            <ListItemText primary="Backup surveillance" />
             <Chevron open={open7} />
           </ListItemButton>
           <Collapse in={open7} timeout="auto" unmountOnExit>
@@ -718,19 +718,6 @@ export const Items = (props) => {
         <ListItemButton sx={iSx('/help')} className="lib">
           <ListItemIcon><QuizIcon style={col(isActive('/help'))} /></ListItemIcon>
           <ListItemText primary="Ressources" />
-        </ListItemButton>
-      </NavLink>
-      {/* Déconnexion */}
-      <NavLink to="/logout" onClick={logOut} style={link}>
-        <ListItemButton sx={{
-          borderRadius: '8px', mx: 0.75, my: 0.1, pl: 2, pr: 1.5, minHeight: 38,
-          transition: 'background 0.18s',
-          '&:hover': { backgroundColor: 'rgba(255,80,80,0.14)' },
-          '& .MuiListItemText-primary': { fontSize: '14.5px', fontWeight: 500, color: 'rgba(255,160,160,0.9)' },
-          '& .MuiListItemIcon-root': { minWidth: 34 },
-        }}>
-          <ListItemIcon><LogoutIcon style={{ color: 'rgba(255,160,160,0.8)', fontSize: '18px' }} /></ListItemIcon>
-          <ListItemText primary="Déconnexion" />
         </ListItemButton>
       </NavLink>
 

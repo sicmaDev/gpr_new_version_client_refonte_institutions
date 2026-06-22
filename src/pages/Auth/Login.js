@@ -419,6 +419,15 @@ const Login = (props) => {
                   background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
                   boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
                 }}
+                sx={{
+                  '&.Mui-disabled': {
+                    pointerEvents: 'all',
+                    cursor: 'not-allowed',
+                    color: 'white !important',
+                    background: 'linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%) !important',
+                    opacity: 0.75,
+                  }
+                }}
                 className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
                 onClick={handleSubmit}
                 loading={props.etat}

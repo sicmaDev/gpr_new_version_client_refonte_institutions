@@ -24,7 +24,7 @@ export const forgetPassword = (email) => {
     return axios(config);
 }
 
-export const LoginApi = (credentials, props,isLocked =false) => {
+export const LoginApi = (credentials, props, isLocked = false) => {
     const config = {
         method: 'post',
         url: LOGIN_API,
@@ -36,15 +36,16 @@ export const LoginApi = (credentials, props,isLocked =false) => {
     };
     axios(config)
         .then(function (response) {
+
             if (response.data.response.status) {
-                
+
                 props.authenticate()
-                if(isLocked){
+                if (isLocked) {
                     props.setUnlocked()
                     props.isAuth(true)
 
 
-                }else{
+                } else {
                     notify("Bravo - Vous êtes authentifié", "success");
                 }
                 //  console.log("loginresponse",response.data.response.content.settings)
@@ -52,8 +53,8 @@ export const LoginApi = (credentials, props,isLocked =false) => {
                 saveItemToSessionStorage(response.data.response.content.token, 'token')
                 saveItemToSessionStorage(1, 'logged')
                 saveItemToSessionStorage(1, 'app-mode')
-                
-                response.data.response.content.user ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.user), 'app-user'): saveItemToSessionStorage([], 'app-user');
+
+                response.data.response.content.user ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.user), 'app-user') : saveItemToSessionStorage([], 'app-user');
                 response.data.response.content.settings.institution ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.institution), 'app-institution') : saveItemToSessionStorage([], 'app-institution');
                 response.data.response.content.settings.mail ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.mail), 'app-mail') : saveItemToSessionStorage([], 'app-mail');
                 response.data.response.content.settings.sms ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.sms), 'app-sms') : saveItemToSessionStorage([], 'app-sms');
@@ -70,13 +71,13 @@ export const LoginApi = (credentials, props,isLocked =false) => {
                 response.data.response.content.settings.help ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.help), 'help') : saveItemToSessionStorage([], 'help');
 
 
-                
+
                 //enregistrement dans le local storage
                 saveItemToLocalStorage(response.data.response.content.token, 'token')
                 saveItemToLocalStorage(1, 'logged')
                 saveItemToLocalStorage(1, 'app-mode')
 
-                response.data.response.content.user ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.user), 'app-user'): saveItemToLocalStorage([], 'app-user');
+                response.data.response.content.user ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.user), 'app-user') : saveItemToLocalStorage([], 'app-user');
                 response.data.response.content.settings.institution ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.institution), 'app-institution') : saveItemToLocalStorage([], 'app-institution');
                 response.data.response.content.settings.mail ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.mail), 'app-mail') : saveItemToLocalStorage([], 'app-mail');
                 response.data.response.content.settings.sms ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.sms), 'app-sms') : saveItemToLocalStorage([], 'app-sms');
@@ -93,44 +94,35 @@ export const LoginApi = (credentials, props,isLocked =false) => {
                 response.data.response.content.settings.help ? saveItemToLocalStorage(JSON.stringify(response.data.response.content.settings.help), 'help') : saveItemToLocalStorage([], 'help');
 
             } else {
-                if (response.content?.message) {
-                    notify(response.content?.message, "error");
-                } else {
-                    notify("Erreur - La connexion a échouée", "error");
-                }
-               
+                const msg = response.data?.response?.content?.message;
+                notify(msg || "Erreur - La connexion a échouée", "error");
             }
-           
+
             // console.log(JSON.parse(response.data.data));
             props.etatChanged(false)
-            synchronData();
+            if (response.data.response.status) {
+                synchronData();
+            }
             // receiveData()
-           
+
         })
         .catch(function (error) {
+            console.log("LOGIN ERROR RESPONSE:", error?.response?.data);
             props.etatChanged(false)
-            
             saveItemToSessionStorage(0, 'logged')
             //    console.log("loginerror",error)
             if (error?.response) {
                 const status = error.response.status;
-                const message = error.response.data?.message || error.response.data?.response?.content.message;
+                const message = error.response.data?.response?.content?.message
+                    || error.response.data?.message
+                    || (status === 403 ? "Erreur - Les identifiants sont incorrects" : null);
 
-                if (status === 403) {
-                    // message personnalisé pour 403
-                    notify(message, "error");
-                } else if (message) {
-                    // afficher le message renvoyé par le backend
-                    notify(message, "error");
-                } else {
-                    // fallback générique
-                    notify("Erreur - Les identifiants sont incorrects", "error");
-                }
+                notify(message || "Erreur - Les identifiants sont incorrects", "error");
             } else {
                 // erreur réseau ou autre
                 notify("Erreur - Les identifiants sont incorrects", "error");
             }
-            
+
         });
 }
 
@@ -149,12 +141,12 @@ export const licenseInfo = async () => {
             return false;
         } else {
             // console.log("licence info demande", response.data);
-            response.data.content.actif ? saveItemToLocalStorage(response.data.content.actif , 'lic') : saveItemToLocalStorage(false, 'lic');
+            response.data.content.actif ? saveItemToLocalStorage(response.data.content.actif, 'lic') : saveItemToLocalStorage(false, 'lic');
 
             return response.data.content;
-            
+
         }
-       
+
     } catch (error) {
         // console.log("licence info error", error);
         // Gérer les erreurs ici si nécessaire
@@ -171,35 +163,35 @@ export const LoginApiOffline = (credentials, props) => {
         // if (etatR === true || etatD === true || etatS === true) {
         //     notify("Erreur - Vous devez vous reconnectez en Online pour une mise à jour des données !", "error");
         // } else {
-            
-            saveItemToSessionStorage(1, 'logged')
-            saveItemToLocalStorage(1, 'logged')
-            saveItemToSessionStorage(0, 'app-mode')
-            saveItemToLocalStorage(0, 'app-mode')
-            props.authenticate()
-            notify("Bravo - Vous êtes authentifié", "success");
-            (loadItemFromLocalStorage("app-user")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-user"), 'app-user'): saveItemToSessionStorage([], 'app-user');
-            (loadItemFromLocalStorage("app-institution")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-institution"), 'app-institution'): saveItemToSessionStorage([], 'app-institution');
-            (loadItemFromLocalStorage("app-mail")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-mail"), 'app-mail'): saveItemToSessionStorage([], 'app-mail');
-            (loadItemFromLocalStorage("app-sms")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-sms"), 'app-sms'): saveItemToSessionStorage([], 'app-sms');
-            (loadItemFromLocalStorage("app-bot")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-bot"), 'app-bot'): saveItemToSessionStorage([], 'app-bot');
-            (loadItemFromLocalStorage("app-langues")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-langues"), 'app-langues') : saveItemToSessionStorage([], 'app-langues');
-            (loadItemFromLocalStorage("app-recours")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-recours"), 'app-recours') : saveItemToSessionStorage([], 'app-recours');
-            (loadItemFromLocalStorage("app-ps")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-ps"), 'app-ps') : saveItemToSessionStorage([], 'app-ps');
-            (loadItemFromLocalStorage("app-supports")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-supports"), 'app-supports') : saveItemToSessionStorage([], 'app-supports');
-            (loadItemFromLocalStorage("app-objets")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-objets"), 'app-objets') : saveItemToSessionStorage([], 'app-objets');
-            (loadItemFromLocalStorage("app-categories")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-categories"), 'app-categories') : saveItemToSessionStorage([], 'app-categories');
-            (loadItemFromLocalStorage("app-postes")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-postes"), 'app-postes') : saveItemToSessionStorage([], 'app-postes');
-            (loadItemFromLocalStorage("app-users")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-users"), 'app-users') : saveItemToSessionStorage([], 'app-users');
-            (loadItemFromLocalStorage("app-produits")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-produits"), 'app-produits') : saveItemToSessionStorage([], 'app-produits');
-            (loadItemFromLocalStorage("help")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("help"), 'help') : saveItemToSessionStorage([], 'help');
-            saveItemToSessionStorage(loadItemFromLocalStorage("token"), 'token')
+
+        saveItemToSessionStorage(1, 'logged')
+        saveItemToLocalStorage(1, 'logged')
+        saveItemToSessionStorage(0, 'app-mode')
+        saveItemToLocalStorage(0, 'app-mode')
+        props.authenticate()
+        notify("Bravo - Vous êtes authentifié", "success");
+        (loadItemFromLocalStorage("app-user")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-user"), 'app-user') : saveItemToSessionStorage([], 'app-user');
+        (loadItemFromLocalStorage("app-institution")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-institution"), 'app-institution') : saveItemToSessionStorage([], 'app-institution');
+        (loadItemFromLocalStorage("app-mail")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-mail"), 'app-mail') : saveItemToSessionStorage([], 'app-mail');
+        (loadItemFromLocalStorage("app-sms")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-sms"), 'app-sms') : saveItemToSessionStorage([], 'app-sms');
+        (loadItemFromLocalStorage("app-bot")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-bot"), 'app-bot') : saveItemToSessionStorage([], 'app-bot');
+        (loadItemFromLocalStorage("app-langues")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-langues"), 'app-langues') : saveItemToSessionStorage([], 'app-langues');
+        (loadItemFromLocalStorage("app-recours")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-recours"), 'app-recours') : saveItemToSessionStorage([], 'app-recours');
+        (loadItemFromLocalStorage("app-ps")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-ps"), 'app-ps') : saveItemToSessionStorage([], 'app-ps');
+        (loadItemFromLocalStorage("app-supports")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-supports"), 'app-supports') : saveItemToSessionStorage([], 'app-supports');
+        (loadItemFromLocalStorage("app-objets")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-objets"), 'app-objets') : saveItemToSessionStorage([], 'app-objets');
+        (loadItemFromLocalStorage("app-categories")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-categories"), 'app-categories') : saveItemToSessionStorage([], 'app-categories');
+        (loadItemFromLocalStorage("app-postes")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-postes"), 'app-postes') : saveItemToSessionStorage([], 'app-postes');
+        (loadItemFromLocalStorage("app-users")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-users"), 'app-users') : saveItemToSessionStorage([], 'app-users');
+        (loadItemFromLocalStorage("app-produits")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("app-produits"), 'app-produits') : saveItemToSessionStorage([], 'app-produits');
+        (loadItemFromLocalStorage("help")) !== undefined ? saveItemToSessionStorage(loadItemFromLocalStorage("help"), 'help') : saveItemToSessionStorage([], 'help');
+        saveItemToSessionStorage(loadItemFromLocalStorage("token"), 'token')
         // }
     } else {
         notify("Erreur - Les identifiants sont incorrects. Si vous voulez vous connectez à un autre compte, passez au mode online !", "error");
     }
-   
-   
+
+
 }
 
 export const receiveData = () => {
@@ -211,7 +203,7 @@ export const receiveData = () => {
             'Content-Type': 'application/json',
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
-        
+
     };
     axios(config)
         .then(function (response) {
@@ -220,20 +212,20 @@ export const receiveData = () => {
                 response.data.content.claimDto ? saveItemToLocalStorage(JSON.stringify(response.data.content.claimDto), 'recs-TS') : saveItemToLocalStorage([], 'recs-TS');
                 response.data.content.denunDto ? saveItemToLocalStorage(JSON.stringify(response.data.content.denunDto), 'dens-TS') : saveItemToLocalStorage([], 'dens-TS');
                 response.data.content.suggestionDto ? saveItemToLocalStorage(JSON.stringify(response.data.content.suggestionDto), 'sugs-TS') : saveItemToLocalStorage([], 'sugs-TS');
-            } 
-          
+            }
+
         })
         .catch(function (error) {
-        //    console.log("receivdataerror",error)
-            
+            //    console.log("receivdataerror",error)
+
         });
 }
 
 export const synchronData = () => {
-    let data={};
-    data["claims"]=loadItemFromLocalStorage("recs-TS") !==undefined ? JSON.parse(loadItemFromLocalStorage("recs-TS")) : []
-    data["denuns"]=loadItemFromLocalStorage("dens-TS") !==undefined ? JSON.parse(loadItemFromLocalStorage("dens-TS")) : []
-    data["suggestions"]=loadItemFromLocalStorage("sugs-TS") !==undefined ? JSON.parse(loadItemFromLocalStorage("sugs-TS")) : []
+    let data = {};
+    data["claims"] = loadItemFromLocalStorage("recs-TS") !== undefined ? JSON.parse(loadItemFromLocalStorage("recs-TS")) : []
+    data["denuns"] = loadItemFromLocalStorage("dens-TS") !== undefined ? JSON.parse(loadItemFromLocalStorage("dens-TS")) : []
+    data["suggestions"] = loadItemFromLocalStorage("sugs-TS") !== undefined ? JSON.parse(loadItemFromLocalStorage("sugs-TS")) : []
     // console.log("datasyncitems",data)
     const config = {
         method: 'POST',
@@ -243,17 +235,17 @@ export const synchronData = () => {
             'Content-Type': 'application/json',
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
-        data:data
+        data: data
     };
     axios(config)
         .then(function (response) {
             // console.log("SYNCHRON",response)
             receiveData();
-          
+
         })
         .catch(function (error) {
             // console.log("SYNCHRONerror",error)
-            
+
         });
 }
 

@@ -1,225 +1,190 @@
-import React, {useEffect} from "react";
+import React, { useEffect, useState } from "react";
 import {
-    changePasswordErrors, currentPasswordChanged,
-    etatChanged,
-    newPasswordAgainChanged,
-    newPasswordChanged
+  changePasswordErrors, currentPasswordChanged,
+  etatChanged, newPasswordAgainChanged, newPasswordChanged,
 } from "../../redux/actions/Compte/ChangePasswordActions";
-// import {authenticate} from "../../redux/actions/layoutActions";
-import {notify} from "../../Utils/alert";
-import { isValidMdp, loadItemFromLocalStorage, loadItemFromSessionStorage } from "../../Utils/utils";
 import { idChanged } from "../../redux/actions/Compte/CompteDetailsActions";
+import { isValidMdp, loadItemFromLocalStorage, loadItemFromSessionStorage } from "../../Utils/utils";
 import { connect } from "react-redux";
-import HelpIcon from '@mui/icons-material/Help';
-import SaveIcon from '@mui/icons-material/Save';
+import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { modalify } from "../../Utils/modal";
 import { ChangerMdpApi } from "../../apis/Compte/CompteApi";
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import IconButton from '@mui/material/IconButton';
-import Input from '@mui/material/Input';
-import InputAdornment from '@mui/material/InputAdornment';
-import InputLabel from '@mui/material/InputLabel';
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
+const PasswordField = ({ label, onChange, error, show, onToggle }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+    <label style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>{label}</label>
+    <div style={{ position: "relative" }}>
+      <input
+        type={show ? "text" : "password"}
+        defaultValue=""
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          border: error ? "1.5px solid #EF4444" : "1.5px solid #E2E8F0",
+          borderRadius: 10, padding: "10px 40px 10px 14px",
+          fontSize: 13.5, color: "#0F172A",
+          background: "#fff", outline: "none",
+          width: "100%", boxSizing: "border-box",
+          transition: "border-color 0.2s",
+        }}
+        onFocus={e => { e.target.style.borderColor = "#0F4C81"; }}
+        onBlur={e => { e.target.style.borderColor = error ? "#EF4444" : "#E2E8F0"; }}
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94a3b8", display: "flex" }}
+      >
+        {show ? <VisibilityOff style={{ fontSize: 18 }} /> : <Visibility style={{ fontSize: 18 }} />}
+      </button>
+    </div>
+    {error && <span style={{ fontSize: 11.5, color: "#EF4444" }}>{error}</span>}
+  </div>
+);
 
 const ChangePassword = (props) => {
+  const mode = loadItemFromSessionStorage("app-mode") !== undefined
+    ? JSON.parse(loadItemFromSessionStorage("app-mode"))
+    : undefined;
 
-    useEffect(() => {
-        const sessionUser = JSON.parse(loadItemFromLocalStorage('app-user'))
-        props.idChanged(sessionUser.id)
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showRepeat, setShowRepeat] = useState(false);
 
-        window.$('.tooltipped').tooltip();
-    }, []);
+  useEffect(() => {
+    const sessionUser = JSON.parse(loadItemFromLocalStorage("app-user"));
+    props.idChanged(sessionUser.id);
+  }, []);
 
-    let mode =loadItemFromSessionStorage("app-mode") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-mode")) : undefined;
+  const handleModal = (e) => {
+    e.preventDefault();
+    modalify(
+      "Confirmation",
+      "Confirmez vous le changement du mot de passe ? Vous devrez vous reconnectez après cela !",
+      "confirm",
+      handleSubmit
+    );
+  };
 
-    const [showPassword, setShowPassword] = React.useState(false);
-
-    const handleClickShowPassword = () => setShowPassword((show) => !show);
-
-    const handleMouseDownPassword = (event) => {
-        event.preventDefault();
-    };
-
-    const handleModal = (e) => {
-        e.preventDefault();
-        modalify(
-          "Confirmation",
-          "Confirmez vous le changement du mot de passe ? Vous devrez vous reconnectez après cela !",
-          "confirm",
-          handleSubmit
-        );
-    };
-
-    let errors = {};
-    const handleValidation = () => {
-        let isValid = true;
-
-        if((props.current_pass==="" || props.current_pass===undefined)){
-            isValid = false;
-            errors["current_pass"] = "Champ incorrect";
-        }
-        if((props.new_pass==="" || props.new_pass===undefined)){
-            isValid = false;
-            errors["new_pass"] = "Champ incorrect";
-        }
-        if((props.new_pass_again==="" || props.new_pass_again===undefined)){
-            isValid = false;
-            errors["new_pass_again"] = "Champ incorrect";
-        }
-        if((props.new_pass !== props.new_pass_again)){
-            isValid = false;
-            errors["new_pass"] = "Les mots de passes ne correspondent pas";
-            errors["new_pass_again"] = "Les mots de passes ne correspondent pas";
-        }
-        if(!isValidMdp(props.new_pass)){
-            isValid = false;
-            errors["new_pass"] = "Le mot de passe est faible";
-        }
-        return isValid
+  let errors = {};
+  const handleValidation = () => {
+    let isValid = true;
+    if (!props.current_pass) { isValid = false; errors["current_pass"] = "Champ requis"; }
+    if (!props.new_pass) { isValid = false; errors["new_pass"] = "Champ requis"; }
+    if (!props.new_pass_again) { isValid = false; errors["new_pass_again"] = "Champ requis"; }
+    if (props.new_pass !== props.new_pass_again) {
+      isValid = false;
+      errors["new_pass"] = "Les mots de passe ne correspondent pas";
+      errors["new_pass_again"] = "Les mots de passe ne correspondent pas";
     }
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        let data = {}
-        data["id"] = props.id;
-        data["oldPassword"] = props.current_pass;
-        data["newPassword"] = props.new_pass;
-        //   console.log("datattta",data)
-        if(handleValidation()){
-            props.etatChanged(true)
-            ChangerMdpApi(data, props,e)
-        }
-        else{
-           
-            // console.log("Form has errors.")
-        }
-        // console.log("errrors",errors)
-        props.changePasswordErrors(errors)
+    if (!isValidMdp(props.new_pass)) {
+      isValid = false;
+      errors["new_pass"] = "Mot de passe trop faible (chiffre + symbole requis)";
     }
+    return isValid;
+  };
 
-    
-    let btnOff;
-
-    if (mode === 1) {
-        btnOff = 
-            <>
-                <div className="col s12 display-flex justify-content-end form-action">
-                    <LoadingButton
-                        className="waves-effect waves-effect-b waves-light btn-small"
-                        onClick={handleModal}
-                        loading={props.etat}
-                        loadingPosition="end"
-                        endIcon={<SaveIcon />}
-                        variant="contained"
-                        sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
-                    >
-                        <span>Changer</span>
-                    </LoadingButton>
-                </div>
-            </>
-    } else {
-        btnOff = 
-            <>
-                <div className="col s12 display-flex justify-content-end mt-3">
-                    <div className="card-alert card red lighten-5" >
-                        <div className="card-content red-text" style={{ textAlign:"center" }}>
-                        <ul>
-                            Vous ne pouvez pas changer votre mot de passe en mode offline !
-                        </ul>
-                        </div>
-                    </div>
-                </div>
-            </>
-            
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const data = { id: props.id, oldPassword: props.current_pass, newPassword: props.new_pass };
+    if (handleValidation()) {
+      props.etatChanged(true);
+      ChangerMdpApi(data, props, e);
     }
-    return (
+    props.changePasswordErrors(errors);
+  };
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 1px 4px rgba(0,0,0,.08)", padding: "24px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "#FFF7ED", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <LockOutlinedIcon style={{ fontSize: 18, color: "#D97706" }} />
+        </div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: "#0F172A" }}>Sécurité</div>
+          <div style={{ fontSize: 12, color: "#94a3b8" }}>Modifiez votre mot de passe</div>
+        </div>
+      </div>
+
+      {mode === 1 ? (
         <>
-            <div className="card-panel">
-                <form className="paaswordvalidate">
-                    <div className="row">
-                        <div className="col s12">
-                            <div className="input-field">
-                                <input id="oldpswd" name="oldpswd" type="password"
-                                       data-error=".errorTxt4" defaultValue=""
-                                       onChange={(e) => props.currentPasswordChanged(e.target.value)}/>
-                                <label htmlFor="oldpswd">Mot de passe actuel</label>
-                                <small className="errorTxt4">
-                                    <div id="cpassword-error" className="error">{props.errors.current_pass}</div>
-                                </small>
-                            </div>
-                        </div>
-                        <div className="col s12">
-                            <div className="input-field">
-                                <input id="newpswd" name="newpswd" type="password"
-                                       data-error=".errorTxt5" defaultValue=""
-                                       onChange={(e) => props.newPasswordChanged(e.target.value)}/>
-                                <label htmlFor="newpswd">Nouveau mot de passe
-                                    <a className="btn btn-floating tooltipped btn-small waves-effect waves-light white red-text" data-position="bottom" data-tooltip="Le mot de passe doit contenir au moins un chiffre et un symbol">
-                                            <HelpIcon/>
-                                    </a>
-                                </label>
-                                <small className="errorTxt4">
-                                    <div id="cpassword-error" className="error">{props.errors.new_pass}</div>
-                                </small>
-                            </div>
-                        </div>
-                        <div className="col s12">
-                            <div className="input-field">
-                                <input id="repswd" type="password" name="repswd"
-                                       data-error=".errorTxt6" defaultValue=""
-                                       onChange={(e) => props.newPasswordAgainChanged(e.target.value)}/>
-                                      
-                                <label htmlFor="repswd">Nouveau mot de passe encore</label>
-                                <small className="errorTxt4">
-                                    <div id="cpassword-error" className="error">{props.errors.new_pass_again}</div>
-                                </small>
-                            </div>
-                        </div>
-                            
-                        {btnOff}
-                    </div>
-                </form>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <PasswordField
+              label="Mot de passe actuel"
+              onChange={props.currentPasswordChanged}
+              error={props.errors?.current_pass}
+              show={showCurrent}
+              onToggle={() => setShowCurrent(v => !v)}
+            />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <PasswordField
+                label="Nouveau mot de passe"
+                onChange={props.newPasswordChanged}
+                error={props.errors?.new_pass}
+                show={showNew}
+                onToggle={() => setShowNew(v => !v)}
+              />
+              <PasswordField
+                label="Confirmer le nouveau"
+                onChange={props.newPasswordAgainChanged}
+                error={props.errors?.new_pass_again}
+                show={showRepeat}
+                onToggle={() => setShowRepeat(v => !v)}
+              />
             </div>
+          </div>
+
+          <div style={{ marginTop: 8, fontSize: 11.5, color: "#94a3b8", background: "#F8FAFC", borderRadius: 8, padding: "8px 12px" }}>
+            Le mot de passe doit contenir au moins un chiffre et un symbole
+          </div>
+
+          <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end" }}>
+            <LoadingButton
+              onClick={handleModal}
+              loading={props.etat}
+              loadingPosition="end"
+              endIcon={<SaveIcon />}
+              variant="contained"
+              sx={{
+                background: "linear-gradient(135deg, #D97706 0%, #F59E0B 100%)",
+                borderRadius: "10px", textTransform: "none",
+                fontWeight: 700, fontSize: 13.5, padding: "8px 22px",
+                boxShadow: "none",
+                "&:hover": { background: "linear-gradient(135deg, #b45309 0%, #d97706 100%)", boxShadow: "none" },
+              }}
+            >
+              Changer
+            </LoadingButton>
+          </div>
         </>
-    )
-}
-const mapStateToProps = (state) => {
-    return {
-        isLoading: state.change_password.isLoading,
-        id: state.change_password.id,
-        current_pass: state.change_password.current_pass,
-        new_pass: state.change_password.new_pass,
-        new_pass_again: state.change_password.new_pass_again,
-        etat: state.change_password.etat,
-        errors: state.change_password.change_password_errors,
-    }
+      ) : (
+        <div style={{ fontSize: 12.5, color: "#EF4444", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px 16px" }}>
+          Modification impossible en mode hors-ligne
+        </div>
+      )}
+    </div>
+  );
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        changePasswordErrors: (err) => {
-            dispatch(changePasswordErrors(err))
-        },
-        idChanged: (id) => {
-            dispatch(idChanged(id))
-        },
-        currentPasswordChanged: (pass) => {
-            dispatch(currentPasswordChanged(pass))
-        },
-        newPasswordChanged: (pass) => {
-            dispatch(newPasswordChanged(pass))
-        },
-        newPasswordAgainChanged: (pass) => {
-            dispatch(newPasswordAgainChanged(pass))
-        },
-        etatChanged: (etat) => {
-            dispatch(etatChanged(etat))
-        },
-        // authenticate: () => dispatch(authenticate())
-    }
-};
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(ChangePassword)
+const mapStateToProps = (state) => ({
+  id: state.change_password.id,
+  current_pass: state.change_password.current_pass,
+  new_pass: state.change_password.new_pass,
+  new_pass_again: state.change_password.new_pass_again,
+  etat: state.change_password.etat,
+  errors: state.change_password.change_password_errors,
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  changePasswordErrors: (err) => dispatch(changePasswordErrors(err)),
+  idChanged: (v) => dispatch(idChanged(v)),
+  currentPasswordChanged: (v) => dispatch(currentPasswordChanged(v)),
+  newPasswordChanged: (v) => dispatch(newPasswordChanged(v)),
+  newPasswordAgainChanged: (v) => dispatch(newPasswordAgainChanged(v)),
+  etatChanged: (v) => dispatch(etatChanged(v)),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChangePassword);
