@@ -88,6 +88,7 @@ export default function Contenu() {
     return (
 
         <Box
+            id="main-scroll"
             component="main"
             sx={{
                 backgroundColor: (theme) =>

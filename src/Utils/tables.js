@@ -688,14 +688,36 @@ export const handlePrintAvance = (childWindow, dom) => {
     <html>
       <head>
         <title>Impression</title>
+        <style>
+          @page { margin: 15mm 10mm; }
+          * { box-sizing: border-box; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1E293B; margin: 0; padding: 20px; }
+          img {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block;
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          div {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+          th, td { border: 1px solid #E2E8F0; padding: 6px 10px; font-size: 11px; }
+          th { background: #F8FAFC; font-weight: 700; }
+          tr:nth-child(even) { background: #F8FAFC; }
+        </style>
       </head>
       <body>
         ${dom}
         <script>
-          setTimeout(function () {
-            window.print();
-            window.close();
-          }, 500);
+          window.onload = function () {
+            setTimeout(function () {
+              window.print();
+              window.close();
+            }, 500);
+          };
         </script>
       </body>
     </html>

@@ -88,6 +88,8 @@ import GaugeChart from "react-gauge-chart";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogActions,
   DialogContentText,
   Tooltip,
 } from "@mui/material";
@@ -145,6 +147,71 @@ const styles = {
   menu: (provided) => ({ ...provided, zIndex: 9999 }),
 };
 
+const filterSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    borderRadius: 10,
+    borderColor: state.isFocused ? "#0F4C81" : "#CBD5E1",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(15,76,129,0.08)" : "none",
+    fontSize: 13,
+    minHeight: 38,
+    cursor: "pointer",
+    "&:hover": { borderColor: "#94A3B8" },
+  }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999,
+    borderRadius: 10,
+    boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+    border: "1px solid #F1F5F9",
+  }),
+  menuList: (base) => ({ ...base, borderRadius: 10, padding: 4 }),
+  option: (base, state) => ({
+    ...base,
+    fontSize: 13,
+    borderRadius: 8,
+    backgroundColor: state.isSelected ? "#0F4C81" : state.isFocused ? "#EFF6FF" : "white",
+    color: state.isSelected ? "white" : "#374151",
+    fontWeight: state.isSelected ? 600 : 400,
+    cursor: "pointer",
+  }),
+  placeholder: (base) => ({ ...base, color: "#94A3B8", fontSize: 13 }),
+  singleValue: (base) => ({ ...base, fontSize: 13, color: "#0F172A" }),
+  multiValue: (base) => ({ ...base, backgroundColor: "#EFF6FF", borderRadius: 6 }),
+  multiValueLabel: (base) => ({ ...base, color: "#1D4ED8", fontSize: 12, fontWeight: 600 }),
+  multiValueRemove: (base) => ({
+    ...base, color: "#1D4ED8", borderRadius: "0 6px 6px 0",
+    "&:hover": { backgroundColor: "#BFDBFE", color: "#1E40AF" },
+  }),
+  valueContainer: (base) => ({ ...base, padding: "2px 10px" }),
+};
+
+const filterLabelStyle = {
+  display: "block",
+  fontSize: 11,
+  fontWeight: 700,
+  color: "#64748B",
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+  marginBottom: 6,
+};
+
+const DateInput = React.forwardRef(({ value, onClick, placeholder }, ref) => (
+  <input
+    ref={ref}
+    value={value}
+    onClick={onClick}
+    readOnly
+    placeholder={placeholder || "jj/mm/aaaa"}
+    style={{
+      width: "100%", padding: "9px 12px", borderRadius: 10,
+      border: "1.5px solid #CBD5E1", fontSize: 13, color: "#0F172A",
+      background: "#fff", cursor: "pointer", outline: "none",
+      boxSizing: "border-box",
+    }}
+  />
+));
+
 const Global = (props) => {
 
   const [open, setOpen] = React.useState(false);
@@ -160,6 +227,7 @@ const Global = (props) => {
   const [other, setOther] = useState(false);
   const [optionsState, setOptionsState] = useState([]);
   const [closeObjet, setCloseObjet] = useState(false);
+  const [highlightExport, setHighlightExport] = useState(false);
   const [claimShow, setClaimShow] = useState(true);
   const [suggestionShow, setSuggestionShow] = useState(true);
   const [denunciationShow, setDenunciationShow] = useState(true);
@@ -273,6 +341,7 @@ const Global = (props) => {
   }
   const userAuth = JSON.parse(loadItemFromSessionStorage("app-user"));
 
+  const pageTopRef = useRef(null);
   const reportRef = useRef(null);
   const globalPieChartRef = useRef(null);
   const globalLineChartRef = useRef(null);
@@ -529,6 +598,13 @@ const Global = (props) => {
   // const nba = unit.length === 0 ? ((ps.length)*100)+"px" : ((unit.length)*100)+"px" ;
   let nba = ((rdsBarModaliteGlobal?.datasets[0]?.data?.length) * 100);
   nba = (parseInt(nba) < 600) ? 600 + "px" : parseInt(nba) + "px";
+
+  // Hauteur dynamique basée sur le nombre de labels d'un dataset donné
+  const chartHeight = (data) => {
+    const count = data?.labels?.length ?? data?.datasets?.[0]?.data?.length ?? 6;
+    const h = count * 70;
+    return (h < 600 ? 600 : h) + "px";
+  };
   // console.log("nba : ",nba)
 
   const delaiFunction = (data) => {
@@ -670,34 +746,30 @@ const Global = (props) => {
         // console.log("oldreport.global = ", oldreport.global["evolutionObjByYearAndAgence"])
         // setRdsBarAgenceGlobal(oldreport.global["evolutionObjByYearAndAgence"]);
 
-        // Imaginons que `evolutionObjByYearAndAgence` a une structure similaire
         let evolutionData = oldreport?.global["evolutionObjByYearAndAgence"];
 
-        // Créer un tableau de paires [label, data] pour les trier
-        let combined = evolutionData.labels.map((label, index) => {
-          return { label: label, data: evolutionData.datasets[0].data[index] };
-        });
-
-        // Trier les paires par ordre décroissant des valeurs de `data`
-        combined.sort((a, b) => b.data - a.data);
-
-        // Réorganiser les labels et les datasets en fonction du tri
-        let sortedLabels = combined.map(item => item.label);
-        let sortedData = combined.map(item => item.data);
-
-        // Mettre à jour l'état avec les données triées
-        setRdsBarAgenceGlobal({
-          labels: sortedLabels,
-          datasets: [
-            {
-              label: evolutionData.datasets[0].label, // Garder l'ancien label
-              data: sortedData, // Utiliser les données triées
-              backgroundColor: "#118DFF",
-              borderColor: "#0A6EDD",
-              borderWidth: 1,
-            },
-          ],
-        });
+        if (evolutionData?.datasets?.length > 0 && evolutionData?.labels?.length > 0) {
+          let combined = evolutionData.labels.map((label, index) => {
+            return { label: label, data: evolutionData.datasets[0].data[index] };
+          });
+          combined.sort((a, b) => b.data - a.data);
+          let sortedLabels = combined.map(item => item.label);
+          let sortedData = combined.map(item => item.data);
+          setRdsBarAgenceGlobal({
+            labels: sortedLabels,
+            datasets: [
+              {
+                label: evolutionData.datasets[0].label,
+                data: sortedData,
+                backgroundColor: "#118DFF",
+                borderColor: "#0A6EDD",
+                borderWidth: 1,
+              },
+            ],
+          });
+        } else {
+          setRdsBarAgenceGlobal({ labels: [], datasets: [] });
+        }
 
 
         setRdsPieModaliteGlobal(
@@ -1226,22 +1298,25 @@ const Global = (props) => {
     cleanForm2(e);
 
     if (plainteType.length !== 0) {
-      plainteType.forEach((type) => {
-        plainteType.includes("claim")
-          ? setClaimShow(true)
-          : setClaimShow(false); setGlobalShow(false);
-        plainteType.includes("denunciation")
-          ? setDenunciationShow(true)
-          : setDenunciationShow(false); setGlobalShow(false);
-        plainteType.includes("suggestion")
-          ? setSuggestionShow(true)
-          : setSuggestionShow(false); setGlobalShow(false);
-      });
+      const hasClaim = plainteType.includes("claim");
+      const hasDenun = plainteType.includes("denunciation");
+      const hasSug   = plainteType.includes("suggestion");
+      setClaimShow(hasClaim);
+      setDenunciationShow(hasDenun);
+      setSuggestionShow(hasSug);
+      setGlobalShow(false);
+
+      // Activer l'onglet correspondant si un seul type est sélectionné
+      if (hasClaim && !hasDenun && !hasSug)       setActiveTab(1);
+      else if (!hasClaim && hasDenun && !hasSug)  setActiveTab(2);
+      else if (!hasClaim && !hasDenun && hasSug)  setActiveTab(3);
+      else                                         setActiveTab(0);
     } else {
       setDenunciationShow(true);
       setClaimShow(true);
       setSuggestionShow(true);
       setGlobalShow(true);
+      setActiveTab(0);
     }
 
     // setFiltres({
@@ -1262,7 +1337,7 @@ const Global = (props) => {
     filtres["objets"] = objet;
     filtres["etats"] = etatState;
     filtres["products"] = product;
-    filtres["saved_by"] = recoredBy;
+    filtres["savedBy"] = recoredBy;
     filtres["receiveStart"] = cleanDate(startDate);
     filtres["receiveEnd"] = cleanDate(endDate);
     filtres["servicePoints"] = unit;
@@ -1275,213 +1350,60 @@ const Global = (props) => {
   };
 
   const claimDashboard = () => {
-    let dableReturn = (
-      <div className="col l12 s12 m12 mb-2">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <span style={{ fontSize: "18px", color: "#015182" }}>
-            <b>{props.claimReport?.basicStats?.total}</b> Réclamation(s)
-          </span>
-
-          <table
-            border="1"
-            style={{ width: "100%", borderCollapse: "collapse" }}
-          >
-            <tr>
-              {
-                <>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      A traiter
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      Affectée
-                    </span>
-                  </td>
-
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      Désapprouvée
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      Traitée
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      Satisfait
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      Partiellement satisfait
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      Non satisfait
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      Contentieux
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      Classée
-                    </span>
-                  </td>
-                </>
-              }
-            </tr>
-
-            <tr>
-              {
-                <>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.claimReport?.basicStats?.statusAndValue?.SAVED}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.claimReport?.basicStats?.statusAndValue?.AFFECTED}
-                    </span>
-                  </td>
-
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {
-                        props.claimReport?.basicStats?.statusAndValue
-                          ?.DESAPPROUVED
-                      }
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.claimReport?.basicStats?.statusAndValue?.TREAT}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.claimReport?.basicStats?.statusAndValue?.SATISFIED}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {
-                        props.claimReport?.basicStats?.statusAndValue
-                          ?.PARTIAL_SATISFIED
-                      }
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {
-                        props.claimReport?.basicStats?.statusAndValue
-                          ?.UNSATISFIED
-                      }
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {
-                        props.claimReport?.basicStats?.statusAndValue
-                          ?.LITIGATION
-                      }
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.claimReport?.basicStats?.statusAndValue?.CLASSED}
-                    </span>
-                  </td>
-                </>
-              }
-            </tr>
-          </table>
+    const s = props.claimReport?.basicStats?.statusAndValue ?? {};
+    const total = props.claimReport?.basicStats?.total ?? 0;
+    const statuses = [
+      { label: "À traiter",              value: s.SAVED,             color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
+      { label: "Affectée",               value: s.AFFECTED,          color: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
+      { label: "Désapprouvée",           value: s.DESAPPROUVED,      color: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+      { label: "Traitée",                value: s.TREAT,             color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
+      { label: "Satisfait",              value: s.SATISFIED,         color: "#059669", bg: "#F0FDF4", border: "#86EFAC" },
+      { label: "Partiellement satisfait",value: s.PARTIAL_SATISFIED, color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
+      { label: "Non satisfait",          value: s.UNSATISFIED,       color: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
+      { label: "Contentieux",            value: s.LITIGATION,        color: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE" },
+      { label: "Classée",                value: s.CLASSED,           color: "#6B7280", bg: "#F9FAFB", border: "#E5E7EB" },
+    ];
+    return (
+      <div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
+          <span style={{ fontSize: 28, fontWeight: 800, color: "#3B82F6" }}>{total}</span>
+          <span style={{ fontSize: 13, color: "#6B7280", fontWeight: 500 }}>réclamation{total > 1 ? "s" : ""} au total</span>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          {statuses.map(({ label, value, color, bg, border }) => (
+            <div key={label} style={{ flex: "1 1 130px", minWidth: 110, background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 22, fontWeight: 800, color }}>{value ?? 0}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color, opacity: 0.8, lineHeight: 1.3 }}>{label}</span>
+            </div>
+          ))}
         </div>
       </div>
     );
-
-    return dableReturn;
   };
   const suggestionDashboard = () => {
-    let dableReturn = (
-      <div className="col l12 s12 m12 mt-2 mb-2">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <span style={{ fontSize: "18px", color: "#015182" }}>
-            <b>{props.sugReport?.basicStats?.total} </b>
-            Suggestions(s)
-          </span>
-
-          <table
-            border="1"
-            style={{ width: "100%", borderCollapse: "collapse" }}
-          >
-            <tr>
-              {
-                <>
-                  <td className="center">
-                    <span style={{ fontWeight: "bold" }}> A traiter</span>
-                  </td>
-
-                  <td className="center">
-                    <span style={{ fontWeight: "bold" }}>Pris en Compte</span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontWeight: "bold" }}>
-                      Non Pris en Compte
-                    </span>
-                  </td>
-                </>
-              }
-            </tr>
-
-            <tr>
-              {
-                <>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.sugReport?.basicStats?.statusAndValue?.SAVED}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.sugReport?.basicStats?.statusAndValue?.ACCEPTED}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.sugReport?.basicStats?.statusAndValue?.UNACCEPTED}
-                    </span>
-                  </td>
-                </>
-              }
-            </tr>
-          </table>
+    const s = props.sugReport?.basicStats?.statusAndValue ?? {};
+    const total = props.sugReport?.basicStats?.total ?? 0;
+    const statuses = [
+      { label: "À traiter",        value: s.SAVED,       color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
+      { label: "Pris en compte",   value: s.ACCEPTED,    color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
+      { label: "Non pris en compte", value: s.UNACCEPTED, color: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
+    ];
+    return (
+      <div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
+          <span style={{ fontSize: 28, fontWeight: 800, color: "#10B981" }}>{total}</span>
+          <span style={{ fontSize: 13, color: "#6B7280", fontWeight: 500 }}>suggestion{total > 1 ? "s" : ""} au total</span>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          {statuses.map(({ label, value, color, bg, border }) => (
+            <div key={label} style={{ flex: "1 1 150px", minWidth: 130, background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 22, fontWeight: 800, color }}>{value ?? 0}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color, opacity: 0.8, lineHeight: 1.3 }}>{label}</span>
+            </div>
+          ))}
         </div>
       </div>
     );
-    return dableReturn;
   };
   
   const restoreSection = (sectionKey) => {
@@ -1498,77 +1420,29 @@ const Global = (props) => {
   }
 
   const denunciationDashboard = () => {
-    let dableReturn = (
-      <div className="col l12 s12 m12 mt-2 mb-2">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <span style={{ fontSize: "18px", color: "#015182" }}>
-            <b>{props.denunReport?.basicStats?.total} </b>
-            Dénonciation(s)
-          </span>
-
-          <br />
-          <table
-            width="960"
-            border="1"
-            style={{ width: "100%", borderCollapse: "collapse" }}
-          >
-            <tr>
-              {
-                <>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      A traiter
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      Affectée
-                    </span>
-                  </td>
-
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      Traitée
-                    </span>
-                  </td>
-                </>
-              }
-            </tr>
-
-            <tr>
-              {
-                <>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.denunReport?.basicStats?.statusAndValue?.SAVED}
-                    </span>
-                  </td>
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.denunReport?.basicStats?.statusAndValue?.AFFECTED}
-                    </span>
-                  </td>
-
-                  <td className="center">
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {props.denunReport?.basicStats?.statusAndValue?.TREAT}
-                    </span>
-                  </td>
-                </>
-              }
-            </tr>
-          </table>
+    const s = props.denunReport?.basicStats?.statusAndValue ?? {};
+    const total = props.denunReport?.basicStats?.total ?? 0;
+    const statuses = [
+      { label: "À traiter", value: s.SAVED,    color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
+      { label: "Affectée",  value: s.AFFECTED, color: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
+      { label: "Traitée",   value: s.TREAT,    color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
+    ];
+    return (
+      <div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
+          <span style={{ fontSize: 28, fontWeight: 800, color: "#F59E0B" }}>{total}</span>
+          <span style={{ fontSize: 13, color: "#6B7280", fontWeight: 500 }}>dénonciation{total > 1 ? "s" : ""} au total</span>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          {statuses.map(({ label, value, color, bg, border }) => (
+            <div key={label} style={{ flex: "1 1 150px", minWidth: 130, background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 22, fontWeight: 800, color }}>{value ?? 0}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color, opacity: 0.8, lineHeight: 1.3 }}>{label}</span>
+            </div>
+          ))}
         </div>
       </div>
     );
-    return dableReturn;
   };
   // Fin dashboard Affichage
 
@@ -1719,7 +1593,7 @@ const Global = (props) => {
       ) : <></>}
       {props.templateData?.global.globalByCanalBarChartRef ? (
         <PBICard title="Répartition des RSD par modalité de dépôt et par agence (%)" accent="#118DFF" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+          <LazyChart overflow={"y"} height={chartHeight(rdsBarModaliteGlobal)} forceRender={isPrinting}>
             {rdsBarModaliteGlobal ? (
               <LazyChartWrapper
                 type="bar"
@@ -1758,7 +1632,7 @@ const Global = (props) => {
       ) : <></>}
       {props.templateData?.global.globalByObjetBarChartRef ? (
         <PBICard title="Répartition des Réclamations et Dénonciations par objets et par agence (%)" accent="#118DFF" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+          <LazyChart overflow={"y"} height={chartHeight(rdsBarObjetGlobal)} forceRender={isPrinting}>
             {rdsBarObjetGlobal ? (
               <LazyChartWrapper
                 type="bar"
@@ -1790,7 +1664,7 @@ const Global = (props) => {
 
       {props.templateData?.global.evolutionByAgenceByAnneeBarChartRef ? (
         <PBICard title="Evolution annuelle des réclamations, dénonciations, suggestions par agence" accent="#118DFF" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, evolutionByAgenceByAnneeBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"x"} height={nba} forceRender={isPrinting}>
+          <LazyChart overflow={"x"} height={chartHeight(rdsBarAgenceGlobal)} forceRender={isPrinting}>
             {rdsBarAgenceGlobal ? (
               <LazyChartWrapper
                 type="bar"
@@ -1830,7 +1704,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.claim.claimByAgenceBarChartRef ? (
           <PBICard title="Nombre de réclamations par Agence" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByAgenceBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"x"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"x"} height={chartHeight(rdsBarAgenceClaim)} forceRender={isPrinting}>
               {rdsBarAgenceClaim ? (
                 <LazyChartWrapper
                   type="bar"
@@ -1870,7 +1744,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.denun.denunByAgenceBarChartRef ? (
           <PBICard title="Nombre de dénonciations par Agence" accent="#F59E0B" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByAgenceBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"x"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"x"} height={chartHeight(rdsBarAgenceDenun)} forceRender={isPrinting}>
               {rdsBarAgenceDenun ? (
                 <LazyChartWrapper
                   type="bar"
@@ -1910,7 +1784,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.suggest.sugByAgenceBarChartRef ? (
           <PBICard title="Nombre de suggestions par Agence" accent="#10B981" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByAgenceBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"x"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"x"} height={chartHeight(rdsBarAgenceSugge)} forceRender={isPrinting}>
               {rdsBarAgenceSugge ? (
                 <LazyChartWrapper
                   type="bar"
@@ -1951,7 +1825,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.claim.claimByCanalBarChartRef ? (
           <PBICard title="Répartition des réclamations par modalité de dépôt et par agence (%)" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByCanalBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"y"} height={chartHeight(rdsBarModaliteClaim)} forceRender={isPrinting}>
               {rdsBarModaliteClaim ? (
                 <LazyChartWrapper
                   type="bar"
@@ -1991,7 +1865,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.denun.denunByCanalBarChartRef ? (
           <PBICard title="Répartition des dénonciations par modalité de dépôt et par agence (%)" accent="#F59E0B" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByCanalBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"y"} height={chartHeight(rdsBarModaliteDenun)} forceRender={isPrinting}>
               {rdsBarModaliteDenun ? (
                 <LazyChartWrapper
                   type="bar"
@@ -2031,7 +1905,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.suggest.sugByCanalBarChartRef ? (
           <PBICard title="Répartition des suggestions par modalité de dépôt et par agence (%)" accent="#10B981" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"y"} height={chartHeight(rdsBarModaliteSugge)} forceRender={isPrinting}>
               {rdsBarModaliteSugge ? (
                 <LazyChartWrapper
                   type="bar"
@@ -2071,7 +1945,7 @@ const Global = (props) => {
       ) : <></>}
       {props.templateData?.claim.claimByObjetBarChartRef ? (
         <PBICard title="Répartition des réclamations par objet par agence (%)" accent="#3B82F6" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+          <LazyChart overflow={"y"} height={chartHeight(rdsBarObjetClaim)} forceRender={isPrinting}>
             {rdsBarObjetClaim ? (
               <LazyChartWrapper
                 type="bar"
@@ -2109,7 +1983,7 @@ const Global = (props) => {
       ) : <></>}
       {props.templateData?.denun.denunByObjetBarChartRef ? (
         <PBICard title="Répartition des dénonciations par objet par agence (%)" accent="#F59E0B" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+          <LazyChart overflow={"y"} height={chartHeight(rdsBarObjetDenun)} forceRender={isPrinting}>
             {rdsBarObjetDenun ? (
               <LazyChartWrapper
                 type="bar"
@@ -2149,7 +2023,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.claim.claimByGenderBarChartRef ? (
           <PBICard title="Répartition des réclamations par genre par agence (%)" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"y"} height={chartHeight(rdsBarGenreClaim)} forceRender={isPrinting}>
               {rdsBarGenreClaim ? (
                 <LazyChartWrapper
                   type="bar"
@@ -2190,7 +2064,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.suggest.sugByGenderBarChartRef ? (
           <PBICard title="Répartition des suggestions par genre par agence (%)" accent="#10B981" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"y"} height={chartHeight(rdsBarGenreSugge)} forceRender={isPrinting}>
               {rdsBarGenreSugge ? (
                 <LazyChartWrapper
                   type="bar"
@@ -2231,7 +2105,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.claim.claimByGraviteBarChartRef ? (
           <PBICard title="Répartition des réclamations par gravité de dépôt par agence (%)" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGraviteBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"y"} height={chartHeight(rdsBarGravityClaim)} forceRender={isPrinting}>
               {rdsBarGravityClaim ? (
                 <LazyChartWrapper
                   type="bar"
@@ -2271,7 +2145,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.denun.denunByGraviteBarChartRef ? (
           <PBICard title="Répartition des dénonciations par gravité de dépôt par agence (%)" accent="#F59E0B" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGraviteBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"y"} height={chartHeight(rdsBarGravityDenun)} forceRender={isPrinting}>
               {rdsBarGravityDenun ? (
                 <LazyChartWrapper
                   type="bar"
@@ -2312,7 +2186,7 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.claim.tauxMensuelClaimByMonthByAgenceBarChartRef ? (
           <PBICard title="Taux de satisfaction des Réclamations par agence (%)" accent="#8B5CF6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthByAgenceBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+            <LazyChart overflow={"y"} height={chartHeight(tauxMensuelClaimByMonthByAgence)} forceRender={isPrinting}>
               {tauxMensuelClaimByMonthByAgence ? (
                 <LazyChartWrapper
                   type="bar"
@@ -2369,7 +2243,7 @@ const Global = (props) => {
       ) : <></>}
       {props.templateData?.claim.resolutionClaimDelaiByMonthByAgenceBarChartRef ? (
         <PBICard title="Respect du délai de résolution des Réclamations par agence (%)" accent="#01B8AA" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthByAgenceBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+          <LazyChart overflow={"y"} height={chartHeight(rdsBarDelaiClaimByMonthByAgence)} forceRender={isPrinting}>
             {rdsBarDelaiClaimByMonthByAgence ? (
               <LazyChartWrapper
                 type="bar"
@@ -2408,7 +2282,7 @@ const Global = (props) => {
       ) : <></>}
       {props.templateData?.denun.resolutionDenunDelaiByMonthByAgenceBarChartRef ? (
         <PBICard title="Respect du délai de résolution des Dénonciations par agence (%)" accent="#01B8AA" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, resolutionDenunDelaiByMonthByAgenceBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={nba} forceRender={isPrinting}>
+          <LazyChart overflow={"y"} height={chartHeight(denunBarDelaiByMonthByAgence)} forceRender={isPrinting}>
             {denunBarDelaiByMonthByAgence ? (
               <LazyChartWrapper
                 type="bar"
@@ -2573,15 +2447,15 @@ const Global = (props) => {
   const prepareToPrint = async (type = "pdf") => {
     setIsPrinting(true);
 
-    // attendre que React monte les charts
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Laisser React re-rendre et Chart.js dessiner les canvas
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    let entete = document.querySelector("#enteteRapport").innerHTML;
-    let title = document.querySelector("#titleRapport").innerHTML;
-    let critere = document.querySelector("#critereRapport").innerHTML;
-    let dashClaim = document.querySelector("#dashClaimRapport").innerHTML;
-    let dashDenun = document.querySelector("#dashDenunRapport").innerHTML;
-    let dashSuggest = document.querySelector("#dashSuggestRapport").innerHTML;
+    let entete   = document.querySelector("#enteteRapport")?.innerHTML ?? "";
+    let title    = document.querySelector("#titleRapport")?.innerHTML ?? "";
+    let critere  = document.querySelector("#critereRapport")?.innerHTML ?? "";
+    let dashClaim   = document.querySelector("#dashClaimRapport")?.innerHTML ?? "";
+    let dashDenun   = document.querySelector("#dashDenunRapport")?.innerHTML ?? "";
+    let dashSuggest = document.querySelector("#dashSuggestRapport")?.innerHTML ?? "";
     let dataClaim = "";
     let dataDenun = "";
     let dataSugg = "";
@@ -2636,15 +2510,18 @@ const Global = (props) => {
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>" : "";
 
     const resolutionClaimDelaiByMonthByAgenceBarChartRefData =
-      "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
-      resolutionClaimDelaiByMonthByAgenceBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>";
-
+      resolutionClaimDelaiByMonthByAgenceBarChartRef.current
+        ? "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
+          resolutionClaimDelaiByMonthByAgenceBarChartRef.current.toBase64Image() +
+          "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>"
+        : "";
 
     const evolutionByAgenceByAnneeBarChartRefData =
-      "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
-      evolutionByAgenceByAnneeBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>";
+      evolutionByAgenceByAnneeBarChartRef.current
+        ? "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
+          evolutionByAgenceByAnneeBarChartRef.current.toBase64Image() +
+          "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>"
+        : "";
 
     const claimByAgencePieChartRefData = props.templateData?.claim.claimByAgencePieChartRef ?
       "<img src='" +
@@ -2691,9 +2568,11 @@ const Global = (props) => {
       claimBySatisfactionPieChartRef.current.toBase64Image() +
       "' style='width:65% !important;margin-bottom:75px!important;margin-left:100px!important;margin-right:100px!important' />" : "";
     const tauxMensuelClaimByMonthByAgenceBarChartRefData =
-      "<img src='" +
-      tauxMensuelClaimByMonthByAgenceBarChartRef.current.toBase64Image() +
-      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />";
+      tauxMensuelClaimByMonthByAgenceBarChartRef.current
+        ? "<img src='" +
+          tauxMensuelClaimByMonthByAgenceBarChartRef.current.toBase64Image() +
+          "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />"
+        : "";
 
     const tauxMensuelClaimByMonthBarChartRefData = props.templateData?.claim.tauxMensuelClaimByMonthBarChartRef ?
       "<img src='" +
@@ -2771,11 +2650,6 @@ const Global = (props) => {
       sugByCanalBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />" : "";
 
-    //tableaux
-    let statClaimTable = document.querySelector("#statClaimTable").innerHTML;
-    let statDenunTable = document.querySelector("#statDenunTable").innerHTML;
-    let statSugTable = document.querySelector("#statSugTable").innerHTML;
-
     //global data
     globalChart =
       globalPieChartRefData +
@@ -2788,70 +2662,52 @@ const Global = (props) => {
       evolutionByAgenceByAnneeBarChartRefData;
 
     if (claimShow) {
+      const statClaimTable = document.querySelector("#statClaimTable")?.innerHTML ?? "";
       dataClaim =
-        '<div class="row mt-1 mb-3 center"><span style="fontSize: 20px; fontWeight: bold" }}>Aucune réclamation ne correspond aux critères de tri</span></div>';
-
-      // if (claimReport.length > 0) {
-      if (claimShow) {
-        // let toeClaim = document.querySelector("#toeClaim").innerHTML;
-
-        dataClaim =
-          claimByAgencePieChartRefData +
-          claimByAgenceBarChartRefData +
-          claimByGenderPieChartRefData +
-          claimByGenderBarChartRefData +
-          claimByCanalPieChartRefData +
-          claimByCanalBarChartRefData +
-          claimByObjetPieChartRefData +
-          claimByObjetBarChartRefData +
-          claimByGravitePieChartRefData +
-          claimByGraviteBarChartRefData +
-          claimBySatisfactionPieChartRefData +
-          tauxMensuelClaimByMonthByAgenceBarChartRefData +
-          tauxMensuelClaimByMonthBarChartRefData +
-          resolutionClaimDelaiByMonthBarChartRefData +
-          resolutionClaimDelaiByMonthByAgenceBarChartRefData +
-          statClaimTable;
-      }
+        claimByAgencePieChartRefData +
+        claimByAgenceBarChartRefData +
+        claimByGenderPieChartRefData +
+        claimByGenderBarChartRefData +
+        claimByCanalPieChartRefData +
+        claimByCanalBarChartRefData +
+        claimByObjetPieChartRefData +
+        claimByObjetBarChartRefData +
+        claimByGravitePieChartRefData +
+        claimByGraviteBarChartRefData +
+        claimBySatisfactionPieChartRefData +
+        tauxMensuelClaimByMonthByAgenceBarChartRefData +
+        tauxMensuelClaimByMonthBarChartRefData +
+        resolutionClaimDelaiByMonthBarChartRefData +
+        resolutionClaimDelaiByMonthByAgenceBarChartRefData +
+        statClaimTable;
     }
+
     if (denunciationShow) {
+      const statDenunTable = document.querySelector("#statDenunTable")?.innerHTML ?? "";
       dataDenun =
-        '<div class="row mt-1 mb-3 center"><span style="fontSize: 20px; fontWeight: bold" >Aucune dénonciation ne correspond aux critères de tri</span></div>';
-      // if (resultGeneralDenonciation.length > 0) {
-      if (denunciationShow) {
-        // let toeDenun = document.querySelector("#toeDenun").innerHTML;
-
-        dataDenun =
-          denunByAgencePieChartRefData +
-          denunByAgenceBarChartRefData +
-          denunByCanalPieChartRefData +
-          denunByCanalBarChartRefData +
-          denunByObjetPieChartRefData +
-          denunByObjetBarChartRefData +
-          resolutionDenunDelaiByMonthBarChartRefData +
-          resolutionDenunDelaiByMonthByAgenceBarChartRefData +
-          denunByGravitePieChartRefData +
-          denunByGraviteBarChartRefData +
-          statDenunTable;
-      }
+        denunByAgencePieChartRefData +
+        denunByAgenceBarChartRefData +
+        denunByCanalPieChartRefData +
+        denunByCanalBarChartRefData +
+        denunByObjetPieChartRefData +
+        denunByObjetBarChartRefData +
+        resolutionDenunDelaiByMonthBarChartRefData +
+        resolutionDenunDelaiByMonthByAgenceBarChartRefData +
+        denunByGravitePieChartRefData +
+        denunByGraviteBarChartRefData +
+        statDenunTable;
     }
-    if (suggestionShow) {
-      dataSugg =
-        '<div class="row mt-1 mb-3 center"><span style="fontSize: 20px; fontWeight: bold">Aucune suggestion ne correspond aux critères de tri</span></div>';
-      // if (resultGeneralSuggestion.length > 0) {
-      if (suggestionShow) {
-        // let tpeSugg = document.querySelector("#tpeSugg").innerHTML;
-        // let tpdSugg = document.querySelector("#tpdSugg").innerHTML;
 
-        dataSugg =
-          sugByAgencePieChartRefData +
-          sugByAgenceBarChartRefData +
-          sugByGenderPieChartRefData +
-          sugByGenderBarChartRefData +
-          sugByCanalPieChartRefData +
-          sugByCanalBarChartRefData +
-          statSugTable;
-      }
+    if (suggestionShow) {
+      const statSugTable = document.querySelector("#statSugTable")?.innerHTML ?? "";
+      dataSugg =
+        sugByAgencePieChartRefData +
+        sugByAgenceBarChartRefData +
+        sugByGenderPieChartRefData +
+        sugByGenderBarChartRefData +
+        sugByCanalPieChartRefData +
+        sugByCanalBarChartRefData +
+        statSugTable;
     }
 
     let data =
@@ -3241,16 +3097,17 @@ const Global = (props) => {
     }
   };
   const TABS = [
-    { label: "Vue d'ensemble", color: "#8B5CF6", bg: "#F5F3FF" },
-    { label: "Réclamations",   color: "#3B82F6", bg: "#EFF6FF" },
-    { label: "Dénonciations",  color: "#F59E0B", bg: "#FFFBEB" },
-    { label: "Suggestions",    color: "#10B981", bg: "#ECFDF5" },
+    { label: "Vue d'ensemble", color: "#8B5CF6", bg: "#F5F3FF", enabled: globalShow },
+    { label: "Réclamations",   color: "#3B82F6", bg: "#EFF6FF", enabled: claimShow },
+    { label: "Dénonciations",  color: "#F59E0B", bg: "#FFFBEB", enabled: denunciationShow },
+    { label: "Suggestions",    color: "#10B981", bg: "#ECFDF5", enabled: suggestionShow },
   ];
 
-  const SectionSubtitle = ({ children, id }) => (
-    <div id={id} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 16, fontWeight: 700, color: "#0F172A", padding: "18px 0 10px" }}>
-      <div style={{ width: 4, height: 22, background: "#0F4C81", borderRadius: 2, flexShrink: 0 }} />
+  const SectionSubtitle = ({ children, id, accent = "#0F4C81" }) => (
+    <div id={id} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, fontWeight: 700, color: "#374151", padding: "20px 0 8px", textTransform: "uppercase", letterSpacing: "0.4px" }}>
+      <div style={{ width: 4, height: 18, background: accent, borderRadius: 2, flexShrink: 0 }} />
       {children}
+      <div style={{ flex: 1, height: 1, background: "#F1F5F9", marginLeft: 4 }} />
     </div>
   );
 
@@ -3263,29 +3120,15 @@ const Global = (props) => {
 
   return (
     <>
+      <div ref={pageTopRef} />
       <div id="trSimple" style={{}}></div>
       <div id="main" style={{ marginBottom: "80px" }}>
         {/* ── PAGE HEADER ── */}
         <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.07)", padding: "20px 24px", marginBottom: 16 }}>
-          {/* Institution + date */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16, flexWrap: "wrap" }} id="enteteRapportHeader">
-            {logoInstitution && <img src={logoInstitution} alt="logo" style={{ height: 52, objectFit: "contain" }} className="report-logo" />}
-            <div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: "#0F172A" }}>{institution}</div>
-              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{agrement && `Agrément: ${agrement}`}{adresse && ` · ${adresse}`}</div>
-            </div>
-            <div style={{ marginLeft: "auto", textAlign: "right" }}>
-              <div style={{ fontSize: 12, color: "#94a3b8" }}>
-                Généré le {new Date().toLocaleDateString("fr-FR", { day: "numeric", year: "numeric", month: "long" })}
-              </div>
-              <div style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>par {userAuth?.firstAndLastName}</div>
-            </div>
-          </div>
-
           {/* KPI badges */}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
             {kpiData.map(({ label, value, color, bg }) => (
-              <div key={label} style={{ background: bg, borderRadius: 12, padding: "10px 18px", display: "flex", flexDirection: "column", gap: 2, minWidth: 120 }}>
+              <div key={label} style={{ flex: "1 1 0", background: bg, borderRadius: 12, padding: "10px 18px", display: "flex", flexDirection: "column", gap: 2, minWidth: 120 }}>
                 <span style={{ fontSize: 22, fontWeight: 800, color }}>{value}</span>
                 <span style={{ fontSize: 11, fontWeight: 600, color, opacity: 0.75 }}>{label}</span>
               </div>
@@ -3293,333 +3136,300 @@ const Global = (props) => {
           </div>
 
           {/* Action bar */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div
+            id="export-bar"
+            style={{
+              display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+              borderRadius: 12, padding: "6px 8px", margin: "-6px -8px",
+              transition: "box-shadow 0.3s ease, background 0.3s ease",
+              ...(highlightExport ? {
+                background: "rgba(59,130,246,0.07)",
+                boxShadow: "0 0 0 3px rgba(59,130,246,0.35)",
+              } : {}),
+            }}
+          >
             <button
-              onClick={() => { setshowSearch(!showSearch); setOpen(!open); }}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: `1.5px solid ${showSearch ? "#0F4C81" : "#E2E8F0"}`, background: showSearch ? "#EFF6FF" : "#fff", color: showSearch ? "#0F4C81" : "#475569", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+              onClick={() => { setshowSearch(true); setOpen(true); }}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "1.5px solid #E2E8F0", background: "#fff", color: "#475569", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
             >
               <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-              Filtres {showSearch ? "▲" : "▼"}
+              Filtres
             </button>
             {[
-              { label: "PDF",   color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5", action: printToPDF },
-              { label: "Excel", color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC", action: prepareReportTablesToXLSX },
-              { label: "Word",  color: "#1D4ED8", bg: "#EFF6FF", border: "#93C5FD", action: printToWord },
-            ].map(({ label, color, bg, border, action }) => (
-              <button key={label} onClick={action} style={{ padding: "8px 16px", borderRadius: 10, border: `1.5px solid ${border}`, background: bg, color, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+              { label: "PDF",   color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5", action: printToPDF,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14a2 2 0 0 0 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg> },
+              { label: "Excel", color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC", action: prepareReportTablesToXLSX,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 13.06L8.18 15.28H9.97L8 12.06L9.93 8.89H8.22L7.13 10.9 7.09 10.96 7.06 11.03Q6.8 10.5 6.5 9.96L5.45 8.89H3.78L5.73 12.06 3.67 15.28H5.42M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38Z"/></svg> },
+              { label: "Word",  color: "#1D4ED8", bg: "#EFF6FF", border: "#93C5FD", action: printToWord,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 15.25H8.5L9.88 10.58 11.25 15.25H12.75L14.82 8.75H13.31L12 13.41 10.63 8.75H9.12L7.82 13.41 6.5 8.75H5L7 15.25M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38Z"/></svg> },
+            ].map(({ label, color, bg, border, action, icon }) => (
+              <button key={label} onClick={action} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: `1.5px solid ${border}`, background: bg, color, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+                {icon}
                 {label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* ── FILTER PANEL ── */}
-        {showSearch && (
-          <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.07)", padding: "24px", marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>Filtrer le rapport</span>
-              <button onClick={handleClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 22, lineHeight: 1, padding: 0 }}>✕</button>
+        {/* ── FILTER MODAL ── */}
+        <Dialog
+          open={showSearch}
+          onClose={handleClose}
+          fullWidth
+          maxWidth="sm"
+          PaperProps={{ style: { borderRadius: 16, overflow: "visible" } }}
+        >
+          <DialogTitle style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px 12px", borderBottom: "1px solid #F1F5F9" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <svg width="16" height="16" fill="none" stroke="#0F4C81" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+              <span style={{ fontSize: 15, fontWeight: 700, color: "#0F172A" }}>Filtrer le rapport</span>
             </div>
-            <div style={{ maxHeight: "460px", overflowY: "auto" }}>
-            <div className="row">
-              <div className="row">
-                <div className="col s12 m12 l12  input-field">
-                  <Select
-                    className="react-select-container mt-4"
-                    classNamePrefix="react-select"
-                    style={styles}
-                    placeholder="Sélectionner l'Année"
-                    options={yearOptions}
-                    isDisabled={yearOptions.length <= 0}
-                    onChange={(e) => props.yearChanged(e.value)}
-                  />
-                  <label htmlFor="agency" className={"active"}>
-                    Année:
-                  </label>
-                </div>
-                {/* Select Type de plainte */}
-                <div className="col s12 l12 m12 input-field">
-                  <label htmlFor="typePlainte" className={"active"}>
-                    Type de Plainte
-                  </label>
-                  <Select
-                    isMulti
-                    className="react-select-container mt-4"
-                    classNamePrefix="react-select"
-                    style={styles}
-                    id="typePlainte"
-                    placeholder="Tous"
-                    options={optionsPlainteType}
-                    onChange={(e) => {
-                      let arrau = [];
-                      let isSee = false;
-                      for (let i = 0; i < e.length; i++) {
-                        if (e.length == 1 && e[i].value == "suggestion") {
-                          setCloseObjet(true);
+            <button onClick={handleClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 22, lineHeight: 1, padding: 4, borderRadius: 6 }}>✕</button>
+          </DialogTitle>
+
+          <DialogContent style={{ padding: "20px 24px", overflowY: "auto" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+              {/* Année */}
+              <div>
+                <label style={filterLabelStyle}>Année</label>
+                <Select
+                  styles={filterSelectStyles}
+                  placeholder="Sélectionner l'année"
+                  options={yearOptions}
+                  isDisabled={yearOptions.length <= 0}
+                  onChange={(e) => props.yearChanged(e.value)}
+                />
+              </div>
+
+              {/* Type de plainte */}
+              <div>
+                <label style={filterLabelStyle}>Type de plainte</label>
+                <Select
+                  isMulti
+                  styles={filterSelectStyles}
+                  placeholder="Tous"
+                  options={optionsPlainteType}
+                  onChange={(e) => {
+                    let arrau = [];
+                    let isSee = false;
+                    for (let i = 0; i < e.length; i++) {
+                      if (e.length == 1 && e[i].value == "suggestion") {
+                        setCloseObjet(true);
+                      } else {
+                        setCloseObjet(false);
+                      }
+                      if (!isSee) {
+                        if (e[i].value == "suggestion") {
+                          setOptionsState([
+                            { label: "A traiter", value: "SAVED" },
+                            { label: "Traitée", value: "TREAT" },
+                          ]);
+                        } else if (e[i].value == "denunciation") {
+                          setOptionsState([
+                            { label: "A traiter", value: "SAVED" },
+                            { label: "Affectée", value: "AFFECTED" },
+                            { label: "Désapprouvée", value: "DESAPPROUVED" },
+                            { label: "Traitée", value: "TREAT" },
+                          ]);
                         } else {
-                          setCloseObjet(false);
+                          isSee = true;
+                          setOptionsState([
+                            { label: "A traiter", value: "SAVED" },
+                            { label: "Affectée", value: "AFFECTED" },
+                            { label: "Désapprouvée", value: "DESAPPROUVED" },
+                            { label: "Traitée", value: "TREAT" },
+                            { label: "Non satisfait", value: "UNSATISFIED" },
+                            { label: "Partiellement satisfait", value: "PARTIAL_SATISFIED" },
+                            { label: "Satisfait", value: "SATISFIED" },
+                            { label: "Contentieux", value: "LITIGATION" },
+                            { label: "Classée", value: "CLASSED" },
+                          ]);
                         }
-                        if (!isSee) {
-                          if (e[i].value == "suggestion") {
-                            setOptionsState([
-                              { label: "A traiter", value: "SAVED" },
-                              { label: "Traitée", value: "TREAT" },
-                            ]);
-                          } else if (e[i].value == "denunciation") {
-                            setOptionsState([
-                              { label: "A traiter", value: "SAVED" },
-                              { label: "Affectée", value: "AFFECTED" },
-                              { label: "Désapprouvée", value: "DESAPPROUVED" },
-                              { label: "Traitée", value: "TREAT" },
-                            ]);
-                          } else {
-                            isSee = true;
-
-                            setOptionsState([
-                              { label: "A traiter", value: "SAVED" },
-                              { label: "Affectée", value: "AFFECTED" },
-                              { label: "Désapprouvée", value: "DESAPPROUVED" },
-                              { label: "Traitée", value: "TREAT" },
-                              { label: "Non satisfait", value: "UNSATISFIED" },
-                              {
-                                label: "Partiellement satisfait",
-                                value: "PARTIAL_SATISFIED",
-                              },
-                              { label: "Satisfait", value: "SATISFIED" },
-                              { label: "Contentieux", value: "LITIGATION" },
-                              { label: "Classée", value: "CLASSED" },
-                            ]);
-                          }
-                        }
-                        arrau.push(e[i].value);
                       }
+                      arrau.push(e[i].value);
+                    }
+                    setPlainteType(arrau);
+                  }}
+                />
+              </div>
 
-                      setPlainteType(arrau);
-                    }}
-                  />
-                </div>
-                {/* Select Objet */}
-                {!closeObjet && (
-                  <>
-                    <div className="col s12 l12 m12  input-field">
-                      <Select
-                        isMulti
-                        className="react-select-container mt-4"
-                        classNamePrefix="react-select"
-                        style={styles}
-                        id="idObjet"
-                        placeholder="Tous"
-                        options={optionsObjet}
-                        onChange={(e) => {
-                          let objets = [];
-
-                          for (let i = 0; i < e.length; i++) {
-                            objets.push(e[i].value);
-                          }
-                          setObjet(objets);
-                        }}
-                      />
-                      <label htmlFor="idObjet" className={"active"}>
-                        Objets
-                      </label>
-                    </div>
-                  </>
-                )}
-                <div className="col s12 m12 l12 input-field">
+              {/* Objets */}
+              {!closeObjet && (
+                <div>
+                  <label style={filterLabelStyle}>Objets</label>
                   <Select
                     isMulti
-                    className="react-select-container mt-4"
-                    classNamePrefix="react-select"
-                    style={styles}
-                    id="idEtatPlainte"
+                    styles={filterSelectStyles}
                     placeholder="Tous"
-                    options={optionsState}
+                    options={optionsObjet}
                     onChange={(e) => {
-                      let arrau = [];
-                      let am = false;
-                      for (let i = 0; i < e.length; i++) {
-                        arrau.push(e[i].value);
-                      }
-                      setEtatState(arrau);
+                      let objets = [];
+                      for (let i = 0; i < e.length; i++) objets.push(e[i].value);
+                      setObjet(objets);
                     }}
                   />
-                  <label htmlFor="idRecoredBy" className={"active"}>
-                    Etat de la plainte
-                  </label>
                 </div>
-                {/*Autres options */}
-                {/*Etat Plainte */}
-                <span
-                  onClick={(e) => setOther(!other)}
-                  className="col l12 m12 s12"
-                  style={{
-                    cursor: "pointer",
-                    color: other ? "red" : "blue",
-                    textAlign: "center",
+              )}
+
+              {/* État de la plainte */}
+              <div>
+                <label style={filterLabelStyle}>État de la plainte</label>
+                <Select
+                  isMulti
+                  styles={filterSelectStyles}
+                  placeholder="Tous"
+                  options={optionsState}
+                  onChange={(e) => {
+                    let arrau = [];
+                    for (let i = 0; i < e.length; i++) arrau.push(e[i].value);
+                    setEtatState(arrau);
                   }}
-                >
-                  {!other ? " + Plus" : " - Moins"} d'options
-                </span>
+                />
+              </div>
 
-                {other && (
-                  <>
-                    <div className="col s12 m12 l12 input-field">
-                      <Select
-                        isMulti
-                        className="react-select-container mt-4"
-                        classNamePrefix="react-select"
-                        style={styles}
-                        id="idProduct"
-                        placeholder="Tous"
-                        options={optionsProducts}
-                        onChange={(e) => {
-                          let arrau = [];
+              {/* Toggle options avancées */}
+              <button
+                onClick={() => setOther(!other)}
+                style={{
+                  background: "none", border: "1.5px dashed #CBD5E1",
+                  borderRadius: 10, padding: "8px 0",
+                  color: other ? "#EF4444" : "#3B82F6",
+                  fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                {other ? "− Moins d'options" : "+ Plus d'options"}
+              </button>
 
-                          for (let i = 0; i < e.length; i++) {
-                            arrau.push(e[i].value);
-                          }
-                          setProduct(arrau);
-                        }}
-                      />
-                      <label htmlFor="idProduct" className={"active"}>
-                        Produits
-                      </label>
-                    </div>
-                    {/* Enregistrer par */}
-                    <div className="col s12 m12 l12 input-field">
-                      <Select
-                        isMulti
-                        className="react-select-container mt-4"
-                        classNamePrefix="react-select"
-                        style={styles}
-                        id="idRecoredBy"
-                        placeholder="Tous"
-                        options={optionsUsers}
-                        onChange={(e) => {
-                          let arrau = [];
+              {/* Options avancées */}
+              {other && (
+                <div style={{
+                  display: "flex", flexDirection: "column", gap: 14,
+                  background: "#F8FAFC", borderRadius: 12,
+                  border: "1px solid #F1F5F9", padding: 16,
+                }}>
 
-                          for (let i = 0; i < e.length; i++) {
-                            arrau.push(e[i].value);
-                          }
-                          setRecoredBy(arrau);
-                        }}
-                      />
-                      <label htmlFor="idEtatPlainte" className={"active"}>
-                        Enregistrer par
-                      </label>
-                    </div>
-                    {/*Dates row*/}
-                    <div className="row">
-                      <div className="col l12 s12 m12 text-center">
-                        Reçu entre:
-                      </div>
-                      {/*Date start*/}
-                      <div className="col s12 m12 l6 input-field">
+                  {/* Produits */}
+                  <div>
+                    <label style={filterLabelStyle}>Produits</label>
+                    <Select
+                      isMulti
+                      styles={filterSelectStyles}
+                      placeholder="Tous"
+                      options={optionsProducts}
+                      onChange={(e) => {
+                        let arrau = [];
+                        for (let i = 0; i < e.length; i++) arrau.push(e[i].value);
+                        setProduct(arrau);
+                      }}
+                    />
+                  </div>
+
+                  {/* Enregistré par */}
+                  <div>
+                    <label style={filterLabelStyle}>Enregistré par</label>
+                    <Select
+                      isMulti
+                      styles={filterSelectStyles}
+                      placeholder="Tous"
+                      options={optionsUsers}
+                      onChange={(e) => {
+                        let arrau = [];
+                        for (let i = 0; i < e.length; i++) arrau.push(e[i].value);
+                        setRecoredBy(arrau);
+                      }}
+                    />
+                  </div>
+
+                  {/* Période */}
+                  <div>
+                    <label style={filterLabelStyle}>Reçu entre</label>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <div style={{ flex: 1 }}>
                         <DatePicker
                           id="idStartDate"
                           name="startDate"
-                          className="mt-4"
                           selected={startDate}
-                          onChange={(date) => {
-                            setStartDate(date);
-                          }}
+                          onChange={(date) => setStartDate(date)}
                           dateFormat="dd/MM/yyyy"
                           locale="fr"
+                          placeholderText="Date de début"
+                          customInput={<DateInput />}
                         />
-                        <label htmlFor="idStartDate" className={"active"}>
-                          Date de debut
-                        </label>
                       </div>
-                      {/*Date end*/}
-
-                      <div className="col s12 m12 l6 input-field">
+                      <div style={{ flex: 1 }}>
                         <DatePicker
                           id="idEndDate"
                           name="endDate"
-                          className="mt-4"
                           selected={endDate}
-                          onChange={(date) => {
-                            setEndDate(date);
-                          }}
+                          onChange={(date) => setEndDate(date)}
                           dateFormat="dd/MM/yyyy"
                           locale="fr"
+                          placeholderText="Date de fin"
+                          customInput={<DateInput />}
                         />
-                        <label htmlFor="idEndDate" className={"active"}>
-                          Date de fin
-                        </label>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Unité operationelle */} 
-                    <div className="col s12 m12 l12 input-field">
-                      <Select
-                        isMulti
-                        className="react-select-container mt-4"
-                        classNamePrefix="react-select"
-                        style={""}
-                        placeholder="Tous"
-                        options={optionsUnits}
-                        isDisabled={""}
-                        onChange={(e) => {
-                          let arrau = [];
+                  {/* Points de service */}
+                  <div>
+                    <label style={filterLabelStyle}>Points de service</label>
+                    <Select
+                      isMulti
+                      styles={filterSelectStyles}
+                      placeholder="Tous"
+                      options={optionsUnits}
+                      onChange={(e) => {
+                        let arrau = [];
+                        for (let i = 0; i < e.length; i++) arrau.push(e[i].value);
+                        setUnit(arrau);
+                      }}
+                    />
+                  </div>
 
-                          for (let i = 0; i < e.length; i++) {
-                            arrau.push(e[i].value);
-                          }
-                          setUnit(arrau);
-                        }}
-                      />
-                      <label htmlFor="agency" className={"active"}>
-                        Points de service:
-                      </label>
-                    </div>
-                  </>
-                )}
-                <div className="col l6 m6 s12 mt-4">
-                  <a
-                    onClick={(e) => {
-                      cleanForm(e);
-                    }}
-                    className="btn indigo lighten-5 indigo-text waves-effect waves-effect-b waves-light display-flex align-items-center justify-content-center mt-1"
-                  >
-                    <span className="text-nowrap">Effacer Tout</span>
-                  </a>
                 </div>
-                <div className="col l6 m6 s12 mt-4">
-                  <a
-                    className="btn waves-effect waves-effect-b waves-light display-flex align-items-center justify-content-center mt-1"
-                    onClick={(e) => {
-                      genereReport(e);
-                    }}
-                  >
-                    <CheckIcon />
-                    <span className="text-nowrap" style={{ fontSize: "15px" }}>
-                      Générer
-                    </span>
-                  </a>
-                </div>
-              </div>
+              )}
+
             </div>
-          </div>
-          </div>
-        )}
+          </DialogContent>
+
+          <DialogActions style={{ padding: "12px 24px 20px", borderTop: "1px solid #F1F5F9", gap: 8 }}>
+            <button
+              onClick={cleanForm}
+              style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "1.5px solid #E2E8F0", background: "#F8FAFC", color: "#475569", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            >
+              Effacer tout
+            </button>
+            <button
+              onClick={(e) => { genereReport(e); handleClose(e); }}
+              style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <CheckIcon style={{ fontSize: 16 }} />
+              Générer
+            </button>
+          </DialogActions>
+        </Dialog>
+
+        <ReportTemplate />
 
         {/* ── TABS ── */}
         <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.07)", padding: 6, marginBottom: 16, display: "flex", gap: 4, flexWrap: "wrap" }}>
-          {TABS.map(({ label, color, bg }, i) => (
+          {TABS.map(({ label, color, bg, enabled }, i) => (
             <button
               key={i}
-              onClick={() => setActiveTab(i)}
+              onClick={() => enabled && setActiveTab(i)}
               style={{
                 flex: "1 1 140px",
                 padding: "10px 16px",
                 borderRadius: 12,
                 border: activeTab === i ? `1.5px solid ${color}33` : "1.5px solid transparent",
                 background: activeTab === i ? bg : "transparent",
-                color: activeTab === i ? color : "#64748b",
+                color: activeTab === i ? color : enabled ? "#64748b" : "#CBD5E1",
                 fontSize: 13.5,
                 fontWeight: activeTab === i ? 700 : 500,
-                cursor: "pointer",
+                cursor: enabled ? "pointer" : "not-allowed",
+                opacity: enabled ? 1 : 0.45,
                 transition: "all 0.2s ease",
               }}
             >
@@ -3628,37 +3438,51 @@ const Global = (props) => {
           ))}
         </div>
 
-        <ReportTemplate />
-
         {/* ── REPORT CONTENT ── */}
         <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.07)", padding: "24px" }} id="rapportAvance">
           {/* Institution header – preserved for print/PDF/Word */}
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }} id="enteteRapport">
-            <div style={{ display: "flex", gap: 16 }}>
-              <img src={logoInstitution} alt="logo" style={{ height: 90 }} className="report-logo" />
-              <div>
-                <b>{institution}</b><br />
-                <i><span>Agrément: </span>{agrement}</i><br />
-                <i><span>Adresse: </span>{adresse}</i><br />
-                <i><span>Téléphone: </span>{tel}</i><br />
-                <i><span>Email: </span>{email}</i>
+          <div id="enteteRapport" style={{ marginBottom: 24 }}>
+            {/* Logo + infos institution */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", paddingBottom: 16, borderBottom: "2px solid #0F4C81", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                {logoInstitution && <img src={logoInstitution} alt="logo" style={{ height: 64, objectFit: "contain" }} className="report-logo" />}
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", marginBottom: 4 }}>{institution}</div>
+                  {agrement && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Agrément :</span> {agrement}</div>}
+                  {adresse  && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Adresse :</span> {adresse}</div>}
+                  {tel      && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Téléphone :</span> {tel}</div>}
+                  {email    && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Email :</span> {email}</div>}
+                </div>
+              </div>
+              {/* Métadonnées à droite */}
+              <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+                <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Rapport généré le</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>{new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
+                <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600, marginTop: 6 }}>Par</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>{userAuth?.firstAndLastName}</div>
               </div>
             </div>
-            <i style={{ marginRight: 10 }}>
-              Généré le {new Date().toLocaleDateString("fr-FR", { day: "numeric", year: "numeric", month: "long" })}
-            </i>
-          </div>
 
-          <div style={{ textAlign: "center", marginBottom: 16 }} id="titleRapport">
-            <span style={{ color: "#015182", fontSize: 22, fontWeight: "bold" }}>
-              Rapport de la gestion des plaintes ou réclamations
-            </span>
-          </div>
+            {/* Titre du rapport */}
+            <div id="titleRapport" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ height: 3, flex: 1, background: "linear-gradient(to right, #0F4C81, transparent)" }} />
+              <span style={{ fontSize: 16, fontWeight: 800, color: "#0F4C81", textTransform: "uppercase", letterSpacing: "0.8px", whiteSpace: "nowrap" }}>
+                Rapport de gestion des plaintes &amp; réclamations
+              </span>
+              <div style={{ height: 3, flex: 1, background: "linear-gradient(to left, #0F4C81, transparent)" }} />
+            </div>
 
-          <div style={{ marginBottom: 20 }} id="critereRapport">
-            <ul style={{ paddingLeft: 15 }}>
-              <li><b>Généré par: {userAuth.firstAndLastName}</b></li>
-            </ul>
+            {/* Ligne de critères */}
+            <div id="critereRapport" style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+              {props.year && (
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0F4C81", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 20, padding: "3px 12px" }}>
+                  Année : {props.year}
+                </span>
+              )}
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7280", background: "#F1F5F9", border: "1px solid #E2E8F0", borderRadius: 20, padding: "3px 12px" }}>
+                Généré par {userAuth?.firstAndLastName}
+              </span>
+            </div>
           </div>
                 {/* { <div
                   className="row"
@@ -3761,22 +3585,22 @@ const Global = (props) => {
 
                     {props.claimReport && props.claimReport.length !== 0 ? (
                       <>
-                        <SectionSubtitle id="toeClaim">Statistiques des réclamations par agences</SectionSubtitle>
+                        <SectionSubtitle id="toeClaim" accent="#3B82F6">Par agence</SectionSubtitle>
                         {claimByAgenceChart}
-                        <SectionSubtitle>Statistiques des modalités de dépôt des réclamations</SectionSubtitle>
+                        <SectionSubtitle accent="#3B82F6">Par modalité de dépôt</SectionSubtitle>
                         {claimByCanalChart}
-                        <SectionSubtitle>Statistiques des objets des réclamations</SectionSubtitle>
+                        <SectionSubtitle accent="#3B82F6">Par objet</SectionSubtitle>
                         {claimByObjetChart}
-                        <SectionSubtitle>Statistiques des réclamations par genre</SectionSubtitle>
+                        <SectionSubtitle accent="#3B82F6">Par genre</SectionSubtitle>
                         {claimByGenreChart}
-                        <SectionSubtitle>Statistiques des réclamations par niveaux de gravité</SectionSubtitle>
+                        <SectionSubtitle accent="#3B82F6">Par niveau de gravité</SectionSubtitle>
                         {claimByGraviteChart}
-                        <SectionSubtitle>Statistiques de la satisfaction des réclamants</SectionSubtitle>
+                        <SectionSubtitle accent="#3B82F6">Satisfaction des réclamants</SectionSubtitle>
                         {claimBySatisfactionChart}
-                        <SectionSubtitle>Statistiques du délai de résolution des réclamations</SectionSubtitle>
+                        <SectionSubtitle accent="#3B82F6">Délai de résolution</SectionSubtitle>
                         {claimDelaiResolutionChart}
                         <div id="statClaimTable">
-                          <SectionSubtitle>Statistiques des réclamations</SectionSubtitle>
+                          <SectionSubtitle accent="#3B82F6">Tableau récapitulatif</SectionSubtitle>
                           {claimTableStat()}
                         </div>
                       </>
@@ -3802,18 +3626,18 @@ const Global = (props) => {
                     </div>
                     {props.denunReport && props.denunReport.length != 0 ? (
                       <>
-                        <SectionSubtitle id="toeDenun">Statistiques des dénonciations par agences</SectionSubtitle>
+                        <SectionSubtitle id="toeDenun" accent="#F59E0B">Par agence</SectionSubtitle>
                         {denunByAgenceChart}
-                        <SectionSubtitle>Statistiques des modalités de dépôt des dénonciations</SectionSubtitle>
+                        <SectionSubtitle accent="#F59E0B">Par modalité de dépôt</SectionSubtitle>
                         {denunByCanalChart}
-                        <SectionSubtitle>Statistiques des objets des dénonciations</SectionSubtitle>
+                        <SectionSubtitle accent="#F59E0B">Par objet</SectionSubtitle>
                         {denunByObjetChart}
-                        <SectionSubtitle>Statistiques du délai de résolution des dénonciations</SectionSubtitle>
+                        <SectionSubtitle accent="#F59E0B">Délai de résolution</SectionSubtitle>
                         {denunDelaiResolutionChart}
-                        <SectionSubtitle>Statistiques des dénonciations par niveau de gravité</SectionSubtitle>
+                        <SectionSubtitle accent="#F59E0B">Par niveau de gravité</SectionSubtitle>
                         {denunByGraviteChart}
                         <div id="statDenunTable">
-                          <SectionSubtitle>Statistiques des dénonciations</SectionSubtitle>
+                          <SectionSubtitle accent="#F59E0B">Tableau récapitulatif</SectionSubtitle>
                           {denunTableStat()}
                         </div>
                       </>
@@ -3839,14 +3663,14 @@ const Global = (props) => {
                     </div>
                     {props.sugReport && props.sugReport.length !== 0 ? (
                       <>
-                        <SectionSubtitle id="tpeSugg">Statistiques des suggestions par agences</SectionSubtitle>
+                        <SectionSubtitle id="tpeSugg" accent="#10B981">Par agence</SectionSubtitle>
                         {sugByAgenceChart}
-                        <SectionSubtitle>Statistiques des modalités de dépôt des suggestions</SectionSubtitle>
+                        <SectionSubtitle accent="#10B981">Par modalité de dépôt</SectionSubtitle>
                         {sugByCanalChart}
-                        <SectionSubtitle>Statistiques des suggestions par genre</SectionSubtitle>
+                        <SectionSubtitle accent="#10B981">Par genre</SectionSubtitle>
                         {sugByGenderChart}
                         <div id="statSugTable">
-                          <SectionSubtitle>Statistiques des suggestions</SectionSubtitle>
+                          <SectionSubtitle accent="#10B981">Tableau récapitulatif</SectionSubtitle>
                           {sugTableStat()}
                         </div>
                       </>
@@ -3859,6 +3683,34 @@ const Global = (props) => {
                 )}
         </div>
       </div>
+
+      {/* FAB Exporter */}
+      <button
+        onClick={() => {
+          if (pageTopRef.current) {
+            pageTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+          setHighlightExport(true);
+          setTimeout(() => setHighlightExport(false), 2000);
+        }}
+        style={{
+          position: "fixed", bottom: 72, right: 32, zIndex: 999,
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "12px 16px", borderRadius: 50, border: "none",
+          background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
+          color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
+          boxShadow: "0 4px 20px rgba(15,76,129,0.4)",
+          transition: "transform 0.15s ease, box-shadow 0.15s ease",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 28px rgba(15,76,129,0.55)"; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(15,76,129,0.4)"; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
     </>
   );
 };
