@@ -24,6 +24,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import { NavLink } from "react-router-dom";
 import { Box, Button, Modal, Typography } from "@mui/material";
 import { notify } from "../../Utils/alert";
+import BlockButton from "../../components/shared/BlockButton";
 
 // ── SVG Icons ────────────────────────────────────────────────────────────
 const SvgEmail    = ({size=20,color="#64748b"}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
@@ -412,31 +413,25 @@ const Login = (props) => {
               </div>
 
               {/* Bouton Se connecter */}
-              <LoadingButton
-                style={{
-                  width: "100%", height: "58px", borderRadius: "14px", fontSize: "16px", fontWeight: 700,
-                  textTransform: "none", marginTop: "20px", color: "white",
-                  background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
-                  boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
-                }}
-                sx={{
-                  '&.Mui-disabled': {
-                    pointerEvents: 'all',
-                    cursor: 'not-allowed',
-                    color: 'white !important',
-                    background: 'linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%) !important',
-                    opacity: 0.75,
-                  }
-                }}
-                className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
-                onClick={handleSubmit}
-                loading={props.etat}
-                loadingPosition="end"
-                endIcon={<SvgArrowIn />}
-                variant="contained"
-              >
-                <span>Se connecter</span>
-              </LoadingButton>
+              <BlockButton disabled={props.etat} style={{ display: 'block' }}>
+                <LoadingButton
+                  style={{
+                    width: "100%", height: "58px", borderRadius: "14px", fontSize: "16px", fontWeight: 700,
+                    textTransform: "none", marginTop: "20px", color: "white",
+                    background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
+                    boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
+                  }}
+                  className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
+                  onClick={handleSubmit}
+                  loading={props.etat}
+                  disabled={props.etat}
+                  loadingPosition="end"
+                  endIcon={<SvgArrowIn />}
+                  variant="contained"
+                >
+                  <span>Se connecter</span>
+                </LoadingButton>
+              </BlockButton>
 
             </form>
 

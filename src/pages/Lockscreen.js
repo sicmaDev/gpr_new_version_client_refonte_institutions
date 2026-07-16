@@ -4,6 +4,7 @@ import logoSicma from '../assets/images/logo_sicma.png';
 import FemalAvatar from "../assets/images/avatar/2.svg"
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Avatar, Button } from '@mui/material';
+import BlockButton from '../components/shared/BlockButton';
 import { connect } from 'react-redux';
 import { locked, setLastActivity, setLocked, setUnlocked, setUser, unlocked } from '../redux/actions/LockscreenActions';
 import { LogoutRounded } from '@mui/icons-material';
@@ -227,22 +228,25 @@ const Lockscreen = (props) => {
                                 </div>
                             </div>
 
-                            <LoadingButton
-                                style={{
-                                    width: "100%", height: "58px", borderRadius: "14px", fontSize: "16px", fontWeight: 700,
-                                    textTransform: "none", marginTop: "20px", color: "white",
-                                    background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
-                                    boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
-                                }}
-                                className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
-                                onClick={handleSubmit}
-                                loading={props.etat}
-                                loadingPosition="end"
-                                endIcon={<SvgArrowIn />}
-                                variant="contained"
-                            >
-                                <span>Déverrouiller</span>
-                            </LoadingButton>
+                            <BlockButton disabled={props.etat} style={{ display: 'block' }}>
+                                <LoadingButton
+                                    style={{
+                                        width: "100%", height: "58px", borderRadius: "14px", fontSize: "16px", fontWeight: 700,
+                                        textTransform: "none", marginTop: "20px", color: "white",
+                                        background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
+                                        boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
+                                    }}
+                                    className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
+                                    onClick={handleSubmit}
+                                    loading={props.etat}
+                                    disabled={props.etat}
+                                    loadingPosition="end"
+                                    endIcon={<SvgArrowIn />}
+                                    variant="contained"
+                                >
+                                    <span>Déverrouiller</span>
+                                </LoadingButton>
+                            </BlockButton>
                         </form>
                     </div>
                 </div>

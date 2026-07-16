@@ -554,6 +554,11 @@ const Dashboard = (props) => {
   const suggestCount= props.dashboard?.suggest               ?? 0;
   const satisfPct   = (props.dashboard?.tauxSatisfaction ?? 0) / 100;
 
+  // Portée (scope) renvoyée par le backend — uniquement pour RA et User simple
+  const scopeType        = props.dashboard?.scopeType;
+  const scopeLabel       = props.dashboard?.scopeLabel;
+  const subAgencesCount  = props.dashboard?.subAgencesCount ?? 0;
+
   // "En traitement" = all active (non-closed) = total - classified
   const inProgress  = Math.max(0, total - treated);
 
@@ -648,6 +653,32 @@ const Dashboard = (props) => {
         <h4 style={{ margin: '0 0 4px', fontWeight: 700, color: '#0f172a', fontSize: 22 }}>Tableau de bord</h4>
         <p style={{ margin: 0, color: '#64748b', fontSize: 13.5 }}>Vue d'ensemble des dossiers et indicateurs clés</p>
       </div>
+
+      {/* ── Bannière direction (RA uniquement, quand le point de service est une DIRECTION) ── */}
+      {isRA && scopeType === 'DIRECTION' && !loading && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '12px 18px', marginBottom: 20,
+          background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+          border: '1px solid #bfdbfe', borderRadius: 12,
+          borderLeft: '4px solid #3b82f6',
+        }}>
+          <div style={{ width: 36, height: 36, borderRadius: 8, background: '#3b82f620', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <InfoOutlinedIcon style={{ color: '#3b82f6', fontSize: 20 }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1d4ed8' }}>
+              Vue Direction — {scopeLabel}
+            </div>
+            <div style={{ fontSize: 12.5, color: '#2563eb', marginTop: 2 }}>
+              Vous consultez les données de votre direction et des {subAgencesCount} agence{subAgencesCount !== 1 ? 's' : ''} rattachée{subAgencesCount !== 1 ? 's' : ''}.
+            </div>
+          </div>
+          <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 20, fontWeight: 700, background: '#dbeafe', color: '#1d4ed8', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {subAgencesCount + 1} point{subAgencesCount + 1 !== 1 ? 's' : ''} de service
+          </span>
+        </div>
+      )}
 
       {/* ── Section 2 : KPI cards ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>

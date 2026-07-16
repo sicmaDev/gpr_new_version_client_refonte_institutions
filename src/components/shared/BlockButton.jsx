@@ -6,7 +6,7 @@ import BlockIcon from "@mui/icons-material/Block";
  * Quand l'utilisateur clique sur un bouton disabled, affiche brièvement
  * une icône d'interdiction en overlay.
  */
-const BlockButton = ({ children, disabled }) => {
+const BlockButton = ({ children, disabled, style }) => {
   const [blocked, setBlocked] = useState(false);
 
   return (
@@ -15,6 +15,7 @@ const BlockButton = ({ children, disabled }) => {
         position: "relative",
         display: "inline-flex",
         cursor: disabled ? "not-allowed" : "default",
+        ...style,
       }}
       onClick={() => {
         if (disabled) {

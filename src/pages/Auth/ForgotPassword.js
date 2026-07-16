@@ -6,6 +6,7 @@ import logo from "../../assets/images/logo_gpr.jpg";
 import logoSicma from "../../assets/images/logo_sicma.png";
 import { notify } from "../../Utils/alert";
 import { forgetPassword } from "../../apis/LoginApi";
+import BlockButton from "../../components/shared/BlockButton";
 
 // ── SVG Icons ────────────────────────────────────────────────────────────
 const SvgEmail    = ({size=20,color="#64748b"}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
@@ -198,22 +199,25 @@ const ForgotPassword = () => {
                 </div>
               </div>
 
-              <LoadingButton
-                type="submit"
-                style={{
-                  width: "100%", height: "58px", borderRadius: "14px", fontSize: "16px", fontWeight: 700,
-                  textTransform: "none", marginTop: "20px", color: "white",
-                  background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
-                  boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
-                }}
-                className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
-                loading={loading}
-                loadingPosition="end"
-                endIcon={<SvgSend />}
-                variant="contained"
-              >
-                <span>Envoyer le lien</span>
-              </LoadingButton>
+              <BlockButton disabled={loading} style={{ display: 'block' }}>
+                <LoadingButton
+                  type="submit"
+                  style={{
+                    width: "100%", height: "58px", borderRadius: "14px", fontSize: "16px", fontWeight: 700,
+                    textTransform: "none", marginTop: "20px", color: "white",
+                    background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
+                    boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
+                  }}
+                  className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
+                  loading={loading}
+                  disabled={loading}
+                  loadingPosition="end"
+                  endIcon={<SvgSend />}
+                  variant="contained"
+                >
+                  <span>Envoyer le lien</span>
+                </LoadingButton>
+              </BlockButton>
 
               <p className="text-center mt-5">
                 <NavLink to="/login" className="text-[#1E88E5] text-[13px] font-semibold hover:underline">
