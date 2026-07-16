@@ -79,7 +79,7 @@ const RingGauge = ({ value, color, size = 110, thickness = 5 }) => (
     <CircularProgress variant="determinate" value={100} size={size} thickness={thickness} style={{ color: '#f1f5f9', position: 'absolute', top: 0, left: 0 }} />
     <CircularProgress variant="determinate" value={value} size={size} thickness={thickness} style={{ color, position: 'absolute', top: 0, left: 0 }} />
     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <span style={{ fontSize: 22, fontWeight: 800, color: '#0f172a' }}>{value}%</span>
+      <span style={{ fontSize: size >= 150 ? 30 : 22, fontWeight: 800, color: '#0f172a' }}>{value}%</span>
     </div>
   </div>
 );
@@ -146,18 +146,18 @@ const SystemPerformanceCard = () => {
       </div>
 
       {/* Vue d'ensemble — anneaux */}
-      <Card style={{ padding: 24, marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 24 }}>
+      <Card style={{ padding: '28px 32px', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 32 }}>
           <DnsIcon style={{ fontSize: 16 }} /> Vue d'ensemble
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 48 }}>
           {metrics.map((m) => (
-            <div key={m.key} style={{ textAlign: 'center' }}>
-              <RingGauge value={m.pct} color={m.color} />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12, fontSize: 13.5, fontWeight: 700, color: '#0f172a' }}>
-                <m.Icon style={{ fontSize: 16, color: m.color }} /> {m.label}
+            <div key={m.key} style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <RingGauge value={m.pct} color={m.color} size={160} thickness={6} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 16, fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
+                <m.Icon style={{ fontSize: 18, color: m.color }} /> {m.label}
               </div>
-              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{m.sub}</div>
+              <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>{m.sub}</div>
             </div>
           ))}
         </div>

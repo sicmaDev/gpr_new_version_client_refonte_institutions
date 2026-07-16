@@ -27,6 +27,7 @@ import { table2XLSX } from "../../Utils/tabletoexcel";
 import BorderColorIcon from '@mui/icons-material/BorderColor';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { LoadingButton } from "@mui/lab";
+import BlockButton from "../../components/shared/BlockButton";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
@@ -105,7 +106,8 @@ const PointsServices = (props) => {
 
     const filteredItems = useMemo(() => {
         const chip = CHIPS_CONFIG.find(c => c.value === activeChip);
-        return chip ? props.items.filter(chip.filter) : props.items;
+        const base = chip ? props.items.filter(chip.filter) : props.items;
+        return [...base].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeChip]);
 
@@ -534,7 +536,7 @@ const PointsServices = (props) => {
                             <div>
                                 <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Modifier le point de service</div>
                                 <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>
-                                    {editForm.libelle || "—"}
+                                    {editForm.libelle}
                                 </div>
                             </div>
                         </div>
@@ -650,15 +652,15 @@ const PointsServices = (props) => {
 
                     {/* Footer */}
                     <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
-                        <Button
+                        <BlockButton disabled={editLoading}><Button
                             onClick={() => { setEditModalOpen(false); clearComponentState(); }}
                             disabled={editLoading}
                             variant="outlined"
                             sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}
                         >
                             Annuler
-                        </Button>
-                        <LoadingButton
+                        </Button></BlockButton>
+                        <BlockButton disabled={editLoading}><LoadingButton
                             onClick={handleEditFormSubmit}
                             loading={editLoading}
                             loadingPosition="start"
@@ -672,7 +674,7 @@ const PointsServices = (props) => {
                             }}
                         >
                             Modifier
-                        </LoadingButton>
+                        </LoadingButton></BlockButton>
                     </DialogActions>
                 </Dialog>
 
@@ -717,15 +719,15 @@ const PointsServices = (props) => {
                         </p>
                     </DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", gap: 10 }}>
-                        <Button
+                        <BlockButton disabled={disableConfirm.loading}><Button
                             onClick={() => setDisableConfirm({ open: false, id: null, isDisabled: true, loading: false })}
                             disabled={disableConfirm.loading}
                             variant="outlined"
                             sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}
                         >
                             Annuler
-                        </Button>
-                        <LoadingButton
+                        </Button></BlockButton>
+                        <BlockButton disabled={disableConfirm.loading}><LoadingButton
                             onClick={() => handleDisable(disableConfirm.id, disableConfirm.isDisabled)}
                             loading={disableConfirm.loading}
                             loadingPosition="start"
@@ -741,7 +743,7 @@ const PointsServices = (props) => {
                             }}
                         >
                             {disableConfirm.isDisabled ? "Désactiver" : "Activer"}
-                        </LoadingButton>
+                        </LoadingButton></BlockButton>
                     </DialogActions>
                 </Dialog>
 
@@ -765,7 +767,7 @@ const PointsServices = (props) => {
                             <div>
                                 <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Supprimer le point de service</div>
                                 <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, marginTop: 2 }}>
-                                    {deleteConfirm.sp?.libelle || "—"}
+                                    {deleteConfirm.sp?.libelle}
                                 </div>
                             </div>
                         </div>
@@ -784,15 +786,15 @@ const PointsServices = (props) => {
                         </p>
                     </DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", gap: 10 }}>
-                        <Button
+                        <BlockButton disabled={deleteConfirm.loading}><Button
                             onClick={() => setDeleteConfirm({ open: false, sp: null, loading: false })}
                             disabled={deleteConfirm.loading}
                             variant="outlined"
                             sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}
                         >
                             Annuler
-                        </Button>
-                        <LoadingButton
+                        </Button></BlockButton>
+                        <BlockButton disabled={deleteConfirm.loading}><LoadingButton
                             onClick={handleDelete}
                             loading={deleteConfirm.loading}
                             loadingPosition="start"
@@ -806,7 +808,7 @@ const PointsServices = (props) => {
                             }}
                         >
                             Supprimer
-                        </LoadingButton>
+                        </LoadingButton></BlockButton>
                     </DialogActions>
                 </Dialog>
 

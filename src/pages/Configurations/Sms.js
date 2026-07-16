@@ -23,7 +23,6 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { ForwardToInboxOutlined } from "@mui/icons-material";
 import { Button, Box, Typography, Tooltip, IconButton, Dialog, DialogActions, DialogContent } from "@mui/material";
-import PhoneInput from "react-phone-number-input";
 import { KTApp } from "../../Utils/blockui";
 import { notify } from "../../Utils/alert";
 
@@ -398,8 +397,8 @@ const Sms = (props) => {
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <Box>
                             <label style={labelStyle}>Téléphone</label>
-                            <PhoneInput international countryCallingCodeEditable={false} value={phoneTest} onChange={(e) => setPhoneTest(e)}
-                                style={{ ...inputStyle(false), display: "flex", alignItems: "center" }} />
+                            <input type="tel" value={phoneTest || ""} onChange={(e) => setPhoneTest(e.target.value)} placeholder="Ex: +225 07 00 00 00 00"
+                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                         <Box>
                             <label style={labelStyle}>Message</label>

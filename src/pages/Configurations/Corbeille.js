@@ -349,7 +349,7 @@ const Corbeille = (props) => {
                     "&.Mui-disabled": { opacity: 0.6 },
                 }}
             >
-                Suppression définitive
+                Supprimer
             </LoadingButton>
         );
     }

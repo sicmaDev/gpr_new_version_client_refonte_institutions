@@ -49,7 +49,7 @@ const Compte = () => {
     : [];
 
   const userHabilitations = HABILITATIONS.filter(h => hbtCodes.includes(h.code));
-  const bg = avatarColor(name);
+  const bg = "#0F4C81";
 
   return (
     <div style={{ padding: "28px clamp(24px, 4vw, 52px)", maxWidth: 1100, margin: "0 auto" }}>
@@ -145,13 +145,13 @@ const Compte = () => {
               </div>
             )}
 
-            {/* Légende au survol - liste des labels */}
+            {/* Légende - liste des labels */}
             {userHabilitations.length > 0 && (
-              <div style={{ marginTop: 16, borderTop: "1px solid #f1f5f9", paddingTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ marginTop: 18, borderTop: "1px solid #f1f5f9", paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
                 {userHabilitations.map(h => (
-                  <div key={h.code} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: h.color, minWidth: 28 }}>{h.code}</span>
-                    <span style={{ fontSize: 11, color: "#64748b", lineHeight: 1.4 }}>{h.label}</span>
+                  <div key={h.code} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: h.color, minWidth: 32, flexShrink: 0 }}>{h.code}</span>
+                    <span style={{ fontSize: 12, color: "#475569", lineHeight: 1.6 }}>{h.label}</span>
                   </div>
                 ))}
               </div>

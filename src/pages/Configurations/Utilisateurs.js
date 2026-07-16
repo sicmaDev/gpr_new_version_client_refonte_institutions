@@ -28,6 +28,7 @@ import { table2XLSX } from "../../Utils/tabletoexcel";
 import { licenseInfo } from "../../apis/LoginApi";
 import { notify } from "../../Utils/alert";
 import { LoadingButton } from "@mui/lab";
+import BlockButton from "../../components/shared/BlockButton";
 import AddDuplicateFormModal from "../../components/shared/AddDuplicateFormModal";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -164,7 +165,8 @@ const Utilisateurs = (props) => {
     ];
     const filteredUsers = useMemo(() => {
         const c = CHIPS_CONFIG.find(x => x.value === activeChip);
-        return c ? props.items.filter(c.filter) : props.items;
+        const base = c ? props.items.filter(c.filter) : props.items;
+        return [...base].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeChip]);
 
@@ -457,7 +459,7 @@ const Utilisateurs = (props) => {
                     <div style={{ background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><EditIcon style={{ color: "#fff", fontSize: 20 }} /></div>
-                            <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Modifier l'utilisateur</div><div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>{editForm.name || "—"}</div></div>
+                            <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Modifier l'utilisateur</div><div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>{editForm.name}</div></div>
                         </div>
                         <IconButton onClick={() => { setEditModalOpen(false); setEditForm(EMPTY_FORM); setEditErrors({}); clearComponentState(); }} disabled={editLoading} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}><CloseIcon style={{ fontSize: 16 }} /></IconButton>
                     </div>
@@ -465,8 +467,8 @@ const Utilisateurs = (props) => {
                         {renderUserForm(editForm, setEditForm, editErrors, setEditErrors, true, showEditPass, setShowEditPass, showEditPass1, setShowEditPass1)}
                     </DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
-                        <Button onClick={() => { setEditModalOpen(false); setEditForm(EMPTY_FORM); setEditErrors({}); clearComponentState(); }} disabled={editLoading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
-                        <LoadingButton onClick={handleEditSubmit} loading={editLoading} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Modifier</LoadingButton>
+                        <BlockButton disabled={editLoading}><Button onClick={() => { setEditModalOpen(false); setEditForm(EMPTY_FORM); setEditErrors({}); clearComponentState(); }} disabled={editLoading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button></BlockButton>
+                        <BlockButton disabled={editLoading}><LoadingButton onClick={handleEditSubmit} loading={editLoading} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Modifier</LoadingButton></BlockButton>
                     </DialogActions>
                 </Dialog>
 
@@ -475,7 +477,7 @@ const Utilisateurs = (props) => {
                     <div style={{ background: disableModalGradient, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>{disableModalIcon}</div>
-                            <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{disableModalTitle}</div><div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, marginTop: 2 }}>{disableConfirm.item?.firstAndLastName || "—"}</div></div>
+                            <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{disableModalTitle}</div><div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, marginTop: 2 }}>{disableConfirm.item?.firstAndLastName}</div></div>
                         </div>
                         <IconButton onClick={() => setDisableConfirm({ open: false, item: null, action: null, loading: false })} disabled={disableConfirm.loading} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}><CloseIcon style={{ fontSize: 16 }} /></IconButton>
                     </div>
@@ -491,7 +493,7 @@ const Utilisateurs = (props) => {
                     <div style={{ background: "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><DeleteIcon style={{ color: "#fff", fontSize: 20 }} /></div>
-                            <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Supprimer l'utilisateur</div><div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, marginTop: 2 }}>{deleteConfirm.item?.firstAndLastName || "—"}</div></div>
+                            <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Supprimer l'utilisateur</div><div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, marginTop: 2 }}>{deleteConfirm.item?.firstAndLastName}</div></div>
                         </div>
                         <IconButton onClick={() => setDeleteConfirm({ open: false, item: null, loading: false })} disabled={deleteConfirm.loading} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}><CloseIcon style={{ fontSize: 16 }} /></IconButton>
                     </div>

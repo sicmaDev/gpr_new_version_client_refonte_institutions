@@ -4,22 +4,15 @@ import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTI
 import { handlePrintAvance } from '../../Utils/tables';
 import { cleanDate, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from '../../Utils/utils';
 import { table2XLSX } from '../../Utils/tabletoexcel';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useEffect } from 'react';
 import DatePicker from "react-datepicker";
 import { mdColors } from '../../Utils/colors';
 import { reportBceaoApi } from '../../apis/Rapports/BceaoApi';
-import { Dialog, DialogTitle, DialogContent, DialogContentText, Tooltip } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogContentText } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
-import PrintIcon from '@mui/icons-material/Print';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { globalChanged, openChanged } from '../../redux/actions/Rapports/BceaoActions';
 import moment from 'moment';
-
-import PDF_IMG from "../../assets/images/reports/pdf.svg"
-import EXCEL_IMG from "../../assets/images/reports/excel.svg"
-import WORD_IMG from "../../assets/images/reports/word.svg"
-import FILTER_IMG from "../../assets/images/reports/filter2.svg"
 // import { useTranslation } from "react-i18next";
 
 const Bceao = (props) => {
@@ -32,6 +25,9 @@ const Bceao = (props) => {
   const [piloteContact, setPiloteContact] = useState("-");
   const [showSearch, setshowSearch] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+  const [exportLoading, setExportLoading] = useState(null);
+  const [highlightExport, setHighlightExport] = useState(false);
+  const pageTopRef = useRef(null);
 
   const [institution, setInstitution] = useState("")
   const [agrement, setAgrement] = useState("")
@@ -379,25 +375,33 @@ const Bceao = (props) => {
   //   handlePrintAvance(toStri);
   // };
   const printToPDF = async () => {
-    // 🔥 ouvrir la fenêtre IMMEDIATEMENT
-    const childWindow = window.open("", "modal");
-
-    if (!childWindow) {
-      alert("Veuillez autoriser les popups pour l'impression.");
-      return;
+    setExportLoading("PDF");
+    try {
+      const childWindow = window.open("", "modal");
+      if (!childWindow) {
+        alert("Veuillez autoriser les popups pour l'impression.");
+        return;
+      }
+      const dom = await prepareToPrint(childWindow);
+      handlePrintAvance(childWindow, dom);
+    } finally {
+      setExportLoading(null);
     }
-
-    const dom = await prepareToPrint(childWindow);
-
-    handlePrintAvance(childWindow, dom);
   };
+
   const prepareReportTablesToXLSX = () => {
-    let filename = "Statistiques_BCEAO_GPR_" + today().replaceAll("/", "");
-    table2XLSX(filename, "", 2);
+    setExportLoading("Excel");
+    try {
+      let filename = "Statistiques_BCEAO_GPR_" + today().replaceAll("/", "");
+      table2XLSX(filename, "", 2);
+    } finally {
+      setExportLoading(null);
+    }
   };
 
   const printToWord = async () => {
-
+    setExportLoading("Word");
+    try {
     let reportData = await prepareToPrint();
     let css =
       "<style>" +
@@ -451,23 +455,38 @@ const Bceao = (props) => {
       //triggering the function
       downloadLink.click();
     }
+    } finally {
+      setExportLoading(null);
+    }
   };
   return (
     <>
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .bceao-table-wrap table.table-xlsx { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .bceao-table-wrap table.table-xlsx td, .bceao-table-wrap table.table-xlsx th { border: 1px solid #E2E8F0; padding: 8px 12px; }
+        .bceao-table-wrap table.table-xlsx thead td { background: #0F4C81; color: #fff; font-weight: 700; }
+        .bceao-table-wrap table.table-xlsx tbody tr:nth-child(odd) { background: #F8FAFC; }
+      `}</style>
       <div id="trSimple" ></div>
-      <div id="main" style={{ marginBottom: "50px" }}>
+      <div id="main" style={{ marginBottom: "80px" }}>
         {showSearch && (
-          <Dialog open={props.open} onClose={(e) => { e.preventDefault(); handleClose() }} style={{ padding: "16px" }}>
-            <DialogTitle
-              align="center"
-              color={"#1E2188"}
-              fontSize={"23px"}
-              fontWeight={"bold"}
-            >
-              Définir une période
+          <Dialog
+            open={props.open}
+            onClose={(e) => { e.preventDefault(); handleClose() }}
+            fullWidth
+            maxWidth="sm"
+            PaperProps={{ style: { borderRadius: 16, overflow: "visible" } }}
+          >
+            <DialogTitle style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px 12px", borderBottom: "1px solid #F1F5F9" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="16" height="16" fill="none" stroke="#0F4C81" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                <span style={{ fontSize: 15, fontWeight: 700, color: "#0F172A" }}>Définir une période</span>
+              </div>
+              <button onClick={handleClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 22, lineHeight: 1, padding: 4, borderRadius: 6 }}>✕</button>
             </DialogTitle>
 
-            <DialogContent style={{ overflowY: "auto", overflowX: "hidden", minHeight: "50px", }}>
+            <DialogContent style={{ padding: "20px 24px", overflowY: "auto", overflowX: "hidden" }}>
 
               <div className="row">
                 <div className="col s12 m12 l6 input-field">
@@ -516,21 +535,31 @@ const Bceao = (props) => {
                     onClick={(e) => {
                       cleanForm(e);
                     }}
-                    className="btn indigo lighten-5 indigo-text waves-effect waves-effect-b waves-light display-flex align-items-center justify-content-center mt-1"
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                      padding: "9px 16px", borderRadius: 10, border: "1.5px solid #E2E8F0",
+                      background: "#fff", color: "#475569", fontSize: 13, fontWeight: 600,
+                      cursor: "pointer", textDecoration: "none",
+                    }}
                   >
                     <span className="text-nowrap">Effacer Tout</span>
                   </a>
                 </div>
                 <div className="col l6 m6 s12 mt-4">
                   <a
-                    className="btn waves-effect waves-effect-b waves-light display-flex align-items-center justify-content-center mt-1"
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                      padding: "9px 16px", borderRadius: 10, border: "1.5px solid #0F4C81",
+                      background: "#0F4C81", color: "#fff", fontSize: 13, fontWeight: 700,
+                      cursor: "pointer", textDecoration: "none",
+                    }}
                     onClick={(e) => {
                       e.preventDefault();
                       rapportSubmit();
                     }}
                   >
-                    <CheckIcon />
-                    <span className="text-nowrap" style={{ fontSize: "15px" }}>
+                    <CheckIcon style={{ fontSize: 18 }} />
+                    <span className="text-nowrap">
                       Générer
                     </span>
                   </a>
@@ -543,415 +572,157 @@ const Bceao = (props) => {
 
         )}
 
-        <div className="row" id="s">
-
-          {/* <div
-            className=""
-            style={{
-              position: "fixed",
-              justifyContent: "center",
-              bottom: 80,
-              right: 5,
-            }}
-          >
-
-            <div style={{ marginTop: "10px", display: "flex", width: "200px" }}>
-              <div
-                style={{
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  color: "#000",
-                  height: "50px",
-                  width: "80px",
-                }}
-              >
-                <span
-                  id="okGenerer"
-                  style={{
-                    marginTop: "20%",
-                    display: "none",
-                    fontSize: "17px",
-                  }}
-                >
-                  Générer
-                </span>
-              </div>
-              <div
-                id="searchShow"
-                style={{
-                  backgroundColor: "#FF0000",
-                  color: "white",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "50px",
-                  width: "50px",
-                  textAlign: "center",
-                  borderRadius: "25px",
-                  paddingTop: "5%",
-                  cursor: "pointer",
-                }}
-                onMouseOver={() => {
-                  document.querySelector("#okGenerer").style.display = "block";
-                }}
-                onMouseOut={() => {
-                  document.querySelector("#okGenerer").style.display = "none";
-                }}
-                onClick={() => {
-                  setshowSearch(true);
-                  props.openChanged(true)
-                }}
-              >
-                <CheckIcon />
-              </div>
-
-              <br />
-            </div>
-            <div style={{ marginTop: "10px", display: "flex", width: "200px" }}>
-              <div
-                style={{
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  color: "#ff0000",
-                  height: "50px",
-                  width: "80px",
-                }}
-              >
-                <span
-                  id="okPdf"
-                  style={{
-                    marginTop: "20%",
-                    fontSize: "17px",
-                    display: "none",
-                  }}
-                >
-                  PDF
-                </span>
-              </div>
-              <div
-                style={{
-                  backgroundColor: "#ffebee",
-                  color: "#ff0000",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "50px",
-                  width: "50px",
-                  textAlign: "center",
-                  borderRadius: "25px",
-                  paddingTop: "5%",
-                  cursor: "pointer",
-                }}
-                onMouseOver={() => {
-                  document.querySelector("#okPdf").style.display = "block";
-                }}
-                onMouseOut={() => {
-                  document.querySelector("#okPdf").style.display = "none";
-                }}
-                onClick={() => {
-                  printToPDF();
-                }}
-              >
-                <PrintIcon />
-              </div>
-
-              <br />
-            </div>
-            <div style={{ marginTop: "10px", display: "flex", width: "200px" }}>
-              <div
-                style={{
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  color: "#3f51b5",
-                  height: "50px",
-                  width: "80px",
-                }}
-              >
-                <span
-                  id="okWord"
-                  style={{
-                    marginTop: "20%",
-                    display: "none",
-                    fontSize: "17px",
-                  }}
-                >
-                  Word
-                </span>
-              </div>
-              <div
-                style={{
-                  backgroundColor: "#e8eaf6",
-                  color: "#3f51b5",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "50px",
-                  width: "50px",
-                  textAlign: "center",
-                  borderRadius: "25px",
-                  paddingTop: "5%",
-                  cursor: "pointer",
-                }}
-                onMouseOver={() => {
-                  document.querySelector("#okWord").style.display = "block";
-                }}
-                onMouseOut={() => {
-                  document.querySelector("#okWord").style.display = "none";
-                }}
-                onClick={() => {
-                  printToWord();
-                }}
-              >
-                <FileDownloadIcon />
-              </div>
-
-              <br />
-            </div>
-            <div style={{ marginTop: "10px", display: "flex", width: "200px" }}>
-              <div
-                style={{
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  color: "#4caf50",
-                  height: "50px",
-                  width: "80px",
-                }}
-              >
-                <span
-                  id="okExcel"
-                  style={{
-                    marginTop: "20%",
-                    display: "none",
-                    fontSize: "17px",
-                  }}
-                >
-                  Excel
-                </span>
-              </div>
-              <div
-                style={{
-                  backgroundColor: "#e8f5e9",
-                  color: "#4caf50",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "50px",
-                  width: "50px",
-                  textAlign: "center",
-                  borderRadius: "25px",
-                  paddingTop: "5%",
-                  cursor: "pointer",
-                }}
-                onMouseOver={() => {
-                  document.querySelector("#okExcel").style.display = "block";
-                }}
-                onMouseOut={() => {
-                  document.querySelector("#okExcel").style.display = "none";
-                }}
-                onClick={() => {
-                  prepareReportTablesToXLSX();
-                }}
-              >
-                <FileDownloadIcon />
-              </div>
-            </div>
-          </div> */}
-
+        {/* ── PAGE HEADER / ACTION BAR ── */}
+        <div ref={pageTopRef} style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.07)", padding: "20px 24px", marginBottom: 16 }}>
           <div
-            className=""
+            id="export-bar"
             style={{
-              position: "fixed",
-              justifyContent: "center",
-              bottom: 80,
-              right: 50,
-              zIndex: 526,
-              display: "block",
-              width: "fit-content"
+              display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+              borderRadius: 12, padding: "6px 8px", margin: "-6px -8px",
+              transition: "box-shadow 0.3s ease, background 0.3s ease",
+              ...(highlightExport ? {
+                background: "rgba(59,130,246,0.07)",
+                boxShadow: "0 0 0 3px rgba(59,130,246,0.35)",
+              } : {}),
             }}
           >
-            <div onClick={() => {
-              setshowSearch(true);
-              props.openChanged(true);
-            }} style={{ padding: "10px", borderRadius: "80px", backgroundColor: "#ff0000", width: "fit-content", cursor: "pointer", margin: "10px 0px" }}>
-              <Tooltip title="Appliquer des filtres" placement="left-start">
-                <img src={FILTER_IMG} alt="Generer" style={{ width: "30px", height: "24px" }} />
-              </Tooltip>
-            </div>
-            <div onClick={() => {
-              printToPDF();
-            }} style={{ padding: "14px 16px", borderRadius: "80px", backgroundColor: "#ffebee", width: "fit-content", cursor: "pointer", margin: "10px 0px" }}>
-              <Tooltip title="Exporter en PDF" placement="left-start">
-                <img src={PDF_IMG} alt="Generer" style={{ width: "20px", height: "20px" }} />
-              </Tooltip>
-            </div>
-            <div onClick={() => {
-              prepareReportTablesToXLSX();
-            }} style={{ padding: "14px 16px", borderRadius: "80px", backgroundColor: "#e8f5e9", width: "fit-content", cursor: "pointer", margin: "10px 0px" }}>
-              <Tooltip title="Exporter en Excel" placement="left-start">
-                <img src={EXCEL_IMG} alt="Generer" style={{ width: "20px", height: "20px" }} />
-              </Tooltip>
-            </div>
-            <div onClick={() => {
-              printToWord();
-            }} style={{ padding: "14px 16px", borderRadius: "80px", backgroundColor: "#e8eaf6", width: "fit-content", cursor: "pointer", margin: "10px 0px" }}>
-              <Tooltip title="Exporter en Word" placement="left-start">
-                <img src={WORD_IMG} alt="Generer" style={{ width: "20px", height: "20px" }} />
-              </Tooltip>
-            </div>
+            <button
+              onClick={() => { setshowSearch(true); props.openChanged(true); }}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "1.5px solid #E2E8F0", background: "#fff", color: "#475569", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+              Filtres
+            </button>
+            {[
+              { label: "PDF",   color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5", action: printToPDF,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14a2 2 0 0 0 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg> },
+              { label: "Excel", color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC", action: prepareReportTablesToXLSX,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 13.06L8.18 15.28H9.97L8 12.06L9.93 8.89H8.22L7.13 10.9 7.09 10.96 7.06 11.03Q6.8 10.5 6.5 9.96L5.45 8.89H3.78L5.73 12.06 3.67 15.28H5.42M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38Z"/></svg> },
+              { label: "Word",  color: "#1D4ED8", bg: "#EFF6FF", border: "#93C5FD", action: printToWord,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 15.25H8.5L9.88 10.58 11.25 15.25H12.75L14.82 8.75H13.31L12 13.41 10.63 8.75H9.12L7.82 13.41 6.5 8.75H5L7 15.25M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38Z"/></svg> },
+            ].map(({ label, color, bg, border, action, icon }) => {
+              const isLoading = exportLoading === label;
+              return (
+              <button
+                key={label}
+                onClick={action}
+                disabled={exportLoading !== null}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "8px 16px", borderRadius: 10,
+                  border: `1.5px solid ${border}`,
+                  background: bg,
+                  color: exportLoading !== null ? "#94A3B8" : color,
+                  fontSize: 12.5, fontWeight: 700,
+                  cursor: exportLoading !== null ? "not-allowed" : "pointer",
+                  opacity: exportLoading !== null && !isLoading ? 0.5 : 1,
+                  transition: "opacity 0.2s",
+                }}
+              >
+                {isLoading ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    style={{ animation: "spin 0.8s linear infinite" }}>
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                  </svg>
+                ) : icon}
+                {isLoading ? "En cours..." : label}
+              </button>
+            );
+            })}
+          </div>
+        </div>
 
+        {/* ── REPORT CONTENT ── */}
+        <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.07)", padding: "24px" }} id="rapportBceao">
+          <div id="enteteRapport" style={{ marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", paddingBottom: 16, borderBottom: "2px solid #0F4C81", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                {logoInstitution && <img src={logoInstitution} alt="logo" style={{ height: 64, objectFit: "contain" }} className="report-logo" />}
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", marginBottom: 4 }}>{institution}</div>
+                  {agrement && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Agrément :</span> {agrement}</div>}
+                  {adresse  && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Adresse :</span> {adresse}</div>}
+                  {tel      && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Téléphone :</span> {tel}</div>}
+                  {email    && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Email :</span> {email}</div>}
+                </div>
+              </div>
+              <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+                <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Généré le</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>
+                  {new Date().toLocaleDateString("fr-FR", { day: "numeric", year: "numeric", month: "long" })}
+                </div>
+              </div>
+            </div>
           </div>
 
+          <div id="titleRapport" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 20 }}>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(to right, #0F4C81, transparent)" }} />
+            <span style={{ fontSize: 16, fontWeight: 800, color: "#0F4C81", textTransform: "uppercase", letterSpacing: "0.8px", textAlign: "center" }}>
+              Rapport sous le format de la Commission Bancaire
+            </span>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(to left, #0F4C81, transparent)" }} />
+          </div>
 
-          <div className="col l12 s12 m12">
-            <div className="container">
-              <section
-                className="tabs-vertical mt1 section card-panel pt-2 pl-1"
-                id="rapportBceao"
-              >
-                <div className="row">
+          <div id="critereRapport" style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 24 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0F4C81", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 20, padding: "3px 12px" }}>
+              Période Concernée : {props.global?.periode}
+            </span>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7280", background: "#F1F5F9", border: "1px solid #E2E8F0", borderRadius: 20, padding: "3px 12px" }}>
+              Généré par {userAuth.firstAndLastName}
+            </span>
+          </div>
 
-                  <div className="row" id="enteteRapport">
-                    <div className="col l2 s3 m3">
-                      <img
-                        src={
-                          logoInstitution
-                        }
-                        alt="logo"
-                        style={{
-                          // width: "100%",
-                          height: "90px",
-                        }}
-                        className={" report-logo"}
-                      />
-                    </div>
-                    <div className="col l8 s7 m7">
-                      <b>
-                        {institution}
-                      </b>
-                      <br />
-                      <i>
-                        <span>Agrément: </span>
-                        {agrement}
-                      </i>
-                      <br />
-                      <i>
-                        <span>Adresse: </span>
-                        {adresse}
-                      </i>
-                      <br />
-                      <i>
-                        <span>Téléphone: </span>
-                        {tel}
-                      </i>
-                      <br />
-                      <i>
-                        <span>Email: </span>
-                        {email}
-                      </i>
-                    </div>
-                    <div className="col l2 m2 s2">
-                      <i>
-                        Générer le {" "}
-                        {new Date().toLocaleDateString("fr-FR", {
-                          day: "numeric",
-                          year: "numeric",
-                          month: "long",
-                        })}
-                      </i>
-                    </div>
-                  </div>
-
-                </div>
-                <div
-                  className="row"
-                  style={{ marginTop: "20px" }}
-                  id="titleRapport"
-                >
-                  <div className="col s12 l12 m12 center">
-                    <span style={{ color: "#015182", fontSize: "25px" }}>
-                    Rapport sous le format de la Commission Bancaire
-                    </span>
-                  </div>
-                </div>
-                <div
-                  className="row"
-                  style={{ marginTop: "20px" }}
-                  id="critereRapport"
-                >
-                  <div className="col l12">
-                    <ul>
-                      <li>
-                        <b style={{ fontSize: "15px" }}>
-                          Période Concernée : {props.global?.periode}
-                        </b>
-                      </li>
-                      <li>
-                        <b>
-                          Générer par :{" "}
-                          {userAuth.firstAndLastName}
-                        </b>
-                      </li>
-                    </ul>
-
-                  </div>
-                </div>
-                <div className="row mt-4 mb-4" id="dashRapport">
-
-                  <>
-                    <div className="col l12 s12 m12">
-                      <div className="row" id="toeClaim">
-                        <div
-                          className="col l12 s12 m12"
-                          id="titleObjetsEtats"
-                        >
-                          <span
-                            style={{
-                              fontSize: "20px",
-                              fontWeight: "bold",
-                            }}
-
-                          >
-                            Statistiques
-                          </span>
-                          <br />
-                        </div>
-                        <div className="col l12 s12 m12 mt-2 mb-4 ">
-                          {claimTableHead()}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="col l12 s12 m12">
-                      <div className="row" id="toeClaim">
-                        <div
-                          className="col l12 s12 m12"
-                          id="titleObjetsEtats"
-                        >
-                          <span
-                            style={{
-                              fontSize: "20px",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            Details des réclamations ou dénonciations
-                          </span>
-                          <br />
-                        </div>
-                        <div className="col l12 s12 m12 mt-2 mb-4 ">
-                          {claimTableBody()}
-
-                        </div>
-                      </div>
-                    </div>
-                  </>
-
-
-
-                </div>
-
-              </section>
+          <div id="dashRapport">
+            <div style={{ marginBottom: 32 }} id="toeClaim">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "#0F172A", marginBottom: 12 }} id="titleObjetsEtats">
+                <div style={{ width: 4, height: 16, borderRadius: 2, background: "#0F4C81" }} />
+                Statistiques
+              </div>
+              <div className="bceao-table-wrap">
+                {claimTableHead()}
+              </div>
             </div>
-            <div className="content-overlay"></div>
+
+            <div id="toeClaim">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "#0F172A", marginBottom: 12 }} id="titleObjetsEtats">
+                <div style={{ width: 4, height: 16, borderRadius: 2, background: "#0F4C81" }} />
+                Details des réclamations ou dénonciations
+              </div>
+              <div className="bceao-table-wrap">
+                {claimTableBody()}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div> </div>
+
+      {/* FAB Exporter */}
+      <button
+        onClick={() => {
+          if (pageTopRef.current) {
+            pageTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+          setHighlightExport(true);
+          setTimeout(() => setHighlightExport(false), 2000);
+        }}
+        style={{
+          position: "fixed", bottom: 72, right: 32, zIndex: 999,
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "12px 16px", borderRadius: 50, border: "none",
+          background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
+          color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
+          boxShadow: "0 4px 20px rgba(15,76,129,0.4)",
+          transition: "transform 0.15s ease, box-shadow 0.15s ease",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 28px rgba(15,76,129,0.55)"; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(15,76,129,0.4)"; }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
     </>
   );
 };

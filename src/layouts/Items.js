@@ -57,6 +57,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import BackupIcon from '@mui/icons-material/Backup';
+import SpeedIcon from '@mui/icons-material/Speed';
 import { NavLink, useLocation } from 'react-router-dom';
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from '../Utils/utils';
 import { connect } from 'react-redux';
@@ -124,6 +125,16 @@ const LockedItem = ({ icon, label, pl = 2 }) => (
 
 export const Items = (props) => {
   const { pathname } = useLocation();
+
+  // ── Badge SLA ────────────────────────────────────────────────────────────
+  const [slaOverdue, setSlaOverdue] = React.useState(
+    () => Number(sessionStorage.getItem("sla-overdue") || 0)
+  );
+  React.useEffect(() => {
+    const handler = (e) => setSlaOverdue(e.detail?.overdue ?? 0);
+    window.addEventListener("sla-update", handler);
+    return () => window.removeEventListener("sla-update", handler);
+  }, []);
 
   // ── Collapse state (preserved exactly) ──────────────────────────────────
   const [open, setOpen] = React.useState(false);
@@ -686,7 +697,7 @@ export const Items = (props) => {
         <>
           <ListItemButton onClick={handleClick7} sx={hSx('/sauvegarde')}>
             <ListItemIcon><BackupIcon style={col(isActive('/sauvegarde'))} /></ListItemIcon>
-            <ListItemText primary="Backup surveillance" />
+            <ListItemText primary="Backup et surveillance" />
             <Chevron open={open7} />
           </ListItemButton>
           <Collapse in={open7} timeout="auto" unmountOnExit>
@@ -703,6 +714,23 @@ export const Items = (props) => {
                 <ListItemButton sx={sSx('/configurations/logs')} className="lib">
                   <ListItemIcon>{si(TerminalIcon, isActive('/configurations/logs'))}</ListItemIcon>
                   <ListItemText primary="Log Système" />
+                </ListItemButton>
+              </NavLink>
+
+              <NavLink to="/configurations/sla" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/configurations/sla')} className="lib">
+                  <ListItemIcon>{si(SpeedIcon, isActive('/configurations/sla'))}</ListItemIcon>
+                  <ListItemText primary="SLA" />
+                  {slaOverdue > 0 && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 800, color: '#fff',
+                      background: '#DC2626', padding: '1px 7px',
+                      borderRadius: 99, minWidth: 18, textAlign: 'center',
+                      flexShrink: 0, lineHeight: 1.6,
+                    }}>
+                      {slaOverdue > 99 ? "99+" : slaOverdue}
+                    </span>
+                  )}
                 </ListItemButton>
               </NavLink>
 

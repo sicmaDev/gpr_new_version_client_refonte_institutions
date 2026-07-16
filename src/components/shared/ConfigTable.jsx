@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import {
   Box, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, TableSortLabel, TablePagination,
-  InputAdornment, TextField, Paper, Select, MenuItem, FormControl,
+  InputAdornment, TextField, Paper, Select, MenuItem, FormControl, Skeleton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -42,15 +42,17 @@ const ConfigTable = ({
   searchFields = [],
   filters = [],
   defaultSort = "",
+  defaultSortDir = "asc",
   rowsPerPageOptions = [10, 15, 25, 50],
   exportClassName = "",
+  loading = false,
 }) => {
   const [search, setSearch]       = useState("");
   const [filterValues, setFilterValues] = useState(
     Object.fromEntries(filters.map((f) => [f.id, ""]))
   );
   const [orderBy, setOrderBy]     = useState(defaultSort || (columns[0]?.id ?? ""));
-  const [order, setOrder]         = useState("asc");
+  const [order, setOrder]         = useState(defaultSortDir);
   const [page, setPage]           = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[1] ?? 15);
 
@@ -120,7 +122,13 @@ const ConfigTable = ({
                 "&:hover fieldset": { borderColor: "#CBD5E1" },
                 "&.Mui-focused fieldset": { borderColor: "#005081", borderWidth: 1.5 },
               },
-              "& input": { borderBottom: "none !important", boxShadow: "none !important" },
+              "& input": {
+                borderBottom: "none !important",
+                boxShadow: "none !important",
+                outline: "none !important",
+                background: "transparent !important",
+              },
+              "& input::after, & input::before": { display: "none !important" },
             }}
           />
         )}
@@ -185,7 +193,17 @@ const ConfigTable = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginated.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 5 }).map((_, idx) => (
+                <TableRow key={idx}>
+                  {columns.map((col) => (
+                    <TableCell key={col.id} sx={{ py: 1.4, px: 2 }}>
+                      <Skeleton variant="text" sx={{ fontSize: "0.83rem", borderRadius: 1 }} />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : paginated.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} align="center" sx={{ py: 6, color: "#94A3B8" }}>
                   Aucun élément trouvé

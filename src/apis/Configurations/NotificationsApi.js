@@ -77,16 +77,16 @@ export const ajout = async (data, props) => {
     };
 
     await axios(config)
-        .then(function (response) {
+        .then(async function (response) {
             // saveItemToSessionStorage(JSON.stringify(response.data.content), "app-recours")
             // saveItemToLocalStorage(JSON.stringify(response.data.content), "app-recours")
 
             props.etatChanged(false)
-           
+
             notify("Bravo - Configuration des notifications", "success");
-           
-           liste(props)
-           listeU(props)
+
+           await liste(props)
+           await listeU(props)
 
         })
         .catch(function (error) {
@@ -111,15 +111,15 @@ export const suppression = async (props,id) => {
     };
 
     await axios(config)
-        .then(function (response) {
+        .then(async function (response) {
             // saveItemToSessionStorage(JSON.stringify(response.data.content), "app-recours")
             // saveItemToLocalStorage(JSON.stringify(response.data.content), "app-recours")
-           
+
             props.etat3Changed(false)
             notify("Suppression effectuée avec succès !", "success");
-           
-           liste(props)
-           listeU(props)
+
+           await liste(props)
+           await listeU(props)
 
         })
         .catch(function (error) {

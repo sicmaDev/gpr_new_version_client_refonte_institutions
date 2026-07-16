@@ -52,14 +52,14 @@ export const ajout = async (data, props) => {
     };
 
     await axios(config)
-        .then(function (response) {
+        .then(async function (response) {
             saveItemToSessionStorage(JSON.stringify(response.data.content), "app-objets")
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-objets")
 
             props.etatChanged(false)
             notify("Bravo - Objet ajouté", "success");
-           
-           liste(props)
+
+            await liste(props)
 
         })
         .catch(function (error) {
@@ -87,14 +87,14 @@ export const modification = async (data, props) => {
     };
 
     await axios(config)
-        .then(function (response) {
+        .then(async function (response) {
             saveItemToSessionStorage(JSON.stringify(response.data.content), "app-objets")
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-objets")
 
             props.etat2Changed(false)
             notify("Bravo - Objet modifié", "success");
-           
-           liste(props)
+
+            await liste(props)
 
         })
         .catch(function (error) {
@@ -122,14 +122,14 @@ export const suppression = async (props, data) => {
     };
 
     await axios(config)
-        .then(function (response) {
+        .then(async function (response) {
             saveItemToSessionStorage(JSON.stringify(response.data.content), "app-objets")
             saveItemToLocalStorage(JSON.stringify(response.data.content), "app-objets")
 
             props.etat3Changed(false)
             notify("Bravo - Point de service supprimé", "success");
-           
-           liste(props)
+
+            await liste(props)
 
         })
         .catch(function (error) {

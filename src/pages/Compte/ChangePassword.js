@@ -149,11 +149,11 @@ const ChangePassword = (props) => {
               endIcon={<SaveIcon />}
               variant="contained"
               sx={{
-                background: "linear-gradient(135deg, #D97706 0%, #F59E0B 100%)",
+                background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
                 borderRadius: "10px", textTransform: "none",
                 fontWeight: 700, fontSize: 13.5, padding: "8px 22px",
                 boxShadow: "none",
-                "&:hover": { background: "linear-gradient(135deg, #b45309 0%, #d97706 100%)", boxShadow: "none" },
+                "&:hover": { background: "linear-gradient(135deg, #0a3560 0%, #1565C0 100%)", boxShadow: "none" },
               }}
             >
               Changer

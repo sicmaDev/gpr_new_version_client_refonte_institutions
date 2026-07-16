@@ -15,6 +15,7 @@ import QuizIcon from "@mui/icons-material/Quiz";
 import { contenuChanged, etat2Changed, etat3Changed, etatChanged, faqErrors, idChanged, itemsChanged, libelleChanged, selectedItemChanged } from "../../redux/actions/Configurations/FaqActions";
 import { ajout, liste, modification, suppression } from "../../apis/Configurations/FaqApi";
 import { LoadingButton } from "@mui/lab";
+import BlockButton from "../../components/shared/BlockButton";
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -45,7 +46,8 @@ const Faq = (props) => {
     const CHIPS_CONFIG = [{ value: "ALL", label: "Tous", filter: () => true }];
     const filteredItems = useMemo(() => {
         const chip = CHIPS_CONFIG.find(c => c.value === activeChip);
-        return chip ? props.items.filter(chip.filter) : props.items;
+        const base = chip ? props.items.filter(chip.filter) : props.items;
+        return [...base].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeChip]);
 
@@ -104,7 +106,7 @@ const Faq = (props) => {
                     <div style={{ background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><EditIcon style={{ color: "#fff", fontSize: 20 }} /></div>
-                            <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Modifier la question</div><div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>{editForm.libelle || "—"}</div></div>
+                            <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Modifier la question</div><div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>{editForm.libelle}</div></div>
                         </div>
                         <IconButton onClick={() => { if (!editLoading) { setEditModalOpen(false); clearComponentState(); } }} disabled={editLoading} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}><CloseIcon style={{ fontSize: 16 }} /></IconButton>
                     </div>
@@ -126,8 +128,8 @@ const Faq = (props) => {
                         </div>
                     </DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
-                        <Button onClick={() => { setEditModalOpen(false); clearComponentState(); }} disabled={editLoading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
-                        <LoadingButton onClick={handleEditSubmit} loading={editLoading} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Modifier</LoadingButton>
+                        <BlockButton disabled={editLoading}><Button onClick={() => { setEditModalOpen(false); clearComponentState(); }} disabled={editLoading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button></BlockButton>
+                        <BlockButton disabled={editLoading}><LoadingButton onClick={handleEditSubmit} loading={editLoading} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Modifier</LoadingButton></BlockButton>
                     </DialogActions>
                 </Dialog>
 
@@ -135,7 +137,7 @@ const Faq = (props) => {
                     <div style={{ background: "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><DeleteIcon style={{ color: "#fff", fontSize: 20 }} /></div>
-                            <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Supprimer la question</div><div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, marginTop: 2 }}>{deleteConfirm.item?.libelle || "—"}</div></div>
+                            <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Supprimer la question</div><div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, marginTop: 2 }}>{deleteConfirm.item?.libelle}</div></div>
                         </div>
                         <IconButton onClick={() => setDeleteConfirm({ open: false, item: null, loading: false })} disabled={deleteConfirm.loading} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}><CloseIcon style={{ fontSize: 16 }} /></IconButton>
                     </div>
@@ -143,11 +145,11 @@ const Faq = (props) => {
                         <Typography sx={{ fontSize: 14, color: "#475569" }}>Confirmez-vous la suppression de cet élément ? Cette action est irréversible.</Typography>
                     </DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
-                        <Button onClick={() => setDeleteConfirm({ open: false, item: null, loading: false })} disabled={deleteConfirm.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
-                        <LoadingButton onClick={handleDelete} loading={deleteConfirm.loading} loadingPosition="start" startIcon={<DeleteIcon style={{ fontSize: 15 }} />} variant="contained"
+                        <BlockButton disabled={deleteConfirm.loading}><Button onClick={() => setDeleteConfirm({ open: false, item: null, loading: false })} disabled={deleteConfirm.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button></BlockButton>
+                        <BlockButton disabled={deleteConfirm.loading}><LoadingButton onClick={handleDelete} loading={deleteConfirm.loading} loadingPosition="start" startIcon={<DeleteIcon style={{ fontSize: 15 }} />} variant="contained"
                             sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #991b1b, #ef4444)", "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
                             Supprimer
-                        </LoadingButton>
+                        </LoadingButton></BlockButton>
                     </DialogActions>
                 </Dialog>
 

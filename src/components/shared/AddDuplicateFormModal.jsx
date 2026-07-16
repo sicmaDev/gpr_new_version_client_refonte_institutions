@@ -7,6 +7,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SaveIcon from "@mui/icons-material/Save";
+import BlockButton from "./BlockButton";
 
 /**
  * AddDuplicateFormModal
@@ -139,7 +140,7 @@ const AddDuplicateFormModal = ({
           <div>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{title}</div>
             <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>
-              {forms.length} formulaire{forms.length > 1 ? "s" : ""} —&nbsp;
+              {forms.length} formulaire{forms.length > 1 ? "s" : ""},
               cliquez sur <strong style={{ color: "#fff" }}>"{addLabel}"</strong> pour en ajouter un autre
             </div>
           </div>
@@ -314,27 +315,31 @@ const AddDuplicateFormModal = ({
             : "Remplissez au moins un formulaire"}
         </span>
         <div style={{ display: "flex", gap: 10 }}>
-          <Button
-            onClick={handleClose} disabled={loading}
-            variant="outlined"
-            sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}
-          >
-            Annuler
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={loading || validCount === 0}
-            variant="contained"
-            startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <SaveIcon style={{ fontSize: 15 }} />}
-            sx={{
-              textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3,
-              background: "linear-gradient(135deg, #1e2188, #3b3fd8)",
-              "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" },
-              "&.Mui-disabled": { opacity: 0.6 },
-            }}
-          >
-            {loading ? "Enregistrement..." : `Enregistrer (${validCount})`}
-          </Button>
+          <BlockButton disabled={loading}>
+            <Button
+              onClick={handleClose} disabled={loading}
+              variant="outlined"
+              sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}
+            >
+              Annuler
+            </Button>
+          </BlockButton>
+          <BlockButton disabled={loading || validCount === 0}>
+            <Button
+              onClick={handleSubmit}
+              disabled={loading || validCount === 0}
+              variant="contained"
+              startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <SaveIcon style={{ fontSize: 15 }} />}
+              sx={{
+                textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3,
+                background: "linear-gradient(135deg, #1e2188, #3b3fd8)",
+                "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" },
+                "&.Mui-disabled": { opacity: 0.6 },
+              }}
+            >
+              {loading ? "Enregistrement..." : `Enregistrer (${validCount})`}
+            </Button>
+          </BlockButton>
         </div>
       </DialogActions>
     </Dialog>

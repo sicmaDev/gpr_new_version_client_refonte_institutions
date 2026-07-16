@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { Delete, Cancel, WarningAmber } from "@mui/icons-material";
+import BlockButton from "../../components/shared/BlockButton";
 
 const CODE_REGEX = /^(REC|DEN|SUG).+$/;
 
@@ -91,7 +92,7 @@ const DeleteModal = ({ open, loading = false, onClose, onConfirm }) => {
           onChange={(e) => setLocalCode(e.target.value)}
           error={Boolean(errors.code)}
           helperText={errors.code}
-          sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }}
+          sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 2.5 }, '& input': { borderBottom: 'none !important', boxShadow: 'none !important' } }}
         />
         <TextField
           fullWidth multiline rows={4}
@@ -101,29 +102,33 @@ const DeleteModal = ({ open, loading = false, onClose, onConfirm }) => {
           onChange={(e) => setReason(e.target.value)}
           error={Boolean(errors.reason)}
           helperText={errors.reason}
-          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }}
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5 }, '& textarea': { borderBottom: 'none !important', boxShadow: 'none !important' } }}
         />
       </DialogContent>
 
       <DialogActions style={{ padding: '12px 24px 20px', gap: 10 }}>
-        <LoadingButton
-          onClick={onClose}
-          disabled={loading}
-          variant="outlined"
-          sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b', fontWeight: 600 }}
-        >
-          Annuler
-        </LoadingButton>
-        <LoadingButton
-          loading={loading}
-          disabled={!isFormValid}
-          variant="contained"
-          startIcon={<Delete />}
-          onClick={handleDeleteClick}
-          sx={{ textTransform: 'none', borderRadius: 2, background: confirmStep ? '#b91c1c' : '#dc2626', fontWeight: 700, '&:hover': { background: '#991b1b' } }}
-        >
-          <span>{confirmStep ? 'Confirmer la suppression' : 'Supprimer'}</span>
-        </LoadingButton>
+        <BlockButton disabled={loading}>
+          <LoadingButton
+            onClick={onClose}
+            disabled={loading}
+            variant="outlined"
+            sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b', fontWeight: 600 }}
+          >
+            Annuler
+          </LoadingButton>
+        </BlockButton>
+        <BlockButton disabled={loading || !isFormValid}>
+          <LoadingButton
+            loading={loading}
+            disabled={!isFormValid}
+            variant="contained"
+            startIcon={<Delete />}
+            onClick={handleDeleteClick}
+            sx={{ textTransform: 'none', borderRadius: 2, background: confirmStep ? '#b91c1c' : '#dc2626', fontWeight: 700, '&:hover': { background: '#991b1b' } }}
+          >
+            <span>{confirmStep ? 'Confirmer la suppression' : 'Supprimer'}</span>
+          </LoadingButton>
+        </BlockButton>
       </DialogActions>
     </Dialog>
   );

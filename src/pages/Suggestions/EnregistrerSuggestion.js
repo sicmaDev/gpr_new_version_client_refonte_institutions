@@ -653,7 +653,7 @@ const EnregistrerSuggestion = (props) => {
                     <DialogContent>
                         <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
                             <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
                             </div>
                             <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>+ Audio</div>
                             <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Enregistrez votre message vocal</div>
@@ -825,7 +825,7 @@ const EnregistrerSuggestion = (props) => {
                             <div className="col l6 m12 s12 input-field">
                                 <input id="sg_dossier" type="text" className="validate" value={props.dossierimf}
                                     onChange={(e) => props.dossierimfChanged(e.target.value)} />
-                                <label htmlFor="sg_dossier" className="active">Dossier IMF</label>
+                                <label htmlFor="sg_dossier" className="active">Dossier Client</label>
                             </div>
                         </div>
                     </div>

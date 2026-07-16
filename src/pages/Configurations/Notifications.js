@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import BlockButton from "../../components/shared/BlockButton";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
@@ -98,7 +99,8 @@ const Notifications = (props) => {
     const [activeRole, setActiveRole] = useState("ALL");
     const filteredItems = useMemo(() => {
         const r = ROLES_CONFIG.find(c => c.value === activeRole);
-        return r ? props.items.filter(r.filter) : props.items;
+        const base = r ? props.items.filter(r.filter) : props.items;
+        return [...base].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeRole]);
 
@@ -346,11 +348,15 @@ const Notifications = (props) => {
                     <Typography sx={{ fontSize: 14, color: "#475569" }}>Confirmez-vous la suppression de cet élément ?</Typography>
                 </DialogContent>
                 <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
-                    <Button onClick={() => setRemoveConfirm({ open: false, id: null, loading: false })} disabled={removeConfirm.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
-                    <LoadingButton onClick={() => handleDelete(removeConfirm.id)} loading={removeConfirm.loading} loadingPosition="start" startIcon={<PersonRemoveIcon style={{ fontSize: 15 }} />} variant="contained"
-                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #991b1b, #ef4444)", "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
-                        Retirer
-                    </LoadingButton>
+                    <BlockButton disabled={removeConfirm.loading}>
+                        <Button onClick={() => setRemoveConfirm({ open: false, id: null, loading: false })} disabled={removeConfirm.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
+                    </BlockButton>
+                    <BlockButton disabled={removeConfirm.loading}>
+                        <LoadingButton onClick={() => handleDelete(removeConfirm.id)} loading={removeConfirm.loading} loadingPosition="start" startIcon={<PersonRemoveIcon style={{ fontSize: 15 }} />} variant="contained"
+                            sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #991b1b, #ef4444)", "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
+                            Retirer
+                        </LoadingButton>
+                    </BlockButton>
                 </DialogActions>
             </Dialog>
         </>

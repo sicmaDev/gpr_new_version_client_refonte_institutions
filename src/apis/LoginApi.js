@@ -113,14 +113,17 @@ export const LoginApi = (credentials, props, isLocked = false) => {
             //    console.log("loginerror",error)
             if (error?.response) {
                 const status = error.response.status;
-                const message = error.response.data?.response?.content?.message
-                    || error.response.data?.message
-                    || (status === 403 ? "Erreur - Les identifiants sont incorrects" : null);
-
-                notify(message || "Erreur - Les identifiants sont incorrects", "error");
+                const raw = error.response.data?.response?.content?.message
+                    || error.response.data?.message;
+                const isGeneric = !raw || raw === "Access Denied" || raw === "Forbidden" || raw === "Unauthorized";
+                const message = isGeneric
+                    ? (status === 403 || status === 401
+                        ? "Mot de passe ou adresse e-mail incorrect(e)"
+                        : "Erreur - La connexion a échouée")
+                    : raw;
+                notify(message, "error");
             } else {
-                // erreur réseau ou autre
-                notify("Erreur - Les identifiants sont incorrects", "error");
+                notify("Impossible de joindre le serveur. Vérifiez votre connexion.", "error");
             }
 
         });

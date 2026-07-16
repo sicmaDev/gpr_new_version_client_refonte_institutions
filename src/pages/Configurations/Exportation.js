@@ -4,7 +4,6 @@ import Select from "react-select"
 import { useState, useEffect, useMemo } from "react";
 import { exportConfigs } from "../../apis/Configurations/ExportationApi";
 import { exportLogs } from "../../apis/Configurations/LogApi";
-import { generateString } from "../../Utils/utils";
 import React from "react";
 import { Box, Typography, Chip, Divider } from "@mui/material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
@@ -35,12 +34,17 @@ const Exportation = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [typeExport, setTypeExport] = useState({ value: "configs", label: "Configurations" });
     const [history, setHistory] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
 
     const loadHistory = () => {
+        setHistoryLoading(true);
         exportLogs().then(({ data }) => {
-            setHistory(data.content || []);
+            const sorted = (data.content || []).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            setHistory(sorted);
         }).catch(() => {
             setHistory([]);
+        }).finally(() => {
+            setHistoryLoading(false);
         });
     };
 
@@ -49,7 +53,9 @@ const Exportation = () => {
     }, []);
 
     const handleSubmit = () => {
-        const jsonFile = `Exportation_${typeExport.label}_${generateString(5)}.json`;
+        const now = new Date();
+        const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}_${String(now.getHours()).padStart(2,"0")}${String(now.getMinutes()).padStart(2,"0")}`;
+        const jsonFile = `Exportation_${typeExport.label}_${stamp}.json`;
         exportConfigs(typeExport.value, jsonFile, loadHistory);
     };
 
@@ -156,6 +162,8 @@ const Exportation = () => {
                 columns={historyColumns}
                 searchFields={["content", "userIpAddress"]}
                 defaultSort="createdAt"
+                defaultSortDir="desc"
+                loading={historyLoading}
             />
         </div>
     );

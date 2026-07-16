@@ -228,6 +228,7 @@ const Global = (props) => {
   const [optionsState, setOptionsState] = useState([]);
   const [closeObjet, setCloseObjet] = useState(false);
   const [highlightExport, setHighlightExport] = useState(false);
+  const [exportLoading, setExportLoading] = useState(null); // "PDF" | "Word" | "Excel" | null
   const [claimShow, setClaimShow] = useState(true);
   const [suggestionShow, setSuggestionShow] = useState(true);
   const [denunciationShow, setDenunciationShow] = useState(true);
@@ -2444,7 +2445,7 @@ const Global = (props) => {
     return tableClaim;
   };
 
-  const prepareToPrint = async (type = "pdf") => {
+  const prepareToPrint = async (type = "pdf", options = {}) => {
     setIsPrinting(true);
 
     // Laisser React re-rendre et Chart.js dessiner les canvas
@@ -2453,9 +2454,10 @@ const Global = (props) => {
     let entete   = document.querySelector("#enteteRapport")?.innerHTML ?? "";
     let title    = document.querySelector("#titleRapport")?.innerHTML ?? "";
     let critere  = document.querySelector("#critereRapport")?.innerHTML ?? "";
-    let dashClaim   = document.querySelector("#dashClaimRapport")?.innerHTML ?? "";
-    let dashDenun   = document.querySelector("#dashDenunRapport")?.innerHTML ?? "";
-    let dashSuggest = document.querySelector("#dashSuggestRapport")?.innerHTML ?? "";
+    // skipDashboards : exclut les KPI cards (À traiter, Affectée...) du document Word
+    let dashClaim   = options.skipDashboards ? "" : document.querySelector("#dashClaimRapport")?.innerHTML ?? "";
+    let dashDenun   = options.skipDashboards ? "" : document.querySelector("#dashDenunRapport")?.innerHTML ?? "";
+    let dashSuggest = options.skipDashboards ? "" : document.querySelector("#dashSuggestRapport")?.innerHTML ?? "";
     let dataClaim = "";
     let dataDenun = "";
     let dataSugg = "";
@@ -2741,18 +2743,43 @@ const Global = (props) => {
     return results;
   };
 
+  // Convertit une URL image en base64 (pour exports Word/PDF)
+  const toBase64 = (url) => new Promise((resolve) => {
+    if (!url || url.startsWith("data:")) { resolve(url); return; }
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext("2d").drawImage(img, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(url);
+    img.src = url;
+  });
+
   const printToPDF = async () => {
-    // 🔥 ouvrir la fenêtre IMMEDIATEMENT
-    const childWindow = window.open("", "modal");
-
-    if (!childWindow) {
-      alert("Veuillez autoriser les popups pour l'impression.");
-      return;
+    setExportLoading("PDF");
+    try {
+      const childWindow = window.open("", "modal");
+      if (!childWindow) {
+        alert("Veuillez autoriser les popups pour l'impression.");
+        return;
+      }
+      const logoBase64 = await toBase64(logoInstitution);
+      let dom = await prepareToPrint(childWindow);
+      if (logoBase64 && logoInstitution) {
+        dom = dom.replace(
+          new RegExp(logoInstitution.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+          logoBase64
+        );
+      }
+      handlePrintAvance(childWindow, dom);
+    } finally {
+      setExportLoading(null);
+      setIsPrinting(false);
     }
-
-    const dom = await prepareToPrint(childWindow);
-
-    handlePrintAvance(childWindow, dom);
   };
 
 
@@ -2762,11 +2789,16 @@ const Global = (props) => {
   // };
 
   const [nameReport, setNameReport] = useState("")
-  const prepareReportTablesToXLSX = () => {
+  const prepareReportTablesToXLSX = async () => {
+    setExportLoading("Excel");
+    try {
+    if (!dataRaport || !dataRaport.newVersionStat) {
+      notify("Les données ne sont pas encore chargées, veuillez patienter", "warning");
+      return;
+    }
     let name = today().replaceAll("/", "")
     let filename = `Statistiques_GPR_${name}.xlsx`;
 
-    // table2XLSX(filename, "", 0);
     const dataPrepare = [];
 
     //PrepareExcel Report Data
@@ -3037,64 +3069,67 @@ const Global = (props) => {
     if (dataPrepare.length) {
       reportNewVersionExport(filename, generateName, dataPrepare);
     } else {
-      notify("Imspossible d'exporter,Ressayez", "error");
+      notify("Impossible d'exporter, réessayez", "error");
+    }
+    } catch (e) {
+      notify("Erreur lors de l'export Excel", "error");
+    } finally {
+      setExportLoading(null);
     }
   };
 
   const printToWord = async () => {
-    let reportData = await prepareToPrint();
-    let css =
+    setExportLoading("Word");
+    const logoBase64 = await toBase64(logoInstitution);
+    // skipDashboards: retire les KPI cards de statut (À traiter, Affectée, etc.)
+    let reportData = await prepareToPrint("word", { skipDashboards: true });
+
+    // Remplace le src du logo par sa version base64
+    if (logoBase64 && logoInstitution) {
+      reportData = reportData.replace(
+        new RegExp(logoInstitution.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+        logoBase64
+      );
+    }
+
+    const css =
       "<style>" +
-      "@page WholeDocument{size: 841.95pt 595.35pt;mso-page-orientation: landscape;}" +
-      "div.WholeDocument {page: WholeDocument;}" +
-      "table{border-collapse:collapse;}  td,th{/*border:0px gray solid;width:5em;padding:2px;*/}" +
-      "table.header-ref{/*border-collapse:collapse;*/}  td,th{/*border:0px gray solid;width:5em;padding:2px;*/}" +
-      "table.header-title{margin-top:5rem;/*border-collapse:collapse;*/}  td,th{/*border:0px gray solid;width:5em;padding:2px;*/}" +
-      "table.header-details{margin-top:5%;/*border-collapse:collapse;*/}  td,th{/*border:0px gray solid;width:5em;padding:2px;*/}" +
-      "table.header-criteria{margin-top:5cm;/*border-collapse:collapse;*/}  td,th{/*border:0px gray solid;width:5em;padding:2px;*/}" +
-      "table[id=stats_claim]{border:1px solide #1e2b37; border-collapse:collapse;}  table[id=stats_claim] td,th{border:0px gray solid;/*width:5em;padding:2px;*/}" +
-      "table#stats_denunciation{border:1px solide #1e2b37;border-collapse:collapse;}  td,th{/*border:0px gray solid;width:5em;padding:2px;*/}" +
-      "table#stats_suggestion{border:1px solide #1e2b37;border-collapse:collapse;}  td,th{/*border:0px gray solid;width:5em;padding:2px;*/}" +
-      //'table{border-collapse:collapse;}  td,th{border:1px gray solid;width:5em;padding:2px;}'+
-      // 'table.theader{border-collapse:collapse;} table.theader td,th{border:0px gray solid;width:5em;padding:2px;}'+
-      "img{width:10cm!important;}" +
+      "@page WholeDocument { size: 841.95pt 595.35pt; mso-page-orientation: landscape; margin: 2cm 1.5cm; }" +
+      "div.WholeDocument { page: WholeDocument; }" +
+      "body { font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #1E293B; line-height: 1.4; }" +
+      "h1, h2, h3 { color: #0F4C81; margin-top: 14pt; margin-bottom: 6pt; }" +
+      "table { border-collapse: collapse; width: 100%; margin-bottom: 14pt; page-break-inside: avoid; }" +
+      "td, th { border: 1px solid #CBD5E1; padding: 5pt 8pt; font-size: 10pt; }" +
+      "th { background: #EFF6FF; color: #0F4C81; font-weight: bold; text-transform: uppercase; font-size: 9pt; }" +
+      "tr:nth-child(even) td { background: #F8FAFC; }" +
+      "img.report-logo { width: 70pt; height: auto; }" +
+      "img { max-width: 480pt; width: 480pt; height: auto; display: block; margin: 10pt auto; page-break-inside: avoid; }" +
+      "hr { border: none; border-top: 2px solid #0F4C81; margin: 10pt 0; }" +
       "</style>";
-    let preHtml =
-      "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Exportation du rapport en Word</title>" +
+
+    const preHtml =
+      "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+      "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+      "xmlns='http://www.w3.org/TR/REC-html40'>" +
+      "<head><meta charset='utf-8'>" +
+      "<title>Rapport GPR</title>" +
       css +
       "</head><body><div class='WholeDocument'>";
-    let postHtml = "</div></body></html>";
-    let html = preHtml + reportData + postHtml;
+    const postHtml = "</div></body></html>";
+    const html = preHtml + reportData + postHtml;
 
-    let blob = new Blob(["\ufeff", html], {
-      type: "application/msword",
-    });
-
-    // Specify link url
-    let url =
-      "data:application/vnd.ms-word;charset=utf-8," + encodeURIComponent(html);
-
-    // sleep(15000)
-    // Specify file name
-    let filename = "Rapport_GPR_" + today().replaceAll("/", "") + ".doc";
-
-    // Create download link element
-    let downloadLink = document.createElement("a");
-
+    const filename = "Rapport_GPR_" + today().replaceAll("/", "") + ".doc";
+    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const downloadLink = document.createElement("a");
+    downloadLink.href = url;
+    downloadLink.download = filename;
     document.body.appendChild(downloadLink);
-
-    if (navigator.msSaveOrOpenBlob) {
-      navigator.msSaveOrOpenBlob(blob, filename);
-    } else {
-      // Create a link to the file
-      downloadLink.href = url;
-
-      // Setting the file name
-      downloadLink.download = filename;
-
-      //triggering the function
-      downloadLink.click();
-    }
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(url);
+    setExportLoading(null);
+    setIsPrinting(false);
   };
   const TABS = [
     { label: "Vue d'ensemble", color: "#8B5CF6", bg: "#F5F3FF", enabled: globalShow },
@@ -3115,11 +3150,12 @@ const Global = (props) => {
     { label: "Réclamations",   value: props.claimReport?.basicStats?.total ?? "—",  color: "#3B82F6", bg: "#EFF6FF" },
     { label: "Dénonciations",  value: props.denunReport?.basicStats?.total ?? "—",  color: "#F59E0B", bg: "#FFFBEB" },
     { label: "Suggestions",    value: props.sugReport?.basicStats?.total ?? "—",    color: "#10B981", bg: "#ECFDF5" },
-    { label: "Taux résolution",value: props.global_trend?.tauxResolution != null ? `${parseFloat(props.global_trend.tauxResolution).toFixed(1)} %` : "—", color: "#8B5CF6", bg: "#F5F3FF" },
+    { label: "Taux résolution",value: props.global_trend?.tauxResolution != null ? `${(parseFloat(props.global_trend.tauxResolution) * 100).toFixed(1)} %` : "—", color: "#8B5CF6", bg: "#F5F3FF" },
   ];
 
   return (
     <>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       <div ref={pageTopRef} />
       <div id="trSimple" style={{}}></div>
       <div id="main" style={{ marginBottom: "80px" }}>
@@ -3162,12 +3198,36 @@ const Global = (props) => {
                 icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 13.06L8.18 15.28H9.97L8 12.06L9.93 8.89H8.22L7.13 10.9 7.09 10.96 7.06 11.03Q6.8 10.5 6.5 9.96L5.45 8.89H3.78L5.73 12.06 3.67 15.28H5.42M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38Z"/></svg> },
               { label: "Word",  color: "#1D4ED8", bg: "#EFF6FF", border: "#93C5FD", action: printToWord,
                 icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 15.25H8.5L9.88 10.58 11.25 15.25H12.75L14.82 8.75H13.31L12 13.41 10.63 8.75H9.12L7.82 13.41 6.5 8.75H5L7 15.25M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38Z"/></svg> },
-            ].map(({ label, color, bg, border, action, icon }) => (
-              <button key={label} onClick={action} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: `1.5px solid ${border}`, background: bg, color, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
-                {icon}
-                {label}
+            ].map(({ label, color, bg, border, action, icon }) => {
+              const isLoading = exportLoading === label;
+              return (
+              <button
+                key={label}
+                onClick={action}
+                disabled={exportLoading !== null}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "8px 16px", borderRadius: 10,
+                  border: `1.5px solid ${border}`,
+                  background: isLoading ? bg : bg,
+                  color: exportLoading !== null ? "#94A3B8" : color,
+                  fontSize: 12.5, fontWeight: 700,
+                  cursor: exportLoading !== null ? "not-allowed" : "pointer",
+                  opacity: exportLoading !== null && !isLoading ? 0.5 : 1,
+                  transition: "opacity 0.2s",
+                }}
+              >
+                {isLoading ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    style={{ animation: "spin 0.8s linear infinite" }}>
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                  </svg>
+                ) : icon}
+                {isLoading ? "En cours..." : label}
               </button>
-            ))}
+            );
+            })}
+
           </div>
         </div>
 
@@ -3458,8 +3518,6 @@ const Global = (props) => {
               <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
                 <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Rapport généré le</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>{new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
-                <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600, marginTop: 6 }}>Par</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>{userAuth?.firstAndLastName}</div>
               </div>
             </div>
 
