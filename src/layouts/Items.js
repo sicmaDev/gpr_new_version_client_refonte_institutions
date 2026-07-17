@@ -63,7 +63,7 @@ import { loadItemFromLocalStorage, loadItemFromSessionStorage } from '../Utils/u
 import { connect } from 'react-redux';
 import { authenticate } from '../redux/actions/LayoutActions';
 import { useHistory } from 'react-router-dom';
-import { useThemeColors } from '../context/ThemeColorsContext';
+import { useThemeColors, darkenColor } from '../context/ThemeColorsContext';
 
 // luminance helper — determines if the sidebar color is light or dark
 const getSidebarLuminance = (hex) => {
@@ -147,24 +147,39 @@ export const Items = (props) => {
     return () => window.removeEventListener("sla-update", handler);
   }, []);
 
-  // ── Collapse state (preserved exactly) ──────────────────────────────────
-  const [open, setOpen] = React.useState(false);
-  const [open1, setOpen1] = React.useState(false);
-  const [open2, setOpen2] = React.useState(false);
-  const [open3, setOpen3] = React.useState(false);
-  const [open4, setOpen4] = React.useState(false);
-  const [open5, setOpen5] = React.useState(false);
-  const [open6, setOpen6] = React.useState(false);
-  const [open7, setOpen7] = React.useState(false);
+  // ── Collapse state ───────────────────────────────────────────────────────
+  const backupPaths = ['/configurations/exportations', '/configurations/logs', '/configurations/sla'];
+  const inBackup = (p) => backupPaths.some(bp => p.startsWith(bp));
 
-  const handleClick = () => setOpen(!open);
-  const handleClick1 = () => setOpen1(!open1);
-  const handleClick2 = () => setOpen2(!open2);
-  const handleClick3 = () => setOpen3(!open3);
-  const handleClick4 = () => setOpen4(!open4);
-  const handleClick5 = () => setOpen5(!open5);
-  const handleClick6 = () => setOpen6(!open6);
-  const handleClick7 = () => setOpen7(!open7);
+  const [open,  setOpen]  = React.useState(() => pathname.startsWith('/reclamations'));
+  const [open1, setOpen1] = React.useState(() => pathname.startsWith('/denonciations'));
+  const [open2, setOpen2] = React.useState(() => pathname.startsWith('/suggestions'));
+  const [open3, setOpen3] = React.useState(() => pathname.startsWith('/rapports'));
+  const [open4, setOpen4] = React.useState(() => pathname.startsWith('/configurations'));
+  const [open5, setOpen5] = React.useState(() => pathname.startsWith('/alertes'));
+  const [open6, setOpen6] = React.useState(() => pathname.startsWith('/ressources'));
+  const [open7, setOpen7] = React.useState(() => inBackup(pathname));
+
+  // Ouvre automatiquement la section de la page courante à chaque navigation
+  React.useEffect(() => {
+    if (pathname.startsWith('/reclamations'))   setOpen(true);
+    if (pathname.startsWith('/denonciations'))  setOpen1(true);
+    if (pathname.startsWith('/suggestions'))    setOpen2(true);
+    if (pathname.startsWith('/rapports'))       setOpen3(true);
+    if (pathname.startsWith('/configurations')) setOpen4(true);
+    if (pathname.startsWith('/alertes'))        setOpen5(true);
+    if (pathname.startsWith('/ressources'))     setOpen6(true);
+    if (inBackup(pathname))                     setOpen7(true);
+  }, [pathname]);
+
+  const handleClick  = () => setOpen(v  => !v);
+  const handleClick1 = () => setOpen1(v => !v);
+  const handleClick2 = () => setOpen2(v => !v);
+  const handleClick3 = () => setOpen3(v => !v);
+  const handleClick4 = () => setOpen4(v => !v);
+  const handleClick5 = () => setOpen5(v => !v);
+  const handleClick6 = () => setOpen6(v => !v);
+  const handleClick7 = () => setOpen7(v => !v);
 
   // ── Auth / user (preserved exactly) ─────────────────────────────────────
   const history = useHistory();
@@ -193,22 +208,26 @@ export const Items = (props) => {
   const sidebarLum = getSidebarLuminance(colors.sidebarColor || '#005081');
   const isDark = sidebarLum < 128;
 
-  const textMain     = isDark ? 'rgba(255,255,255,0.87)' : 'rgba(0,0,0,0.80)';
-  const textSub      = isDark ? 'rgba(255,255,255,0.60)' : 'rgba(0,0,0,0.55)';
-  const textLabel    = isDark ? 'rgba(255,255,255,0.46)' : 'rgba(0,0,0,0.40)';
-  const lineColor    = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.10)';
-  const chevronColor = isDark ? 'rgba(255,255,255,0.30)' : 'rgba(0,0,0,0.28)';
-  const iconInactive = isDark ? 'rgba(255,255,255,0.58)' : 'rgba(0,0,0,0.45)';
-  const hoverBg      = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
-  // Sub-items get a contrasting tint to distinguish them from parent items
-  const subItemBg    = isDark ? 'rgba(0,0,0,0.18)' : 'rgba(0,0,0,0.07)';
-  const subHoverBg   = isDark ? 'rgba(0,0,0,0.26)' : 'rgba(0,0,0,0.12)';
+  const textMain     = isDark ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.87)';
+  const textSub      = isDark ? 'rgba(255,255,255,0.90)' : 'rgba(0,0,0,0.80)';
+  const textLabel    = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)';
+  const lineColor    = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+  const chevronColor = isDark ? 'rgba(255,255,255,0.60)' : 'rgba(0,0,0,0.40)';
+  const iconInactive = isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.60)';
+  const hoverBg      = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.07)';
+  // Sous-menus inactifs : fond transparent, seul le hover est visible
+  const subItemBg  = 'transparent';
+  const subHoverBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.07)';
 
   const link = { color: 'inherit', textDecoration: 'none' };
 
-  // Icon colors: active icons use the sidebar color (on white pill background)
+  // Couleur du texte actif sur la pill blanche — assombrie selon luminance du sidebar
+  // sidebar sombre → légère darken suffit ; sidebar clair → darken plus fort pour contraste sur blanc
+  const activeColor = darkenColor(colors.sidebarColor || '#005081', isDark ? 0.06 : 0.28);
+
+  // Icon colors: active icons use activeColor (on white pill background)
   const col = (active) => ({
-    color: active ? colors.sidebarColor : iconInactive,
+    color: active ? activeColor : iconInactive,
     fontSize: '18px',
     transition: 'color 0.2s',
   });
@@ -230,8 +249,9 @@ export const Items = (props) => {
       '&:hover': { backgroundColor: active ? '#fff' : hoverBg },
       '& .MuiListItemText-primary': {
         fontSize: '14.5px',
-        fontWeight: active ? 700 : 400,
-        color: active ? colors.sidebarColor : textMain,
+        fontWeight: active ? 800 : 400,
+        color: active ? activeColor : textMain,
+        letterSpacing: active ? '-0.01em' : 'normal',
       },
       '& .MuiListItemIcon-root': { minWidth: 34 },
     };
@@ -254,8 +274,9 @@ export const Items = (props) => {
       '&:hover': { backgroundColor: active ? '#fff' : hoverBg },
       '& .MuiListItemText-primary': {
         fontSize: '14.5px',
-        fontWeight: active ? 700 : 400,
-        color: active ? colors.sidebarColor : textMain,
+        fontWeight: active ? 800 : 400,
+        color: active ? activeColor : textMain,
+        letterSpacing: active ? '-0.01em' : 'normal',
       },
       '& .MuiListItemIcon-root': { minWidth: 34 },
     };
@@ -271,33 +292,38 @@ export const Items = (props) => {
       ml: 2.25,
       pl: active ? 2.25 : 1.5,
       pr: active ? 2.25 : 1.5,
-      minHeight: 32,
+      minHeight: 36,
+      py: 0.75,
       position: 'relative',
+      alignItems: 'flex-start',
       transition: 'all 0.2s ease',
-      backgroundColor: active ? 'rgba(255,255,255,0.92)' : subItemBg,
-      boxShadow: active ? '0 2px 8px rgba(0,0,0,0.14)' : 'none',
-      '&:hover': { backgroundColor: active ? 'rgba(255,255,255,0.92)' : subHoverBg },
+      backgroundColor: active ? (isDark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.13)') : subItemBg,
+      boxShadow: active ? '0 2px 8px rgba(0,0,0,0.12)' : 'none',
+      '&:hover': { backgroundColor: active ? (isDark ? 'rgba(255,255,255,0.26)' : 'rgba(0,0,0,0.17)') : subHoverBg },
       '&::before': {
         content: '""',
         position: 'absolute',
         left: -10,
         top: 0,
         bottom: 0,
-        width: '2px',
-        background: active ? colors.sidebarColor : lineColor,
+        width: '3px',
+        background: active ? activeColor : lineColor,
         borderRadius: '2px',
       },
       '& .MuiListItemText-primary': {
-        fontSize: '13.5px',
-        fontWeight: active ? 700 : 400,
-        color: active ? colors.sidebarColor : textSub,
+        fontSize: '13px',
+        fontWeight: active ? 800 : 500,
+        color: textSub,
+        letterSpacing: active ? '-0.01em' : 'normal',
+        whiteSpace: 'normal',
+        lineHeight: 1.35,
       },
-      '& .MuiListItemIcon-root': { minWidth: 30 },
+      '& .MuiListItemIcon-root': { minWidth: 30, alignSelf: 'flex-start', paddingTop: '2px' },
     };
   };
 
   const si = (Icon, active) => (
-    <Icon sx={{ fontSize: 17, color: active ? colors.sidebarColor : iconInactive }} />
+    <Icon sx={{ fontSize: 17, color: iconInactive }} />
   );
 
   // ── Visibility flags (same conditions as original) ───────────────────────
