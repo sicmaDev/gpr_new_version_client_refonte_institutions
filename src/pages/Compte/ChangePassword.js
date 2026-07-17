@@ -13,6 +13,7 @@ import { ChangerMdpApi } from "../../apis/Compte/CompteApi";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { useThemeColors, getPagePrimary, darkenColor } from "../../context/ThemeColorsContext";
 
 const PasswordField = ({ label, onChange, error, show, onToggle }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -30,7 +31,7 @@ const PasswordField = ({ label, onChange, error, show, onToggle }) => (
           width: "100%", boxSizing: "border-box",
           transition: "border-color 0.2s",
         }}
-        onFocus={e => { e.target.style.borderColor = "#0F4C81"; }}
+        onFocus={e => { e.target.style.borderColor = "var(--gpr-primary)"; }}
         onBlur={e => { e.target.style.borderColor = error ? "#EF4444" : "#E2E8F0"; }}
       />
       <button
@@ -46,6 +47,10 @@ const PasswordField = ({ label, onChange, error, show, onToggle }) => (
 );
 
 const ChangePassword = (props) => {
+  const { colors } = useThemeColors();
+  const primary = getPagePrimary(colors);
+  const primaryDark = darkenColor(primary, 0.18);
+
   const mode = loadItemFromSessionStorage("app-mode") !== undefined
     ? JSON.parse(loadItemFromSessionStorage("app-mode"))
     : undefined;
@@ -149,11 +154,11 @@ const ChangePassword = (props) => {
               endIcon={<SaveIcon />}
               variant="contained"
               sx={{
-                background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
+                background: `linear-gradient(135deg, ${primaryDark} 0%, ${primary} 100%)`,
                 borderRadius: "10px", textTransform: "none",
                 fontWeight: 700, fontSize: 13.5, padding: "8px 22px",
                 boxShadow: "none",
-                "&:hover": { background: "linear-gradient(135deg, #0a3560 0%, #1565C0 100%)", boxShadow: "none" },
+                "&:hover": { background: `linear-gradient(135deg, ${darkenColor(primary, 0.28)} 0%, ${primaryDark} 100%)`, boxShadow: "none" },
               }}
             >
               Changer

@@ -24,6 +24,13 @@ export const saveAuthDataToLocal = (data) => {
     saveItemToSessionStorage(1, 'app-mode')
 
     data.user ? saveItemToSessionStorage(JSON.stringify(data.user), 'app-user') : saveItemToSessionStorage([], 'app-user');
+
+    // Notify ThemeColorsContext to apply colors saved in DB (on page refresh / token check)
+    if (data.user?.sidebarColor) {
+        window.dispatchEvent(new CustomEvent('gpr-auth-loaded', {
+            detail: { sidebarColor: data.user.sidebarColor, topbarColor: data.user.topbarColor }
+        }));
+    }
     data.settings.institution ? saveItemToSessionStorage(JSON.stringify(data.settings.institution), 'app-institution') : saveItemToSessionStorage([], 'app-institution');
     data.settings.mail ? saveItemToSessionStorage(JSON.stringify(data.settings.mail), 'app-mail') : saveItemToSessionStorage([], 'app-mail');
     data.settings.sms ? saveItemToSessionStorage(JSON.stringify(data.settings.sms), 'app-sms') : saveItemToSessionStorage([], 'app-sms');

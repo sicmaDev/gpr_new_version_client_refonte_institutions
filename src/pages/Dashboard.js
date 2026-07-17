@@ -42,6 +42,7 @@ import SdStorageIcon from '@mui/icons-material/SdStorage';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { logs, exportLogs } from '../apis/Configurations/LogApi';
 import { systemPerformance } from '../apis/Configurations/ReportApi';
+import { useThemeColors, getPagePrimary } from '../context/ThemeColorsContext';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VISUAL CONSTANTS
@@ -419,7 +420,7 @@ const ClaimRow = ({ item, showGravity }) => {
       <div className="py-[11px] border-b border-slate-50 hover:bg-slate-50 transition-colors">
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-[#005081]">{code}</span>
+            <span className="text-xs font-bold" style={{ color: 'var(--gpr-primary)' }}>{code}</span>
             <span
               className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
               style={{ background: showGravity ? grav.bg : st.bg, color: showGravity ? grav.color : st.color }}
@@ -448,6 +449,8 @@ const ClaimRow = ({ item, showGravity }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const Dashboard = (props) => {
+  const { colors } = useThemeColors();
+  const primary = getPagePrimary(colors);
 
   // ── Data fetch (preserved exactly) ─────────────────────────────────────
   useEffect(() => {
@@ -587,7 +590,7 @@ const Dashboard = (props) => {
 
   // ── Gauge section (config preserved exactly, wrapper improved) ─────────
   const settingTauxRef = useRef(null);
-  const missingLink    = { color: '#005081', textDecoration: 'none', fontWeight: 500, fontSize: 13 };
+  const missingLink    = { color: primary, textDecoration: 'none', fontWeight: 500, fontSize: 13 };
   const missingRow     = { display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid #f8fafc' };
 
   const configChart = (
@@ -626,7 +629,7 @@ const Dashboard = (props) => {
   const page = { background: '#f8fafc', minHeight: '100vh' };
   const pageClass = 'px-3 pt-3 pb-8 sm:px-6 sm:pt-6 sm:pb-12';
   const seeAll = (to, label = 'Voir tout') => (
-    <NavLink to={to} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: '#005081', fontWeight: 600 }}>
+    <NavLink to={to} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: primary, fontWeight: 600 }}>
       {label} <ArrowForwardIcon style={{ fontSize: 14 }} />
     </NavLink>
   );
@@ -751,7 +754,7 @@ const Dashboard = (props) => {
                 </span>
               }
               action={
-                <NavLink to="/alertes/reclamations" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: '#005081', fontWeight: 600 }}>
+                <NavLink to="/alertes/reclamations" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: primary, fontWeight: 600 }}>
                   Voir tout <ArrowForwardIcon style={{ fontSize: 14 }} />
                 </NavLink>
               }
@@ -783,7 +786,7 @@ const Dashboard = (props) => {
                             {badge.label}
                           </span>
                           <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: '#005081', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {item.claimCodeClient}
                             </span>
                             <span style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '250px' }}>
@@ -796,7 +799,7 @@ const Dashboard = (props) => {
                             <AccessTimeIcon style={{ fontSize: 12 }} />
                             {item.retardDay} retard
                           </span>
-                          <ArrowForwardIcon style={{ fontSize: 14, color: '#005081' }} />
+                          <ArrowForwardIcon style={{ fontSize: 14, color: primary }} />
                         </div>
                       </div>
                     </div>
@@ -828,7 +831,7 @@ const Dashboard = (props) => {
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
-        <StatCard value={`${compte} / 7`}                 label="Modules configurés"    sub="modules requis"    IconComp={SettingsIcon}             iconColor="#005081"  iconBg="#e0f0ff" loading={false} />
+        <StatCard value={`${compte} / 7`}                 label="Modules configurés"    sub="modules requis"    IconComp={SettingsIcon}             iconColor={primary}  iconBg={primary + '22'} loading={false} />
         <StatCard value={Math.round((compte / 7) * 100) + '%'} label="Taux de config"  sub="progression totale" IconComp={TrendingUpIcon}           iconColor="#059669"  iconBg="#d1fae5" loading={false} />
         <StatCard
           value={pendingConfigs.length}
@@ -872,7 +875,7 @@ const Dashboard = (props) => {
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
               <div style={{ width: 36, height: 36, borderRadius: 8, background: '#e0f0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <SettingsIcon style={{ color: '#005081', fontSize: 18 }} />
+                <SettingsIcon style={{ color: primary, fontSize: 18 }} />
               </div>
               <div>
                 <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>Configurations à compléter</div>
@@ -923,7 +926,7 @@ const Dashboard = (props) => {
                           <NavLink to={item.route} style={{ textDecoration: 'none' }}>
                             <span style={{
                               fontSize: 12, padding: '5px 12px', borderRadius: 7, fontWeight: 600,
-                              background: '#005081', color: 'white', cursor: 'pointer',
+                              background: primary, color: 'white', cursor: 'pointer',
                               display: 'inline-flex', alignItems: 'center', gap: 4,
                             }}>
                               Configurer <ArrowForwardIcon style={{ fontSize: 13 }} />

@@ -7,6 +7,7 @@ import logoSicma from "../../assets/images/logo_sicma.png";
 import { notify } from "../../Utils/alert";
 import { forgetPassword } from "../../apis/LoginApi";
 import BlockButton from "../../components/shared/BlockButton";
+import { useThemeColors, darkenColor, getPagePrimary } from "../../context/ThemeColorsContext";
 
 // ── SVG Icons ────────────────────────────────────────────────────────────
 const SvgEmail    = ({size=20,color="#64748b"}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
@@ -42,6 +43,9 @@ const CARD_POSITIONS = [
 ];
 
 const ForgotPassword = () => {
+  const { colors } = useThemeColors();
+  const primaryColor = getPagePrimary(colors);
+  const primaryDark  = darkenColor(primaryColor, 0.18);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [showGroupB, setShowGroupB] = useState(false);
@@ -79,7 +83,7 @@ const ForgotPassword = () => {
         style={{ width: "50%" }}
       >
         {/* Couche 1 — fond dégradé */}
-        <div className="absolute inset-0 animate-gradient-bg" style={{ background: "linear-gradient(135deg, #0B1F4D 0%, #1565C0 100%)" }} />
+        <div className="absolute inset-0 animate-gradient-bg" style={{ background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)` }} />
 
         {/* Couche 2 — cercles */}
         <div className="absolute rounded-full animate-blob" style={{ width: "62vh", height: "62vh", top: "-14%", right: "-24%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }} />
@@ -205,8 +209,8 @@ const ForgotPassword = () => {
                   style={{
                     width: "100%", height: "58px", borderRadius: "14px", fontSize: "16px", fontWeight: 700,
                     textTransform: "none", marginTop: "20px", color: "white",
-                    background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
-                    boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
+                    background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)`,
+                    boxShadow: `0 10px 25px -8px ${primaryColor}80`,
                   }}
                   className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
                   loading={loading}
@@ -220,7 +224,7 @@ const ForgotPassword = () => {
               </BlockButton>
 
               <p className="text-center mt-5">
-                <NavLink to="/login" className="text-[#1E88E5] text-[13px] font-semibold hover:underline">
+                <NavLink to="/login" style={{ color: primaryColor }} className="text-[13px] font-semibold hover:underline">
                   Retour à la connexion
                 </NavLink>
               </p>

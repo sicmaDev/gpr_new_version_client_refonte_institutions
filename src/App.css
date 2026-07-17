@@ -1,3 +1,9 @@
+:root {
+  --gpr-primary: #005081;
+  --gpr-primary-dark: #003d62;
+  --gpr-primary-light: #00508122;
+}
+
 .App {
   height: 100%;
   /* text-align: center; */

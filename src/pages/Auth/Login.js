@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { authenticate } from "../../redux/actions/LayoutActions";
+import { useThemeColors, darkenColor, getPagePrimary } from "../../context/ThemeColorsContext";
 import { connect } from "react-redux";
 import {
   emailChanged,
@@ -62,6 +63,9 @@ const CARD_POSITIONS = [
 ];
 
 const Login = (props) => {
+  const { colors } = useThemeColors();
+  const primaryColor = getPagePrimary(colors);
+  const primaryDark  = darkenColor(primaryColor, 0.18);
   const [showPassword, setShowPassword] = useState(false);
   const [showGroupB, setShowGroupB] = useState(false);
 
@@ -215,7 +219,7 @@ const Login = (props) => {
           {/* Couche 1 — fond dégradé */}
           <div
             className="absolute inset-0 animate-gradient-bg"
-            style={{ background: "linear-gradient(135deg, #0B1F4D 0%, #1565C0 100%)" }}
+            style={{ background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)` }}
           />
 
           {/* Couche 2 — grands cercles semi-transparents (≈60% de la hauteur) */}
@@ -339,7 +343,7 @@ const Login = (props) => {
                 <button
                   type="button"
                   className={`flex-1 py-2.5 sm:py-3 rounded-lg font-semibold text-sm border-0 cursor-pointer transition-colors ${online ? "text-white" : "bg-[#eef2f7] text-[#475569]"}`}
-                  style={online ? { background: "linear-gradient(135deg, #0F4C81, #1E88E5)" } : undefined}
+                  style={online ? { background: `linear-gradient(135deg, ${primaryDark}, ${primaryColor})` } : undefined}
                   onClick={handleOnline}
                 >
                   Online
@@ -347,7 +351,7 @@ const Login = (props) => {
                 <button
                   type="button"
                   className={`flex-1 py-2.5 sm:py-3 rounded-lg font-semibold text-sm border-0 cursor-pointer transition-colors ${!online ? "text-white" : "bg-[#eef2f7] text-[#475569]"}`}
-                  style={!online ? { background: "linear-gradient(135deg, #0F4C81, #1E88E5)" } : undefined}
+                  style={!online ? { background: `linear-gradient(135deg, ${primaryDark}, ${primaryColor})` } : undefined}
                   onClick={handleControl}
                 >
                   Offline
@@ -406,7 +410,8 @@ const Login = (props) => {
               <div className="flex justify-end mb-1 mt-3">
                 <NavLink
                   to="/forgot-password"
-                  className="text-[#1E88E5] text-[13px] font-semibold hover:underline"
+                  style={{ color: primaryColor }}
+                className="text-[13px] font-semibold hover:underline"
                 >
                   Mot de passe oublié ?
                 </NavLink>
@@ -418,8 +423,8 @@ const Login = (props) => {
                   style={{
                     width: "100%", height: "58px", borderRadius: "14px", fontSize: "16px", fontWeight: 700,
                     textTransform: "none", marginTop: "20px", color: "white",
-                    background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
-                    boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
+                    background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)`,
+                    boxShadow: `0 10px 25px -8px ${primaryColor}80`,
                   }}
                   className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
                   onClick={handleSubmit}
@@ -438,7 +443,7 @@ const Login = (props) => {
             {/* Lien création de compte — mobile uniquement */}
             <div className="lg:hidden text-center mt-6">
               <span className="text-[#64748b] text-[13px]">Pas encore de compte ?&nbsp;</span>
-              <NavLink to="/SignUser" className="text-[#1E88E5] text-[13px] font-semibold hover:underline">
+              <NavLink to="/SignUser" style={{ color: primaryColor }} className="text-[13px] font-semibold hover:underline">
                 Créer un compte
               </NavLink>
             </div>

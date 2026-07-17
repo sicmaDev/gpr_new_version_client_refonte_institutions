@@ -10,6 +10,7 @@ import { LoadingButton } from "@mui/lab";
 import { modalify } from "../../Utils/modal";
 import { CompteInfosApi } from "../../apis/Compte/CompteApi";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import { useThemeColors, getPagePrimary, darkenColor } from "../../context/ThemeColorsContext";
 
 const Field = ({ label, value, onChange, type = "text", readOnly = false, error }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -40,7 +41,7 @@ const Field = ({ label, value, onChange, type = "text", readOnly = false, error 
         transition: "border-color 0.2s, box-shadow 0.2s",
         cursor: readOnly ? "not-allowed" : undefined,
       }}
-      onFocus={e => { if (!readOnly) { e.target.style.borderColor = "#0F4C81"; e.target.style.boxShadow = "0 0 0 3px rgba(15,76,129,0.1)"; } }}
+      onFocus={e => { if (!readOnly) { e.target.style.borderColor = "var(--gpr-primary)"; e.target.style.boxShadow = "0 0 0 3px var(--gpr-primary-light)"; } }}
       onBlur={e => { e.target.style.borderColor = error ? "#EF4444" : readOnly ? "#E2E8F0" : "#CBD5E1"; e.target.style.boxShadow = "none"; }}
     />
     {error && <span style={{ fontSize: 11.5, color: "#EF4444" }}>{error}</span>}
@@ -48,6 +49,10 @@ const Field = ({ label, value, onChange, type = "text", readOnly = false, error 
 );
 
 const CompteDetails = (props) => {
+  const { colors } = useThemeColors();
+  const primary = getPagePrimary(colors);
+  const primaryDark = darkenColor(primary, 0.18);
+
   const mode = loadItemFromSessionStorage("app-mode") !== undefined
     ? JSON.parse(loadItemFromSessionStorage("app-mode"))
     : undefined;
@@ -96,7 +101,7 @@ const CompteDetails = (props) => {
     <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 1px 4px rgba(0,0,0,.08)", padding: "24px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
         <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <PersonOutlineIcon style={{ fontSize: 18, color: "#0F4C81" }} />
+          <PersonOutlineIcon style={{ fontSize: 18, color: primary }} />
         </div>
         <div>
           <div style={{ fontSize: 15, fontWeight: 800, color: "#0F172A" }}>Informations personnelles</div>
@@ -137,11 +142,11 @@ const CompteDetails = (props) => {
             endIcon={<SaveIcon />}
             variant="contained"
             sx={{
-              background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
+              background: `linear-gradient(135deg, ${primaryDark} 0%, ${primary} 100%)`,
               borderRadius: "10px", textTransform: "none",
               fontWeight: 700, fontSize: 13.5, padding: "8px 22px",
               boxShadow: "none",
-              "&:hover": { background: "linear-gradient(135deg, #0d3d6e 0%, #1565c0 100%)", boxShadow: "none" },
+              "&:hover": { background: `linear-gradient(135deg, ${darkenColor(primary, 0.28)} 0%, ${primaryDark} 100%)`, boxShadow: "none" },
             }}
           >
             Enregistrer

@@ -55,6 +55,14 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 saveItemToSessionStorage(1, 'app-mode')
 
                 response.data.response.content.user ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.user), 'app-user') : saveItemToSessionStorage([], 'app-user');
+
+                // Notify ThemeColorsContext to apply colors saved in DB
+                const _u = response.data.response.content.user;
+                if (_u?.sidebarColor) {
+                    window.dispatchEvent(new CustomEvent('gpr-auth-loaded', {
+                        detail: { sidebarColor: _u.sidebarColor, topbarColor: _u.topbarColor }
+                    }));
+                }
                 response.data.response.content.settings.institution ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.institution), 'app-institution') : saveItemToSessionStorage([], 'app-institution');
                 response.data.response.content.settings.mail ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.mail), 'app-mail') : saveItemToSessionStorage([], 'app-mail');
                 response.data.response.content.settings.sms ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.settings.sms), 'app-sms') : saveItemToSessionStorage([], 'app-sms');

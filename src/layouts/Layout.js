@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { isAuth, authenticate } from "../redux/actions/LayoutActions";
+import { useThemeColors, getPagePrimary } from "../context/ThemeColorsContext";
 
 // import {claimColorChanged, denunColorChanged} from "../redux/actions/alert/headerActions"
 
@@ -13,6 +14,7 @@ import Auth from "../pages/Auth/Auth";
 import Modal from "../Utils/modal";
 
 const Layout = (props) => {
+  const { colors } = useThemeColors();
   const [isLoading, setIsLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
@@ -76,7 +78,7 @@ const Layout = (props) => {
             style={{
               width: "100vw",
               height: "100vh",
-              backgroundColor: "#005081",
+              backgroundColor: getPagePrimary(colors),
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",

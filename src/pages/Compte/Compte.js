@@ -2,6 +2,7 @@ import React from "react";
 import CompteDetails from "./CompteDetails";
 import ChangePassword from "./ChangePassword";
 import { loadItemFromSessionStorage } from "../../Utils/utils";
+import { useThemeColors, getPagePrimary } from "../../context/ThemeColorsContext";
 
 const HABILITATIONS = [
   { code: "H1",  label: "Enregistrer une réclamation, suggestion, dénonciation",                                              color: "#00B8D9" },
@@ -48,8 +49,9 @@ const Compte = () => {
     ? user.posteDto.habilitations.split(",").map(h => h.trim())
     : [];
 
+  const { colors } = useThemeColors();
+  const bg = getPagePrimary(colors);
   const userHabilitations = HABILITATIONS.filter(h => hbtCodes.includes(h.code));
-  const bg = "#0F4C81";
 
   return (
     <div style={{ padding: "28px clamp(24px, 4vw, 52px)", maxWidth: 1100, margin: "0 auto" }}>
@@ -101,7 +103,7 @@ const Compte = () => {
               <div style={{ marginTop: 12, fontWeight: 800, fontSize: 15.5, color: "#0F172A", textAlign: "center" }}>{name || "—"}</div>
               <div style={{
                 marginTop: 6, fontSize: 11.5, fontWeight: 700,
-                color: "#0F4C81", background: "#EFF6FF",
+                color: bg, background: bg + '18',
                 padding: "3px 12px", borderRadius: 20,
               }}>
                 {poste || "—"}

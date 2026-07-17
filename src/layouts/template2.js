@@ -47,8 +47,7 @@ function Template2(props) {
 
         <Suspense fallback="loading">
             <HashRouter>
-                {props.isLocked ? (<Lockscreen />) :
-                    (<Haut />)}
+                {props.isLocked ? (<Lockscreen />) : (<Haut />)}
             </HashRouter>
         </Suspense>
 

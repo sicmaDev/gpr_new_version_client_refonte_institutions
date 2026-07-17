@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import { connect } from "react-redux";
+import { useThemeColors, darkenColor, getPagePrimary } from "../../context/ThemeColorsContext";
 import logo from "../../assets/images/logo_gpr.jpg";
 import logoSicma from "../../assets/images/logo_sicma.png";
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -86,6 +87,10 @@ const selectSx = {
     "&:hover:not(.Mui-disabled):before": { display: "none" },
 };
 const SignCompteUser = (props) => {
+    const { colors } = useThemeColors();
+    const primaryColor = getPagePrimary(colors);
+    const primaryDark  = darkenColor(primaryColor, 0.18);
+
     const [showPassword, setShowPassword] = useState(false);
     const [showPassword1, setShowPassword1] = useState(false);
     const [showGroupB, setShowGroupB] = useState(false);
@@ -390,13 +395,14 @@ const SignCompteUser = (props) => {
         // console.log("Started filtering the table")
     };
 
-    const fieldShellClass = "flex items-center gap-2.5 border-2 border-[#e2e8f0] bg-[#f8fafc] rounded-xl px-4 h-[48px] transition-all duration-200 focus-within:border-[#1E88E5] focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(30,136,229,0.1)]";
+    const fieldShellClass = "gpr-sign-field flex items-center gap-2.5 border-2 border-[#e2e8f0] bg-[#f8fafc] rounded-xl px-4 h-[48px] transition-all duration-200";
     const labelClass = "block text-[10px] font-bold text-[#94a3b8] uppercase tracking-[0.6px] mb-1";
     const inputClass = "validate border-0 outline-none flex-1 h-full text-sm text-[#1a2b3c] bg-transparent placeholder-[#94a3b8]";
     const iconSx = { fontSize: 20, color: "#64748b" };
 
     return (
         <div className="gpr-auth flex h-screen" style={{ background: "#F8FAFC", fontFamily: "'Inter', -apple-system, sans-serif" }}>
+            <style>{`.gpr-sign-field:focus-within { border-color: ${primaryColor} !important; background: white !important; box-shadow: 0 0 0 4px ${primaryColor}1a !important; }`}</style>
 
             {/* ── Colonne gauche — hero storytelling ── */}
             <div
@@ -404,7 +410,7 @@ const SignCompteUser = (props) => {
                 style={{ width: "50%" }}
             >
                 {/* Couche 1 — fond dégradé */}
-                <div className="absolute inset-0 animate-gradient-bg" style={{ background: "linear-gradient(135deg, #0B1F4D 0%, #1565C0 100%)" }} />
+                <div className="absolute inset-0 animate-gradient-bg" style={{ background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)` }} />
 
                 {/* Couche 2 — grands cercles semi-transparents */}
                 <div className="absolute rounded-full animate-blob" style={{ width: "62vh", height: "62vh", top: "-14%", right: "-24%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }} />
@@ -671,7 +677,8 @@ const SignCompteUser = (props) => {
                             <div className="flex items-center justify-between mb-1.5">
                                 <label htmlFor="pass" className={labelClass + " mb-0"}>Mot de passe</label>
                                 <span
-                                    className="text-[#1E88E5] text-[13px] font-semibold cursor-pointer hover:underline"
+                                    className="text-[13px] font-semibold cursor-pointer hover:underline"
+                                    style={{ color: primaryColor }}
                                     onClick={generateCode}
                                 >
                                     Générer un mot de passe
@@ -725,8 +732,8 @@ const SignCompteUser = (props) => {
                                     style={{
                                         width: "100%", height: "50px", borderRadius: "12px", fontSize: "15px", fontWeight: 700,
                                         textTransform: "none", marginTop: "8px", color: "white",
-                                        background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
-                                        boxShadow: "0 10px 25px -8px rgba(15,76,129,0.5)",
+                                        background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)`,
+                                        boxShadow: `0 10px 25px -8px ${primaryColor}80`,
                                     }}
                                     className="transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_14px_35px_-8px_rgba(21,101,192,0.65)]"
                                     loading={props.etat}
@@ -746,7 +753,7 @@ const SignCompteUser = (props) => {
                     {/* Lien connexion — mobile uniquement */}
                     <div className="md:hidden text-center mt-6">
                         <span className="text-[#64748b] text-[13px]">Déjà un compte ?&nbsp;</span>
-                        <NavLink to="/login" className="text-[#1E88E5] text-[13px] font-semibold hover:underline">
+                        <NavLink to="/login" className="text-[13px] font-semibold hover:underline" style={{ color: primaryColor }}>
                             Se connecter
                         </NavLink>
                     </div>

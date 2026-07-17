@@ -63,33 +63,44 @@ import { loadItemFromLocalStorage, loadItemFromSessionStorage } from '../Utils/u
 import { connect } from 'react-redux';
 import { authenticate } from '../redux/actions/LayoutActions';
 import { useHistory } from 'react-router-dom';
+import { useThemeColors } from '../context/ThemeColorsContext';
+
+// luminance helper — determines if the sidebar color is light or dark
+const getSidebarLuminance = (hex) => {
+  try {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+  } catch { return 50; }
+};
 
 // ── Purely visual sub-components ─────────────────────────────────────────────
 
-const GroupLabel = ({ children }) => (
+const GroupLabel = ({ children, textColor, lineColor }) => (
   <div style={{
     padding: '10px 16px 3px',
     fontSize: '10px',
     fontWeight: 800,
     letterSpacing: '1.4px',
-    color: 'rgba(255,255,255,0.52)',
+    color: textColor,
     textTransform: 'uppercase',
     userSelect: 'none',
     display: 'flex',
     alignItems: 'center',
     gap: 8,
   }}>
-    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.14)', borderRadius: 1 }} />
+    <div style={{ flex: 1, height: 1, background: lineColor, borderRadius: 1 }} />
     {children}
-    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.14)', borderRadius: 1 }} />
+    <div style={{ flex: 1, height: 1, background: lineColor, borderRadius: 1 }} />
   </div>
 );
 
-
 // Rotating chevron (smooth open/close animation)
-const Chevron = ({ open }) => (
+const Chevron = ({ open, color }) => (
   <ExpandMore style={{
-    color: 'rgba(255,255,255,0.35)',
+    color: color,
     fontSize: '16px',
     transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
     transition: 'transform 0.25s ease',
@@ -177,9 +188,30 @@ export const Items = (props) => {
   const isActive = (path) =>
     pathname === path || pathname.startsWith(path + '/');
 
-  const col = (active) => ({ color: active ? '#3b3fd8' : 'rgba(255,255,255,0.65)', fontSize: '18px', transition: 'color 0.2s' });
-  const chevron = { color: 'rgba(255,255,255,0.35)', fontSize: '16px' };
-  const link = { color: 'white', textDecoration: 'none' };
+  // Dynamic colors — adapt to the sidebar color chosen by the user
+  const { colors } = useThemeColors();
+  const sidebarLum = getSidebarLuminance(colors.sidebarColor || '#005081');
+  const isDark = sidebarLum < 128;
+
+  const textMain     = isDark ? 'rgba(255,255,255,0.87)' : 'rgba(0,0,0,0.80)';
+  const textSub      = isDark ? 'rgba(255,255,255,0.60)' : 'rgba(0,0,0,0.55)';
+  const textLabel    = isDark ? 'rgba(255,255,255,0.46)' : 'rgba(0,0,0,0.40)';
+  const lineColor    = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.10)';
+  const chevronColor = isDark ? 'rgba(255,255,255,0.30)' : 'rgba(0,0,0,0.28)';
+  const iconInactive = isDark ? 'rgba(255,255,255,0.58)' : 'rgba(0,0,0,0.45)';
+  const hoverBg      = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+  // Sub-items get a contrasting tint to distinguish them from parent items
+  const subItemBg    = isDark ? 'rgba(0,0,0,0.18)' : 'rgba(0,0,0,0.07)';
+  const subHoverBg   = isDark ? 'rgba(0,0,0,0.26)' : 'rgba(0,0,0,0.12)';
+
+  const link = { color: 'inherit', textDecoration: 'none' };
+
+  // Icon colors: active icons use the sidebar color (on white pill background)
+  const col = (active) => ({
+    color: active ? colors.sidebarColor : iconInactive,
+    fontSize: '18px',
+    transition: 'color 0.2s',
+  });
 
   // Top-level leaf item — active = floating white pill with soft shadow
   const iSx = (path, pl = 2) => {
@@ -195,11 +227,11 @@ export const Items = (props) => {
       backgroundColor: active ? '#fff' : 'transparent',
       boxShadow: active ? '0 4px 14px rgba(0,0,0,0.18)' : 'none',
       transform: active ? 'translateX(2px)' : 'none',
-      '&:hover': { backgroundColor: active ? '#fff' : 'rgba(255,255,255,0.07)' },
+      '&:hover': { backgroundColor: active ? '#fff' : hoverBg },
       '& .MuiListItemText-primary': {
         fontSize: '14.5px',
         fontWeight: active ? 700 : 400,
-        color: active ? '#3b3fd8' : 'rgba(255,255,255,0.78)',
+        color: active ? colors.sidebarColor : textMain,
       },
       '& .MuiListItemIcon-root': { minWidth: 34 },
     };
@@ -219,53 +251,53 @@ export const Items = (props) => {
       backgroundColor: active ? '#fff' : 'transparent',
       boxShadow: active ? '0 4px 14px rgba(0,0,0,0.18)' : 'none',
       transform: active ? 'translateX(2px)' : 'none',
-      '&:hover': { backgroundColor: active ? '#fff' : 'rgba(255,255,255,0.07)' },
+      '&:hover': { backgroundColor: active ? '#fff' : hoverBg },
       '& .MuiListItemText-primary': {
         fontSize: '14.5px',
         fontWeight: active ? 700 : 400,
-        color: active ? '#3b3fd8' : 'rgba(255,255,255,0.82)',
+        color: active ? colors.sidebarColor : textMain,
       },
       '& .MuiListItemIcon-root': { minWidth: 34 },
     };
   };
 
-  // Sub-item leaf — small floating pill + indented connector line
+  // Sub-item leaf — tinted background to distinguish from parent items
   const sSx = (path) => {
     const active = isActive(path);
     return {
       borderRadius: '10px',
       mx: 0.75,
-      my: 0.15,
+      my: 0.1,
       ml: 2.25,
       pl: active ? 2.25 : 1.5,
       pr: active ? 2.25 : 1.5,
       minHeight: 32,
       position: 'relative',
       transition: 'all 0.2s ease',
-      backgroundColor: active ? '#fff' : 'transparent',
-      boxShadow: active ? '0 3px 10px rgba(0,0,0,0.14)' : 'none',
-      '&:hover': { backgroundColor: active ? '#fff' : 'rgba(255,255,255,0.05)' },
-      '&:hover .MuiListItemText-primary': { color: '#fff' },
+      backgroundColor: active ? 'rgba(255,255,255,0.92)' : subItemBg,
+      boxShadow: active ? '0 2px 8px rgba(0,0,0,0.14)' : 'none',
+      '&:hover': { backgroundColor: active ? 'rgba(255,255,255,0.92)' : subHoverBg },
       '&::before': {
         content: '""',
         position: 'absolute',
         left: -10,
         top: 0,
         bottom: 0,
-        width: '1px',
-        background: 'rgba(255,255,255,0.1)',
+        width: '2px',
+        background: active ? colors.sidebarColor : lineColor,
+        borderRadius: '2px',
       },
       '& .MuiListItemText-primary': {
         fontSize: '13.5px',
         fontWeight: active ? 700 : 400,
-        color: active ? '#fff' : 'rgba(255,255,255,0.62)',
+        color: active ? colors.sidebarColor : textSub,
       },
       '& .MuiListItemIcon-root': { minWidth: 30 },
     };
   };
 
   const si = (Icon, active) => (
-    <Icon sx={{ fontSize: 17, color: active ? '#3b3fd8' : 'rgba(255,255,255,0.45)' }} />
+    <Icon sx={{ fontSize: 17, color: active ? colors.sidebarColor : iconInactive }} />
   );
 
   // ── Visibility flags (same conditions as original) ───────────────────────
@@ -297,7 +329,7 @@ export const Items = (props) => {
       )}
 
       {/* ══ GESTION ══════════════════════════════════════════════════════════ */}
-      {hasGestion && <GroupLabel>Gestion</GroupLabel>}
+      {hasGestion && <GroupLabel textColor={textLabel} lineColor={lineColor}>Gestion</GroupLabel>}
 
       {/* Réclamations */}
       {showReclamations && (
@@ -305,7 +337,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick} sx={hSx('/reclamations')}>
             <ListItemIcon><InboxIcon style={col(isActive('/reclamations'))} /></ListItemIcon>
             <ListItemText primary="Réclamations" />
-            <Chevron open={open} />
+            <Chevron open={open} color={chevronColor} />
           </ListItemButton>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -373,7 +405,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick1} sx={hSx('/denonciations')}>
             <ListItemIcon><ReportProblemIcon style={col(isActive('/denonciations'))} /></ListItemIcon>
             <ListItemText primary="Dénonciations" />
-            <Chevron open={open1} />
+            <Chevron open={open1} color={chevronColor} />
           </ListItemButton>
           <Collapse in={open1} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -414,7 +446,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick2} sx={hSx('/suggestions')}>
             <ListItemIcon><TipsAndUpdatesIcon style={col(isActive('/suggestions'))} /></ListItemIcon>
             <ListItemText primary="Suggestions" />
-            <Chevron open={open2} />
+            <Chevron open={open2} color={chevronColor} />
           </ListItemButton>
           <Collapse in={open2} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -450,7 +482,7 @@ export const Items = (props) => {
       )}
 
       {/* ══ ANALYSE ══════════════════════════════════════════════════════════ */}
-      {hasAnalyse && <GroupLabel>Analyse</GroupLabel>}
+      {hasAnalyse && <GroupLabel textColor={textLabel} lineColor={lineColor}>Analyse</GroupLabel>}
 
       {/* Rapports */}
       {showRapports && (
@@ -458,7 +490,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick3} sx={hSx('/rapports')}>
             <ListItemIcon><BarChartIcon style={col(isActive('/rapports'))} /></ListItemIcon>
             <ListItemText primary="Rapports" />
-            <Chevron open={open3} />
+            <Chevron open={open3} color={chevronColor} />
           </ListItemButton>
           <Collapse in={open3} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -495,7 +527,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick5} sx={hSx('/alertes')}>
             <ListItemIcon><NotificationImportantIcon style={col(isActive('/alertes'))} /></ListItemIcon>
             <ListItemText primary="Alertes" />
-            <Chevron open={open5} />
+            <Chevron open={open5} color={chevronColor} />
           </ListItemButton>
           <Collapse in={open5} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -520,7 +552,7 @@ export const Items = (props) => {
       )}
 
       {/* ══ ADMINISTRATION ═══════════════════════════════════════════════════ */}
-      {hasAdmin && <GroupLabel>Administration</GroupLabel>}
+      {hasAdmin && <GroupLabel textColor={textLabel} lineColor={lineColor}>Administration</GroupLabel>}
 
       {/* WhatsApp */}
       {showWhatsapp && (
@@ -547,7 +579,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick4} sx={hSx('/configurations')}>
             <ListItemIcon><SettingsIcon style={col(isActive('/configurations'))} /></ListItemIcon>
             <ListItemText primary="Configurations" />
-            <Chevron open={open4} />
+            <Chevron open={open4} color={chevronColor} />
           </ListItemButton>
           <Collapse in={open4} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -668,7 +700,7 @@ export const Items = (props) => {
               <ListItemButton onClick={handleClick6} sx={hSx('/ressources', 2)}>
                 <ListItemIcon><ArticleIcon style={col(isActive('/ressources'))} /></ListItemIcon>
                 <ListItemText primary="Ressources" />
-                <Chevron open={open6} />
+                <Chevron open={open6} color={chevronColor} />
               </ListItemButton>
               <Collapse in={open6} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
@@ -698,7 +730,7 @@ export const Items = (props) => {
           <ListItemButton onClick={handleClick7} sx={hSx('/sauvegarde')}>
             <ListItemIcon><BackupIcon style={col(isActive('/sauvegarde'))} /></ListItemIcon>
             <ListItemText primary="Backup et surveillance" />
-            <Chevron open={open7} />
+            <Chevron open={open7} color={chevronColor} />
           </ListItemButton>
           <Collapse in={open7} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -740,7 +772,7 @@ export const Items = (props) => {
       )}
 
       {/* ══ AIDE ═════════════════════════════════════════════════════════════ */}
-      <GroupLabel>Aide</GroupLabel>
+      <GroupLabel textColor={textLabel} lineColor={lineColor}>Aide</GroupLabel>
 
       <NavLink to="/help" activeClassName="hero" style={link}>
         <ListItemButton sx={iSx('/help')} className="lib">
