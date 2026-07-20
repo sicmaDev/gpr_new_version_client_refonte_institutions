@@ -312,10 +312,11 @@ const ListeDenonciations = (props) => {
   const handleClickOpen = () => { setOpen(true); };
   const history = useHistory();
 
-  // Chargement depuis l'URL quand on arrive directement sur /denonciations/liste/:code
+  // Chargement depuis l'URL ou sessionStorage quand on arrive directement sur /denonciations/liste/:code
   useEffect(() => {
-    const code = props.match?.params?.code;
-    if (code && code !== "all") {
+    const urlCode = props.match?.params?.code;
+    const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_den_code');
+    if (code) {
       axios({
         method: "get",
         url: HOST + "api/v1/denunciation/" + code + "/details",
@@ -354,6 +355,7 @@ const ListeDenonciations = (props) => {
           props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
           props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
           setClaimId(data.id);
+          setDetailVisible(true);
           getFillesApi(data.id, props);
           getClaimAudioApi(data.id, props);
         }
@@ -369,6 +371,7 @@ const ListeDenonciations = (props) => {
   const [extraContent, setExtraContent] = useState("");
   const [extraFileLoading, setExtraFileLoading] = useState(false);
   const [claim_id, setClaimId] = useState(null);
+  const [detailVisible, setDetailVisible] = useState(false);
 
   const clearFiles = () => {
     if (inputRef.current) {
@@ -712,7 +715,8 @@ const ListeDenonciations = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     clearComponentState();
-    history.push("/denonciations/liste/" + data.code);
+    sessionStorage.setItem('gpr_den_code', data.code);
+    setDetailVisible(true);
     setClaimId(data.id);
     // setAudios([])
     // setFiles([])
@@ -2352,7 +2356,7 @@ const ListeDenonciations = (props) => {
       });
   };
 
-  if (props.match?.params?.code && props.match.params.code !== "all") {
+  if (detailVisible) {
     const solutions = Array.isArray(props.solution) ? props.solution : [];
     const hasH14 = hbt.includes("H14") || addR === "PILOTE" || addR === "DE";
 
@@ -2447,7 +2451,7 @@ const ListeDenonciations = (props) => {
         )}
 
         <TraitementShell
-          onBack={() => history.push("/denonciations/liste/all")}
+          onBack={() => { sessionStorage.removeItem('gpr_den_code'); setDetailVisible(false); history.push("/denonciations/liste/all"); }}
           hideClientInfo={true}
           codeClient={props.codeClient || props.code}
           status={props.status}
@@ -2729,19 +2733,7 @@ const ListeDenonciations = (props) => {
                       <span style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>Flux du dossier</span>
                     </div>
                     <div style={{ padding: "8px 12px" }}>
-                      <HistoriqueTimeline
-                        recorded_at={props.recorded_at}
-                        created_by={props.created_by}
-                        transmitted={props.selectedItem?.transmitted != null ? "" + props.selectedItem.transmitted : ""}
-                        transmittedBy={props.selectedItem?.transmittedBy?.firstAndLastName}
-                        transmittedTo={props.selectedItem?.transmittedTo?.firstAndLastName}
-                        handled_by={props.handled_by}
-                        assigned_by={props.selectedItem?.treatmentAffectedBy?.firstAndLastName}
-                        assignedAt={props.selectedItem?.affectedAt}
-                        solution={solutions}
-                        formatDate={formatDate}
-                        formatDate3={formatDate3}
-                      />
+                      <HistoriqueTimeline claimId={claim_id} />
                     </div>
                   </div>
                 </div>

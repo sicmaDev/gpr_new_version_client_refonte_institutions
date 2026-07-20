@@ -532,6 +532,11 @@ const MesurerReclamation = (props) => {
           subject: "Solution à votre réclamation ",
           message: props.solution[0].content,
           commentaire: props.solution[0].commentaire,
+          claimId: props.id || null,
+          claimCode: props.codeClient || null,
+          claimType: "CLAIM",
+          senderName: user?.firstAndLastName || null,
+          senderEmail: user?.email || null,
         });
         notify("Mail envoyé avec succès", "success");
       } catch (err) {
@@ -564,6 +569,11 @@ const MesurerReclamation = (props) => {
           await send({
             phone: cleanPhoneNumber3(props.phone),
             message: segment,
+            claimId: props.id || null,
+            claimCode: props.codeClient || null,
+            claimType: "CLAIM",
+            senderName: user?.firstAndLastName || null,
+            senderEmail: user?.email || null,
           });
 
           await sleep(500); // petite pause entre chaque SMS si besoin

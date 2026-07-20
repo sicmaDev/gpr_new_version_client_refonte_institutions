@@ -1,198 +1,180 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import SendIcon from "@mui/icons-material/Send";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
 import SentimentNeutralIcon from "@mui/icons-material/SentimentNeutral";
+import SendIcon from "@mui/icons-material/Send";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import SmsOutlinedIcon from "@mui/icons-material/SmsOutlined";
+import GavelIcon from "@mui/icons-material/Gavel";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import GroupsIcon from "@mui/icons-material/Groups";
+import ThumbDownOutlinedIcon from "@mui/icons-material/ThumbDownOutlined";
+import { getClaimEvents } from "../../apis/Reclamations/ReclamationsApi";
 
-const HistoriqueTimeline = ({
-  recorded_at, created_by,
-  transmitted, transmittedBy, transmittedTo,
-  handled_by, assigned_by, assignedAt,
-  solution,
-  formatDate, formatDate3,
-}) => {
-  const solutionList = Array.isArray(solution) ? solution : [];
-  // ── Construire les événements ──────────────────────────────────
-  const events = [];
+const EVENT_CONFIG = {
+  SAVED:              { label: "Enregistrée",                    color: "#3b82f6", bg: "#eff6ff", border: "#bfdbfe", Icon: ArticleOutlinedIcon },
+  AFFECTED:           { label: "Affectée",                       color: "#f59e0b", bg: "#fffbeb", border: "#fde68a", Icon: AssignmentIndIcon },
+  SOLUTION_PROPOSED:  { label: "Solution proposée",              color: "#10b981", bg: "#f0fdf4", border: "#bbf7d0", Icon: RecordVoiceOverIcon },
+  APPROVED:           { label: "Solution approuvée",             color: "#16a34a", bg: "#dcfce7", border: "#86efac", Icon: CheckCircleOutlineIcon },
+  REJECTED:           { label: "Solution désapprouvée",          color: "#dc2626", bg: "#fef2f2", border: "#fecaca", Icon: HighlightOffIcon },
+  SATISFIED:          { label: "Client satisfait",               color: "#15803d", bg: "#f0fdf4", border: "#86efac", Icon: SentimentSatisfiedAltIcon },
+  UNSATISFIED:        { label: "Client non satisfait",           color: "#dc2626", bg: "#fef2f2", border: "#fecaca", Icon: SentimentDissatisfiedIcon },
+  PARTIAL_SATISFIED:  { label: "Client partiellement satisfait", color: "#d97706", bg: "#fffbeb", border: "#fde68a", Icon: SentimentNeutralIcon },
+  CLASSED:            { label: "Classée",                        color: "#475569", bg: "#f8fafc", border: "#e2e8f0", Icon: ArchiveOutlinedIcon },
+  LITIGATION:         { label: "Contentieux",                    color: "#9f1239", bg: "#fff1f2", border: "#fecdd3", Icon: GavelIcon },
+  TRANSMITTED:        { label: "Transmise",                      color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", Icon: SendIcon },
+  CONVERTED:          { label: "Convertie",                      color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", Icon: SwapHorizIcon },
+  MAIL_SENT_AGENT:    { label: "Mail envoyé (agent)",            color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", Icon: EmailOutlinedIcon },
+  SMS_SENT_AGENT:     { label: "SMS envoyé (agent)",             color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", Icon: SmsOutlinedIcon },
+  MAIL_SENT_CLIENT:   { label: "Mail envoyé (client)",           color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd", Icon: EmailOutlinedIcon },
+  SMS_SENT_CLIENT:    { label: "SMS envoyé (client)",            color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd", Icon: SmsOutlinedIcon },
+  SESSION_STARTED:    { label: "Session collaborative",          color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", Icon: GroupsIcon },
+};
 
-  if (recorded_at)
-    events.push({
-      key: 'enregistree', label: 'Enregistrée',
-      agent: created_by, date: recorded_at,
-      color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe',
-      icon: <ArticleOutlinedIcon style={{ fontSize: 16, color: '#3b82f6' }} />,
-    });
+const formatDate = (dt) => {
+  if (!dt) return "";
+  try {
+    return new Date(dt).toLocaleString("fr-FR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  } catch { return dt; }
+};
 
-  if (transmitted === 'true' && transmittedBy)
-    events.push({
-      key: 'transmise', label: 'Transmise',
-      agent: transmittedBy, date: null,
-      sub: `Transmise à ${transmittedTo}`,
-      color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe',
-      icon: <SendIcon style={{ fontSize: 15, color: '#8b5cf6' }} />,
-    });
+const HistoriqueTimeline = ({ claimId }) => {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  if (handled_by && assignedAt)
-    events.push({
-      key: 'affectee', label: 'Affectée',
-      agent: assigned_by, date: assignedAt,
-      sub: `Assignée à ${handled_by}`,
-      color: '#f59e0b', bg: '#fffbeb', border: '#fde68a',
-      icon: <AssignmentIndIcon style={{ fontSize: 16, color: '#f59e0b' }} />,
-    });
+  useEffect(() => {
+    if (!claimId) return;
+    setLoading(true);
+    getClaimEvents(claimId)
+      .then(({ data }) => {
+        const items = Array.isArray(data?.content) ? data.content : [];
+        setEvents(items);
+      })
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false));
+  }, [claimId]);
 
-  solutionList.forEach((sol, i) => {
-    const satDto = sol.satisfactionMeasureDto;
-    const satLabel = satDto?.status === 'SATISFIED' ? 'Satisfait'
-      : satDto?.status === 'UNSATISFIED' ? 'Non satisfait'
-      : satDto?.status === 'PARTIAL' ? 'Partiellement satisfait' : null;
-
-    events.push({
-      key: `sol-${i}`, label: 'Solution proposée',
-      agent: sol.author?.firstAndLastName, date: sol.createdAt,
-      solution: sol.content,
-      commentaire: sol.commentaire,
-      color: '#10b981', bg: '#f0fdf4', border: '#bbf7d0',
-      icon: <RecordVoiceOverIcon style={{ fontSize: 15, color: '#10b981' }} />,
-      approbation: sol.status === 'UNAPPROVED'
-        ? { approved: false, motif: sol.motifDesaprobation, by: sol.unApprouver?.firstAndLastName, date: sol.unApprouvedAt }
-        : sol.status === 'APPROVED' ? { approved: true } : null,
-      satisfaction: satDto ? {
-        label: satLabel, pending: !satLabel,
-        commentaire: satDto.commentaire,
-        measurer: satDto.measurer?.firstAndLastName || 'site web',
-        date: satDto.measureDateTime,
-      } : null,
-    });
-  });
+  if (loading) return (
+    <div style={{ padding: "24px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
+      Chargement du flux…
+    </div>
+  );
 
   if (events.length === 0) return (
-    <div className="bg-white rounded-xl border border-gray-200 py-12 text-center">
-      <div className="text-[36px] mb-3">🕓</div>
-      <div className="text-[13.5px] font-medium text-gray-700 mb-1">Aucun historique</div>
-      <div className="text-xs text-slate-400">Les événements apparaîtront ici</div>
+    <div style={{ padding: "24px", textAlign: "center" }}>
+      <div style={{ fontSize: 32, marginBottom: 8 }}>🕓</div>
+      <div style={{ fontSize: 13.5, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Aucun événement tracé</div>
+      <div style={{ fontSize: 12, color: "#94a3b8" }}>Les actions effectuées sur ce dossier apparaîtront ici</div>
     </div>
   );
 
   return (
     <>
       {/* Header */}
-      <div className="bg-white rounded-2xl mb-3 px-4 py-3 flex items-center gap-2"
-        style={{ border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-        <CalendarMonthIcon style={{ fontSize: 17, color: '#64748b' }} />
-        <span style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>Historique du dossier</span>
-        <span style={{ marginLeft: 6, background: '#f1f5f9', borderRadius: 20, padding: '2px 9px', fontSize: 11, fontWeight: 600, color: '#64748b' }}>
-          {events.length} événement{events.length > 1 ? 's' : ''}
+      <div style={{ background: "#fff", borderRadius: 12, marginBottom: 12, padding: "10px 16px", display: "flex", alignItems: "center", gap: 8, border: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <CalendarMonthIcon style={{ fontSize: 17, color: "#64748b" }} />
+        <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>Historique du dossier</span>
+        <span style={{ marginLeft: 6, background: "#f1f5f9", borderRadius: 20, padding: "2px 9px", fontSize: 11, fontWeight: 600, color: "#64748b" }}>
+          {events.length} événement{events.length > 1 ? "s" : ""}
         </span>
       </div>
 
       {/* Timeline */}
-      <div style={{ position: 'relative', paddingLeft: 32 }}>
-        <div style={{ position: 'absolute', left: 15, top: 8, bottom: 8, width: 2, background: '#e2e8f0', borderRadius: 2 }} />
+      <div style={{ position: "relative", paddingLeft: 32 }}>
+        <div style={{ position: "absolute", left: 15, top: 8, bottom: 8, width: 2, background: "#e2e8f0", borderRadius: 2 }} />
 
         {events.map((ev, idx) => {
+          const cfg = EVENT_CONFIG[ev.eventType] || { label: ev.eventType, color: "#64748b", bg: "#f8fafc", border: "#e2e8f0", Icon: ArticleOutlinedIcon };
+          const { Icon } = cfg;
           const isLast = idx === events.length - 1;
+          const isPilote = (ev.eventType === "MAIL_SENT_AGENT" || ev.eventType === "SMS_SENT_AGENT") && ev.metadata?.startsWith("Pilote Principal");
+          const isClientEvent = ev.eventType === "MAIL_SENT_CLIENT" || ev.eventType === "SMS_SENT_CLIENT";
+          const isAgentEvent = ev.eventType === "MAIL_SENT_AGENT" || ev.eventType === "SMS_SENT_AGENT";
+          let displayLabel = cfg.label;
+          if (isPilote) displayLabel = ev.eventType === "MAIL_SENT_AGENT" ? "Mail envoyé (pilote principal)" : "SMS envoyé (pilote principal)";
+
           return (
-            <div key={ev.key} style={{ position: 'relative', marginBottom: isLast ? 0 : 16 }}>
+            <div key={ev.id} style={{ position: "relative", marginBottom: isLast ? 0 : 14 }}>
               {/* Nœud */}
               <div style={{
-                position: 'absolute', left: -24, top: 14,
-                width: 18, height: 18, borderRadius: '50%',
-                background: ev.color, border: '3px solid white',
-                boxShadow: `0 0 0 2px ${ev.color}`, zIndex: 1,
+                position: "absolute", left: -24, top: 14,
+                width: 18, height: 18, borderRadius: "50%",
+                background: cfg.color, border: "3px solid white",
+                boxShadow: `0 0 0 2px ${cfg.color}`, zIndex: 1,
               }} />
 
               {/* Card */}
               <div style={{
-                background: 'white',
-                border: isLast ? `1.5px solid ${ev.border}` : '1px solid #e5e7eb',
+                background: "white",
+                border: isLast ? `1.5px solid ${cfg.border}` : "1px solid #e5e7eb",
                 borderRadius: 12,
-                overflow: 'hidden',
-                boxShadow: isLast ? `0 2px 12px ${ev.color}22` : '0 1px 3px rgba(0,0,0,0.04)',
+                overflow: "hidden",
+                boxShadow: isLast ? `0 2px 12px ${cfg.color}22` : "0 1px 3px rgba(0,0,0,0.04)",
               }}>
-                {/* Header événement */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: isLast ? ev.bg : 'white', borderBottom: '1px solid #f1f5f9' }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: ev.bg, border: `1px solid ${ev.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    {ev.icon}
+                {/* Header */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: isLast ? cfg.bg : "white", borderBottom: ev.metadata ? "1px solid #f1f5f9" : "none" }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: cfg.bg, border: `1px solid ${cfg.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon style={{ fontSize: 15, color: cfg.color }} />
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: ev.color }}>{ev.label}</div>
-                    {ev.sub && <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 1 }}>{ev.sub}</div>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: cfg.color }}>{displayLabel}</div>
+                    {ev.actorName && (
+                      <div style={{ fontSize: 11.5, color: "#64748b", marginTop: 1 }}>
+                        {isClientEvent ? `Par : ${ev.actorName}` : ev.actorName}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    {ev.agent && <div style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>{ev.agent}</div>}
-                    {ev.date && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{formatDate3(ev.date)}</div>}
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    {ev.createdAt && (
+                      <div style={{ fontSize: 11, color: "#94a3b8" }}>{formatDate(ev.createdAt)}</div>
+                    )}
                   </div>
                 </div>
 
-                {/* Solution + commentaire */}
-                {(ev.solution || ev.commentaire) && (
-                  <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {ev.solution && (
-                      <div>
-                        <div style={{ fontSize: 10.5, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Solution</div>
-                        <div style={{ fontSize: 13, color: '#374151', background: '#f8fafc', borderRadius: 8, padding: '8px 10px', lineHeight: 1.5, borderLeft: `3px solid ${ev.color}` }}>{ev.solution}</div>
-                      </div>
-                    )}
-                    {ev.commentaire && (
-                      <div>
-                        <div style={{ fontSize: 10.5, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Commentaire interne</div>
-                        <div style={{ fontSize: 12.5, color: '#64748b', fontStyle: 'italic' }}>{ev.commentaire}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Désapprobation uniquement */}
-                {ev.approbation && !ev.approbation.approved && (
-                  <div style={{ margin: '0 14px 10px', borderRadius: 8, padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <HighlightOffIcon style={{ fontSize: 16, color: '#dc2626' }} />
-                      <span style={{ fontSize: 12.5, fontWeight: 600, color: '#dc2626' }}>
-                        {`Désapprouvée${ev.approbation.by ? ` par ${ev.approbation.by}` : ''}`}
+                {/* Metadata */}
+                {ev.metadata && (
+                  <div style={{ padding: "8px 14px", fontSize: 12.5, color: "#475569", background: "#fafafa", borderTop: "1px solid #f1f5f9" }}>
+                    {ev.eventType === "AFFECTED" && <span>Assignée à <strong>{ev.metadata}</strong></span>}
+                    {ev.eventType === "TRANSMITTED" && <span>Transmise à <strong>{ev.metadata}</strong></span>}
+                    {ev.eventType === "REJECTED" && <span>Motif : <em>{ev.metadata}</em></span>}
+                    {ev.eventType === "MAIL_SENT_CLIENT" && (
+                      <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <EmailOutlinedIcon style={{ fontSize: 13, color: "#0284c7" }} />
+                        Destinataire (client) : <strong style={{ marginLeft: 4 }}>{ev.metadata}</strong>
                       </span>
-                      {ev.approbation.date && <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 'auto' }}>{formatDate3(ev.approbation.date)}</span>}
-                    </div>
-                    {ev.approbation.motif && (
-                      <div style={{ fontSize: 12, color: '#dc2626', marginTop: 5, paddingTop: 5, borderTop: '1px solid #fecaca' }}>
-                        Motif : {ev.approbation.motif}
-                      </div>
                     )}
-                  </div>
-                )}
-
-                {/* Satisfaction */}
-                {ev.satisfaction && (
-                  <div style={{ margin: '0 14px 10px', borderRadius: 8, padding: '8px 12px', background: '#fefce8', border: '1px solid #fef08a' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {ev.satisfaction.pending
-                        ? <HourglassEmptyIcon style={{ fontSize: 15, color: '#92400e' }} />
-                        : ev.satisfaction.label === 'Satisfait'
-                          ? <SentimentSatisfiedAltIcon style={{ fontSize: 16, color: '#15803d' }} />
-                          : ev.satisfaction.label === 'Non satisfait'
-                            ? <SentimentDissatisfiedIcon style={{ fontSize: 16, color: '#dc2626' }} />
-                            : <SentimentNeutralIcon style={{ fontSize: 16, color: '#d97706' }} />
-                      }
-                      <span style={{ fontSize: 12.5, fontWeight: 600, color: '#854d0e' }}>
-                        {ev.satisfaction.pending ? 'En attente de mesure de satisfaction' : `Client ${ev.satisfaction.label}`}
+                    {ev.eventType === "SMS_SENT_CLIENT" && (
+                      <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <SmsOutlinedIcon style={{ fontSize: 13, color: "#0284c7" }} />
+                        Destinataire (client) : <strong style={{ marginLeft: 4 }}>{ev.metadata}</strong>
                       </span>
-                      {ev.satisfaction.date && <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 'auto' }}>{formatDate(ev.satisfaction.date)}</span>}
-                    </div>
-                    {ev.satisfaction.commentaire && (
-                      <div style={{ fontSize: 12, color: '#92400e', marginTop: 5, paddingTop: 5, borderTop: '1px solid #fef08a', fontStyle: 'italic' }}>
-                        "{ev.satisfaction.commentaire}"
-                      </div>
                     )}
-                    {!ev.satisfaction.pending && (
-                      <div style={{ fontSize: 11, color: '#a16207', marginTop: 3 }}>Mesuré via {ev.satisfaction.measurer}</div>
+                    {ev.eventType === "MAIL_SENT_AGENT" && (
+                      <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <EmailOutlinedIcon style={{ fontSize: 13, color: "#0891b2" }} />
+                        {isPilote
+                          ? <><strong>{ev.metadata}</strong></>
+                          : <>Destinataire (agent) : <strong style={{ marginLeft: 4 }}>{ev.metadata}</strong></>
+                        }
+                      </span>
                     )}
+                    {ev.eventType === "SMS_SENT_AGENT" && (
+                      <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <SmsOutlinedIcon style={{ fontSize: 13, color: "#0891b2" }} />
+                        {isPilote
+                          ? <><strong>{ev.metadata}</strong></>
+                          : <>Destinataire (agent) : <strong style={{ marginLeft: 4 }}>{ev.metadata}</strong></>
+                        }
+                      </span>
+                    )}
+                    {!["AFFECTED", "TRANSMITTED", "REJECTED", "MAIL_SENT_AGENT", "MAIL_SENT_CLIENT", "SMS_SENT_AGENT", "SMS_SENT_CLIENT"].includes(ev.eventType) && ev.metadata}
                   </div>
                 )}
               </div>

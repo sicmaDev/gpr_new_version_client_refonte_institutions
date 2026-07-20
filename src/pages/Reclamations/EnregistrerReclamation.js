@@ -766,7 +766,7 @@ const EnregistrerReclamation = (props) => {
   };
 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e, onSuccess = null) => {
     e.preventDefault();
     setShowSmsBox(false);
     setOpen(false);
@@ -824,11 +824,12 @@ const EnregistrerReclamation = (props) => {
 
       props.etat2Changed(true);
       if (mode === 1) {
-        addClaimApi(formData, props).then(() => {
+        addClaimApi(formData, props).then((savedClaim) => {
           handleCancel(e);
           props.resetWhatsapp();
           setCurrentStep(0);
           setActiveTab("new");
+          if (onSuccess && savedClaim) onSuccess(savedClaim);
         });
       } else {
         addClaimApiOffline(claim, props).then(() => {
@@ -1523,35 +1524,44 @@ const EnregistrerReclamation = (props) => {
     element.createdAtFormated = createdAt;
   });
 
-  const sendSms = async (e) => {
+  const sendSms = (e) => {
     e.preventDefault();
     if (props.phone !== "" && props.phone) {
-      await sleep(3000);
-      props.etat2Changed(true);
-      send({ phone: cleanPhoneNumber3(props.phone), message: smsToSend }).then(({ data }) => {
-        if (props.email && props.email !== "") {
-          notify("Super - SMS et Email envoyé au client avec succès ", "success");
-        } else {
-          notify("Super - SMS envoyé", "success");
-        }
-      }).catch((err) => {
-        notify("Oups - SMS non envoyé", "error");
-      }).finally(() => {
-        if (props.email && props.email !== "") {
-          sendEmail({
-            email: props.email,
-            subject: "Accusé de réception - Votre réclamation a bien été enregistrée",
-            message: smsToSend
-          }).then(() => {
-            // SMS déjà notifié avant
-          }).catch(() => {
-            notify("Oups - Email non envoyé", "error");
-          }).finally(() => {
-            handleSubmit(e);
-            KTApp.unblockPage();
+      KTApp.blockPage({ overlayColor: "#000000", type: "v2", state: "danger", message: "Enregistrement en cours..." });
+      // Sauvegarder d'abord, puis envoyer SMS/mail avec le vrai claimId
+      handleSubmit(e, async (savedClaim) => {
+        const claimId = savedClaim?.id ?? null;
+        const claimCode = savedClaim?.code ?? null;
+        try {
+          await send({
+            phone: cleanPhoneNumber3(props.phone),
+            message: smsToSend,
+            claimId,
+            claimCode,
+            claimType: "CLAIM",
+            senderName: user?.firstAndLastName || null,
+            senderEmail: user?.email || null,
+            clientName: props.lastname || null,
           });
-        } else {
-          handleSubmit(e);
+          if (props.email && props.email !== "") {
+            await sendEmail({
+              email: props.email,
+              subject: "Accusé de réception - Votre réclamation a bien été enregistrée",
+              message: smsToSend,
+              claimId,
+              claimCode,
+              claimType: "CLAIM",
+              senderName: user?.firstAndLastName || null,
+              senderEmail: user?.email || null,
+              clientName: props.lastname || null,
+            });
+            notify("Super - SMS et Email envoyé au client avec succès", "success");
+          } else {
+            notify("Super - SMS envoyé", "success");
+          }
+        } catch (err) {
+          notify("Oups - SMS non envoyé", "error");
+        } finally {
           KTApp.unblockPage();
         }
       });
@@ -1928,14 +1938,14 @@ const EnregistrerReclamation = (props) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {props.existingClaims.map((claim, index) => {
                 const STATUS_CFG = {
-                  SAVED:        { bg: '#dbeafe', color: '#1d4ed8', label: 'À traiter' },
-                  AFFECTED:     { bg: '#fef9c3', color: '#854d0e', label: 'Affectée' },
+                  SAVED: { bg: '#dbeafe', color: '#1d4ed8', label: 'À traiter' },
+                  AFFECTED: { bg: '#fef9c3', color: '#854d0e', label: 'Affectée' },
                   TO_APPROUVED: { bg: '#fef3c7', color: '#92400e', label: 'À approuver' },
                   DESAPPROUVED: { bg: '#fee2e2', color: '#991b1b', label: 'Désapprouvée' },
-                  TREAT:        { bg: '#dcfce7', color: '#166534', label: 'Traitée' },
-                  SATISFIED:    { bg: '#dcfce7', color: '#166534', label: 'Satisfait' },
-                  UNSATISFIED:  { bg: '#fee2e2', color: '#991b1b', label: 'Non satisfait' },
-                  CLASSED:      { bg: '#f3e8ff', color: '#6b21a8', label: 'Classée' },
+                  TREAT: { bg: '#dcfce7', color: '#166534', label: 'Traitée' },
+                  SATISFIED: { bg: '#dcfce7', color: '#166534', label: 'Satisfait' },
+                  UNSATISFIED: { bg: '#fee2e2', color: '#991b1b', label: 'Non satisfait' },
+                  CLASSED: { bg: '#f3e8ff', color: '#6b21a8', label: 'Classée' },
                 };
                 const sc = STATUS_CFG[claim.status] || { bg: '#f1f5f9', color: '#475569', label: claim.status };
                 return (
@@ -1948,12 +1958,12 @@ const EnregistrerReclamation = (props) => {
                     {/* Card body — grid 2 col */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '12px 14px' }}>
                       {[
-                        { label: 'Client',          value: claim.clientFirstAndLastName },
-                        { label: 'Téléphone',        value: claim.tel },
-                        { label: 'Objet',            value: claim.objet?.libelle },
-                        { label: 'Produit',          value: claim.product?.libelle },
+                        { label: 'Client', value: claim.clientFirstAndLastName },
+                        { label: 'Téléphone', value: claim.tel },
+                        { label: 'Objet', value: claim.objet?.libelle },
+                        { label: 'Produit', value: claim.product?.libelle },
                         { label: 'Point de service', value: claim.servicePoint?.libelle },
-                        { label: 'Date réception',   value: claim.receiptDateTime },
+                        { label: 'Date réception', value: claim.receiptDateTime },
                       ].map(({ label, value }) => (
                         <div key={label} style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px' }}>
                           <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 3 }}>{label}</div>
@@ -2341,7 +2351,7 @@ const EnregistrerReclamation = (props) => {
                 value={props.dossierimf}
                 onChange={(e) => props.dossierimfChanged(e.target.value)}
               />
-              <label htmlFor="dossierimf" className="active">Dossier IMF</label>
+              <label htmlFor="dossierimf" className="active">Dossier Client</label>
             </div>
           </div>
         )}

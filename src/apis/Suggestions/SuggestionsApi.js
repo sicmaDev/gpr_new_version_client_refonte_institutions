@@ -121,25 +121,24 @@ export const addSuggestionApi = async (data, props) => {
     //     notify("Erreur - Veuillez réessayer!", "error");
     //     // console.log("erreur", error)
     // });
+    let savedSuggestion = null;
     try {
         const response = await axios(config);
 
         props.etat2Changed(false);
 
         if (response.data.status) {
+            savedSuggestion = response.data.content ?? null;
             notify("Bravo - Suggestion ajoutée", "success");
             listeByStatut(props, "TEMP_SAVED");
         } else {
             notify("Erreur - Veuillez réessayer!", "error");
         }
-
-        return response; // 🔥 important : on retourne la réponse
-
     } catch (error) {
         props.etat2Changed(false);
         notify("Erreur - Veuillez réessayer!", "error");
-        throw error; // 🔥 on renvoie l'erreur pour pouvoir la gérer
     }
+    return savedSuggestion;
 }
 
 export const treatSuggestionApi = async (data, props) => {

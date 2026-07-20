@@ -320,6 +320,7 @@ const ListeReclamations = (props) => {
   const [extraContent, setExtraContent] = useState("");
   const [extraFileLoading, setExtraFileLoading] = useState(false);
   const [claim_id, setClaimId] = useState(null);
+  const [detailVisible, setDetailVisible] = useState(false);
 
   const clearFiles = () => {
     if (inputRef.current) {
@@ -330,10 +331,11 @@ const ListeReclamations = (props) => {
 
   const history = useHistory();
 
-  // Chargement depuis l'URL quand on arrive directement sur /reclamations/liste/:code
+  // Chargement depuis l'URL ou sessionStorage quand on arrive directement sur /reclamations/liste/:code
   useEffect(() => {
-    const code = props.match?.params?.code;
-    if (code && code !== "all") {
+    const urlCode = props.match?.params?.code;
+    const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_rec_code');
+    if (code) {
       axios({
         method: "get",
         url: HOST + "api/v1/claim/" + code + "/details",
@@ -376,6 +378,7 @@ const ListeReclamations = (props) => {
           setCurrentData(data);
           props.extrasChanged(data.extras ?? []);
           setClaimId(data.id);
+          setDetailVisible(true);
           getFillesApi(data.id, props);
           getClaimAudioApi(data.id, props);
           loadHistorique(data.id);
@@ -778,7 +781,8 @@ const ListeReclamations = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     clearComponentState();
-    history.push("/reclamations/liste/" + data.code);
+    sessionStorage.setItem('gpr_rec_code', data.code);
+    setDetailVisible(true);
     setClaimId(data.id);
 
     if (mode === 1) {
@@ -2533,7 +2537,7 @@ const ListeReclamations = (props) => {
      printRecu, printToWord, handleInterne/Externe,
      conditions H14/PILOTE/DE, session PV, etc.
   ══════════════════════════════════════════════════════ */
-  if (props.match?.params?.code && props.match.params.code !== "all") {
+  if (detailVisible) {
 
     /* ─ Boutons d'en-tête ─ */
     const headerActionsBtns = (
@@ -2640,7 +2644,7 @@ const ListeReclamations = (props) => {
         )}
 
         <TraitementShell
-          onBack={() => history.push("/reclamations/liste/all")}
+          onBack={() => { sessionStorage.removeItem('gpr_rec_code'); setDetailVisible(false); history.push("/reclamations/liste/all"); }}
           codeClient={props.codeClient || props.code}
           status={props.status}
           risqueLevel={props.selectedItem?.objet?.risqueLevel}
@@ -2989,19 +2993,7 @@ const ListeReclamations = (props) => {
                     </button>
                     {histAccordions.flux && (
                       <div style={{ borderTop: "1px solid #f1f5f9", padding: "8px 12px" }}>
-                        <HistoriqueTimeline
-                          recorded_at={props.recorded_at}
-                          created_by={props.created_by}
-                          transmitted={props.selectedItem?.transmitted != null ? "" + props.selectedItem.transmitted : ""}
-                          transmittedBy={props.selectedItem?.transmittedBy?.firstAndLastName}
-                          transmittedTo={props.selectedItem?.transmittedTo?.firstAndLastName}
-                          handled_by={props.handled_by}
-                          assigned_by={props.selectedItem?.treatmentAffectedBy?.firstAndLastName}
-                          assignedAt={props.selectedItem?.affectedAt}
-                          solution={Array.isArray(props.solution) ? props.solution : []}
-                          formatDate={formatDate}
-                          formatDate3={formatDate3}
-                        />
+                        <HistoriqueTimeline claimId={claim_id} />
                       </div>
                     )}
                   </div>

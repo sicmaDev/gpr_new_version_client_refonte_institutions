@@ -35,6 +35,17 @@ const LIST_DELETE_CLAIM_API = HOST + "api/v1/claim/list/deleted"
 const RESTORE_CLAIM_API = HOST + "api/v1/claim/restore/%s"
 const DELETE_ONLY_CLAIM_API = HOST + "api/v1/claim/delete/{id}"
 const CHECK_PHONE_API = HOST + "api/v1/claim/checkPhone/%s"
+const CLAIM_EVENTS_API = HOST + "api/v1/claim-events/"
+
+export const getClaimEvents = (claimId) => {
+    return axios.get(CLAIM_EVENTS_API + claimId, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    });
+}
 
 export const listeTousStatuts = async (props) => {
 
@@ -254,11 +265,12 @@ export const addClaimApi = async (data, props) => {
         },
         data: data
     };
+    let savedClaim = null;
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
             if (response.data.status) {
-                // console.log("reponse1", response)
+                savedClaim = response.data.content ?? null;
                 notify("Bravo - Réclamation ajoutée", "success");
                 listeByStatut(props, "TEMP_SAVED")
             } else {
@@ -269,8 +281,8 @@ export const addClaimApi = async (data, props) => {
         .catch(function (error) {
             props.etat2Changed(false)
             notify("Erreur - Veuillez réessayer!", "error");
-            // console.log("rsponse1 ERREUR", error)
         });
+    return savedClaim;
 }
 
 export const addExtraClaimApi = async (data, props) => {

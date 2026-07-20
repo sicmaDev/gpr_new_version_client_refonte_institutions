@@ -300,7 +300,7 @@ const EnregistrerSuggestion = (props) => {
         ) : <></>;
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e, onSuccess = null) => {
         e.preventDefault();
         setShowSmsBox(false);
         setOpen(false);
@@ -333,7 +333,11 @@ const EnregistrerSuggestion = (props) => {
             });
             props.etat2Changed(true);
             if (mode === 1) {
-                addSuggestionApi(formData, props).then(() => { clearComponentState(); props.resetWhatsapp(); });
+                addSuggestionApi(formData, props).then((savedSuggestion) => {
+                    clearComponentState();
+                    props.resetWhatsapp();
+                    if (onSuccess && savedSuggestion) onSuccess(savedSuggestion);
+                });
             } else {
                 addSuggestionApiOffline(claim, props).then(() => { clearComponentState(); props.resetWhatsapp(); });
             }
@@ -403,31 +407,48 @@ const EnregistrerSuggestion = (props) => {
         setAudioRecordings(prev => prev.filter((_, i) => i !== index));
     };
 
-    const sendSms = async (e) => {
+    const sendSms = (e) => {
         e.preventDefault();
         if (props.phone !== "" && props.phone) {
-            await sleep(3000);
-            props.etat2Changed(true);
-            send({ phone: cleanPhoneNumber3(props.phone), message: smsToSend })
-                .then(() => {
-                    notify(props.email ? "SMS et Email envoye au client" : "SMS envoye", "success");
-                })
-                .catch(() => { notify("SMS non envoye", "error"); })
-                .finally(() => {
+            KTApp.blockPage({ overlayColor: "#000000", type: "v2", state: "danger", message: "Enregistrement en cours..." });
+            handleSubmit(e, async (savedSuggestion) => {
+                const suggestionId = savedSuggestion?.id ?? null;
+                const suggestionCode = savedSuggestion?.code ?? null;
+                try {
+                    await send({
+                        phone: cleanPhoneNumber3(props.phone),
+                        message: smsToSend,
+                        claimId: suggestionId,
+                        claimCode: suggestionCode,
+                        claimType: "SUGGESTION",
+                        senderName: user?.firstAndLastName || null,
+                        senderEmail: user?.email || null,
+                        clientName: props.lastname || null,
+                    });
                     if (props.email && props.email !== "") {
-                        sendEmail({
+                        await sendEmail({
                             email: props.email,
-                            subject: "Accuse de reception - Votre suggestion a bien ete enregistree",
-                            message: smsToSend
-                        }).catch(() => { notify("Email non envoye", "error"); })
-                            .finally(() => { handleSubmit(e); KTApp.unblockPage(); });
+                            subject: "Accusé de réception - Votre suggestion a bien été enregistrée",
+                            message: smsToSend,
+                            claimId: suggestionId,
+                            claimCode: suggestionCode,
+                            claimType: "SUGGESTION",
+                            senderName: user?.firstAndLastName || null,
+                            senderEmail: user?.email || null,
+                            clientName: props.lastname || null,
+                        });
+                        notify("Super - SMS et Email envoyé au client avec succès", "success");
                     } else {
-                        handleSubmit(e);
-                        KTApp.unblockPage();
+                        notify("Super - SMS envoyé", "success");
                     }
-                });
+                } catch (err) {
+                    notify("Oups - SMS non envoyé", "error");
+                } finally {
+                    KTApp.unblockPage();
+                }
+            });
         } else {
-            notify("Numero de telephone incorrect", "error");
+            notify("Numéro de téléphone incorrect", "error");
         }
     };
 

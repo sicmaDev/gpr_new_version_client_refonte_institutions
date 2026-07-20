@@ -59,11 +59,13 @@ const CompteDetails = (props) => {
 
   const sessionUser = JSON.parse(loadItemFromSessionStorage("app-user")) || {};
   const addR = sessionUser.additionalRole;
-  const roleLabel = addR === "PILOTE"
-    ? "Pilote Principal"
-    : addR === "DE"
-      ? "Directeur / Directrice (Executif, General,...)"
-      : "Aucun";
+  const isRa = sessionUser.isRa || sessionUser.ra;
+  const roleLabels = [
+    addR === "PILOTE" ? "Pilote Principal" : null,
+    addR === "DE"     ? "Directeur / Directrice" : null,
+    isRa              ? "Responsable d'Agence" : null,
+  ].filter(Boolean);
+  const roleLabel = roleLabels.length > 0 ? roleLabels.join(" · ") : "Aucun";
 
   useEffect(() => {
     props.posteChanged(sessionUser.posteDto.libelle);

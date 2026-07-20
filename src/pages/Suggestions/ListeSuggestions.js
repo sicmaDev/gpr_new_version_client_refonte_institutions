@@ -165,6 +165,7 @@ const ListeSuggestions = (props) => {
   let hbt = (user.posteDto.habilitations).split(',');
   let addR = (user.additionalRole);
 
+  const [detailVisible, setDetailVisible] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [viewMode, setViewMode] = useState("list");
@@ -174,10 +175,11 @@ const ListeSuggestions = (props) => {
   const handleClickOpen = () => { setOpen(true); };
   const history = useHistory();
 
-  // Chargement depuis l'URL quand on arrive directement sur /suggestions/liste/:code
+  // Chargement depuis l'URL ou sessionStorage quand on arrive directement sur /suggestions/liste/:code
   useEffect(() => {
-    const code = props.match?.params?.code;
-    if (code && code !== "all") {
+    const urlCode = props.match?.params?.code;
+    const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_sug_code');
+    if (code) {
       axios({
         method: "get",
         url: HOST + "api/v1/suggestion/" + code + "/details",
@@ -211,6 +213,7 @@ const ListeSuggestions = (props) => {
           props.extrasChanged(data.extras ?? []);
           props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
           props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
+          setDetailVisible(true);
           getFillesApi(data.id, props);
           getSuggeAudioApi(data.id, props);
         }
@@ -476,7 +479,8 @@ const ListeSuggestions = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     clearComponentState();
-    history.push("/suggestions/liste/" + data.code);
+    sessionStorage.setItem('gpr_sug_code', data.code);
+    setDetailVisible(true);
 
     if (mode === 1) {
       props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");
@@ -1229,7 +1233,7 @@ const ListeSuggestions = (props) => {
 
 
 
-  if (props.match?.params?.code && props.match.params.code !== "all") {
+  if (detailVisible) {
     const filesCount = props.selectedItemFiles?.length ?? 0;
     const audiosCount = props.selectedItemAudio?.length ?? 0;
     const extrasCount = props.extras?.filter(e => e.contenu)?.length ?? 0;
@@ -1256,7 +1260,7 @@ const ListeSuggestions = (props) => {
       <>
         <audio ref={audioRef} src={currentAudio} hidden />
         <TraitementShell
-          onBack={() => history.push("/suggestions/liste/all")}
+          onBack={() => { sessionStorage.removeItem('gpr_sug_code'); setDetailVisible(false); history.push("/suggestions/liste/all"); }}
           codeClient={props.codeClient || props.code}
           status={props.status}
           conversionWarning={warningConvert || null}
