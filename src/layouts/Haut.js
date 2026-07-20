@@ -29,16 +29,7 @@ import logo from '../assets/images/logo_gpr.jpg';
 import Footer from './Footer';
 import { APP_OWNER, APP_OWNER_WEBSITE } from '../Utils/globals';
 import { licenseInfo } from '../apis/LoginApi';
-import Popover from '@mui/material/Popover';
-import { useThemeColors, getPagePrimary } from '../context/ThemeColorsContext';
-import { updateTheme } from '../apis/ThemeApi';
-
-const MoonIcon = ({ size = 20, color = 'white' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-  </svg>
-);
-
+import { useThemeColors } from '../context/ThemeColorsContext';
 
 
 const drawerWidth = 250;
@@ -150,30 +141,7 @@ export const Haut = (props) => {
   }, []);
   
 
-  const { colors, setColors } = useThemeColors();
-  const [themeAnchor, setThemeAnchor] = useState(null);
-  const [tempColors, setTempColors] = useState({ sidebarColor: '#005081', topbarColor: '#005081' });
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState(false);
-
-  const handleOpenTheme = (e) => {
-    setTempColors({ ...colors });
-    setSaveError(false);
-    setThemeAnchor(e.currentTarget);
-  };
-
-  const handleSaveTheme = async () => {
-    setSaving(true);
-    setSaveError(false);
-    try {
-      await updateTheme({ id: user.id, sidebarColor: tempColors.sidebarColor, topbarColor: tempColors.topbarColor });
-      setColors(tempColors);
-      setThemeAnchor(null);
-    } catch {
-      setSaveError(true);
-    }
-    setSaving(false);
-  };
+  const { colors } = useThemeColors();
 
   const [open, setOpen] = React.useState(true);
   const toggleDrawer = () => {
@@ -259,11 +227,6 @@ export const Haut = (props) => {
 
 
                   <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
-                    <Tooltip title="Personnaliser les couleurs">
-                      <IconButton size="small" onClick={handleOpenTheme} sx={{ mr: 0.5 }}>
-                        <MoonIcon size={20} color="white" />
-                      </IconButton>
-                    </Tooltip>
                     <Tooltip title="Compte">
                       <IconButton
                         onClick={handleClick}
@@ -475,12 +438,6 @@ export const Haut = (props) => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textAlign: 'center' }}>
                     {contenuMode}
 
-                    <Tooltip title="Personnaliser les couleurs">
-                      <IconButton size="small" onClick={handleOpenTheme}>
-                        <MoonIcon size={20} color="white" />
-                      </IconButton>
-                    </Tooltip>
-
                     <Tooltip title="Mon compte">
                       <IconButton
                         onClick={handleClick}
@@ -653,66 +610,6 @@ export const Haut = (props) => {
         
       </div>
 
-      <Popover
-        open={Boolean(themeAnchor)}
-        anchorEl={themeAnchor}
-        onClose={() => setThemeAnchor(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{ elevation: 3, sx: { borderRadius: 2, minWidth: 270 } }}
-      >
-        <div style={{ padding: '18px 20px' }}>
-          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16, color: '#1e293b' }}>
-            Personnaliser les couleurs
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <span style={{ fontSize: 13, color: '#374151' }}>Barre latérale</span>
-              <input
-                type="color"
-                value={tempColors.sidebarColor}
-                onChange={e => setTempColors(c => ({ ...c, sidebarColor: e.target.value }))}
-                style={{ width: 44, height: 32, border: '1px solid #e2e8f0', cursor: 'pointer', borderRadius: 6, padding: 2 }}
-              />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <span style={{ fontSize: 13, color: '#374151' }}>Barre supérieure</span>
-              <input
-                type="color"
-                value={tempColors.topbarColor}
-                onChange={e => setTempColors(c => ({ ...c, topbarColor: e.target.value }))}
-                style={{ width: 44, height: 32, border: '1px solid #e2e8f0', cursor: 'pointer', borderRadius: 6, padding: 2 }}
-              />
-            </div>
-          </div>
-          {tempColors.sidebarColor.toLowerCase() !== tempColors.topbarColor.toLowerCase() && (
-            <div style={{ marginTop: 14, padding: '8px 12px', borderRadius: 8, background: '#F8FAFC', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 6, background: getPagePrimary(tempColors), flexShrink: 0 }} />
-              <span style={{ fontSize: 12, color: '#64748b' }}>Couleur résultante pour les autres pages</span>
-            </div>
-          )}
-          {saveError && (
-            <div style={{ marginTop: 12, fontSize: 12, color: '#DC2626', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 6, padding: '6px 10px' }}>
-              Erreur lors de l'enregistrement. Réessayez.
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button
-              onClick={() => setThemeAnchor(null)}
-              style={{ flex: 1, padding: '7px 0', fontSize: 13, borderRadius: 6, border: '1px solid #e2e8f0', cursor: 'pointer', background: 'white', color: '#374151' }}
-            >
-              Annuler
-            </button>
-            <button
-              onClick={handleSaveTheme}
-              disabled={saving}
-              style={{ flex: 1, padding: '7px 0', fontSize: 13, borderRadius: 6, border: 'none', cursor: saving ? 'wait' : 'pointer', background: getPagePrimary(tempColors), color: 'white', fontWeight: 600 }}
-            >
-              {saving ? '...' : 'Enregistrer'}
-            </button>
-          </div>
-        </div>
-      </Popover>
     </>
 
 

@@ -47,21 +47,28 @@ const ThemeColorsContext = createContext({ colors: DEFAULT_COLORS, setColors: ()
 
 export const ThemeColorsProvider = ({ children }) => {
     const [colors, setColorsState] = useState(() => {
-        // 1. Try session storage (current authenticated session)
+        // Si module appearance actif → charger les couleurs institution
         try {
-            const raw = loadItemFromSessionStorage('app-user');
-            if (raw) {
-                const user = JSON.parse(raw);
-                if (user?.sidebarColor) {
-                    return { sidebarColor: user.sidebarColor, topbarColor: user.topbarColor || DEFAULT_COLOR };
+            const modules = JSON.parse(sessionStorage.getItem('app-modules') || '[]');
+            if (Array.isArray(modules) && modules.includes('appearance')) {
+                const raw = sessionStorage.getItem('app-appearance');
+                if (raw) {
+                    const appearance = JSON.parse(raw);
+                    if (appearance?.sidebarColor) {
+                        return { sidebarColor: appearance.sidebarColor, topbarColor: appearance.topbarColor || DEFAULT_COLOR };
+                    }
+                }
+                // Module actif mais pas encore configuré → fallback localStorage
+                const saved = localStorage.getItem('app-appearance');
+                if (saved) {
+                    const appearance = JSON.parse(saved);
+                    if (appearance?.sidebarColor) {
+                        return { sidebarColor: appearance.sidebarColor, topbarColor: appearance.topbarColor || DEFAULT_COLOR };
+                    }
                 }
             }
         } catch {}
-        // 2. Fall back to localStorage (persists across sessions for pre-auth pages)
-        try {
-            const saved = localStorage.getItem(LS_KEY);
-            if (saved) return { sidebarColor: saved, topbarColor: saved };
-        } catch {}
+        // Pas de module appearance → couleur GPR par défaut
         return DEFAULT_COLORS;
     });
 

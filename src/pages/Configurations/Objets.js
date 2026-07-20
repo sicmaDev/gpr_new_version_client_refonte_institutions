@@ -139,7 +139,7 @@ const Objets = (props) => {
             render: (value, onChange) => (
                 <input type="number" min={0} max={MAX_SUBJECT_DURATION} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder="Ex: 10"
                     style={{ width: "100%", boxSizing: "border-box", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 }}
-                    onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                    onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
             ),
         },
     ];
@@ -187,7 +187,7 @@ const Objets = (props) => {
                 <AddDuplicateFormModal open={addModalOpen} onClose={() => setAddModalOpen(false)} title="Ajouter des objets de réclamation" fields={addFields} onSubmit={handleModalSubmit} loading={addLoading} maxWidth="md" addLabel="Ajouter un autre objet" />
 
                 <Dialog open={editModalOpen} onClose={() => { if (!editLoading) { setEditModalOpen(false); clearComponentState(); } }} fullWidth maxWidth="sm" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
-                    <div style={{ background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><EditIcon style={{ color: "#fff", fontSize: 20 }} /></div>
                             <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Modifier l'objet</div><div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>{editForm.libelle}</div></div>
@@ -199,13 +199,13 @@ const Objets = (props) => {
                             <div>
                                 <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Intitulé <span style={{ color: "#ef4444" }}>*</span></label>
                                 <input value={editForm.libelle} onChange={(e) => { setEditForm(p => ({ ...p, libelle: e.target.value })); setEditErrors(p => ({ ...p, libelle: "" })); }} placeholder="Ex: Rançonnement"
-                                    style={{ ...selectStyle(editErrors.libelle) }} onFocus={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#e2e8f0"; }} />
+                                    style={{ ...selectStyle(editErrors.libelle) }} onFocus={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "var(--gpr-primary)"; }} onBlur={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#e2e8f0"; }} />
                                 {editErrors.libelle && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.libelle}</div>}
                             </div>
                             <div style={{ gridColumn: "1 / -1" }}>
                                 <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Description</label>
                                 <textarea value={editForm.description} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" rows={3}
-                                    style={{ width: "100%", boxSizing: "border-box", resize: "vertical", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "9px 12px", fontSize: 13, outline: "none", background: "#fff", color: "#1e293b", whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "inherit" }} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                    style={{ width: "100%", boxSizing: "border-box", resize: "vertical", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "9px 12px", fontSize: 13, outline: "none", background: "#fff", color: "#1e293b", whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "inherit" }} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                             </div>
                             <div>
                                 <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Niveau de gravité <span style={{ color: "#ef4444" }}>*</span></label>
@@ -230,7 +230,7 @@ const Objets = (props) => {
                             <div>
                                 <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Délai (jours) <span style={{ color: "#ef4444" }}>*</span></label>
                                 <input type="number" min={0} max={MAX_SUBJECT_DURATION} value={editForm.processingTime} onChange={(e) => { setEditForm(p => ({ ...p, processingTime: e.target.value })); setEditErrors(p => ({ ...p, processingTime: "" })); }} placeholder={`Max ${MAX_SUBJECT_DURATION}`}
-                                    style={{ ...selectStyle(editErrors.processingTime) }} onFocus={(e) => { if (!editErrors.processingTime) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!editErrors.processingTime) e.target.style.borderColor = "#e2e8f0"; }} />
+                                    style={{ ...selectStyle(editErrors.processingTime) }} onFocus={(e) => { if (!editErrors.processingTime) e.target.style.borderColor = "var(--gpr-primary)"; }} onBlur={(e) => { if (!editErrors.processingTime) e.target.style.borderColor = "#e2e8f0"; }} />
                                 {editErrors.processingTime && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.processingTime}</div>}
                             </div>
                         </div>
@@ -252,7 +252,7 @@ const Objets = (props) => {
                     <DialogContent sx={{ px: 3, pt: 3, pb: 1 }}><p style={{ margin: 0, fontSize: 14, color: "#334155", lineHeight: 1.6 }}>Confirmez-vous la suppression de <strong style={{ color: "#0f172a" }}>{deleteConfirm.item?.libelle}</strong> ? Cette action est irréversible.</p></DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", gap: 10 }}>
                         <BlockButton disabled={deleteConfirm.loading}><Button onClick={() => setDeleteConfirm({ open: false, item: null, loading: false })} disabled={deleteConfirm.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button></BlockButton>
-                        <BlockButton disabled={deleteConfirm.loading}><LoadingButton onClick={handleDelete} loading={deleteConfirm.loading} loadingPosition="start" startIcon={<DeleteIcon style={{ fontSize: 15 }} />} variant="contained" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #991b1b, #ef4444)", "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Supprimer</LoadingButton></BlockButton>
+                        <BlockButton disabled={deleteConfirm.loading}><LoadingButton onClick={handleDelete} loading={deleteConfirm.loading} loadingPosition="start" startIcon={<DeleteIcon style={{ fontSize: 15 }} />} variant="contained" color="error" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #991b1b, #ef4444)", "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Supprimer</LoadingButton></BlockButton>
                     </DialogActions>
                 </Dialog>
 

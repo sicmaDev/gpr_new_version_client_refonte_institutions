@@ -1,6 +1,16 @@
 import { licenseInfo } from "../apis/LoginApi";
 import { loadItemFromSessionStorage } from "./utils";
 
+export const hasModule = (moduleName) => {
+    try {
+        const raw = sessionStorage.getItem('app-modules');
+        const modules = JSON.parse(raw || '[]');
+        return Array.isArray(modules) && modules.includes(moduleName);
+    } catch {
+        return false;
+    }
+};
+
 export const isLicenseExpired = () => {
     let appLicenseData = loadItemFromSessionStorage("app-license") !== undefined ? loadItemFromSessionStorage("app-license"): undefined
     // console.log("isLicenseExpired");

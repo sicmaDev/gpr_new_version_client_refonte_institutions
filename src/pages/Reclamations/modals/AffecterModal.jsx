@@ -31,7 +31,7 @@ const AffecterModal = ({
       PaperProps={{ style: { borderRadius: 16, boxShadow: "0 20px 60px rgba(0,0,0,0.15)" } }}
     >
       {/* Header coloré */}
-      <div style={{ background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: 10, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <PersonAddIcon style={{ color: "white", fontSize: 20 }} />
@@ -97,7 +97,7 @@ const AffecterModal = ({
             loading={loading}
             loadingPosition="end"
             variant="contained"
-            style={{ flex: 2, borderRadius: 10, textTransform: "none", fontWeight: 700, fontSize: 13.5, background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)", boxShadow: "0 4px 12px rgba(30,33,136,0.3)" }}
+            style={{ flex: 2, borderRadius: 10, textTransform: "none", fontWeight: 700, fontSize: 13.5, background: "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)", boxShadow: "0 4px 12px rgba(30,33,136,0.3)" }}
           >
             <span>{isReaffect ? "Confirmer la réaffectation" : "Confirmer l'affectation"}</span>
           </LoadingButton>

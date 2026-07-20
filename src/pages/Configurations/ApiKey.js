@@ -249,7 +249,7 @@ const ApiKey = (props) => {
             >
                 {/* Header */}
                 <div style={{
-                    background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)",
+                    background: "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)",
                     padding: "18px 24px",
                     display: "flex", alignItems: "center", justifyContent: "space-between",
                 }}>
@@ -370,7 +370,7 @@ const ApiKey = (props) => {
             </div>
 
             <Dialog open={confirmModal.open} onClose={() => { if (!confirmModal.loading) setConfirmModal({ open: false, id: null, isDeleted: false, loading: false }); }} fullWidth maxWidth="xs" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
-                <div style={{ background: confirmModal.isDeleted ? "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)" : "linear-gradient(135deg, #b45309, #f59e0b)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ background: confirmModal.isDeleted ? "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)" : "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             {confirmModal.isDeleted ? <DeleteIcon style={{ color: "#fff", fontSize: 20 }} /> : <AutorenewIcon style={{ color: "#fff", fontSize: 20 }} />}
@@ -386,7 +386,7 @@ const ApiKey = (props) => {
                 </DialogContent>
                 <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
                     <Button onClick={() => setConfirmModal({ open: false, id: null, isDeleted: false, loading: false })} disabled={confirmModal.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
-                    <LoadingButton onClick={handleConfirmAction} loading={confirmModal.loading} loadingPosition="start" startIcon={confirmModal.isDeleted ? <DeleteIcon style={{ fontSize: 15 }} /> : <AutorenewIcon style={{ fontSize: 15 }} />} variant="contained"
+                    <LoadingButton onClick={handleConfirmAction} loading={confirmModal.loading} loadingPosition="start" startIcon={confirmModal.isDeleted ? <DeleteIcon style={{ fontSize: 15 }} /> : <AutorenewIcon style={{ fontSize: 15 }} />} variant="contained" color={confirmModal.isDeleted ? "error" : "primary"}
                         sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: confirmModal.isDeleted ? "linear-gradient(135deg, #991b1b, #ef4444)" : "linear-gradient(135deg, #b45309, #f59e0b)", "&:hover": { background: confirmModal.isDeleted ? "linear-gradient(135deg, #7f1d1d, #dc2626)" : "linear-gradient(135deg, #92400e, #d97706)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
                         {confirmModal.isDeleted ? "Supprimer" : "Régénérer"}
                     </LoadingButton>

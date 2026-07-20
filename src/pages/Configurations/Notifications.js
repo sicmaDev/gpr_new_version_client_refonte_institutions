@@ -352,7 +352,7 @@ const Notifications = (props) => {
                         <Button onClick={() => setRemoveConfirm({ open: false, id: null, loading: false })} disabled={removeConfirm.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
                     </BlockButton>
                     <BlockButton disabled={removeConfirm.loading}>
-                        <LoadingButton onClick={() => handleDelete(removeConfirm.id)} loading={removeConfirm.loading} loadingPosition="start" startIcon={<PersonRemoveIcon style={{ fontSize: 15 }} />} variant="contained"
+                        <LoadingButton onClick={() => handleDelete(removeConfirm.id)} loading={removeConfirm.loading} loadingPosition="start" startIcon={<PersonRemoveIcon style={{ fontSize: 15 }} />} variant="contained" color="error"
                             sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #991b1b, #ef4444)", "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
                             Retirer
                         </LoadingButton>

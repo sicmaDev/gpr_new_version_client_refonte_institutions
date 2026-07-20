@@ -40,6 +40,7 @@ import Notifications from '../pages/Configurations/Notifications';
 import Solutions from '../pages/Configurations/Solutions';
 import Categories from '../pages/Configurations/Categories';
 import Institution from '../pages/Configurations/Institution';
+import Apparence from '../pages/Configurations/Apparence';
 import Email from '../pages/Configurations/Email';
 import Sms from '../pages/Configurations/Sms';
 import Bot from '../pages/Configurations/Bot';
@@ -109,6 +110,7 @@ export default function Contenu() {
 
                     {/* configurations */}
                     <Route path="/configurations/institution" component={Institution} />
+                    <Route path="/configurations/apparence" component={Apparence} />
                     <Route path="/configurations/langues" component={Langues} />
                     <Route path="/configurations/categories" component={Categories} />
                     <Route path="/configurations/objets" component={Objets} />

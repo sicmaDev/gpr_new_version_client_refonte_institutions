@@ -339,6 +339,7 @@ const Corbeille = (props) => {
                 loadingPosition="start"
                 startIcon={<DeleteIcon style={{ fontSize: 15 }} />}
                 variant="contained"
+                color="error"
                 sx={{
                     textTransform: "none",
                     borderRadius: 2,

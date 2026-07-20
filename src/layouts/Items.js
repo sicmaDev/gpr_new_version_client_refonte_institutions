@@ -54,6 +54,7 @@ import UploadIcon from '@mui/icons-material/Upload';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import GroupIcon from '@mui/icons-material/Group';
 import BusinessIcon from '@mui/icons-material/Business';
+import PaletteIcon from '@mui/icons-material/Palette';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import BackupIcon from '@mui/icons-material/Backup';
@@ -64,6 +65,7 @@ import { connect } from 'react-redux';
 import { authenticate } from '../redux/actions/LayoutActions';
 import { useHistory } from 'react-router-dom';
 import { useThemeColors, darkenColor } from '../context/ThemeColorsContext';
+import { hasModule } from '../Utils/license';
 
 // luminance helper — determines if the sidebar color is light or dark
 const getSidebarLuminance = (hex) => {
@@ -616,6 +618,15 @@ export const Items = (props) => {
                   <ListItemText primary="Institution" />
                 </ListItemButton>
               </NavLink>
+
+              {(addR === 'PILOTE' || addR === 'DE') && mode === 1 && hasModule('appearance') && (
+                <NavLink to="/configurations/apparence" activeClassName="hero" style={link}>
+                  <ListItemButton sx={sSx('/configurations/apparence')} className="lib">
+                    <ListItemIcon>{si(PaletteIcon, isActive('/configurations/apparence'))}</ListItemIcon>
+                    <ListItemText primary="Apparence" />
+                  </ListItemButton>
+                </NavLink>
+              )}
 
               <NavLink to="/configurations/pointsServices" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/pointsServices')} className="lib">

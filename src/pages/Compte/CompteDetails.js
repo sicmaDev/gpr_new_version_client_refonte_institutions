@@ -57,8 +57,15 @@ const CompteDetails = (props) => {
     ? JSON.parse(loadItemFromSessionStorage("app-mode"))
     : undefined;
 
+  const sessionUser = JSON.parse(loadItemFromSessionStorage("app-user")) || {};
+  const addR = sessionUser.additionalRole;
+  const roleLabel = addR === "PILOTE"
+    ? "Pilote Principal"
+    : addR === "DE"
+      ? "Directeur / Directrice (Executif, General,...)"
+      : "Aucun";
+
   useEffect(() => {
-    const sessionUser = JSON.parse(loadItemFromSessionStorage("app-user"));
     props.posteChanged(sessionUser.posteDto.libelle);
     props.idChanged(sessionUser.id);
     props.emailChanged(sessionUser.email);
@@ -131,6 +138,7 @@ const CompteDetails = (props) => {
           onChange={props.phoneChanged}
           error={props.errors?.phone}
         />
+        <Field label="Privilèges spécifiques" value={roleLabel} readOnly />
       </div>
 
       <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end" }}>

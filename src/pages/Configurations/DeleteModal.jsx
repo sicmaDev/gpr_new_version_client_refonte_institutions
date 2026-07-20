@@ -122,6 +122,7 @@ const DeleteModal = ({ open, loading = false, onClose, onConfirm }) => {
             loading={loading}
             disabled={!isFormValid}
             variant="contained"
+            color="error"
             startIcon={<Delete />}
             onClick={handleDeleteClick}
             sx={{ textTransform: 'none', borderRadius: 2, background: confirmStep ? '#b91c1c' : '#dc2626', fontWeight: 700, '&:hover': { background: '#991b1b' } }}

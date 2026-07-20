@@ -800,6 +800,7 @@ const PointsServices = (props) => {
                             loadingPosition="start"
                             startIcon={<DeleteIcon style={{ fontSize: 15 }} />}
                             variant="contained"
+                            color="error"
                             sx={{
                                 textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3,
                                 background: "linear-gradient(135deg, #991b1b, #ef4444)",

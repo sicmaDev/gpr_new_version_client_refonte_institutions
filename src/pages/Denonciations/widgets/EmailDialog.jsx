@@ -67,7 +67,7 @@ const EmailDialog = (props) => {
       PaperProps={{ style: { borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', overflow: 'hidden' } }}
     >
       {/* ── Header ── */}
-      <div style={{ background: 'linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: 'linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -118,11 +118,11 @@ const EmailDialog = (props) => {
           variant="contained"
           sx={{
             textTransform: 'none', borderRadius: 2, fontWeight: 700, px: 3,
-            background: 'linear-gradient(135deg, #1e2188, #3b3fd8)',
+            background: 'linear-gradient(135deg, var(--gpr-primary-dark), var(--gpr-primary))',
             color: '#fff',
             '&:hover': { background: 'linear-gradient(135deg, #1a1c6e, #1e2188)' },
             '&.MuiLoadingButton-loading': {
-              background: 'linear-gradient(135deg, #1e2188, #3b3fd8)',
+              background: 'linear-gradient(135deg, var(--gpr-primary-dark), var(--gpr-primary))',
               color: '#fff',
             },
             '& .MuiLoadingButton-loadingIndicator': { color: '#fff' },
