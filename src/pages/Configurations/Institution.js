@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { v4 as uuidv4 } from 'uuid';
 import { Box, Typography, Tooltip } from "@mui/material";
@@ -23,7 +23,7 @@ const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#4
 const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", border: hasError ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 });
 
 const selectStyles = (hasError) => ({
-    control: (base, state) => ({ ...base, minHeight: 40, borderRadius: 9, borderColor: hasError ? "#ef4444" : (state.isFocused ? "#3b3fd8" : "#e2e8f0"), borderWidth: 1.5, boxShadow: "none", "&:hover": { borderColor: hasError ? "#ef4444" : "#3b3fd8" } }),
+    control: (base, state) => ({ ...base, minHeight: 40, borderRadius: 9, borderColor: hasError ? "#ef4444" : (state.isFocused ? "var(--gpr-primary, #005081)" : "#e2e8f0"), borderWidth: 1.5, boxShadow: "none", "&:hover": { borderColor: hasError ? "#ef4444" : "var(--gpr-primary, #005081)" } }),
     valueContainer: base => ({ ...base, padding: "2px 14px" }),
     placeholder: base => ({ ...base, fontSize: 14, color: "#94a3b8" }),
     singleValue: base => ({ ...base, fontSize: 14, color: "#1e293b" }),
@@ -34,8 +34,8 @@ const selectStyles = (hasError) => ({
 
 const SectionTitle = ({ icon: Icon, title, subtitle }) => (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-        <Icon sx={{ fontSize: 16, color: "#3b3fd8" }} />
-        <Typography sx={{ fontSize: 12, fontWeight: 800, color: "#3b3fd8", textTransform: "uppercase", letterSpacing: "0.6px" }}>{title}</Typography>
+        <Icon sx={{ fontSize: 16, color: "var(--gpr-primary, #005081)" }} />
+        <Typography sx={{ fontSize: 12, fontWeight: 800, color: "var(--gpr-primary, #005081)", textTransform: "uppercase", letterSpacing: "0.6px" }}>{title}</Typography>
         {subtitle && <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{subtitle}</Typography>}
     </Box>
 );
@@ -206,7 +206,7 @@ const Institution = (props) => {
         <div className="card-panel pb-5">
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
                 <Box sx={{ width: 38, height: 38, borderRadius: 2, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <BusinessIcon sx={{ color: "#6366F1", fontSize: 20 }} />
+                    <BusinessIcon sx={{ color: "var(--gpr-primary, #005081)", fontSize: 20 }} />
                 </Box>
                 <Box>
                     <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Configurer les informations de l'institution</Typography>
@@ -223,49 +223,20 @@ const Institution = (props) => {
                         <Box>
                             <label style={labelStyle}>Raison / Dénomination <FieldCheck valid={validDenomination} /></label>
                             <input value={props.denomination || ""} onChange={(e) => props.denominationChanged(e.target.value)} placeholder="Ex: SICMA ET ASSOCIES"
-                                style={inputStyle(props.errors.denomination)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.denomination ? "#ef4444" : "#e2e8f0"; }} />
+                                style={inputStyle(props.errors.denomination)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.denomination ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.denomination && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.denomination}</div>}
                         </Box>
                         <Box>
                             <label style={labelStyle}>Numéro d'agrément <FieldCheck valid={validReference} /></label>
                             <input value={props.reference || ""} onChange={(e) => props.referenceChanged(e.target.value)} placeholder="Ex: RCCM RB/ABC/20 B 3215"
-                                style={inputStyle(props.errors.reference)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.reference ? "#ef4444" : "#e2e8f0"; }} />
+                                style={inputStyle(props.errors.reference)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.reference ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.reference && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.reference}</div>}
                         </Box>
                         <Box>
                             <label style={labelStyle}>Adresse <FieldCheck valid={validAddress} /></label>
                             <input value={props.address || ""} onChange={(e) => props.addressChanged(e.target.value)} placeholder="Ex: Calavi-Kpota, 2ème étage Immeuble Tankaya-Banque Atlantique"
-                                style={inputStyle(props.errors.address)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.address ? "#ef4444" : "#e2e8f0"; }} />
+                                style={inputStyle(props.errors.address)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.address ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.address && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.address}</div>}
-                        </Box>
-                        <Box>
-                            <label style={labelStyle}>Logo de l'institution <FieldCheck valid={validLogo} /></label>
-                            <Box
-                                component="label"
-                                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                                onDragLeave={() => setIsDragging(false)}
-                                onDrop={handleLogoDrop}
-                                sx={{
-                                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1,
-                                    width: "100%", minHeight: 150, borderRadius: 2.5, cursor: "pointer", textAlign: "center", padding: "16px",
-                                    border: isDragging ? "2px dashed #3b3fd8" : (props.errors.logo ? "1.5px dashed #ef4444" : "1.5px dashed #cbd5e1"),
-                                    background: isDragging ? "#EEF2FF" : "#f8fafc",
-                                    transition: "all 0.15s ease",
-                                    "&:hover": { borderColor: "#3b3fd8", background: "#EEF2FF" },
-                                }}
-                            >
-                                <input type="file" hidden accept="image/*" onChange={handleFile} />
-                                {props.logo ? (
-                                    <img src={props.logo} alt="Logo de l'institution" style={{ maxWidth: 180, maxHeight: 90, objectFit: "contain" }} />
-                                ) : (
-                                    <BusinessIcon sx={{ color: "#94a3b8", fontSize: 28 }} />
-                                )}
-                                <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>
-                                    {props.logo ? "Cliquez ou glissez pour remplacer le logo" : "Glissez votre logo ici ou cliquez pour parcourir"}
-                                </Typography>
-                                <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>Dimensions supportées: {LOGO_SUPPORTED_SIZE}</Typography>
-                            </Box>
-                            {props.errors.logo && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.logo}</div>}
                         </Box>
                     </Box>
 
@@ -275,7 +246,7 @@ const Institution = (props) => {
                         <Box>
                             <label style={labelStyle}>Adresse électronique <FieldCheck valid={validEmail} /></label>
                             <input type="email" value={props.email || ""} onChange={(e) => props.emailChanged(e.target.value)} placeholder="Ex: info@sicmagroup.com"
-                                style={inputStyle(props.errors.email)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.email ? "#ef4444" : "#e2e8f0"; }} />
+                                style={inputStyle(props.errors.email)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.email ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.email && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.email}</div>}
                         </Box>
                         <Box>
@@ -286,7 +257,7 @@ const Institution = (props) => {
                                 </Tooltip>
                             </label>
                             <input type="tel" value={props.phone || ""} onChange={(e) => props.phoneChanged(e.target.value)} placeholder="Ex: 22990909090"
-                                style={inputStyle(props.errors.phone)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.phone ? "#ef4444" : "#e2e8f0"; }} />
+                                style={inputStyle(props.errors.phone)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.phone ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.phone && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.phone}</div>}
                         </Box>
                         <Box>
@@ -304,6 +275,37 @@ const Institution = (props) => {
                     </Box>
                 </Box>
 
+                {/* Logo — pleine largeur */}
+                <Box sx={{ mt: 2.5 }}>
+                    <label style={labelStyle}>Logo de l'institution <FieldCheck valid={validLogo} /></label>
+                    <Box
+                        component="label"
+                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={handleLogoDrop}
+                        sx={{
+                            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1,
+                            width: "100%", minHeight: 150, borderRadius: 2.5, cursor: "pointer", textAlign: "center", padding: "16px",
+                            border: isDragging ? "2px dashed #3b3fd8" : (props.errors.logo ? "1.5px dashed #ef4444" : "1.5px dashed #cbd5e1"),
+                            background: isDragging ? "#EEF2FF" : "#f8fafc",
+                            transition: "all 0.15s ease",
+                            "&:hover": { borderColor: "var(--gpr-primary, #005081)", background: "#EEF2FF" },
+                        }}
+                    >
+                        <input type="file" hidden accept="image/*" onChange={handleFile} />
+                        {props.logo ? (
+                            <img src={props.logo} alt="Logo de l'institution" style={{ maxWidth: 180, maxHeight: 90, objectFit: "contain" }} />
+                        ) : (
+                            <BusinessIcon sx={{ color: "#94a3b8", fontSize: 28 }} />
+                        )}
+                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>
+                            {props.logo ? "Cliquez ou glissez pour remplacer le logo" : "Glissez votre logo ici ou cliquez pour parcourir"}
+                        </Typography>
+                        <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>Dimensions supportées: {LOGO_SUPPORTED_SIZE}</Typography>
+                    </Box>
+                    {props.errors.logo && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.logo}</div>}
+                </Box>
+
                 <Box sx={{
                     position: "sticky", bottom: 0, zIndex: 5, mt: 3, pt: 2, pb: 1,
                     display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 2,
@@ -318,7 +320,7 @@ const Institution = (props) => {
                         loadingPosition="start"
                         startIcon={<SaveIcon style={{ fontSize: 16 }} />}
                         variant="contained"
-                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" }, "&.Mui-disabled": { opacity: 0.6 } }}
                     >
                         Enregistrer
                     </LoadingButton>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+﻿import React, { useState, useCallback } from "react";
 import {
   Dialog, DialogContent, DialogActions,
   Button, IconButton, CircularProgress,
@@ -55,7 +55,7 @@ const AddSimpleModal = ({
     >
       {/* Header */}
       <div style={{
-        background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)",
+        background: "var(--gpr-primary, #005081)",
         padding: "18px 24px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
@@ -106,8 +106,8 @@ const AddSimpleModal = ({
             }
             sx={{
               textTransform: "none", borderRadius: 2, fontWeight: 600, px: 3,
-              borderColor: "#c7d2fe", color: "#3b3fd8",
-              "&:hover": { background: "#eef2ff", borderColor: "#3b3fd8" },
+              borderColor: "#c7d2fe", color: "var(--gpr-primary, #005081)",
+              "&:hover": { background: "#eef2ff", borderColor: "var(--gpr-primary, #005081)" },
               "&.Mui-disabled": { opacity: 0.5 },
             }}>
             {loadingAdd ? "Enregistrement..." : "Enregistrer et ajouter un autre"}
@@ -125,8 +125,8 @@ const AddSimpleModal = ({
           }
           sx={{
             textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3,
-            background: "linear-gradient(135deg, #1e2188, #3b3fd8)",
-            "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" },
+            background: "var(--gpr-primary, #005081)",
+            "&:hover": { background: "var(--gpr-primary-dark, #003d63)" },
             "&.Mui-disabled": { opacity: 0.6 },
           }}>
           {loading ? "Enregistrement..." : submitLabel}

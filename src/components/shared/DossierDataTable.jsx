@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import { Tooltip } from "@mui/material";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
@@ -29,7 +29,7 @@ const GRAVITY_CONFIG = {
   GRAVE:  { label: "Grave",  bg: "#fee2e2", color: "#991b1b", dot: "#ef4444" },
 };
 
-const AVATAR_COLORS = ["#6366f1","#0ea5e9","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#14b8a6"];
+const AVATAR_COLORS = ["var(--gpr-primary, #005081)","#0ea5e9","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#14b8a6"];
 const avatarColor = (str = "") => AVATAR_COLORS[(str.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
 
 const initials = (name = "") => {
@@ -172,7 +172,7 @@ const DossierCard = ({ record, onRowClick }) => {
 
       {/* Action footer */}
       <div style={{ padding: "8px 16px", borderTop: "1px solid #f8fafc", background: "#fafbff", display: "flex", justifyContent: "flex-end" }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: "#6366f1", display: "flex", alignItems: "center", gap: 4 }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--gpr-primary, #005081)", display: "flex", alignItems: "center", gap: 4 }}>
           Ouvrir →
         </span>
       </div>
@@ -235,7 +235,7 @@ const DossierDataTable = ({
                 display: "flex", alignItems: "center", justifyContent: "center",
                 width: 34, height: 34, border: "none", borderRadius: 8, cursor: "pointer",
                 background: view === "table" ? "white" : "transparent",
-                color: view === "table" ? "#6366f1" : "#94a3b8",
+                color: view === "table" ? "var(--gpr-primary, #005081)" : "#94a3b8",
                 boxShadow: view === "table" ? "0 1px 4px rgba(0,0,0,0.1)" : "none",
                 transition: "all 0.15s",
               }}
@@ -250,7 +250,7 @@ const DossierDataTable = ({
                 display: "flex", alignItems: "center", justifyContent: "center",
                 width: 34, height: 34, border: "none", borderRadius: 8, cursor: "pointer",
                 background: view === "cards" ? "white" : "transparent",
-                color: view === "cards" ? "#6366f1" : "#94a3b8",
+                color: view === "cards" ? "var(--gpr-primary, #005081)" : "#94a3b8",
                 boxShadow: view === "cards" ? "0 1px 4px rgba(0,0,0,0.1)" : "none",
                 transition: "all 0.15s",
               }}

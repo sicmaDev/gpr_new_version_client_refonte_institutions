@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+﻿import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Link, NavLink } from "react-router-dom";
 import {
   addressChanged,
@@ -234,7 +234,7 @@ const MesurerReclamation = (props) => {
   const handleClose = () => {
     setOpen(false);
     clearComponentState();
-
+    sessionStorage.removeItem('gpr_mes_code');
     history.push("/reclamations/mesure/all");
   };
 
@@ -307,14 +307,24 @@ const MesurerReclamation = (props) => {
 
 
   useEffect(() => {
-    //  console.log("params",props.match.params)
-    //  console.log("params 2",props.id)
-    if (props.match.params.code !== "all") {
+    const urlCode = props.match?.params?.code;
+    if (!urlCode || urlCode === "all") {
+      const storedCode = sessionStorage.getItem('gpr_mes_code');
+      if (storedCode) {
+        history.replace('/reclamations/mesure/' + storedCode);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const urlCode = props.match?.params?.code;
+    const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_mes_code');
+    if (code) {
 
       async function details() {
         let cc = await axios({
           method: "get",
-          url: HOST + "api/v1/claim/" + props.match.params.code + "/details",
+          url: HOST + "api/v1/claim/" + code + "/details",
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
@@ -735,6 +745,7 @@ const MesurerReclamation = (props) => {
 
   const rowClickedHandler = (event, data, rowIndex) => {
     props.appraisalChanged("");
+    sessionStorage.setItem('gpr_mes_code', data.code);
     history.push("/reclamations/mesure/" + data.code, { from: 'mesure' });
     props.idChanged(data.id ? data.id : "");
     props.lastnameChanged(
@@ -1331,8 +1342,9 @@ const MesurerReclamation = (props) => {
                     endIcon={<SaveIcon />}
                     variant="contained"
                     sx={{
-                      backgroundColor: "#1e2188",
+                      backgroundColor: "var(--gpr-primary, #005081)",
                       textTransform: "initial",
+                      "&:hover": { backgroundColor: "var(--gpr-primary-dark, #003d63)" },
                     }}
                   >
                     <span>Mesurer</span>
@@ -1626,10 +1638,8 @@ const MesurerReclamation = (props) => {
     return (
       <>
         <TraitementShell
-          onBack={() => history.push("/reclamations/mesure/all")}
+          onBack={() => { sessionStorage.removeItem('gpr_mes_code'); history.push("/reclamations/mesure/all"); }}
           codeClient={props.codeClient || props.code}
-          status={props.status}
-          statusLabel="En attente de satisfaction"
           risqueLevel={props.selectedItem?.objet?.risqueLevel}
           lastname={props.lastname}
           phone={props.phone}
@@ -1807,8 +1817,8 @@ const MesurerReclamation = (props) => {
                           </div>
                           {props.errors?.appraisal && <div style={{ color: "#ef4444", fontSize: 12, marginBottom: 8 }}>{props.errors.appraisal}</div>}
                           {props.errors?.commenta && <div style={{ color: "#ef4444", fontSize: 12, marginBottom: 8 }}>{props.errors.commenta}</div>}
-                          <button onClick={handleAppraise} disabled={props.etat} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: selected ? selected.accent : "#e2e8f0", color: "#fff", fontSize: 14, fontWeight: 700, cursor: props.etat ? "not-allowed" : "pointer", opacity: props.etat ? 0.7 : 1, transition: "all 0.15s" }}>
-                            {props.etat ? "En cours..." : selected ? `Valider — ${selected.label}` : "Valider la mesure"}
+                          <button onClick={handleAppraise} disabled={props.etat} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: selected ? "var(--gpr-primary, #005081)" : "#e2e8f0", color: "#fff", fontSize: 14, fontWeight: 700, cursor: props.etat ? "not-allowed" : "pointer", opacity: props.etat ? 0.7 : 1, transition: "all 0.15s" }}>
+                            {props.etat ? "En cours..." : "Valider"}
                           </button>
                         </div>
                       );
@@ -1967,19 +1977,7 @@ const MesurerReclamation = (props) => {
               key: "historique",
               label: "Historique",
               content: (
-                <HistoriqueTimeline
-                  recorded_at={props.recorded_at}
-                  created_by={props.created_by}
-                  transmitted={props.selectedItem?.transmitted != null ? "" + props.selectedItem.transmitted : ""}
-                  transmittedBy={props.selectedItem?.transmittedBy?.firstAndLastName}
-                  transmittedTo={props.selectedItem?.transmittedTo?.firstAndLastName}
-                  handled_by={props.handled_by}
-                  assigned_by={props.selectedItem?.treatmentAffectedBy?.firstAndLastName}
-                  assignedAt={props.selectedItem?.affectedAt}
-                  solution={Array.isArray(props.solution) ? props.solution : []}
-                  formatDate={formatDate}
-                  formatDate3={formatDate3}
-                />
+                <HistoriqueTimeline claimId={props.id} />
               ),
             },
           ]}
@@ -2024,51 +2022,91 @@ const MesurerReclamation = (props) => {
         )}
 
         {/* ── Modal SMS ── */}
-        <Dialog open={showUploadModal} onClose={() => setShowUploadModal(false)}>
-          <DialogTitle>Envoyer la solution au Client</DialogTitle>
+        <Dialog open={showUploadModal} onClose={() => setShowUploadModal(false)} fullWidth maxWidth="sm"
+          PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
           <DialogContent>
-            <div style={{ marginBottom: 12 }}>
-              <h6 style={{ fontWeight: 700, marginBottom: 6 }}>Prévisualisation SMS</h6>
-              <p style={{ fontSize: 13, color: "#64748b" }}>Le message sera envoyé en <strong>{smsSegments.length}</strong> SMS.</p>
-              <div style={{ maxHeight: 200, overflowY: "auto", marginTop: 10 }}>
-                {smsSegments.map((seg, i) => (
-                  <div key={i} style={{ border: "1px solid #e2e8f0", padding: 8, marginBottom: 6, borderRadius: 6, fontSize: 13 }}>
-                    <strong>SMS {i + 1} :</strong> {seg}
-                  </div>
-                ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingTop: 8 }}>
+              <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.62 4.38 2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.96a16 16 0 0 0 6.07 6.07l1.06-1.06a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Envoyer par SMS</div>
+                <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>
+                  {smsSegments.length > 1 ? `${smsSegments.length} SMS seront envoyés` : "1 SMS sera envoyé"}
+                </div>
               </div>
             </div>
-            <DialogContentText sx={{ fontSize: 13 }}>
-              Nom client : {props.lastname || "—"}<br />Téléphone : {props.phone || "—"}
-            </DialogContentText>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0", marginBottom: 16 }}>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "—"}</div>
+                <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.phone || "—"}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Prévisualisation</div>
+            <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+              {smsSegments.map((seg, i) => (
+                <div key={i} style={{ padding: "10px 14px", borderRadius: 10, background: "#f0fdf4", border: "1px solid #bbf7d0", fontSize: 13, color: "#166534", lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>SMS {i + 1} / {smsSegments.length}</div>
+                  {seg}
+                </div>
+              ))}
+            </div>
           </DialogContent>
-          <DialogActions>
-            <Button color="error" variant="contained" onClick={() => setShowUploadModal(false)}>Fermer</Button>
-            <Button variant="contained" onClick={handleSms}>Envoyer par SMS</Button>
+          <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
+            <LoadingButton fullWidth onClick={() => setShowUploadModal(false)} variant="outlined"
+              sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+              Annuler
+            </LoadingButton>
+            <LoadingButton fullWidth onClick={handleSms} loading={loading} loadingPosition="end" endIcon={<span />}
+              variant="contained" sx={{ textTransform: "none", borderRadius: 2, background: "#16a34a", "&:hover": { background: "#15803d" } }}>
+              <span>Envoyer par SMS</span>
+            </LoadingButton>
           </DialogActions>
         </Dialog>
 
         {/* ── Modal Mail ── */}
-        <Dialog open={showMailModal} onClose={() => setShowMailModal(false)}>
-          <DialogTitle>Envoyer la solution au Client par Mail</DialogTitle>
+        <Dialog open={showMailModal} onClose={() => setShowMailModal(false)} fullWidth maxWidth="sm"
+          PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
           <DialogContent>
-            <div style={{ marginBottom: 12 }}>
-              <h6 style={{ fontWeight: 700, marginBottom: 6 }}>Prévisualisation Mail</h6>
-              <div style={{ maxHeight: 200, overflowY: "auto", marginTop: 10 }}>
-                {smsSegments.map((seg, i) => (
-                  <div key={i} style={{ border: "1px solid #e2e8f0", padding: 8, marginBottom: 6, borderRadius: 6, fontSize: 13 }}>
-                    <strong>Partie {i + 1} :</strong> {seg}
-                  </div>
-                ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingTop: 8 }}>
+              <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Envoyer par Mail</div>
+                <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>La solution sera envoyée en un seul mail</div>
               </div>
             </div>
-            <DialogContentText sx={{ fontSize: 13 }}>
-              Nom client : {props.lastname || "—"}<br />Email : {props.email || "—"}
-            </DialogContentText>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0", marginBottom: 16 }}>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "—"}</div>
+                <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.email || "—"}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Aperçu du contenu</div>
+            <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+              {smsSegments.map((seg, i) => (
+                <div key={i} style={{ padding: "10px 14px", borderRadius: 10, background: "#eff6ff", border: "1px solid #bfdbfe", fontSize: 13, color: "#1e40af", lineHeight: 1.6 }}>
+                  {seg}
+                </div>
+              ))}
+            </div>
           </DialogContent>
-          <DialogActions>
-            <Button color="error" variant="contained" onClick={() => setShowMailModal(false)}>Fermer</Button>
-            <Button variant="contained" onClick={handleMail} disabled={loadingMail}>Envoyer par Mail</Button>
+          <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
+            <LoadingButton fullWidth onClick={() => setShowMailModal(false)} variant="outlined"
+              sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+              Annuler
+            </LoadingButton>
+            <LoadingButton fullWidth onClick={handleMail} loading={loadingMail} loadingPosition="end" endIcon={<span />}
+              variant="contained" sx={{ textTransform: "none", borderRadius: 2, background: "#1d4ed8", "&:hover": { background: "#1e40af" } }}>
+              <span>Envoyer par Mail</span>
+            </LoadingButton>
           </DialogActions>
         </Dialog>
 
@@ -2244,7 +2282,7 @@ const MesurerReclamation = (props) => {
                 loadingPosition="end"
                 endIcon={<SaveIcon />}
                 variant="contained"
-                sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
                 color="primary"
               >
                 Enregistrer
@@ -2308,7 +2346,7 @@ const MesurerReclamation = (props) => {
                     endIcon={<SaveIcon />}
                     variant="contained"
                     sx={{
-                      backgroundColor: "#1e2188",
+                      backgroundColor: "var(--gpr-primary, #005081)",
                       textTransform: "initial",
                     }}
                   >
@@ -2348,7 +2386,7 @@ const MesurerReclamation = (props) => {
           >
             <DialogTitle
               align="center"
-              color={"#1E2188"}
+              color={"var(--gpr-primary, #005081)"}
               fontSize={"23px"}
               fontWeight={"bold"}
             >
@@ -2428,7 +2466,7 @@ const MesurerReclamation = (props) => {
                   endIcon={<SaveIcon />}
                   variant="contained"
                   sx={{
-                    backgroundColor: "#1e2188",
+                    backgroundColor: "var(--gpr-primary, #005081)",
                     textTransform: "initial",
                   }}
                 >
@@ -2487,12 +2525,12 @@ const MesurerReclamation = (props) => {
                       </h5>
                       <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
                         <Tooltip title="Vue liste">
-                          <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                          <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                           </Box>
                         </Tooltip>
                         <Tooltip title="Vue cartes">
-                          <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                          <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                           </Box>
                         </Tooltip>
@@ -2529,7 +2567,7 @@ const MesurerReclamation = (props) => {
                       <AppBar
                         sx={{
                           position: "relative",
-                          backgroundColor: "#1e2188",
+                          backgroundColor: "var(--gpr-primary, #005081)",
                         }}
                       >
                         <Toolbar>
@@ -2763,7 +2801,7 @@ const MesurerReclamation = (props) => {
                                           className="pb-2 ml-3 "
                                           style={{
                                             cursor: "pointer",
-                                            color: "#1e2188",
+                                            color: "var(--gpr-primary, #005081)",
                                           }}
                                         >
                                           + Ajouter du contenu
@@ -2952,99 +2990,55 @@ const MesurerReclamation = (props) => {
                                 </LoadingButton>
                               </div>
                             </div>
-                            <Dialog
-                              open={showUploadModal}
-                              onClose={() => setShowUploadModal(false)}
-                              id="dialog-sms"
-                            >
-                              <DialogTitle>
-                                Envoyer la solution au Client
-                              </DialogTitle>
+                            <Dialog open={showUploadModal} onClose={() => setShowUploadModal(false)}
+                              fullWidth maxWidth="sm" id="dialog-sms"
+                              PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
                               <DialogContent>
-                                <div style={{ marginBottom: "15px" }}>
-                                  <h6 style={{ fontWeight: "1000" }}>
-                                    Prévisualisation SMS
-                                  </h6>
-                                  <p>
-                                    Le message sera envoyé en{" "}
-                                    <strong>{smsSegments.length}</strong> SMS en
-                                    raison de la limite de caractères imposée
-                                    par le fournisseur.
-                                  </p>
-
-                                  <div
-                                    style={{
-                                      maxHeight: "200px",
-                                      overflowY: "auto",
-                                      marginTop: "10px",
-                                      scrollbarWidth: "thin", // Firefox
-                                      scrollbarColor: "#999 transparent", // Firefox
-                                    }}
-                                    className="custom-scroll"
-                                  >
-                                    {smsSegments.map((seg, index) => (
-                                      <div
-                                        key={index}
-                                        style={{
-                                          border: "1px solid #ccc",
-                                          padding: "8px",
-                                          marginBottom: "5px",
-                                          borderRadius: "4px",
-                                        }}
-                                      >
-                                        <strong>SMS {index + 1} :</strong> {seg}
-                                      </div>
-                                    ))}
+                                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingTop: 8 }}>
+                                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.62 4.38 2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.96a16 16 0 0 0 6.07 6.07l1.06-1.06a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Envoyer par SMS</div>
+                                    <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>
+                                      {smsSegments.length > 1 ? `${smsSegments.length} SMS seront envoyés` : "1 SMS sera envoyé"}
+                                    </div>
                                   </div>
                                 </div>
-                                <br />
-                                <DialogContentText>
-                                  La solution ci-dessus sera envoyée au client
-                                  par SMS.
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                    }}
-                                  >
-                                    <span style={{ whiteSpace: "pre-wrap" }}>
-                                      {"Nom client : " + props.lastname || ""}
-                                    </span>
-                                    <span style={{ whiteSpace: "pre-wrap" }}>
-                                      {"Téléphone : " + props.phone || ""}
-                                    </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0", marginBottom: 16 }}>
+                                  <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                   </div>
-                                </DialogContentText>
-                                <br />
-                                <div className="row">
-                                  {/* Champ Commentaire */}
-                                  <div className="col s12 input-field">
-                                    <input
-                                      type="text"
-                                      className="trait-style"
-                                      value={
-                                        props.solution[0]?.commentaire || ""
-                                      }
-                                      disabled
-                                    />
-                                    <label className="active">
-                                      Commentaire
-                                    </label>
+                                  <div>
+                                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "—"}</div>
+                                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.phone || "—"}</div>
                                   </div>
                                 </div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Prévisualisation</div>
+                                <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+                                  {smsSegments.map((seg, index) => (
+                                    <div key={index} style={{ padding: "10px 14px", borderRadius: 10, background: "#f0fdf4", border: "1px solid #bbf7d0", fontSize: 13, color: "#166534", lineHeight: 1.6 }}>
+                                      <div style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>SMS {index + 1} / {smsSegments.length}</div>
+                                      {seg}
+                                    </div>
+                                  ))}
+                                </div>
+                                {props.solution[0]?.commentaire && (
+                                  <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 13, color: "#475569" }}>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Commentaire</div>
+                                    {props.solution[0].commentaire}
+                                  </div>
+                                )}
                               </DialogContent>
-
-                              <DialogActions>
-                                <Button
-                                  variant="contained"
-                                  color="error"
-                                  onClick={() => setShowUploadModal(false)}
-                                >
-                                  Fermer
-                                </Button>
-                                <Button variant="contained" onClick={handleSms}>
-                                  Envoyer par SMS
-                                </Button>
+                              <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
+                                <LoadingButton fullWidth onClick={() => setShowUploadModal(false)} variant="outlined"
+                                  sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+                                  Annuler
+                                </LoadingButton>
+                                <LoadingButton fullWidth onClick={handleSms} loading={loading} loadingPosition="end" endIcon={<span />}
+                                  variant="contained" sx={{ textTransform: "none", borderRadius: 2, background: "#16a34a", "&:hover": { background: "#15803d" } }}>
+                                  <span>Envoyer par SMS</span>
+                                </LoadingButton>
                               </DialogActions>
                             </Dialog>
 
@@ -3074,79 +3068,52 @@ const MesurerReclamation = (props) => {
                               </div>
                             </div>
 
-                            <Dialog
-                              open={showMailModal}
-                              onClose={() => setShowMailModal(false)}
-                              id="dialog-mail"
-                            >
-                              <DialogTitle>Envoyer la solution au Client par Mail</DialogTitle>
+                            <Dialog open={showMailModal} onClose={() => setShowMailModal(false)}
+                              fullWidth maxWidth="sm" id="dialog-mail"
+                              PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
                               <DialogContent>
-                                <div style={{ marginBottom: "15px" }}>
-                                  <h6 style={{ fontWeight: "1000" }}>Prévisualisation Mail</h6>
-                                  <p>Le message sera envoyé en un seul mail.</p>
-
-                                  {/* Même affichage des segments que la modale SMS */}
-                                  <div
-                                    style={{
-                                      maxHeight: "200px",
-                                      overflowY: "auto",
-                                      marginTop: "10px",
-                                      scrollbarWidth: "thin",
-                                      scrollbarColor: "#999 transparent",
-                                    }}
-                                  >
-                                    {smsSegments.map((seg, index) => (
-                                      <div
-                                        key={index}
-                                        style={{
-                                          border: "1px solid #ccc",
-                                          padding: "8px",
-                                          marginBottom: "5px",
-                                          borderRadius: "4px",
-                                        }}
-                                      >
-                                        <strong>Partie {index + 1} :</strong> {seg}
-                                      </div>
-                                    ))}
+                                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, paddingTop: 8 }}>
+                                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize: 16, fontWeight: 700, color: "#1e293b" }}>Envoyer par Mail</div>
+                                    <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>La solution sera envoyée en un seul mail</div>
                                   </div>
                                 </div>
-                                <br />
-                                <DialogContentText>
-                                  La solution ci-dessus sera envoyée au client par Mail.
-                                  <div style={{ display: "flex", flexDirection: "column" }}>
-                                    <span style={{ whiteSpace: "pre-wrap" }}>
-                                      {"Nom client : " + props.lastname || ""}
-                                    </span>
-                                    <span style={{ whiteSpace: "pre-wrap" }}>
-                                      {"Email : " + props.email || ""}
-                                    </span>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0", marginBottom: 16 }}>
+                                  <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                   </div>
-                                </DialogContentText>
-                                <br />
-                                <div className="row">
-                                  <div className="col s12 input-field">
-                                    <input
-                                      type="text"
-                                      className="trait-style"
-                                      value={props.solution[0]?.commentaire || ""}
-                                      disabled
-                                    />
-                                    <label className="active">Commentaire</label>
+                                  <div>
+                                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "—"}</div>
+                                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.email || "—"}</div>
                                   </div>
                                 </div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Aperçu du contenu</div>
+                                <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+                                  {smsSegments.map((seg, index) => (
+                                    <div key={index} style={{ padding: "10px 14px", borderRadius: 10, background: "#eff6ff", border: "1px solid #bfdbfe", fontSize: 13, color: "#1e40af", lineHeight: 1.6 }}>
+                                      {seg}
+                                    </div>
+                                  ))}
+                                </div>
+                                {props.solution[0]?.commentaire && (
+                                  <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 13, color: "#475569" }}>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Commentaire</div>
+                                    {props.solution[0].commentaire}
+                                  </div>
+                                )}
                               </DialogContent>
-
-                              <DialogActions>
-                                <Button
-                                  variant="contained"
-                                  color="error"
-                                  onClick={() => setShowMailModal(false)}
-                                >
-                                  Fermer
-                                </Button>
-                                <Button variant="contained" onClick={handleMail}>
-                                  Envoyer par Mail
-                                </Button>
+                              <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
+                                <LoadingButton fullWidth onClick={() => setShowMailModal(false)} variant="outlined"
+                                  sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b" }}>
+                                  Annuler
+                                </LoadingButton>
+                                <LoadingButton fullWidth onClick={handleMail} loading={loadingMail} loadingPosition="end" endIcon={<span />}
+                                  variant="contained" sx={{ textTransform: "none", borderRadius: 2, background: "#1d4ed8", "&:hover": { background: "#1e40af" } }}>
+                                  <span>Envoyer par Mail</span>
+                                </LoadingButton>
                               </DialogActions>
                             </Dialog>
 

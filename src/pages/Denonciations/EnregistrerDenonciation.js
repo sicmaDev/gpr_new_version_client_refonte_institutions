@@ -685,7 +685,7 @@ const EnregistrerDenonciation = (props) => {
                         loadingPosition="end"
                         endIcon={<SaveIcon />}
                         variant="contained"
-                        sx={{ backgroundColor: "#005081", textTransform: "initial" }}
+                        sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
                     >
                         <span>Enregistrer</span>
                     </LoadingButton>
@@ -743,7 +743,7 @@ const EnregistrerDenonciation = (props) => {
                         loadingPosition="end"
                         endIcon={<SaveIcon />}
                         variant="contained"
-                        sx={{ backgroundColor: "#005081", textTransform: "initial" }}
+                        sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
                     >
                         <span>Enregistrer</span>
                     </LoadingButton>
@@ -1233,7 +1233,7 @@ const EnregistrerDenonciation = (props) => {
                     >
                         <DialogTitle
                             align="center"
-                            color={"#1E2188"}
+                            color={"var(--gpr-primary, #005081)"}
                             fontSize={"23px"}
                             fontWeight={"bold"}
                         >

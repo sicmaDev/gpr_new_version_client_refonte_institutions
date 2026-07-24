@@ -27,10 +27,13 @@ export const saveAuthDataToLocal = (data) => {
 
     const _modules = data.settings.modules || [];
 
-    // Couleurs institution si module appearance actif
+    // Logo toujours depuis l'institution (source de vérité unique)
+    const _institutionLogo = data.settings.institution?.logo || null;
+
+    // Couleurs depuis appearance ; logo depuis institution
     if (_modules.includes('appearance') && data.settings.appearance?.sidebarColor) {
         window.dispatchEvent(new CustomEvent('gpr-auth-loaded', {
-            detail: { sidebarColor: data.settings.appearance.sidebarColor, topbarColor: data.settings.appearance.topbarColor }
+            detail: { sidebarColor: data.settings.appearance.sidebarColor, topbarColor: data.settings.appearance.topbarColor, logo: _institutionLogo }
         }));
     }
 
@@ -49,10 +52,8 @@ export const saveAuthDataToLocal = (data) => {
     data.settings.products ? saveItemToSessionStorage(JSON.stringify(data.settings.products), 'app-produits') : saveItemToSessionStorage([], 'app-produits');
     data.settings.help ? saveItemToSessionStorage(JSON.stringify(data.settings.help), 'help') : saveItemToSessionStorage([], 'help');
     saveItemToSessionStorage(JSON.stringify(_modules), 'app-modules');
-    if (_modules.includes('appearance') && data.settings.appearance) {
+    if (data.settings.appearance) {
         saveItemToSessionStorage(JSON.stringify(data.settings.appearance), 'app-appearance');
-    } else {
-        sessionStorage.removeItem('app-appearance');
     }
 
     //enregistrement dans le local storage
@@ -75,10 +76,8 @@ export const saveAuthDataToLocal = (data) => {
     data.settings.products ? saveItemToLocalStorage(JSON.stringify(data.settings.products), 'app-produits') : saveItemToLocalStorage([], 'app-produits');
     data.settings.help ? saveItemToLocalStorage(JSON.stringify(data.settings.help), 'help') : saveItemToLocalStorage([], 'help');
     saveItemToLocalStorage(JSON.stringify(_modules), 'app-modules');
-    if (_modules.includes('appearance') && data.settings.appearance) {
+    if (data.settings.appearance) {
         saveItemToLocalStorage(JSON.stringify(data.settings.appearance), 'app-appearance');
-    } else {
-        localStorage.removeItem('app-appearance');
     }
 
 }

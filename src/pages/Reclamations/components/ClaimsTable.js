@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+﻿import React, { useState, useMemo } from "react";
 import {
   Box, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, TableSortLabel, TablePagination,
@@ -227,7 +227,7 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
                       direction={orderBy === col.id ? order : "asc"}
                       onClick={() => handleSort(col.id)}
                       sx={{
-                        "&.Mui-active": { color: "#6366F1" },
+                        "&.Mui-active": { color: "var(--gpr-primary, #005081)" },
                         "& .MuiTableSortLabel-icon": { fontSize: 14 },
                       }}
                     >

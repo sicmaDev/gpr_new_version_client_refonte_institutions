@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { loadItemFromSessionStorage, saveItemToSessionStorage } from '../Utils/utils';
 
 const DEFAULT_COLOR = '#005081';
-const DEFAULT_COLORS = { sidebarColor: DEFAULT_COLOR, topbarColor: DEFAULT_COLOR };
+const DEFAULT_COLORS = { sidebarColor: DEFAULT_COLOR, topbarColor: DEFAULT_COLOR, logo: null };
 const LS_KEY = 'gpr-primary-color';
 
 // Darken a hex color by a ratio (0-1)
@@ -28,76 +28,67 @@ export const blendColors = (hex1, hex2) => {
     } catch { return hex1; }
 };
 
-// Returns the blended color when sidebar ≠ topbar, otherwise returns the single color.
+// Returns the sidebar color to perform propagation throughout the system.
 // Used by all pages that are not the sidebar/topbar themselves (auth, loading, MUI theme, KPIs…).
 export const getPagePrimary = (colors) => {
-    const sc = (colors.sidebarColor || DEFAULT_COLOR).toLowerCase();
-    const tc = (colors.topbarColor  || DEFAULT_COLOR).toLowerCase();
-    return sc === tc ? colors.sidebarColor || DEFAULT_COLOR : blendColors(colors.sidebarColor, colors.topbarColor);
+    return colors.sidebarColor || DEFAULT_COLOR;
 };
 
 const injectCssVars = (colors) => {
     const primary = getPagePrimary(colors);
-    document.documentElement.style.setProperty('--gpr-primary', primary);
+    document.documentElement.style.setProperty('--gpr-primary',      primary);
     document.documentElement.style.setProperty('--gpr-primary-dark', darkenColor(primary, 0.15));
     document.documentElement.style.setProperty('--gpr-primary-light', primary + '22');
+    document.documentElement.style.setProperty('--gpr-sidebar', colors.sidebarColor || DEFAULT_COLOR);
+    document.documentElement.style.setProperty('--gpr-topbar',  colors.topbarColor  || DEFAULT_COLOR);
 };
 
-const ThemeColorsContext = createContext({ colors: DEFAULT_COLORS, setColors: () => {} });
+const ThemeColorsContext = createContext({ colors: DEFAULT_COLORS, setColors: () => {}, logo: null });
+
+const readAppearanceFromStorage = () => {
+    try {
+        const raw = sessionStorage.getItem('app-appearance') || localStorage.getItem('app-appearance');
+        if (raw) {
+            let a = JSON.parse(raw);
+            if (typeof a === 'string') {
+                a = JSON.parse(a);
+            }
+            if (a?.sidebarColor) return { sidebarColor: a.sidebarColor, topbarColor: a.topbarColor || DEFAULT_COLOR, logo: a.logo || null };
+        }
+    } catch {}
+    return DEFAULT_COLORS;
+};
 
 export const ThemeColorsProvider = ({ children }) => {
-    const [colors, setColorsState] = useState(() => {
-        // Si module appearance actif → charger les couleurs institution
-        try {
-            const modules = JSON.parse(sessionStorage.getItem('app-modules') || '[]');
-            if (Array.isArray(modules) && modules.includes('appearance')) {
-                const raw = sessionStorage.getItem('app-appearance');
-                if (raw) {
-                    const appearance = JSON.parse(raw);
-                    if (appearance?.sidebarColor) {
-                        return { sidebarColor: appearance.sidebarColor, topbarColor: appearance.topbarColor || DEFAULT_COLOR };
-                    }
-                }
-                // Module actif mais pas encore configuré → fallback localStorage
-                const saved = localStorage.getItem('app-appearance');
-                if (saved) {
-                    const appearance = JSON.parse(saved);
-                    if (appearance?.sidebarColor) {
-                        return { sidebarColor: appearance.sidebarColor, topbarColor: appearance.topbarColor || DEFAULT_COLOR };
-                    }
-                }
-            }
-        } catch {}
-        // Pas de module appearance → couleur GPR par défaut
-        return DEFAULT_COLORS;
-    });
+    const [colors, setColorsState] = useState(readAppearanceFromStorage);
+    const [logo, setLogo] = useState(() => readAppearanceFromStorage().logo);
 
     // Inject CSS variables whenever colors change
     useEffect(() => {
         injectCssVars(colors);
     }, [colors.sidebarColor, colors.topbarColor]);
 
-    // Listen for auth data loaded (login / token check) — update colors from DB
+    // Listen for auth data loaded (login / token check) — update colors and logo from DB
     useEffect(() => {
         const handler = (e) => {
-            const { sidebarColor, topbarColor } = e.detail || {};
+            const { sidebarColor, topbarColor, logo: newLogo } = e.detail || {};
             if (sidebarColor) {
                 const next = { sidebarColor, topbarColor: topbarColor || sidebarColor };
                 setColorsState(next);
                 injectCssVars(next);
                 try { localStorage.setItem(LS_KEY, sidebarColor); } catch {}
             }
+            if (newLogo !== undefined) setLogo(newLogo || null);
         };
         window.addEventListener('gpr-auth-loaded', handler);
         return () => window.removeEventListener('gpr-auth-loaded', handler);
     }, []);
 
-    const setColors = (next) => {
+    const setColors = (next, newLogo) => {
         setColorsState(next);
         injectCssVars(next);
-        // Persist in localStorage so login/lockscreen/loading pages pick it up next time
+        if (newLogo !== undefined) setLogo(newLogo || null);
         try { localStorage.setItem(LS_KEY, next.sidebarColor); } catch {}
-        // Update session storage (maintain double-encoding to match CheckToken.js pattern)
         try {
             const raw = loadItemFromSessionStorage('app-user');
             if (raw) {
@@ -110,7 +101,7 @@ export const ThemeColorsProvider = ({ children }) => {
     };
 
     return (
-        <ThemeColorsContext.Provider value={{ colors, setColors }}>
+        <ThemeColorsContext.Provider value={{ colors, setColors, logo }}>
             {children}
         </ThemeColorsContext.Provider>
     );

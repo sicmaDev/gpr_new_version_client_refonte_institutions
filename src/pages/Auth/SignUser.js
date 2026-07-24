@@ -87,7 +87,7 @@ const selectSx = {
     "&:hover:not(.Mui-disabled):before": { display: "none" },
 };
 const SignCompteUser = (props) => {
-    const { colors } = useThemeColors();
+    const { colors, logo: institutionLogo } = useThemeColors();
     const primaryColor = getPagePrimary(colors);
     const primaryDark  = darkenColor(primaryColor, 0.18);
 
@@ -466,7 +466,7 @@ const SignCompteUser = (props) => {
                         </div>
                         <div className="w-px h-8 bg-[#e2e8f0] mx-1 flex-shrink-0" />
                         <div className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center">
-                            <img src={logoSicma} alt="Logo Institution" className="h-full w-full object-contain" />
+                            <img src={institutionLogo || logoSicma} alt="Logo Institution" className="h-full w-full object-contain" />
                         </div>
                     </div>
 
@@ -505,7 +505,7 @@ const SignCompteUser = (props) => {
                                 <img src={logo} alt="Logo GPR" className="h-12 w-auto object-cover object-left" />
                             </div>
                             <div className="w-px h-8 bg-[#e2e8f0]" />
-                            <img src={logoSicma} alt="Logo Institution" className="h-10 object-contain" />
+                            <img src={institutionLogo || logoSicma} alt="Logo Institution" className="h-10 object-contain" />
                         </div>
                         {/* Titre visible uniquement quand le panneau gauche est masqué */}
                         <div className="md:hidden text-center">

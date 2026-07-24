@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
 import { Box, Typography, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import { connect } from "react-redux";
 import { helpChanged } from '../redux/actions/HelpActions';
@@ -17,17 +17,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import FileTypeIcon from '../components/shared/FileTypeIcon';
 import { KTApp } from "../Utils/blockui";
-
-const sectionHeaderSx = {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    padding: "16px 20px",
-    borderRadius: "12px",
-    background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)",
-    color: "#fff",
-    marginBottom: "20px",
-};
+import { useThemeColors, getPagePrimary } from '../context/ThemeColorsContext';
 
 const cardPanelSx = {
     background: "#fff",
@@ -45,6 +35,20 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const Help = (props) => {
     const [open, setOpen] = React.useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const { colors } = useThemeColors();
+    const sidebarColor = colors?.sidebarColor;
+    const topbarColor = colors?.topbarColor;
+    const primary = getPagePrimary({ sidebarColor, topbarColor });
+    const sectionHeaderSx = {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        padding: "16px 20px",
+        borderRadius: "12px",
+        background: primary,
+        color: "#fff",
+        marginBottom: "20px",
+    };
     useEffect(() => {
         KTApp.blockPage({
             overlayColor: '#000000',
@@ -92,15 +96,15 @@ const Help = (props) => {
                     border: "1px solid #e2e8f0",
                     cursor: "pointer",
                     transition: "all 0.2s ease",
-                    "&:hover": { background: "#f8fafc", borderColor: "#3b3fd8" },
+                    "&:hover": { background: "#f8fafc", borderColor: "var(--gpr-primary, #005081)" },
                 }}
             >
                 <FileTypeIcon attachment={doc} size={36} />
                 <Typography
                     sx={{
-                        fontSize: "14px",
+                        fontSize: "12px",
                         fontWeight: 500,
-                        color: "#1e2188",
+                        color: "var(--gpr-primary, #005081)",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -120,7 +124,7 @@ const Help = (props) => {
                 <div className="container">
                     <Box sx={sectionHeaderSx}>
                         <FolderOpenIcon />
-                        <Typography sx={{ fontSize: "18px", fontWeight: 700 }}>
+                        <Typography sx={{ fontSize: "14px", fontWeight: 700 }}>
                             Ressources disponibles
                         </Typography>
                     </Box>
@@ -133,7 +137,7 @@ const Help = (props) => {
 
                     <Box sx={sectionHeaderSx}>
                         <HelpOutlineIcon />
-                        <Typography sx={{ fontSize: "18px", fontWeight: 700 }}>
+                        <Typography sx={{ fontSize: "14px", fontWeight: 700 }}>
                             FAQ (Comment ça marche ?)
                         </Typography>
                     </Box>
@@ -149,21 +153,21 @@ const Help = (props) => {
                                     borderRadius: "10px !important",
                                     marginBottom: "10px",
                                     "&:before": { display: "none" },
-                                    "&.Mui-expanded": { borderColor: "#3b3fd8" },
+                                    "&.Mui-expanded": { borderColor: "var(--gpr-primary, #005081)" },
                                 }}
                             >
                                 <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon sx={{ color: "#3b3fd8" }} />}
+                                    expandIcon={<ExpandMoreIcon sx={{ color: "var(--gpr-primary, #005081)" }} />}
                                     sx={{
                                         "& .MuiAccordionSummary-content": { margin: "10px 0" },
                                     }}
                                 >
-                                    <Typography sx={{ fontSize: "15px", fontWeight: 600, color: "#1e2188" }}>
+                                    <Typography sx={{ fontSize: "13px", fontWeight: 600, color: "var(--gpr-primary, #005081)" }}>
                                         {faq.libelle}
                                     </Typography>
                                 </AccordionSummary>
                                 <AccordionDetails>
-                                    <Typography sx={{ fontSize: "14px", color: "#475569" }}>
+                                    <Typography sx={{ fontSize: "12px", color: "#475569" }}>
                                         {faq.answer}
                                     </Typography>
                                 </AccordionDetails>
@@ -183,7 +187,7 @@ const Help = (props) => {
                         TransitionComponent={Transition}
                     >
                         <AppBar
-                            sx={{ position: "relative", backgroundColor: "#1e2188" }}
+                            sx={{ position: "relative", backgroundColor: "var(--gpr-primary, #005081)" }}
                         >
                             <Toolbar>
                                 <IconButton

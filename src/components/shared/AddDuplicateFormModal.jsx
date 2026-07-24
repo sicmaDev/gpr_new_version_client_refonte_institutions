@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+﻿import React, { useState, useCallback } from "react";
 import {
   Dialog, DialogContent, DialogActions,
   Button, IconButton, Tooltip, CircularProgress, Divider,
@@ -124,7 +124,7 @@ const AddDuplicateFormModal = ({
     >
       {/* ── Header ── */}
       <div style={{
-        background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)",
+        background: "var(--gpr-primary, #005081)",
         padding: "18px 24px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
         flexShrink: 0,
@@ -181,7 +181,7 @@ const AddDuplicateFormModal = ({
                 justifyContent: "space-between", marginBottom: 16,
               }}>
                 <span style={{
-                  fontSize: 12, fontWeight: 700, color: "#3b3fd8",
+                  fontSize: 12, fontWeight: 700, color: "var(--gpr-primary, #005081)",
                   background: "#eef2ff", borderRadius: 20,
                   padding: "3px 12px",
                 }}>
@@ -239,7 +239,7 @@ const AddDuplicateFormModal = ({
                           whiteSpace: "pre-wrap", wordBreak: "break-word",
                           fontFamily: "inherit",
                         }}
-                        onFocus={(e) => { if (!errors[formIdx]?.[f.key]) e.target.style.borderColor = "#3b3fd8"; }}
+                        onFocus={(e) => { if (!errors[formIdx]?.[f.key]) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }}
                         onBlur={(e) => { if (!errors[formIdx]?.[f.key]) e.target.style.borderColor = "#e2e8f0"; }}
                       />
                     ) : (
@@ -258,7 +258,7 @@ const AddDuplicateFormModal = ({
                           transition: "border-color 0.15s",
                           height: 40,
                         }}
-                        onFocus={(e) => { if (!errors[formIdx]?.[f.key]) e.target.style.borderColor = "#3b3fd8"; }}
+                        onFocus={(e) => { if (!errors[formIdx]?.[f.key]) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }}
                         onBlur={(e) => { if (!errors[formIdx]?.[f.key]) e.target.style.borderColor = "#e2e8f0"; }}
                       />
                     )}
@@ -285,12 +285,12 @@ const AddDuplicateFormModal = ({
               width: "100%", justifyContent: "center",
               background: "none", border: "1.5px dashed #c7d2fe",
               borderRadius: 10, padding: "10px",
-              color: "#3b3fd8", fontSize: 13, fontWeight: 700,
+              color: "var(--gpr-primary, #005081)", fontSize: 13, fontWeight: 700,
               cursor: "pointer", transition: "all 0.15s",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "#eef2ff";
-              e.currentTarget.style.borderColor = "#3b3fd8";
+              e.currentTarget.style.borderColor = "var(--gpr-primary, #005081)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "none";
@@ -332,8 +332,8 @@ const AddDuplicateFormModal = ({
               startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <SaveIcon style={{ fontSize: 15 }} />}
               sx={{
                 textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3,
-                background: "linear-gradient(135deg, #1e2188, #3b3fd8)",
-                "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" },
+                background: "var(--gpr-primary, #005081)",
+                "&:hover": { background: "var(--gpr-primary-dark, #003d63)" },
                 "&.Mui-disabled": { opacity: 0.6 },
               }}
             >

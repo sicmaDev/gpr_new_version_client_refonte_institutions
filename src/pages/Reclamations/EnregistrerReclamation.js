@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, Component } from "react";
+﻿import React, { useEffect, useRef, useState, Component } from "react";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DatePicker, { registerLocale, setDefaultLocale } from "react-datepicker";
@@ -954,7 +954,7 @@ const EnregistrerReclamation = (props) => {
             loadingPosition="end"
             endIcon={<SaveIcon />}
             variant="contained"
-            sx={{ backgroundColor: "#005081", textTransform: "initial" }}
+            sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
           >
             <span>Enregistrer</span>
           </LoadingButton>
@@ -1014,7 +1014,7 @@ const EnregistrerReclamation = (props) => {
             loadingPosition="end"
             endIcon={<SaveIcon />}
             variant="contained"
-            sx={{ backgroundColor: "#005081", textTransform: "initial" }}
+            sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
           >
             <span>Enregistrer</span>
           </LoadingButton>
@@ -1784,7 +1784,7 @@ const EnregistrerReclamation = (props) => {
 
               {/* Header gradient */}
               <div style={{
-                background: "linear-gradient(135deg, #005081, #005081)",
+                background: "var(--gpr-primary, #005081)",
                 padding: "32px 28px 24px", textAlign: "center",
               }}>
                 <div style={{
@@ -1837,7 +1837,7 @@ const EnregistrerReclamation = (props) => {
                 onClick={(e) => { e.preventDefault(); setShowSmsBox(false); sendSms(e); }}
                 style={{
                   width: "100%", padding: "14px", borderRadius: 12, border: "none",
-                  background: "linear-gradient(135deg, #005081, #005081)",
+                  background: "var(--gpr-primary, #005081)",
                   color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   boxShadow: "0 4px 14px rgba(0,80,129,0.35)",
@@ -1873,7 +1873,7 @@ const EnregistrerReclamation = (props) => {
           >
             <DialogTitle
               align="center"
-              color={"#1E2188"}
+              color={"var(--gpr-primary, #005081)"}
               fontSize={"23px"}
               fontWeight={"bold"}
             >
@@ -1914,7 +1914,7 @@ const EnregistrerReclamation = (props) => {
           PaperProps={{ style: { borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' } }}
         >
           {/* Header */}
-          <div style={{ background: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ background: 'var(--gpr-primary, #005081)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <WarningIcon style={{ color: '#fff', fontSize: 22 }} />
@@ -1987,7 +1987,7 @@ const EnregistrerReclamation = (props) => {
           {/* Actions */}
           <DialogActions style={{ padding: '12px 20px 20px', gap: 10, borderTop: '1px solid #f1f5f9' }}>
             <Button
-              onClick={() => props.setModalVisible(false)}
+              onClick={() => { props.setModalVisible(false); clearComponentState(); setCurrentStep(0); }}
               variant="outlined"
               sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b', fontWeight: 600, px: 3 }}
             >
@@ -1996,7 +1996,7 @@ const EnregistrerReclamation = (props) => {
             <Button
               onClick={() => { props.setModalVisible(false); }}
               variant="contained"
-              sx={{ textTransform: 'none', borderRadius: 2, fontWeight: 700, px: 3, background: 'linear-gradient(135deg, #d97706, #f59e0b)', color: '#fff', '&:hover': { background: 'linear-gradient(135deg, #b45309, #d97706)' } }}
+              sx={{ textTransform: 'none', borderRadius: 2, fontWeight: 700, px: 3, background: 'var(--gpr-primary, #005081)', color: '#fff', '&:hover': { background: 'var(--gpr-primary-dark, #003d63)' } }}
             >
               Enregistrer quand même
             </Button>
@@ -2312,7 +2312,7 @@ const EnregistrerReclamation = (props) => {
 
             <div className="col l6 m12 s12 input-field" ref={genderRef}>
               <Select
-                value={props.gender ? { label: props.gender, value: props.gender } : { label: "Sélectionner le genre", value: "" }}
+                value={props.gender ? { label: props.gender === "HOMME" ? "Homme" : "Femme", value: props.gender } : null}
                 options={genderOptions}
                 className="react-select-container mt-4"
                 classNamePrefix="react-select"

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+﻿import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import TraitementShell from "../../components/treatment/TraitementShell";
 import axios from "axios";
@@ -190,6 +190,7 @@ const TraiterSuggestion = (props) => {
 
   const handleClose = () => {
     if (props.match?.params?.code && props.match.params.code !== "all") {
+      sessionStorage.removeItem('gpr_sug_treat_code');
       history.push("/suggestions/traitement/all");
     } else {
       setOpen(false);
@@ -316,6 +317,16 @@ const TraiterSuggestion = (props) => {
     };
 
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const urlCode = props.match?.params?.code;
+    if (!urlCode || urlCode === "all") {
+      const storedCode = sessionStorage.getItem('gpr_sug_treat_code');
+      if (storedCode) {
+        history.replace('/suggestions/traitement/' + storedCode);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -528,12 +539,15 @@ const TraiterSuggestion = (props) => {
     props.selectedItemAudioChanged([]);
 
     props.commentChanged("");
+    props.convertedByChanged("");
+    props.convertedAtChanged("");
 
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
 
     clearComponentState();
+    sessionStorage.setItem('gpr_sug_treat_code', data.code);
     history.push("/suggestions/traitement/" + data.code);
     props.idChanged(data.id ? data.id : "");
     props.lastnameChanged(data.clientFirstAndLastName ? data.clientFirstAndLastName : "");
@@ -662,7 +676,7 @@ const TraiterSuggestion = (props) => {
                           handleTreatment(e, false)
                         }}
 
-                        className="waves-effect waves-effect-b waves-light btn-small mr-1 red-text red lighten-4"
+                        className="waves-effect waves-effect-b waves-light btn-small mr-1 red lighten-4"
                         loading={props.etat}
                         loadingPosition="end"
                         endIcon={<SaveIcon />}
@@ -681,7 +695,7 @@ const TraiterSuggestion = (props) => {
                         loadingPosition="end"
                         endIcon={<SaveIcon />}
                         variant="contained"
-                        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                        sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
                       >
                         <span>Prendre en compte</span>
                       </LoadingButton>
@@ -988,9 +1002,10 @@ const TraiterSuggestion = (props) => {
       <>
         <audio ref={audioRef} src={currentAudio} hidden />
         <TraitementShell
-          onBack={() => history.push("/suggestions/traitement/all")}
+          onBack={() => { sessionStorage.removeItem('gpr_sug_treat_code'); history.push("/suggestions/traitement/all"); }}
           codeClient={props.codeClient || props.code}
           status={props.status}
+          claimId={props.id}
           lastname={props.lastname}
           phone={props.phone}
           email={props.email}
@@ -1058,7 +1073,7 @@ const TraiterSuggestion = (props) => {
                           onClick={(e) => handleTreatment(e, false)}
                           loading={props.etat}
                           variant="contained"
-                          sx={{ textTransform: "none", borderRadius: 2, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", boxShadow: "none", fontWeight: 600, "&:hover": { background: "#fee2e2" } }}
+                          sx={{ textTransform: "none", borderRadius: 2, background: "#fef2f2", color: "#fff", border: "1px solid #fecaca", boxShadow: "none", fontWeight: 600, "&:hover": { background: "#fee2e2" } }}
                         >
                           <span>Ne pas prendre en compte</span>
                         </LoadingButton>
@@ -1066,7 +1081,7 @@ const TraiterSuggestion = (props) => {
                           onClick={(e) => handleTreatment(e, true)}
                           loading={props.etat2}
                           variant="contained"
-                          sx={{ textTransform: "none", borderRadius: 2, background: "#1e2188", fontWeight: 600, "&:hover": { background: "#15187a" } }}
+                          sx={{ textTransform: "none", borderRadius: 2, background: "var(--gpr-primary, #005081)", fontWeight: 600, "&:hover": { background: "#15187a" } }}
                         >
                           <span>Prendre en compte</span>
                         </LoadingButton>
@@ -1075,7 +1090,7 @@ const TraiterSuggestion = (props) => {
                   ) : props.status === "TREAT" ? (
                     <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 18, display: "flex", alignItems: "center", gap: 8 }}>
-                        <GavelIcon style={{ fontSize: 17, color: "#6366f1" }} /> Résultat du traitement
+                        <GavelIcon style={{ fontSize: 17, color: "var(--gpr-primary, #005081)" }} /> Résultat du traitement
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: props.solution === true ? "#f0fdf4" : "#fef2f2", borderRadius: 10, border: `1px solid ${props.solution === true ? "#bbf7d0" : "#fecaca"}` }}>
@@ -1202,12 +1217,12 @@ const TraiterSuggestion = (props) => {
                       </h5>
                       <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
                         <Tooltip title="Vue liste">
-                          <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                          <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                           </Box>
                         </Tooltip>
                         <Tooltip title="Vue cartes">
-                          <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                          <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                           </Box>
                         </Tooltip>
@@ -1252,7 +1267,7 @@ const TraiterSuggestion = (props) => {
                     TransitionComponent={Transition}
                   >
                     <AppBar
-                      sx={{ position: "relative", backgroundColor: "#1e2188" }}
+                      sx={{ position: "relative", backgroundColor: "var(--gpr-primary, #005081)" }}
                     >
                       <Toolbar>
                         <IconButton

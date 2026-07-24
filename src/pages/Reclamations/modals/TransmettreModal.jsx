@@ -11,7 +11,7 @@ const TransmettreModal = ({ open, onClose, onConfirm, loading }) => {
       PaperProps={{ style: { borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" } }}
     >
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ background: "var(--gpr-primary, #005081)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <SendIcon style={{ color: "white", fontSize: 19 }} />
@@ -50,7 +50,7 @@ const TransmettreModal = ({ open, onClose, onConfirm, loading }) => {
             loadingPosition="end"
             endIcon={<SendIcon />}
             variant="contained"
-            style={{ flex: 2, borderRadius: 10, textTransform: "none", fontWeight: 700, fontSize: 13.5, background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)" }}
+            style={{ flex: 2, borderRadius: 10, textTransform: "none", fontWeight: 700, fontSize: 13.5, background: "var(--gpr-primary, #005081)" }}
           >
             <span>Confirmer la transmission</span>
           </LoadingButton>

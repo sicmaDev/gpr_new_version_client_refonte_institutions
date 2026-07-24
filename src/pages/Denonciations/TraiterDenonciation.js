@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+﻿import React, { useEffect, useState, useRef, useMemo } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DossierDataTable from "../../components/shared/DossierDataTable";
 import Select from "react-select";
@@ -142,7 +142,7 @@ import {
 import RecorderControls from "../../components/recorder-controls";
 import useRecorder from "../../hooks/useRecorder";
 import { LoadingButton } from "@mui/lab";
-import { addExtraClaimApi } from "../../apis/Reclamations/ReclamationsApi";
+import { addExtraClaimApi, saveDraftApi } from "../../apis/Reclamations/ReclamationsApi";
 import {
   getClaimAudioApi,
   convertClaimApi,
@@ -254,6 +254,9 @@ const TraiterDenonciation = (props) => {
   const [audioFiles, setAudioFiles] = useState([]);
   const [fileBlobs, setFileBlobs] = useState([]);
   const [loadingConversion, setLoadingConversion] = useState(false);
+  const [loadingDraft, setLoadingDraft] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState(null);
+  const [savedDraft, setSavedDraft] = useState(null);
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
       ? JSON.parse(loadItemFromLocalStorage("app-mode"))
@@ -285,7 +288,7 @@ const TraiterDenonciation = (props) => {
     var statusElt = status;
     switch (status) {
       case "SAVED":
-        statusElt = "Enregistrée";
+        statusElt = "À traiter";
         break;
       case "TEMP_SAVED":
         statusElt = "Sauvegardée";
@@ -443,6 +446,7 @@ const TraiterDenonciation = (props) => {
   const location = useLocation();
   const [shouldAutoSelect, setShouldAutoSelect] = useState(false);
   const handleClose = () => {
+    sessionStorage.removeItem('gpr_den_treat_code');
     history.push("/denonciations/traitement/all");
   };
   const handleConversionBoxClose = () => {
@@ -489,7 +493,11 @@ const TraiterDenonciation = (props) => {
     if (mode === 1) {
       addSuggestionApi(formData, props)
         .then((response) => {
-          const suggestionCode = response.data.content.code;
+          if (!response) {
+            setLoadingConversion(false);
+            return;
+          }
+          const suggestionCode = response.code;
           const data = {
             code: suggestionCode,
             claimId: dataRow.id,
@@ -520,6 +528,16 @@ const TraiterDenonciation = (props) => {
 
   const { id } = useParams();
   //console.log("params",props.match)
+
+  useEffect(() => {
+    const urlCode = props.match?.params?.code;
+    if (!urlCode || urlCode === "all") {
+      const storedCode = sessionStorage.getItem('gpr_den_treat_code');
+      if (storedCode) {
+        history.replace('/denonciations/traitement/' + storedCode);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     KTApp.blockPage({
@@ -716,6 +734,16 @@ const TraiterDenonciation = (props) => {
               : ""
           );
           props.selectedItemChanged(data);
+
+          // Store draft if it belongs to the current user (user loads it manually)
+          if (data.draftSolution && data.draftUserId === user.id) {
+            setSavedDraft({ solution: data.draftSolution, commentaire: data.draftCommentaire });
+            if (data.draftSavedAt) setDraftSavedAt(data.draftSavedAt);
+          } else {
+            setSavedDraft(null);
+            setDraftSavedAt(null);
+          }
+
           setCurrentData(data);
           props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
           props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
@@ -872,6 +900,33 @@ const TraiterDenonciation = (props) => {
     },
   });
 
+
+  const handleSaveDraft = async () => {
+    if (!props.id) return;
+    setLoadingDraft(true);
+    try {
+      const res = await saveDraftApi(props.id, {
+        draftSolution: props.new_solution || '',
+        draftCommentaire: props.new_comment || '',
+        userId: user.id,
+      });
+      if (res.data?.content) {
+        const saved = res.data.content;
+        if (saved.draftSavedAt) setDraftSavedAt(saved.draftSavedAt);
+        setSavedDraft({ solution: saved.draftSolution, commentaire: saved.draftCommentaire });
+      }
+    } catch (e) {
+      // silently fail
+    } finally {
+      setLoadingDraft(false);
+    }
+  };
+
+  const handleLoadDraft = () => {
+    if (!savedDraft) return;
+    if (savedDraft.solution) props.newSolutionChanged(savedDraft.solution);
+    if (savedDraft.commentaire) props.newCommentChanged(savedDraft.commentaire);
+  };
 
   //Handling the List
   let columns = [
@@ -1124,6 +1179,7 @@ const TraiterDenonciation = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
+    sessionStorage.setItem('gpr_den_treat_code', data.code);
     history.push('/denonciations/traitement/' + data.code, { from: 'traitement' });
   };
 
@@ -1453,6 +1509,15 @@ const TraiterDenonciation = (props) => {
     );
   };
 
+  const warningTransmission = props.transmitted === "true" && props.transmittedTo &&
+    user?.firstAndLastName !== props.transmittedTo && (
+    <span style={{ display: 'flex', alignItems: 'center', fontStyle: 'italic' }}>
+      <SendIcon fontSize="small" sx={{ mr: 1, color: '#7c3aed' }} />
+      {`Cette dénonciation a été transmise à `}
+      <strong style={{ marginLeft: 4 }}>{props.transmittedTo}</strong>
+    </span>
+  );
+
   let statusElt;
   let affectForm;
   let treatForm;
@@ -1587,7 +1652,7 @@ const TraiterDenonciation = (props) => {
                           endIcon={<SaveIcon />}
                           variant="contained"
                           sx={{
-                            backgroundColor: "#1e2188",
+                            backgroundColor: "var(--gpr-primary, #005081)",
                             textTransform: "initial",
                           }}
                         >
@@ -1701,7 +1766,7 @@ const TraiterDenonciation = (props) => {
                           endIcon={<SaveIcon />}
                           variant="contained"
                           sx={{
-                            backgroundColor: "#1e2188",
+                            backgroundColor: "var(--gpr-primary, #005081)",
                             textTransform: "initial",
                           }}
                         >
@@ -1869,7 +1934,7 @@ const TraiterDenonciation = (props) => {
                         endIcon={<SaveIcon />}
                         variant="contained"
                         sx={{
-                          backgroundColor: "#1e2188",
+                          backgroundColor: "var(--gpr-primary, #005081)",
                           textTransform: "initial",
                         }}
                       >
@@ -1972,7 +2037,7 @@ const TraiterDenonciation = (props) => {
                               endIcon={<SaveIcon />}
                               variant="contained"
                               sx={{
-                                backgroundColor: "#1e2188",
+                                backgroundColor: "var(--gpr-primary, #005081)",
                                 textTransform: "initial",
                               }}
                             >
@@ -2192,7 +2257,7 @@ const TraiterDenonciation = (props) => {
                         endIcon={<SaveIcon />}
                         variant="contained"
                         sx={{
-                          backgroundColor: "#1e2188",
+                          backgroundColor: "var(--gpr-primary, #005081)",
                           textTransform: "initial",
                         }}
                       >
@@ -2336,7 +2401,7 @@ const TraiterDenonciation = (props) => {
                             endIcon={<SaveIcon />}
                             variant="contained"
                             sx={{
-                              backgroundColor: "#1e2188",
+                              backgroundColor: "var(--gpr-primary, #005081)",
                               textTransform: "initial",
                             }}
                           >
@@ -2720,7 +2785,7 @@ const TraiterDenonciation = (props) => {
           loadingPosition="end"
           endIcon={<SendIcon />}
           variant="contained"
-          sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+          sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
         >
           <span>Transmettre</span>
         </LoadingButton>
@@ -2744,7 +2809,7 @@ const TraiterDenonciation = (props) => {
         loadingPosition="end"
         endIcon={<ChatIcon />}
         variant="contained"
-        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+        sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
       >
         <span>Ouvrir une session</span>
       </LoadingButton>
@@ -2760,7 +2825,7 @@ const TraiterDenonciation = (props) => {
         loadingPosition="end"
         endIcon={<ChatIcon />}
         variant="contained"
-        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+        sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
       >
         <span>Rejoindre la session</span>
       </LoadingButton>
@@ -2776,7 +2841,7 @@ const TraiterDenonciation = (props) => {
         loadingPosition="end"
         endIcon={<ChatIcon />}
         variant="contained"
-        sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+        sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
       >
         <span>Voir la discussion</span>
       </LoadingButton>
@@ -3047,12 +3112,12 @@ const TraiterDenonciation = (props) => {
                         </h5>
                         <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
                           <Tooltip title="Vue liste">
-                            <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                            <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                             </Box>
                           </Tooltip>
                           <Tooltip title="Vue cartes">
-                            <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                            <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                             </Box>
                           </Tooltip>
@@ -3092,6 +3157,7 @@ const TraiterDenonciation = (props) => {
           codeClient={props.codeClient}
           status={props.status}
           risqueLevel={dataRow?.objet?.risqueLevel}
+          claimId={props.id}
 
           lastname={props.lastname}
           phone={props.phone}
@@ -3119,6 +3185,11 @@ const TraiterDenonciation = (props) => {
             (addR !== "PILOTE" && !hbt.includes("H6")) && props.status === "SAVED" && props.transmitted === "false" && (user.firstAndLastName === props.created_by || user.ra === true) && 'transmettre',
             (hbt.includes("H6") || addR === "PILOTE") && props.status === "TO_APPROUVED" && 'approuver',
           ].filter(Boolean)}
+          transmettreDesc={
+            dataRow?.servicePoint?.directionId
+              ? `Transmettre au responsable d'agence de ${props.unit || 'votre agence'}`
+              : 'Transmettre au pilote'
+          }
 
           selectedItemFiles={props.selectedItemFiles}
           selectedItemAudio={props.selectedItemAudio}
@@ -3139,11 +3210,16 @@ const TraiterDenonciation = (props) => {
           treatForm={treatForm}
           onTreat={handleReSolve}
           loadingTreat={props.etat2}
+          onSaveDraft={handleSaveDraft}
+          loadingDraft={loadingDraft}
+          draftSavedAt={draftSavedAt}
+          onLoadDraft={savedDraft ? handleLoadDraft : undefined}
           canTreat={
             (props.handled_by === user.firstAndLastName && Boolean(props.authorize)) ||
             (props.created_by === user.firstAndLastName && props.unit && user?.servicePointDto?.libelle && props.unit === user.servicePointDto.libelle)
           }
           conversionWarning={warningConvert || null}
+          transmissionWarning={warningTransmission || null}
           existingSolutions={props.selectedItem?.objet?.existingSolutions || []}
           onModifyBeforeSend={(content) => {
             props.solutionChanged(content);

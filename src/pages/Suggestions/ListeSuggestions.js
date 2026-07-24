@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import FileTypeIcon from "../../components/shared/FileTypeIcon";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import TraitementShell from "../../components/treatment/TraitementShell";
+import HistoriqueTimeline from "../../components/treatment/HistoriqueTimeline";
 import axios from "axios";
 import { HOST } from "../../Utils/globals";
 import ReactDatatable from "@ashvin27/react-datatable";
@@ -153,6 +154,22 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
+const AccSection = ({ color, dotColor, icon, title, badge, actionBtn, children }) => {
+  const [isOpen, setIsOpen] = useState(true);
+  return (
+    <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden", marginBottom: 12 }}>
+      <button onClick={() => setIsOpen(v => !v)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
+        <div style={{ width: 30, height: 30, borderRadius: 8, background: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</div>
+        <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: "#1e293b" }}>{title}</span>
+        {badge !== undefined && <span style={{ fontSize: 11.5, fontWeight: 700, color: "#fff", background: dotColor, borderRadius: 20, padding: "2px 9px", marginRight: 8 }}>{badge}</span>}
+        {actionBtn && <div onClick={e => e.stopPropagation()} style={{ marginRight: 8 }}>{actionBtn}</div>}
+        <span style={{ fontSize: 10, color: "#94a3b8" }}>{isOpen ? "▲" : "▼"}</span>
+      </button>
+      {isOpen && <div style={{ borderTop: "1px solid #f1f5f9", padding: "14px 18px" }}>{children}</div>}
+    </div>
+  );
+};
+
 const ListeSuggestions = (props) => {
   let dimf, crew, emailDisplay;
   const [open, setOpen] = React.useState(false);
@@ -166,6 +183,8 @@ const ListeSuggestions = (props) => {
   let addR = (user.additionalRole);
 
   const [detailVisible, setDetailVisible] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [claim_id, setClaimId] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [viewMode, setViewMode] = useState("list");
@@ -175,11 +194,13 @@ const ListeSuggestions = (props) => {
   const handleClickOpen = () => { setOpen(true); };
   const history = useHistory();
 
-  // Chargement depuis l'URL ou sessionStorage quand on arrive directement sur /suggestions/liste/:code
+  // Chargement depuis l'URL ou sessionStorage — un seul useEffect pour éviter la race condition
   useEffect(() => {
     const urlCode = props.match?.params?.code;
     const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_sug_code');
     if (code) {
+      setDetailVisible(true);
+      setDetailLoading(true);
       axios({
         method: "get",
         url: HOST + "api/v1/suggestion/" + code + "/details",
@@ -187,7 +208,7 @@ const ListeSuggestions = (props) => {
       }).then((cc) => {
         if (cc.status >= 200 && cc.status <= 299) {
           const data = cc.data.content;
-          clearComponentState();
+          setClaimId(data.id);
           props.lastnameChanged(data.clientFirstAndLastName ?? "");
           props.addressChanged(data.address ?? "");
           props.phoneChanged(data.tel ?? "");
@@ -213,11 +234,13 @@ const ListeSuggestions = (props) => {
           props.extrasChanged(data.extras ?? []);
           props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
           props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
-          setDetailVisible(true);
+          setDetailLoading(false);
           getFillesApi(data.id, props);
           getSuggeAudioApi(data.id, props);
+        } else {
+          setDetailLoading(false);
         }
-      }).catch(() => {});
+      }).catch(() => { setDetailLoading(false); });
     }
   }, []);
 
@@ -296,25 +319,32 @@ const ListeSuggestions = (props) => {
 
 
   useEffect(() => {
-    KTApp.blockPage({
-      overlayColor: '#000000',
-      type: 'v2',
-      state: 'danger',
-      message: 'En cours de chargement...'
-    })
+    const hasDetailCode = (() => {
+      const urlCode = props.match?.params?.code;
+      return (urlCode && urlCode !== "all") || !!sessionStorage.getItem('gpr_sug_code');
+    })();
+
+    if (!hasDetailCode) {
+      KTApp.blockPage({
+        overlayColor: '#000000',
+        type: 'v2',
+        state: 'danger',
+        message: 'En cours de chargement...'
+      });
+    }
     setIsLoading(true);
 
     if (mode === 1) {
       props.itemsChanged([])
       listeTousStatuts(props).then((r) => { }).finally(() => {
         setIsLoading(false);
-        KTApp.unblockPage();
+        if (!hasDetailCode) KTApp.unblockPage();
       });
     } else {
       props.itemsChanged([])
       listeTousStatutsOffline(props).then((r) => { }).finally(() => {
         setIsLoading(false);
-        KTApp.unblockPage();
+        if (!hasDetailCode) KTApp.unblockPage();
       });
     }
 
@@ -480,6 +510,7 @@ const ListeSuggestions = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     clearComponentState();
     sessionStorage.setItem('gpr_sug_code', data.code);
+    history.push('/suggestions/liste/' + data.code);
     setDetailVisible(true);
 
     if (mode === 1) {
@@ -506,6 +537,7 @@ const ListeSuggestions = (props) => {
       props.solutionChanged(data.accepted ? data.accepted : "");
       props.commentChanged(data.commentaire ? data.commentaire : "");
       props.selectedItemChanged(data);
+      setClaimId(data.id);
       getFillesApi(data.id, props);
       getSuggeAudioApi(data.id, props);
       props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
@@ -536,6 +568,7 @@ const ListeSuggestions = (props) => {
         props.solutionChanged(data.accepted ? data.accepted : "");
         props.commentChanged(data.commentaire ? data.commentaire : "");
         props.selectedItemChanged(data);
+        setClaimId(data.id);
         getSuggeAudioApi(data.id, props);
         getFillesApi(data.id, props);
 
@@ -1233,28 +1266,22 @@ const ListeSuggestions = (props) => {
 
 
 
+  if (detailVisible && detailLoading) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 16 }}>
+        <div style={{ width: 48, height: 48, border: "4px solid #e2e8f0", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <span style={{ color: "#64748b", fontSize: 14 }}>Chargement de la suggestion…</span>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   if (detailVisible) {
     const filesCount = props.selectedItemFiles?.length ?? 0;
     const audiosCount = props.selectedItemAudio?.length ?? 0;
     const extrasCount = props.extras?.filter(e => e.contenu)?.length ?? 0;
     const contentsCount = (props.content ? 1 : 0) + extrasCount;
     const decision = props.solution === true ? "Pris en compte" : props.solution === false && props.status === "TREAT" ? "Non pris en compte" : null;
-
-    const AccSection = ({ color, dotColor, icon, title, badge, actionBtn, children }) => {
-      const [isOpen, setIsOpen] = useState(true);
-      return (
-        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden", marginBottom: 12 }}>
-          <button onClick={() => setIsOpen(v => !v)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{icon}</div>
-            <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: "#1e293b" }}>{title}</span>
-            {badge !== undefined && <span style={{ fontSize: 11.5, fontWeight: 700, color: "#fff", background: dotColor, borderRadius: 20, padding: "2px 9px", marginRight: 8 }}>{badge}</span>}
-            {actionBtn && <div onClick={e => e.stopPropagation()} style={{ marginRight: 8 }}>{actionBtn}</div>}
-            <span style={{ fontSize: 10, color: "#94a3b8" }}>{isOpen ? "▲" : "▼"}</span>
-          </button>
-          {isOpen && <div style={{ borderTop: "1px solid #f1f5f9", padding: "14px 18px" }}>{children}</div>}
-        </div>
-      );
-    };
 
     return (
       <>
@@ -1299,8 +1326,11 @@ const ListeSuggestions = (props) => {
                 const currentStep = sgAllDone ? SG_STEPS.length : 0;
 
                 const SG_HERO = {
-                  SAVED:      { title: "En attente de décision", sub: "Cette suggestion n'a pas encore été traitée", iconColor: "#1d4ed8", iconBg: "#dbeafe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-                  TEMP_SAVED: { title: "Sauvegardée temporairement", sub: "En attente de complétion", iconColor: "#7c3aed", iconBg: "#ede9fe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> },
+                  SAVED:        { title: "En attente de décision", sub: "Cette suggestion n'a pas encore été traitée", iconColor: "#1d4ed8", iconBg: "#dbeafe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+                  TEMP_SAVED:   { title: "Sauvegardée temporairement", sub: "En attente de complétion", iconColor: "#7c3aed", iconBg: "#ede9fe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> },
+                  AFFECTED:     { title: "Affectée", sub: "Cette suggestion a été affectée à un agent pour traitement", iconColor: "#b45309", iconBg: "#fef3c7", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+                  TO_APPROUVED: { title: "En attente d'approbation", sub: "Cette suggestion est en cours de validation par un superviseur", iconColor: "#0369a1", iconBg: "#e0f2fe", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
+                  DESAPPROUVED: { title: "Désapprouvée", sub: "Cette suggestion a été désapprouvée et nécessite une révision", iconColor: "#b91c1c", iconBg: "#fee2e2", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> },
                 };
                 const hero = SG_HERO[props.status];
 
@@ -1365,7 +1395,7 @@ const ListeSuggestions = (props) => {
                     {props.status === "TREAT" && (
                       <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 18, display: "flex", alignItems: "center", gap: 8 }}>
-                          <GavelIcon style={{ fontSize: 17, color: "#6366f1" }} /> Résultat du traitement
+                          <GavelIcon style={{ fontSize: 17, color: "var(--gpr-primary, #005081)" }} /> Résultat du traitement
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: props.solution === true ? "#f0fdf4" : "#fef2f2", borderRadius: 10, border: `1px solid ${props.solution === true ? "#bbf7d0" : "#fecaca"}` }}>
@@ -1409,29 +1439,8 @@ const ListeSuggestions = (props) => {
               key: "historique",
               label: "Historique",
               content: (
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 20px", borderBottom: "1px solid #f1f5f9" }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 9, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                      <span style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>Flux du dossier</span>
-                    </div>
-                    <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0369a1" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                        </div>
-                        <div style={{ fontSize: 13, color: "#475569" }}><span style={{ fontWeight: 600, color: "#1e293b" }}>Enregistrée par : </span>{props.created_by || "—"}<span style={{ color: "#94a3b8" }}> · {creationDate}</span></div>
-                      </div>
-                      {props.status === "TREAT" && props.handled_by && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                          </div>
-                          <div style={{ fontSize: 13, color: "#475569" }}><span style={{ fontWeight: 600, color: "#1e293b" }}>Traitée par : </span>{props.handled_by}<span style={{ color: "#94a3b8" }}>{props.handled_at ? " · " + formatDate(props.handled_at) : ""}</span></div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                <div style={{ padding: "8px 4px" }}>
+                  <HistoriqueTimeline claimId={claim_id} />
                 </div>
               ),
             },
@@ -1669,7 +1678,7 @@ const ListeSuggestions = (props) => {
                           <h5 className="card-title" style={{ margin: 0 }}>
                             Liste des suggestions
                           </h5>
-                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 24, borderRadius: 12, backgroundColor: "#005081", color: "#fff", fontSize: "0.75rem", fontWeight: 700, padding: "0 8px" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 24, borderRadius: 12, backgroundColor: "var(--gpr-primary, #005081)", color: "#fff", fontSize: "0.75rem", fontWeight: 700, padding: "0 8px" }}>
                             {activeFilter === "ALL" ? content.length : content.filter((i) => i.status === activeFilter).length}
                           </span>
                         </div>
@@ -1678,8 +1687,8 @@ const ListeSuggestions = (props) => {
                           style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}
                         >
                           <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-                            <Tooltip title="Vue liste"><Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></Box></Tooltip>
-                            <Tooltip title="Vue cartes"><Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></Box></Tooltip>
+                            <Tooltip title="Vue liste"><Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></Box></Tooltip>
+                            <Tooltip title="Vue cartes"><Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></Box></Tooltip>
                           </Box>
                           {hbt.includes("H7") ? (
                             <img
@@ -1758,7 +1767,7 @@ const ListeSuggestions = (props) => {
                     TransitionComponent={Transition}
                   >
                     <AppBar
-                      sx={{ position: "relative", backgroundColor: "#1e2188" }}
+                      sx={{ position: "relative", backgroundColor: "var(--gpr-primary, #005081)" }}
                     >
                       <Toolbar>
                         <IconButton

@@ -25,5 +25,6 @@ export const DashboardApi = async (props) => {
         })
         .catch(function (error) {
             // console.log("erreurDASH",error)
+            props.etat1Changed(true);
         });
 }

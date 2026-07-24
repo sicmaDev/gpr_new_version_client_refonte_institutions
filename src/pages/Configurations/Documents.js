@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+﻿import React, { useEffect, useRef, useState, useMemo } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import HelpIcon from '@mui/icons-material/Help';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -248,7 +248,7 @@ const Documents = (props) => {
                             <div>
                                 <label style={labelStyle}>Intitulé <span style={{ color: "#ef4444" }}>*</span></label>
                                 <input value={props.libelle} onChange={(e) => props.libelleChanged(e.target.value)} placeholder="Ex: Tribunal, Statuts, etc."
-                                    style={inputStyle(!!props.errors.libelle)} onFocus={(e) => { if (!props.errors.libelle) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!props.errors.libelle) e.target.style.borderColor = "#e2e8f0"; }} />
+                                    style={inputStyle(!!props.errors.libelle)} onFocus={(e) => { if (!props.errors.libelle) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { if (!props.errors.libelle) e.target.style.borderColor = "#e2e8f0"; }} />
                                 {props.errors.libelle && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.libelle}</div>}
                             </div>
                             <div>
@@ -263,7 +263,7 @@ const Documents = (props) => {
                     <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
                         <Button onClick={() => { setAddModalOpen(false); clearComponentState(); }} disabled={props.etat} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
                         <LoadingButton onClick={handleSubmit} loading={props.etat} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained"
-                            sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
+                            sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
                             Ajouter
                         </LoadingButton>
                     </DialogActions>
@@ -276,7 +276,7 @@ const Documents = (props) => {
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, gap: 1, flexWrap: "wrap" }}>
                     <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Liste des documents</Typography>
                     <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                        <LoadingButton onClick={() => setAddModalOpen(true)} variant="contained" startIcon={<AddIcon />} sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap" }}>Ajouter</LoadingButton>
+                        <LoadingButton onClick={() => setAddModalOpen(true)} variant="contained" startIcon={<AddIcon />} sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" }, fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap" }}>Ajouter</LoadingButton>
                     </Box>
                 </Box>
                 {viewMode === "list" ? (

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Dialog, DialogContent, FormControlLabel, Checkbox } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -81,7 +81,7 @@ const AffecterModal = ({
         {/* Anonymat */}
         <div style={{ background: "white", borderRadius: 10, border: "1px solid #e5e7eb", padding: "12px 16px" }}>
           <FormControlLabel
-            control={<Checkbox checked={!!anonymat} onChange={onAnonymatChange} size="small" sx={{ color: "#1e2188", "&.Mui-checked": { color: "#1e2188" } }} />}
+            control={<Checkbox checked={!!anonymat} onChange={onAnonymatChange} size="small" sx={{ color: "var(--gpr-primary, #005081)", "&.Mui-checked": { color: "var(--gpr-primary, #005081)" } }} />}
             label={<span style={{ fontSize: 13.5, color: "#374151" }}>Cacher l'identité du plaignant</span>}
             style={{ margin: 0 }}
           />

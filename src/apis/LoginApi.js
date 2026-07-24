@@ -61,10 +61,10 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 const _u = response.data.response.content.user;
                 const _modules = _s.modules || [];
 
-                // Couleurs : si module appearance actif → couleurs institution, sinon couleur GPR par défaut
+                // Couleurs + logo institution si module appearance actif
                 if (_modules.includes('appearance') && _s.appearance?.sidebarColor) {
                     window.dispatchEvent(new CustomEvent('gpr-auth-loaded', {
-                        detail: { sidebarColor: _s.appearance.sidebarColor, topbarColor: _s.appearance.topbarColor }
+                        detail: { sidebarColor: _s.appearance.sidebarColor, topbarColor: _s.appearance.topbarColor, logo: _s.appearance.logo || null }
                     }));
                 }
 
@@ -84,10 +84,8 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 _s.products ? saveItemToSessionStorage(JSON.stringify(_s.products), 'app-produits') : saveItemToSessionStorage([], 'app-produits');
                 _s.help ? saveItemToSessionStorage(JSON.stringify(_s.help), 'help') : saveItemToSessionStorage([], 'help');
                 saveItemToSessionStorage(JSON.stringify(_modules), 'app-modules');
-                if (_modules.includes('appearance') && _s.appearance) {
+                if (_s.appearance) {
                     saveItemToSessionStorage(JSON.stringify(_s.appearance), 'app-appearance');
-                } else {
-                    sessionStorage.removeItem('app-appearance');
                 }
 
                 //enregistrement dans le local storage
@@ -111,10 +109,8 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 _s.products ? saveItemToLocalStorage(JSON.stringify(_s.products), 'app-produits') : saveItemToLocalStorage([], 'app-produits');
                 _s.help ? saveItemToLocalStorage(JSON.stringify(_s.help), 'help') : saveItemToLocalStorage([], 'help');
                 saveItemToLocalStorage(JSON.stringify(_modules), 'app-modules');
-                if (_modules.includes('appearance') && _s.appearance) {
+                if (_s.appearance) {
                     saveItemToLocalStorage(JSON.stringify(_s.appearance), 'app-appearance');
-                } else {
-                    localStorage.removeItem('app-appearance');
                 }
 
             } else {

@@ -572,3 +572,33 @@ body{
 .scroll-container::-webkit-scrollbar-track {
   background-color: #f1f1f1;
 }
+
+/* ── Couleur primaire configurée sur tous les headers de modals ─── */
+.MuiDialogTitle-root {
+    background-color: var(--gpr-primary, #005081) !important;
+    color: #ffffff !important;
+}
+.MuiDialogTitle-root * {
+    color: #ffffff !important;
+}
+.modal-header {
+    background-color: var(--gpr-primary, #005081) !important;
+    color: #ffffff !important;
+    border-bottom: none !important;
+}
+.modal-header h4,
+.modal-header h5,
+.modal-header .modal-close {
+    color: #ffffff !important;
+}
+/* ─────────────────────────────────────────────────────────────────── */
+
+/* ── Supprimer le triangle/marqueur des <summary> (details) ──────── */
+summary.text-details {
+    list-style: none;
+    cursor: pointer;
+}
+summary.text-details::-webkit-details-marker {
+    display: none;
+}
+/* ─────────────────────────────────────────────────────────────────── */

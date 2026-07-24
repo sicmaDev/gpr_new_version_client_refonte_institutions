@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import FileTypeIcon from "../../components/shared/FileTypeIcon";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import TraitementShell from "../../components/treatment/TraitementShell";
@@ -208,7 +208,7 @@ const DEN_KPI_CARDS = [
 
 const DEN_FILTER_BUTTONS = [
   { value: "ALL",         label: "Tous" },
-  { value: "SAVED",       label: "Enregistrée" },
+  { value: "SAVED",       label: "À traiter" },
   { value: "AFFECTED",    label: "Affectée" },
   { value: "TO_APPROUVED",label: "À approuver" },
   { value: "TREAT",       label: "Traitée" },
@@ -255,7 +255,7 @@ const ListeDenonciations = (props) => {
     var statusElt = status;
     switch (status) {
       case "SAVED":
-        statusElt = "Enregistrée";
+        statusElt = "À traiter";
         break;
       case "TEMP_SAVED":
         statusElt = "Sauvegardée";
@@ -312,11 +312,16 @@ const ListeDenonciations = (props) => {
   const handleClickOpen = () => { setOpen(true); };
   const history = useHistory();
 
-  // Chargement depuis l'URL ou sessionStorage quand on arrive directement sur /denonciations/liste/:code
+  // Chargement depuis l'URL ou sessionStorage — un seul useEffect pour éviter la race condition
   useEffect(() => {
     const urlCode = props.match?.params?.code;
     const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_den_code');
     if (code) {
+      if (!urlCode || urlCode === "all") {
+        history.replace('/denonciations/liste/' + code);
+      }
+      setDetailVisible(true);
+      setDetailLoading(true);
       axios({
         method: "get",
         url: HOST + "api/v1/denunciation/" + code + "/details",
@@ -324,15 +329,7 @@ const ListeDenonciations = (props) => {
       }).then((cc) => {
         if (cc.status >= 200 && cc.status <= 299) {
           const data = cc.data.content;
-          clearComponentState();
           props.idChanged(data.id ?? "");
-          props.lastnameChanged(data.clientFirstAndLastName ?? "");
-          props.addressChanged(data.address ?? "");
-          props.phoneChanged(data.tel ?? "");
-          props.genderChanged(data.gender ?? "");
-          props.languageChanged(data.language?.libelle ?? "");
-          props.dossierimfChanged(data.folderCode ?? "");
-          props.emailChanged(data.email ?? "");
           props.codeChanged(data.code ?? "");
           props.codeClientChanged(data.codeClient ?? "");
           props.recordedAtChanged(data.receiptDateTime ?? "");
@@ -355,11 +352,14 @@ const ListeDenonciations = (props) => {
           props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
           props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
           setClaimId(data.id);
+          setDetailLoading(false);
           setDetailVisible(true);
           getFillesApi(data.id, props);
-          getClaimAudioApi(data.id, props);
+          getDenunAudioApi(data.id, props);
+        } else {
+          setDetailLoading(false);
         }
-      }).catch(() => {});
+      }).catch(() => { setDetailLoading(false); });
     }
   }, []);
 
@@ -372,6 +372,7 @@ const ListeDenonciations = (props) => {
   const [extraFileLoading, setExtraFileLoading] = useState(false);
   const [claim_id, setClaimId] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const clearFiles = () => {
     if (inputRef.current) {
@@ -426,12 +427,19 @@ const ListeDenonciations = (props) => {
   }
 
   useEffect(() => {
-    KTApp.blockPage({
-      overlayColor: "#000000",
-      type: "v2",
-      state: "danger",
-      message: "En cours de chargement...",
-    });
+    const hasDetailCode = (() => {
+      const urlCode = props.match?.params?.code;
+      return (urlCode && urlCode !== "all") || !!sessionStorage.getItem('gpr_den_code');
+    })();
+
+    if (!hasDetailCode) {
+      KTApp.blockPage({
+        overlayColor: "#000000",
+        type: "v2",
+        state: "danger",
+        message: "En cours de chargement...",
+      });
+    }
     setIsLoading(true);
 
     if (mode === 1) {
@@ -440,7 +448,7 @@ const ListeDenonciations = (props) => {
         .then((r) => { })
         .finally(() => {
           setIsLoading(false);
-          KTApp.unblockPage();
+          if (!hasDetailCode) KTApp.unblockPage();
         });
     } else {
       props.itemsChanged([]);
@@ -448,7 +456,7 @@ const ListeDenonciations = (props) => {
         .then((r) => { })
         .finally(() => {
           setIsLoading(false);
-          KTApp.unblockPage();
+          if (!hasDetailCode) KTApp.unblockPage();
         });
     }
 
@@ -507,7 +515,7 @@ const ListeDenonciations = (props) => {
           case "SAVED":
             statusElt = (
               <span className="chip toTreatBgColor">
-                <span className="">Enregistrée</span>
+                <span className="">À traiter</span>
               </span>
             );
             break;
@@ -716,6 +724,7 @@ const ListeDenonciations = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     clearComponentState();
     sessionStorage.setItem('gpr_den_code', data.code);
+    history.push('/denonciations/liste/' + data.code);
     setDetailVisible(true);
     setClaimId(data.id);
     // setAudios([])
@@ -903,7 +912,7 @@ const ListeDenonciations = (props) => {
               style={{ cursor: "pointer" }}
             />
             <span className="chip toTreatBgColor">
-              <span className="">Enregistrée</span>
+              <span className="">À traiter</span>
             </span>
           </h5>
         </>
@@ -1936,7 +1945,7 @@ const ListeDenonciations = (props) => {
     let statusElt;
     switch (element.status) {
       case "SAVED":
-        statusElt = "Enregistrée";
+        statusElt = "À traiter";
         break;
       case "TEMP_SAVED":
         statusElt = "Sauvegardée";
@@ -2356,6 +2365,16 @@ const ListeDenonciations = (props) => {
       });
   };
 
+  if (detailVisible && detailLoading) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 16 }}>
+        <div style={{ width: 48, height: 48, border: "4px solid #e2e8f0", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <span style={{ color: "#64748b", fontSize: 14 }}>Chargement de la dénonciation…</span>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   if (detailVisible) {
     const solutions = Array.isArray(props.solution) ? props.solution : [];
     const hasH14 = hbt.includes("H14") || addR === "PILOTE" || addR === "DE";
@@ -2630,7 +2649,7 @@ const ListeDenonciations = (props) => {
                           {displayedSolutions.map((sol, idx) => {
                             const isLast = idx === displayedSolutions.length - 1;
                             const sat = sol.satisfactionMeasureDto?.status;
-                            const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : "#6366f1";
+                            const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : "var(--gpr-primary, #005081)";
                             const satLabel = sat === "SATISFIED" ? "Satisfait" : sat === "UNSATISFIED" ? "Non satisfait" : sat === "PARTIAL" ? "Partiellement satisfait" : null;
                             return (
                               <div key={sol.id ?? idx} style={{ position: "relative", marginBottom: isLast ? 0 : 20 }}>
@@ -2709,7 +2728,7 @@ const ListeDenonciations = (props) => {
                         <div style={{ position: "absolute", left: 36, top: 20, bottom: 20, width: 2, background: "#e2e8f0", borderRadius: 2 }} />
                         {solutions.map((sol, idx) => {
                           const sat = sol.satisfactionMeasureDto?.status;
-                          const dc = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : "#6366f1";
+                          const dc = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : "var(--gpr-primary, #005081)";
                           return (
                             <div key={sol.id ?? idx} style={{ position: "relative", marginBottom: idx < solutions.length - 1 ? 16 : 0 }}>
                               <div style={{ position: "absolute", left: -22, top: 12, width: 14, height: 14, borderRadius: "50%", background: dc, border: "2px solid #fff", boxShadow: `0 0 0 2px ${dc}`, zIndex: 1 }} />
@@ -3066,8 +3085,8 @@ const ListeDenonciations = (props) => {
                           style={{ textAlign: "end", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}
                         >
                           <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-                            <Tooltip title="Vue liste"><Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></Box></Tooltip>
-                            <Tooltip title="Vue cartes"><Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></Box></Tooltip>
+                            <Tooltip title="Vue liste"><Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></Box></Tooltip>
+                            <Tooltip title="Vue cartes"><Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></Box></Tooltip>
                           </Box>
                           {hbt.includes("H7") ? (
                             <img
@@ -3157,7 +3176,7 @@ const ListeDenonciations = (props) => {
                     TransitionComponent={Transition}
                   >
                     <AppBar
-                      sx={{ position: "relative", backgroundColor: "#1e2188" }}
+                      sx={{ position: "relative", backgroundColor: "var(--gpr-primary, #005081)" }}
                     >
                       <Toolbar>
                         <IconButton
@@ -3301,7 +3320,7 @@ const ListeDenonciations = (props) => {
                                         className="pb-2 ml-3 "
                                         style={{
                                           cursor: "pointer",
-                                          color: "#1e2188",
+                                          color: "var(--gpr-primary, #005081)",
                                         }}
                                       >
                                         + Ajouter du contenu
@@ -3484,7 +3503,7 @@ const ListeDenonciations = (props) => {
                                     endIcon={<SaveIcon />}
                                     variant="contained"
                                     sx={{
-                                      backgroundColor: "#1e2188",
+                                      backgroundColor: "var(--gpr-primary, #005081)",
                                       textTransform: "initial",
                                     }}
                                   >

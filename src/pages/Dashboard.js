@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import ReactDatatable from '@ashvin27/react-datatable';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -444,6 +444,90 @@ const ClaimRow = ({ item, showGravity }) => {
   );
 };
 
+// Chips agences avec bouton +N (même comportement que CommGroupLine dans HistoriqueTimeline)
+const AgenceChips = ({ agencesStats }) => {
+  const [dropPos, setDropPos] = useState(null);
+  const btnRef = useRef(null);
+  const dropRef = useRef(null);
+  const open = dropPos !== null;
+  const first = agencesStats[0];
+  const rest  = agencesStats.slice(1);
+
+  const toggleDrop = () => {
+    if (open) { setDropPos(null); return; }
+    const rect = btnRef.current.getBoundingClientRect();
+    const dropH = Math.min(rest.length * 30 + 8, 180);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const goUp = spaceBelow < dropH + 12 && spaceAbove >= dropH + 12;
+    setDropPos({
+      right: window.innerWidth - rect.right,
+      ...(goUp ? { bottom: window.innerHeight - rect.top + 4 } : { top: rect.bottom + 4 }),
+    });
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (
+        btnRef.current && !btnRef.current.contains(e.target) &&
+        dropRef.current && !dropRef.current.contains(e.target)
+      ) setDropPos(null);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  if (!first) return null;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+      <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, fontWeight: 700, background: '#dbeafe', color: '#1d4ed8', whiteSpace: 'nowrap' }}>
+        {first.agenceLabel}
+      </span>
+      {rest.length > 0 && (
+        <>
+          <button
+            ref={btnRef}
+            onClick={toggleDrop}
+            style={{
+              fontSize: 11, fontWeight: 700, cursor: 'pointer',
+              padding: '3px 10px', borderRadius: 20,
+              background: '#dbeafe', color: '#1d4ed8',
+              border: '1px solid #bfdbfe', lineHeight: '18px',
+            }}
+          >
+            +{rest.length}
+          </button>
+          {open && (
+            <div ref={dropRef} style={{
+              position: 'fixed',
+              top: dropPos.top ?? 'auto',
+              bottom: dropPos.bottom ?? 'auto',
+              right: dropPos.right,
+              zIndex: 9999,
+              background: 'white', borderRadius: 10,
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+              minWidth: 150, maxHeight: 180, overflowY: 'auto',
+              padding: '4px 0',
+            }}>
+              {rest.map((s, i) => (
+                <div key={i} style={{
+                  padding: '5px 12px',
+                  borderBottom: i < rest.length - 1 ? '1px solid #f1f5f9' : 'none',
+                  fontSize: 12, color: '#1d4ed8', fontWeight: 600,
+                }}>
+                  {s.agenceLabel}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -545,6 +629,9 @@ const Dashboard = (props) => {
     el.receiptDateTimeFormated = new Intl.DateTimeFormat('fr-FR', { year: 'numeric', month: 'long', day: '2-digit', hour: 'numeric', minute: 'numeric' }).format(new Date(el.receiptDateTime));
   });
 
+  // ── Données par agence (RA/DIRECTION uniquement) ──────────────────────
+  const agencesStats = props.dashboard?.agencesStats ?? [];
+
   // ── Derived display values (from props.dashboard.* only — no invention) ─
   const loading     = props.etat1 === false;
   const total       = props.dashboard?.plainteSuggest        ?? 0;
@@ -626,7 +713,7 @@ const Dashboard = (props) => {
     </Card>
   );
 
-  const page = { background: '#f8fafc', minHeight: '100vh' };
+  const page = { background: '#ffffff', minHeight: '100vh' };
   const pageClass = 'px-3 pt-3 pb-8 sm:px-6 sm:pt-6 sm:pb-12';
   const seeAll = (to, label = 'Voir tout') => (
     <NavLink to={to} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: primary, fontWeight: 600 }}>
@@ -662,7 +749,7 @@ const Dashboard = (props) => {
         <div style={{
           display: 'flex', alignItems: 'center', gap: 12,
           padding: '12px 18px', marginBottom: 20,
-          background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+          background: '#ffffff',
           border: '1px solid #bfdbfe', borderRadius: 12,
           borderLeft: '4px solid #3b82f6',
         }}>
@@ -671,42 +758,148 @@ const Dashboard = (props) => {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1d4ed8' }}>
-              Vue Direction — {scopeLabel}
+              Vue Direction {scopeLabel}
             </div>
             <div style={{ fontSize: 12.5, color: '#2563eb', marginTop: 2 }}>
-              Vous consultez les données de votre direction et des {subAgencesCount} agence{subAgencesCount !== 1 ? 's' : ''} rattachée{subAgencesCount !== 1 ? 's' : ''}.
+              Vous consultez les données de votre direction et des agences qui sont rattachées à votre direction.
             </div>
           </div>
-          <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 20, fontWeight: 700, background: '#dbeafe', color: '#1d4ed8', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            {subAgencesCount + 1} point{subAgencesCount + 1 !== 1 ? 's' : ''} de service
-          </span>
+          <AgenceChips agencesStats={agencesStats} />
         </div>
       )}
 
       {/* ── Section 2 : KPI cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
+      <div className="row" style={{ marginBottom: 4 }}>
+        <div className="col l12 m12 s12" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
 
-        <StatCard value={total}          label="RSD enregistrées" sub={`${claimsCount} réc. · ${denUnsCount} dén. · ${suggestCount} sug.`} IconComp={SummarizeIcon} iconColor="#6366f1" loading={loading} />
-        <StatCard value={affected}        label="Affectés"                                   IconComp={RedoIcon}                  iconColor="#8b5cf6" loading={loading} />
-        <StatCard value={overdue}         label="En retard de traitement"                    IconComp={AssignmentLateIcon}        iconColor="#f43f5e" loading={loading} />
-        <StatCard value={treated}         label="Traités"                                    IconComp={RecyclingIcon}             iconColor="#10b981" loading={loading} />
-        <StatCard value={awaitingMeasure} label="En attente de mesure"                       IconComp={AccessTimeIcon}            iconColor="#f59e0b" loading={loading} />
-        <StatCard
-          value={(() => { const v = Number(props.dashboard?.tauxSatisfaction); return (!isNaN(v) && v > 0) ? v.toFixed(1) + ' %' : '0.0 %'; })()}
-          inlineSub={(() => { const v = Number(props.dashboard?.tauxSatisfaction); return (!isNaN(v) && v > 0) ? `(${(v / 100 * 5).toFixed(1)}/5)` : '(0.0/5)'; })()}
-          progress={(() => { const v = Number(props.dashboard?.tauxSatisfaction); return !isNaN(v) ? v : 0; })()}
-          label="Satisfaction réclamations"
-          IconComp={SentimentSatisfiedAltIcon}
-          iconColor="#0ea5e9"
-          loading={loading}
-        />
+            <StatCard value={total}          label="RSD enregistrées" sub={`${claimsCount} réc. · ${denUnsCount} dén. · ${suggestCount} sug.`} IconComp={SummarizeIcon} iconColor="var(--gpr-primary, #005081)" loading={loading} />
+            <StatCard value={affected}        label="Affectés"                                   IconComp={RedoIcon}                  iconColor="#8b5cf6" loading={loading} />
+            <StatCard value={overdue}         label="En retard de traitement"                    IconComp={AssignmentLateIcon}        iconColor="#f43f5e" loading={loading} />
+            <StatCard value={treated}         label="Traités"                                    IconComp={RecyclingIcon}             iconColor="#10b981" loading={loading} />
+            <StatCard value={awaitingMeasure} label="En attente de mesure"                       IconComp={AccessTimeIcon}            iconColor="#f59e0b" loading={loading} />
+            <StatCard
+              value={(() => { const v = Number(props.dashboard?.tauxSatisfaction); return (!isNaN(v) && v > 0) ? v.toFixed(1) + ' %' : '0.0 %'; })()}
+              inlineSub={(() => { const v = Number(props.dashboard?.tauxSatisfaction); return (!isNaN(v) && v > 0) ? `(${(v / 100 * 5).toFixed(1)}/5)` : '(0.0/5)'; })()}
+              progress={(() => { const v = Number(props.dashboard?.tauxSatisfaction); return !isNaN(v) ? v : 0; })()}
+              label="Satisfaction réclamations"
+              IconComp={SentimentSatisfiedAltIcon}
+              iconColor="#0ea5e9"
+              loading={loading}
+            />
 
+          </div>
+        </div>
       </div>
 
-      {/* ── Section 3 : Charts ── */}
-      <div className="row" style={{ marginBottom: 4 }}>
+      {/* ── Section 3 : Répartition par agence (RA/DIRECTION uniquement) ── */}
+      {isRA && scopeType === 'DIRECTION' && agencesStats.length > 0 && (
+        <div className="row" style={{ marginBottom: 4 }}>
+          <div className="col l12 m12 s12" style={{ marginBottom: 16 }}>
+            <Card>
+              <CardHeader
+                title={
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gpr-primary, #005081)" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Répartition par agence
+                  </span>
+                }
+                subtitle="Réclamations · Dénonciations · Suggestions par point de service"
+              />
 
-        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
+              {/* En-tête des colonnes */}
+              <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr 1fr 70px', alignItems: 'end', padding: '0 4px 10px', borderBottom: '1px solid #e2e8f0', marginBottom: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Agence</div>
+
+                <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: 16 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 6 }}>Réclamations</div>
+                  <div style={{ display: 'flex' }}>
+                    <div style={{ flex: 1, fontSize: 9.5, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Enreg.</div>
+                    <div style={{ flex: 1, fontSize: 9.5, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Traité</div>
+                    <div style={{ flex: 1, fontSize: 9.5, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Satisf.</div>
+                  </div>
+                </div>
+
+                <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: 16 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 6 }}>Dénonciations</div>
+                  <div style={{ display: 'flex' }}>
+                    <div style={{ flex: 1, fontSize: 9.5, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Enreg.</div>
+                    <div style={{ flex: 1, fontSize: 9.5, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Traité</div>
+                  </div>
+                </div>
+
+                <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: 16 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 6 }}>Suggestions</div>
+                  <div style={{ display: 'flex' }}>
+                    <div style={{ flex: 1, fontSize: 9.5, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Enreg.</div>
+                    <div style={{ flex: 1, fontSize: 9.5, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>Traité</div>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', textAlign: 'center' }}>Retard</div>
+              </div>
+
+              {/* Lignes par agence */}
+              {agencesStats.map((stat, i) => (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr 1fr 70px', alignItems: 'center', padding: '14px 4px', borderBottom: i < agencesStats.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 8 }}>{stat.agenceLabel}</div>
+
+                  {/* Réclamations */}
+                  <div style={{ display: 'flex', borderLeft: '1px solid #e2e8f0', paddingLeft: 16 }}>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: '#f97316', fontVariantNumeric: 'tabular-nums' }}>{stat.claims || 0}</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 15, fontWeight: 500, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>{stat.claimsTrait || 0}</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 15, fontWeight: 500, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>{stat.claimsSatisfait || 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Dénonciations */}
+                  <div style={{ display: 'flex', borderLeft: '1px solid #e2e8f0', paddingLeft: 16 }}>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: '#ef4444', fontVariantNumeric: 'tabular-nums' }}>{stat.denuns || 0}</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 15, fontWeight: 500, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>{stat.denunsTrait || 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Suggestions */}
+                  <div style={{ display: 'flex', borderLeft: '1px solid #e2e8f0', paddingLeft: 16 }}>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: '#3b82f6', fontVariantNumeric: 'tabular-nums' }}>{stat.suggests || 0}</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 15, fontWeight: 500, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>{stat.suggestsTrait || 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Retard */}
+                  <div style={{ textAlign: 'center' }}>
+                    {(stat.retard || 0) > 0 ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11.5, fontWeight: 700, color: '#dc2626', background: '#fee2e2', padding: '3px 10px', borderRadius: 4 }}>
+                        <AccessTimeIcon style={{ fontSize: 12 }} />{stat.retard}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 13, color: '#94a3b8' }}>—</span>
+                    )}
+                  </div>
+
+                </div>
+              ))}
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* ── Section 4 : Charts ── */}
+      <div className="row" style={{ marginBottom: 4, display: 'flex', flexWrap: 'wrap', alignItems: 'stretch' }}>
+
+        <div className="col l4 m12 s12" style={{ marginBottom: 16, display: 'flex', flexDirection: 'column' }}>
           <Card>
             <CardHeader title="Par statut" subtitle="Répartition des dossiers" />
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -718,7 +911,7 @@ const Dashboard = (props) => {
           </Card>
         </div>
 
-        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
+        <div className="col l4 m12 s12" style={{ marginBottom: 16, display: 'flex', flexDirection: 'column' }}>
           <Card>
             <CardHeader title="Par catégorie" subtitle="Types de dossiers" />
             <VerticalBars loading={loading} data={[
@@ -729,7 +922,7 @@ const Dashboard = (props) => {
           </Card>
         </div>
 
-        <div className="col l4 m12 s12" style={{ marginBottom: 16 }}>
+        <div className="col l4 m12 s12" style={{ marginBottom: 16, display: 'flex', flexDirection: 'column' }}>
           <Card>
             <CardHeader title="Par gravité" subtitle="Niveaux de criticité" />
             <HorizontalBars loading={loading} data={[
@@ -768,44 +961,57 @@ const Dashboard = (props) => {
                 Aucun dossier en retard
               </div>
             ) : (
-              overdueItems.map((item, i) => {
-                const badge = typeBadge(item.type);
-                const url   = item.type === 'CLAIM'
-                  ? (item.status === 'TREAT' ? `/reclamations/mesure/${item.claimCode}` : `/reclamations/traitement/${item.claimCode}`)
-                  : `/denonciations/traitement/${item.claimCode}`;
-                return (
-                  <NavLink key={i} to={url} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                    <div
-                      style={{ padding: '11px 0', borderBottom: i < overdueItems.length - 1 ? '1px solid #f8fafc' : 'none', transition: 'background 0.15s', borderRadius: 6 }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 700, flexShrink: 0, background: badge.bg, color: badge.color }}>
-                            {badge.label}
-                          </span>
-                          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {item.claimCodeClient}
+              <>
+                {/* En-tête de colonnes */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '0 0 8px 0', borderBottom: '1px solid #e2e8f0', marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', flex: 1 }}>Dossier</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 140, textAlign: 'center' }}>Agence concernée</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 100, textAlign: 'right' }}>Délai</span>
+                </div>
+                {overdueItems.map((item, i) => {
+                  const badge = typeBadge(item.type);
+                  const url   = item.type === 'CLAIM'
+                    ? (item.status === 'TREAT' ? `/reclamations/mesure/${item.claimCode}` : `/reclamations/traitement/${item.claimCode}`)
+                    : `/denonciations/traitement/${item.claimCode}`;
+                  return (
+                    <NavLink key={i} to={url} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                      <div
+                        style={{ padding: '11px 0', borderBottom: i < overdueItems.length - 1 ? '1px solid #f8fafc' : 'none', transition: 'background 0.15s', borderRadius: 6 }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 700, flexShrink: 0, background: badge.bg, color: badge.color }}>
+                              {badge.label}
                             </span>
-                            <span style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '250px' }}>
-                              {item.objetLibelle || item.objet?.libelle || item.content || '—'}
+                            <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                              <span style={{ fontSize: 13, fontWeight: 600, color: primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {item.claimCodeClient}
+                              </span>
+                              <span style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {item.objetLibelle || item.objet?.libelle || item.content || '—'}
+                              </span>
+                            </div>
+                          </div>
+                          <div style={{ flexShrink: 0, minWidth: 140, textAlign: 'center' }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                              {item.servicePointLibelle || '—'}
                             </span>
                           </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: '#f9005e', background: '#ffe8f0', padding: '2px 8px', borderRadius: 20 }}>
-                            <AccessTimeIcon style={{ fontSize: 12 }} />
-                            {item.retardDay} retard
-                          </span>
-                          <ArrowForwardIcon style={{ fontSize: 14, color: primary }} />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, minWidth: 100, justifyContent: 'flex-end' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: '#f9005e', background: '#ffe8f0', padding: '2px 8px', borderRadius: 20 }}>
+                              <AccessTimeIcon style={{ fontSize: 12 }} />
+                              {item.retardDay} retard
+                            </span>
+                            <ArrowForwardIcon style={{ fontSize: 14, color: primary }} />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </NavLink>
-                );
-              })
+                    </NavLink>
+                  );
+                })}
+              </>
             )}
           </Card>
         </div>

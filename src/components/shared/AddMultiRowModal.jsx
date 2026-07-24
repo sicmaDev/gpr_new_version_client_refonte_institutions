@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+﻿import React, { useState, useCallback } from "react";
 import {
   Dialog, DialogContent, DialogActions,
   Button, IconButton, Tooltip, CircularProgress,
@@ -97,7 +97,7 @@ const AddMultiRowModal = ({
     >
       {/* Header */}
       <div style={{
-        background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)",
+        background: "var(--gpr-primary, #005081)",
         padding: "18px 24px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
@@ -165,7 +165,7 @@ const AddMultiRowModal = ({
                           background: "#fff", color: "#1e293b",
                           transition: "border-color 0.15s",
                         }}
-                        onFocus={(e) => { if (!errors[idx]?.[f.key]) e.target.style.borderColor = "#3b3fd8"; }}
+                        onFocus={(e) => { if (!errors[idx]?.[f.key]) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }}
                         onBlur={(e) => { if (!errors[idx]?.[f.key]) e.target.style.borderColor = "#e2e8f0"; }}
                       />
                       {errors[idx]?.[f.key] && (
@@ -199,10 +199,10 @@ const AddMultiRowModal = ({
               display: "flex", alignItems: "center", gap: 6,
               background: "none", border: "1.5px dashed #c7d2fe",
               borderRadius: 8, padding: "7px 14px",
-              color: "#3b3fd8", fontSize: 13, fontWeight: 600,
+              color: "var(--gpr-primary, #005081)", fontSize: 13, fontWeight: 600,
               cursor: "pointer", transition: "all 0.15s",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "#eef2ff"; e.currentTarget.style.borderColor = "#3b3fd8"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#eef2ff"; e.currentTarget.style.borderColor = "var(--gpr-primary, #005081)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "#c7d2fe"; }}
           >
             <AddIcon style={{ fontSize: 15 }} /> Ajouter une ligne
@@ -231,8 +231,8 @@ const AddMultiRowModal = ({
             startIcon={loading ? <CircularProgress size={14} color="inherit" /> : null}
             sx={{
               textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3,
-              background: "linear-gradient(135deg, #1e2188, #3b3fd8)",
-              "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" },
+              background: "var(--gpr-primary, #005081)",
+              "&:hover": { background: "var(--gpr-primary-dark, #003d63)" },
               "&.Mui-disabled": { opacity: 0.6 },
             }}>
             {loading ? "Enregistrement..." : `Enregistrer (${validRows.length})`}

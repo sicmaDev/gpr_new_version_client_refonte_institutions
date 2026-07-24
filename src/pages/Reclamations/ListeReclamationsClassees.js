@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+﻿import React, { useEffect, useRef, useState, useMemo } from "react";
 import FileTypeIcon from "../../components/shared/FileTypeIcon";
 import { Link, NavLink } from "react-router-dom";
 import { KTApp } from "../../Utils/blockui";
@@ -202,11 +202,23 @@ const ListeReclamationsClassees = (props) => {
   const history = useHistory();
 
   useEffect(() => {
-    if (props.match.params.code !== "all") {
+    const urlCode = props.match?.params?.code;
+    if (!urlCode || urlCode === "all") {
+      const storedCode = sessionStorage.getItem('gpr_cls_code');
+      if (storedCode) {
+        history.replace('/reclamations/classees/' + storedCode);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const urlCode = props.match?.params?.code;
+    const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_cls_code');
+    if (code) {
       async function details() {
         let cc = await axios({
           method: "get",
-          url: HOST + "api/v1/claim/" + props.match.params.code + "/details",
+          url: HOST + "api/v1/claim/" + code + "/details",
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
@@ -518,6 +530,7 @@ const ListeReclamationsClassees = (props) => {
   };
 
   const rowClickedHandler = (event, data, rowIndex) => {
+    sessionStorage.setItem('gpr_cls_code', data.code);
     history.push("/reclamations/classees/" + data.code);
 
     switch (data.objet?.risqueLevel) {
@@ -1227,7 +1240,7 @@ const ListeReclamationsClassees = (props) => {
 
     return (
       <TraitementShell
-        onBack={() => history.push("/reclamations/classees/all")}
+        onBack={() => { sessionStorage.removeItem('gpr_cls_code'); history.push("/reclamations/classees/all"); }}
         codeClient={props.codeClient || props.code}
         status={props.status}
         risqueLevel={props.selectedItem?.objet?.risqueLevel}
@@ -1393,19 +1406,7 @@ const ListeReclamationsClassees = (props) => {
             key: "historique",
             label: "Historique",
             content: (
-              <HistoriqueTimeline
-                recorded_at={props.recorded_at}
-                created_by={props.created_by}
-                transmitted={props.selectedItem?.transmitted != null ? "" + props.selectedItem.transmitted : ""}
-                transmittedBy={props.selectedItem?.transmittedBy?.firstAndLastName}
-                transmittedTo={props.selectedItem?.transmittedTo?.firstAndLastName}
-                handled_by={props.handled_by}
-                assigned_by={props.selectedItem?.treatmentAffectedBy?.firstAndLastName}
-                assignedAt={props.selectedItem?.affectedAt}
-                solution={Array.isArray(props.solution) ? props.solution : []}
-                formatDate={formatDate}
-                formatDate3={formatDate3}
-              />
+              <HistoriqueTimeline claimId={props.id} />
             ),
           },
         ]}
@@ -1445,12 +1446,12 @@ const ListeReclamationsClassees = (props) => {
                       </h5>
                       <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
                         <Tooltip title="Vue liste">
-                          <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                          <Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                           </Box>
                         </Tooltip>
                         <Tooltip title="Vue cartes">
-                          <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
+                          <Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                           </Box>
                         </Tooltip>
@@ -1487,7 +1488,7 @@ const ListeReclamationsClassees = (props) => {
                       <AppBar
                         sx={{
                           position: "relative",
-                          backgroundColor: "#1e2188",
+                          backgroundColor: "var(--gpr-primary, #005081)",
                         }}
                       >
                         <Toolbar>
@@ -1929,7 +1930,7 @@ const ListeReclamationsClassees = (props) => {
                                             loadingPosition="end"
                                             endIcon={<SaveIcon />}
                                             variant="contained"
-                                            sx={{ backgroundColor:"#1e2188",textTransform:"initial" }}
+                                            sx={{ backgroundColor:"var(--gpr-primary, #005081)",textTransform:"initial" }}
                                           >
                                               <span>Résoudre</span>
                                           </LoadingButton>

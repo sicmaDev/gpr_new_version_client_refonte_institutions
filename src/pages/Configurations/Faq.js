@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import { connect } from "react-redux";
 import { Tooltip, IconButton, Box, Typography, Dialog, DialogContent, DialogActions, Button, Chip } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
@@ -64,7 +64,7 @@ const Faq = (props) => {
             key: "contenu", label: "Contenu", required: true, fullWidth: true,
             render: (value, onChange) => (
                 <textarea value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder="Ex: Vous pouvez suivre l'état de votre réclamation depuis votre espace personnel..."
-                    style={textareaStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                    style={textareaStyle(false)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
             ),
         },
     ];
@@ -116,20 +116,20 @@ const Faq = (props) => {
                                 <label style={labelStyle}>Intitulé <span style={{ color: "#ef4444" }}>*</span></label>
                                 <input value={editForm.libelle} onChange={(e) => { setEditForm(p => ({ ...p, libelle: e.target.value })); setEditErrors(p => ({ ...p, libelle: "" })); }} placeholder="Ex: Comment suivre ma réclamation ?"
                                     style={{ width: "100%", boxSizing: "border-box", border: editErrors.libelle ? "1.5px solid #ef4444" : "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 }}
-                                    onFocus={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#e2e8f0"; }} />
+                                    onFocus={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#e2e8f0"; }} />
                                 {editErrors.libelle && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.libelle}</div>}
                             </div>
                             <div>
                                 <label style={labelStyle}>Contenu <span style={{ color: "#ef4444" }}>*</span></label>
                                 <textarea value={editForm.contenu} onChange={(e) => { setEditForm(p => ({ ...p, contenu: e.target.value })); setEditErrors(p => ({ ...p, contenu: "" })); }} placeholder="Ex: Vous pouvez suivre l'état de votre réclamation depuis votre espace personnel..."
-                                    style={textareaStyle(editErrors.contenu)} onFocus={(e) => { if (!editErrors.contenu) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!editErrors.contenu) e.target.style.borderColor = "#e2e8f0"; }} />
+                                    style={textareaStyle(editErrors.contenu)} onFocus={(e) => { if (!editErrors.contenu) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { if (!editErrors.contenu) e.target.style.borderColor = "#e2e8f0"; }} />
                                 {editErrors.contenu && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.contenu}</div>}
                             </div>
                         </div>
                     </DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
                         <BlockButton disabled={editLoading}><Button onClick={() => { setEditModalOpen(false); clearComponentState(); }} disabled={editLoading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button></BlockButton>
-                        <BlockButton disabled={editLoading}><LoadingButton onClick={handleEditSubmit} loading={editLoading} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Modifier</LoadingButton></BlockButton>
+                        <BlockButton disabled={editLoading}><LoadingButton onClick={handleEditSubmit} loading={editLoading} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Modifier</LoadingButton></BlockButton>
                     </DialogActions>
                 </Dialog>
 
@@ -163,7 +163,7 @@ const Faq = (props) => {
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, flexWrap: "nowrap", gap: 1 }}>
                     <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A", flexShrink: 0 }}>Liste de la FAQ</Typography>
                     <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexShrink: 0 }}>
-                        <LoadingButton onClick={() => setAddModalOpen(true)} variant="contained" startIcon={<AddIcon />} sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap" }}>Ajouter</LoadingButton>
+                        <LoadingButton onClick={() => setAddModalOpen(true)} variant="contained" startIcon={<AddIcon />} sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" }, fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap" }}>Ajouter</LoadingButton>
                     </Box>
                 </Box>
                 {viewMode === "list" ? (

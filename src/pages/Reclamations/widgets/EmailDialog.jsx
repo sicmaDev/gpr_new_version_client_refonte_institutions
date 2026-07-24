@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -147,7 +147,7 @@ const EmailDialog = (props) => {
             textTransform: 'none', borderRadius: 2, fontWeight: 700, px: 3,
             background: 'linear-gradient(135deg, var(--gpr-primary-dark), var(--gpr-primary))',
             color: '#fff',
-            '&:hover': { background: 'linear-gradient(135deg, #1a1c6e, #1e2188)' },
+            '&:hover': { background: 'var(--gpr-primary-dark, #003d63)' },
             '&.MuiLoadingButton-loading': {
               background: 'linear-gradient(135deg, var(--gpr-primary-dark), var(--gpr-primary))',
               color: '#fff',

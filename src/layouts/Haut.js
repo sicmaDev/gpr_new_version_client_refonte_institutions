@@ -41,7 +41,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
       whiteSpace: 'nowrap',
       width: drawerWidth,
       height: '100vh',
-      backgroundColor: '#005081',
+      backgroundColor: 'var(--gpr-sidebar, #005081)',
       color: 'white',
       display: 'flex',
       flexDirection: 'column',
@@ -99,7 +99,7 @@ const AppBar = styled(MuiAppBar, {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  backgroundColor:"#005081",
+  backgroundColor: 'var(--gpr-topbar, #005081)',
   ...(open && {
     marginLeft: drawerWidth,
     width: `calc(100% - ${drawerWidth}px)`,
@@ -107,13 +107,23 @@ const AppBar = styled(MuiAppBar, {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
     }),
-    backgroundColor:"#005081"
+    backgroundColor: 'var(--gpr-topbar, #005081)'
   }),
 }));
 
 
 // TODO remove, this demo shouldn't need to reset the theme.
 const defaultTheme = createTheme();
+
+const getSidebarLuminance = (hex) => {
+  try {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+  } catch { return 50; }
+};
 
 export const Haut = (props) => {
   // const [actif, setActif] = useState();
@@ -141,7 +151,28 @@ export const Haut = (props) => {
   }, []);
   
 
-  const { colors } = useThemeColors();
+  const { colors, logo: institutionLogo } = useThemeColors();
+  const sidebarLum = getSidebarLuminance(colors.sidebarColor || '#005081');
+  const isDark = sidebarLum < 128;
+  const brandTextColor = isDark ? 'white' : 'rgba(0,0,0,0.87)';
+  const brandSubColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.55)';
+  const userTextColor = isDark ? 'white' : 'rgba(0,0,0,0.87)';
+  const userSubColor = isDark ? 'rgba(255,255,255,0.48)' : 'rgba(0,0,0,0.55)';
+  const logoutIconColor = isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.55)';
+  const logoutTextColor = isDark ? 'rgba(255,255,255,0.78)' : 'rgba(0,0,0,0.70)';
+
+  const topbarLum = getSidebarLuminance(colors.topbarColor || '#005081');
+  const isTopbarDark = topbarLum < 128;
+  const avatarTextColor = isTopbarDark ? '#fff' : 'rgba(0,0,0,0.87)';
+  const avatarBorder = isTopbarDark ? 'none' : '1px solid rgba(0,0,0,0.12)';
+
+  const institutionName = (() => {
+    try {
+      const raw = loadItemFromSessionStorage('app-institution') || loadItemFromLocalStorage('app-institution');
+      if (raw && raw !== '[]') return JSON.parse(raw)?.denomination || '';
+    } catch {}
+    return '';
+  })();
 
   const [open, setOpen] = React.useState(true);
   const toggleDrawer = () => {
@@ -236,7 +267,15 @@ export const Haut = (props) => {
                         aria-haspopup="true"
                         aria-expanded={opena ? 'true' : undefined}
                       >
-                        <Avatar sx={{ width: 32, height: 32,backgroundColor:"#1E2188" }}>{user.firstAndLastName[0]}</Avatar>
+                        <Avatar sx={{ 
+                          width: 32, 
+                          height: 32, 
+                          backgroundColor: colors.topbarColor || '#005081', 
+                          color: avatarTextColor, 
+                          border: avatarBorder 
+                        }}>
+                          {user.firstAndLastName[0]}
+                        </Avatar>
                       </IconButton>
                     </Tooltip>
                   </Box>
@@ -304,14 +343,12 @@ export const Haut = (props) => {
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
+                  gap: '10px',
                   padding: '14px 16px',
                   minHeight: '64px',
                   flexShrink: 0,
                 }}>
                   <div style={{
-                    background: colors.sidebarColor,
-                    border: '1px solid rgba(255,255,255,0.15)',
                     borderRadius: '10px',
                     width: '38px',
                     height: '38px',
@@ -320,58 +357,56 @@ export const Haut = (props) => {
                     justifyContent: 'center',
                     flexShrink: 0,
                     overflow: 'hidden',
+                    background: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)',
+                    border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.08)',
                   }}>
-                    <img src={logo} height="30px" width="30px" alt="logo" style={{ objectFit: 'contain' }} loading="lazy" />
+                    <img src={institutionLogo || logo} height="30px" width="30px" alt="logo" style={{ objectFit: 'contain' }} loading="lazy" />
                   </div>
                   {open && (
-                    <div style={{ overflow: 'hidden' }}>
-                      <div style={{ color: 'white', fontWeight: 700, fontSize: '15px', lineHeight: 1.2 }}>GPR</div>
-                      <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{APP_OWNER}</div>
+                    <div style={{ overflow: 'hidden', flex: 1 }}>
+                      <div style={{ color: brandTextColor, fontWeight: 700, fontSize: '15px', lineHeight: 1.2 }}>GPR</div>
+                      <div style={{ color: brandSubColor, fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {institutionName || APP_OWNER}
+                      </div>
                     </div>
                   )}
                 </div>
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                <Divider style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }} />
 
                 {/* ── Nav items ── */}
-                <List component="nav" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '4px 0', backgroundColor: colors.sidebarColor }} sx={{ '&::-webkit-scrollbar': { width: '4px' }, '&::-webkit-scrollbar-track': { background: 'transparent' }, '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.2)', borderRadius: '4px' }, '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.35)' } }}>
+                <List component="nav" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '4px 0', backgroundColor: colors.sidebarColor }} sx={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent', '&::-webkit-scrollbar': { width: '3px' }, '&::-webkit-scrollbar-track': { background: 'transparent' }, '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.2)', borderRadius: '3px' }, '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.35)' } }}>
                     <Items/>
                 </List>
 
                 {/* ── Footer utilisateur ── */}
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-                <div style={{ padding: '12px 14px', flexShrink: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Avatar sx={{ width: 36, height: 36, backgroundColor: '#fff', color: '#1E2188', fontSize: '15px', fontWeight: 700, flexShrink: 0 }}>
-                      {user.firstAndLastName.trim().split(' ')[0][0]}
-                    </Avatar>
-                    {open && (
-                      <div style={{ overflow: 'hidden', flex: 1 }}>
-                        <div style={{ color: 'white', fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {user.firstAndLastName}
-                        </div>
-                        <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {user.posteDto?.libelle || ''}
-                        </div>
+                <Divider style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }} />
+                <div style={{ padding: open ? '10px 10px 8px' : '10px 6px', flexShrink: 0 }}>
+                  {open ? (
+                    <div style={{ background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)', borderRadius: 12, padding: '10px 10px 8px', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+                        <Avatar sx={{ width: 36, height: 36, backgroundColor: colors.sidebarColor || '#005081', color: '#fff', fontSize: '14px', fontWeight: 700, boxShadow: `0 0 0 2px rgba(255,255,255,0.15), 0 0 0 4px ${colors.sidebarColor || '#005081'}` }}>
+                          {user.firstAndLastName.trim()[0]}
+                        </Avatar>
                       </div>
-                    )}
-                  </div>
-                  {open && (
-                    <NavLink to="/logout" onClick={(e) => logOut(e)} style={{ textDecoration: 'none' }}>
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 0,
-                        borderRadius: 12, margin: '4px 0 0', padding: '8px 12px',
-                        minHeight: 38, cursor: 'pointer',
-                        background: 'transparent', transition: 'background 0.2s ease',
-                      }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,80,80,0.14)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div style={{ minWidth: 34, display: 'flex', alignItems: 'center' }}>
-                          <Logout style={{ color: 'rgba(255,255,255,0.65)', fontSize: 18 }} />
-                        </div>
-                        <span style={{ fontSize: 14.5, fontWeight: 400, color: 'rgba(255,255,255,0.78)' }}>Déconnexion</span>
+                      <div style={{ color: userTextColor, fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user.firstAndLastName}
                       </div>
-                    </NavLink>
+                      <NavLink to="/logout" onClick={(e) => logOut(e)} style={{ textDecoration: 'none' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 8, marginTop: 6, padding: '5px 10px', cursor: 'pointer', background: 'transparent', transition: 'background 0.2s ease' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,80,80,0.14)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <Logout style={{ color: logoutIconColor, fontSize: 14 }} />
+                          <span style={{ fontSize: 12, fontWeight: 400, color: logoutTextColor }}>Déconnexion</span>
+                        </div>
+                      </NavLink>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <Avatar sx={{ width: 30, height: 30, backgroundColor: colors.sidebarColor || '#005081', color: '#fff', fontSize: '12px', fontWeight: 700, boxShadow: `0 0 0 2px rgba(255,255,255,0.15), 0 0 0 3px ${colors.sidebarColor || '#005081'}` }}>
+                        {user.firstAndLastName.trim()[0]}
+                      </Avatar>
+                    </div>
                   )}
                 </div>
                 </div>
@@ -447,7 +482,15 @@ export const Haut = (props) => {
                         aria-haspopup="true"
                         aria-expanded={opena ? 'true' : undefined}
                       >
-                        <Avatar sx={{ width: 32, height: 32,backgroundColor:"#1E2188" }}>{user.firstAndLastName[0]}</Avatar>
+                        <Avatar sx={{ 
+                          width: 32, 
+                          height: 32, 
+                          backgroundColor: colors.topbarColor || '#005081', 
+                          color: avatarTextColor, 
+                          border: avatarBorder 
+                        }}>
+                          {user.firstAndLastName[0]}
+                        </Avatar>
                       </IconButton>
                     </Tooltip>
                   </Box>
@@ -515,14 +558,12 @@ export const Haut = (props) => {
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
+                  gap: '10px',
                   padding: '14px 16px',
                   minHeight: '70px',
                   flexShrink: 0,
                 }}>
                   <div style={{
-                    background: colors.sidebarColor,
-                    border: '1px solid rgba(255,255,255,0.15)',
                     borderRadius: '10px',
                     width: '40px',
                     height: '40px',
@@ -531,58 +572,56 @@ export const Haut = (props) => {
                     justifyContent: 'center',
                     flexShrink: 0,
                     overflow: 'hidden',
+                    background: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)',
+                    border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.08)',
                   }}>
-                    <img src={logo} height="32px" width="32px" alt="logo" style={{ objectFit: 'contain' }} loading="lazy" />
+                    <img src={institutionLogo || logo} height="32px" width="32px" alt="logo" style={{ objectFit: 'contain' }} loading="lazy" />
                   </div>
                   {open && (
-                    <div style={{ overflow: 'hidden' }}>
-                      <div style={{ color: 'white', fontWeight: 700, fontSize: '15px', lineHeight: 1.2 }}>GPR</div>
-                      <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{APP_OWNER}</div>
+                    <div style={{ overflow: 'hidden', flex: 1 }}>
+                      <div style={{ color: brandTextColor, fontWeight: 700, fontSize: '15px', lineHeight: 1.2 }}>GPR</div>
+                      <div style={{ color: brandSubColor, fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {institutionName || APP_OWNER}
+                      </div>
                     </div>
                   )}
                 </div>
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+                <Divider style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }} />
 
                 {/* ── Nav items ── */}
-                <List component="nav" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '4px 0', backgroundColor: colors.sidebarColor }} sx={{ '&::-webkit-scrollbar': { width: '4px' }, '&::-webkit-scrollbar-track': { background: 'transparent' }, '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.2)', borderRadius: '4px' }, '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.35)' } }}>
+                <List component="nav" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '4px 0', backgroundColor: colors.sidebarColor }} sx={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent', '&::-webkit-scrollbar': { width: '3px' }, '&::-webkit-scrollbar-track': { background: 'transparent' }, '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.2)', borderRadius: '3px' }, '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.35)' } }}>
                     <Items/>
                 </List>
 
                 {/* ── Footer utilisateur ── */}
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-                <div style={{ padding: '12px 14px', flexShrink: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Avatar sx={{ width: 36, height: 36, backgroundColor: '#fff', color: '#1E2188', fontSize: '15px', fontWeight: 700, flexShrink: 0 }}>
-                      {user.firstAndLastName.trim().split(' ')[0][0]}
-                    </Avatar>
-                    {open && (
-                      <div style={{ overflow: 'hidden', flex: 1 }}>
-                        <div style={{ color: 'white', fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {user.firstAndLastName}
-                        </div>
-                        <div style={{ color: 'rgba(255,255,255,0.48)', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {user.posteDto?.libelle || ''}
-                        </div>
+                <Divider style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }} />
+                <div style={{ padding: open ? '16px 12px 12px' : '14px 6px', flexShrink: 0 }}>
+                  {open ? (
+                    <div style={{ background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)', borderRadius: 12, padding: '10px 10px 8px', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+                        <Avatar sx={{ width: 36, height: 36, backgroundColor: colors.sidebarColor || '#005081', color: '#fff', fontSize: '14px', fontWeight: 700, boxShadow: `0 0 0 2px rgba(255,255,255,0.15), 0 0 0 4px ${colors.sidebarColor || '#005081'}` }}>
+                          {user.firstAndLastName.trim()[0]}
+                        </Avatar>
                       </div>
-                    )}
-                  </div>
-                  {open && (
-                    <NavLink to="/logout" onClick={(e) => logOut(e)} style={{ textDecoration: 'none' }}>
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 0,
-                        borderRadius: 12, margin: '4px 0 0', padding: '8px 12px',
-                        minHeight: 38, cursor: 'pointer',
-                        background: 'transparent', transition: 'background 0.2s ease',
-                      }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,80,80,0.14)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div style={{ minWidth: 34, display: 'flex', alignItems: 'center' }}>
-                          <Logout style={{ color: 'rgba(255,255,255,0.65)', fontSize: 18 }} />
-                        </div>
-                        <span style={{ fontSize: 14.5, fontWeight: 400, color: 'rgba(255,255,255,0.78)' }}>Déconnexion</span>
+                      <div style={{ color: userTextColor, fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user.firstAndLastName}
                       </div>
-                    </NavLink>
+                      <NavLink to="/logout" onClick={(e) => logOut(e)} style={{ textDecoration: 'none' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 8, marginTop: 6, padding: '5px 10px', cursor: 'pointer', background: 'transparent', transition: 'background 0.2s ease' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,80,80,0.14)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <Logout style={{ color: logoutIconColor, fontSize: 14 }} />
+                          <span style={{ fontSize: 12, fontWeight: 400, color: logoutTextColor }}>Déconnexion</span>
+                        </div>
+                      </NavLink>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <Avatar sx={{ width: 30, height: 30, backgroundColor: colors.sidebarColor || '#005081', color: '#fff', fontSize: '12px', fontWeight: 700, boxShadow: `0 0 0 2px rgba(255,255,255,0.15), 0 0 0 3px ${colors.sidebarColor || '#005081'}` }}>
+                        {user.firstAndLastName.trim()[0]}
+                      </Avatar>
+                    </div>
                   )}
                 </div>
                 </div>

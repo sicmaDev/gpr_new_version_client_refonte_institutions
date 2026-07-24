@@ -34,7 +34,9 @@ const initialState = {
     selectedFiles: [],
     selectedItemFiles: [],
     selectedItemAudio: [],
-    showSelectPrintItem: false
+    showSelectPrintItem: false,
+    converted_by: "",
+    converted_at: "",
 };
 const TraitementSuggestionReducer = (state = initialState, action) => {
     switch (action.type) {

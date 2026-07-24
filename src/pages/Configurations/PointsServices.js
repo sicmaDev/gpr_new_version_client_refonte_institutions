@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+﻿import React, { useEffect, useRef, useState, useMemo } from "react";
 import Select from "react-select";
 import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
@@ -471,7 +471,7 @@ const PointsServices = (props) => {
                             borderRadius: "9px", fontSize: 14, height: 40,
                             "& .MuiOutlinedInput-notchedOutline": { borderColor: "#e2e8f0" },
                             "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#94a3b8" },
-                            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#3b3fd8", borderWidth: 1.5 },
+                            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
                         }}
                     >
                         <MenuItem value="" disabled sx={{ fontSize: 13, color: "#94a3b8" }}>Sélectionner le type</MenuItem>
@@ -494,7 +494,7 @@ const PointsServices = (props) => {
                             borderRadius: "9px", fontSize: 14, height: 40,
                             "& .MuiOutlinedInput-notchedOutline": { borderColor: "#e2e8f0" },
                             "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#94a3b8" },
-                            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#3b3fd8", borderWidth: 1.5 },
+                            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
                         }}
                     >
                         <MenuItem value="" sx={{ fontSize: 13, color: "#94a3b8" }}>Sélectionner une direction</MenuItem>
@@ -521,7 +521,7 @@ const PointsServices = (props) => {
                 >
                     {/* Header */}
                     <div style={{
-                        background: "linear-gradient(135deg, #1e2188 0%, #3b3fd8 100%)",
+                        background: "var(--gpr-primary, #005081)",
                         padding: "18px 24px",
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                     }}>
@@ -568,7 +568,7 @@ const PointsServices = (props) => {
                                         borderRadius: 9, padding: "10.5px 14px",
                                         fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40,
                                     }}
-                                    onFocus={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#3b3fd8"; }}
+                                    onFocus={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }}
                                     onBlur={(e) => { if (!editErrors.libelle) e.target.style.borderColor = "#e2e8f0"; }}
                                 />
                                 {editErrors.libelle && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.libelle}</div>}
@@ -591,7 +591,7 @@ const PointsServices = (props) => {
                                         fontSize: 13, outline: "none", background: "#fff", color: "#1e293b",
                                         whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "inherit",
                                     }}
-                                    onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }}
+                                    onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }}
                                     onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }}
                                 />
                             </div>
@@ -610,7 +610,7 @@ const PointsServices = (props) => {
                                             borderRadius: "9px", fontSize: 14, height: 40,
                                             "& .MuiOutlinedInput-notchedOutline": { borderColor: editErrors.type ? "#ef4444" : "#e2e8f0" },
                                             "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#94a3b8" },
-                                            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#3b3fd8", borderWidth: 1.5 },
+                                            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
                                         }}
                                     >
                                         <MenuItem value="" disabled sx={{ fontSize: 13, color: "#94a3b8" }}>Sélectionner le type</MenuItem>
@@ -636,7 +636,7 @@ const PointsServices = (props) => {
                                             borderRadius: "9px", fontSize: 14, height: 40,
                                             "& .MuiOutlinedInput-notchedOutline": { borderColor: "#e2e8f0" },
                                             "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#94a3b8" },
-                                            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#3b3fd8", borderWidth: 1.5 },
+                                            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
                                         }}
                                     >
                                         <MenuItem value="" sx={{ fontSize: 13, color: "#94a3b8" }}>Sélectionner une direction</MenuItem>
@@ -668,8 +668,8 @@ const PointsServices = (props) => {
                             variant="contained"
                             sx={{
                                 textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3,
-                                background: "linear-gradient(135deg, #1e2188, #3b3fd8)",
-                                "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" },
+                                background: "var(--gpr-primary, #005081)",
+                                "&:hover": { background: "var(--gpr-primary-dark, #003d63)" },
                                 "&.Mui-disabled": { opacity: 0.6 },
                             }}
                         >
@@ -879,8 +879,8 @@ const PointsServices = (props) => {
                             startIcon={<AddIcon />}
                             sx={{
                                 textTransform: "none", borderRadius: 2, fontWeight: 700,
-                                background: "linear-gradient(135deg, #1e2188, #3b3fd8)",
-                                "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" },
+                                background: "var(--gpr-primary, #005081)",
+                                "&:hover": { background: "var(--gpr-primary-dark, #003d63)" },
                                 fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap",
                             }}
                         >

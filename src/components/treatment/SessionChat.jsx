@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { Avatar } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -9,7 +9,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import SearchIcon from "@mui/icons-material/Search";
 
-const COLORS = ["#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const COLORS = ["var(--gpr-primary, #005081)", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 const avatarColor = (name) => COLORS[(name?.charCodeAt(0) ?? 0) % COLORS.length];
 
 /* ── Vote card ──────────────────────────────────────────────── */
@@ -32,7 +32,7 @@ const VoteCard = ({ chat, user, isUserOpenSession, showConfirmChooseSolution,
       overflow: 'hidden', boxShadow: '0 2px 12px rgba(99,102,241,0.08)',
     }}>
       {/* Header vote */}
-      <div style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ background: 'var(--gpr-primary, #005081)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
         <HowToVoteIcon style={{ color: 'white', fontSize: 18 }} />
         <span style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>Proposition de vote</span>
         <span style={{ marginLeft: 'auto', fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>
@@ -43,7 +43,7 @@ const VoteCard = ({ chat, user, isUserOpenSession, showConfirmChooseSolution,
       {/* Contenu */}
       <div style={{ padding: '12px 14px' }}>
         <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 3 }}>Solution</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gpr-primary, #005081)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 3 }}>Solution</div>
           <div style={{ fontSize: 13, color: '#1e293b', background: '#f8fafc', borderRadius: 8, padding: '8px 10px', borderLeft: '3px solid #6366f1' }}>
             {content.contenu}
           </div>
@@ -170,7 +170,7 @@ const SessionChat = ({
                       {m.firstAndLastName}
                     </div>
                     {m.id === session?.createdBy?.id && (
-                      <div style={{ fontSize: 10, color: '#6366f1', fontWeight: 600 }}>Animateur</div>
+                      <div style={{ fontSize: 10, color: 'var(--gpr-primary, #005081)', fontWeight: 600 }}>Animateur</div>
                     )}
                   </div>
                 </div>
@@ -214,7 +214,7 @@ const SessionChat = ({
                 onClick={() => setShowInviteSearch(!showInviteSearch)}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', background: '#f8fafc', border: '1.5px dashed #e2e8f0', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', color: '#64748b', fontSize: 12, fontWeight: 500 }}
               >
-                <AddCircleOutlineIcon style={{ fontSize: 16, color: '#6366f1' }} />
+                <AddCircleOutlineIcon style={{ fontSize: 16, color: 'var(--gpr-primary, #005081)' }} />
                 Inviter un agent
               </button>
 
@@ -242,7 +242,7 @@ const SessionChat = ({
                           <div style={{ fontSize: 10, color: '#94a3b8' }}>{m.posteDto?.libelle}</div>
                         </div>
                         <IconButton size="small" onClick={(e) => { onInvite(e, m.id); setShowInviteSearch(false); }}
-                          sx={{ color: '#6366f1', p: 0.3 }}>
+                          sx={{ color: 'var(--gpr-primary, #005081)', p: 0.3 }}>
                           <AddCircleOutlineIcon sx={{ fontSize: 15 }} />
                         </IconButton>
                       </div>
@@ -262,7 +262,7 @@ const SessionChat = ({
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 width: '100%', padding: '8px 0',
-                background: showVoteField ? '#fef3c7' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                background: showVoteField ? '#fef3c7' : 'var(--gpr-primary, #005081)',
                 color: showVoteField ? '#92400e' : 'white',
                 border: 'none', borderRadius: 9, cursor: 'pointer',
                 fontSize: 12, fontWeight: 600,
@@ -330,7 +330,7 @@ const SessionChat = ({
                   maxWidth: '75%',
                   padding: '9px 13px',
                   borderRadius: isMe ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                  background: isMe ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'white',
+                  background: isMe ? 'var(--gpr-primary, #005081)' : 'white',
                   color: isMe ? 'white' : '#1e293b',
                   fontSize: 13,
                   boxShadow: isMe ? '0 2px 8px rgba(99,102,241,0.25)' : '0 1px 4px rgba(0,0,0,0.06)',
@@ -352,7 +352,7 @@ const SessionChat = ({
           {showVoteField ? (
             /* Mode proposition de vote */
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#6366f1', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gpr-primary, #005081)', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <HowToVoteIcon style={{ fontSize: 15 }} />
                 Proposition de vote
               </div>
@@ -375,7 +375,7 @@ const SessionChat = ({
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                 <button onClick={onToggleVoteField} style={btnSmall('#f1f5f9', '#64748b')}>Annuler</button>
                 <button onClick={onSendVote} style={{
-                  ...btnSmall('linear-gradient(135deg,#6366f1,#8b5cf6)', 'white'),
+                  ...btnSmall('var(--gpr-primary, #005081)', 'white'),
                   padding: '7px 18px', boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
                 }}>
                   Soumettre au vote
@@ -386,7 +386,7 @@ const SessionChat = ({
             /* Mode message normal */
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
               <div style={{ flex: 1, background: '#f8fafc', borderRadius: 12, border: '1.5px solid #e2e8f0', overflow: 'hidden', transition: 'border-color 0.2s' }}
-                onFocus={e => e.currentTarget.style.borderColor = '#6366f1'}
+                onFocus={e => e.currentTarget.style.borderColor = 'var(--gpr-primary, #005081)'}
                 onBlur={e => e.currentTarget.style.borderColor = '#e2e8f0'}>
                 <textarea
                   placeholder="Saisir un message..."
@@ -406,7 +406,7 @@ const SessionChat = ({
                 disabled={!userData.message}
                 style={{
                   width: 42, height: 42, borderRadius: '50%', border: 'none', cursor: userData.message ? 'pointer' : 'not-allowed',
-                  background: userData.message ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : '#e2e8f0',
+                  background: userData.message ? 'var(--gpr-primary, #005081)' : '#e2e8f0',
                   color: userData.message ? 'white' : '#94a3b8',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,

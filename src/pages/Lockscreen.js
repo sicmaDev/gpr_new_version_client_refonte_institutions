@@ -49,7 +49,7 @@ const CARD_POSITIONS = [
 ];
 
 const Lockscreen = (props) => {
-    const { colors } = useThemeColors();
+    const { colors, logo: institutionLogo } = useThemeColors();
     const primaryColor = getPagePrimary(colors);
     const primaryDark  = darkenColor(primaryColor, 0.18);
     const [showPassword, setShowPassword] = useState(false);
@@ -150,7 +150,7 @@ const Lockscreen = (props) => {
                         </div>
                         <div className="w-px h-8 bg-[#e2e8f0] mx-1 flex-shrink-0" />
                         <div className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center">
-                            <img src={logoSicma} alt="Logo Institution" className="h-full w-full object-contain" />
+                            <img src={institutionLogo || logoSicma} alt="Logo Institution" className="h-full w-full object-contain" />
                         </div>
                     </div>
 
@@ -187,7 +187,7 @@ const Lockscreen = (props) => {
                                 <img src={logo} alt="Logo GPR" className="h-full w-auto object-cover object-left" />
                             </div>
                             <div className="w-px h-8 bg-[#e2e8f0]" />
-                            <img src={logoSicma} alt="Logo Institution" className="h-9 object-contain" />
+                            <img src={institutionLogo || logoSicma} alt="Logo Institution" className="h-9 object-contain" />
                         </div>
 
                         {/* Profil utilisateur */}

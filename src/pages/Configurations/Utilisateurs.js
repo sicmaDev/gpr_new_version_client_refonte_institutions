@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import LastPageIcon from '@mui/icons-material/LastPage';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -91,7 +91,7 @@ const PasswordPairInput = ({ value, onChange }) => {
                 <span onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 12, top: 12, cursor: "pointer", color: "#94a3b8" }}>
                     {showPass ? <VisibilityOffIcon style={{ fontSize: 18 }} /> : <VisibilityIcon style={{ fontSize: 18 }} />}
                 </span>
-                <span onClick={generate} style={{ display: "block", marginTop: 4, fontSize: 12, color: "#3b3fd8", cursor: "pointer", fontWeight: 600 }}>Générer un mot de passe</span>
+                <span onClick={generate} style={{ display: "block", marginTop: 4, fontSize: 12, color: "var(--gpr-primary, #005081)", cursor: "pointer", fontWeight: 600 }}>Générer un mot de passe</span>
             </div>
             <div style={{ position: "relative" }}>
                 <input type={showPassAgain ? "text" : "password"} value={passAgain} onChange={(e) => onChange({ pass, passAgain: e.target.value })} placeholder="Confirmer le mot de passe" style={passInputStyle} />
@@ -363,17 +363,17 @@ const Utilisateurs = (props) => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
                 <div>
                     <label style={labelStyle}>Nom et Prénom(s) <span style={{ color: "#ef4444" }}>*</span></label>
-                    <input value={form.name} onChange={(e) => { setter(p => ({ ...p, name: e.target.value })); setErrors(p => ({ ...p, name: "" })); }} placeholder="Ex: Jean Dupont" style={inputStyle(errors.name)} onFocus={(e) => { if (!errors.name) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!errors.name) e.target.style.borderColor = "#e2e8f0"; }} />
+                    <input value={form.name} onChange={(e) => { setter(p => ({ ...p, name: e.target.value })); setErrors(p => ({ ...p, name: "" })); }} placeholder="Ex: Jean Dupont" style={inputStyle(errors.name)} onFocus={(e) => { if (!errors.name) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { if (!errors.name) e.target.style.borderColor = "#e2e8f0"; }} />
                     {errors.name && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{errors.name}</div>}
                 </div>
                 <div>
                     <label style={labelStyle}>Adresse électronique <span style={{ color: "#ef4444" }}>*</span></label>
-                    <input type="email" value={form.email} onChange={(e) => { setter(p => ({ ...p, email: e.target.value })); setErrors(p => ({ ...p, email: "" })); }} placeholder="Ex: jean@exemple.com" style={inputStyle(errors.email)} onFocus={(e) => { if (!errors.email) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!errors.email) e.target.style.borderColor = "#e2e8f0"; }} />
+                    <input type="email" value={form.email} onChange={(e) => { setter(p => ({ ...p, email: e.target.value })); setErrors(p => ({ ...p, email: "" })); }} placeholder="Ex: jean@exemple.com" style={inputStyle(errors.email)} onFocus={(e) => { if (!errors.email) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { if (!errors.email) e.target.style.borderColor = "#e2e8f0"; }} />
                     {errors.email && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{errors.email}</div>}
                 </div>
                 <div>
                     <label style={labelStyle}>Téléphone <span style={{ color: "#ef4444" }}>*</span></label>
-                    <input type="tel" value={form.phone} onChange={(e) => { setter(p => ({ ...p, phone: e.target.value })); setErrors(p => ({ ...p, phone: "" })); }} placeholder="Ex: 22890909090" style={inputStyle(errors.phone)} onFocus={(e) => { if (!errors.phone) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!errors.phone) e.target.style.borderColor = "#e2e8f0"; }} />
+                    <input type="tel" value={form.phone} onChange={(e) => { setter(p => ({ ...p, phone: e.target.value })); setErrors(p => ({ ...p, phone: "" })); }} placeholder="Ex: 22890909090" style={inputStyle(errors.phone)} onFocus={(e) => { if (!errors.phone) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { if (!errors.phone) e.target.style.borderColor = "#e2e8f0"; }} />
                     {errors.phone && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{errors.phone}</div>}
                 </div>
                 <div>
@@ -416,10 +416,10 @@ const Utilisateurs = (props) => {
                     <label style={labelStyle}>
                         Mot de passe {!isEdit && <span style={{ color: "#ef4444" }}>*</span>}
                         {isEdit && <span style={{ color: "#94a3b8", fontWeight: 400, fontSize: 11, marginLeft: 4 }}>(laisser vide pour ne pas modifier)</span>}
-                        <span style={{ color: "#3b3fd8", cursor: "pointer", fontWeight: 500, fontSize: 11, marginLeft: 8, textTransform: "none" }} onClick={() => generateCode(setter)}>Générer</span>
+                        <span style={{ color: "var(--gpr-primary, #005081)", cursor: "pointer", fontWeight: 500, fontSize: 11, marginLeft: 8, textTransform: "none" }} onClick={() => generateCode(setter)}>Générer</span>
                     </label>
                     <div style={{ position: "relative" }}>
-                        <input type={showPass ? "text" : "password"} value={form.pass} onChange={(e) => { setter(p => ({ ...p, pass: e.target.value })); setErrors(p => ({ ...p, pass: "" })); }} placeholder={isEdit ? "Nouveau mot de passe (optionnel)" : "Mot de passe"} style={{ ...inputStyle(errors.pass), paddingRight: 40 }} onFocus={(e) => { if (!errors.pass) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!errors.pass) e.target.style.borderColor = "#e2e8f0"; }} />
+                        <input type={showPass ? "text" : "password"} value={form.pass} onChange={(e) => { setter(p => ({ ...p, pass: e.target.value })); setErrors(p => ({ ...p, pass: "" })); }} placeholder={isEdit ? "Nouveau mot de passe (optionnel)" : "Mot de passe"} style={{ ...inputStyle(errors.pass), paddingRight: 40 }} onFocus={(e) => { if (!errors.pass) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { if (!errors.pass) e.target.style.borderColor = "#e2e8f0"; }} />
                         <span onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#94a3b8" }}>{showPass ? <VisibilityOffIcon style={{ fontSize: 18 }} /> : <VisibilityIcon style={{ fontSize: 18 }} />}</span>
                     </div>
                     {errors.pass && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{errors.pass}</div>}
@@ -427,7 +427,7 @@ const Utilisateurs = (props) => {
                 <div>
                     <label style={labelStyle}>Confirmer le mot de passe</label>
                     <div style={{ position: "relative" }}>
-                        <input type={showPass1 ? "text" : "password"} value={form.pass_again} onChange={(e) => { setter(p => ({ ...p, pass_again: e.target.value })); setErrors(p => ({ ...p, pass_again: "" })); }} placeholder="Répéter le mot de passe" style={{ ...inputStyle(errors.pass_again), paddingRight: 40 }} onFocus={(e) => { if (!errors.pass_again) e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { if (!errors.pass_again) e.target.style.borderColor = "#e2e8f0"; }} />
+                        <input type={showPass1 ? "text" : "password"} value={form.pass_again} onChange={(e) => { setter(p => ({ ...p, pass_again: e.target.value })); setErrors(p => ({ ...p, pass_again: "" })); }} placeholder="Répéter le mot de passe" style={{ ...inputStyle(errors.pass_again), paddingRight: 40 }} onFocus={(e) => { if (!errors.pass_again) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { if (!errors.pass_again) e.target.style.borderColor = "#e2e8f0"; }} />
                         <span onClick={() => setShowPass1(v => !v)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#94a3b8" }}>{showPass1 ? <VisibilityOffIcon style={{ fontSize: 18 }} /> : <VisibilityIcon style={{ fontSize: 18 }} />}</span>
                     </div>
                     {errors.pass_again && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{errors.pass_again}</div>}
@@ -468,7 +468,7 @@ const Utilisateurs = (props) => {
                     </DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
                         <BlockButton disabled={editLoading}><Button onClick={() => { setEditModalOpen(false); setEditForm(EMPTY_FORM); setEditErrors({}); clearComponentState(); }} disabled={editLoading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button></BlockButton>
-                        <BlockButton disabled={editLoading}><LoadingButton onClick={handleEditSubmit} loading={editLoading} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Modifier</LoadingButton></BlockButton>
+                        <BlockButton disabled={editLoading}><LoadingButton onClick={handleEditSubmit} loading={editLoading} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Modifier</LoadingButton></BlockButton>
                     </DialogActions>
                 </Dialog>
 
@@ -523,7 +523,7 @@ const Utilisateurs = (props) => {
                                 <span><LoadingButton disabled variant="contained" startIcon={<AddIcon />} sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap" }}>Ajouter</LoadingButton></span>
                             </Tooltip>
                         ) : (
-                            <LoadingButton onClick={() => setAddModalOpen(true)} variant="contained" startIcon={<AddIcon />} sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap" }}>Ajouter</LoadingButton>
+                            <LoadingButton onClick={() => setAddModalOpen(true)} variant="contained" startIcon={<AddIcon />} sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" }, fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap" }}>Ajouter</LoadingButton>
                         )}
                     </Box>
                 </Box>

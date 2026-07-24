@@ -47,7 +47,7 @@ const injectButtonStyles = () => {
 };
 
 // Rebuilds the MUI theme whenever the user changes their primary color.
-// Uses the blended color when sidebar and topbar colors differ.
+// Uses the sidebar color as the primary color for the system.
 const DynamicMuiTheme = ({ children }) => {
   const { colors } = useThemeColors();
 

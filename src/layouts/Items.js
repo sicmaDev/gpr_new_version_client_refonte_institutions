@@ -65,7 +65,6 @@ import { connect } from 'react-redux';
 import { authenticate } from '../redux/actions/LayoutActions';
 import { useHistory } from 'react-router-dom';
 import { useThemeColors, darkenColor } from '../context/ThemeColorsContext';
-import { hasModule } from '../Utils/license';
 
 // luminance helper — determines if the sidebar color is light or dark
 const getSidebarLuminance = (hex) => {
@@ -153,7 +152,7 @@ export const Items = (props) => {
   const backupPaths = ['/configurations/exportations', '/configurations/logs', '/configurations/sla'];
   const inBackup = (p) => backupPaths.some(bp => p.startsWith(bp));
 
-  const [open,  setOpen]  = React.useState(() => pathname.startsWith('/reclamations'));
+  const [open, setOpen] = React.useState(() => pathname.startsWith('/reclamations'));
   const [open1, setOpen1] = React.useState(() => pathname.startsWith('/denonciations'));
   const [open2, setOpen2] = React.useState(() => pathname.startsWith('/suggestions'));
   const [open3, setOpen3] = React.useState(() => pathname.startsWith('/rapports'));
@@ -164,17 +163,17 @@ export const Items = (props) => {
 
   // Ouvre automatiquement la section de la page courante à chaque navigation
   React.useEffect(() => {
-    if (pathname.startsWith('/reclamations'))   setOpen(true);
-    if (pathname.startsWith('/denonciations'))  setOpen1(true);
-    if (pathname.startsWith('/suggestions'))    setOpen2(true);
-    if (pathname.startsWith('/rapports'))       setOpen3(true);
+    if (pathname.startsWith('/reclamations')) setOpen(true);
+    if (pathname.startsWith('/denonciations')) setOpen1(true);
+    if (pathname.startsWith('/suggestions')) setOpen2(true);
+    if (pathname.startsWith('/rapports')) setOpen3(true);
     if (pathname.startsWith('/configurations')) setOpen4(true);
-    if (pathname.startsWith('/alertes'))        setOpen5(true);
-    if (pathname.startsWith('/ressources'))     setOpen6(true);
-    if (inBackup(pathname))                     setOpen7(true);
+    if (pathname.startsWith('/alertes')) setOpen5(true);
+    if (pathname.startsWith('/ressources')) setOpen6(true);
+    if (inBackup(pathname)) setOpen7(true);
   }, [pathname]);
 
-  const handleClick  = () => setOpen(v  => !v);
+  const handleClick = () => setOpen(v => !v);
   const handleClick1 = () => setOpen1(v => !v);
   const handleClick2 = () => setOpen2(v => !v);
   const handleClick3 = () => setOpen3(v => !v);
@@ -210,15 +209,15 @@ export const Items = (props) => {
   const sidebarLum = getSidebarLuminance(colors.sidebarColor || '#005081');
   const isDark = sidebarLum < 128;
 
-  const textMain     = isDark ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.87)';
-  const textSub      = isDark ? 'rgba(255,255,255,0.90)' : 'rgba(0,0,0,0.80)';
-  const textLabel    = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)';
-  const lineColor    = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+  const textMain = isDark ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.87)';
+  const textSub = isDark ? 'rgba(255,255,255,0.90)' : 'rgba(0,0,0,0.80)';
+  const textLabel = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)';
+  const lineColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
   const chevronColor = isDark ? 'rgba(255,255,255,0.60)' : 'rgba(0,0,0,0.40)';
   const iconInactive = isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.60)';
-  const hoverBg      = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.07)';
+  const hoverBg = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.07)';
   // Sous-menus inactifs : fond transparent, seul le hover est visible
-  const subItemBg  = 'transparent';
+  const subItemBg = 'transparent';
   const subHoverBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.07)';
 
   const link = { color: 'inherit', textDecoration: 'none' };
@@ -235,8 +234,8 @@ export const Items = (props) => {
   });
 
   // Top-level leaf item — active = floating white pill with soft shadow
-  const iSx = (path, pl = 2) => {
-    const active = isActive(path);
+  const iSx = (path, pl = 2, forceActive = false) => {
+    const active = isActive(path) || forceActive;
     return {
       borderRadius: '12px',
       mx: 0.75,
@@ -260,8 +259,8 @@ export const Items = (props) => {
   };
 
   // Collapsible section header — same floating white pill as top-level leaves
-  const hSx = (basePath, pl = 2) => {
-    const active = isActive(basePath);
+  const hSx = (basePath, pl = 2, forceActive = false) => {
+    const active = isActive(basePath) || forceActive;
     return {
       borderRadius: '12px',
       mx: 0.75,
@@ -348,7 +347,7 @@ export const Items = (props) => {
 
       {/* ── Dashboard ── */}
       {showDashboard && (
-        <NavLink to="/dashboard" activeClassName="hero" style={link}>
+        <NavLink to="/dashboard" style={link}>
           <ListItemButton sx={iSx('/dashboard')} className="lib">
             <ListItemIcon><DashboardIcon style={col(isActive('/dashboard'))} /></ListItemIcon>
             <ListItemText primary="Dashboard" />
@@ -362,7 +361,7 @@ export const Items = (props) => {
       {/* Réclamations */}
       {showReclamations && (
         <>
-          <ListItemButton onClick={handleClick} sx={hSx('/reclamations')}>
+          <ListItemButton onClick={handleClick} sx={hSx('/reclamations', 2, open)}>
             <ListItemIcon><InboxIcon style={col(isActive('/reclamations'))} /></ListItemIcon>
             <ListItemText primary="Réclamations" />
             <Chevron open={open} color={chevronColor} />
@@ -537,12 +536,12 @@ export const Items = (props) => {
                 </ListItemButton>
               </NavLink>
 
-              <NavLink to="/rapports/superset" activeClassName="hero" style={link}>
+              {/* <NavLink to="/rapports/superset" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/rapports/superset')} className="lib">
                   <ListItemIcon>{si(MultilineChartIcon, isActive('/rapports/superset'))}</ListItemIcon>
                   <ListItemText primary="Superset" />
                 </ListItemButton>
-              </NavLink>
+              </NavLink> */}
 
             </List>
           </Collapse>
@@ -584,7 +583,7 @@ export const Items = (props) => {
 
       {/* WhatsApp */}
       {showWhatsapp && (
-        <NavLink to="/whatgpr" activeClassName="hero" style={link}>
+        <NavLink to="/whatgpr" style={link}>
           <ListItemButton sx={iSx('/whatsapp')} className="lib">
             <ListItemIcon><WhatsApp style={col(isActive('/whatsapp'))} /></ListItemIcon>
             <ListItemText primary="WhatsApp" />
@@ -619,14 +618,12 @@ export const Items = (props) => {
                 </ListItemButton>
               </NavLink>
 
-              {(addR === 'PILOTE' || addR === 'DE') && mode === 1 && hasModule('appearance') && (
-                <NavLink to="/configurations/apparence" activeClassName="hero" style={link}>
-                  <ListItemButton sx={sSx('/configurations/apparence')} className="lib">
-                    <ListItemIcon>{si(PaletteIcon, isActive('/configurations/apparence'))}</ListItemIcon>
-                    <ListItemText primary="Apparence" />
-                  </ListItemButton>
-                </NavLink>
-              )}
+              <NavLink to="/configurations/apparence" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/configurations/apparence')} className="lib">
+                  <ListItemIcon>{si(PaletteIcon, isActive('/configurations/apparence'))}</ListItemIcon>
+                  <ListItemText primary="Apparence" />
+                </ListItemButton>
+              </NavLink>
 
               <NavLink to="/configurations/pointsServices" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/pointsServices')} className="lib">
@@ -733,29 +730,33 @@ export const Items = (props) => {
                 </ListItemButton>
               </NavLink>
 
-              {/* Ressources (nested) */}
-              <ListItemButton onClick={handleClick6} sx={hSx('/ressources', 2)}>
-                <ListItemIcon><ArticleIcon style={col(isActive('/ressources'))} /></ListItemIcon>
-                <ListItemText primary="Ressources" />
-                <Chevron open={open6} color={chevronColor} />
-              </ListItemButton>
-              <Collapse in={open6} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  <NavLink to="/ressources/documents" activeClassName="hero" style={link}>
-                    <ListItemButton sx={sSx('/ressources/documents')} className="lib">
-                      <ListItemIcon>{si(MenuBookIcon, isActive('/ressources/documents'))}</ListItemIcon>
-                      <ListItemText primary="Documents" />
-                    </ListItemButton>
-                  </NavLink>
-                  <NavLink to="/ressources/faq" activeClassName="hero" style={link}>
-                    <ListItemButton sx={sSx('/ressources/faq')} className="lib">
-                      <ListItemIcon>{si(QuizIcon, isActive('/ressources/faq'))}</ListItemIcon>
-                      <ListItemText primary="FAQ" />
-                    </ListItemButton>
-                  </NavLink>
-                </List>
-              </Collapse>
+            </List>
+          </Collapse>
+        </>
+      )}
 
+      {/* Ressources */}
+      {showConfigs && (
+        <>
+          <ListItemButton onClick={handleClick6} sx={hSx('/ressources', 2, open6)}>
+            <ListItemIcon><ArticleIcon style={col(isActive('/ressources'))} /></ListItemIcon>
+            <ListItemText primary="Ressources" />
+            <Chevron open={open6} color={chevronColor} />
+          </ListItemButton>
+          <Collapse in={open6} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              <NavLink to="/ressources/documents" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/ressources/documents')} className="lib">
+                  <ListItemIcon>{si(MenuBookIcon, isActive('/ressources/documents'))}</ListItemIcon>
+                  <ListItemText primary="Documents" />
+                </ListItemButton>
+              </NavLink>
+              <NavLink to="/ressources/faq" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/ressources/faq')} className="lib">
+                  <ListItemIcon>{si(QuizIcon, isActive('/ressources/faq'))}</ListItemIcon>
+                  <ListItemText primary="FAQ" />
+                </ListItemButton>
+              </NavLink>
             </List>
           </Collapse>
         </>
@@ -811,7 +812,7 @@ export const Items = (props) => {
       {/* ══ AIDE ═════════════════════════════════════════════════════════════ */}
       <GroupLabel textColor={textLabel} lineColor={lineColor}>Aide</GroupLabel>
 
-      <NavLink to="/help" activeClassName="hero" style={link}>
+      <NavLink to="/help" style={link}>
         <ListItemButton sx={iSx('/help')} className="lib">
           <ListItemIcon><QuizIcon style={col(isActive('/help'))} /></ListItemIcon>
           <ListItemText primary="Ressources" />

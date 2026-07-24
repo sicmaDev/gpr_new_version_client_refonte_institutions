@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, today } from "../../Utils/utils";
 import { connect } from "react-redux";
 
@@ -283,13 +283,13 @@ const ApiKey = (props) => {
                         <Box>
                             <label style={labelStyle}>Libellé <span style={{ color: "#ef4444" }}>*</span></label>
                             <input value={keyField.libelle} onChange={(e) => setKeyField({ ...keyField, libelle: e.target.value })} maxLength={36} placeholder="Ex: Clé du module BOT"
-                                style={inputStyle(props.gprbotErrors.apiKey)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                style={inputStyle(props.gprbotErrors.apiKey)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                             {props.gprbotErrors.apiKey && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.gprbotErrors.apiKey}</div>}
                         </Box>
                         <Box sx={{ gridColumn: "1 / -1" }}>
                             <label style={labelStyle}>Description</label>
                             <textarea value={keyField.description} onChange={(e) => setKeyField({ ...keyField, description: e.target.value })} rows={3} placeholder="Ex: Clé pour les notifications BOT"
-                                style={textareaStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                style={textareaStyle(false)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                         <Box>
                             <label style={labelStyle}>API Secret</label>
@@ -318,7 +318,7 @@ const ApiKey = (props) => {
                         Fermer
                     </Button>
                     <LoadingButton onClick={(e) => createTokenApi(e)} loading={props.etat} loadingPosition="start" startIcon={<VpnKeyIcon style={{ fontSize: 16 }} />} variant="contained"
-                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
                         Générer
                     </LoadingButton>
                 </DialogActions>
@@ -336,8 +336,8 @@ const ApiKey = (props) => {
                             startIcon={<AddIcon />}
                             sx={{
                                 textTransform: "none", borderRadius: 2, fontWeight: 700,
-                                background: "linear-gradient(135deg, #1e2188, #3b3fd8)",
-                                "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" },
+                                background: "var(--gpr-primary, #005081)",
+                                "&:hover": { background: "var(--gpr-primary-dark, #003d63)" },
                                 fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap",
                             }}
                         >

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
 
 import { cleanPhoneNumber, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep, today } from "../../Utils/utils";
@@ -30,8 +30,8 @@ const textareaStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", b
 
 const SectionTitle = ({ icon: Icon, title, subtitle }) => (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-        <Icon sx={{ fontSize: 16, color: "#3b3fd8" }} />
-        <Typography sx={{ fontSize: 12, fontWeight: 800, color: "#3b3fd8", textTransform: "uppercase", letterSpacing: "0.6px" }}>{title}</Typography>
+        <Icon sx={{ fontSize: 16, color: "var(--gpr-primary, #005081)" }} />
+        <Typography sx={{ fontSize: 12, fontWeight: 800, color: "var(--gpr-primary, #005081)", textTransform: "uppercase", letterSpacing: "0.6px" }}>{title}</Typography>
         {subtitle && <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{subtitle}</Typography>}
     </Box>
 );
@@ -205,7 +205,7 @@ const Email = (props) => {
         <div className="card-panel pb-5">
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
                 <Box sx={{ width: 38, height: 38, borderRadius: 2, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <MailOutlineIcon sx={{ color: "#6366F1", fontSize: 20 }} />
+                    <MailOutlineIcon sx={{ color: "var(--gpr-primary, #005081)", fontSize: 20 }} />
                 </Box>
                 <Box>
                     <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Serveur mail</Typography>
@@ -220,12 +220,12 @@ const Email = (props) => {
                         <Box>
                             <label style={labelStyle}>Serveur (Host) <FieldCheck valid={validHost} /></label>
                             <input value={props.host || ""} onChange={(e) => props.hostChanged(e.target.value)} placeholder="Ex: smtp.gmail.com"
-                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                         <Box>
                             <label style={labelStyle}>Port <FieldCheck valid={validPort} /></label>
                             <input value={props.port || ""} onChange={(e) => props.portChanged(e.target.value)} placeholder="Ex: 465"
-                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                     </Box>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -233,13 +233,13 @@ const Email = (props) => {
                         <Box>
                             <label style={labelStyle}>Utilisateur mail (User) <FieldCheck valid={validUser} /></label>
                             <input value={props.user || ""} onChange={(e) => props.userChanged(e.target.value)} placeholder="Ex: contact@domaine.com"
-                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                         <Box>
                             <label style={labelStyle}>Mot de Passe (Password) <FieldCheck valid={validPassword} /></label>
                             <Box sx={{ position: "relative" }}>
                                 <input type={showPassword ? "text" : "password"} value={props.password || ""} onChange={(e) => props.passwordChanged(e.target.value)} placeholder="••••••••"
-                                    style={{ ...inputStyle(false), paddingRight: 40 }} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                    style={{ ...inputStyle(false), paddingRight: 40 }} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                                 <IconButton onClick={toggleShowPassword} size="small" sx={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)" }}>
                                     {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
                                 </IconButton>
@@ -260,7 +260,7 @@ const Email = (props) => {
                         onClick={() => setShowTestModal(true)}
                         variant="outlined"
                         startIcon={<ForwardToInboxOutlined style={{ fontSize: 16 }} />}
-                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, borderColor: "#e2e8f0", color: "#3b3fd8", "&:hover": { borderColor: "#3b3fd8", background: "#eef2ff" } }}
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, borderColor: "#e2e8f0", color: "var(--gpr-primary, #005081)", "&:hover": { borderColor: "var(--gpr-primary, #005081)", background: "#eef2ff" } }}
                     >
                         Tester
                     </LoadingButton>
@@ -270,7 +270,7 @@ const Email = (props) => {
                         loadingPosition="start"
                         startIcon={<SaveIcon style={{ fontSize: 16 }} />}
                         variant="contained"
-                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" }, "&.Mui-disabled": { opacity: 0.6 } }}
                     >
                         Enregistrer
                     </LoadingButton>
@@ -298,17 +298,17 @@ const Email = (props) => {
                         <Box>
                             <label style={labelStyle}>Email</label>
                             <input type="email" defaultValue={to} onChange={(e) => setTo(e.target.value)} placeholder="destinataire@domaine.com"
-                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                         <Box>
                             <label style={labelStyle}>Objet</label>
                             <input defaultValue={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Objet du message"
-                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                         <Box>
                             <label style={labelStyle}>Message</label>
                             <textarea defaultValue={message} onChange={(e) => setMessage(e.target.value)} placeholder="Contenu du message"
-                                style={textareaStyle(false)} onFocus={(e) => { e.target.style.borderColor = "#3b3fd8"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                style={textareaStyle(false)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
                     </Box>
                 </DialogContent>
@@ -318,7 +318,7 @@ const Email = (props) => {
                         Fermer
                     </Button>
                     <LoadingButton onClick={handleTest} variant="contained" startIcon={<ForwardToInboxOutlined style={{ fontSize: 16 }} />}
-                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" } }}>
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" } }}>
                         Envoyer
                     </LoadingButton>
                 </DialogActions>

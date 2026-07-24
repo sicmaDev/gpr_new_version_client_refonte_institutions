@@ -1,9 +1,9 @@
-import React from "react";
+﻿import React from "react";
 import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 
 const ACTION_DEFS = [
   { key: 'convertir',    label: 'Convertir',               desc: 'Changer le type du dossier',              accent: '#ea580c', bg: '#fff7ed', dot: '#f97316' },
-  { key: 'affecter',     label: 'Affecter',                desc: 'Assigner ce dossier à un agent',          accent: '#1e2188', bg: '#eff6ff', dot: '#3b82f6' },
+  { key: 'affecter',     label: 'Affecter',                desc: 'Assigner ce dossier à un agent',          accent: 'var(--gpr-primary, #005081)', bg: '#eff6ff', dot: '#3b82f6' },
   { key: 'reaffecter',   label: 'Réaffecter',              desc: "Changer l'agent assigné",                 accent: '#6d28d9', bg: '#f5f3ff', dot: '#8b5cf6' },
   { key: 'transmettre',  label: 'Transmettre',             desc: 'Transmettre au pilote',                   accent: '#0f172a', bg: '#f0f9ff', dot: '#0ea5e9' },
   { key: 'approuver',    label: 'Approuver',               desc: 'Valider ou rejeter la solution',          accent: '#065f46', bg: '#f0fdf4', dot: '#22c55e' },
@@ -12,8 +12,10 @@ const ACTION_DEFS = [
   { key: 'contentieux',  label: 'Recours externe',         desc: 'Enregistrer un recours à des entités externes', accent: '#b45309', bg: '#fffbeb', dot: '#f59e0b' },
 ];
 
-const ActionsDisponibles = ({ isOpen, onToggle, visibleActions, onAction }) => {
-  const actions = ACTION_DEFS.filter(a => visibleActions.includes(a.key));
+const ActionsDisponibles = ({ isOpen, onToggle, visibleActions, onAction, transmettreDesc }) => {
+  const actions = ACTION_DEFS.filter(a => visibleActions.includes(a.key)).map(a =>
+    a.key === 'transmettre' && transmettreDesc ? { ...a, desc: transmettreDesc } : a
+  );
 
   return (
     <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>

@@ -1,4 +1,4 @@
-// Chat.js
+﻿// Chat.js
 
 import { Avatar, FormControl, FormControlLabel, FormLabel, IconButton, LinearProgress, Radio, RadioGroup } from '@mui/material';
 import React, { useState, useEffect, useRef } from 'react';
@@ -461,7 +461,7 @@ const Chat = ({ guestsP, claimCode, oldMessages, members, users, user, showJoinB
                   {usersCGR.map((member) => (
                     <>
                         <li class="clearfix" key={member.id} style={{ display: "flex", verticalAlign: "center"}}>
-                          <Avatar sx={{ width: 40, height: 40,backgroundColor:"#1E2188" }}>{member.firstAndLastName[0]}</Avatar>
+                          <Avatar sx={{ width: 40, height: 40,backgroundColor:"var(--gpr-primary, #005081)" }}>{member.firstAndLastName[0]}</Avatar>
                           
                           <div class="about" style={{ marginTop: "0px" }}>
                             <div class="name">{member.firstAndLastName}</div>
@@ -493,7 +493,7 @@ const Chat = ({ guestsP, claimCode, oldMessages, members, users, user, showJoinB
                         sx={{
                           width: 48,
                           height: 48,
-                          backgroundColor: "#1E2188",
+                          backgroundColor: "var(--gpr-primary, #005081)",
                         }}
                       >
                         {member.firstAndLastName[0]}
@@ -519,7 +519,7 @@ const Chat = ({ guestsP, claimCode, oldMessages, members, users, user, showJoinB
 
                     {(guests)?.map((guest) => (
                       <li className="clearfix" key={guest.id} style={{ display: "flex", verticalAlign: "center" }}>
-                        <Avatar sx={{width: 48, height: 48, backgroundColor: "#1E2188",}}>
+                        <Avatar sx={{width: 48, height: 48, backgroundColor: "var(--gpr-primary, #005081)",}}>
                           {guest !== null && guest.firstAndLastName != null && guest?.firstAndLastName[0]}
                         </Avatar>
 
@@ -564,7 +564,7 @@ const Chat = ({ guestsP, claimCode, oldMessages, members, users, user, showJoinB
                       sx={{
                         width: 48,
                         height: 48,
-                        backgroundColor: "#1E2188",
+                        backgroundColor: "var(--gpr-primary, #005081)",
                         marginTop: "auto",
                         marginBottom: "auto",
                       }}

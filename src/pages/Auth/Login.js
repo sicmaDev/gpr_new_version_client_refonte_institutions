@@ -63,7 +63,7 @@ const CARD_POSITIONS = [
 ];
 
 const Login = (props) => {
-  const { colors } = useThemeColors();
+  const { colors, logo: institutionLogo } = useThemeColors();
   const primaryColor = getPagePrimary(colors);
   const primaryDark  = darkenColor(primaryColor, 0.18);
   const [showPassword, setShowPassword] = useState(false);
@@ -285,7 +285,7 @@ const Login = (props) => {
               </div>
               <div className="w-px h-8 bg-[#e2e8f0] mx-1 flex-shrink-0" />
               <div className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center">
-                <img src={logoSicma} alt="Logo Institution" className="h-full w-full object-contain" />
+                <img src={institutionLogo || logoSicma} alt="Logo Institution" className="h-full w-full object-contain" />
               </div>
             </div>
 
@@ -325,7 +325,7 @@ const Login = (props) => {
                   <img src={logo} alt="Logo GPR" className="h-12 w-auto object-cover object-left" />
                 </div>
                 <div className="w-px h-8 bg-[#e2e8f0]" />
-                <img src={logoSicma} alt="Logo Institution" className="h-10 object-contain" />
+                <img src={institutionLogo || logoSicma} alt="Logo Institution" className="h-10 object-contain" />
               </div>
               <div className="text-center">
                 <p className="text-[#1a2b3c] font-bold text-[15px]">Gestion des Plaintes &amp; Réclamations</p>

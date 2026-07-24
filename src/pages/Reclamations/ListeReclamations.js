@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import FileTypeIcon from "../../components/shared/FileTypeIcon";
 import ClaimStatusBadge from "./components/ClaimStatusBadge";
 import ClaimGravityBadge from "./components/ClaimGravityBadge";
@@ -228,7 +228,7 @@ const ListeReclamations = (props) => {
     var statusElt = status;
     switch (status) {
       case "SAVED":
-        statusElt = "Enregistrée";
+        statusElt = "À traiter";
         break;
       case "TEMP_SAVED":
         statusElt = "Sauvegardée";
@@ -336,6 +336,7 @@ const ListeReclamations = (props) => {
     const urlCode = props.match?.params?.code;
     const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_rec_code');
     if (code) {
+      setDetailVisible(true);
       axios({
         method: "get",
         url: HOST + "api/v1/claim/" + code + "/details",
@@ -427,12 +428,19 @@ const ListeReclamations = (props) => {
   }, [audio]);
 
   useEffect(() => {
-    KTApp.blockPage({
-      overlayColor: "#000000",
-      type: "v2",
-      state: "danger",
-      message: "En cours de chargement...",
-    });
+    const hasDetailCode = (() => {
+      const urlCode = props.match?.params?.code;
+      return (urlCode && urlCode !== "all") || !!sessionStorage.getItem('gpr_rec_code');
+    })();
+
+    if (!hasDetailCode) {
+      KTApp.blockPage({
+        overlayColor: "#000000",
+        type: "v2",
+        state: "danger",
+        message: "En cours de chargement...",
+      });
+    }
     setIsLoading(true);
 
     if (mode === 1) {
@@ -441,7 +449,7 @@ const ListeReclamations = (props) => {
         .then((r) => { })
         .finally(() => {
           setIsLoading(false);
-          KTApp.unblockPage();
+          if (!hasDetailCode) KTApp.unblockPage();
         });
     } else {
       props.itemsChanged([]);
@@ -449,7 +457,7 @@ const ListeReclamations = (props) => {
         .then((r) => { })
         .finally(() => {
           setIsLoading(false);
-          KTApp.unblockPage();
+          if (!hasDetailCode) KTApp.unblockPage();
         });
     }
     //couleurs
@@ -517,7 +525,7 @@ const ListeReclamations = (props) => {
           case "SAVED":
             statusElt = (
               <span className="chip toTreatBgColor">
-                <span className="">Enregistrée</span>
+                <span className="">À traiter</span>
               </span>
             );
             break;
@@ -782,6 +790,7 @@ const ListeReclamations = (props) => {
   const rowClickedHandler = (event, data, rowIndex) => {
     clearComponentState();
     sessionStorage.setItem('gpr_rec_code', data.code);
+    history.push('/reclamations/liste/' + data.code);
     setDetailVisible(true);
     setClaimId(data.id);
 
@@ -1004,7 +1013,7 @@ const ListeReclamations = (props) => {
               style={{ cursor: "pointer" }}
             />
             <span className="chip toTreatBgColor">
-              <span className="">Enregistrée</span>
+              <span className="">À traiter</span>
             </span>
           </h5>
         </>
@@ -2015,7 +2024,7 @@ const ListeReclamations = (props) => {
 
     // Statut
     const statusMap = {
-      SAVED: "Enregistrée",
+      SAVED: "À traiter",
       TEMP_SAVED: "Sauvegardée",
       AFFECTED: "Affectée",
       TO_APPROUVED: "À approuver",
@@ -2094,7 +2103,7 @@ const ListeReclamations = (props) => {
     let statusElt;
     switch (element.status) {
       case "SAVED":
-        statusElt = "Enregistrée";
+        statusElt = "À traiter";
         break;
       case "TEMP_SAVED":
         statusElt = "Sauvegardée";
@@ -2568,7 +2577,7 @@ const ListeReclamations = (props) => {
             endIcon={<SaveIcon />}
             size="small"
             variant="outlined"
-            sx={{ textTransform: "none", borderRadius: 2, fontSize: 12, borderColor: "#1e2188", color: "#1e2188" }}
+            sx={{ textTransform: "none", borderRadius: 2, fontSize: 12, borderColor: "var(--gpr-primary, #005081)", color: "var(--gpr-primary, #005081)" }}
           >
             <span>PV de session</span>
           </LoadingButton>
@@ -2594,7 +2603,7 @@ const ListeReclamations = (props) => {
             {extraContent?.trim() && (
               <DialogActions>
                 <LoadingButton onClick={() => { setExtraContent(""); setShowExtraContent(false); }} endIcon={<CloseIcon />} variant="contained" sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary">Annuler</LoadingButton>
-                <LoadingButton onClick={(e) => handleContentSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}>Enregistrer</LoadingButton>
+                <LoadingButton onClick={(e) => handleContentSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}>Enregistrer</LoadingButton>
               </DialogActions>
             )}
           </Dialog>
@@ -2609,7 +2618,7 @@ const ListeReclamations = (props) => {
             </DialogContent>
             <DialogActions>
               <LoadingButton onClick={clearFiles} endIcon={<CloseIcon />} variant="contained" sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary">Annuler</LoadingButton>
-              <LoadingButton onClick={(e) => handleFileSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}>Enregistrer</LoadingButton>
+              <LoadingButton onClick={(e) => handleFileSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}>Enregistrer</LoadingButton>
             </DialogActions>
           </Dialog>
         )}
@@ -2637,7 +2646,7 @@ const ListeReclamations = (props) => {
             {audioListUrlForm.length > 0 && (
               <DialogActions>
                 <LoadingButton onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} endIcon={<CloseIcon />} variant="contained" sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary">Annuler</LoadingButton>
-                <LoadingButton onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}>Enregistrer</LoadingButton>
+                <LoadingButton onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}>Enregistrer</LoadingButton>
               </DialogActions>
             )}
           </Dialog>
@@ -2724,7 +2733,7 @@ const ListeReclamations = (props) => {
                 const renderSolution = (sol, idx, total) => {
                   const isLast = idx === total - 1;
                   const sat = sol.satisfactionMeasureDto?.status;
-                  const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : "#6366f1";
+                  const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : "var(--gpr-primary, #005081)";
                   const satLabel = sat === "SATISFIED" ? "Satisfait" : sat === "UNSATISFIED" ? "Non satisfait" : sat === "PARTIAL" ? "Partiellement satisfait" : null;
                   const clientComment = sol.satisfactionMeasureDto?.commentaire;
                   const approb = sol.status === "UNAPPROVED";
@@ -2932,7 +2941,7 @@ const ListeReclamations = (props) => {
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                           </div>
                           <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, color: "#1e293b" }}>Historique des solutions</span>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: allSolutions.length > 0 ? "#fff" : "#94a3b8", background: allSolutions.length > 0 ? "#6366f1" : "#e2e8f0", borderRadius: 20, padding: "2px 9px", marginRight: 8 }}>{allSolutions.length}</span>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, color: allSolutions.length > 0 ? "#fff" : "#94a3b8", background: allSolutions.length > 0 ? "var(--gpr-primary, #005081)" : "#e2e8f0", borderRadius: 20, padding: "2px 9px", marginRight: 8 }}>{allSolutions.length}</span>
                           <span style={{ fontSize: 10, color: "#94a3b8" }}>{histAccordions.solutions ? "▲" : "▼"}</span>
                         </button>
                         {histAccordions.solutions && (
@@ -2945,7 +2954,7 @@ const ListeReclamations = (props) => {
                                 {allSolutions.map((sol, idx) => {
                                   const isLast = idx === allSolutions.length - 1;
                                   const sat = sol.satisfactionMeasureDto?.status;
-                                  const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : sol.status === "UNAPPROVED" ? "#f97316" : "#6366f1";
+                                  const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : sol.status === "UNAPPROVED" ? "#f97316" : "var(--gpr-primary, #005081)";
                                   const satLabel = sat === "SATISFIED" ? "Satisfait" : sat === "UNSATISFIED" ? "Non satisfait" : sat === "PARTIAL" ? "Partiellement satisfait" : null;
                                   const clientComment = sol.satisfactionMeasureDto?.commentaire;
                                   return (
@@ -3065,7 +3074,7 @@ const ListeReclamations = (props) => {
                   loadingPosition="end"
                   endIcon={<SaveIcon />}
                   variant="contained"
-                  sx={{ backgroundColor: "#1e2188", textTransform: "initial" }}
+                  sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
                   color="primary"
                 >
                   Enregistrer
@@ -3133,7 +3142,7 @@ const ListeReclamations = (props) => {
                     endIcon={<SaveIcon />}
                     variant="contained"
                     sx={{
-                      backgroundColor: "#1e2188",
+                      backgroundColor: "var(--gpr-primary, #005081)",
                       textTransform: "initial",
                     }}
                   >
@@ -3173,7 +3182,7 @@ const ListeReclamations = (props) => {
           >
             <DialogTitle
               align="center"
-              color={"#1E2188"}
+              color={"var(--gpr-primary, #005081)"}
               fontSize={"23px"}
               fontWeight={"bold"}
             >
@@ -3254,7 +3263,7 @@ const ListeReclamations = (props) => {
                     endIcon={<SaveIcon />}
                     variant="contained"
                     sx={{
-                      backgroundColor: "#1e2188",
+                      backgroundColor: "var(--gpr-primary, #005081)",
                       textTransform: "initial",
                     }}
                   >
@@ -3519,8 +3528,8 @@ const ListeReclamations = (props) => {
                         <div className="col l6 m6 s12" style={{ textAlign: "end", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
                           {/* Toggle Vue liste / cartes */}
                           <Box sx={{ display: "inline-flex", borderRadius: "10px", border: "1px solid #E2E8F0", overflow: "hidden" }}>
-                            <Tooltip title="Vue liste"><Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "#6366F1" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></Box></Tooltip>
-                            <Tooltip title="Vue cartes"><Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "#6366F1" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></Box></Tooltip>
+                            <Tooltip title="Vue liste"><Box onClick={() => setViewMode("list")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "list" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "list" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></Box></Tooltip>
+                            <Tooltip title="Vue cartes"><Box onClick={() => setViewMode("card")} sx={{ px: 1.4, py: 0.8, cursor: "pointer", backgroundColor: viewMode === "card" ? "var(--gpr-primary, #005081)" : "#F8FAFC", color: viewMode === "card" ? "#fff" : "#94A3B8", display: "flex", alignItems: "center", transition: "all 0.18s" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></Box></Tooltip>
                           </Box>
                           {hbt.includes("H7") ? (
                             <img src={pdf} alt="" style={{ marginRight: "15px", cursor: "pointer" }}
@@ -3572,7 +3581,7 @@ const ListeReclamations = (props) => {
                     TransitionComponent={Transition}
                   >
                     <AppBar
-                      sx={{ position: "relative", backgroundColor: "#1e2188" }}
+                      sx={{ position: "relative", backgroundColor: "var(--gpr-primary, #005081)" }}
                     >
                       <Toolbar>
                         <IconButton
@@ -3825,7 +3834,7 @@ const ListeReclamations = (props) => {
                                         className="pb-2 ml-3 "
                                         style={{
                                           cursor: "pointer",
-                                          color: "#1e2188",
+                                          color: "var(--gpr-primary, #005081)",
                                         }}
                                       >
                                         + Ajouter du contenu
@@ -4008,7 +4017,7 @@ const ListeReclamations = (props) => {
                                     endIcon={<SaveIcon />}
                                     variant="contained"
                                     sx={{
-                                      backgroundColor: "#1e2188",
+                                      backgroundColor: "var(--gpr-primary, #005081)",
                                       textTransform: "initial",
                                     }}
                                   >

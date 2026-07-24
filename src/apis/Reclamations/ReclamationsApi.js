@@ -36,6 +36,17 @@ const RESTORE_CLAIM_API = HOST + "api/v1/claim/restore/%s"
 const DELETE_ONLY_CLAIM_API = HOST + "api/v1/claim/delete/{id}"
 const CHECK_PHONE_API = HOST + "api/v1/claim/checkPhone/%s"
 const CLAIM_EVENTS_API = HOST + "api/v1/claim-events/"
+const CLAIM_DRAFT_API = HOST + "api/v1/claim/%s/draft"
+
+export const saveDraftApi = (claimId, data) => {
+    return axios.put(CLAIM_DRAFT_API.replace('%s', claimId), data, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    });
+}
 
 export const getClaimEvents = (claimId) => {
     return axios.get(CLAIM_EVENTS_API + claimId, {

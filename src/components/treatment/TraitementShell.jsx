@@ -93,6 +93,7 @@ const TraitementShell = ({
   // Sidebar — actions
   visibleActions = [],
   onActionOverride,
+  transmettreDesc,
 
   // Custom tabs override — [{ key, label, content }]
   customTabs,
@@ -103,6 +104,7 @@ const TraitementShell = ({
   inputRef, onFilesChange, onAddAudio,
 
   // Historique
+  claimId,
   transmitted, transmittedBy, transmittedTo,
   handled_by, assigned_by, assignedAt, solution,
 
@@ -110,6 +112,10 @@ const TraitementShell = ({
   treatForm,
   onTreat,         // handler du bouton "Traiter"
   loadingTreat,    // boolean loading state
+  onSaveDraft,     // handler du bouton "Sauvegarder"
+  loadingDraft,    // boolean loading state for draft
+  draftSavedAt,    // string — date de la dernière sauvegarde brouillon
+  onLoadDraft,     // handler du bouton "Charger le brouillon"
   canTreat,        // boolean — si false, boutons solutions grisés
   existingSolutions = [],
   onModifyBeforeSend,
@@ -134,6 +140,7 @@ const TraitementShell = ({
   emailDialogSlot,
   headerActions,
   conversionWarning,
+  transmissionWarning,
   conversionTypes,
   dossierLabel,
   hideClientInfo = false,
@@ -185,9 +192,11 @@ const TraitementShell = ({
           <span className="font-bold text-[15px] text-slate-900 tracking-wide font-mono">
             {codeClient}
           </span>
-          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, fontWeight: 600, background: bgS, color: colS }}>
-            {lblS}
-          </span>
+          {lblS && (
+            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, fontWeight: 600, background: bgS, color: colS }}>
+              {lblS}
+            </span>
+          )}
           {risqueLevel && lblG && (
             <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, fontWeight: 600, background: bgG, color: colG }}>
               {lblG}
@@ -252,6 +261,7 @@ const TraitementShell = ({
                 onToggle={() => toggleAccordion('actions')}
                 visibleActions={visibleActions}
                 onAction={handleActionClick}
+                transmettreDesc={transmettreDesc}
               />
             )}
           </div>
@@ -306,6 +316,27 @@ const TraitementShell = ({
               </div>
             )}
 
+            {/* Bannière transmission */}
+            {transmissionWarning && (
+              <div className="flex-shrink-0 px-3 pt-2">
+                <div style={{
+                  background: '#f5f3ff',
+                  border: '1px solid #ddd6fe',
+                  borderLeft: '4px solid #7c3aed',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  fontSize: '0.82rem',
+                  color: '#5b21b6',
+                  fontWeight: 500,
+                }}>
+                  {transmissionWarning}
+                </div>
+              </div>
+            )}
+
             {/* Tab content */}
             <div className="flex-1 overflow-y-auto bg-[#f5f5f5]">
 
@@ -348,7 +379,6 @@ const TraitementShell = ({
                         </button>
                       );
                     })}
-                    {transmettre && <div style={{ marginLeft: 'auto' }}>{transmettre}</div>}
                   </div>
 
                   {/* Classique */}
@@ -362,9 +392,49 @@ const TraitementShell = ({
                           <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>Proposition de solution</div>
                           <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 1 }}>Solution proposée pour résoudre ce dossier</div>
                         </div>
-                        <button style={{ padding: '8px 18px', borderRadius: 9, background: '#2563eb', border: 'none', color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,99,235,0.25)' }}>
-                          Sauvegarder
-                        </button>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                          {draftSavedAt && (
+                            <span style={{ fontSize: 11, color: '#64748b', fontStyle: 'italic' }}>
+                              Brouillon du {draftSavedAt}
+                            </span>
+                          )}
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            {draftSavedAt && onLoadDraft && (
+                              <button
+                                onClick={onLoadDraft}
+                                style={{
+                                  padding: '7px 14px', borderRadius: 9,
+                                  background: '#f0fdf4', border: '1.5px solid #22c55e',
+                                  color: '#166534', fontWeight: 700, fontSize: 12,
+                                  cursor: 'pointer', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                ↩ Charger le brouillon
+                              </button>
+                            )}
+                            {onSaveDraft && (
+                              <LoadingButton
+                                onClick={onSaveDraft}
+                                loading={loadingDraft}
+                                loadingPosition="end"
+                                endIcon={<SaveIcon />}
+                                variant="outlined"
+                                sx={{
+                                  textTransform: 'initial',
+                                  fontWeight: 700,
+                                  fontSize: 13,
+                                  borderRadius: 9,
+                                  px: 2,
+                                  borderColor: '#2563eb',
+                                  color: '#2563eb',
+                                  '&:hover': { borderColor: '#1d4ed8', background: '#eff6ff' },
+                                }}
+                              >
+                                Sauvegarder
+                              </LoadingButton>
+                            )}
+                          </div>
+                        </div>
                       </div>
                       <div className="treat-form-modern" style={{ padding: '16px 18px' }}>
                         {treatForm}
@@ -453,19 +523,7 @@ const TraitementShell = ({
               {/* ── HISTORIQUE ── */}
               {!customTabs && activeTab === 'historique' && (
                 <div className="p-3">
-                  <HistoriqueTimeline
-                    recorded_at={recorded_at}
-                    created_by={created_by}
-                    transmitted={transmitted}
-                    transmittedBy={transmittedBy}
-                    transmittedTo={transmittedTo}
-                    handled_by={handled_by}
-                    assigned_by={assigned_by}
-                    assignedAt={assignedAt}
-                    solution={solution}
-                    formatDate={formatDate}
-                    formatDate3={formatDate3}
-                  />
+                  <HistoriqueTimeline claimId={claimId} />
                 </div>
               )}
 

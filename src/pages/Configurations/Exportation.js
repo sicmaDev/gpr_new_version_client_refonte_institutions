@@ -1,4 +1,4 @@
-import { Save } from "@mui/icons-material"
+﻿import { Save } from "@mui/icons-material"
 import { LoadingButton } from "@mui/lab"
 import Select from "react-select"
 import { useState, useEffect, useMemo } from "react";
@@ -13,7 +13,7 @@ import ConfigTable from "../../components/shared/ConfigTable";
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" };
 
 const selectStyles = {
-    control: (base, state) => ({ ...base, minHeight: 40, borderRadius: 9, borderColor: state.isFocused ? "#3b3fd8" : "#e2e8f0", borderWidth: 1.5, boxShadow: "none", "&:hover": { borderColor: "#3b3fd8" } }),
+    control: (base, state) => ({ ...base, minHeight: 40, borderRadius: 9, borderColor: state.isFocused ? "var(--gpr-primary, #005081)" : "#e2e8f0", borderWidth: 1.5, boxShadow: "none", "&:hover": { borderColor: "var(--gpr-primary, #005081)" } }),
     valueContainer: base => ({ ...base, padding: "2px 14px" }),
     placeholder: base => ({ ...base, fontSize: 14, color: "#94a3b8" }),
     singleValue: base => ({ ...base, fontSize: 14, color: "#1e293b" }),
@@ -105,7 +105,7 @@ const Exportation = () => {
         <div className="card-panel pb-5">
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
                 <Box sx={{ width: 38, height: 38, borderRadius: 2, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <FileDownloadOutlinedIcon sx={{ color: "#6366F1", fontSize: 20 }} />
+                    <FileDownloadOutlinedIcon sx={{ color: "var(--gpr-primary, #005081)", fontSize: 20 }} />
                 </Box>
                 <Box>
                     <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Exportation des configurations, dénonciations et plaintes</Typography>
@@ -138,7 +138,7 @@ const Exportation = () => {
                     loadingPosition="start"
                     startIcon={<Save style={{ fontSize: 16 }} />}
                     variant="contained"
-                    sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #1e2188, #3b3fd8)", "&:hover": { background: "linear-gradient(135deg, #16186e, #2f32b0)" }, "&.Mui-disabled": { opacity: 0.6 } }}
+                    sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "var(--gpr-primary, #005081)", "&:hover": { background: "var(--gpr-primary-dark, #003d63)" }, "&.Mui-disabled": { opacity: 0.6 } }}
                 >
                     Exporter
                 </LoadingButton>

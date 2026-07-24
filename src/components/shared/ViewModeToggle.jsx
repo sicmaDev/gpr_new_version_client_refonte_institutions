@@ -19,9 +19,9 @@ const ViewModeToggle = ({ value, onChange }) => {
   };
 
   const activeSx = {
-    background: "#6366F1",
+    background: "var(--gpr-primary, #005081)",
     color: "#fff",
-    "&:hover": { background: "#6366F1" },
+    "&:hover": { background: "var(--gpr-primary, #005081)" },
   };
 
   const inactiveSx = {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import Select from "react-select";
 
 import DatePicker, { registerLocale } from "react-datepicker";
@@ -590,7 +590,7 @@ const EnregistrerSuggestion = (props) => {
                     <DialogContent style={{ padding: 0 }}>
                         {/* Header gradient */}
                         <div style={{
-                            background: "linear-gradient(135deg, #005081, #005081)",
+                            background: "var(--gpr-primary, #005081)",
                             padding: "32px 28px 24px", textAlign: "center",
                         }}>
                             <div style={{
@@ -642,7 +642,7 @@ const EnregistrerSuggestion = (props) => {
                             onClick={(e) => { e.preventDefault(); setShowSmsBox(false); sendSms(e); }}
                             style={{
                                 width: "100%", padding: "14px", borderRadius: 12, border: "none",
-                                background: "linear-gradient(135deg, #005081, #005081)",
+                                background: "var(--gpr-primary, #005081)",
                                 color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer",
                                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                                 boxShadow: "0 4px 14px rgba(0,80,129,0.35)",
@@ -931,7 +931,7 @@ const EnregistrerSuggestion = (props) => {
                             {mode === 1 && (
                                 <div style={{ position: "absolute", right: 0, top: -16 }}>
                                     <Fab color="primary" size="small"
-                                        style={{ backgroundColor: "#005081" }}
+                                        style={{ backgroundColor: "var(--gpr-primary, #005081)" }}
                                         onClick={(e) => { e.preventDefault(); setAudioBox(true); setOpen2(true); }}
                                     >
                                         <Mic />

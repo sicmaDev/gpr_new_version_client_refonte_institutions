@@ -28,7 +28,7 @@ const ConvertirModal = ({
       <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
         PaperProps={{ style: { borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" } }}
       >
-        <div style={{ background: "linear-gradient(135deg, #ef6c00 0%, #f59e0b 100%)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ background: "var(--gpr-primary, #005081)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: 10, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <AutorenewIcon style={{ color: "white", fontSize: 20 }} />
