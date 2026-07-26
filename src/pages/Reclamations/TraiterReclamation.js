@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DossierDataTable from "../../components/shared/DossierDataTable";
 import ClaimsKPIBar from "./components/ClaimsKPIBar";
@@ -616,12 +616,9 @@ const TraiterReclamation = (props) => {
   useEffect(() => {
     const urlCode = props.match?.params?.code;
     if (!urlCode || urlCode === "all") {
-      const storedCode = sessionStorage.getItem('gpr_treat_code');
-      if (storedCode) {
-        history.replace('/reclamations/traitement/' + storedCode);
-      }
+      sessionStorage.removeItem('gpr_treat_code');
     }
-  }, []);
+  }, [props.match?.params?.code]);
 
   let alreadyCall = false;
   useEffect(() => {
@@ -1859,7 +1856,8 @@ const TraiterReclamation = (props) => {
   };
 
   const warningTransmission = props.transmitted === "true" && props.transmittedTo &&
-    user?.firstAndLastName !== props.transmittedTo && (
+    user?.firstAndLastName !== props.transmittedTo &&
+    !props.convertedBy && (
     <span style={{ display: 'flex', alignItems: 'center', fontStyle: 'italic' }}>
       <SendIcon fontSize="small" sx={{ mr: 1, color: '#7c3aed' }} />
       {`Cette réclamation a été transmise à `}
@@ -2037,7 +2035,7 @@ const TraiterReclamation = (props) => {
       }
 
       if (
-        hbt.includes("H2", "H3", "H4") &&
+        (hbt.includes("H2") || hbt.includes("H3") || hbt.includes("H4")) &&
         ((props.created_by === user.firstAndLastName &&
           props.transmitted === "false") ||
           (props.transmittedTo === user.firstAndLastName &&
@@ -3777,10 +3775,10 @@ const TraiterReclamation = (props) => {
   let btnS = "";
 
   if (
-    (addR !== "PILOTE" && !hbt.includes("H6")) &&
+    (addR !== "PILOTE" && (!hbt.includes("H6") || user.ra === true)) &&
     ((user.firstAndLastName === props.created_by && props.transmitted === "false") ||
-      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && addR === "MOLDUE") ||
-      (user.ra === true && props.transmitted === "false" && props.authorize)) &&
+      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true") ||
+      (user.ra === true && props.transmitted === "false")) &&
     props.status === "SAVED"
   ) {
     transmettre = (
@@ -4239,13 +4237,15 @@ const TraiterReclamation = (props) => {
               addR === "PILOTE" && props.status === "SAVED" && 'convertir',
               (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && props.status === "SAVED" && props.transmitted !== "true" && 'affecter',
               (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && ["AFFECTED","UNSATISFIED","PARTIAL_SATISFIED","CLASSED"].includes(props.status) && 'reaffecter',
-              (addR !== "PILOTE" && !hbt.includes("H6")) && props.status === "SAVED" && props.transmitted === "false" && (user.firstAndLastName === props.created_by || user.ra === true) && 'transmettre',
+              (addR !== "PILOTE" && (!hbt.includes("H6") || user.ra === true)) && props.status === "SAVED" && ((user.firstAndLastName === props.created_by && props.transmitted === "false") || (user.firstAndLastName === props.transmittedTo && props.transmitted === "true") || (user.ra === true && props.transmitted === "false")) && 'transmettre',
               (hbt.includes("H6") || addR === "PILOTE") && props.status === "TO_APPROUVED" && 'approuver',
             ].filter(Boolean)}
             transmettreDesc={
-              dataRow?.servicePoint?.directionId
-                ? `Transmettre au responsable d'agence de ${props.unit || 'votre agence'}`
-                : 'Transmettre au pilote'
+              user?.servicePointDto?.directionLibelle
+                ? `Transmission au responsable de l'agence ${user.servicePointDto.directionLibelle}`
+                : (user?.servicePointDto?.direction_id || user?.servicePointDto?.directionId)
+                  ? "Transmission au responsable d'agence de l'autorité supérieure"
+                  : "Transmission au pilote"
             }
 
             selectedItemFiles={props.selectedItemFiles}

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DossierDataTable from "../../components/shared/DossierDataTable";
 import Select from "react-select";
@@ -532,12 +532,9 @@ const TraiterDenonciation = (props) => {
   useEffect(() => {
     const urlCode = props.match?.params?.code;
     if (!urlCode || urlCode === "all") {
-      const storedCode = sessionStorage.getItem('gpr_den_treat_code');
-      if (storedCode) {
-        history.replace('/denonciations/traitement/' + storedCode);
-      }
+      sessionStorage.removeItem('gpr_den_treat_code');
     }
-  }, []);
+  }, [props.match?.params?.code]);
 
   useEffect(() => {
     KTApp.blockPage({
@@ -745,6 +742,19 @@ const TraiterDenonciation = (props) => {
           }
 
           setCurrentData(data);
+          props.transmittedChanged(
+            data.transmitted !== null ? "" + data.transmitted + "" : ""
+          );
+          props.transmittedToChanged(
+            data.transmittedTo !== null
+              ? "" + data.transmittedTo.firstAndLastName + ""
+              : ""
+          );
+          props.transmittedByChanged(
+            data.transmittedBy !== null
+              ? "" + data.transmittedBy.firstAndLastName + ""
+              : ""
+          );
           props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
           props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
           //fetch attachments for selected claim
@@ -1510,7 +1520,8 @@ const TraiterDenonciation = (props) => {
   };
 
   const warningTransmission = props.transmitted === "true" && props.transmittedTo &&
-    user?.firstAndLastName !== props.transmittedTo && (
+    user?.firstAndLastName !== props.transmittedTo &&
+    !props.convertedBy && (
     <span style={{ display: 'flex', alignItems: 'center', fontStyle: 'italic' }}>
       <SendIcon fontSize="small" sx={{ mr: 1, color: '#7c3aed' }} />
       {`Cette dénonciation a été transmise à `}
@@ -2770,9 +2781,9 @@ const TraiterDenonciation = (props) => {
   let btnS = "";
 
   if (
-    (addR !== "PILOTE" && !hbt.includes("H6")) &&
+    (addR !== "PILOTE" && (!hbt.includes("H6") || user.ra === true)) &&
     ((user.firstAndLastName === props.created_by && props.transmitted === "false") ||
-      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && addR === "MOLDUE") ||
+      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true") ||
       (user.ra === true && props.transmitted === "false")) &&
     props.status === "SAVED"
   ) {
@@ -3182,13 +3193,15 @@ const TraiterDenonciation = (props) => {
             addR === "PILOTE" && props.status === "SAVED" && 'convertir',
             (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && props.status === "SAVED" && props.transmitted !== "true" && 'affecter',
             (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && ["AFFECTED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(props.status) && 'reaffecter',
-            (addR !== "PILOTE" && !hbt.includes("H6")) && props.status === "SAVED" && props.transmitted === "false" && (user.firstAndLastName === props.created_by || user.ra === true) && 'transmettre',
+            (addR !== "PILOTE" && (!hbt.includes("H6") || user.ra === true)) && props.status === "SAVED" && ((user.firstAndLastName === props.created_by && props.transmitted === "false") || (user.firstAndLastName === props.transmittedTo && props.transmitted === "true") || (user.ra === true && props.transmitted === "false")) && 'transmettre',
             (hbt.includes("H6") || addR === "PILOTE") && props.status === "TO_APPROUVED" && 'approuver',
           ].filter(Boolean)}
           transmettreDesc={
-            dataRow?.servicePoint?.directionId
-              ? `Transmettre au responsable d'agence de ${props.unit || 'votre agence'}`
-              : 'Transmettre au pilote'
+            user?.servicePointDto?.directionLibelle
+              ? `Transmission au responsable de l'agence ${user.servicePointDto.directionLibelle}`
+              : (user?.servicePointDto?.direction_id || user?.servicePointDto?.directionId)
+                ? "Transmission au responsable d'agence de l'autorité supérieure"
+                : "Transmission au pilote"
           }
 
           selectedItemFiles={props.selectedItemFiles}

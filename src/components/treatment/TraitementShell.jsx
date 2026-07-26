@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import BoltIcon from "@mui/icons-material/Bolt";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import GroupsIcon from "@mui/icons-material/Groups";
 import EditNoteIcon from "@mui/icons-material/EditNote";
+import ForumIcon from "@mui/icons-material/Forum";
+import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
+import MoveUpIcon from "@mui/icons-material/MoveUp";
 
 import SidebarInfosClient from "./SidebarInfosClient";
 import SidebarDetailsDossier from "./SidebarDetailsDossier";
@@ -176,6 +180,12 @@ const TraitementShell = ({
   const lblS = statusLabel ?? lblS_;
   const [bgG, colG, lblG] = GRAVITY_MAP[risqueLevel] || [];
 
+  const sessionUser = JSON.parse(sessionStorage.getItem("app-user") || "{}");
+  const isClosed = ["SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(status);
+  const isAssignedToMe = status === "AFFECTED" && handled_by === sessionUser?.firstAndLastName;
+  const hasSession = session && (typeof session === "string" ? session !== "" : session.status !== "CLOSED") && !isClosed;
+  const isTransmitted = transmitted === "true" || transmitted === true;
+
   const handleActionClick = (key) => {
     if (onActionOverride) { onActionOverride(key); } else { setOpenModal(key); }
   };
@@ -192,6 +202,21 @@ const TraitementShell = ({
           <span className="font-bold text-[15px] text-slate-900 tracking-wide font-mono">
             {codeClient}
           </span>
+          {isAssignedToMe && (
+            <Tooltip title="Vous êtes assigné à ce dossier">
+              <AlternateEmailIcon sx={{ fontSize: 16, color: "#DC2626" }} />
+            </Tooltip>
+          )}
+          {hasSession && (
+            <Tooltip title="Session collaborative ouverte">
+              <ForumIcon sx={{ fontSize: 16, color: "#DC2626" }} />
+            </Tooltip>
+          )}
+          {isTransmitted && (
+            <Tooltip title="Transmis à une autorité supérieure">
+              <MoveUpIcon sx={{ fontSize: 16, color: "#DC2626" }} />
+            </Tooltip>
+          )}
           {lblS && (
             <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, fontWeight: 600, background: bgS, color: colS }}>
               {lblS}
@@ -582,6 +607,7 @@ const TraitementShell = ({
         onClose={() => setOpenModal(null)}
         onConfirm={(e) => { setOpenModal(null); onConfirmTransmettre?.(e); }}
         loading={loadingTransmettre}
+        description={transmettreDesc}
       />
 
       <ApprouverModal

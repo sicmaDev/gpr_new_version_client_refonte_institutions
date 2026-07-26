@@ -267,12 +267,13 @@ export const Haut = (props) => {
                         aria-haspopup="true"
                         aria-expanded={opena ? 'true' : undefined}
                       >
-                        <Avatar sx={{ 
-                          width: 32, 
-                          height: 32, 
-                          backgroundColor: colors.topbarColor || '#005081', 
-                          color: avatarTextColor, 
-                          border: avatarBorder 
+                        <Avatar sx={{
+                          width: 32,
+                          height: 32,
+                          backgroundColor: 'rgba(255,255,255,0.22)',
+                          color: '#fff',
+                          border: '1.5px solid rgba(255,255,255,0.55)',
+                          fontWeight: 700,
                         }}>
                           {user.firstAndLastName[0]}
                         </Avatar>
@@ -482,12 +483,13 @@ export const Haut = (props) => {
                         aria-haspopup="true"
                         aria-expanded={opena ? 'true' : undefined}
                       >
-                        <Avatar sx={{ 
-                          width: 32, 
-                          height: 32, 
-                          backgroundColor: colors.topbarColor || '#005081', 
-                          color: avatarTextColor, 
-                          border: avatarBorder 
+                        <Avatar sx={{
+                          width: 32,
+                          height: 32,
+                          backgroundColor: 'rgba(255,255,255,0.22)',
+                          color: '#fff',
+                          border: '1.5px solid rgba(255,255,255,0.55)',
+                          fontWeight: 700,
                         }}>
                           {user.firstAndLastName[0]}
                         </Avatar>

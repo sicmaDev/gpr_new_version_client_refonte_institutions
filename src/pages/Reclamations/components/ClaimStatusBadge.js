@@ -8,7 +8,7 @@ import { Chip } from "@mui/material";
 
 const STATUS_CONFIG = {
   SAVED: {
-    label: "Enregistrée",
+    label: "À traiter",
     bg: "#DBEAFE",
     color: "#1D4ED8",
     border: "#93C5FD",

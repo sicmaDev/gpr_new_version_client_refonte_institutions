@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState, Component } from "react";
+import React, { useEffect, useRef, useState, Component } from "react";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DatePicker, { registerLocale, setDefaultLocale } from "react-datepicker";
@@ -84,6 +84,7 @@ import {
   deleteClaimApi,
   deleteOnlyClaimApi,
   checkPhoneApi,
+  checkPhoneCrossAgencyApi,
 } from "../../apis/Reclamations/ReclamationsApi";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
@@ -399,6 +400,7 @@ const EnregistrerReclamation = (props) => {
 
   // //variable to show box of sms
   const [showSmsBox, setShowSmsBox] = useState(false);
+  const [crossAgencyClaims, setCrossAgencyClaims] = useState([]);
   const [showAudioBox, setAudioBox] = useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
@@ -761,7 +763,11 @@ const EnregistrerReclamation = (props) => {
 
   const handleBlur = async () => {
     if (props.phone) {
-      await checkPhoneApi(cleanPhoneNumber(props.phone), props).then(() => { });
+      const phone = cleanPhoneNumber(props.phone);
+      await Promise.all([
+        checkPhoneApi(phone, props),
+        checkPhoneCrossAgencyApi(phone, { setCrossAgencyClaims }),
+      ]);
     }
   };
 
@@ -1952,7 +1958,7 @@ const EnregistrerReclamation = (props) => {
                   <div key={index} style={{ background: '#fff', borderRadius: 12, border: '1.5px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
                     {/* Card header */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{claim.code}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{claim.codeClient}</span>
                       <span style={{ fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color }}>{sc.label}</span>
                     </div>
                     {/* Card body — grid 2 col */}
@@ -2296,6 +2302,57 @@ const EnregistrerReclamation = (props) => {
               </label>
               <small className="errorTxt4"><div className="error">{props.errors?.phone}</div></small>
             </div>
+
+            {crossAgencyClaims.length > 0 && (
+              <div className="col s12" style={{ marginBottom: 12 }}>
+                <div style={{
+                  padding: '12px 16px',
+                  borderRadius: 10,
+                  background: '#fff7ed',
+                  border: '1px solid #fed7aa',
+                  borderLeft: '4px solid #f97316',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#9a3412' }}>
+                      ⚠ Doublon inter-agences détecté
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCrossAgencyClaims([])}
+                      style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#9a3412', fontSize: 18, lineHeight: 1 }}
+                    >×</button>
+                  </div>
+                  <div style={{ fontSize: 12.5, color: '#7c2d12' }}>
+                    Ce numéro est associé à {crossAgencyClaims.length === 1 ? 'une réclamation' : `${crossAgencyClaims.length} réclamations`} en cours dans une autre agence. Vous pouvez continuer l'enregistrement.
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {crossAgencyClaims.map((c, i) => (
+                      <div key={i} style={{
+                        background: '#fff',
+                        borderRadius: 8,
+                        padding: '8px 12px',
+                        border: '1px solid #fed7aa',
+                        fontSize: 12,
+                        color: '#7c2d12',
+                        display: 'flex',
+                        gap: 10,
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                      }}>
+                        <span style={{ fontWeight: 700, fontFamily: 'monospace' }}>{c.codeClient}</span>
+                        <span style={{ color: '#fdba74' }}>|</span>
+                        <span>{c.servicePoint?.libelle || '-'}</span>
+                        <span style={{ color: '#fdba74' }}>|</span>
+                        <span>{c.objet?.libelle || '-'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="col l12 m12 s12 input-field">
               <input

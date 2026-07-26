@@ -2544,6 +2544,7 @@ const MesurerReclamation = (props) => {
                           objets={[]}
                           onRowClick={(data) => rowClickedHandler(null, data, 0)}
                           statusOptions={MES_STATUS_OPTIONS}
+                          showTransmitted={false}
                         />
                       ) : (
                         <ClaimsCardView

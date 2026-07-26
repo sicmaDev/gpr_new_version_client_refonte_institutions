@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, TableSortLabel, TablePagination,
@@ -73,7 +73,7 @@ const getObjet = (claim, mode, objets) => {
   } catch (_) { return { libelle: "—", categorie: "" }; }
 };
 
-const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, currentUser }) => {
+const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, currentUser, showTransmitted = true }) => {
   const resolvedStatusOptions = statusOptions || STATUS_OPTIONS;
   const [search, setSearch]             = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -253,6 +253,10 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
                 const isOverdue = claim.retardDay <= 0 &&
                   !["SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "LITIGATION"].includes(claim.status);
                 const isClosed = ["SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(claim.status);
+                const isAssignedToMe = claim.status === "AFFECTED" &&
+                  claim.treatmentAffectedTo &&
+                  (claim.treatmentAffectedTo.firstAndLastName === currentUser?.firstAndLastName || claim.treatmentAffectedTo.id === currentUser?.id);
+                const hasSession = claim.session && claim.session !== "" && !isClosed;
 
                 return (
                   <TableRow
@@ -277,18 +281,17 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
                   >
                     {/* Code client */}
                     <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                         <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
                           {claim.codeClient || "—"}
                         </span>
-                        {claim.status === "AFFECTED" &&
-                         claim.treatmentAffectedTo?.firstAndLastName === currentUser?.firstAndLastName && (
-                          <Tooltip title="Affecté à vous">
+                        {isAssignedToMe && (
+                          <Tooltip title="Vous êtes assigné à cette réclamation">
                             <AlternateEmailIcon sx={{ fontSize: 15, color: "#DC2626" }} />
                           </Tooltip>
                         )}
-                        {claim.session && claim.session !== "" && !["TREAT","SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION","CLASSED"].includes(claim.status) && (
-                          <Tooltip title="Session ouverte">
+                        {hasSession && (
+                          <Tooltip title="Session collaborative ouverte">
                             <ForumIcon sx={{ fontSize: 15, color: "#DC2626" }} />
                           </Tooltip>
                         )}
@@ -330,7 +333,7 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
 
                     {/* Gravité */}
                     <TableCell>
-                      <ClaimGravityBadge gravity={gravity} transmitted={claim.transmitted} />
+                      <ClaimGravityBadge gravity={gravity} transmitted={claim.transmitted === "true" || claim.transmitted === true} />
                     </TableCell>
 
                     {/* Date */}
@@ -347,10 +350,7 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
                       {isClosed ? (
                         <span style={{ color: "#CBD5E1", fontSize: "0.78rem" }}>—</span>
                       ) : isOverdue ? (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
-                          <WarningAmberIcon sx={{ fontSize: 14, color: "#EF4444" }} />
-                          <span style={{ fontSize: "0.75rem", color: "#EF4444", fontWeight: 700 }}>Retard</span>
-                        </Box>
+                        <WarningAmberIcon sx={{ fontSize: 18, color: "#EF4444" }} />
                       ) : (
                         <span style={{ fontSize: "0.78rem", color: "#475569" }}>
                           {claim.declenchedDate || "—"}

@@ -5,7 +5,7 @@ import SendIcon from "@mui/icons-material/Send";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 
-const TransmettreModal = ({ open, onClose, onConfirm, loading }) => {
+const TransmettreModal = ({ open, onClose, onConfirm, loading, description }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
       PaperProps={{ style: { borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" } }}
@@ -18,7 +18,9 @@ const TransmettreModal = ({ open, onClose, onConfirm, loading }) => {
           </div>
           <div>
             <div style={{ color: "white", fontWeight: 700, fontSize: 16 }}>Transmettre le dossier</div>
-            <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, marginTop: 2 }}>Transmission au pilote</div>
+            <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, marginTop: 2 }}>
+              {description || "Transmission au pilote"}
+            </div>
           </div>
         </div>
         <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -37,7 +39,7 @@ const TransmettreModal = ({ open, onClose, onConfirm, loading }) => {
         </div>
 
         <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 20, marginTop: 0 }}>
-          Confirmez-vous la transmission de cette réclamation au pilote ?
+          {description ? `Confirmez-vous cette transmission ?` : "Confirmez-vous la transmission de cette réclamation au pilote ?"}
         </p>
 
         <div style={{ display: "flex", gap: 10 }}>

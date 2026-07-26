@@ -7,7 +7,16 @@ const PreEnregistreesTab = ({ solutions = [], onUseAndTreat, onModifyBeforeSend,
 
   if (solutions.length === 0) return (
     <div className="bg-white rounded-xl py-12 px-5 text-center" style={{ border: '1px solid #e5e7eb' }}>
-      <div className="text-[32px] mb-2.5">📋</div>
+      <div className="mb-3 flex justify-center">
+        <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="13" y2="16"/>
+          </svg>
+        </div>
+      </div>
       <div className="text-[13.5px] font-semibold text-slate-800 mb-1">Aucune solution pré-enregistrée</div>
       <div className="text-[12.5px] text-slate-400">Ce type de dossier ne dispose pas encore de solutions configurées</div>
     </div>

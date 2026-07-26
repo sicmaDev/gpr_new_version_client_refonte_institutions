@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import {
   Box, Grid, Card, CardContent,
   Typography, InputAdornment, TextField, TablePagination,
-  Select, MenuItem, FormControl,
+  Select, MenuItem, FormControl, Tooltip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -15,6 +15,8 @@ import GavelIcon from "@mui/icons-material/Gavel";
 import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutline";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import ForumIcon from "@mui/icons-material/Forum";
+import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import { STATUS_CONFIG } from "../../pages/Reclamations/components/ClaimStatusBadge";
 import ClaimGravityBadge from "../../pages/Reclamations/components/ClaimGravityBadge";
 
@@ -238,12 +240,24 @@ const DossierCardView = ({
 
                       {/* Ligne 1 : code + statut */}
                       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
-                        <Typography sx={{
-                          fontSize: "0.72rem", fontWeight: 700, color: "#005081",
-                          fontFamily: "monospace", letterSpacing: "0.03em",
-                        }}>
-                          {d.code || "—"}
-                        </Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
+                          <Typography sx={{
+                            fontSize: "0.72rem", fontWeight: 700, color: "#005081",
+                            fontFamily: "monospace", letterSpacing: "0.03em",
+                          }}>
+                            {d.code || "—"}
+                          </Typography>
+                          {d.isAssignedToMe && (
+                            <Tooltip title="Affecté à vous">
+                              <AlternateEmailIcon sx={{ fontSize: 14, color: "#DC2626" }} />
+                            </Tooltip>
+                          )}
+                          {d.hasSession && (
+                            <Tooltip title="Session ouverte">
+                              <ForumIcon sx={{ fontSize: 14, color: "#DC2626" }} />
+                            </Tooltip>
+                          )}
+                        </Box>
                         <StatusPill status={d.status} />
                       </Box>
 
@@ -281,7 +295,7 @@ const DossierCardView = ({
                       {/* Ligne 5 : gravité + date */}
                       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <Box>
-                          {d.gravity && <ClaimGravityBadge gravity={d.gravity} />}
+                          {d.gravity && <ClaimGravityBadge gravity={d.gravity} transmitted={d.transmitted === "true" || d.transmitted === true} />}
                         </Box>
                         <Typography sx={{ fontSize: "0.77rem", color: "#9CA3AF" }}>
                           {fmtDate(d.date)}

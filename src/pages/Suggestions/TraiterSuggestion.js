@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import TraitementShell from "../../components/treatment/TraitementShell";
 import axios from "axios";
@@ -322,12 +322,9 @@ const TraiterSuggestion = (props) => {
   useEffect(() => {
     const urlCode = props.match?.params?.code;
     if (!urlCode || urlCode === "all") {
-      const storedCode = sessionStorage.getItem('gpr_sug_treat_code');
-      if (storedCode) {
-        history.replace('/suggestions/traitement/' + storedCode);
-      }
+      sessionStorage.removeItem('gpr_sug_treat_code');
     }
-  }, []);
+  }, [props.match?.params?.code]);
 
   useEffect(() => {
     const code = props.match?.params?.code;

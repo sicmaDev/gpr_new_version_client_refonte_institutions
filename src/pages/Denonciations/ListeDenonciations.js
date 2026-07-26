@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import FileTypeIcon from "../../components/shared/FileTypeIcon";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import TraitementShell from "../../components/treatment/TraitementShell";
@@ -198,6 +198,8 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ForumIcon from "@mui/icons-material/Forum";
+import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 
 const DEN_KPI_CARDS = [
   { key: "total",   label: "Total dénonciations",       icon: AssignmentIcon,    iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
@@ -1840,6 +1842,7 @@ const ListeDenonciations = (props) => {
         gravity = item.objet?.risqueLevel || objets?.find((e) => e.id === item.objetId)?.risqueLevel;
       }
     } catch (_) {}
+    const isClosed = ["SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(item.status);
     return {
       code: item.codeClient,
       client: item.clientFirstAndLastName || "Anonyme",
@@ -1850,6 +1853,11 @@ const ListeDenonciations = (props) => {
       date: item.createdAt,
       slaWarning: item.status !== "TREAT" && item.retardDay !== undefined && item.retardDay <= 0,
       retardDay: item.retardDay,
+      transmitted: item.transmitted,
+      isAssignedToMe: item.status === "AFFECTED" &&
+        item.treatmentAffectedTo &&
+        (item.treatmentAffectedTo.firstAndLastName === user?.firstAndLastName || item.treatmentAffectedTo.id === user?.id),
+      hasSession: item.session && item.session !== "" && !isClosed,
     };
   };
 
@@ -1863,11 +1871,31 @@ const ListeDenonciations = (props) => {
   const tableColumns = [
     {
       id: "codeClient", label: "Code client", sortable: true, minWidth: 100,
-      render: (item) => (
-        <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
-          {item.codeClient || "—"}
-        </span>
-      ),
+      render: (item) => {
+        const isClosed = ["SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(item.status);
+        const isAssignedToMe = item.status === "AFFECTED" &&
+          item.treatmentAffectedTo &&
+          (item.treatmentAffectedTo.firstAndLastName === user?.firstAndLastName || item.treatmentAffectedTo.id === user?.id);
+        const hasSession = item.session && item.session !== "" && !isClosed;
+
+        return (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
+              {item.codeClient || "—"}
+            </span>
+            {isAssignedToMe && (
+              <Tooltip title="Vous êtes assigné à cette dénonciation">
+                <AlternateEmailIcon sx={{ fontSize: 15, color: "#DC2626" }} />
+              </Tooltip>
+            )}
+            {hasSession && (
+              <Tooltip title="Session collaborative ouverte">
+                <ForumIcon sx={{ fontSize: 15, color: "#DC2626" }} />
+              </Tooltip>
+            )}
+          </Box>
+        );
+      },
     },
     {
       id: "objet", label: "Objet / Catégorie", sortable: false, minWidth: 160,
@@ -1898,7 +1926,7 @@ const ListeDenonciations = (props) => {
     },
     {
       id: "gravity", label: "Gravité", sortable: true, minWidth: 100,
-      render: (item) => <ClaimGravityBadge gravity={getGravityDen(item)} />,
+      render: (item) => <ClaimGravityBadge gravity={getGravityDen(item)} transmitted={item.transmitted === "true" || item.transmitted === true} />,
       sortValue: (item) => getGravityDen(item) || "",
     },
     {

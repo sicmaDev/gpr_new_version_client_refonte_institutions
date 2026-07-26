@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import ReactDatatable from '@ashvin27/react-datatable';
 import LastPageIcon from '@mui/icons-material/LastPage';
@@ -963,10 +963,10 @@ const Dashboard = (props) => {
             ) : (
               <>
                 {/* En-tête de colonnes */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '0 0 8px 0', borderBottom: '1px solid #e2e8f0', marginBottom: 4 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', flex: 1 }}>Dossier</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 140, textAlign: 'center' }}>Agence concernée</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', minWidth: 100, textAlign: 'right' }}>Délai</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px 240px', gap: 16, padding: '0 8px 8px 8px', borderBottom: '1px solid #e2e8f0', marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dossier</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left' }}>Agence concernée</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right', paddingRight: 20 }}>Délai</span>
                 </div>
                 {overdueItems.map((item, i) => {
                   const badge = typeBadge(item.type);
@@ -976,12 +976,12 @@ const Dashboard = (props) => {
                   return (
                     <NavLink key={i} to={url} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                       <div
-                        style={{ padding: '11px 0', borderBottom: i < overdueItems.length - 1 ? '1px solid #f8fafc' : 'none', transition: 'background 0.15s', borderRadius: 6 }}
+                        style={{ padding: '11px 8px', borderBottom: i < overdueItems.length - 1 ? '1px solid #f8fafc' : 'none', transition: 'background 0.15s', borderRadius: 6 }}
                         onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px 240px', gap: 16, alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                             <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 700, flexShrink: 0, background: badge.bg, color: badge.color }}>
                               {badge.label}
                             </span>
@@ -994,17 +994,17 @@ const Dashboard = (props) => {
                               </span>
                             </div>
                           </div>
-                          <div style={{ flexShrink: 0, minWidth: 140, textAlign: 'center' }}>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                          <div style={{ textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>
                               {item.servicePointLibelle || '—'}
                             </span>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, minWidth: 100, justifyContent: 'flex-end' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: '#f9005e', background: '#ffe8f0', padding: '2px 8px', borderRadius: 20 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, color: '#f9005e', background: '#ffe8f0', padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>
                               <AccessTimeIcon style={{ fontSize: 12 }} />
                               {item.retardDay} retard
                             </span>
-                            <ArrowForwardIcon style={{ fontSize: 14, color: primary }} />
+                            <ArrowForwardIcon style={{ fontSize: 14, color: primary, flexShrink: 0 }} />
                           </div>
                         </div>
                       </div>

@@ -119,23 +119,23 @@ Chart.defaults.set("plugins.datalabels", {
 
 /* ── Power BI global chart defaults ── */
 Chart.defaults.font.family = "'Segoe UI', system-ui, -apple-system, sans-serif";
-Chart.defaults.font.size   = 11;
-Chart.defaults.color       = "#6B7280";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = "#6B7280";
 
-Chart.defaults.plugins.legend.labels.boxWidth     = 12;
-Chart.defaults.plugins.legend.labels.padding       = 16;
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.padding = 16;
 Chart.defaults.plugins.legend.labels.usePointStyle = true;
 
 Chart.defaults.plugins.tooltip.backgroundColor = "#1E293B";
-Chart.defaults.plugins.tooltip.titleFont        = { size: 12, weight: "bold" };
-Chart.defaults.plugins.tooltip.bodyFont         = { size: 11 };
-Chart.defaults.plugins.tooltip.padding          = 10;
-Chart.defaults.plugins.tooltip.cornerRadius     = 6;
+Chart.defaults.plugins.tooltip.titleFont = { size: 12, weight: "bold" };
+Chart.defaults.plugins.tooltip.bodyFont = { size: 11 };
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 6;
 
-Chart.defaults.scale.grid.color       = "#F1F5F9";
-Chart.defaults.scale.grid.drawBorder  = false;
-Chart.defaults.scale.ticks.color      = "#9CA3AF";
-Chart.defaults.scale.ticks.font       = { size: 10 };
+Chart.defaults.scale.grid.color = "#F1F5F9";
+Chart.defaults.scale.grid.drawBorder = false;
+Chart.defaults.scale.ticks.color = "#9CA3AF";
+Chart.defaults.scale.ticks.font = { size: 10 };
 
 
 const styles = {
@@ -720,7 +720,7 @@ const Global = (props) => {
           )
         );
       }
-      if (oldreport !==undefined) {
+      if (oldreport !== undefined) {
         setRdsPieGlobal({
           labels:
             oldreport?.global["repartitionClaimDenunSuggest"]["labels"] ?? [],
@@ -1301,17 +1301,17 @@ const Global = (props) => {
     if (plainteType.length !== 0) {
       const hasClaim = plainteType.includes("claim");
       const hasDenun = plainteType.includes("denunciation");
-      const hasSug   = plainteType.includes("suggestion");
+      const hasSug = plainteType.includes("suggestion");
       setClaimShow(hasClaim);
       setDenunciationShow(hasDenun);
       setSuggestionShow(hasSug);
       setGlobalShow(false);
 
       // Activer l'onglet correspondant si un seul type est sélectionné
-      if (hasClaim && !hasDenun && !hasSug)       setActiveTab(1);
-      else if (!hasClaim && hasDenun && !hasSug)  setActiveTab(2);
-      else if (!hasClaim && !hasDenun && hasSug)  setActiveTab(3);
-      else                                         setActiveTab(0);
+      if (hasClaim && !hasDenun && !hasSug) setActiveTab(1);
+      else if (!hasClaim && hasDenun && !hasSug) setActiveTab(2);
+      else if (!hasClaim && !hasDenun && hasSug) setActiveTab(3);
+      else setActiveTab(0);
     } else {
       setDenunciationShow(true);
       setClaimShow(true);
@@ -1354,15 +1354,15 @@ const Global = (props) => {
     const s = props.claimReport?.basicStats?.statusAndValue ?? {};
     const total = props.claimReport?.basicStats?.total ?? 0;
     const statuses = [
-      { label: "À traiter",              value: s.SAVED,             color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
-      { label: "Affectée",               value: s.AFFECTED,          color: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
-      { label: "Désapprouvée",           value: s.DESAPPROUVED,      color: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
-      { label: "Traitée",                value: s.TREAT,             color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
-      { label: "Satisfait",              value: s.SATISFIED,         color: "#059669", bg: "#F0FDF4", border: "#86EFAC" },
-      { label: "Partiellement satisfait",value: s.PARTIAL_SATISFIED, color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
-      { label: "Non satisfait",          value: s.UNSATISFIED,       color: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
-      { label: "Contentieux",            value: s.LITIGATION,        color: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE" },
-      { label: "Classée",                value: s.CLASSED,           color: "#6B7280", bg: "#F9FAFB", border: "#E5E7EB" },
+      { label: "À traiter", value: s.SAVED, color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
+      { label: "Affectée", value: s.AFFECTED, color: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
+      { label: "Désapprouvée", value: s.DESAPPROUVED, color: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+      { label: "Traitée", value: s.TREAT, color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
+      { label: "Satisfait", value: s.SATISFIED, color: "#059669", bg: "#F0FDF4", border: "#86EFAC" },
+      { label: "Partiellement satisfait", value: s.PARTIAL_SATISFIED, color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
+      { label: "Non satisfait", value: s.UNSATISFIED, color: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
+      { label: "Contentieux", value: s.LITIGATION, color: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE" },
+      { label: "Classée", value: s.CLASSED, color: "#6B7280", bg: "#F9FAFB", border: "#E5E7EB" },
     ];
     return (
       <div>
@@ -1385,8 +1385,8 @@ const Global = (props) => {
     const s = props.sugReport?.basicStats?.statusAndValue ?? {};
     const total = props.sugReport?.basicStats?.total ?? 0;
     const statuses = [
-      { label: "À traiter",        value: s.SAVED,       color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
-      { label: "Pris en compte",   value: s.ACCEPTED,    color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
+      { label: "À traiter", value: s.SAVED, color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
+      { label: "Pris en compte", value: s.ACCEPTED, color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
       { label: "Non pris en compte", value: s.UNACCEPTED, color: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
     ];
     return (
@@ -1406,7 +1406,7 @@ const Global = (props) => {
       </div>
     );
   };
-  
+
   const restoreSection = (sectionKey) => {
     props.setTemplateData({
       ...props.templateData, [sectionKey]: Object.fromEntries(
@@ -1424,9 +1424,9 @@ const Global = (props) => {
     const s = props.denunReport?.basicStats?.statusAndValue ?? {};
     const total = props.denunReport?.basicStats?.total ?? 0;
     const statuses = [
-      { label: "À traiter", value: s.SAVED,    color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
-      { label: "Affectée",  value: s.AFFECTED, color: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
-      { label: "Traitée",   value: s.TREAT,    color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
+      { label: "À traiter", value: s.SAVED, color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
+      { label: "Affectée", value: s.AFFECTED, color: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
+      { label: "Traitée", value: s.TREAT, color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
     ];
     return (
       <div>
@@ -1681,7 +1681,7 @@ const Global = (props) => {
         </PBICard>
       ) : <></>}
     </>
-  ); 
+  );
 
   const claimByAgenceChart = (
     <>
@@ -2451,12 +2451,12 @@ const Global = (props) => {
     // Laisser React re-rendre et Chart.js dessiner les canvas
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    let entete   = document.querySelector("#enteteRapport")?.innerHTML ?? "";
-    let title    = document.querySelector("#titleRapport")?.innerHTML ?? "";
-    let critere  = document.querySelector("#critereRapport")?.innerHTML ?? "";
+    let entete = document.querySelector("#enteteRapport")?.innerHTML ?? "";
+    let title = document.querySelector("#titleRapport")?.innerHTML ?? "";
+    let critere = document.querySelector("#critereRapport")?.innerHTML ?? "";
     // skipDashboards : exclut les KPI cards (À traiter, Affectée...) du document Word
-    let dashClaim   = options.skipDashboards ? "" : document.querySelector("#dashClaimRapport")?.innerHTML ?? "";
-    let dashDenun   = options.skipDashboards ? "" : document.querySelector("#dashDenunRapport")?.innerHTML ?? "";
+    let dashClaim = options.skipDashboards ? "" : document.querySelector("#dashClaimRapport")?.innerHTML ?? "";
+    let dashDenun = options.skipDashboards ? "" : document.querySelector("#dashDenunRapport")?.innerHTML ?? "";
     let dashSuggest = options.skipDashboards ? "" : document.querySelector("#dashSuggestRapport")?.innerHTML ?? "";
     let dataClaim = "";
     let dataDenun = "";
@@ -2514,15 +2514,15 @@ const Global = (props) => {
     const resolutionClaimDelaiByMonthByAgenceBarChartRefData =
       resolutionClaimDelaiByMonthByAgenceBarChartRef.current
         ? "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
-          resolutionClaimDelaiByMonthByAgenceBarChartRef.current.toBase64Image() +
-          "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>"
+        resolutionClaimDelaiByMonthByAgenceBarChartRef.current.toBase64Image() +
+        "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>"
         : "";
 
     const evolutionByAgenceByAnneeBarChartRefData =
       evolutionByAgenceByAnneeBarChartRef.current
         ? "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
-          evolutionByAgenceByAnneeBarChartRef.current.toBase64Image() +
-          "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>"
+        evolutionByAgenceByAnneeBarChartRef.current.toBase64Image() +
+        "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>"
         : "";
 
     const claimByAgencePieChartRefData = props.templateData?.claim.claimByAgencePieChartRef ?
@@ -2572,8 +2572,8 @@ const Global = (props) => {
     const tauxMensuelClaimByMonthByAgenceBarChartRefData =
       tauxMensuelClaimByMonthByAgenceBarChartRef.current
         ? "<img src='" +
-          tauxMensuelClaimByMonthByAgenceBarChartRef.current.toBase64Image() +
-          "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />"
+        tauxMensuelClaimByMonthByAgenceBarChartRef.current.toBase64Image() +
+        "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' />"
         : "";
 
     const tauxMensuelClaimByMonthBarChartRefData = props.templateData?.claim.tauxMensuelClaimByMonthBarChartRef ?
@@ -2792,285 +2792,285 @@ const Global = (props) => {
   const prepareReportTablesToXLSX = async () => {
     setExportLoading("Excel");
     try {
-    if (!dataRaport || !dataRaport.newVersionStat) {
-      notify("Les données ne sont pas encore chargées, veuillez patienter", "warning");
-      return;
-    }
-    let name = today().replaceAll("/", "")
-    let filename = `Statistiques_GPR_${name}.xlsx`;
+      if (!dataRaport || !dataRaport.newVersionStat) {
+        notify("Les données ne sont pas encore chargées, veuillez patienter", "warning");
+        return;
+      }
+      let name = today().replaceAll("/", "")
+      let filename = `Statistiques_GPR_${name}.xlsx`;
 
-    const dataPrepare = [];
+      const dataPrepare = [];
 
-    //PrepareExcel Report Data
+      //PrepareExcel Report Data
 
-    //Institution
-    dataPrepare.push({
-      sheetName: "Info général",
-      sheetColor: "yellow",
-      logo: logoInstitution,
-      name: institution,
-      adresse,
-      agrement,
-      copyright: "Copyright SICMA et ASSOCIES",
-      rows: [
-        {
-          name: "Rapport Général (RDS)",
-          values: [
-            { value: "Repartition RDS", sheetLink: "'Repartiton RDS'" },
-            { value: "Evolution annuel des RDS", sheetLink: "'Evolution annuel des RDS'" },
-            { value: "Modalité dépôt", sheetLink: "'Modalité de dépôt'" },
-            { value: "Repartition RDS par objet", sheetLink: "'Repartition RDS par objet'" },
-            { value: "Respect délai", sheetLink: "'Respect délai'" },
-            // { value: "Respect du délai par agence", sheetLink: "'Info général'" },
-            // { value: "Taux de satistaction", sheetLink: "'Info général'" },
-            // { value: "Taux de satistaction par agence", sheetLink: "'Info général'" },
-          ],
-          color: "#002060"
-        },
-        {
-          name: "Rapports Réclamations",
-          values: [
-            { value: "Statut des réclamations", sheetLink: "'Statut des réclamations'" },
-            { value: "Evolution annuelle", sheetLink: "'Evolution Annuelle Satisfaction'" },
-            { value: "Modalité dépôt", sheetLink: "'Répart.Réclamation par modalité'" },
-            { value: "Repartition par objet", sheetLink: "'Répart.Réclamation par objet'" },
-            { value: "Repartition par genre", sheetLink: "'Réclamation par genre'" },
-            { value: "Repartition par gravite", sheetLink: "'Répart.Réclamation par gravité'" },
-            // { value: "Respect délai", sheetLink: "''" },
-            // { value: "Niveaux de satisfaction", sheetLink: "" },
-          ],
-          color: "#c00000"
-        },
-        {
-          name: "Rapports Dénonciations",
-          values: [
-            { value: "Statut des dénonciations", sheetLink: "'Status des Dénonciations'" },
-            // { value: "Evolution annuelle", sheetLink: "" },
-            { value: "Modalité dépôt", sheetLink: "'Répart.Dénonciation_Modalité'" },
-            { value: "Repartition par objet", sheetLink: "'Répart.Dénonciation_Objet'" },
-            // { value: "Repartition par genre", sheetLink: "''" },
-            { value: "Repartition par gravite", sheetLink: "'Répart.Dénonciation par gravité'" },
-            // { value: "Respect délai", sheetLink: "" },
-            // { value: "Niveaux de satisfaction", sheetLink: "" },
-          ],
-          color: "#e97132"
-        },
-        {
-          name: "Rapports Suggestions",
-          values: [
-            { value: "Statut des suggestions", sheetLink: "'Status des Suggestions'" },
-            { value: "Modalité dépôt", sheetLink: "'Répart.Suggestions par modalité'" },
-            // { value: "Repartition par objet", sheetLink: "" },
-            { value: "Repartition par genre", sheetLink: "'Suggestions par genre'" }
-          ],
-          color: "#4ea72e"
-        },
-      ],
-    });
+      //Institution
+      dataPrepare.push({
+        sheetName: "Info général",
+        sheetColor: "yellow",
+        logo: logoInstitution,
+        name: institution,
+        adresse,
+        agrement,
+        copyright: "Copyright SICMA et ASSOCIES",
+        rows: [
+          {
+            name: "Rapport Général (RDS)",
+            values: [
+              { value: "Repartition RDS", sheetLink: "'Repartiton RDS'" },
+              { value: "Evolution annuel des RDS", sheetLink: "'Evolution annuel des RDS'" },
+              { value: "Modalité dépôt", sheetLink: "'Modalité de dépôt'" },
+              { value: "Repartition RDS par objet", sheetLink: "'Repartition RDS par objet'" },
+              { value: "Respect délai", sheetLink: "'Respect délai'" },
+              // { value: "Respect du délai par agence", sheetLink: "'Info général'" },
+              // { value: "Taux de satistaction", sheetLink: "'Info général'" },
+              // { value: "Taux de satistaction par agence", sheetLink: "'Info général'" },
+            ],
+            color: "#002060"
+          },
+          {
+            name: "Rapports Réclamations",
+            values: [
+              { value: "Statut des réclamations", sheetLink: "'Statut des réclamations'" },
+              { value: "Evolution annuelle", sheetLink: "'Evolution Annuelle Satisfaction'" },
+              { value: "Modalité dépôt", sheetLink: "'Répart.Réclamation par modalité'" },
+              { value: "Repartition par objet", sheetLink: "'Répart.Réclamation par objet'" },
+              { value: "Repartition par genre", sheetLink: "'Réclamation par genre'" },
+              { value: "Repartition par gravite", sheetLink: "'Répart.Réclamation par gravité'" },
+              // { value: "Respect délai", sheetLink: "''" },
+              // { value: "Niveaux de satisfaction", sheetLink: "" },
+            ],
+            color: "#c00000"
+          },
+          {
+            name: "Rapports Dénonciations",
+            values: [
+              { value: "Statut des dénonciations", sheetLink: "'Status des Dénonciations'" },
+              // { value: "Evolution annuelle", sheetLink: "" },
+              { value: "Modalité dépôt", sheetLink: "'Répart.Dénonciation_Modalité'" },
+              { value: "Repartition par objet", sheetLink: "'Répart.Dénonciation_Objet'" },
+              // { value: "Repartition par genre", sheetLink: "''" },
+              { value: "Repartition par gravite", sheetLink: "'Répart.Dénonciation par gravité'" },
+              // { value: "Respect délai", sheetLink: "" },
+              // { value: "Niveaux de satisfaction", sheetLink: "" },
+            ],
+            color: "#e97132"
+          },
+          {
+            name: "Rapports Suggestions",
+            values: [
+              { value: "Statut des suggestions", sheetLink: "'Status des Suggestions'" },
+              { value: "Modalité dépôt", sheetLink: "'Répart.Suggestions par modalité'" },
+              // { value: "Repartition par objet", sheetLink: "" },
+              { value: "Repartition par genre", sheetLink: "'Suggestions par genre'" }
+            ],
+            color: "#4ea72e"
+          },
+        ],
+      });
 
-    //Global
-    //1er Sheet 
-    dataPrepare.push({
-      sheetName: "Repartiton RDS",
-      sheetColor: "#002060",
-      doubleCharts: false,
-      chartInfo: [{ type: "Pie", title: "Répartition des réclamations, dénonciations, suggestions", tablePosition: 0 }],
-      tables: [{ title: "", data: rdsPieGlobal }],
-    })
+      //Global
+      //1er Sheet 
+      dataPrepare.push({
+        sheetName: "Repartiton RDS",
+        sheetColor: "#002060",
+        doubleCharts: false,
+        chartInfo: [{ type: "Pie", title: "Répartition des réclamations, dénonciations, suggestions", tablePosition: 0 }],
+        tables: [{ title: "", data: rdsPieGlobal }],
+      })
 
-    //2em Sheet
-    dataPrepare.push({
-      sheetName: "Evolution annuel des RDS",
-      sheetColor: "#002060",
-      doubleCharts: false,
-      chartInfo: [{ type: "Bar", title: "Glissement annuel", tablePosition: 0 }],
-      tables: [{ title: "", data: rdsBarGlobal }],
-    })
-
-
-    //3em Sheet
-    dataPrepare.push({
-      sheetName: "Modalité de dépôt",
-      sheetColor: "#002060",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des RSD par modalité de dépôt et par  agences en %", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieModaliteGlobal }, { title: "Nombre de RDS par agence", data: dataRaport.newVersionStat["GeneralPerAgence"]["RSDModalite"] ?? [] }, { title: "Répartition des RSD par modalité de dépôt par agence", data: rdsBarModaliteGlobal }],
-    })
-
-    //4em Sheet
-    dataPrepare.push({
-      sheetName: "Repartition RDS par objet",
-      sheetColor: "#002060",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des réclamations, dénonciations, suggestions par objet (10 plus importants, le reste dans autres)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations et Dénonciations par objets par agence", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieObjetGlobal }, { title: "Nombre de RDS par agence", data: dataRaport.newVersionStat["GeneralPerAgence"]["RSDObjet"] ?? [] }, { title: "Répartition des RSD par objet par agence", data: rdsBarObjetGlobal }],
-    })
-
-    //5em Sheet
-    dataPrepare.push({
-      sheetName: "Respect délai",
-      sheetColor: "#002060",
-      doubleCharts: true,
-      chartInfo: [{ type: "Bar", title: "Délai de résolution des RDS par mois (en %)", tablePosition: 1 }],
-      tables: [{ title: "", data: rdsBarDelaiGlobal }],
-    })
-    //End Global
-
-    // Claims
-
-    //6e Sheet
-    dataPrepare.push({
-      sheetName: "Status des réclamations",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Bar", title: "Réclamations classées par statuts de traitement", tablePosition: 1 }],
-      tables: [{ title: "", data: dataRaport.claimReport["basicStats"] }],
-    })
-
-    //7em Sheet
-    dataPrepare.push({
-      sheetName: "Répart.Réclamation par modalité",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des réclamations par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par modalité de dépôt et par  agences en % ", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieModaliteClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerModalite"]["claims"] ?? [] }, { title: "Répartition des Réclamations par modalité de dépôt par agence", data: rdsBarModaliteClaim }],
-    })
-    //8em Sheet
-    dataPrepare.push({
-      sheetName: "Répart.Réclamation par objet",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des réclamations par objet", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par objet et par  agences en % ", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieObjetClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerObjet"]["claims"] ?? [] }, { title: "Répartition des Réclamations par objet par agence", data: rdsBarObjetClaim }],
-    })
-
-    //9em Sheet
-    dataPrepare.push({
-      sheetName: "Réclamation par genre",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des réclamations par genre (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par genre et par agences en %  ", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieGenreClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerGenre"]["claims"] ?? [] }, { title: "Répartition des Réclamations par genre par agence", data: rdsBarGenreClaim }],
-    })
-
-    //10em Sheet
-    dataPrepare.push({
-      sheetName: "Répart.Réclamation par gravité",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des réclamations par gravité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par gravité et par agences en %", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieGravityClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerGravity"]["claims"] ?? [] }, { title: "Répartition des Réclamations par gravité par agence", data: rdsBarGravityClaim }],
-    })
-
-    //11em Sheet
-    dataPrepare.push({
-      sheetName: "Répart.Satisfaction_Réclamants",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des niveaux de satisfactions par traitement de réclamations (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des niveaux de satisfactions du traitement des réclamations et par agences en %", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieStatisClaim }, { title: "Nombre du niveau de satisfaction obtenus par traitement et par agence", data: dataRaport.newVersionStat["AgencePerMesure"]["claims"] ?? [] }, { title: "Répartition des niveaux de satisfaction des réclamants par agence", data: rdsBarStatisClaim }],
-    })
-    //12em Sheet
-    dataPrepare.push({
-      sheetName: "Evolution Annuelle Satisfaction",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Bar", title: "Evolution annuelle de la satisfaction des réclamants", tablePosition: 0 },],
-      tables: [{ title: "", data: rdsChartStatisClaim }],
-    })
-
-    //End Claims
-
-    //Denonciations
-
-    //13e Sheet
-    dataPrepare.push({
-      sheetName: "Status des Dénonciations",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Bar", title: "Dénonciations classées par statuts de traitement", tablePosition: 1 }],
-      tables: [{ title: "", data: dataRaport.denunReport["basicStats"] }],
-    })
-
-    //14em Sheet
-    dataPrepare.push({
-      sheetName: "Répart.Dénonciation_Modalité",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des dénonciations par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Dénonciations par modalité de dépôt et par agences en % ", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieModaliteDenun }, { title: "Nombre de Dénonciation par agence", data: dataRaport.newVersionStat["AgencePerModalite"]["denonciations"] ?? [] }, { title: "Répartition des Dénonciations par modalité de dépôt par agence", data: rdsBarModaliteDenun }],
-    })
-
-    //15em Sheet
-    dataPrepare.push({
-      sheetName: "Répart.Dénonciation_Objet",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des dénonciations par objet", tablePosition: 0 }, { type: "Chart", title: "Répartition des Dénonciations par objet et par agences en %", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieObjetDenun }, { title: "Nombre de Dénonciations par agence", data: dataRaport.newVersionStat["AgencePerObjet"]["denonciations"] ?? [] }, { title: "Répartition des Dénonciations par objet par agence", data: rdsBarObjetDenun }],
-    })
+      //2em Sheet
+      dataPrepare.push({
+        sheetName: "Evolution annuel des RDS",
+        sheetColor: "#002060",
+        doubleCharts: false,
+        chartInfo: [{ type: "Bar", title: "Glissement annuel", tablePosition: 0 }],
+        tables: [{ title: "", data: rdsBarGlobal }],
+      })
 
 
-    //16em Sheet
-    dataPrepare.push({
-      sheetName: "Répart.Dénonciation par gravité",
-      sheetColor: "#c00000",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des dénonciations par gravité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Dénonciations par gravité et par agences en %", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieGravityDenun }, { title: "Nombre de Dénonciations par agence", data: dataRaport.newVersionStat["AgencePerGravity"]["denonciations"] ?? [] }, { title: "Répartition des Dénonciation par gravité par agence", data: rdsBarGravityDenun }],
-    })
+      //3em Sheet
+      dataPrepare.push({
+        sheetName: "Modalité de dépôt",
+        sheetColor: "#002060",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des RSD par modalité de dépôt et par  agences en %", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieModaliteGlobal }, { title: "Nombre de RDS par agence", data: dataRaport.newVersionStat["GeneralPerAgence"]["RSDModalite"] ?? [] }, { title: "Répartition des RSD par modalité de dépôt par agence", data: rdsBarModaliteGlobal }],
+      })
 
-    //End Denonciations
+      //4em Sheet
+      dataPrepare.push({
+        sheetName: "Repartition RDS par objet",
+        sheetColor: "#002060",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des réclamations, dénonciations, suggestions par objet (10 plus importants, le reste dans autres)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations et Dénonciations par objets par agence", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieObjetGlobal }, { title: "Nombre de RDS par agence", data: dataRaport.newVersionStat["GeneralPerAgence"]["RSDObjet"] ?? [] }, { title: "Répartition des RSD par objet par agence", data: rdsBarObjetGlobal }],
+      })
 
-    //Suuggestion
+      //5em Sheet
+      dataPrepare.push({
+        sheetName: "Respect délai",
+        sheetColor: "#002060",
+        doubleCharts: true,
+        chartInfo: [{ type: "Bar", title: "Délai de résolution des RDS par mois (en %)", tablePosition: 1 }],
+        tables: [{ title: "", data: rdsBarDelaiGlobal }],
+      })
+      //End Global
 
-    //17e Sheets
-    dataPrepare.push({
-      sheetName: "Status des Suggestions",
-      sheetColor: "#4ea72e",
-      doubleCharts: true,
-      chartInfo: [{ type: "Bar", title: "Suggestions classées par statuts de traitement", tablePosition: 1 }],
-      tables: [{ title: "", data: dataRaport.suggestionReport["basicStats"] }],
-    })
+      // Claims
 
-    //18em Sheet
-    dataPrepare.push({
-      sheetName: "Répart.Suggestions par modalité",
-      sheetColor: "#4ea72e",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des suggestions par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des suggestions par modalité de dépôt et par agences en % ", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieModaliteSugge }, { title: "Nombre de Suggestion par agence", data: dataRaport.newVersionStat["AgencePerModalite"]["suggestions"] ?? [] }, { title: "Répartition des suggestions par modalité de dépôt par agence", data: rdsBarModaliteSugge }],
-    })
+      //6e Sheet
+      dataPrepare.push({
+        sheetName: "Status des réclamations",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Bar", title: "Réclamations classées par statuts de traitement", tablePosition: 1 }],
+        tables: [{ title: "", data: dataRaport.claimReport["basicStats"] }],
+      })
 
-    //19em Sheet
-    //  dataPrepare.push({
-    //   sheetName:"Répart.Suggestions par objet",
-    //   sheetColor:"#c00000",
-    //   doubleCharts:true,
-    //   chartInfo:[{type:"Pie",title:"Répartition des suggestions par objet",tablePosition:0},{type:"Chart",title:"Répartition des Suggestions par objet et par agences en %",tablePosition:2}],
-    //   tables:[{title:"",data:rdsPieObjetDenun},{title:"Nombre de Dénonciations par agence",data:dataRaport.newVersionStat["AgencePerObjet"]["denonciations"] ?? []},{title:"Répartition des Suggestions par objet par agence",data:rdsBarObjet}],
-    // })
+      //7em Sheet
+      dataPrepare.push({
+        sheetName: "Répart.Réclamation par modalité",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des réclamations par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par modalité de dépôt et par  agences en % ", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieModaliteClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerModalite"]["claims"] ?? [] }, { title: "Répartition des Réclamations par modalité de dépôt par agence", data: rdsBarModaliteClaim }],
+      })
+      //8em Sheet
+      dataPrepare.push({
+        sheetName: "Répart.Réclamation par objet",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des réclamations par objet", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par objet et par  agences en % ", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieObjetClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerObjet"]["claims"] ?? [] }, { title: "Répartition des Réclamations par objet par agence", data: rdsBarObjetClaim }],
+      })
 
-    //19em Sheet
-    dataPrepare.push({
-      sheetName: "Suggestions par genre",
-      sheetColor: "#4ea72e",
-      doubleCharts: true,
-      chartInfo: [{ type: "Pie", title: "Répartition des suggestions par genre (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Suggestions par genre et par agences en %  ", tablePosition: 2 }],
-      tables: [{ title: "", data: rdsPieGenreSugge }, { title: "Nombre de Suggestions par agence", data: dataRaport.newVersionStat["AgencePerGenre"]["suggestions"] ?? [] }, { title: "Répartition des Suggestions par genre par agence", data: rdsBarGenreSugge }],
-    })
+      //9em Sheet
+      dataPrepare.push({
+        sheetName: "Réclamation par genre",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des réclamations par genre (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par genre et par agences en %  ", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieGenreClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerGenre"]["claims"] ?? [] }, { title: "Répartition des Réclamations par genre par agence", data: rdsBarGenreClaim }],
+      })
 
-    const generateName = generateString(10)
+      //10em Sheet
+      dataPrepare.push({
+        sheetName: "Répart.Réclamation par gravité",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des réclamations par gravité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Réclamations par gravité et par agences en %", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieGravityClaim }, { title: "Nombre de Réclamations par agence", data: dataRaport.newVersionStat["AgencePerGravity"]["claims"] ?? [] }, { title: "Répartition des Réclamations par gravité par agence", data: rdsBarGravityClaim }],
+      })
 
-    dataPrepare.push(generateName)
+      //11em Sheet
+      dataPrepare.push({
+        sheetName: "Répart.Satisfaction_Réclamants",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des niveaux de satisfactions par traitement de réclamations (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des niveaux de satisfactions du traitement des réclamations et par agences en %", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieStatisClaim }, { title: "Nombre du niveau de satisfaction obtenus par traitement et par agence", data: dataRaport.newVersionStat["AgencePerMesure"]["claims"] ?? [] }, { title: "Répartition des niveaux de satisfaction des réclamants par agence", data: rdsBarStatisClaim }],
+      })
+      //12em Sheet
+      dataPrepare.push({
+        sheetName: "Evolution Annuelle Satisfaction",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Bar", title: "Evolution annuelle de la satisfaction des réclamants", tablePosition: 0 },],
+        tables: [{ title: "", data: rdsChartStatisClaim }],
+      })
+
+      //End Claims
+
+      //Denonciations
+
+      //13e Sheet
+      dataPrepare.push({
+        sheetName: "Status des Dénonciations",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Bar", title: "Dénonciations classées par statuts de traitement", tablePosition: 1 }],
+        tables: [{ title: "", data: dataRaport.denunReport["basicStats"] }],
+      })
+
+      //14em Sheet
+      dataPrepare.push({
+        sheetName: "Répart.Dénonciation_Modalité",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des dénonciations par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Dénonciations par modalité de dépôt et par agences en % ", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieModaliteDenun }, { title: "Nombre de Dénonciation par agence", data: dataRaport.newVersionStat["AgencePerModalite"]["denonciations"] ?? [] }, { title: "Répartition des Dénonciations par modalité de dépôt par agence", data: rdsBarModaliteDenun }],
+      })
+
+      //15em Sheet
+      dataPrepare.push({
+        sheetName: "Répart.Dénonciation_Objet",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des dénonciations par objet", tablePosition: 0 }, { type: "Chart", title: "Répartition des Dénonciations par objet et par agences en %", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieObjetDenun }, { title: "Nombre de Dénonciations par agence", data: dataRaport.newVersionStat["AgencePerObjet"]["denonciations"] ?? [] }, { title: "Répartition des Dénonciations par objet par agence", data: rdsBarObjetDenun }],
+      })
+
+
+      //16em Sheet
+      dataPrepare.push({
+        sheetName: "Répart.Dénonciation par gravité",
+        sheetColor: "#c00000",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des dénonciations par gravité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Dénonciations par gravité et par agences en %", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieGravityDenun }, { title: "Nombre de Dénonciations par agence", data: dataRaport.newVersionStat["AgencePerGravity"]["denonciations"] ?? [] }, { title: "Répartition des Dénonciation par gravité par agence", data: rdsBarGravityDenun }],
+      })
+
+      //End Denonciations
+
+      //Suuggestion
+
+      //17e Sheets
+      dataPrepare.push({
+        sheetName: "Status des Suggestions",
+        sheetColor: "#4ea72e",
+        doubleCharts: true,
+        chartInfo: [{ type: "Bar", title: "Suggestions classées par statuts de traitement", tablePosition: 1 }],
+        tables: [{ title: "", data: dataRaport.suggestionReport["basicStats"] }],
+      })
+
+      //18em Sheet
+      dataPrepare.push({
+        sheetName: "Répart.Suggestions par modalité",
+        sheetColor: "#4ea72e",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des suggestions par modalité de dépôt (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des suggestions par modalité de dépôt et par agences en % ", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieModaliteSugge }, { title: "Nombre de Suggestion par agence", data: dataRaport.newVersionStat["AgencePerModalite"]["suggestions"] ?? [] }, { title: "Répartition des suggestions par modalité de dépôt par agence", data: rdsBarModaliteSugge }],
+      })
+
+      //19em Sheet
+      //  dataPrepare.push({
+      //   sheetName:"Répart.Suggestions par objet",
+      //   sheetColor:"#c00000",
+      //   doubleCharts:true,
+      //   chartInfo:[{type:"Pie",title:"Répartition des suggestions par objet",tablePosition:0},{type:"Chart",title:"Répartition des Suggestions par objet et par agences en %",tablePosition:2}],
+      //   tables:[{title:"",data:rdsPieObjetDenun},{title:"Nombre de Dénonciations par agence",data:dataRaport.newVersionStat["AgencePerObjet"]["denonciations"] ?? []},{title:"Répartition des Suggestions par objet par agence",data:rdsBarObjet}],
+      // })
+
+      //19em Sheet
+      dataPrepare.push({
+        sheetName: "Suggestions par genre",
+        sheetColor: "#4ea72e",
+        doubleCharts: true,
+        chartInfo: [{ type: "Pie", title: "Répartition des suggestions par genre (%)", tablePosition: 0 }, { type: "Chart", title: "Répartition des Suggestions par genre et par agences en %  ", tablePosition: 2 }],
+        tables: [{ title: "", data: rdsPieGenreSugge }, { title: "Nombre de Suggestions par agence", data: dataRaport.newVersionStat["AgencePerGenre"]["suggestions"] ?? [] }, { title: "Répartition des Suggestions par genre par agence", data: rdsBarGenreSugge }],
+      })
+
+      const generateName = generateString(10)
+
+      dataPrepare.push(generateName)
 
 
 
-    if (dataPrepare.length) {
-      reportNewVersionExport(filename, generateName, dataPrepare);
-    } else {
-      notify("Impossible d'exporter, réessayez", "error");
-    }
+      if (dataPrepare.length) {
+        reportNewVersionExport(filename, generateName, dataPrepare);
+      } else {
+        notify("Impossible d'exporter, réessayez", "error");
+      }
     } catch (e) {
       notify("Erreur lors de l'export Excel", "error");
     } finally {
@@ -3133,9 +3133,9 @@ const Global = (props) => {
   };
   const TABS = [
     { label: "Vue d'ensemble", color: "#8B5CF6", bg: "#F5F3FF", enabled: globalShow },
-    { label: "Réclamations",   color: "#3B82F6", bg: "#EFF6FF", enabled: claimShow },
-    { label: "Dénonciations",  color: "#F59E0B", bg: "#FFFBEB", enabled: denunciationShow },
-    { label: "Suggestions",    color: "#10B981", bg: "#ECFDF5", enabled: suggestionShow },
+    { label: "Réclamations", color: "#3B82F6", bg: "#EFF6FF", enabled: claimShow },
+    { label: "Dénonciations", color: "#F59E0B", bg: "#FFFBEB", enabled: denunciationShow },
+    { label: "Suggestions", color: "#10B981", bg: "#ECFDF5", enabled: suggestionShow },
   ];
 
   const SectionSubtitle = ({ children, id, accent = "#0F4C81" }) => (
@@ -3147,10 +3147,10 @@ const Global = (props) => {
   );
 
   const kpiData = [
-    { label: "Réclamations",   value: props.claimReport?.basicStats?.total ?? "—",  color: "#3B82F6", bg: "#EFF6FF" },
-    { label: "Dénonciations",  value: props.denunReport?.basicStats?.total ?? "—",  color: "#F59E0B", bg: "#FFFBEB" },
-    { label: "Suggestions",    value: props.sugReport?.basicStats?.total ?? "—",    color: "#10B981", bg: "#ECFDF5" },
-    { label: "Taux résolution",value: props.global_trend?.tauxResolution != null ? `${(parseFloat(props.global_trend.tauxResolution) * 100).toFixed(1)} %` : "—", color: "#8B5CF6", bg: "#F5F3FF" },
+    { label: "Réclamations", value: props.claimReport?.basicStats?.total ?? "—", color: "#3B82F6", bg: "#EFF6FF" },
+    { label: "Dénonciations", value: props.denunReport?.basicStats?.total ?? "—", color: "#F59E0B", bg: "#FFFBEB" },
+    { label: "Suggestions", value: props.sugReport?.basicStats?.total ?? "—", color: "#10B981", bg: "#ECFDF5" },
+    { label: "Taux résolution", value: props.global_trend?.tauxResolution != null ? `${(parseFloat(props.global_trend.tauxResolution) * 100).toFixed(1)} %` : "—", color: "#8B5CF6", bg: "#F5F3FF" },
   ];
 
   return (
@@ -3188,44 +3188,50 @@ const Global = (props) => {
               onClick={() => { setshowSearch(true); setOpen(true); }}
               style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "1.5px solid #E2E8F0", background: "#fff", color: "#475569", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" /></svg>
               Filtres
             </button>
             {[
-              { label: "PDF",   color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5", action: printToPDF,
-                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14a2 2 0 0 0 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg> },
-              { label: "Excel", color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC", action: prepareReportTablesToXLSX,
-                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 13.06L8.18 15.28H9.97L8 12.06L9.93 8.89H8.22L7.13 10.9 7.09 10.96 7.06 11.03Q6.8 10.5 6.5 9.96L5.45 8.89H3.78L5.73 12.06 3.67 15.28H5.42M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38Z"/></svg> },
-              { label: "Word",  color: "#1D4ED8", bg: "#EFF6FF", border: "#93C5FD", action: printToWord,
-                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 15.25H8.5L9.88 10.58 11.25 15.25H12.75L14.82 8.75H13.31L12 13.41 10.63 8.75H9.12L7.82 13.41 6.5 8.75H5L7 15.25M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38Z"/></svg> },
+              {
+                label: "PDF", color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5", action: printToPDF,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14a2 2 0 0 0 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z" /></svg>
+              },
+              {
+                label: "Excel", color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC", action: prepareReportTablesToXLSX,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 13.06L8.18 15.28H9.97L8 12.06L9.93 8.89H8.22L7.13 10.9 7.09 10.96 7.06 11.03Q6.8 10.5 6.5 9.96L5.45 8.89H3.78L5.73 12.06 3.67 15.28H5.42M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38Z" /></svg>
+              },
+              {
+                label: "Word", color: "#1D4ED8", bg: "#EFF6FF", border: "#93C5FD", action: printToWord,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 15.25H8.5L9.88 10.58 11.25 15.25H12.75L14.82 8.75H13.31L12 13.41 10.63 8.75H9.12L7.82 13.41 6.5 8.75H5L7 15.25M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38Z" /></svg>
+              },
             ].map(({ label, color, bg, border, action, icon }) => {
               const isLoading = exportLoading === label;
               return (
-              <button
-                key={label}
-                onClick={action}
-                disabled={exportLoading !== null}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "8px 16px", borderRadius: 10,
-                  border: `1.5px solid ${border}`,
-                  background: isLoading ? bg : bg,
-                  color: exportLoading !== null ? "#94A3B8" : color,
-                  fontSize: 12.5, fontWeight: 700,
-                  cursor: exportLoading !== null ? "not-allowed" : "pointer",
-                  opacity: exportLoading !== null && !isLoading ? 0.5 : 1,
-                  transition: "opacity 0.2s",
-                }}
-              >
-                {isLoading ? (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-                    style={{ animation: "spin 0.8s linear infinite" }}>
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                  </svg>
-                ) : icon}
-                {isLoading ? "En cours..." : label}
-              </button>
-            );
+                <button
+                  key={label}
+                  onClick={action}
+                  disabled={exportLoading !== null}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "8px 16px", borderRadius: 10,
+                    border: `1.5px solid ${border}`,
+                    background: isLoading ? bg : bg,
+                    color: exportLoading !== null ? "#94A3B8" : color,
+                    fontSize: 12.5, fontWeight: 700,
+                    cursor: exportLoading !== null ? "not-allowed" : "pointer",
+                    opacity: exportLoading !== null && !isLoading ? 0.5 : 1,
+                    transition: "opacity 0.2s",
+                  }}
+                >
+                  {isLoading ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                      style={{ animation: "spin 0.8s linear infinite" }}>
+                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                    </svg>
+                  ) : icon}
+                  {isLoading ? "En cours..." : label}
+                </button>
+              );
             })}
 
           </div>
@@ -3241,7 +3247,7 @@ const Global = (props) => {
         >
           <DialogTitle style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px 12px", borderBottom: "1px solid #F1F5F9" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <svg width="16" height="16" fill="none" stroke="#0F4C81" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+              <svg width="16" height="16" fill="none" stroke="#0F4C81" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" /></svg>
               <span style={{ fontSize: 15, fontWeight: 700, color: "#0F172A" }}>Filtrer le rapport</span>
             </div>
             <button onClick={handleClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 22, lineHeight: 1, padding: 4, borderRadius: 6 }}>✕</button>
@@ -3509,9 +3515,9 @@ const Global = (props) => {
                 <div>
                   <div style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", marginBottom: 4 }}>{institution}</div>
                   {agrement && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Agrément :</span> {agrement}</div>}
-                  {adresse  && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Adresse :</span> {adresse}</div>}
-                  {tel      && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Téléphone :</span> {tel}</div>}
-                  {email    && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Email :</span> {email}</div>}
+                  {adresse && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Adresse :</span> {adresse}</div>}
+                  {tel && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Téléphone :</span> {tel}</div>}
+                  {email && <div style={{ fontSize: 12, color: "#64748b" }}><span style={{ fontWeight: 600, color: "#374151" }}>Email :</span> {email}</div>}
                 </div>
               </div>
               {/* Métadonnées à droite */}
@@ -3525,7 +3531,7 @@ const Global = (props) => {
             <div id="titleRapport" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 12 }}>
               <div style={{ height: 3, flex: 1, background: "linear-gradient(to right, #0F4C81, transparent)" }} />
               <span style={{ fontSize: 16, fontWeight: 800, color: "#0F4C81", textTransform: "uppercase", letterSpacing: "0.8px", whiteSpace: "nowrap" }}>
-                Rapport de gestion des plaintes &amp; réclamations
+                Rapport de Gestion des Plaintes ou Réclamations
               </span>
               <div style={{ height: 3, flex: 1, background: "linear-gradient(to left, #0F4C81, transparent)" }} />
             </div>
@@ -3542,7 +3548,7 @@ const Global = (props) => {
               </span>
             </div>
           </div>
-                {/* { <div
+          {/* { <div
                   className="row"
                   style={{ marginTop: "20px" }}
                   id="critereRapport"
@@ -3615,130 +3621,130 @@ const Global = (props) => {
                   </div>
                 </div> } */}
 
-                {(activeTab === 0 || isPrinting) && globalShow && (
-                  <>
-                    {(hasFalseInSection("global") && props.tmpState.showForm) && (
-                      <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={(e) => restoreSection("global")}>Restaurer les stats globales</div>
-                    )}
-                    {reportGlobalChart}
-                    {reportGlobalByCanalChart}
-                    {reportGlobalByObjetChart}
-                    {reportMixteChart}
-                    <canvas id="myChart2"></canvas>
-                  </>
-                )}
+          {(activeTab === 0 || isPrinting) && globalShow && (
+            <>
+              {(hasFalseInSection("global") && props.tmpState.showForm) && (
+                <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={(e) => restoreSection("global")}>Restaurer les stats globales</div>
+              )}
+              {reportGlobalChart}
+              {reportGlobalByCanalChart}
+              {reportGlobalByObjetChart}
+              {reportMixteChart}
+              <canvas id="myChart2"></canvas>
+            </>
+          )}
 
-                {(activeTab === 1 || isPrinting) && claimShow && (
-                  <>
-                    {(hasFalseInSection("claim") && props.tmpState.showForm) && (
-                      <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={(e) => restoreSection("claim")}>Restaurer les stats des réclamations</div>
-                    )}
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0 16px", borderBottom: "1.5px solid #F1F5F9", marginBottom: 20 }} id="titleClaim">
-                      <div style={{ width: 5, height: 28, background: "#3B82F6", borderRadius: 3 }} />
-                      <span style={{ color: "#0F172A", fontSize: 22, fontWeight: 800 }}>Réclamations</span>
-                    </div>
-                    <div style={{ marginBottom: 24 }} id="dashClaimRapport">
-                      {claimShow ? claimDashboard() : ""}
-                    </div>
+          {(activeTab === 1 || isPrinting) && claimShow && (
+            <>
+              {(hasFalseInSection("claim") && props.tmpState.showForm) && (
+                <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={(e) => restoreSection("claim")}>Restaurer les stats des réclamations</div>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0 16px", borderBottom: "1.5px solid #F1F5F9", marginBottom: 20 }} id="titleClaim">
+                <div style={{ width: 5, height: 28, background: "#3B82F6", borderRadius: 3 }} />
+                <span style={{ color: "#0F172A", fontSize: 22, fontWeight: 800 }}>Réclamations</span>
+              </div>
+              <div style={{ marginBottom: 24 }} id="dashClaimRapport">
+                {claimShow ? claimDashboard() : ""}
+              </div>
 
-                    {props.claimReport && props.claimReport.length !== 0 ? (
-                      <>
-                        <SectionSubtitle id="toeClaim" accent="#3B82F6">Par agence</SectionSubtitle>
-                        {claimByAgenceChart}
-                        <SectionSubtitle accent="#3B82F6">Par modalité de dépôt</SectionSubtitle>
-                        {claimByCanalChart}
-                        <SectionSubtitle accent="#3B82F6">Par objet</SectionSubtitle>
-                        {claimByObjetChart}
-                        <SectionSubtitle accent="#3B82F6">Par genre</SectionSubtitle>
-                        {claimByGenreChart}
-                        <SectionSubtitle accent="#3B82F6">Par niveau de gravité</SectionSubtitle>
-                        {claimByGraviteChart}
-                        <SectionSubtitle accent="#3B82F6">Satisfaction des réclamants</SectionSubtitle>
-                        {claimBySatisfactionChart}
-                        <SectionSubtitle accent="#3B82F6">Délai de résolution</SectionSubtitle>
-                        {claimDelaiResolutionChart}
-                        <div id="statClaimTable">
-                          <SectionSubtitle accent="#3B82F6">Tableau récapitulatif</SectionSubtitle>
-                          {claimTableStat()}
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8", fontSize: 15 }}>
-                        Aucune réclamation ne correspond aux critères de tri
-                      </div>
-                    )}
-                  </>
-                )}
+              {props.claimReport && props.claimReport.length !== 0 ? (
+                <>
+                  <SectionSubtitle id="toeClaim" accent="#3B82F6">Par agence</SectionSubtitle>
+                  {claimByAgenceChart}
+                  <SectionSubtitle accent="#3B82F6">Par modalité de dépôt</SectionSubtitle>
+                  {claimByCanalChart}
+                  <SectionSubtitle accent="#3B82F6">Par objet</SectionSubtitle>
+                  {claimByObjetChart}
+                  <SectionSubtitle accent="#3B82F6">Par genre</SectionSubtitle>
+                  {claimByGenreChart}
+                  <SectionSubtitle accent="#3B82F6">Par niveau de gravité</SectionSubtitle>
+                  {claimByGraviteChart}
+                  <SectionSubtitle accent="#3B82F6">Satisfaction des réclamants</SectionSubtitle>
+                  {claimBySatisfactionChart}
+                  <SectionSubtitle accent="#3B82F6">Délai de résolution</SectionSubtitle>
+                  {claimDelaiResolutionChart}
+                  <div id="statClaimTable">
+                    <SectionSubtitle accent="#3B82F6">Tableau récapitulatif</SectionSubtitle>
+                    {claimTableStat()}
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8", fontSize: 15 }}>
+                  Aucune réclamation ne correspond aux critères de tri
+                </div>
+              )}
+            </>
+          )}
 
-                {(activeTab === 2 || isPrinting) && denunciationShow && (
-                  <>
-                    {(hasFalseInSection("denun") && props.tmpState.showForm) && (
-                      <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={() => restoreSection("denun")}>Restaurer les stats des dénonciations</div>
-                    )}
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0 16px", borderBottom: "1.5px solid #F1F5F9", marginBottom: 20 }}>
-                      <div style={{ width: 5, height: 28, background: "#F59E0B", borderRadius: 3 }} />
-                      <span style={{ color: "#0F172A", fontSize: 22, fontWeight: 800 }}>Dénonciations</span>
-                    </div>
-                    <div id="dashDenunRapport" style={{ marginBottom: 20 }}>
-                      {denunciationDashboard()}
-                    </div>
-                    {props.denunReport && props.denunReport.length != 0 ? (
-                      <>
-                        <SectionSubtitle id="toeDenun" accent="#F59E0B">Par agence</SectionSubtitle>
-                        {denunByAgenceChart}
-                        <SectionSubtitle accent="#F59E0B">Par modalité de dépôt</SectionSubtitle>
-                        {denunByCanalChart}
-                        <SectionSubtitle accent="#F59E0B">Par objet</SectionSubtitle>
-                        {denunByObjetChart}
-                        <SectionSubtitle accent="#F59E0B">Délai de résolution</SectionSubtitle>
-                        {denunDelaiResolutionChart}
-                        <SectionSubtitle accent="#F59E0B">Par niveau de gravité</SectionSubtitle>
-                        {denunByGraviteChart}
-                        <div id="statDenunTable">
-                          <SectionSubtitle accent="#F59E0B">Tableau récapitulatif</SectionSubtitle>
-                          {denunTableStat()}
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8", fontSize: 15 }}>
-                        Aucune dénonciation ne correspond aux critères de tri
-                      </div>
-                    )}
-                  </>
-                )}
+          {(activeTab === 2 || isPrinting) && denunciationShow && (
+            <>
+              {(hasFalseInSection("denun") && props.tmpState.showForm) && (
+                <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={() => restoreSection("denun")}>Restaurer les stats des dénonciations</div>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0 16px", borderBottom: "1.5px solid #F1F5F9", marginBottom: 20 }}>
+                <div style={{ width: 5, height: 28, background: "#F59E0B", borderRadius: 3 }} />
+                <span style={{ color: "#0F172A", fontSize: 22, fontWeight: 800 }}>Dénonciations</span>
+              </div>
+              <div id="dashDenunRapport" style={{ marginBottom: 20 }}>
+                {denunciationDashboard()}
+              </div>
+              {props.denunReport && props.denunReport.length != 0 ? (
+                <>
+                  <SectionSubtitle id="toeDenun" accent="#F59E0B">Par agence</SectionSubtitle>
+                  {denunByAgenceChart}
+                  <SectionSubtitle accent="#F59E0B">Par modalité de dépôt</SectionSubtitle>
+                  {denunByCanalChart}
+                  <SectionSubtitle accent="#F59E0B">Par objet</SectionSubtitle>
+                  {denunByObjetChart}
+                  <SectionSubtitle accent="#F59E0B">Délai de résolution</SectionSubtitle>
+                  {denunDelaiResolutionChart}
+                  <SectionSubtitle accent="#F59E0B">Par niveau de gravité</SectionSubtitle>
+                  {denunByGraviteChart}
+                  <div id="statDenunTable">
+                    <SectionSubtitle accent="#F59E0B">Tableau récapitulatif</SectionSubtitle>
+                    {denunTableStat()}
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8", fontSize: 15 }}>
+                  Aucune dénonciation ne correspond aux critères de tri
+                </div>
+              )}
+            </>
+          )}
 
-                {(activeTab === 3 || isPrinting) && suggestionShow && (
-                  <>
-                    {(hasFalseInSection("suggest") && props.tmpState.showForm) && (
-                      <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={() => restoreSection("suggest")}>Restaurer les stats des suggestions</div>
-                    )}
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0 16px", borderBottom: "1.5px solid #F1F5F9", marginBottom: 20 }}>
-                      <div style={{ width: 5, height: 28, background: "#10B981", borderRadius: 3 }} />
-                      <span style={{ color: "#0F172A", fontSize: 22, fontWeight: 800 }}>Suggestions</span>
-                    </div>
-                    <div id="dashSuggestRapport" style={{ marginBottom: 20 }}>
-                      {suggestionDashboard()}
-                    </div>
-                    {props.sugReport && props.sugReport.length !== 0 ? (
-                      <>
-                        <SectionSubtitle id="tpeSugg" accent="#10B981">Par agence</SectionSubtitle>
-                        {sugByAgenceChart}
-                        <SectionSubtitle accent="#10B981">Par modalité de dépôt</SectionSubtitle>
-                        {sugByCanalChart}
-                        <SectionSubtitle accent="#10B981">Par genre</SectionSubtitle>
-                        {sugByGenderChart}
-                        <div id="statSugTable">
-                          <SectionSubtitle accent="#10B981">Tableau récapitulatif</SectionSubtitle>
-                          {sugTableStat()}
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8", fontSize: 15 }}>
-                        Aucune suggestion ne correspond aux critères de tri
-                      </div>
-                    )}
-                  </>
-                )}
+          {(activeTab === 3 || isPrinting) && suggestionShow && (
+            <>
+              {(hasFalseInSection("suggest") && props.tmpState.showForm) && (
+                <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={() => restoreSection("suggest")}>Restaurer les stats des suggestions</div>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0 16px", borderBottom: "1.5px solid #F1F5F9", marginBottom: 20 }}>
+                <div style={{ width: 5, height: 28, background: "#10B981", borderRadius: 3 }} />
+                <span style={{ color: "#0F172A", fontSize: 22, fontWeight: 800 }}>Suggestions</span>
+              </div>
+              <div id="dashSuggestRapport" style={{ marginBottom: 20 }}>
+                {suggestionDashboard()}
+              </div>
+              {props.sugReport && props.sugReport.length !== 0 ? (
+                <>
+                  <SectionSubtitle id="tpeSugg" accent="#10B981">Par agence</SectionSubtitle>
+                  {sugByAgenceChart}
+                  <SectionSubtitle accent="#10B981">Par modalité de dépôt</SectionSubtitle>
+                  {sugByCanalChart}
+                  <SectionSubtitle accent="#10B981">Par genre</SectionSubtitle>
+                  {sugByGenderChart}
+                  <div id="statSugTable">
+                    <SectionSubtitle accent="#10B981">Tableau récapitulatif</SectionSubtitle>
+                    {sugTableStat()}
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8", fontSize: 15 }}>
+                  Aucune suggestion ne correspond aux critères de tri
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -3764,9 +3770,9 @@ const Global = (props) => {
         onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(15,76,129,0.4)"; }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
         </svg>
       </button>
     </>

@@ -35,6 +35,7 @@ const LIST_DELETE_CLAIM_API = HOST + "api/v1/claim/list/deleted"
 const RESTORE_CLAIM_API = HOST + "api/v1/claim/restore/%s"
 const DELETE_ONLY_CLAIM_API = HOST + "api/v1/claim/delete/{id}"
 const CHECK_PHONE_API = HOST + "api/v1/claim/checkPhone/%s"
+const CHECK_PHONE_CROSS_AGENCY_API = HOST + "api/v1/claim/checkPhoneCrossAgency/%s"
 const CLAIM_EVENTS_API = HOST + "api/v1/claim-events/"
 const CLAIM_DRAFT_API = HOST + "api/v1/claim/%s/draft"
 
@@ -987,6 +988,30 @@ export const listeRSDDelete = async (props) => {
         });
 }
 
+
+export const checkPhoneCrossAgencyApi = async (phoneValue, props) => {
+    const config = {
+        method: "get",
+        url: CHECK_PHONE_CROSS_AGENCY_API.replace("%s", phoneValue),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    };
+    await axios(config)
+        .then(function (response) {
+            const content = response.data.content;
+            if (content.exists) {
+                props.setCrossAgencyClaims(content.claims);
+            } else {
+                props.setCrossAgencyClaims([]);
+            }
+        })
+        .catch(function (error) {
+            props.setCrossAgencyClaims([]);
+        });
+}
 
 export const checkPhoneApi = async (phoneValue, props) => {
     const config = {
