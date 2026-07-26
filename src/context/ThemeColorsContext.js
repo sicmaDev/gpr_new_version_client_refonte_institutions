@@ -34,6 +34,19 @@ export const getPagePrimary = (colors) => {
     return colors.sidebarColor || DEFAULT_COLOR;
 };
 
+// Picks white or dark text depending on how light the given background color is,
+// so text stays readable if an institution picks a near-white theme color.
+export const getContrastText = (hex) => {
+    try {
+        const h = hex.replace('#', '');
+        const r = parseInt(h.slice(0, 2), 16);
+        const g = parseInt(h.slice(2, 4), 16);
+        const b = parseInt(h.slice(4, 6), 16);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.75 ? '#0F172A' : '#FFFFFF';
+    } catch { return '#FFFFFF'; }
+};
+
 const injectCssVars = (colors) => {
     const primary = getPagePrimary(colors);
     document.documentElement.style.setProperty('--gpr-primary',      primary);

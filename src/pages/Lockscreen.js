@@ -11,7 +11,7 @@ import { LogoutRounded } from '@mui/icons-material';
 import { LoginApi } from '../apis/LoginApi';
 import { authenticate, isAuth } from "../redux/actions/LayoutActions";
 import { etatChanged } from "../redux/actions/LoginActions";
-import { useThemeColors, darkenColor, getPagePrimary } from "../context/ThemeColorsContext";
+import { useThemeColors, darkenColor, getPagePrimary, getContrastText } from "../context/ThemeColorsContext";
 
 // ── SVG Icons ────────────────────────────────────────────────────────────
 const SvgLock = ({ size = 20, color = "#64748b" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>;
@@ -19,7 +19,7 @@ const SvgEye = ({ size = 18, color = "#94a3b8" }) => <svg width={size} height={s
 const SvgEyeOff = ({ size = 18, color = "#94a3b8" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>;
 const SvgArrowIn = ({ size = 18, color = "white" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>;
 const SvgShield = ({ size = 16, color = "rgba(255,255,255,0.7)" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>;
-const SvgWarning = ({ size = 18, color }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>;
+const SvgComplaint = ({ size = 18, color }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="15.5" x2="12.01" y2="15.5" /></svg>;
 const SvgBulb = ({ size = 18, color }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="9" y1="18" x2="15" y2="18" /><line x1="10" y1="22" x2="14" y2="22" /><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" /></svg>;
 const SvgMega = ({ size = 18, color }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>;
 const SvgChart = ({ size = 18, color }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>;
@@ -28,7 +28,7 @@ const SvgStar = ({ size = 18, color }) => <svg width={size} height={size} viewBo
 const SvgSendMail = ({ size = 18, color }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>;
 
 const GROUP_A = [
-    { icon: SvgWarning, label: "Réclamations", color: "#fb923c" },
+    { icon: SvgComplaint, label: "Réclamations", color: "#fb923c" },
     { icon: SvgBulb, label: "Suggestions", color: "#60a5fa" },
     { icon: SvgMega, label: "Dénonciations", color: "#f87171" },
     { icon: SvgChart, label: "Rapports", color: "#34d399" },
@@ -52,6 +52,10 @@ const Lockscreen = (props) => {
     const { colors, logo: institutionLogo } = useThemeColors();
     const primaryColor = getPagePrimary(colors);
     const primaryDark  = darkenColor(primaryColor, 0.18);
+    const heroText = getContrastText(primaryColor);
+    const isLightHero = heroText === "#0F172A";
+    const heroTextSoft = isLightHero ? "rgba(15,23,42,0.65)" : "rgba(255,255,255,0.75)";
+    const heroTextSofter = isLightHero ? "rgba(15,23,42,0.55)" : "rgba(255,255,255,0.70)";
     const [showPassword, setShowPassword] = useState(false);
     const [userInfo, setUserInfo] = useState(null);
     const [password, setPassword] = useState(null);
@@ -123,14 +127,14 @@ const Lockscreen = (props) => {
                                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: modA.color + "33" }}>
                                     <modA.icon size={18} color={modA.color} />
                                 </div>
-                                <span className="text-white text-[13px] font-semibold">{modA.label}</span>
+                                <span className="text-[13px] font-semibold" style={{ color: heroText }}>{modA.label}</span>
                             </div>
                             {modB && (
                                 <div style={{ ...cardBase, gridArea: '1/1', transform: showGroupB ? 'translateY(0)' : 'translateY(24px)', opacity: showGroupB ? 1 : 0 }}>
                                     <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: modB.color + "33" }}>
                                         <modB.icon size={18} color={modB.color} />
                                     </div>
-                                    <span className="text-white text-[13px] font-semibold">{modB.label}</span>
+                                    <span className="text-[13px] font-semibold" style={{ color: heroText }}>{modB.label}</span>
                                 </div>
                             )}
                         </div>
@@ -154,22 +158,22 @@ const Lockscreen = (props) => {
                         </div>
                     </div>
 
-                    <p className="text-white text-[15px] md:text-[19px] leading-relaxed mb-2 md:mb-3 animate-fade-up font-bold" style={{ animationDelay: "0.2s" }}>
+                    <p className="text-[15px] md:text-[19px] leading-relaxed mb-2 md:mb-3 animate-fade-up font-bold" style={{ animationDelay: "0.2s", color: heroText }}>
                         Chaque voix mérite une réponse.
                     </p>
-                    <p className="text-white/75 text-[12.5px] md:text-[14.5px] leading-relaxed mb-5 md:mb-10 animate-fade-up" style={{ animationDelay: "0.25s" }}>
+                    <p className="text-[12.5px] md:text-[14.5px] leading-relaxed mb-5 md:mb-10 animate-fade-up" style={{ animationDelay: "0.25s", color: heroTextSoft }}>
                         Transformez les plaintes, suggestions et alertes<br />en actions concrètes et mesurables.
                     </p>
                 </div>
 
                 {/* Couche 6 — CTA déconnexion */}
                 <div className="relative z-10 mt-5 md:mt-10 text-center animate-fade-up" style={{ animationDelay: "0.4s" }}>
-                    <h6 className="text-white/70 text-[13px] mb-3">Ce n'est pas vous ?</h6>
+                    <h6 className="text-[13px] mb-3" style={{ color: heroTextSofter }}>Ce n'est pas vous ?</h6>
                     <Button
-                        variant="outlined"
+                        variant="contained"
                         onClick={logout}
-                        style={{ borderColor: "rgba(255,255,255,0.5)", color: "white", borderRadius: "10px", padding: "9px 30px", fontWeight: 600, fontSize: "13px", textTransform: "none" }}
-                        className="transition-all duration-300 hover:bg-white/10 hover:shadow-[0_0_24px_rgba(255,255,255,0.35)]"
+                        style={{ background: "#FFFFFF", color: primaryColor, borderRadius: "10px", padding: "9px 30px", fontWeight: 700, fontSize: "13px", textTransform: "none", boxShadow: "0 6px 18px rgba(0,0,0,0.18)" }}
+                        className="transition-all duration-300 hover:scale-105 hover:shadow-[0_8px_24px_rgba(0,0,0,0.28)]"
                     >
                         Se déconnecter
                     </Button>
@@ -236,7 +240,7 @@ const Lockscreen = (props) => {
                                 <LoadingButton
                                     style={{
                                         width: "100%", height: "58px", borderRadius: "14px", fontSize: "16px", fontWeight: 700,
-                                        textTransform: "none", marginTop: "20px", color: "white",
+                                        textTransform: "none", marginTop: "20px", color: heroText,
                                         background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)`,
                                         boxShadow: `0 10px 25px -8px ${primaryColor}80`,
                                     }}
@@ -245,7 +249,7 @@ const Lockscreen = (props) => {
                                     loading={props.etat}
                                     disabled={props.etat}
                                     loadingPosition="end"
-                                    endIcon={<SvgArrowIn />}
+                                    endIcon={<SvgArrowIn color={heroText} />}
                                     variant="contained"
                                 >
                                     <span>Déverrouiller</span>
