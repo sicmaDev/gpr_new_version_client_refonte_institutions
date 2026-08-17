@@ -1,24 +1,66 @@
-const BASE = '/api/whatgpr';
-const token = () => sessionStorage.getItem('token') || '';
-const authHeaders = () => ({ 'Authorization': `Bearer ${token()}` });
+import { loadItemFromSessionStorage } from '../Utils/utils';
+import { HOST } from '../Utils/globals';
+
+const BASE = HOST.replace(/\/$/, '') + '/api/whatgpr';
+
+const authHeader = () => ({
+    'Authorization': 'Bearer ' + loadItemFromSessionStorage('token'),
+    'Content-Type': 'application/json',
+});
+
+// Vérifie response.ok avant de parser le JSON — sans ça, une erreur HTTP (403 sécurité,
+// 500 serveur) avec un corps JSON valide passait silencieusement comme un succès avec des
+// données incohérentes. Journalise systématiquement pour rendre les échecs diagnosticables.
+const handleResponse = async (response) => {
+    if (!response.ok) {
+        let message = `${response.status} ${response.statusText}`;
+        try {
+            const body = await response.json();
+            message = body?.content?.message || body?.message || message;
+        } catch (_) { /* corps non JSON — on garde le message par défaut */ }
+        console.error(`[WhatGPR] Erreur API (${response.url}) : ${message}`);
+        throw new Error(message);
+    }
+    return response.json();
+};
+
+// Même principe pour les appels qui n'attendent pas de corps JSON en retour.
+const ensureOk = (response) => {
+    if (!response.ok) {
+        console.error(`[WhatGPR] Erreur API (${response.url}) : ${response.status} ${response.statusText}`);
+        throw new Error(`${response.status} ${response.statusText}`);
+    }
+    return response;
+};
 
 // WhatsApp
-export const getQR = () => fetch(`${BASE}/whatsapp/qr`, { headers: authHeaders() }).then(r => r.json());
-export const getStatus = () => fetch(`${BASE}/whatsapp/status`, { headers: authHeaders() }).then(r => r.json());
-export const disconnect = () => fetch(`${BASE}/whatsapp/disconnect`, { method: 'POST', headers: authHeaders() });
+export const getQR = () =>
+    fetch(`${BASE}/whatsapp/qr`, { headers: authHeader() }).then(handleResponse);
+
+export const getStatus = () =>
+    fetch(`${BASE}/whatsapp/status`, { headers: authHeader() }).then(handleResponse);
+
+export const disconnect = () =>
+    fetch(`${BASE}/whatsapp/disconnect`, { method: 'POST', headers: authHeader() }).then(ensureOk);
+
+export const forceRestart = () =>
+    fetch(`${BASE}/whatsapp/force-restart`, { method: 'POST', headers: authHeader() }).then(ensureOk);
 
 // Messages
-export const getMessages = (filter = 'all') => fetch(`${BASE}/messages?filter=${filter}`, { headers: authHeaders() }).then(r => r.json());
-export const markRead = (id) => fetch(`${BASE}/messages/${id}/read`, { method: 'PATCH', headers: authHeaders() });
-export const markReadBatch = (ids) => fetch(`${BASE}/messages/read`, { method: 'PATCH', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
+export const getMessages = (filter = 'all') =>
+    fetch(`${BASE}/messages?filter=${filter}`, { headers: authHeader() }).then(handleResponse);
 
-// Complaints
-export const getComplaints = (status) => fetch(`${BASE}/complaints${status ? `?status=${status}` : ''}`, { headers: authHeaders() }).then(r => r.json());
-export const createComplaint = (formData) => fetch(`${BASE}/complaints`, { method: 'POST', headers: authHeaders(), body: formData });
-export const getComplaint = (id) => fetch(`${BASE}/complaints/${id}`, { headers: authHeaders() }).then(r => r.json());
-export const updateComplaintStatus = (id, status) => fetch(`${BASE}/complaints/${id}/status`, { method: 'PATCH', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
-export const replyToComplaint = (id, body) => fetch(`${BASE}/complaints/${id}/reply`, { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ body }) });
-export const sendSurvey = (id) => fetch(`${BASE}/complaints/${id}/survey`, { method: 'POST', headers: authHeaders() });
+export const markRead = (id) =>
+    fetch(`${BASE}/messages/${id}/read`, { method: 'PATCH', headers: authHeader() }).then(ensureOk);
 
-// Dashboard
-export const getDashboardStats = () => fetch(`${BASE}/dashboard/stats`, { headers: authHeaders() }).then(r => r.json());
+export const markConverted = (ids) =>
+    fetch(`${BASE}/messages/mark-converted`, {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({ ids }),
+    }).then(ensureOk);
+
+// Claims nécessitant commentaire pilote (client a voté sans commenter)
+export const getClaimsNeedingPilotComment = () =>
+    fetch(`${BASE}/claims/needing-pilot-comment`, { headers: authHeader() })
+        .then(handleResponse).catch(() => []);

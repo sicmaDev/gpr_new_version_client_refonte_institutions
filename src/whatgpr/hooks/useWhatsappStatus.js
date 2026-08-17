@@ -1,32 +1,46 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getStatus } from '../api';
 
-export const useWhatsappStatus = () => {
-  const [status, setStatus] = useState(null);
-  const [qrOpen, setQrOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+// Passe toujours par le proxy Spring Boot authentifié (jamais d'appel direct au
+// microservice Node depuis le navigateur).
+const useWhatsappStatus = () => {
+    const [status, setStatus]         = useState('disconnected');
+    const [showQRModal, setShowQRModal] = useState(false);
+    const intervalRef = useRef(null);
 
-  const refresh = useCallback(async () => {
-    try {
-      const data = await getStatus();
-      const s = data?.status || data?.state || 'disconnected';
-      setStatus(s);
-      if (s !== 'connected') setQrOpen(true);
-      else setQrOpen(false);
-    } catch {
-      setStatus('disconnected');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    const clearPoll = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+    };
 
-  useEffect(() => {
-    refresh();
-    const id = setInterval(() => {
-      if (status !== 'connected') refresh();
-    }, 5000);
-    return () => clearInterval(id);
-  }, [refresh, status]);
+    const checkStatus = useCallback(async () => {
+        try {
+            const d = await getStatus();
+            setStatus(d.status ?? 'disconnected');
+        } catch (err) {
+            // Backend ou Node.js inaccessible → déconnecté
+            console.error('[WhatGPR] Erreur récupération statut:', err);
+            setStatus('disconnected');
+        }
+    }, []);
 
-  return { status, loading, qrOpen, setQrOpen, refresh };
+    // Vérification initiale
+    useEffect(() => { checkStatus(); }, [checkStatus]);
+
+    // Polling : toutes les 5s si non connecté, toutes les 30s si connecté
+    useEffect(() => {
+        const interval = status === 'connected' ? 30_000 : 5_000;
+
+        if (status === 'connected') setShowQRModal(false);
+
+        clearPoll();
+        intervalRef.current = setInterval(checkStatus, interval);
+        return clearPoll;
+    }, [status, checkStatus]);
+
+    return { status, showQRModal, setShowQRModal, checkStatus, setStatus };
 };
+
+export default useWhatsappStatus;
