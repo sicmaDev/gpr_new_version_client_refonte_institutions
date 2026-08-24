@@ -3,13 +3,13 @@ import { Box, ButtonBase, Typography } from "@mui/material";
 import { STATUS_CONFIG } from "../../pages/Reclamations/components/ClaimStatusBadge";
 
 /**
- * DossierFilterChips — chips de filtre rapide par statut
+ * DossierFilterChips - chips de filtre rapide par statut
  *
  * Props:
- *   items          — tableau de données
- *   activeFilter   — valeur active ("ALL" ou un statut)
- *   onFilterChange — callback(value)
- *   filterButtons  — [{ value, label }]  (value="ALL" pour "Tous")
+ *   items          - tableau de données
+ *   activeFilter   - valeur active ("ALL" ou un statut)
+ *   onFilterChange - callback(value)
+ *   filterButtons  - [{ value, label }]  (value="ALL" pour "Tous")
  */
 const DossierFilterChips = ({ items = [], activeFilter, onFilterChange, filterButtons = [] }) => {
   const counts = useMemo(() => {

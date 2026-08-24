@@ -70,10 +70,10 @@ const getObjet = (claim, mode, objets) => {
     if (claim.id && claim.collectionChannel) return { libelle: claim.objet?.libelle, categorie: claim.objet?.categorie?.libelle };
     const found = objets?.find((e) => e.id === claim.objetId);
     return { libelle: found?.libelle, categorie: found?.categorie?.libelle };
-  } catch (_) { return { libelle: "—", categorie: "" }; }
+  } catch (_) { return { libelle: "-", categorie: "" }; }
 };
 
-const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, currentUser, showTransmitted = true }) => {
+const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, currentUser, showTransmitted = true, showStatusIcons = true }) => {
   const resolvedStatusOptions = statusOptions || STATUS_OPTIONS;
   const [search, setSearch]             = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -256,7 +256,11 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
                 const isAssignedToMe = claim.status === "AFFECTED" &&
                   claim.treatmentAffectedTo &&
                   (claim.treatmentAffectedTo.firstAndLastName === currentUser?.firstAndLastName || claim.treatmentAffectedTo.id === currentUser?.id);
-                const hasSession = claim.session && claim.session !== "" && !isClosed;
+                // Une session collaborative n'a de sens que pendant le traitement actif :
+                // une fois le dossier traité (TREAT) ou clos, elle ne doit plus s'afficher
+                // dans les listes "mesure de satisfaction" / "assurance" / "liste générale".
+                const isPastTreatment = ["TREAT", "SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "LITIGATION", "CLASSED"].includes(claim.status);
+                const hasSession = claim.session && claim.session !== "" && !isPastTreatment;
 
                 return (
                   <TableRow
@@ -283,14 +287,14 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                         <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
-                          {claim.codeClient || "—"}
+                          {claim.codeClient || "-"}
                         </span>
-                        {isAssignedToMe && (
+                        {showStatusIcons && isAssignedToMe && (
                           <Tooltip title="Vous êtes assigné à cette réclamation">
                             <AlternateEmailIcon sx={{ fontSize: 15, color: "#DC2626" }} />
                           </Tooltip>
                         )}
-                        {hasSession && (
+                        {showStatusIcons && hasSession && (
                           <Tooltip title="Session collaborative ouverte">
                             <ForumIcon sx={{ fontSize: 15, color: "#DC2626" }} />
                           </Tooltip>
@@ -306,7 +310,7 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
                           color: "#0F172A", maxWidth: 180, overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap"
                         }}>
-                          {objet.libelle || "—"}
+                          {objet.libelle || "-"}
                         </span>
                         {objet.categorie && (
                           <span style={{ fontSize: "0.72rem", color: "#94A3B8" }}>
@@ -333,7 +337,7 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
 
                     {/* Gravité */}
                     <TableCell>
-                      <ClaimGravityBadge gravity={gravity} transmitted={claim.transmitted === "true" || claim.transmitted === true} />
+                      <ClaimGravityBadge gravity={gravity} transmitted={showTransmitted && (claim.transmitted === "true" || claim.transmitted === true)} />
                     </TableCell>
 
                     {/* Date */}
@@ -341,19 +345,19 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
                       <span style={{ fontSize: "0.80rem", color: "#475569", whiteSpace: "nowrap" }}>
                         {claim.createdAt
                           ? new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(claim.createdAt))
-                          : "—"}
+                          : "-"}
                       </span>
                     </TableCell>
 
                     {/* Délai */}
                     <TableCell>
                       {isClosed ? (
-                        <span style={{ color: "#CBD5E1", fontSize: "0.78rem" }}>—</span>
+                        <span style={{ color: "#CBD5E1", fontSize: "0.78rem" }}>-</span>
                       ) : isOverdue ? (
                         <WarningAmberIcon sx={{ fontSize: 18, color: "#EF4444" }} />
                       ) : (
                         <span style={{ fontSize: "0.78rem", color: "#475569" }}>
-                          {claim.declenchedDate || "—"}
+                          {claim.declenchedDate || "-"}
                         </span>
                       )}
                     </TableCell>

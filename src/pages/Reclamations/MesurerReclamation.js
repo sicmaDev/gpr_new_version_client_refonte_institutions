@@ -87,7 +87,20 @@ import {
   listeByStatut,
   mesurerClaimSolutionApi,
   unapproveClaimSolutionApi,
+  deleteFileApi,
+  deleteAudioApi,
+  deleteExtraContentApi,
 } from "../../apis/Reclamations/ReclamationsApi";
+import { modalify } from "../../Utils/modal";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import WaAudioSection from "../../whatgpr/components/WaAudioSection";
+import AudioGrid from "../../whatgpr/components/AudioGrid";
+import useWaAudioJump from "../../whatgpr/hooks/useWaAudioJump";
+import { splitWaAudios } from "../../whatgpr/utils";
+import useSSE from "../../whatgpr/hooks/useSSE";
+import { getClaimsNeedingPilotComment } from "../../whatgpr/api";
+import SendSolutionWhatsappDialog from "../../whatgpr/components/SendSolutionWhatsappDialog";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import {
   Button,
   DialogActions,
@@ -193,6 +206,50 @@ const MES_CHIPS = [
 const MesurerReclamation = (props) => {
   let dimf, crew, emailDisplay;
 
+  const { waAudios, regularAudios } = splitWaAudios(props.selectedItemAudio);
+  const { highlightedAudioId, handleJumpToWhatsappAudioComment } = useWaAudioJump(waAudios);
+  const [showSolutionWaModal, setShowSolutionWaModal] = useState(false);
+  const [needingCommentIds, setNeedingCommentIds] = useState([]);
+  const [needingCommentData, setNeedingCommentData] = useState([]);
+
+  // Charge les réclamations dont le client a mesuré la satisfaction via WhatsApp sans
+  // laisser de commentaire (nécessite l'action du pilote pour en ajouter un manuellement).
+  const loadNeedingComment = () => {
+    getClaimsNeedingPilotComment().then((rows) => {
+      const list = rows || [];
+      setNeedingCommentIds(list.map((r) => r.claim_id));
+      setNeedingCommentData(list);
+    });
+  };
+
+  useEffect(() => {
+    loadNeedingComment();
+  }, []);
+
+  // Rafraîchissement en direct quand un client répond au sondage de satisfaction WhatsApp
+  useSSE({
+    survey_response: () => {
+      if (props.match.params.code === "all") {
+        listeByStatut(props, "TREAT").then(() => {}).catch(() => {});
+        loadNeedingComment();
+      }
+    },
+  });
+
+  // Pré-sélectionne le niveau de satisfaction déjà donné par le client via WhatsApp,
+  // pour le dossier actuellement ouvert, quand il attend encore un commentaire pilote.
+  useEffect(() => {
+    if (!props.id || !needingCommentData.length) return;
+    const t = setTimeout(() => {
+      const survey = needingCommentData.find((r) => String(r.claim_id) === String(props.id));
+      if (!survey) return;
+      const mapping = { SATISFIED: "SATISFIED", PARTIAL: "PARTIAL", UNSATISFIED: "UNSATISFIED" };
+      const val = mapping[survey.satisfaction];
+      if (val && props.appraisal !== val) props.appraisalChanged(val);
+    }, 150);
+    return () => clearTimeout(t);
+  }, [props.id, needingCommentData, props.appraisal]);
+
   const [open, setOpen] = React.useState(false);
   const [openModal, setOpenModal] = useState(null);
   const [showAudioPlayer, setAudioPlayer] = useState("");
@@ -240,7 +297,7 @@ const MesurerReclamation = (props) => {
 
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-user"))
+      ? loadItemFromSessionStorage("app-user")
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
@@ -462,7 +519,7 @@ const MesurerReclamation = (props) => {
   let appSms =
     loadItemFromLocalStorage("app-sms") !== undefined &&
       loadItemFromLocalStorage("app-sms").length !== 0
-      ? JSON.parse(loadItemFromLocalStorage("app-sms"))
+      ? loadItemFromLocalStorage("app-sms")
       : undefined;
 
   const segmentMessage = (message, maxLength = 150) => {
@@ -634,8 +691,18 @@ const MesurerReclamation = (props) => {
         switch (claim.status) {
           case "TREAT":
             statusElt = (
-              <span className="chip treatBgColor z-depth-1">
-                <span className="">Traitée</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span className="chip treatBgColor z-depth-1">
+                  <span className="">Traitée</span>
+                </span>
+                {needingCommentIds.includes(claim.id) && (
+                  <span
+                    title="Le client a mesuré la satisfaction via WhatsApp sans laisser de commentaire. Ajoutez un commentaire."
+                    style={{ fontSize: 16, cursor: "help" }}
+                  >
+                    ⚠️
+                  </span>
+                )}
               </span>
             );
             break;
@@ -921,6 +988,47 @@ const MesurerReclamation = (props) => {
     props.claimAppraiseErrors(errors);
   };
 
+  const handleDeleteFile = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de ce fichier ?",
+      "confirm",
+      () => {
+        deleteFileApi(id).then((ok) => {
+          if (ok) getFillesApi(currentData?.id, props);
+        });
+      }
+    );
+  };
+
+  const handleDeleteAudio = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de cet audio ?",
+      "confirm",
+      () => {
+        deleteAudioApi(id).then((ok) => {
+          if (ok) getClaimAudioApi(currentData?.id, props);
+        });
+      }
+    );
+  };
+
+  const handleDeleteExtraContent = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de ce contenu ?",
+      "confirm",
+      () => {
+        deleteExtraContentApi(id).then((ok) => {
+          if (ok) {
+            props.extrasChanged(props.extras.filter((e) => e.id !== id));
+          }
+        });
+      }
+    );
+  };
+
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
@@ -1006,6 +1114,21 @@ const MesurerReclamation = (props) => {
               }}
               onClick={() => downloadFillesApi(attachment.id, attachment.name)}
             />
+            {attachment._extra &&
+              attachment.extra?.user?.firstAndLastName === user.firstAndLastName && (
+                <DeleteOutlineIcon
+                  sx={{
+                    fontSize: "18px",
+                    color: "error.main",
+                    ml: 1,
+                    "&:hover": {
+                      color: "error.dark",
+                      cursor: "pointer",
+                    },
+                  }}
+                  onClick={() => handleDeleteFile(attachment.id)}
+                />
+              )}
           </Card>
         </Grid>
       );
@@ -1044,123 +1167,25 @@ const MesurerReclamation = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    let audioListChild = props.selectedItemAudio.map((audioItem) => {
-      const isWhatsappAudio = audioItem.name && audioItem.name.startsWith("[WhatsApp]");
-      const displayName = isWhatsappAudio
-        ? audioItem.name.replace(/^\[WhatsApp\]\s*/, "")
-        : audioItem.name;
-      return (
-        <Grid item xs={12} sm={6} key={audioItem.id}>
-          <Card
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              borderRadius: 2,
-              p: 1.5,
-              boxShadow: isWhatsappAudio
-                ? "0 2px 8px rgba(37,211,102,0.25)"
-                : "0 2px 4px rgba(0,0,0,0.05)",
-              border: isWhatsappAudio ? "1px solid #25d366" : "1px solid transparent",
-              height: "100%",
-            }}
-          >
-            <Box
-              sx={{
-                bgcolor: isWhatsappAudio ? "#25d366" : "primary.light",
-                borderRadius: "6px",
-                p: 1.5,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mr: 2,
-                minWidth: "48px",
-                height: "48px",
-              }}
-            >
-              <VolumeUp
-                sx={{
-                  color: "primary.contrastText",
-                  fontSize: "28px",
-                  display: isWhatsappAudio ? "none" : "block",
-                }}
-              />
-              <span style={{ display: isWhatsappAudio ? "inline" : "none", fontSize: "22px" }}>🎙</span>
-            </Box>
-
-            <CardContent sx={{ flex: 1, minWidth: 0, p: "8px !important" }}>
-              <Box
-                component="span"
-                sx={{
-                  display: isWhatsappAudio ? "inline-flex" : "none",
-                  alignItems: "center", gap: 0.5,
-                  bgcolor: "#dcfce7", color: "#15803d",
-                  fontSize: "10px", fontWeight: 700, px: 0.8, py: 0.2,
-                  borderRadius: "4px", border: "1px solid #86efac",
-                  whiteSpace: "nowrap", mb: 0.5,
-                }}
-              >
-                🎙 Commentaire WhatsApp
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  mb: 0.5,
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 500,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {displayName}
-                </Typography>
-                <Tooltip
-                  title={audioItem._extra
-                    ? `Ajouté par ${audioItem.extra?.user?.firstAndLastName ?? ""} le ${audioItem.extra?.createdAt && isFinite(new Date(audioItem.extra.createdAt)) ? formatDate(audioItem.extra.createdAt) : "date invalide"}`
-                    : ""}
-                  disableHoverListener={!audioItem._extra}
-                  disableFocusListener={!audioItem._extra}
-                  disableTouchListener={!audioItem._extra}
-                >
-                  <Info fontSize="small" sx={{ ml: 1, visibility: audioItem._extra ? "visible" : "hidden" }} />
-                </Tooltip>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                {Math.round((audioItem.size / 1024 + Number.EPSILON) * 100) /
-                  100}{" "}
-                {"Ko"} • {audioItem.duration}
-              </Typography>
-            </CardContent>
-
-            <Box sx={{ display: "flex" }}>
-              <IconButton
-                onClick={() => handlePlay(audioItem.id, audioItem.name)}
-                sx={{
-                  color:
-                    currentAudioId === audioItem.id
-                      ? "primary.main"
-                      : "text.secondary",
-                }}
-              >
-                <Pause sx={{ display: currentAudioId === audioItem.id ? "block" : "none" }} />
-                <PlayArrow sx={{ display: currentAudioId === audioItem.id ? "none" : "block" }} />
-              </IconButton>
-            </Box>
-          </Card>
-        </Grid>
-      );
-    });
     audioList = (
-      <Grid spacing={2} container size={12}>
-        {audioListChild}
-      </Grid>
+      <>
+        <AudioGrid
+          audios={regularAudios}
+          currentAudioId={currentAudioId}
+          onPlay={handlePlay}
+          highlightedAudioId={highlightedAudioId}
+          formatDate={formatDate}
+          onDelete={handleDeleteAudio}
+          currentUser={user}
+        />
+        <WaAudioSection
+          waAudios={waAudios}
+          currentAudioId={currentAudioId}
+          onPlay={handlePlay}
+          highlightedAudioId={highlightedAudioId}
+          formatDate={formatDate}
+        />
+      </>
     );
   } else {
     audioList = (
@@ -1695,7 +1720,7 @@ const MesurerReclamation = (props) => {
               label: "Mesure de satisfaction",
               content: (() => {
                 const sol = Array.isArray(props.solution) && props.solution.length > 0 ? props.solution[0] : null;
-                const statusCfg = STATUS_CONFIG[props.status] || { label: props.status || "—", bg: "#f1f5f9", color: "#64748b", border: "#e2e8f0" };
+                const statusCfg = STATUS_CONFIG[props.status] || { label: props.status || "-", bg: "#f1f5f9", color: "#64748b", border: "#e2e8f0" };
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                     {/* ── Solution / Réponse ── */}
@@ -1711,7 +1736,7 @@ const MesurerReclamation = (props) => {
                           <div style={{ padding: "14px 18px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fafafa" }}>
                             <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Solution</div>
                             <div style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
-                              {sol.content || sol.solution || "—"}
+                              {sol.content || sol.solution || "-"}
                             </div>
                           </div>
                           {sol.commentaire && (
@@ -1767,7 +1792,7 @@ const MesurerReclamation = (props) => {
                     {(hbt.includes("H5") || addR === "PILOTE") && (() => {
                       const OPTIONS = [
                         { val: "SATISFIED",   icon: satisfaire_icon,   label: "Satisfait",   accent: "#22c55e", color: "#166534", bg: "#f0fdf4", circleBg: "#dcfce7", dots: 5 },
-                        { val: "PARTIAL",     icon: partiel_icon,      label: "Partiel",     accent: "#f59e0b", color: "#92400e", bg: "#fffbeb", circleBg: "#fef3c7", dots: 3 },
+                        { val: "PARTIAL",     icon: partiel_icon,      label: "Partielle",   accent: "#f59e0b", color: "#92400e", bg: "#fffbeb", circleBg: "#fef3c7", dots: 3 },
                         { val: "UNSATISFIED", icon: unsatisfaire_icon, label: "Insatisfait", accent: "#ef4444", color: "#991b1b", bg: "#fef2f2", circleBg: "#fee2e2", dots: 1 },
                       ];
                       const selected = OPTIONS.find(o => o.val === props.appraisal);
@@ -1937,7 +1962,15 @@ const MesurerReclamation = (props) => {
                           )}
                           {props.extras?.filter(e => e.contenu).map((extra, idx) => (
                             <div key={extra.id ?? idx} style={{ background: "#faf5ff", borderRadius: 10, border: "1px solid #ede9fe", padding: "12px 16px" }}>
-                              <div style={{ fontSize: 13.5, color: "#1e293b", whiteSpace: "pre-wrap", lineHeight: 1.6, marginBottom: 6 }}>{extra.contenu}</div>
+                              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                                <div style={{ fontSize: 13.5, color: "#1e293b", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{extra.contenu}</div>
+                                {extra.user?.firstAndLastName === user.firstAndLastName && (
+                                  <DeleteOutlineIcon
+                                    sx={{ fontSize: 18, color: "#dc2626", cursor: "pointer", flexShrink: 0 }}
+                                    onClick={() => handleDeleteExtraContent(extra.id)}
+                                  />
+                                )}
+                              </div>
                               <div style={{ fontSize: 11.5, color: "#94a3b8" }}>
                                 {extra.user?.firstAndLastName && <span>User {extra.user.firstAndLastName}</span>}
                                 {extra.createdAt && <span> le {formatDate(extra.createdAt)}</span>}
@@ -1994,7 +2027,7 @@ const MesurerReclamation = (props) => {
                 </div>
                 <div onClick={() => props.appraisalChanged("PARTIAL")} style={{ cursor: "pointer", textAlign: "center", padding: 12, borderRadius: 12, border: props.appraisal === "PARTIAL" ? "2px solid #f59e0b" : "2px solid #e2e8f0", background: props.appraisal === "PARTIAL" ? "#fffbeb" : "#fff" }}>
                   <img src={partiel_icon} alt="partiel" style={{ width: 56 }} />
-                  <div style={{ fontSize: 12, fontWeight: 600, marginTop: 6, color: "#92400e" }}>Partiel</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginTop: 6, color: "#92400e" }}>Partielle</div>
                 </div>
                 <div onClick={() => props.appraisalChanged("UNSATISFIED")} style={{ cursor: "pointer", textAlign: "center", padding: 12, borderRadius: 12, border: props.appraisal === "UNSATISFIED" ? "2px solid #ef4444" : "2px solid #e2e8f0", background: props.appraisal === "UNSATISFIED" ? "#fef2f2" : "#fff" }}>
                   <img src={unsatisfaire_icon} alt="insatisfait" style={{ width: 56 }} />
@@ -2041,8 +2074,8 @@ const MesurerReclamation = (props) => {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </div>
               <div>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "—"}</div>
-                <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.phone || "—"}</div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "-"}</div>
+                <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.phone || "-"}</div>
               </div>
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Prévisualisation</div>
@@ -2085,8 +2118,8 @@ const MesurerReclamation = (props) => {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </div>
               <div>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "—"}</div>
-                <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.email || "—"}</div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "-"}</div>
+                <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.email || "-"}</div>
               </div>
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Aperçu du contenu</div>
@@ -2545,6 +2578,7 @@ const MesurerReclamation = (props) => {
                           onRowClick={(data) => rowClickedHandler(null, data, 0)}
                           statusOptions={MES_STATUS_OPTIONS}
                           showTransmitted={false}
+                          showStatusIcons={false}
                         />
                       ) : (
                         <ClaimsCardView
@@ -2552,6 +2586,8 @@ const MesurerReclamation = (props) => {
                           mode={1}
                           objets={[]}
                           onCardClick={(data) => rowClickedHandler(null, data, 0)}
+                          showTransmitted={false}
+                          showStatusIcons={false}
                         />
                       )}
                     </div>
@@ -2848,6 +2884,22 @@ const MesurerReclamation = (props) => {
                                               >
                                                 <Info />
                                               </Tooltip>
+                                              {extra.user?.firstAndLastName ===
+                                                user.firstAndLastName && (
+                                                <DeleteOutlineIcon
+                                                  sx={{
+                                                    color: "error.main",
+                                                    ml: 1,
+                                                    cursor: "pointer",
+                                                  }}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteExtraContent(
+                                                      extra.id
+                                                    );
+                                                  }}
+                                                />
+                                              )}
                                             </ListItemButton>
                                           ) : (
                                             <></>
@@ -2989,8 +3041,76 @@ const MesurerReclamation = (props) => {
                                 >
                                   <span>Envoyer Mail</span>
                                 </LoadingButton>
+
+                                {props.phone && props.solutionId && (
+                                  <Button
+                                    className="btn-small flex-shrink-0"
+                                    onClick={() => setShowSolutionWaModal(true)}
+                                    variant="outlined"
+                                    startIcon={<WhatsAppIcon />}
+                                    style={{ color: "#25d366", borderColor: "#25d366" }}
+                                  >
+                                    <span>WhatsApp</span>
+                                  </Button>
+                                )}
                               </div>
                             </div>
+
+                            {(() => {
+                              const survey = needingCommentData.find(
+                                (r) => String(r.claim_id) === String(props.id)
+                              );
+                              if (!survey) return null;
+                              const satisfLabel =
+                                survey.satisfaction === "UNSATISFIED"
+                                  ? { text: "😕 Non Satisfait", color: "#C62828", bg: "#FFEBEE" }
+                                  : survey.satisfaction === "PARTIAL"
+                                  ? { text: "😐 Partiellement Satisfait", color: "#E65100", bg: "#FFF3E0" }
+                                  : { text: "😊 Satisfait", color: "#2E7D32", bg: "#E8F5E9" };
+                              return (
+                                <div
+                                  style={{
+                                    marginBottom: 14,
+                                    padding: "12px 16px",
+                                    background: "#FFF8E1",
+                                    border: "1.5px solid #FFB300",
+                                    borderRadius: 8,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 8,
+                                  }}
+                                >
+                                  <div style={{ fontWeight: 700, color: "#E65100", fontSize: 13 }}>
+                                    ⚠️ Le client a mesuré la satisfaction via WhatsApp mais n'a pas laissé de
+                                    commentaire.
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <span style={{ fontSize: 12, color: "#555" }}>Niveau de satisfaction :</span>
+                                    <span
+                                      style={{
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                        color: satisfLabel.color,
+                                        background: satisfLabel.bg,
+                                        borderRadius: 6,
+                                        padding: "2px 10px",
+                                      }}
+                                    >
+                                      {satisfLabel.text}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            <SendSolutionWhatsappDialog
+                              open={showSolutionWaModal}
+                              onClose={() => setShowSolutionWaModal(false)}
+                              phone={props.phone}
+                              claimId={props.id}
+                              solutionId={props.solutionId}
+                              solutionText={props.solution?.[0]?.content}
+                            />
                             <Dialog open={showUploadModal} onClose={() => setShowUploadModal(false)}
                               fullWidth maxWidth="sm" id="dialog-sms"
                               PaperProps={{ style: { borderRadius: 16, padding: 8 } }}>
@@ -3011,8 +3131,8 @@ const MesurerReclamation = (props) => {
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                   </div>
                                   <div>
-                                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "—"}</div>
-                                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.phone || "—"}</div>
+                                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "-"}</div>
+                                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.phone || "-"}</div>
                                   </div>
                                 </div>
                                 <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Prévisualisation</div>
@@ -3087,8 +3207,8 @@ const MesurerReclamation = (props) => {
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                   </div>
                                   <div>
-                                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "—"}</div>
-                                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.email || "—"}</div>
+                                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1e293b" }}>{props.lastname || "-"}</div>
+                                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{props.email || "-"}</div>
                                   </div>
                                 </div>
                                 <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Aperçu du contenu</div>

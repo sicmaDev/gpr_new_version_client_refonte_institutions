@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { notify } from "../../Utils/alert";
 import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { HOST } from "../../Utils/globals";
@@ -31,13 +31,13 @@ export const ajout = async (data, props) => {
             infosLicense["email"] = data.email ;
             infosLicense["contact"] = data.tel ;
 
-            let appInstitution =  loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+            let appInstitution =  loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? loadItemFromLocalStorage("app-institution") : undefined;
             if (appInstitution === undefined || appInstitution === "") {
                 createLicense(infosLicense,props);
             }
 
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-institution")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-institution")
+            saveItemToSessionStorage(response.data.content, "app-institution")
+            saveItemToLocalStorage(response.data.content, "app-institution")
             
             props.etatChanged(false)
 
@@ -97,8 +97,8 @@ export const createLicense = async (data, props) => {
             // }
 
             createLicenseFile(JSON.stringify(finResultat));
-            // saveItemToSessionStorage(JSON.stringify(response.data.content), "app-institution")
-            // saveItemToLocalStorage(JSON.stringify(response.data.content), "app-institution")
+            // saveItemToSessionStorage(response.data.content, "app-institution")
+            // saveItemToLocalStorage(response.data.content, "app-institution")
 
             // props.etatChanged(false)
            

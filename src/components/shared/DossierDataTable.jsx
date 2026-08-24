@@ -94,8 +94,8 @@ const SummaryBar = ({ records }) => {
 const DossierCard = ({ record, onRowClick }) => {
   const rawName = record.clientFirstAndLastName;
   const name = rawName || "Anonyme";
-  const code = record.codeClient || record.code || "—";
-  const objet = record.objet?.libelle || record.subject || "—";
+  const code = record.codeClient || record.code || "-";
+  const objet = record.objet?.libelle || record.subject || "-";
   const isLate = record.retardDay > 0;
 
   return (
@@ -110,7 +110,7 @@ const DossierCard = ({ record, onRowClick }) => {
       onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.1)"; }}
       onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.05)"; }}
     >
-      {/* Top strip — colored by gravity */}
+      {/* Top strip - colored by gravity */}
       <div style={{
         height: 4,
         background: record.objet?.risqueLevel === "GRAVE" ? "#ef4444"
@@ -165,7 +165,7 @@ const DossierCard = ({ record, onRowClick }) => {
           <GravityDot level={record.objet?.risqueLevel} />
           <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#94a3b8" }}>
             <CalendarTodayIcon style={{ fontSize: 12 }} />
-            {record.createdAtFormated || record.receiptDateTime?.slice(0, 10) || "—"}
+            {record.createdAtFormated || record.receiptDateTime?.slice(0, 10) || "-"}
           </div>
         </div>
       </div>

@@ -47,7 +47,7 @@ const LEVEL_OPTIONS = [
 
 const Objets = (props) => {
     let categories;
-    try { categories = JSON.parse(loadItemFromLocalStorage('app-categories')); }
+    try { categories = loadItemFromLocalStorage('app-categories'); }
     catch (e) { categories = []; }
     const categorieOptions = (categories || []).map(c => ({ label: c.libelle, value: c.id }));
 

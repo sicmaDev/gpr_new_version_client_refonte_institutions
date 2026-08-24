@@ -73,31 +73,35 @@ import {
   clearPendingWAMediaInfos,
 } from "../pendingWAFiles";
 
-// ─── Palette ──────────────────────────────────────────────────────────────────
+// ─── Palette (alignée sur le thème GPR - var(--gpr-primary) + palette slate) ──
+const PRIMARY = "var(--gpr-primary, #005081)";
+const PRIMARY_DARK = "var(--gpr-primary-dark, #003d62)";
+const PRIMARY_LIGHT = "var(--gpr-primary-light, #00508122)";
+
 const WA = {
-  sentBg: "#DCF8C6",
+  sentBg: "var(--gpr-primary-light, #00508122)",
   recvBg: "#FFFFFF",
-  sentText: "#111B21",
-  recvText: "#111B21",
-  sentTime: "#667781",
-  recvTime: "#667781",
-  accent: "#25D366",
-  dateBg: "rgba(11,20,26,0.55)",
+  sentText: "#1e293b",
+  recvText: "#1e293b",
+  sentTime: "#64748b",
+  recvTime: "#64748b",
+  dateBg: "rgba(30,41,59,0.55)",
   dateText: "#FFFFFF",
-  convBg: "#EBF5FB",
+  convBg: "#f8fafc",
   headerBg: "#FFFFFF",
 };
 
-// Couleurs d'avatar cycliques (basées sur le numéro de téléphone)
+// Couleurs d'avatar cycliques (basées sur le numéro de téléphone) - palette
+// volontairement distincte de la couleur primaire GPR pour ne jamais s'y confondre.
 const AVATAR_COLORS = [
-  "#1565C0",
-  "#7B1FA2",
-  "#C62828",
-  "#2E7D32",
-  "#F57C00",
-  "#00838F",
-  "#4527A0",
-  "#AD1457",
+  "#1E88E5",
+  "#8E24AA",
+  "#D81B60",
+  "#43A047",
+  "#FB8C00",
+  "#00ACC1",
+  "#5E35B1",
+  "#6D4C41",
 ];
 
 const avatarColor = (phone) => {
@@ -202,8 +206,8 @@ const Bubble = ({ msg, selectionActive, selected, onToggle }) => {
           sx={{
             p: 0.5,
             order: isSent ? 1 : -1,
-            color: WA.accent,
-            "&.Mui-checked": { color: WA.accent },
+            color: PRIMARY,
+            "&.Mui-checked": { color: PRIMARY },
           }}
         />
       )}
@@ -213,11 +217,11 @@ const Bubble = ({ msg, selectionActive, selected, onToggle }) => {
           px: 1.4,
           py: 0.65,
           borderRadius: isSent ? "8px 8px 2px 8px" : "8px 8px 8px 2px",
-          bgcolor: converted ? "#F5F5F5" : isSent ? WA.sentBg : WA.recvBg,
+          bgcolor: converted ? "#f1f5f9" : isSent ? WA.sentBg : WA.recvBg,
           color: isSent ? WA.sentText : WA.recvText,
           boxShadow: "0 1px 3px rgba(0,0,0,0.22)",
           position: "relative",
-          border: converted ? "1px solid #C8E6C9" : "none",
+          border: converted ? "1px solid #10b98155" : "none",
         }}
       >
         {msg.type === "chat" ? (
@@ -253,18 +257,18 @@ const Bubble = ({ msg, selectionActive, selected, onToggle }) => {
                 display: "flex",
                 alignItems: "center",
                 gap: 0.3,
-                bgcolor: "#E8F5E9",
+                bgcolor: "#10b98118",
                 borderRadius: 1,
                 px: 0.6,
                 py: 0.1,
               }}
             >
-              <TaskAlt sx={{ fontSize: 10, color: "#2E7D32" }} />
+              <TaskAlt sx={{ fontSize: 10, color: "#10b981" }} />
               <Typography
                 component="span"
                 sx={{
                   fontSize: 9.5,
-                  color: "#2E7D32",
+                  color: "#10b981",
                   fontWeight: 700,
                   lineHeight: 1,
                 }}
@@ -371,7 +375,9 @@ const QRPanel = ({ onClose, embedded = false }) => {
     try {
       const d = await getQR();
       if (d?.qr) {
-        setQrSrc("data:image/png;base64," + d.qr);
+        // Le service Node renvoie déjà une data URL complète (qrcode.toDataURL) —
+        // la préfixer à nouveau ici produisait une URL invalide (image cassée).
+        setQrSrc(d.qr);
         setCountdown(0);
       } else setCountdown(POLL_INTERVAL);
     } catch (err) {
@@ -428,7 +434,7 @@ const QRPanel = ({ onClose, embedded = false }) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          border: `3px solid ${WA.accent}`,
+          border: `3px solid ${PRIMARY}`,
           borderRadius: 2,
           p: 1,
           bgcolor: "#fff",
@@ -469,20 +475,20 @@ const QRPanel = ({ onClose, embedded = false }) => {
                 value={(countdown / POLL_INTERVAL) * 100}
                 size={80}
                 thickness={3}
-                sx={{ color: WA.accent, position: "absolute" }}
+                sx={{ color: PRIMARY, position: "absolute" }}
               />
               <CircularProgress
                 variant="determinate"
                 value={100}
                 size={80}
                 thickness={3}
-                sx={{ color: WA.accent + "22", position: "absolute" }}
+                sx={{ color: PRIMARY_LIGHT, position: "absolute" }}
               />
               <Typography
                 sx={{
                   fontSize: 28,
                   fontWeight: 800,
-                  color: WA.accent,
+                  color: PRIMARY,
                   lineHeight: 1,
                   userSelect: "none",
                 }}
@@ -503,8 +509,8 @@ const QRPanel = ({ onClose, embedded = false }) => {
       {qrSrc && (
         <Box
           sx={{
-            bgcolor: "#FFF8E1",
-            border: "1px solid #FFD54F",
+            bgcolor: "#f59e0b18",
+            border: "1px solid #f59e0b55",
             borderRadius: 2,
             px: 2,
             py: 0.75,
@@ -514,7 +520,7 @@ const QRPanel = ({ onClose, embedded = false }) => {
         >
           <Typography
             variant="caption"
-            sx={{ color: "#E65100", fontWeight: 600 }}
+            sx={{ color: "#d97706", fontWeight: 600 }}
           >
             ⏳ En attente du scan…
           </Typography>
@@ -535,7 +541,7 @@ const QRPanel = ({ onClose, embedded = false }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        bgcolor: "#F5F5F5",
+        bgcolor: "#f1f5f9",
       }}
     >
       <Paper
@@ -549,7 +555,7 @@ const QRPanel = ({ onClose, embedded = false }) => {
       >
         <Box
           sx={{
-            bgcolor: "#1565C0",
+            bgcolor: PRIMARY,
             px: 2,
             py: 1.25,
             display: "flex",
@@ -558,7 +564,7 @@ const QRPanel = ({ onClose, embedded = false }) => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <QrCode2 sx={{ color: WA.accent, fontSize: 20 }} />
+            <QrCode2 sx={{ color: PRIMARY, fontSize: 20 }} />
             <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>
               Scanner le QR Code
             </Typography>
@@ -606,7 +612,7 @@ const ConnectionCard = ({ phase, syncState }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        bgcolor: "#F5F5F5",
+        bgcolor: "#f1f5f9",
       }}
     >
       <Paper
@@ -616,13 +622,13 @@ const ConnectionCard = ({ phase, syncState }) => {
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
           <Box
             sx={{
-              bgcolor: WA.accent + "22",
+              bgcolor: PRIMARY_LIGHT,
               p: 1,
               borderRadius: 2,
               display: "flex",
             }}
           >
-            <QrCode2 sx={{ color: WA.accent, fontSize: 28 }} />
+            <QrCode2 sx={{ color: PRIMARY, fontSize: 28 }} />
           </Box>
           <Box>
             <Typography variant="subtitle1" fontWeight={700}>
@@ -645,15 +651,15 @@ const ConnectionCard = ({ phase, syncState }) => {
                 sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
               >
                 {done ? (
-                  <CheckCircle sx={{ color: WA.accent, fontSize: 20 }} />
+                  <CheckCircle sx={{ color: PRIMARY, fontSize: 20 }} />
                 ) : active ? (
                   <CircularProgress
                     size={18}
                     thickness={5}
-                    sx={{ color: WA.accent }}
+                    sx={{ color: PRIMARY }}
                   />
                 ) : (
-                  <RadioButtonUnchecked sx={{ color: "#ccc", fontSize: 20 }} />
+                  <RadioButtonUnchecked sx={{ color: "#cbd5e1", fontSize: 20 }} />
                 )}
                 <Typography
                   variant="body2"
@@ -663,7 +669,7 @@ const ConnectionCard = ({ phase, syncState }) => {
                       ? "text.secondary"
                       : active
                         ? "text.primary"
-                        : "#bbb",
+                        : "#94a3b8",
                   }}
                 >
                   {step.label}
@@ -686,8 +692,8 @@ const ConnectionCard = ({ phase, syncState }) => {
           sx={{
             borderRadius: 2,
             height: 5,
-            bgcolor: WA.accent + "22",
-            "& .MuiLinearProgress-bar": { bgcolor: WA.accent },
+            bgcolor: PRIMARY_LIGHT,
+            "& .MuiLinearProgress-bar": { bgcolor: PRIMARY },
           }}
         />
         {phase === "syncing" && syncState.total > 0 && (
@@ -696,7 +702,7 @@ const ConnectionCard = ({ phase, syncState }) => {
             color="text.secondary"
             sx={{ mt: 0.75, display: "block", textAlign: "right" }}
           >
-            {Math.round((syncState.current / syncState.total) * 100)}% —{" "}
+            {Math.round((syncState.current / syncState.total) * 100)}% -{" "}
             {syncState.messages} messages récupérés
           </Typography>
         )}
@@ -786,14 +792,14 @@ const WgprMain = () => {
   useEffect(() => {
     loadAll();
   }, [loadAll]);
-  // Filet de sécurité : rafraîchissement périodique indépendant du SSE — si le flux
+  // Filet de sécurité : rafraîchissement périodique indépendant du SSE - si le flux
   // temps réel s'est arrêté silencieusement (avant sa propre reconnexion), les messages
   // finissent quand même par apparaître sans action de l'utilisateur.
   useEffect(() => {
     const interval = setInterval(loadAll, 60000);
     return () => clearInterval(interval);
   }, [loadAll]);
-  // Scroll uniquement dans le container messages — ne touche pas le scroll de la page
+  // Scroll uniquement dans le container messages - ne touche pas le scroll de la page
   useEffect(() => {
     if (msgContainerRef.current)
       msgContainerRef.current.scrollTop = msgContainerRef.current.scrollHeight;
@@ -811,10 +817,10 @@ const WgprMain = () => {
       // Ferme aussi le popup de connexion ici (pas seulement dans le handler SSE
       // wa_status) : si l'événement SSE 'connected' est manqué, ce useEffect reste
       // le seul déclencheur fiable (status est aussi mis à jour par le polling de
-      // secours) — sans ça, le popup restait ouvert indéfiniment après un scan réussi.
+      // secours) - sans ça, le popup restait ouvert indéfiniment après un scan réussi.
       setShowConnectPopup(false);
       if (countdownRef.current) clearInterval(countdownRef.current);
-      notify("✅ WhatsApp connecté — synchronisation en cours...", "success");
+      notify("✅ WhatsApp connecté - synchronisation en cours...", "success");
       // Fallback : si sync_progress:done est manqué, masquer la carte après 10s
       setTimeout(
         () =>
@@ -901,7 +907,7 @@ const WgprMain = () => {
       }
     },
     new_message: (d) => {
-      // Le payload contient déjà le message complet (transmis tel quel par Node) —
+      // Le payload contient déjà le message complet (transmis tel quel par Node) -
       // l'insérer directement dans l'état évite un aller-retour HTTP complet à chaque
       // message, et la race condition qui en découlait (deux GET /messages concurrents
       // pouvant s'écraser dans le mauvais ordre et faire disparaître un message reçu).
@@ -968,7 +974,7 @@ const WgprMain = () => {
       await forceRestartApi();
       setConnectingStuckSince(null);
       setSyncState({ phase: "connecting", current: 0, total: 0, messages: 0 });
-      notify("🔄 Reconnexion forcée — veuillez patienter...", "info");
+      notify("🔄 Reconnexion forcée - veuillez patienter...", "info");
     } catch (err) {
       console.error("[WhatGPR] Erreur reconnexion forcée:", err);
       notify("Erreur lors de la reconnexion forcée", "error");
@@ -1101,7 +1107,7 @@ const WgprMain = () => {
     dispatch(resetSelectMessage());
     const inboxData = { phone: displayNumber(selectedContact) };
     // La persistance sessionStorage est gérée par le reducer lui-même (voir
-    // WhatsappReducer.js) — plus besoin de la dupliquer manuellement ici.
+    // WhatsappReducer.js) - plus besoin de la dupliquer manuellement ici.
     dispatch(setCurrentInbox(inboxData));
 
     const sorted = [...selectedMessages].sort(
@@ -1158,13 +1164,13 @@ const WgprMain = () => {
       markedOk = false;
       console.error("[WhatGPR] Erreur marquage converti:", err);
       notify(
-        "Erreur lors du marquage des messages comme convertis — ils resteront visibles comme non traités",
+        "Erreur lors du marquage des messages comme convertis - ils resteront visibles comme non traités",
         "error",
       );
     }
     setShowConvertDialog(false);
     cancelSelection();
-    // N'affiche "converti" localement que si le serveur l'a réellement enregistré —
+    // N'affiche "converti" localement que si le serveur l'a réellement enregistré -
     // sinon l'agent perdrait la trace de messages non marqués côté serveur.
     if (markedOk) {
       setMessages((prev) =>
@@ -1209,7 +1215,7 @@ const WgprMain = () => {
         {/* Header */}
         <Box
           sx={{
-            bgcolor: "#1565C0",
+            bgcolor: PRIMARY,
             px: 2.5,
             py: 1.5,
             display: "flex",
@@ -1218,7 +1224,7 @@ const WgprMain = () => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <QrCode2 sx={{ color: "#25D366", fontSize: 22 }} />
+            <QrCode2 sx={{ color: PRIMARY, fontSize: 22 }} />
             <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>
               {connectCountdown > 0
                 ? "Connexion WhatsApp en cours..."
@@ -1260,35 +1266,35 @@ const WgprMain = () => {
                   value={100}
                   size={120}
                   thickness={4}
-                  sx={{ color: "#E3F2FD", position: "absolute" }}
+                  sx={{ color: PRIMARY_LIGHT, position: "absolute" }}
                 />
                 <CircularProgress
                   variant="determinate"
                   value={(connectCountdown / 30) * 100}
                   size={120}
                   thickness={4}
-                  sx={{ color: "#1565C0", position: "absolute" }}
+                  sx={{ color: PRIMARY, position: "absolute" }}
                 />
                 <Box sx={{ textAlign: "center" }}>
                   <Typography
                     sx={{
                       fontSize: 34,
                       fontWeight: 800,
-                      color: "#1565C0",
+                      color: PRIMARY,
                       lineHeight: 1,
                     }}
                   >
                     {connectCountdown}
                   </Typography>
-                  <Typography sx={{ fontSize: 11, color: "#9E9E9E" }}>
+                  <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
                     secondes
                   </Typography>
                 </Box>
               </Box>
-              <Typography sx={{ fontSize: 14, color: "#555", mb: 1 }}>
+              <Typography sx={{ fontSize: 14, color: "#64748b", mb: 1 }}>
                 Démarrage de Chrome et chargement de WhatsApp Web...
               </Typography>
-              <Typography sx={{ fontSize: 12, color: "#9E9E9E" }}>
+              <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
                 Le QR Code apparaîtra automatiquement dès qu'il sera prêt.
               </Typography>
             </Box>
@@ -1303,7 +1309,7 @@ const WgprMain = () => {
       <Paper
         elevation={0}
         sx={{
-          border: "1px solid #e0e0e0",
+          border: "1px solid #e2e8f0",
           borderRadius: 2.5,
           px: 2.5,
           py: 1.25,
@@ -1319,7 +1325,7 @@ const WgprMain = () => {
         <Box sx={{ display: "flex", alignItems: "center", gap: 0 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, pr: 2 }}>
             <Typography
-              sx={{ fontWeight: 700, fontSize: 15, color: "#1565C0" }}
+              sx={{ fontWeight: 700, fontSize: 15, color: PRIMARY }}
             >
               Plaintes WhatsApp
             </Typography>
@@ -1328,19 +1334,19 @@ const WgprMain = () => {
             sx={{
               width: "1px",
               height: 26,
-              bgcolor: "#e0e0e0",
+              bgcolor: "#e2e8f0",
               mx: 1,
               flexShrink: 0,
             }}
           />
           {/* Tab "Plaintes Créées" */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, pl: 1 }}>
-            <Typography sx={{ fontSize: 13.5, color: "#555", fontWeight: 500 }}>
+            <Typography sx={{ fontSize: 13.5, color: "#64748b", fontWeight: 500 }}>
               Plaintes créées
             </Typography>
             <Box
               sx={{
-                bgcolor: "#1565C0",
+                bgcolor: PRIMARY,
                 color: "#fff",
                 borderRadius: "10px",
                 px: 0.9,
@@ -1366,11 +1372,11 @@ const WgprMain = () => {
               gap: 0.6,
               bgcolor:
                 status === "connected"
-                  ? "#E8F5E9"
+                  ? "#10b98118"
                   : status === "connecting" || status === "authenticated"
-                    ? "#FFF8E1"
-                    : "#FFEBEE",
-              border: `1px solid ${status === "connected" ? "#A5D6A7" : status === "connecting" || status === "authenticated" ? "#FFD54F" : "#EF9A9A"}`,
+                    ? "#f59e0b18"
+                    : "#ef444418",
+              border: `1px solid ${status === "connected" ? "#10b98155" : status === "connecting" || status === "authenticated" ? "#f59e0b55" : "#ef444455"}`,
               borderRadius: 10,
               px: 1.25,
               py: 0.3,
@@ -1383,10 +1389,10 @@ const WgprMain = () => {
                 borderRadius: "50%",
                 bgcolor:
                   status === "connected"
-                    ? "#2E7D32"
+                    ? "#10b981"
                     : status === "connecting" || status === "authenticated"
-                      ? "#F57F17"
-                      : "#C62828",
+                      ? "#f59e0b"
+                      : "#ef4444",
               }}
             />
             <Typography
@@ -1395,10 +1401,10 @@ const WgprMain = () => {
                 fontWeight: 600,
                 color:
                   status === "connected"
-                    ? "#2E7D32"
+                    ? "#10b981"
                     : status === "connecting" || status === "authenticated"
-                      ? "#F57F17"
-                      : "#C62828",
+                      ? "#f59e0b"
+                      : "#ef4444",
               }}
             >
               {status === "connected"
@@ -1434,8 +1440,8 @@ const WgprMain = () => {
               startIcon={<QrCode2 sx={{ fontSize: 16 }} />}
               onClick={handleStartConnection}
               sx={{
-                bgcolor: "#1565C0",
-                "&:hover": { bgcolor: "#0D47A1" },
+                bgcolor: PRIMARY,
+                "&:hover": { bgcolor: PRIMARY_DARK },
                 fontSize: 12,
                 py: 0.4,
                 borderRadius: 2,
@@ -1446,7 +1452,7 @@ const WgprMain = () => {
           )}
 
           {isStuck && (
-            <Tooltip title="La connexion semble bloquée — cliquez pour forcer la reconnexion">
+            <Tooltip title="La connexion semble bloquée - cliquez pour forcer la reconnexion">
               <Button
                 size="small"
                 variant="outlined"
@@ -1472,7 +1478,7 @@ const WgprMain = () => {
               size="small"
               onClick={loadAll}
               disabled={msgLoading}
-              sx={{ color: "#757575" }}
+              sx={{ color: "#64748b" }}
             >
               <Refresh
                 fontSize="small"
@@ -1493,8 +1499,8 @@ const WgprMain = () => {
       {syncState.phase === "done" && (
         <Box
           sx={{
-            bgcolor: WA.accent + "22",
-            border: `1px solid ${WA.accent}55`,
+            bgcolor: PRIMARY_LIGHT,
+            border: `1px solid ${PRIMARY}`,
             borderRadius: 2,
             px: 2,
             py: 1,
@@ -1503,12 +1509,12 @@ const WgprMain = () => {
             gap: 1,
           }}
         >
-          <Sync sx={{ color: WA.accent, fontSize: 18 }} />
+          <Sync sx={{ color: PRIMARY, fontSize: 18 }} />
           <Typography
             variant="body2"
-            sx={{ color: WA.accent, fontWeight: 600 }}
+            sx={{ color: PRIMARY, fontWeight: 600 }}
           >
-            Synchronisation terminée — {syncState.messages} messages chargés
+            Synchronisation terminée - {syncState.messages} messages chargés
           </Typography>
         </Box>
       )}
@@ -1521,7 +1527,7 @@ const WgprMain = () => {
           height: "calc(100vh - 175px)",
           display: "flex",
           boxShadow: "0 2px 12px rgba(0,0,0,0.12)",
-          border: "1px solid #e0e0e0",
+          border: "1px solid #e2e8f0",
         }}
       >
         {/* ── Sidebar contacts (blanc) ── */}
@@ -1532,12 +1538,12 @@ const WgprMain = () => {
             bgcolor: "#FFFFFF",
             display: "flex",
             flexDirection: "column",
-            borderRight: "1px solid #e8e8e8",
+            borderRight: "1px solid #e2e8f0",
             overflow: "hidden",
           }}
         >
           {/* Header sidebar */}
-          <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid #f0f0f0" }}>
+          <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid #e2e8f0" }}>
             <Box
               sx={{
                 display: "flex",
@@ -1547,13 +1553,13 @@ const WgprMain = () => {
               }}
             >
               <Typography
-                sx={{ fontWeight: 700, fontSize: 15, color: "#1A1A1A" }}
+                sx={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}
               >
                 Conversations
               </Typography>
               <Box
                 sx={{
-                  bgcolor: "#1565C0",
+                  bgcolor: PRIMARY,
                   color: "#fff",
                   borderRadius: "10px",
                   px: 0.9,
@@ -1575,14 +1581,14 @@ const WgprMain = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
-                bgcolor: "#F5F5F5",
+                bgcolor: "#f1f5f9",
                 borderRadius: 2,
                 px: 1.25,
                 py: 0.5,
-                border: "1px solid #EBEBEB",
+                border: "1px solid #e2e8f0",
               }}
             >
-              <Search sx={{ fontSize: 17, color: "#9E9E9E" }} />
+              <Search sx={{ fontSize: 17, color: "#94a3b8" }} />
               <InputBase
                 placeholder="Rechercher..."
                 value={searchQuery}
@@ -1595,7 +1601,7 @@ const WgprMain = () => {
                   onClick={() => setSearchQuery("")}
                   sx={{ p: 0.25 }}
                 >
-                  <Close sx={{ fontSize: 15, color: "#9E9E9E" }} />
+                  <Close sx={{ fontSize: 15, color: "#94a3b8" }} />
                 </IconButton>
               )}
             </Box>
@@ -1623,13 +1629,13 @@ const WgprMain = () => {
                     py: 0.3,
                     borderRadius: 10,
                     cursor: "pointer",
-                    bgcolor: activeFilter === f.key ? "#1565C0" : "#F0F0F0",
-                    color: activeFilter === f.key ? "#fff" : "#555",
+                    bgcolor: activeFilter === f.key ? PRIMARY : "#f1f5f9",
+                    color: activeFilter === f.key ? "#fff" : "#64748b",
                     fontSize: 11.5,
                     fontWeight: activeFilter === f.key ? 700 : 500,
                     transition: "all 0.15s",
                     "&:hover": {
-                      bgcolor: activeFilter === f.key ? "#1565C0" : "#E0E0E0",
+                      bgcolor: activeFilter === f.key ? PRIMARY : "#e2e8f0",
                     },
                   }}
                 >
@@ -1646,19 +1652,19 @@ const WgprMain = () => {
               overflowY: "auto",
               "&::-webkit-scrollbar": { width: 4 },
               "&::-webkit-scrollbar-thumb": {
-                bgcolor: "#E0E0E0",
+                bgcolor: "#e2e8f0",
                 borderRadius: 2,
               },
             }}
           >
             {msgLoading ? (
               <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-                <CircularProgress size={24} sx={{ color: "#1565C0" }} />
+                <CircularProgress size={24} sx={{ color: PRIMARY }} />
               </Box>
             ) : filteredContacts.length === 0 ? (
               <Typography
                 sx={{
-                  color: "#BDBDBD",
+                  color: "#94a3b8",
                   p: 2.5,
                   textAlign: "center",
                   fontSize: 13,
@@ -1687,13 +1693,13 @@ const WgprMain = () => {
                       py: 1.25,
                       cursor: "pointer",
                       gap: 1.25,
-                      bgcolor: isSelected ? "#EEF4FF" : "#FFFFFF",
+                      bgcolor: isSelected ? PRIMARY_LIGHT : "#FFFFFF",
                       borderLeft: isSelected
-                        ? "3px solid #1565C0"
+                        ? `3px solid ${PRIMARY}`
                         : "3px solid transparent",
-                      borderBottom: "1px solid #F5F5F5",
+                      borderBottom: "1px solid #f1f5f9",
                       "&:hover": {
-                        bgcolor: isSelected ? "#EEF4FF" : "#FAFAFA",
+                        bgcolor: isSelected ? PRIMARY_LIGHT : "#f8fafc",
                       },
                       transition: "background 0.1s",
                     }}
@@ -1727,7 +1733,7 @@ const WgprMain = () => {
                           sx={{
                             fontSize: 13.5,
                             fontWeight: c.unread ? 700 : 500,
-                            color: "#1A1A1A",
+                            color: "#1e293b",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
@@ -1740,7 +1746,7 @@ const WgprMain = () => {
                           <Typography
                             sx={{
                               fontSize: 11,
-                              color: c.unread ? "#1565C0" : "#9E9E9E",
+                              color: c.unread ? PRIMARY : "#94a3b8",
                               fontWeight: c.unread ? 600 : 400,
                               flexShrink: 0,
                             }}
@@ -1757,14 +1763,14 @@ const WgprMain = () => {
                       <Typography
                         sx={{
                           fontSize: 12,
-                          color: "#757575",
+                          color: "#64748b",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
                           mb: 0.5,
                         }}
                       >
-                        {lastPreview || "—"}
+                        {lastPreview || "-"}
                       </Typography>
 
                       {/* Ligne 3 : point non lu */}
@@ -1774,7 +1780,7 @@ const WgprMain = () => {
                         >
                           <Box
                             sx={{
-                              bgcolor: WA.accent,
+                              bgcolor: PRIMARY,
                               color: "#fff",
                               borderRadius: "50%",
                               width: 18,
@@ -1812,7 +1818,7 @@ const WgprMain = () => {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              bgcolor: "#F8F9FA",
+              bgcolor: "#f8fafc",
               gap: 1.5,
             }}
           >
@@ -1821,15 +1827,15 @@ const WgprMain = () => {
                 width: 72,
                 height: 72,
                 borderRadius: "50%",
-                bgcolor: "#E0E0E0",
+                bgcolor: "#e2e8f0",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <QrCode2 sx={{ color: "#9E9E9E", fontSize: 36 }} />
+              <QrCode2 sx={{ color: "#94a3b8", fontSize: 36 }} />
             </Box>
-            <Typography sx={{ color: "#9E9E9E", fontSize: 14 }}>
+            <Typography sx={{ color: "#94a3b8", fontSize: 14 }}>
               Sélectionnez une conversation
             </Typography>
           </Box>
@@ -1848,7 +1854,7 @@ const WgprMain = () => {
                 px: 2,
                 py: 1.25,
                 bgcolor: "#FFFFFF",
-                borderBottom: "1px solid #EEEEEE",
+                borderBottom: "1px solid #e2e8f0",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -1881,7 +1887,7 @@ const WgprMain = () => {
                     sx={{
                       fontWeight: 700,
                       fontSize: 14.5,
-                      color: "#1A1A1A",
+                      color: "#1e293b",
                       lineHeight: 1.3,
                     }}
                   >
@@ -1889,7 +1895,7 @@ const WgprMain = () => {
                       displayNumber(selectedContact)}
                   </Typography>
                   <Typography
-                    sx={{ fontSize: 11.5, color: "#9E9E9E", lineHeight: 1.2 }}
+                    sx={{ fontSize: 11.5, color: "#94a3b8", lineHeight: 1.2 }}
                   >
                     {displayNumber(selectedContact)}
                   </Typography>
@@ -1916,9 +1922,9 @@ const WgprMain = () => {
                       fontSize: 11.5,
                       py: 0.4,
                       borderRadius: 1.5,
-                      borderColor: "#E0E0E0",
-                      color: "#555",
-                      "&:hover": { borderColor: "#1565C0", color: "#1565C0" },
+                      borderColor: "#e2e8f0",
+                      color: "#64748b",
+                      "&:hover": { borderColor: PRIMARY, color: PRIMARY },
                     }}
                   >
                     Sélectionner
@@ -1929,9 +1935,9 @@ const WgprMain = () => {
                   >
                     <Typography
                       sx={{
-                        bgcolor: "#FFF8E1",
-                        color: "#E65100",
-                        border: "1px solid #FFCC02",
+                        bgcolor: "#f59e0b18",
+                        color: "#d97706",
+                        border: "1px solid #f59e0b55",
                         px: 1.25,
                         py: 0.3,
                         borderRadius: 1,
@@ -1947,7 +1953,7 @@ const WgprMain = () => {
                       <IconButton
                         size="small"
                         onClick={selectAll}
-                        sx={{ color: "#757575" }}
+                        sx={{ color: "#64748b" }}
                       >
                         <SelectAll fontSize="small" />
                       </IconButton>
@@ -1959,8 +1965,8 @@ const WgprMain = () => {
                         startIcon={<ReportProblem sx={{ fontSize: 14 }} />}
                         onClick={() => setShowConvertDialog(true)}
                         sx={{
-                          bgcolor: "#FF8F00",
-                          "&:hover": { bgcolor: "#E65100" },
+                          bgcolor: "#f59e0b",
+                          "&:hover": { bgcolor: "#d97706" },
                           fontSize: 11.5,
                           py: 0.35,
                           borderRadius: 1.5,
@@ -1973,7 +1979,7 @@ const WgprMain = () => {
                       <IconButton
                         size="small"
                         onClick={cancelSelection}
-                        sx={{ color: "#757575" }}
+                        sx={{ color: "#64748b" }}
                       >
                         <Close fontSize="small" />
                       </IconButton>

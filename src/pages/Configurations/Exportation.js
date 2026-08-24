@@ -66,7 +66,7 @@ const Exportation = () => {
             sortable: true,
             minWidth: 160,
             render: (row) => {
-                const label = TYPE_LABELS[row.content] || row.content || "—";
+                const label = TYPE_LABELS[row.content] || row.content || "-";
                 const colorMap = { claims: "#3B82F6", denunciations: "#F59E0B", suggestions: "#10B981", configs: "#8B5CF6" };
                 const bg = colorMap[row.content] || "#64748B";
                 return <Chip label={label} size="small" sx={{ backgroundColor: bg, color: "#fff", fontWeight: 700, fontSize: "0.72rem" }} />;
@@ -78,7 +78,7 @@ const Exportation = () => {
             sortable: true,
             minWidth: 200,
             render: (row) => (
-                <span style={{ paddingLeft: 8 }}>{row.userIpAddress || "—"}</span>
+                <span style={{ paddingLeft: 8 }}>{row.userIpAddress || "-"}</span>
             )
         },
         {
@@ -88,7 +88,7 @@ const Exportation = () => {
             minWidth: 120,
             render: (row) => row.createdAt
                 ? new Intl.DateTimeFormat("fr-FR", { year: "numeric", month: "long", day: "2-digit" }).format(new Date(row.createdAt))
-                : "—"
+                : "-"
         },
         {
             id: "createdAtHour",
@@ -97,7 +97,7 @@ const Exportation = () => {
             minWidth: 100,
             render: (row) => row.createdAt
                 ? new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" }).format(new Date(row.createdAt))
-                : "—"
+                : "-"
         },
     ], []);
 

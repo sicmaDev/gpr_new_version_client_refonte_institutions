@@ -101,10 +101,10 @@ const Login = (props) => {
   const handleControl = () => {
     let lic = loadItemFromLocalStorage("lic");
     if (lic) {
-      let user =
-        loadItemFromLocalStorage("app-user") !== undefined
-          ? JSON.parse(loadItemFromLocalStorage("app-user"))
-          : undefined;
+      // loadItemFromLocalStorage() parse déjà le JSON en interne — un second
+      // JSON.parse() ici plantait dès que "app-user" existait, empêchant le
+      // passage en mode offline.
+      let user = loadItemFromLocalStorage("app-user");
 
       if (user === undefined) {
         notify(
@@ -214,19 +214,19 @@ const Login = (props) => {
       {/* ── Layout 2 colonnes ── */}
       <div className="gpr-auth flex h-screen" style={{ background: "#F8FAFC", fontFamily: "'Inter', -apple-system, sans-serif" }}>
 
-        {/* ── Colonne gauche — hero storytelling ── */}
+        {/* ── Colonne gauche - hero storytelling ── */}
         <div
           className="hidden md:flex relative overflow-hidden flex-col items-center justify-center px-4 py-8 md:px-6 md:py-10 lg:px-12 lg:py-16"
           style={{ width: "50%" }}
         >
 
-          {/* Couche 1 — fond dégradé */}
+          {/* Couche 1 - fond dégradé */}
           <div
             className="absolute inset-0 animate-gradient-bg"
             style={{ background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)` }}
           />
 
-          {/* Couche 2 — grands cercles semi-transparents (≈60% de la hauteur) */}
+          {/* Couche 2 - grands cercles semi-transparents (≈60% de la hauteur) */}
           <div
             className="absolute rounded-full animate-blob"
             style={{ width: "62vh", height: "62vh", top: "-14%", right: "-24%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }}
@@ -236,12 +236,12 @@ const Login = (props) => {
             style={{ width: "44vh", height: "44vh", bottom: "-16%", left: "-18%", background: "rgba(255,255,255,0.05)", animationDelay: "6s" }}
           />
 
-          {/* Couche 3 — carrés flottants (opacité 10%) — desktop uniquement */}
+          {/* Couche 3 - carrés flottants (opacité 10%) - desktop uniquement */}
           <div className="hidden lg:block absolute top-20 left-28 w-16 h-16 rounded-2xl rotate-12 animate-float" style={{ background: "rgba(255,255,255,0.1)" }} />
           <div className="hidden lg:block absolute bottom-24 right-32 w-20 h-20 rounded-2xl -rotate-12 animate-float" style={{ background: "rgba(255,255,255,0.1)", animationDelay: "1.5s" }} />
           <div className="hidden lg:block absolute top-1/2 right-12 w-10 h-10 rounded-xl rotate-45 animate-float" style={{ background: "rgba(255,255,255,0.1)", animationDelay: "3s" }} />
 
-          {/* Couche 4 — cartes fonctionnelles avec cycle zoom */}
+          {/* Couche 4 - cartes fonctionnelles avec cycle zoom */}
           {CARD_POSITIONS.map((pos, i) => {
             const modA = GROUP_A[i];
             const modB = GROUP_B[i];
@@ -255,14 +255,14 @@ const Login = (props) => {
             };
             return (
               <div key={i} className="hidden lg:grid" style={{ position: 'absolute', ...pos }}>
-                {/* Groupe A — cellule 1/1 */}
+                {/* Groupe A - cellule 1/1 */}
                 <div style={{ ...cardBase, gridArea: '1/1', transform: (!showGroupB || !modB) ? 'translateY(0)' : 'translateY(-24px)', opacity: (!showGroupB || !modB) ? 1 : 0 }}>
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: modA.color + "33" }}>
                     <modA.icon size={18} color={modA.color} />
                   </div>
                   <span className="text-[13px] font-semibold" style={{ color: heroText }}>{modA.label}</span>
                 </div>
-                {/* Groupe B — même cellule 1/1, superposée */}
+                {/* Groupe B - même cellule 1/1, superposée */}
                 {modB && (
                   <div style={{ ...cardBase, gridArea: '1/1', transform: showGroupB ? 'translateY(0)' : 'translateY(24px)', opacity: showGroupB ? 1 : 0 }}>
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: modB.color + "33" }}>
@@ -275,7 +275,7 @@ const Login = (props) => {
             );
           })}
 
-          {/* Couche 5 — contenu central */}
+          {/* Couche 5 - contenu central */}
           <div className="relative z-10 flex flex-col items-center text-center w-full px-2">
 
             {/* Badge plateforme */}
@@ -302,7 +302,7 @@ const Login = (props) => {
 
           </div>
 
-          {/* Couche 6 — CTA création de compte */}
+          {/* Couche 6 - CTA création de compte */}
           <div className="relative z-10 mt-5 md:mt-10 text-center animate-fade-up" style={{ animationDelay: "0.4s" }}>
             <h6 className="text-[13px] mb-3" style={{ color: heroTextSofter }}>Pas encore de compte ?</h6>
             <NavLink to="/SignUser">
@@ -317,7 +317,7 @@ const Login = (props) => {
           </div>
         </div>
 
-        {/* ── Colonne droite — formulaire ── */}
+        {/* ── Colonne droite - formulaire ── */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white flex flex-col">
           <div className="flex flex-col items-center px-6 sm:px-10 lg:px-0 pt-8 sm:pt-10 flex-1">
             <div className="w-full max-w-[540px] animate-fade-up">
@@ -444,7 +444,7 @@ const Login = (props) => {
 
               </form>
 
-              {/* Lien création de compte — mobile uniquement */}
+              {/* Lien création de compte - mobile uniquement */}
               <div className="lg:hidden text-center mt-6">
                 <span className="text-[#64748b] text-[13px]">Pas encore de compte ?&nbsp;</span>
                 <NavLink to="/SignUser" style={{ color: primaryColor }} className="text-[13px] font-semibold hover:underline">

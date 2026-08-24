@@ -77,7 +77,7 @@ const STATUS_CONFIG = {
 
 const ClaimStatusBadge = ({ status, size = "small" }) => {
   const cfg = STATUS_CONFIG[status] || {
-    label: status || "—",
+    label: status || "-",
     bg: "#F3F4F6",
     color: "#374151",
     border: "#D1D5DB",

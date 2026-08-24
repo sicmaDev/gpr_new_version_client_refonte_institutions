@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { notify } from "../../Utils/alert";
 import { loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { HOST } from "../../Utils/globals";
@@ -27,8 +27,8 @@ export let liste = async (props) => {
         .then(function (response) {
             //console.log("reponse", response.data)
             if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
-                saveItemToSessionStorage(JSON.stringify(response.data.content),"app-recours")
-                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-recours")
+                saveItemToSessionStorage(response.data.content,"app-recours")
+                saveItemToLocalStorage(response.data.content, "app-recours")
                 props.itemsChanged(response.data.content);
             }
 
@@ -53,8 +53,8 @@ export const ajout = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-recours")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-recours")
+            saveItemToSessionStorage(response.data.content, "app-recours")
+            saveItemToLocalStorage(response.data.content, "app-recours")
 
             props.etatChanged(false)
             notify("Bravo - Recours Externe ajouté", "success");
@@ -88,8 +88,8 @@ export const modification = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-recours")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-recours")
+            saveItemToSessionStorage(response.data.content, "app-recours")
+            saveItemToLocalStorage(response.data.content, "app-recours")
 
             props.etat2Changed(false)
             notify("Bravo - Recours Externe modifié", "success");
@@ -123,8 +123,8 @@ export const suppression = async (props, data) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-recours")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-recours")
+            saveItemToSessionStorage(response.data.content, "app-recours")
+            saveItemToLocalStorage(response.data.content, "app-recours")
 
             props.etat3Changed(false)
             notify("Bravo - Recours Externe supprimé", "success");

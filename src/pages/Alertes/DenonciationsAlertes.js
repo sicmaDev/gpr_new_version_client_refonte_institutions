@@ -54,7 +54,7 @@ const DenonciationsAlertes = (props) => {
                 day: "2-digit", month: "short", year: "numeric",
                 hour: "2-digit", minute: "2-digit",
             }).format(new Date(iso));
-        } catch (_) { return "—"; }
+        } catch (_) { return "-"; }
     };
 
     const tableColumns = [
@@ -62,7 +62,7 @@ const DenonciationsAlertes = (props) => {
             id: "claimCodeClient", label: "Code client", sortable: true, minWidth: 110,
             render: (item) => (
                 <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
-                    {item.claimCodeClient || "—"}
+                    {item.claimCodeClient || "-"}
                 </span>
             ),
         },
@@ -115,7 +115,7 @@ const DenonciationsAlertes = (props) => {
     const getCardData = (item) => ({
         code: item.claimCodeClient,
         client: item.claimClient || "Anonyme",
-        title: item.claimSubject || item.claimObjet || item.claimObject || item.objetLibelle || item.objet?.libelle || (typeof item.objet === "string" ? item.objet : null) || "—",
+        title: item.claimSubject || item.claimObjet || item.claimObject || item.objetLibelle || item.objet?.libelle || (typeof item.objet === "string" ? item.objet : null) || "-",
         subtitle: null,
         status: item.status,
         gravity: null,

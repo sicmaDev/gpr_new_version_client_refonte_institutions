@@ -18,25 +18,25 @@ import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
  * Wizard multi-step form layout.
  *
  * Props:
- *   title, subtitle        — page header text
- *   onBack                 — back button handler
- *   hasDraft               — boolean — shows "Brouillon en cours" badge
- *   draftCount             — number of saved drafts
- *   activeTab              — "new" | "drafts"
- *   onTabChange            — (tab) => void
- *   steps                  — [{ key, label, sublabel, icon: ReactNode }]
- *   currentStep            — 0-based index
- *   completionPercent      — 0-100, drives the progress bar
- *   apercu                 — { [label]: value } object for live preview
- *   onSaveDraft            — () => void
- *   onNext                 — () => void
- *   onPrev                 — () => void
- *   isLastStep             — boolean
- *   onSubmit               — () => void
- *   loadingSave            — boolean
- *   loadingSubmit          — boolean
- *   children               — current step content
- *   draftsContent          — JSX shown in "Brouillons" tab
+ *   title, subtitle        - page header text
+ *   onBack                 - back button handler
+ *   hasDraft               - boolean - shows "Brouillon en cours" badge
+ *   draftCount             - number of saved drafts
+ *   activeTab              - "new" | "drafts"
+ *   onTabChange            - (tab) => void
+ *   steps                  - [{ key, label, sublabel, icon: ReactNode }]
+ *   currentStep            - 0-based index
+ *   completionPercent      - 0-100, drives the progress bar
+ *   apercu                 - { [label]: value } object for live preview
+ *   onSaveDraft            - () => void
+ *   onNext                 - () => void
+ *   onPrev                 - () => void
+ *   isLastStep             - boolean
+ *   onSubmit               - () => void
+ *   loadingSave            - boolean
+ *   loadingSubmit          - boolean
+ *   children               - current step content
+ *   draftsContent          - JSX shown in "Brouillons" tab
  */
 const WizardLayout = ({
   title = "Dossier",

@@ -62,7 +62,7 @@ const Help = (props) => {
             KTApp.unblockPage();
         });
     }, []);
-    let mode = loadItemFromSessionStorage("app-mode") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-mode")) : undefined;
+    let mode = loadItemFromSessionStorage("app-mode") !== undefined ? loadItemFromSessionStorage("app-mode") : undefined;
 
     const handleClickOpen = () => {
         setOpen(true);

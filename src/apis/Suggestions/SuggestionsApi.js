@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { notify } from "../../Utils/alert";
 import { HOST } from "../../Utils/globals";
@@ -238,7 +238,7 @@ export const downloadFillesApi = async (data, filename) => {
 
 //offline
 export const listeByStatutOffline = async (props, state) => {
-    let sugs = loadItemFromLocalStorage("sugs-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("sugs-TS"))) : [];
+    let sugs = loadItemFromLocalStorage("sugs-TS") !== undefined ? (loadItemFromLocalStorage("sugs-TS")) : [];
     let sugsTemp = sugs.filter((e) => { return e.status === state })
 
     // console.log(sugsTemp)
@@ -248,8 +248,9 @@ export const listeByStatutOffline = async (props, state) => {
 }
 
 export const listeTousStatutsOffline = async (props) => {
-    let sugs = loadItemFromLocalStorage("sugs-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("sugs-TS"))) : [];
+    let sugs = loadItemFromLocalStorage("sugs-TS") !== undefined ? (loadItemFromLocalStorage("sugs-TS")) : [];
     let sugsGlobal = sugs.filter((e) => { return e.status !== "TEMP_SAVED" })
+    sugsGlobal.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
     props.itemsChanged(sugsGlobal)
 
@@ -259,7 +260,7 @@ export const listeTousStatutsOffline = async (props) => {
 
 
 export const addTempSuggestionApiOffline = async (data, props) => {
-    let sugs = loadItemFromLocalStorage("sugs-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("sugs-TS"))) : [];
+    let sugs = loadItemFromLocalStorage("sugs-TS") !== undefined ? (loadItemFromLocalStorage("sugs-TS")) : [];
 
     //date
     let datetmp = new Date();
@@ -277,12 +278,12 @@ export const addTempSuggestionApiOffline = async (data, props) => {
 
     if (data["code"] === "") {
         //code
-        let code = "sug" + uuidv4().substring(0, 5) + '-' + (JSON.parse(loadItemFromSessionStorage('app-user'))).servicePointDto.uuid + '-' + (JSON.parse(loadItemFromSessionStorage('app-user')).code)
+        let code = "sug" + uuidv4().substring(0, 5) + '-' + (loadItemFromSessionStorage('app-user')).servicePointDto.uuid + '-' + (loadItemFromSessionStorage('app-user').code)
         // console.log("codeeee",code)
         data["code"] = code
 
         sugs.push(data);
-        saveItemToLocalStorage(JSON.stringify(sugs), "sugs-TS")
+        saveItemToLocalStorage(sugs, "sugs-TS")
     } else {
         let sugsTemp = sugs.filter((e) => { return e.code !== data["code"] })
         let sugsF = sugs.filter((e) => { return e.code === data["code"] })
@@ -292,11 +293,11 @@ export const addTempSuggestionApiOffline = async (data, props) => {
         // console.log("data",data)
         // console.log("sugsTemp3",sugs)
         sugsTemp.push(data);
-        saveItemToLocalStorage(JSON.stringify(sugsTemp), "sugs-TS")
+        saveItemToLocalStorage(sugsTemp, "sugs-TS")
     }
 
     // sugs.push(data);
-    // saveItemToLocalStorage(JSON.stringify(sugs),"sugs-TS")
+    // saveItemToLocalStorage(sugs,"sugs-TS")
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etatChanged(false)
 
@@ -329,7 +330,7 @@ export const getSuggeAudioApi = async (data, props) => {
 }
 
 export const addSuggestionApiOffline = async (data, props) => {
-    let sugs = loadItemFromLocalStorage("sugs-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("sugs-TS"))) : [];
+    let sugs = loadItemFromLocalStorage("sugs-TS") !== undefined ? (loadItemFromLocalStorage("sugs-TS")) : [];
 
     //date
     let datetmp = new Date();
@@ -342,7 +343,7 @@ export const addSuggestionApiOffline = async (data, props) => {
     // console.log("datee",created_at)
 
     //code
-    let code = "sug" + uuidv4().substring(0, 5) + '-' + (JSON.parse(loadItemFromSessionStorage('app-user'))).servicePointDto.uuid + '-' + (JSON.parse(loadItemFromSessionStorage('app-user')).code)
+    let code = "sug" + uuidv4().substring(0, 5) + '-' + (loadItemFromSessionStorage('app-user')).servicePointDto.uuid + '-' + (loadItemFromSessionStorage('app-user').code)
     // console.log("codeeee",code)
 
 
@@ -352,23 +353,25 @@ export const addSuggestionApiOffline = async (data, props) => {
 
     if (data["code"] === "") {
         data["code"] = code
+        data["codeClient"] = "SUG-" + uuidv4().substring(0, 4).toUpperCase()
 
         // console.log("dataasave",data)
         sugs.push(data);
-        saveItemToLocalStorage(JSON.stringify(sugs), "sugs-TS")
+        saveItemToLocalStorage(sugs, "sugs-TS")
     } else {
         let sugsTemp = sugs.filter((e) => { return e.code !== data["code"] })
         let sugsF = sugs.filter((e) => { return e.code === data["code"] })
         data["id"] = sugsF[0].id
+        data["codeClient"] = sugsF[0].codeClient ? sugsF[0].codeClient : "SUG-" + uuidv4().substring(0, 4).toUpperCase()
 
         sugsTemp.push(data);
-        saveItemToLocalStorage(JSON.stringify(sugsTemp), "sugs-TS")
+        saveItemToLocalStorage(sugsTemp, "sugs-TS")
     }
 
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etat2Changed(false)
 
-    notify("Bravo - Réclamation enregistrée", "success")
+    notify("Bravo - Suggestion enregistrée (code client : " + data["codeClient"] + ")", "success")
 }
 
 

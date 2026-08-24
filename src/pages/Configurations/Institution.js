@@ -62,7 +62,7 @@ const Institution = (props) => {
     useEffect(() => {
 
         try {
-            let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+            let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? loadItemFromLocalStorage("app-institution") : undefined;
 
             if (appInstitution !== undefined || appInstitution !== "") {
                 props.denominationChanged(appInstitution.denomination)
@@ -275,7 +275,7 @@ const Institution = (props) => {
                     </Box>
                 </Box>
 
-                {/* Logo — pleine largeur */}
+                {/* Logo - pleine largeur */}
                 <Box sx={{ mt: 2.5 }}>
                     <label style={labelStyle}>Logo de l'institution <FieldCheck valid={validLogo} /></label>
                     <Box

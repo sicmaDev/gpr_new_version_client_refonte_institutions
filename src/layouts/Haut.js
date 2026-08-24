@@ -66,7 +66,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-let mode =loadItemFromSessionStorage("app-mode") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-mode")) : undefined;
+let mode =loadItemFromSessionStorage("app-mode") !== undefined ? loadItemFromSessionStorage("app-mode") : undefined;
 
 export const titre = (titre) => {
  return 'titre';
@@ -168,8 +168,10 @@ export const Haut = (props) => {
 
   const institutionName = (() => {
     try {
+      // loadItemFromSessionStorage/loadItemFromLocalStorage parsent déjà le JSON —
+      // pas besoin (et ça plantait) de repasser le résultat dans JSON.parse().
       const raw = loadItemFromSessionStorage('app-institution') || loadItemFromLocalStorage('app-institution');
-      if (raw && raw !== '[]') return JSON.parse(raw)?.denomination || '';
+      if (raw && !(Array.isArray(raw) && raw.length === 0)) return raw?.denomination || '';
     } catch {}
     return '';
   })();
@@ -199,8 +201,8 @@ export const Haut = (props) => {
 
   let user;
   try {
-    const _raw = loadItemFromSessionStorage("app-user");
-    user = _raw ? JSON.parse(_raw) : undefined;
+    // loadItemFromSessionStorage() parse déjà le JSON en interne.
+    user = loadItemFromSessionStorage("app-user") || undefined;
   } catch { user = undefined; }
   if (!user) return null;
 
@@ -632,18 +634,18 @@ export const Haut = (props) => {
 
             <footer
               className="page-footer footer footer-static footer-light footer-bottom white navbar-border navbar-shadow">
-              <div className="footer-copyright" style={{ ...(open && { marginLeft: "12%" }) }}>
-                <div className="container"><span>&copy; {(new Date().getFullYear())} <a href={APP_OWNER_WEBSITE} target="_blank">{APP_OWNER}</a> Tous droits réservés.</span>
+              <div className="footer-copyright" style={{ marginLeft: open ? `${drawerWidth}px` : '72px', transition: 'margin-left 0.2s' }}>
+                <div className="container"><span style={{ fontSize: 11 }}>&copy; {(new Date().getFullYear())} <a href={APP_OWNER_WEBSITE} target="_blank">{APP_OWNER}</a> Tous droits réservés.</span>
                 <span className="right hide-on-small-only hide"> <a href="#"></a></span></div>
-                {message !== undefined && 
-                  (<div className="" style={{color:"red",width:"500px",fontSize:"18px",textAlign:"center",fontStyle:"bold",fontWeight:"700"}} >
+                {message !== undefined &&
+                  (<div className="" style={{color:"red",textAlign:"center",fontWeight:600,fontSize:"11px"}} >
                     {message}
                   </div>)
-                } 
+                }
               </div>
-           
+
             </footer>
-            
+
             {/* <Footer/> */}
           </Box>
       

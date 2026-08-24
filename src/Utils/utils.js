@@ -90,6 +90,28 @@ export const cleanPhoneNumber3 = (phoneValue) => {
     }
 
 }
+// Convertit un File/Blob en {name, contentType, base64} — format sérialisable
+// en JSON, utilisé pour stocker fichiers/audios en localStorage en mode hors-ligne
+// (un File/Blob ne peut pas être JSON.stringify puis relu tel quel).
+export const fileToBase64Dto = (file, fallbackName = "fichier") => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({
+            name: file.name || fallbackName,
+            contentType: file.type || "application/octet-stream",
+            base64: reader.result, // data:...;base64,XXXX — le backend retire le préfixe
+        });
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
+
+// Convertit une liste de File/Blob en tableau de {name, contentType, base64}.
+export const filesToBase64Dtos = async (files, fallbackName = "fichier") => {
+    if (!files || files.length === 0) return [];
+    return Promise.all(Array.from(files).map((f) => fileToBase64Dto(f, fallbackName)));
+};
+
 export const today = (items) => {
     return new Intl.DateTimeFormat("fr-FR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now()));
 }
@@ -152,14 +174,14 @@ export const isSettingComplete = () => {
     let supports;
     let produits;
     try {
-        postes = JSON.parse(loadItemFromLocalStorage('app-postes'));
-        ps = JSON.parse(loadItemFromLocalStorage('app-ps'));
-        langues = JSON.parse(loadItemFromLocalStorage('app-langues'));
-        objets = JSON.parse(loadItemFromLocalStorage('app-objets'));
-        recours = JSON.parse(loadItemFromLocalStorage('app-recours'));
-        utilisateurs = JSON.parse(loadItemFromLocalStorage('app-users'));
-        supports = JSON.parse(loadItemFromLocalStorage('app-supports'));
-        produits = JSON.parse(loadItemFromLocalStorage('app-produits'));
+        postes = loadItemFromLocalStorage('app-postes');
+        ps = loadItemFromLocalStorage('app-ps');
+        langues = loadItemFromLocalStorage('app-langues');
+        objets = loadItemFromLocalStorage('app-objets');
+        recours = loadItemFromLocalStorage('app-recours');
+        utilisateurs = loadItemFromLocalStorage('app-users');
+        supports = loadItemFromLocalStorage('app-supports');
+        produits = loadItemFromLocalStorage('app-produits');
     }
     catch (e) {
         postes = [];

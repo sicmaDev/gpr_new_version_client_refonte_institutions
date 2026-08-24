@@ -8,7 +8,7 @@ const HELP_API = HOST + "api/v1/help"
 const FILES_DOWNLOAD_API = HOST + "api/v1/doc/get/%id"
 
 export const HelpApi = async (props) => {
-    let mode =loadItemFromSessionStorage("app-mode") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-mode")) : undefined;
+    let mode =loadItemFromSessionStorage("app-mode") !== undefined ? loadItemFromSessionStorage("app-mode") : undefined;
 
     if (mode === 1) {
         const config = {
@@ -29,7 +29,7 @@ export const HelpApi = async (props) => {
                 // console.log("erreurhelp",error)
             });
     } else {
-        props.helpChanged(loadItemFromSessionStorage("help") !== undefined ? JSON.parse(loadItemFromSessionStorage("help")) : {})
+        props.helpChanged(loadItemFromSessionStorage("help") !== undefined ? loadItemFromSessionStorage("help") : {})
     }
 
    

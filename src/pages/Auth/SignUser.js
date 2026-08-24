@@ -120,7 +120,7 @@ const SignCompteUser = (props) => {
         props.unitChanged(obj.target.value);
     }
 
-    let users = loadItemFromLocalStorage("app-users") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-users")) : undefined;
+    let users = loadItemFromLocalStorage("app-users") !== undefined ? loadItemFromLocalStorage("app-users") : undefined;
     useEffect(() => {
         // all(props).then((r) => {});
 
@@ -323,8 +323,8 @@ const SignCompteUser = (props) => {
     let titles
     let units
     try {
-        titles = JSON.parse(loadItemFromLocalStorage('app-postes'));
-        units = JSON.parse(loadItemFromLocalStorage('app-ps'));
+        titles = loadItemFromLocalStorage('app-postes');
+        units = loadItemFromLocalStorage('app-ps');
     }
     catch (e) {
         titles = [];
@@ -408,24 +408,24 @@ const SignCompteUser = (props) => {
         <div className="gpr-auth flex h-screen" style={{ background: "#F8FAFC", fontFamily: "'Inter', -apple-system, sans-serif" }}>
             <style>{`.gpr-sign-field:focus-within { border-color: ${primaryColor} !important; background: white !important; box-shadow: 0 0 0 4px ${primaryColor}1a !important; }`}</style>
 
-            {/* ── Colonne gauche — hero storytelling ── */}
+            {/* ── Colonne gauche - hero storytelling ── */}
             <div
                 className="hidden md:flex relative overflow-hidden flex-col items-center justify-center px-4 py-8 md:px-6 md:py-10 lg:px-12 lg:py-16"
                 style={{ width: "50%" }}
             >
-                {/* Couche 1 — fond dégradé */}
+                {/* Couche 1 - fond dégradé */}
                 <div className="absolute inset-0 animate-gradient-bg" style={{ background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)` }} />
 
-                {/* Couche 2 — grands cercles semi-transparents */}
+                {/* Couche 2 - grands cercles semi-transparents */}
                 <div className="absolute rounded-full animate-blob" style={{ width: "62vh", height: "62vh", top: "-14%", right: "-24%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }} />
                 <div className="absolute rounded-full animate-blob" style={{ width: "44vh", height: "44vh", bottom: "-16%", left: "-18%", background: "rgba(255,255,255,0.05)", animationDelay: "6s" }} />
 
-                {/* Couche 3 — carrés flottants — desktop uniquement */}
+                {/* Couche 3 - carrés flottants - desktop uniquement */}
                 <div className="hidden lg:block absolute top-20 left-28 w-16 h-16 rounded-2xl rotate-12 animate-float" style={{ background: "rgba(255,255,255,0.1)" }} />
                 <div className="hidden lg:block absolute bottom-24 right-32 w-20 h-20 rounded-2xl -rotate-12 animate-float" style={{ background: "rgba(255,255,255,0.1)", animationDelay: "1.5s" }} />
                 <div className="hidden lg:block absolute top-1/2 right-12 w-10 h-10 rounded-xl rotate-45 animate-float" style={{ background: "rgba(255,255,255,0.1)", animationDelay: "3s" }} />
 
-                {/* Couche 4 — cartes fonctionnelles avec cycle défilement — desktop uniquement */}
+                {/* Couche 4 - cartes fonctionnelles avec cycle défilement - desktop uniquement */}
                 {CARD_POSITIONS.map((pos, i) => {
                     const modA = GROUP_A[i];
                     const modB = GROUP_B[i];
@@ -457,7 +457,7 @@ const SignCompteUser = (props) => {
                     );
                 })}
 
-                {/* Couche 5 — contenu central */}
+                {/* Couche 5 - contenu central */}
                 <div className="relative z-10 flex flex-col items-center text-center w-full px-2">
                     {/* Badge plateforme */}
                     <div className="bg-white rounded-2xl p-3 mb-5 md:mb-8 shadow-xl inline-flex items-center gap-3 animate-fade-up">
@@ -482,7 +482,7 @@ const SignCompteUser = (props) => {
                     </p>
                 </div>
 
-                {/* Couche 6 — CTA déjà inscrit */}
+                {/* Couche 6 - CTA déjà inscrit */}
                 <div className="relative z-10 mt-5 md:mt-10 text-center animate-fade-up" style={{ animationDelay: "0.4s" }}>
                     <h6 className="text-[13px] mb-3" style={{ color: heroTextSofter }}>Vous avez déjà un compte ?</h6>
                     <NavLink to="/login">
@@ -497,12 +497,12 @@ const SignCompteUser = (props) => {
                 </div>
             </div>
 
-            {/* ── Colonne droite — formulaire ── */}
+            {/* ── Colonne droite - formulaire ── */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white flex flex-col">
                 <div className="flex flex-col items-center px-6 sm:px-10 lg:px-4 pt-10 sm:pt-14 flex-1">
                     <div className="w-full max-w-[680px] animate-fade-up">
 
-                        {/* Logos header — toujours visible */}
+                        {/* Logos header - toujours visible */}
                         <div className="mb-4">
                             <div className="flex items-center justify-center gap-4 mb-2">
                                 <div className="bg-[#f4f7fb] rounded-xl w-12 h-12 flex-shrink-0 overflow-hidden">
@@ -761,7 +761,7 @@ const SignCompteUser = (props) => {
                             </div>
                         </form>
 
-                        {/* Lien connexion — mobile uniquement */}
+                        {/* Lien connexion - mobile uniquement */}
                         <div className="md:hidden text-center mt-6">
                             <span className="text-[#64748b] text-[13px]">Déjà un compte ?&nbsp;</span>
                             <NavLink to="/login" className="text-[13px] font-semibold hover:underline" style={{ color: primaryColor }}>

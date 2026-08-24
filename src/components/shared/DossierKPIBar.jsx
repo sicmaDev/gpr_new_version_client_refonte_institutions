@@ -2,11 +2,11 @@ import React, { useMemo } from "react";
 import { Box, Typography, Tooltip } from "@mui/material";
 
 /**
- * DossierKPIBar — barre de KPI générique
+ * DossierKPIBar - barre de KPI générique
  *
  * Props:
- *   items    — tableau de données
- *   kpiCards — [{ key, label, icon: Component, iconBg, iconColor, borderColor, filter(item) }]
+ *   items    - tableau de données
+ *   kpiCards - [{ key, label, icon: Component, iconBg, iconColor, borderColor, filter(item) }]
  */
 const DossierKPIBar = ({ items = [], kpiCards = [] }) => {
   const counts = useMemo(() => {

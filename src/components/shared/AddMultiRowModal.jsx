@@ -8,7 +8,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 /**
- * AddMultiRowModal — Option A : lignes empilées
+ * AddMultiRowModal - Option A : lignes empilées
  * Pour les pages simples avec 2-3 champs (Langues, Catégories, Objets, Solutions…)
  *
  * Props :
@@ -16,7 +16,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
  *   onClose       : () => void
  *   title         : string
  *   fields        : [{ key, label, placeholder?, required?, type?, width? }]
- *   onSubmit      : async (rows: object[]) => void   — appelé avec les lignes valides uniquement
+ *   onSubmit      : async (rows: object[]) => void   - appelé avec les lignes valides uniquement
  *   loading       : bool
  *   maxWidth      : "xs"|"sm"|"md"|"lg"|"xl"  (défaut "md")
  */
@@ -112,7 +112,7 @@ const AddMultiRowModal = ({
           <div>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{title}</div>
             <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>
-              Remplissez chaque ligne — seules les lignes avec un {fields.find(f => f.required)?.label?.toLowerCase() || "nom"} seront enregistrées
+              Remplissez chaque ligne - seules les lignes avec un {fields.find(f => f.required)?.label?.toLowerCase() || "nom"} seront enregistrées
             </div>
           </div>
         </div>

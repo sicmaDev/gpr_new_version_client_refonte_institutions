@@ -76,6 +76,7 @@ const Lockscreen = (props) => {
     };
 
     const logout = () => {
+        localStorage.removeItem("isLocked");
         props.setUnlocked();
         props.isAuth(false);
     };
@@ -92,24 +93,24 @@ const Lockscreen = (props) => {
     return (
         <div className="gpr-auth flex h-screen" style={{ background: "#F8FAFC", fontFamily: "'Inter', -apple-system, sans-serif" }}>
 
-            {/* ── Colonne gauche — hero ── */}
+            {/* ── Colonne gauche - hero ── */}
             <div
                 className="hidden md:flex relative overflow-hidden flex-col items-center justify-center px-4 py-8 md:px-6 md:py-10 lg:px-12 lg:py-16"
                 style={{ width: "50%" }}
             >
-                {/* Couche 1 — fond dégradé */}
+                {/* Couche 1 - fond dégradé */}
                 <div className="absolute inset-0 animate-gradient-bg" style={{ background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)` }} />
 
-                {/* Couche 2 — cercles */}
+                {/* Couche 2 - cercles */}
                 <div className="absolute rounded-full animate-blob" style={{ width: "62vh", height: "62vh", top: "-14%", right: "-24%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }} />
                 <div className="absolute rounded-full animate-blob" style={{ width: "44vh", height: "44vh", bottom: "-16%", left: "-18%", background: "rgba(255,255,255,0.05)", animationDelay: "6s" }} />
 
-                {/* Couche 3 — carrés flottants — desktop uniquement */}
+                {/* Couche 3 - carrés flottants - desktop uniquement */}
                 <div className="hidden lg:block absolute top-20 left-28 w-16 h-16 rounded-2xl rotate-12 animate-float" style={{ background: "rgba(255,255,255,0.1)" }} />
                 <div className="hidden lg:block absolute bottom-24 right-32 w-20 h-20 rounded-2xl -rotate-12 animate-float" style={{ background: "rgba(255,255,255,0.1)", animationDelay: "1.5s" }} />
                 <div className="hidden lg:block absolute top-1/2 right-12 w-10 h-10 rounded-xl rotate-45 animate-float" style={{ background: "rgba(255,255,255,0.1)", animationDelay: "3s" }} />
 
-                {/* Couche 4 — cartes cycling — desktop uniquement */}
+                {/* Couche 4 - cartes cycling - desktop uniquement */}
                 {CARD_POSITIONS.map((pos, i) => {
                     const modA = GROUP_A[i];
                     const modB = GROUP_B[i];
@@ -141,7 +142,7 @@ const Lockscreen = (props) => {
                     );
                 })}
 
-                {/* Couche 5 — contenu central */}
+                {/* Couche 5 - contenu central */}
                 <div className="relative z-10 flex flex-col items-center text-center w-full px-2">
                     {/* Badge */}
                     <div className="bg-white rounded-2xl p-3 mb-5 md:mb-8 shadow-xl inline-flex items-center gap-3 animate-fade-up">
@@ -166,7 +167,7 @@ const Lockscreen = (props) => {
                     </p>
                 </div>
 
-                {/* Couche 6 — CTA déconnexion */}
+                {/* Couche 6 - CTA déconnexion */}
                 <div className="relative z-10 mt-5 md:mt-10 text-center animate-fade-up" style={{ animationDelay: "0.4s" }}>
                     <h6 className="text-[13px] mb-3" style={{ color: heroTextSofter }}>Ce n'est pas vous ?</h6>
                     <Button
@@ -180,12 +181,12 @@ const Lockscreen = (props) => {
                 </div>
             </div>
 
-            {/* ── Colonne droite — déverrouillage ── */}
+            {/* ── Colonne droite - déverrouillage ── */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white flex flex-col">
                 <div className="flex flex-col items-center justify-center px-6 sm:px-10 lg:px-0 py-8 flex-1">
                     <div className="w-full max-w-[440px] animate-fade-up">
 
-                        {/* Logos — mobile uniquement */}
+                        {/* Logos - mobile uniquement */}
                         <div className="flex md:hidden items-center justify-center gap-4 mb-7">
                             <div className="bg-[#f4f7fb] rounded-xl w-10 h-10 flex-shrink-0 overflow-hidden">
                                 <img src={logo} alt="Logo GPR" className="h-full w-auto object-cover object-left" />

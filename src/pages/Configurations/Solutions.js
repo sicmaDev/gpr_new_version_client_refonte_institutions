@@ -37,7 +37,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 
 const Solutions = (props) => {
     let objets = [];
-    try { objets = JSON.parse(loadItemFromLocalStorage("app-objets")) || []; } catch (e) { objets = []; }
+    try { objets = loadItemFromLocalStorage("app-objets") || []; } catch (e) { objets = []; }
     const objetsOptions = objets.map(o => ({ label: o.libelle, value: o.id }));
 
     const [isLoading, setIsLoading]         = useState(false);

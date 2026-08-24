@@ -2,7 +2,7 @@ import React from "react";
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from "./utils";
 import { v4 as uuidv4 } from "uuid";
 import { INSTITUTION_ADDRESS, INSTITUTION_AGREMENT, INSTITUTION_EMAIL, INSTITUTION_LOGO, INSTITUTION_NAME, INSTITUTION_TEL } from "./globals";
-let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
+let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (loadItemFromLocalStorage("app-mode")) : undefined;
 
 export const getExportHtml = (columns, records, without = []) => {
   try {
@@ -30,7 +30,7 @@ export const getExportHtml = (columns, records, without = []) => {
         //Formatting custom columns cells
         if (columns[index].key === "status") {
           let mode = parseInt(1
-            //JSON.parse(loadItemFromSessionStorage("app-mode")).value
+            //loadItemFromSessionStorage("app-mode").value
           );
           if (mode === 0) {
             if (record.status === 1) {
@@ -600,30 +600,30 @@ export const getExportHtml2 = (columns, records, id = "") => {
           return (tableHtml += "<td>" + solution + "</td>");
         }
         if (column == "Moyens de collecte") {
-          let description1 = record.collectionChannelId ? (JSON.parse(loadItemFromSessionStorage('app-supports'))).filter((e) => { return e.id === record.collectionChannelId }) : ""
+          let description1 = record.collectionChannelId ? (loadItemFromSessionStorage('app-supports')).filter((e) => { return e.id === record.collectionChannelId }) : ""
           let scTemp = mode === 1 ? record.collectionChannel.libelle : (record.id && record.collectionChannel) ? record.collectionChannel.libelle : description1[0].libelle;
 
           return (tableHtml += "<td>" + scTemp + "</td>");
         }
         if (column == "Point de service") {
-          let description4 = record.servicePointId ? (JSON.parse(loadItemFromSessionStorage('app-ps'))).filter((e) => { return e.id === record.servicePointId }) : ""
+          let description4 = record.servicePointId ? (loadItemFromSessionStorage('app-ps')).filter((e) => { return e.id === record.servicePointId }) : ""
           let psTemp = mode === 1 ? record.servicePoint.libelle : (record.id && record.collectionChannel) ? record.servicePoint.libelle : description4[0].libelle;
 
           return (tableHtml += "<td>" + psTemp + "</td>");
         }
         if (column == "Produit") {
-          let description3 = record.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => { return e.id === record.productId }) : ""
+          let description3 = record.productId ? (loadItemFromSessionStorage('app-produits')).filter((e) => { return e.id === record.productId }) : ""
           let produitTemp = mode === 1 ? record.product.libelle : (record.id && record.collectionChannel) ? record.product.libelle : description3[0].libelle;
 
           return (tableHtml += "<td>" + produitTemp + "</td>");
         }
         if (column == "Objet") {
-          let description2 = record.objetId ? (JSON.parse(loadItemFromSessionStorage('app-objets'))).filter((e) => { return e.id === record.objetId }) : ""
+          let description2 = record.objetId ? (loadItemFromSessionStorage('app-objets')).filter((e) => { return e.id === record.objetId }) : ""
           let objetTemp = mode === 1 ? record.objet.libelle : (record.id && record.collectionChannel) ? record.objet.libelle : description2[0].libelle;
           return (tableHtml += "<td>" + objetTemp + "</td>");
         }
         if (column == "Enregistrer par") {
-          let description5 = record.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => { return e.id === record.collectorId }) : ""
+          let description5 = record.collectorId ? (loadItemFromSessionStorage('app-users')).filter((e) => { return e.id === record.collectorId }) : ""
           let addByTemp = mode === 1 ? record.collector.firstAndLastName : (record.id && record.collectionChannel) ? record.collector.firstAndLastName : description5[0].firstAndLastName;
           return (tableHtml +=
             "<td>" +
@@ -896,27 +896,27 @@ export const getExportHtml3 = (columns, records, id = "") => {
           return (tableHtml += "<td>" + decision + "</td>");
         }
         if (column == "Moyens de collecte") {
-          let description1 = record.collectionChannelId ? (JSON.parse(loadItemFromSessionStorage('app-supports'))).filter((e) => { return e.id === record.collectionChannelId }) : ""
+          let description1 = record.collectionChannelId ? (loadItemFromSessionStorage('app-supports')).filter((e) => { return e.id === record.collectionChannelId }) : ""
           let canal = mode === 1 ? (record.canal === null ? "<i>-</i>" : record.canal.libelle) : (record.id && record.canal) ? (record.canal === null ? "<i>-</i>" : record.canal.libelle) : description1[0].libelle;
 
           return (tableHtml += "<td>" + canal + "</td>");
         }
         if (column == "Point de service") {
-          let description4 = record.servicePointId ? (JSON.parse(loadItemFromSessionStorage('app-ps'))).filter((e) => { return e.id === record.servicePointId }) : ""
+          let description4 = record.servicePointId ? (loadItemFromSessionStorage('app-ps')).filter((e) => { return e.id === record.servicePointId }) : ""
 
           let ps = mode === 1 ? (record.serviceIndexe === null ? "<i>-</i>" : record.serviceIndexe.libelle) : (record.id && record.canal) ? (record.serviceIndexe === null ? "<i>-</i>" : record.serviceIndexe.libelle) : (description4 !== "") ? description4[0].libelle : "";
 
           return (tableHtml += "<td>" + ps + "</td>");
         }
         if (column == "Produit") {
-          let description3 = record.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => { return e.id === record.productId }) : ""
+          let description3 = record.productId ? (loadItemFromSessionStorage('app-produits')).filter((e) => { return e.id === record.productId }) : ""
 
           let produit = mode === 1 ? (record.produit === null ? "<i>-</i>" : record.produit.libelle) : (record.id && record.canal) ? (record.produit === null ? "<i>-</i>" : record.produit.libelle) : (description3 !== "") ? description3[0].libelle : "";
 
           return (tableHtml += "<td>" + produit + "</td>");
         }
         if (column == "Enregistrer par") {
-          let description5 = record.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => { return e.id === record.collectorId }) : ""
+          let description5 = record.collectorId ? (loadItemFromSessionStorage('app-users')).filter((e) => { return e.id === record.collectorId }) : ""
           let addByTemp = mode === 1 ? record.collecteur.firstAndLastName : (record.id && record.canal) ? record.collecteur.firstAndLastName : description5[0].firstAndLastName;
           return (tableHtml +=
             "<td>" +

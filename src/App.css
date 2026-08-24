@@ -82,3 +82,26 @@
     transform: rotate(360deg);
   }
 }
+
+/* Badge d'appel à l'action pour les commentaires vocaux WhatsApp (lien vers l'onglet Audios) */
+@keyframes waCommentPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+/* Audio mis en avant dans la liste des audios après clic sur le badge ci-dessus */
+@keyframes waAudioHighlight {
+  0%, 100% {
+    box-shadow: 0 0 0 3px #22c55e, 0 0 14px rgba(34, 197, 94, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 3px #22c55e, 0 0 22px rgba(34, 197, 94, 0.85);
+  }
+}

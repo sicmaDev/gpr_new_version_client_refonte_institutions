@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, Component } from "react";
+import { fetchPendingWAFiles } from "../../whatgpr/pendingWAFiles";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DatePicker, { registerLocale, setDefaultLocale } from "react-datepicker";
@@ -69,6 +70,7 @@ import {
   loadItemFromLocalStorage,
   loadItemFromSessionStorage,
   sleep,
+  filesToBase64Dtos,
 } from "../../Utils/utils";
 import {
   addClaimApi,
@@ -160,6 +162,59 @@ const styles = {
   }),
   menu: (provided) => ({ ...provided, zIndex: 9999 }),
 };
+
+// Limites d'ajout de pièces jointes à l'enregistrement d'une réclamation
+// (revérifiées côté serveur dans ClaimController.validateAttachments - ces
+// contrôles côté client ne servent qu'à donner un retour immédiat à l'agent).
+const MAX_FILES_COUNT = 5;
+const MAX_AUDIOS_COUNT = 3;
+const MAX_DOC_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo (documents/images)
+const MAX_AV_FILE_SIZE = 20 * 1024 * 1024; // 20 Mo (audio/vidéo)
+const MAX_TOTAL_ATTACHMENTS_SIZE = 100 * 1024 * 1024; // 100 Mo cumulés
+
+const isAudioOrVideoFile = (file) => !!file.type && (file.type.startsWith("audio/") || file.type.startsWith("video/"));
+const sumFilesSize = (arr) => Array.from(arr || []).reduce((s, f) => s + (f.size || 0), 0);
+const toMB = (bytes) => Math.round(bytes / (1024 * 1024));
+
+// Valide la liste finale des fichiers (après ajout) + les audios déjà enregistrés.
+// Retourne true si OK, sinon affiche un message et retourne false.
+const checkFilesConstraints = (finalFilesArr, audioRecordingsArr) => {
+  if (finalFilesArr.length > MAX_FILES_COUNT) {
+    window.alert(`Vous ne pouvez pas joindre plus de ${MAX_FILES_COUNT} fichiers.`);
+    return false;
+  }
+  for (const file of finalFilesArr) {
+    const maxSize = isAudioOrVideoFile(file) ? MAX_AV_FILE_SIZE : MAX_DOC_FILE_SIZE;
+    if (file.size > maxSize) {
+      window.alert(`Le fichier "${file.name}" dépasse la taille maximale autorisée (${toMB(maxSize)} Mo).`);
+      return false;
+    }
+  }
+  const totalSize = sumFilesSize(finalFilesArr) + sumFilesSize(audioRecordingsArr);
+  if (totalSize > MAX_TOTAL_ATTACHMENTS_SIZE) {
+    window.alert(`La taille totale des pièces jointes dépasse la limite autorisée (${toMB(MAX_TOTAL_ATTACHMENTS_SIZE)} Mo).`);
+    return false;
+  }
+  return true;
+};
+
+// Valide un nouvel enregistrement audio par rapport à ceux déjà présents + aux fichiers.
+const checkNewAudioConstraints = (existingAudioRecordings, newAudioBlob, filesArr) => {
+  if (existingAudioRecordings.length >= MAX_AUDIOS_COUNT) {
+    window.alert(`Vous ne pouvez pas joindre plus de ${MAX_AUDIOS_COUNT} enregistrements audio.`);
+    return false;
+  }
+  if (newAudioBlob.size > MAX_AV_FILE_SIZE) {
+    window.alert(`L'enregistrement audio dépasse la taille maximale autorisée (${toMB(MAX_AV_FILE_SIZE)} Mo).`);
+    return false;
+  }
+  const totalSize = sumFilesSize(filesArr) + sumFilesSize(existingAudioRecordings) + newAudioBlob.size;
+  if (totalSize > MAX_TOTAL_ATTACHMENTS_SIZE) {
+    window.alert(`La taille totale des pièces jointes dépasse la limite autorisée (${toMB(MAX_TOTAL_ATTACHMENTS_SIZE)} Mo).`);
+    return false;
+  }
+  return true;
+};
 const EnregistrerReclamation = (props) => {
   const [open, setOpen] = React.useState(false);
   const [open2, setOpen2] = React.useState(false);
@@ -176,17 +231,17 @@ const EnregistrerReclamation = (props) => {
   let settingComplete = isSettingComplete();
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-user"))
+      ? loadItemFromSessionStorage("app-user")
       : undefined;
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
-      ? JSON.parse(loadItemFromLocalStorage("app-mode"))
+      ? loadItemFromLocalStorage("app-mode")
       : undefined;
 
   let appInstitution =
     loadItemFromLocalStorage("app-institution") !== undefined &&
       loadItemFromLocalStorage("app-institution").length !== 0
-      ? JSON.parse(loadItemFromLocalStorage("app-institution"))
+      ? loadItemFromLocalStorage("app-institution")
       : undefined;
 
   const handleClickOpen = () => {
@@ -287,12 +342,12 @@ const EnregistrerReclamation = (props) => {
   let products;
   let units;
   try {
-    languages = JSON.parse(loadItemFromLocalStorage("app-langues"));
-    collects = JSON.parse(loadItemFromLocalStorage("app-supports"));
-    subjects = JSON.parse(loadItemFromLocalStorage("app-categories"));
-    underSubjects = JSON.parse(loadItemFromLocalStorage("app-objets"));
-    products = JSON.parse(loadItemFromLocalStorage("app-produits"));
-    units = JSON.parse(loadItemFromLocalStorage("app-ps"));
+    languages = loadItemFromLocalStorage("app-langues");
+    collects = loadItemFromLocalStorage("app-supports");
+    subjects = loadItemFromLocalStorage("app-categories");
+    underSubjects = loadItemFromLocalStorage("app-objets");
+    products = loadItemFromLocalStorage("app-produits");
+    units = loadItemFromLocalStorage("app-ps");
   } catch (e) {
     languages = [];
     collects = [];
@@ -318,6 +373,13 @@ const EnregistrerReclamation = (props) => {
       clearComponentState();
       props.contentChanged(transformConversation(props.whatsappSelectMessage));
       props.phoneChanged(props.whatsappCurrentInbox.phone);
+
+      // Récupérer les fichiers médias WhatsApp et les injecter dans le formData
+      fetchPendingWAFiles().then(fileObjects => {
+        if (fileObjects.length > 0) {
+          setFiles(fileObjects);
+        }
+      });
     }
   }, [""]);
 
@@ -410,11 +472,16 @@ const EnregistrerReclamation = (props) => {
   const prevAudioRef = useRef(null);
   useEffect(() => { }, [showAudioPlayer, currentAudio]);
 
-  // Accumulate each completed recording — audio changes each time the user stops recording
+  // Accumulate each completed recording - audio changes each time the user stops recording
   useEffect(() => {
     if (audio != null && audio !== prevAudioRef.current) {
       prevAudioRef.current = audio;
-      setAudioRecordings(prev => [...prev, audio]);
+      setAudioRecordings(prev => {
+        if (!checkNewAudioConstraints(prev, audio, files)) {
+          return prev;
+        }
+        return [...prev, audio];
+      });
     }
   }, [audio]);
 
@@ -761,6 +828,9 @@ const EnregistrerReclamation = (props) => {
     setPhoneError("");
   };
 
+  // Vérification de doublon, déclenchée au blur du champ téléphone (voir
+  // onBlur plus bas) et réutilisée par handleNext comme filet de sécurité
+  // avant de changer d'étape.
   const handleBlur = async () => {
     if (props.phone) {
       const phone = cleanPhoneNumber(props.phone);
@@ -772,7 +842,7 @@ const EnregistrerReclamation = (props) => {
   };
 
 
-  const handleSubmit = (e, onSuccess = null) => {
+  const handleSubmit = async (e, onSuccess = null) => {
     e.preventDefault();
     setShowSmsBox(false);
     setOpen(false);
@@ -790,7 +860,8 @@ const EnregistrerReclamation = (props) => {
       claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(
         ({ type }) => type !== "chat"
       );
-      claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null;
+      // Envoyer null si inbox sans id (WhatGPR) → évite TransientObjectException Hibernate
+      claim["inboxWhatsapp"] = props.whatsappCurrentInbox?.id ? props.whatsappCurrentInbox : null;
       claim["phone"] = cleanPhoneNumber(props.phone);
       claim["collectionChannelId"] = props.collect;
       claim["servicePointId"] = props.unit;
@@ -838,6 +909,14 @@ const EnregistrerReclamation = (props) => {
           if (onSuccess && savedClaim) onSuccess(savedClaim);
         });
       } else {
+        // Hors-ligne : File/Blob ne survivent pas à un JSON.stringify en localStorage —
+        // on les convertit donc en base64, décodé côté backend à la synchronisation.
+        claim["files"] = await filesToBase64Dtos(files);
+        claim["audios"] = await filesToBase64Dtos(
+          audioRecordings.map(blob => new File([blob], "claim_record_" + uuid() + ".ogg", {
+            type: "audio/ogg; codecs=opus",
+          }))
+        );
         addClaimApiOffline(claim, props).then(() => {
           handleCancel(e);
           props.resetWhatsapp();
@@ -849,7 +928,7 @@ const EnregistrerReclamation = (props) => {
     }
     props.claimRecordErrors(errors);
   };
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const formData = new FormData();
     let claim = {};
@@ -864,7 +943,8 @@ const EnregistrerReclamation = (props) => {
     claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(
       ({ type }) => type !== "chat"
     );
-    claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null;
+    // Envoyer null si inbox sans id (WhatGPR) → évite TransientObjectException Hibernate
+    claim["inboxWhatsapp"] = props.whatsappCurrentInbox?.id ? props.whatsappCurrentInbox : null;
     claim["servicePointId"] = props.unit;
     claim["productId"] = props.product;
     claim["objetId"] = props.underSubject;
@@ -899,6 +979,14 @@ const EnregistrerReclamation = (props) => {
         setActiveTab("new");
       });
     } else {
+      // Hors-ligne : File/Blob ne survivent pas à un JSON.stringify en localStorage —
+      // on les convertit donc en base64, décodé côté backend à la synchronisation.
+      claim["files"] = await filesToBase64Dtos(files);
+      claim["audios"] = await filesToBase64Dtos(
+        audioRecordings.map(blob => new File([blob], "claim_record_" + uuid() + ".ogg", {
+          type: "audio/ogg; codecs=opus",
+        }))
+      );
       addTempClaimApiOffline(claim, props).then(() => {
         handleCancel(e);
         setCurrentStep(0);
@@ -1239,41 +1327,41 @@ const EnregistrerReclamation = (props) => {
         props.contentChanged(data.content ? data.content : "");
 
         let description = data.languageId
-          ? JSON.parse(loadItemFromSessionStorage("app-langues")).filter(
+          ? loadItemFromSessionStorage("app-langues").filter(
             (e) => {
               return e.id === data.languageId;
             }
           )
           : "";
         let description1 = data.collectionChannelId
-          ? JSON.parse(loadItemFromSessionStorage("app-supports")).filter(
+          ? loadItemFromSessionStorage("app-supports").filter(
             (e) => {
               return e.id === data.collectionChannelId;
             }
           )
           : "";
-        // console.log("description2",JSON.parse(loadItemFromSessionStorage("app-objets")))
+        // console.log("description2",loadItemFromSessionStorage("app-objets"))
         let description2 = data.objetId
-          ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
+          ? loadItemFromSessionStorage("app-objets").filter((e) => {
             // console.log("description2",e.categorie.id === data.objetId)
             return e.id === data.objetId;
           })
           : "";
 
         let description5 = data.objetId
-          ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
+          ? loadItemFromSessionStorage("app-objets").filter((e) => {
             return e.id === data.objetId;
           })
           : "";
         let description3 = data.productId
-          ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
+          ? loadItemFromSessionStorage("app-produits").filter(
             (e) => {
               return e.id === data.productId;
             }
           )
           : "";
         let description4 = data.servicePointId
-          ? JSON.parse(loadItemFromSessionStorage("app-ps")).filter((e) => {
+          ? loadItemFromSessionStorage("app-ps").filter((e) => {
             return e.id === data.servicePointId;
           })
           : "";
@@ -1326,18 +1414,24 @@ const EnregistrerReclamation = (props) => {
   };
 
   const handleFile = (e) => {
+    const newArr = Array.from(e.target.files);
+    if (!checkFilesConstraints(newArr, audioRecordings)) {
+      e.target.value = "";
+      return Promise.resolve([]);
+    }
     setFiles(e.target.files);
-    let filesArray = Array.prototype.slice.call(e.target.files);
-    return Promise.all(filesArray.map(fileToDataURL));
+    return Promise.all(newArr.map(fileToDataURL));
   };
 
   // Accumulates files instead of replacing (used by the dropzone)
   const handleDropzoneFiles = (newFilesInput) => {
     const newArr = Array.from(newFilesInput);
-    setFiles(prev => {
-      const prevArr = prev ? Array.from(prev) : [];
-      return [...prevArr, ...newArr];
-    });
+    const prevArr = files ? Array.from(files) : [];
+    const combined = [...prevArr, ...newArr];
+    if (!checkFilesConstraints(combined, audioRecordings)) {
+      return Promise.resolve([]);
+    }
+    setFiles(combined);
     return Promise.all(newArr.map(fileToDataURL));
   };
 
@@ -1513,7 +1607,7 @@ const EnregistrerReclamation = (props) => {
       </div>
     );
   }
-  // let appSpecificationData = loadItemFromSessionStorage("app-specification") !== undefined ? JSON.parse(JSON.parse(loadItemFromSessionStorage("app-specification")).value).filter(n=>n!==null) : undefined
+  // let appSpecificationData = loadItemFromSessionStorage("app-specification") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-specification").value).filter(n=>n!==null) : undefined
 
   let content = [];
   content = props.items;
@@ -1684,8 +1778,15 @@ const EnregistrerReclamation = (props) => {
     return isValid;
   };
 
-  const handleNext = () => {
-    if (currentStep === 0 && !validateStep0()) return;
+  const handleNext = async () => {
+    if (currentStep === 0) {
+      if (!validateStep0()) return;
+      // Attend la vérification de doublon (normalement lancée au blur du champ
+      // téléphone) avant de passer à l'étape suivante — sinon, sur une requête
+      // lente, la modale de doublon apparaît en retard alors que l'agent est
+      // déjà en train de remplir l'étape 2.
+      await handleBlur();
+    }
     if (currentStep === 1 && !validateStep1()) return;
     setCurrentStep(s => s + 1);
   };
@@ -1961,7 +2062,7 @@ const EnregistrerReclamation = (props) => {
                       <span style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>{claim.codeClient}</span>
                       <span style={{ fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color }}>{sc.label}</span>
                     </div>
-                    {/* Card body — grid 2 col */}
+                    {/* Card body - grid 2 col */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '12px 14px' }}>
                       {[
                         { label: 'Client', value: claim.clientFirstAndLastName },
@@ -1973,7 +2074,7 @@ const EnregistrerReclamation = (props) => {
                       ].map(({ label, value }) => (
                         <div key={label} style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px' }}>
                           <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 3 }}>{label}</div>
-                          <div style={{ fontSize: 12.5, fontWeight: 600, color: '#1e293b' }}>{value || '—'}</div>
+                          <div style={{ fontSize: 12.5, fontWeight: 600, color: '#1e293b' }}>{value || '-'}</div>
                         </div>
                       ))}
                     </div>
@@ -2067,7 +2168,7 @@ const EnregistrerReclamation = (props) => {
                         {draft.clientFirstAndLastName || <em>Anonyme</em>}
                       </div>
                       <div style={{ fontSize: 11, color: "#64748b" }}>
-                        {draft.createdAtFormated || "—"}
+                        {draft.createdAtFormated || "-"}
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }} onClick={e => e.stopPropagation()}>
@@ -2220,7 +2321,7 @@ const EnregistrerReclamation = (props) => {
               <small className="errorTxt4"><div className="error">{props.errors?.content}</div></small>
             </div>
 
-            {/* Audio feedback — visible immédiatement après l'enregistrement */}
+            {/* Audio feedback - visible immédiatement après l'enregistrement */}
             {(audioRecordings.length > 0 || props.selectedItemAudio?.length > 0) && (
               <div className="col l12 m12 s12" style={{ marginTop: 8 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
@@ -2588,7 +2689,7 @@ const EnregistrerReclamation = (props) => {
               <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
                 <span style={{ color: "#757575", width: "160px", fontSize: "13px", flexShrink: 0 }}>Date de réception</span>
                 <span style={{ fontWeight: "500", fontSize: "13px" }}>
-                  {props.recorded_at ? moment(props.recorded_at, "DD-MM-YYYY HH:mm").format("DD MMMM YYYY [à] HH:mm") : "—"}
+                  {props.recorded_at ? moment(props.recorded_at, "DD-MM-YYYY HH:mm").format("DD MMMM YYYY [à] HH:mm") : "-"}
                 </span>
               </div>
               <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
@@ -2596,7 +2697,7 @@ const EnregistrerReclamation = (props) => {
                 <span style={{ fontWeight: "500", fontSize: "13px", flex: 1 }}>
                   {props.content && props.content !== "#ReclamationAudio" && <span>{props.content}</span>}
                   {!props.content && audio == null && (!props.selectedItemAudio || props.selectedItemAudio.length === 0) && (
-                    <span style={{ color: "#bdbdbd" }}>—</span>
+                    <span style={{ color: "#bdbdbd" }}>-</span>
                   )}
                 </span>
               </div>

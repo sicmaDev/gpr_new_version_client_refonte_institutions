@@ -32,20 +32,20 @@ import SaveIcon from "@mui/icons-material/Save";
  *
  * Props:
  *   Navigation:
- *     onBack          — called when the back button is clicked
+ *     onBack          - called when the back button is clicked
  *
  *   Dossier identity:
  *     codeClient, status, risqueLevel
  *
- *   Sidebar — client info:
+ *   Sidebar - client info:
  *     lastname, phone, email, address, language, gender, dossierimf
  *
- *   Sidebar — dossier details:
+ *   Sidebar - dossier details:
  *     recorded_at, collect, subject, underSubject, product, unit,
- *     created_by, creationDate, content, extras, onAddContent
+ *     created_by, creationDate, content, extras, onAddContent, onDeleteExtra, currentUser
  *
- *   Sidebar — actions:
- *     visibleActions  — string[] of action keys to show
+ *   Sidebar - actions:
+ *     visibleActions  - string[] of action keys to show
  *
  *   Fichiers tab:
  *     selectedItemFiles, selectedItemAudio, attachmentList, audioList,
@@ -55,18 +55,18 @@ import SaveIcon from "@mui/icons-material/Save";
  *     recorded_at, created_by, transmitted, transmittedBy, transmittedTo,
  *     handled_by, assigned_by, assignedAt, solution
  *
- *   Traitement tab — sub-tabs:
- *     treatForm           — JSX for the "Classique" sub-tab form
- *     existingSolutions   — array for PreEnregistreesTab
- *     onModifyBeforeSend  — (content) => void
- *     onUseAndTreat       — (content) => void
- *     btnS                — JSX: session start/join button
- *     transmettre         — JSX: transmit button (optional)
- *     session             — session object (for collaboratif panel)
- *     onSwitchToChat      — () => void  (called when "Voir la discussion" clicked)
+ *   Traitement tab - sub-tabs:
+ *     treatForm           - JSX for the "Classique" sub-tab form
+ *     existingSolutions   - array for PreEnregistreesTab
+ *     onModifyBeforeSend  - (content) => void
+ *     onUseAndTreat       - (content) => void
+ *     btnS                - JSX: session start/join button
+ *     transmettre         - JSX: transmit button (optional)
+ *     session             - session object (for collaboratif panel)
+ *     onSwitchToChat      - () => void  (called when "Voir la discussion" clicked)
  *
  *   Chat tab:
- *     tchat               — <SessionChat ... /> or null
+ *     tchat               - <SessionChat ... /> or null
  *
  *   Modals:
  *     agentsOptions, onAgentChange, anonymat, onAnonymatChange
@@ -75,7 +75,7 @@ import SaveIcon from "@mui/icons-material/Save";
  *     onConfirmTransmettre, loadingTransmettre
  *     motif, onMotifChange, onApprove, onDisapprove, loadingApprove, loadingDisapprove
  *     modalErrors
- *     emailDialogSlot  — <EmailDialog .../> rendered by parent (has its own Redux connect)
+ *     emailDialogSlot  - <EmailDialog .../> rendered by parent (has its own Redux connect)
  *
  *   Permissions:
  *     loading (props.etat), loading2 (props.etat2), loading3 (props.etat3)
@@ -87,19 +87,20 @@ const TraitementShell = ({
   // Identity
   codeClient, status, statusLabel, risqueLevel,
 
-  // Sidebar — client
+  // Sidebar - client
   lastname, phone, email, address, language, gender, dossierimf,
 
-  // Sidebar — dossier
+  // Sidebar - dossier
   recorded_at, collect, subject, underSubject, product, unit,
   created_by, creationDate, content, extras, onAddContent,
+  onDeleteExtra, currentUser,
 
-  // Sidebar — actions
+  // Sidebar - actions
   visibleActions = [],
   onActionOverride,
   transmettreDesc,
 
-  // Custom tabs override — [{ key, label, content }]
+  // Custom tabs override - [{ key, label, content }]
   customTabs,
 
   // Fichiers
@@ -118,9 +119,9 @@ const TraitementShell = ({
   loadingTreat,    // boolean loading state
   onSaveDraft,     // handler du bouton "Sauvegarder"
   loadingDraft,    // boolean loading state for draft
-  draftSavedAt,    // string — date de la dernière sauvegarde brouillon
+  draftSavedAt,    // string - date de la dernière sauvegarde brouillon
   onLoadDraft,     // handler du bouton "Charger le brouillon"
-  canTreat,        // boolean — si false, boutons solutions grisés
+  canTreat,        // boolean - si false, boutons solutions grisés
   existingSolutions = [],
   onModifyBeforeSend,
   onUseAndTreat,
@@ -542,6 +543,8 @@ const TraitementShell = ({
                   content={content}
                   extras={extras}
                   onAddContent={onAddContent}
+                  onDeleteExtra={onDeleteExtra}
+                  currentUser={currentUser}
                 />
               )}
 
@@ -552,7 +555,7 @@ const TraitementShell = ({
                 </div>
               )}
 
-              {/* ── CHAT — always mounted ── */}
+              {/* ── CHAT - always mounted ── */}
               <div className={`flex-col p-3 min-h-full ${!customTabs && activeTab === 'chat' ? 'flex' : 'hidden'}`}>
                 {tchat ? (
                   <div className="bg-white rounded-xl border border-gray-200 flex-1 overflow-hidden">
@@ -623,7 +626,7 @@ const TraitementShell = ({
         errors={modalErrors}
       />
 
-      {/* EmailDialog connecté Redux — rendu par le parent */}
+      {/* EmailDialog connecté Redux - rendu par le parent */}
       {emailDialogSlot}
     </>
   );

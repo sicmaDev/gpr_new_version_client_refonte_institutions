@@ -1,7 +1,7 @@
 import React from "react";
 import CompteDetails from "./CompteDetails";
 import ChangePassword from "./ChangePassword";
-import { loadItemFromSessionStorage } from "../../Utils/utils";
+import { loadItemFromSessionStorage, loadItemFromLocalStorage } from "../../Utils/utils";
 import { useThemeColors, getPagePrimary } from "../../context/ThemeColorsContext";
 
 const HABILITATIONS = [
@@ -38,7 +38,7 @@ const initials = (name = "") => {
 
 const Compte = () => {
   const user = loadItemFromSessionStorage("app-user")
-    ? JSON.parse(loadItemFromSessionStorage("app-user"))
+    ? loadItemFromSessionStorage("app-user")
     : {};
 
   const name      = user.firstAndLastName || "";
@@ -52,6 +52,23 @@ const Compte = () => {
   const { colors } = useThemeColors();
   const bg = getPagePrimary(colors);
   const userHabilitations = HABILITATIONS.filter(h => hbtCodes.includes(h.code));
+
+  // Logo de l'institution (même logique de repli que Apparence.js : app-appearance.logo,
+  // sinon app-institution.logo) affiché en fond du bandeau, à la place d'une photo de profil
+  // personnalisée (fonctionnalité non prise en charge par l'application).
+  const institutionLogo = (() => {
+    try {
+      const rawApp = loadItemFromSessionStorage('app-appearance') || loadItemFromLocalStorage('app-appearance');
+      const app = typeof rawApp === 'string' ? JSON.parse(rawApp) : rawApp;
+      if (app?.logo) return app.logo;
+
+      const rawInst = loadItemFromSessionStorage('app-institution') || loadItemFromLocalStorage('app-institution');
+      const inst = typeof rawInst === 'string' ? JSON.parse(rawInst) : rawInst;
+      return inst?.logo || null;
+    } catch {
+      return null;
+    }
+  })();
 
   return (
     <div style={{ padding: "28px clamp(24px, 4vw, 52px)", maxWidth: 1100, margin: "0 auto" }}>
@@ -69,44 +86,33 @@ const Compte = () => {
 
           {/* Card identité */}
           <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.07)", overflow: "hidden" }}>
-            {/* Bandeau couleur */}
-            <div style={{ height: 64, background: `linear-gradient(135deg, ${bg}22 0%, ${bg}44 100%)` }} />
+            {/* Bandeau — logo de l'institution si disponible, sinon dégradé de couleur */}
+            <div style={{
+              height: 64,
+              background: institutionLogo
+                ? `url(${institutionLogo}) center / contain no-repeat, linear-gradient(135deg, ${bg}22 0%, ${bg}44 100%)`
+                : `linear-gradient(135deg, ${bg}22 0%, ${bg}44 100%)`,
+            }} />
             {/* Avatar */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "0 20px 24px", marginTop: -36 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "0 20px 24px", marginTop: -28 }}>
               <div style={{ position: "relative", display: "inline-block" }}>
                 <div style={{
-                  width: 72, height: 72, borderRadius: "50%",
-                  background: bg, border: "4px solid #fff",
+                  width: 56, height: 56, borderRadius: "50%",
+                  background: bg, border: "3px solid #fff",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 26, fontWeight: 800, color: "#fff",
+                  fontSize: 20, fontWeight: 800, color: "#fff",
                   boxShadow: "0 2px 8px rgba(0,0,0,.15)",
                 }}>
                   {initials(name)}
                 </div>
-                <button
-                  title="Modifier la photo"
-                  style={{
-                    position: "absolute", bottom: 0, right: 0,
-                    width: 24, height: 24, borderRadius: "50%",
-                    background: "#fff", border: "1.5px solid #e2e8f0",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,.12)",
-                    padding: 0,
-                  }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                    <circle cx="12" cy="13" r="4"/>
-                  </svg>
-                </button>
               </div>
-              <div style={{ marginTop: 12, fontWeight: 800, fontSize: 15.5, color: "#0F172A", textAlign: "center" }}>{name || "—"}</div>
+              <div style={{ marginTop: 12, fontWeight: 800, fontSize: 15.5, color: "#0F172A", textAlign: "center" }}>{name || "-"}</div>
               <div style={{
                 marginTop: 6, fontSize: 11.5, fontWeight: 700,
                 color: bg, background: bg + '18',
                 padding: "3px 12px", borderRadius: 20,
               }}>
-                {poste || "—"}
+                {poste || "-"}
               </div>
               <div style={{ marginTop: 8, fontSize: 12, color: "#64748b", textAlign: "center", wordBreak: "break-all" }}>{email}</div>
 

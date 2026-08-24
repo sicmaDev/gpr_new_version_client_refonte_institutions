@@ -88,7 +88,7 @@ const Corbeille = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeChip]);
 
-    let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
+    let user = loadItemFromSessionStorage("app-user") !== undefined ? (loadItemFromSessionStorage("app-user")) : undefined;
     let hbt = (user.posteDto.habilitations).split(',');
     let addR = (user.additionalRole);
 

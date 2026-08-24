@@ -74,7 +74,7 @@ const EmailDialog = (props) => {
           </div>
           <div>
             <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>Envoyer un email</div>
-            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12.5, marginTop: 2 }}>Notification par email — {props.codeClient}</div>
+            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12.5, marginTop: 2 }}>Notification par email - {props.codeClient}</div>
           </div>
         </div>
         <button onClick={() => props.handledShowModalChanged(false)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>

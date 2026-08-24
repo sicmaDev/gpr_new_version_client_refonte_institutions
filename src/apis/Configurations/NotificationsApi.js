@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { notify } from "../../Utils/alert";
 import { loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { HOST } from "../../Utils/globals";
@@ -51,8 +51,8 @@ export let listeU = async (props) => {
         .then(function (response) {
             //console.log("reponse", response.data)
             if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
-                saveItemToSessionStorage(JSON.stringify(response.data.content),"app-users")
-                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
+                saveItemToSessionStorage(response.data.content,"app-users")
+                saveItemToLocalStorage(response.data.content, "app-users")
                 props.items2Changed(response.data.content);
                 // console.log("reponseuser2", response.data.content)
             }
@@ -78,8 +78,8 @@ export const ajout = async (data, props) => {
 
     await axios(config)
         .then(async function (response) {
-            // saveItemToSessionStorage(JSON.stringify(response.data.content), "app-recours")
-            // saveItemToLocalStorage(JSON.stringify(response.data.content), "app-recours")
+            // saveItemToSessionStorage(response.data.content, "app-recours")
+            // saveItemToLocalStorage(response.data.content, "app-recours")
 
             props.etatChanged(false)
 
@@ -112,8 +112,8 @@ export const suppression = async (props,id) => {
 
     await axios(config)
         .then(async function (response) {
-            // saveItemToSessionStorage(JSON.stringify(response.data.content), "app-recours")
-            // saveItemToLocalStorage(JSON.stringify(response.data.content), "app-recours")
+            // saveItemToSessionStorage(response.data.content, "app-recours")
+            // saveItemToLocalStorage(response.data.content, "app-recours")
 
             props.etat3Changed(false)
             notify("Suppression effectuée avec succès !", "success");

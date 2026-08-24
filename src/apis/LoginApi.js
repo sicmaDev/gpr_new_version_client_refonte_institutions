@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { notify } from "../Utils/alert"
 import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage, today } from "../Utils/utils";
 import { HOST } from "../Utils/globals";
@@ -41,6 +41,7 @@ export const LoginApi = (credentials, props, isLocked = false) => {
 
                 props.authenticate()
                 if (isLocked) {
+                    localStorage.removeItem("isLocked")
                     props.setUnlocked()
                     props.isAuth(true)
 
@@ -54,7 +55,7 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 saveItemToSessionStorage(1, 'logged')
                 saveItemToSessionStorage(1, 'app-mode')
 
-                response.data.response.content.user ? saveItemToSessionStorage(JSON.stringify(response.data.response.content.user), 'app-user') : saveItemToSessionStorage([], 'app-user');
+                response.data.response.content.user ? saveItemToSessionStorage(response.data.response.content.user, 'app-user') : saveItemToSessionStorage([], 'app-user');
 
                 // Notify ThemeColorsContext to apply colors saved in DB
                 const _s = response.data.response.content.settings;
@@ -69,23 +70,23 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 }
 
                 // sessionStorage
-                _s.institution ? saveItemToSessionStorage(JSON.stringify(_s.institution), 'app-institution') : saveItemToSessionStorage([], 'app-institution');
-                _s.mail ? saveItemToSessionStorage(JSON.stringify(_s.mail), 'app-mail') : saveItemToSessionStorage([], 'app-mail');
-                _s.sms ? saveItemToSessionStorage(JSON.stringify(_s.sms), 'app-sms') : saveItemToSessionStorage([], 'app-sms');
-                _s.bot ? saveItemToSessionStorage(JSON.stringify(_s.bot), 'app-bot') : saveItemToSessionStorage([], 'app-bot');
-                _s.languages ? saveItemToSessionStorage(JSON.stringify(_s.languages), 'app-langues') : saveItemToSessionStorage([], 'app-langues');
-                _s.externalRecourses ? saveItemToSessionStorage(JSON.stringify(_s.externalRecourses), 'app-recours') : saveItemToSessionStorage([], 'app-recours');
-                _s.servicePoints ? saveItemToSessionStorage(JSON.stringify(_s.servicePoints), 'app-ps') : saveItemToSessionStorage([], 'app-ps');
-                _s.collectionChannels ? saveItemToSessionStorage(JSON.stringify(_s.collectionChannels), 'app-supports') : saveItemToSessionStorage([], 'app-supports');
-                _s.objets ? saveItemToSessionStorage(JSON.stringify(_s.objets), 'app-objets') : saveItemToSessionStorage([], 'app-objets');
-                _s.categorie_objet ? saveItemToSessionStorage(JSON.stringify(_s.categorie_objet), 'app-categories') : saveItemToSessionStorage([], 'app-categories');
-                _s.postes ? saveItemToSessionStorage(JSON.stringify(_s.postes), 'app-postes') : saveItemToSessionStorage([], 'app-postes');
-                _s.users ? saveItemToSessionStorage(JSON.stringify(_s.users), 'app-users') : saveItemToSessionStorage([], 'app-users');
-                _s.products ? saveItemToSessionStorage(JSON.stringify(_s.products), 'app-produits') : saveItemToSessionStorage([], 'app-produits');
-                _s.help ? saveItemToSessionStorage(JSON.stringify(_s.help), 'help') : saveItemToSessionStorage([], 'help');
-                saveItemToSessionStorage(JSON.stringify(_modules), 'app-modules');
+                _s.institution ? saveItemToSessionStorage(_s.institution, 'app-institution') : saveItemToSessionStorage([], 'app-institution');
+                _s.mail ? saveItemToSessionStorage(_s.mail, 'app-mail') : saveItemToSessionStorage([], 'app-mail');
+                _s.sms ? saveItemToSessionStorage(_s.sms, 'app-sms') : saveItemToSessionStorage([], 'app-sms');
+                _s.bot ? saveItemToSessionStorage(_s.bot, 'app-bot') : saveItemToSessionStorage([], 'app-bot');
+                _s.languages ? saveItemToSessionStorage(_s.languages, 'app-langues') : saveItemToSessionStorage([], 'app-langues');
+                _s.externalRecourses ? saveItemToSessionStorage(_s.externalRecourses, 'app-recours') : saveItemToSessionStorage([], 'app-recours');
+                _s.servicePoints ? saveItemToSessionStorage(_s.servicePoints, 'app-ps') : saveItemToSessionStorage([], 'app-ps');
+                _s.collectionChannels ? saveItemToSessionStorage(_s.collectionChannels, 'app-supports') : saveItemToSessionStorage([], 'app-supports');
+                _s.objets ? saveItemToSessionStorage(_s.objets, 'app-objets') : saveItemToSessionStorage([], 'app-objets');
+                _s.categorie_objet ? saveItemToSessionStorage(_s.categorie_objet, 'app-categories') : saveItemToSessionStorage([], 'app-categories');
+                _s.postes ? saveItemToSessionStorage(_s.postes, 'app-postes') : saveItemToSessionStorage([], 'app-postes');
+                _s.users ? saveItemToSessionStorage(_s.users, 'app-users') : saveItemToSessionStorage([], 'app-users');
+                _s.products ? saveItemToSessionStorage(_s.products, 'app-produits') : saveItemToSessionStorage([], 'app-produits');
+                _s.help ? saveItemToSessionStorage(_s.help, 'help') : saveItemToSessionStorage([], 'help');
+                saveItemToSessionStorage(_modules, 'app-modules');
                 if (_s.appearance) {
-                    saveItemToSessionStorage(JSON.stringify(_s.appearance), 'app-appearance');
+                    saveItemToSessionStorage(_s.appearance, 'app-appearance');
                 }
 
                 //enregistrement dans le local storage
@@ -93,24 +94,24 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 saveItemToLocalStorage(1, 'logged')
                 saveItemToLocalStorage(1, 'app-mode')
 
-                _u ? saveItemToLocalStorage(JSON.stringify(_u), 'app-user') : saveItemToLocalStorage([], 'app-user');
-                _s.institution ? saveItemToLocalStorage(JSON.stringify(_s.institution), 'app-institution') : saveItemToLocalStorage([], 'app-institution');
-                _s.mail ? saveItemToLocalStorage(JSON.stringify(_s.mail), 'app-mail') : saveItemToLocalStorage([], 'app-mail');
-                _s.sms ? saveItemToLocalStorage(JSON.stringify(_s.sms), 'app-sms') : saveItemToLocalStorage([], 'app-sms');
-                _s.bot ? saveItemToLocalStorage(JSON.stringify(_s.bot), 'app-bot') : saveItemToLocalStorage([], 'app-bot');
-                _s.languages ? saveItemToLocalStorage(JSON.stringify(_s.languages), 'app-langues') : saveItemToLocalStorage([], 'app-langues');
-                _s.externalRecourses ? saveItemToLocalStorage(JSON.stringify(_s.externalRecourses), 'app-recours') : saveItemToLocalStorage([], 'app-recours');
-                _s.servicePoints ? saveItemToLocalStorage(JSON.stringify(_s.servicePoints), 'app-ps') : saveItemToLocalStorage([], 'app-ps');
-                _s.collectionChannels ? saveItemToLocalStorage(JSON.stringify(_s.collectionChannels), 'app-supports') : saveItemToLocalStorage([], 'app-supports');
-                _s.objets ? saveItemToLocalStorage(JSON.stringify(_s.objets), 'app-objets') : saveItemToLocalStorage([], 'app-objets');
-                _s.categorie_objet ? saveItemToLocalStorage(JSON.stringify(_s.categorie_objet), 'app-categories') : saveItemToLocalStorage([], 'app-categories');
-                _s.postes ? saveItemToLocalStorage(JSON.stringify(_s.postes), 'app-postes') : saveItemToLocalStorage([], 'app-postes');
-                _s.users ? saveItemToLocalStorage(JSON.stringify(_s.users), 'app-users') : saveItemToLocalStorage([], 'app-users');
-                _s.products ? saveItemToLocalStorage(JSON.stringify(_s.products), 'app-produits') : saveItemToLocalStorage([], 'app-produits');
-                _s.help ? saveItemToLocalStorage(JSON.stringify(_s.help), 'help') : saveItemToLocalStorage([], 'help');
-                saveItemToLocalStorage(JSON.stringify(_modules), 'app-modules');
+                _u ? saveItemToLocalStorage(_u, 'app-user') : saveItemToLocalStorage([], 'app-user');
+                _s.institution ? saveItemToLocalStorage(_s.institution, 'app-institution') : saveItemToLocalStorage([], 'app-institution');
+                _s.mail ? saveItemToLocalStorage(_s.mail, 'app-mail') : saveItemToLocalStorage([], 'app-mail');
+                _s.sms ? saveItemToLocalStorage(_s.sms, 'app-sms') : saveItemToLocalStorage([], 'app-sms');
+                _s.bot ? saveItemToLocalStorage(_s.bot, 'app-bot') : saveItemToLocalStorage([], 'app-bot');
+                _s.languages ? saveItemToLocalStorage(_s.languages, 'app-langues') : saveItemToLocalStorage([], 'app-langues');
+                _s.externalRecourses ? saveItemToLocalStorage(_s.externalRecourses, 'app-recours') : saveItemToLocalStorage([], 'app-recours');
+                _s.servicePoints ? saveItemToLocalStorage(_s.servicePoints, 'app-ps') : saveItemToLocalStorage([], 'app-ps');
+                _s.collectionChannels ? saveItemToLocalStorage(_s.collectionChannels, 'app-supports') : saveItemToLocalStorage([], 'app-supports');
+                _s.objets ? saveItemToLocalStorage(_s.objets, 'app-objets') : saveItemToLocalStorage([], 'app-objets');
+                _s.categorie_objet ? saveItemToLocalStorage(_s.categorie_objet, 'app-categories') : saveItemToLocalStorage([], 'app-categories');
+                _s.postes ? saveItemToLocalStorage(_s.postes, 'app-postes') : saveItemToLocalStorage([], 'app-postes');
+                _s.users ? saveItemToLocalStorage(_s.users, 'app-users') : saveItemToLocalStorage([], 'app-users');
+                _s.products ? saveItemToLocalStorage(_s.products, 'app-produits') : saveItemToLocalStorage([], 'app-produits');
+                _s.help ? saveItemToLocalStorage(_s.help, 'help') : saveItemToLocalStorage([], 'help');
+                saveItemToLocalStorage(_modules, 'app-modules');
                 if (_s.appearance) {
-                    saveItemToLocalStorage(JSON.stringify(_s.appearance), 'app-appearance');
+                    saveItemToLocalStorage(_s.appearance, 'app-appearance');
                 }
 
             } else {
@@ -179,8 +180,16 @@ export const licenseInfo = async () => {
 
 
 export const LoginApiOffline = (credentials, props) => {
-    let user = loadItemFromLocalStorage("app-user") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-user")) : undefined;
+    // loadItemFromLocalStorage() parse déjà le JSON en interne — le repasser dans
+    // JSON.parse() ici plantait systématiquement (JSON.parse d'un objet, pas d'une
+    // chaîne), ce qui empêchait toute connexion en mode offline.
+    let user = loadItemFromLocalStorage("app-user");
     props.etatChanged(false)
+
+    if (!user) {
+        notify("Erreur - Vous devez vous connecter au moins une fois en ligne avant de pouvoir utiliser le mode offline.", "error");
+        return;
+    }
 
     if (user.email === credentials.email) {
         // if (etatR === true || etatD === true || etatS === true) {
@@ -232,9 +241,9 @@ export const receiveData = () => {
         .then(function (response) {
             // console.log("receivdataresponse",response)
             if (response.data.status) {
-                response.data.content.claimDto ? saveItemToLocalStorage(JSON.stringify(response.data.content.claimDto), 'recs-TS') : saveItemToLocalStorage([], 'recs-TS');
-                response.data.content.denunDto ? saveItemToLocalStorage(JSON.stringify(response.data.content.denunDto), 'dens-TS') : saveItemToLocalStorage([], 'dens-TS');
-                response.data.content.suggestionDto ? saveItemToLocalStorage(JSON.stringify(response.data.content.suggestionDto), 'sugs-TS') : saveItemToLocalStorage([], 'sugs-TS');
+                response.data.content.claimDto ? saveItemToLocalStorage(response.data.content.claimDto, 'recs-TS') : saveItemToLocalStorage([], 'recs-TS');
+                response.data.content.denunDto ? saveItemToLocalStorage(response.data.content.denunDto, 'dens-TS') : saveItemToLocalStorage([], 'dens-TS');
+                response.data.content.suggestionDto ? saveItemToLocalStorage(response.data.content.suggestionDto, 'sugs-TS') : saveItemToLocalStorage([], 'sugs-TS');
             }
 
         })
@@ -246,9 +255,9 @@ export const receiveData = () => {
 
 export const synchronData = () => {
     let data = {};
-    data["claims"] = loadItemFromLocalStorage("recs-TS") !== undefined ? JSON.parse(loadItemFromLocalStorage("recs-TS")) : []
-    data["denuns"] = loadItemFromLocalStorage("dens-TS") !== undefined ? JSON.parse(loadItemFromLocalStorage("dens-TS")) : []
-    data["suggestions"] = loadItemFromLocalStorage("sugs-TS") !== undefined ? JSON.parse(loadItemFromLocalStorage("sugs-TS")) : []
+    data["claims"] = loadItemFromLocalStorage("recs-TS") !== undefined ? loadItemFromLocalStorage("recs-TS") : []
+    data["denuns"] = loadItemFromLocalStorage("dens-TS") !== undefined ? loadItemFromLocalStorage("dens-TS") : []
+    data["suggestions"] = loadItemFromLocalStorage("sugs-TS") !== undefined ? loadItemFromLocalStorage("sugs-TS") : []
     // console.log("datasyncitems",data)
     const config = {
         method: 'POST',

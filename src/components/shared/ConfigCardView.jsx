@@ -21,22 +21,22 @@ const selectSx = {
 };
 
 /**
- * ConfigCardView — Vue cartes MUI générique pour les modules de configuration
+ * ConfigCardView - Vue cartes MUI générique pour les modules de configuration
  *
  * Props :
- *   items          : array  — données à afficher
- *   titleField     : string — champ principal affiché en titre
- *   subtitleField  : string — champ secondaire (description)
- *   badgeField     : string — champ pour un badge optionnel (ex: type, statut)
- *   badgeColorMap  : object — { [valeur]: couleur } pour colorier le badge
- *   extraFields    : array  — champs supplémentaires à afficher :
+ *   items          : array  - données à afficher
+ *   titleField     : string - champ principal affiché en titre
+ *   subtitleField  : string - champ secondaire (description)
+ *   badgeField     : string - champ pour un badge optionnel (ex: type, statut)
+ *   badgeColorMap  : object - { [valeur]: couleur } pour colorier le badge
+ *   extraFields    : array  - champs supplémentaires à afficher :
  *     { label, render: (row) => ReactNode }
- *   searchFields   : array  — champs sur lesquels porter la recherche
- *   filters        : array  — filtres select optionnels :
+ *   searchFields   : array  - champs sur lesquels porter la recherche
+ *   filters        : array  - filtres select optionnels :
  *     { id, label, options: [{value, label}], filterFn: (row, value) => bool }
- *   onEdit         : fn(row) — callback bouton Modifier (null = pas de bouton)
- *   onDelete       : fn(row) — callback bouton Supprimer (null = pas de bouton)
- *   avatarField    : string — champ utilisé pour l'avatar (initiales), défaut = titleField
+ *   onEdit         : fn(row) - callback bouton Modifier (null = pas de bouton)
+ *   onDelete       : fn(row) - callback bouton Supprimer (null = pas de bouton)
+ *   avatarField    : string - champ utilisé pour l'avatar (initiales), défaut = titleField
  *   rowsPerPageOptions : array
  */
 
@@ -169,7 +169,7 @@ const ConfigCardView = ({
             const avatarName = String(row[avatarField ?? titleField] ?? "");
             const [avatarBg, avatarColor] = getAvatarColors(avatarName);
             const initials = getInitials(avatarName);
-            const title = String(row[titleField] ?? "—");
+            const title = String(row[titleField] ?? "-");
             const subtitle = subtitleField ? String(row[subtitleField] ?? "") : "";
             const badge = badgeField ? row[badgeField] : null;
             const badgeColor = badge ? (badgeColorMap[badge] ?? "#64748B") : null;

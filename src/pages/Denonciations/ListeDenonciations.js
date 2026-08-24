@@ -160,8 +160,13 @@ import { KTApp } from "../../Utils/blockui";
 import {
   addExtraClaimApi,
   startSession,
+  deleteFileApi,
+  deleteAudioApi,
+  deleteExtraContentApi,
 } from "../../apis/Reclamations/ReclamationsApi";
 import { getClaimAudioApi } from "../../apis/Reclamations/ReclamationsApi";
+import { modalify } from "../../Utils/modal";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import {
   downloadAudioApi,
   downloadFillesApi,
@@ -198,8 +203,6 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ForumIcon from "@mui/icons-material/Forum";
-import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 
 const DEN_KPI_CARDS = [
   { key: "total",   label: "Total dénonciations",       icon: AssignmentIcon,    iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
@@ -240,7 +243,7 @@ const ListeDenonciations = (props) => {
 
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-user"))
+      ? loadItemFromSessionStorage("app-user")
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
@@ -300,11 +303,11 @@ const ListeDenonciations = (props) => {
 
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
-      ? JSON.parse(loadItemFromLocalStorage("app-mode"))
+      ? loadItemFromLocalStorage("app-mode")
       : undefined;
   let objets =
     loadItemFromLocalStorage("app-objets") !== undefined
-      ? JSON.parse(loadItemFromLocalStorage("app-objets"))
+      ? loadItemFromLocalStorage("app-objets")
       : undefined;
 
   const [currentData, setCurrentData] = useState(null);
@@ -314,7 +317,7 @@ const ListeDenonciations = (props) => {
   const handleClickOpen = () => { setOpen(true); };
   const history = useHistory();
 
-  // Chargement depuis l'URL ou sessionStorage — un seul useEffect pour éviter la race condition
+  // Chargement depuis l'URL ou sessionStorage - un seul useEffect pour éviter la race condition
   useEffect(() => {
     const urlCode = props.match?.params?.code;
     const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_den_code');
@@ -848,31 +851,31 @@ const ListeDenonciations = (props) => {
         props.statusChanged(data.status ? data.status : "");
 
         let description1 = data.collectionChannelId
-          ? JSON.parse(loadItemFromSessionStorage("app-supports")).filter(
+          ? loadItemFromSessionStorage("app-supports").filter(
             (e) => {
               return e.id === data.collectionChannelId;
             }
           )
           : "";
         let description2 = data.objetId
-          ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
+          ? loadItemFromSessionStorage("app-objets").filter((e) => {
             return e.id === data.objetId;
           })
           : "";
         let description3 = data.productId
-          ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
+          ? loadItemFromSessionStorage("app-produits").filter(
             (e) => {
               return e.id === data.productId;
             }
           )
           : "";
         let description4 = data.servicePointId
-          ? JSON.parse(loadItemFromSessionStorage("app-ps")).filter((e) => {
+          ? loadItemFromSessionStorage("app-ps").filter((e) => {
             return e.id === data.servicePointId;
           })
           : "";
         let description5 = data.collectorId
-          ? JSON.parse(loadItemFromSessionStorage("app-users")).filter((e) => {
+          ? loadItemFromSessionStorage("app-users").filter((e) => {
             return e.id === data.collectorId;
           })
           : "";
@@ -1472,6 +1475,47 @@ const ListeDenonciations = (props) => {
     }
   }
 
+  const handleDeleteFile = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de ce fichier ?",
+      "confirm",
+      () => {
+        deleteFileApi(id).then((ok) => {
+          if (ok) getFillesApi(props.id, props);
+        });
+      }
+    );
+  };
+
+  const handleDeleteAudio = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de cet audio ?",
+      "confirm",
+      () => {
+        deleteAudioApi(id).then((ok) => {
+          if (ok) getClaimAudioApi(props.id, props);
+        });
+      }
+    );
+  };
+
+  const handleDeleteExtraContent = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de ce contenu ?",
+      "confirm",
+      () => {
+        deleteExtraContentApi(id).then((ok) => {
+          if (ok) {
+            props.extrasChanged(props.extras.filter((e) => e.id !== id));
+          }
+        });
+      }
+    );
+  };
+
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
@@ -1547,6 +1591,21 @@ const ListeDenonciations = (props) => {
               }}
               onClick={() => downloadFillesApi(attachment.id, attachment.name)}
             />
+            {attachment._extra &&
+              attachment.extra?.user?.firstAndLastName === user.firstAndLastName && (
+                <DeleteOutlineIcon
+                  sx={{
+                    fontSize: "18px",
+                    color: "error.main",
+                    ml: 1,
+                    "&:hover": {
+                      color: "error.dark",
+                      cursor: "pointer",
+                    },
+                  }}
+                  onClick={() => handleDeleteFile(attachment.id)}
+                />
+              )}
           </Card>
         </Grid>
       );
@@ -1665,6 +1724,15 @@ const ListeDenonciations = (props) => {
               >
                 {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
               </IconButton>
+              {audioItem._extra &&
+                audioItem.extra?.user?.firstAndLastName === user.firstAndLastName && (
+                  <IconButton
+                    onClick={() => handleDeleteAudio(audioItem.id)}
+                    sx={{ color: "error.main" }}
+                  >
+                    <DeleteOutlineIcon fontSize="small" />
+                  </IconButton>
+                )}
             </Box>
           </Card>
         </Grid>
@@ -1712,17 +1780,17 @@ const ListeDenonciations = (props) => {
 
     // Données de l'élément sélectionné
     let description2 = props.selectedItem.objetId
-      ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter(
+      ? loadItemFromSessionStorage("app-objets").filter(
         (e) => e.id === props.selectedItem.objetId
       )
       : "";
     let description3 = props.selectedItem.productId
-      ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
+      ? loadItemFromSessionStorage("app-produits").filter(
         (e) => e.id === props.selectedItem.productId
       )
       : "";
     let description5 = props.selectedItem.collectorId
-      ? JSON.parse(loadItemFromSessionStorage("app-users")).filter(
+      ? loadItemFromSessionStorage("app-users").filter(
         (e) => e.id === props.selectedItem.collectorId
       )
       : "";
@@ -1842,22 +1910,21 @@ const ListeDenonciations = (props) => {
         gravity = item.objet?.risqueLevel || objets?.find((e) => e.id === item.objetId)?.risqueLevel;
       }
     } catch (_) {}
-    const isClosed = ["SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(item.status);
     return {
       code: item.codeClient,
       client: item.clientFirstAndLastName || "Anonyme",
-      title: item.objet?.libelle || "—",
+      title: item.objet?.libelle || "-",
       subtitle: item.objet?.categorie?.libelle || null,
       status: item.status,
       gravity,
       date: item.createdAt,
       slaWarning: item.status !== "TREAT" && item.retardDay !== undefined && item.retardDay <= 0,
       retardDay: item.retardDay,
-      transmitted: item.transmitted,
-      isAssignedToMe: item.status === "AFFECTED" &&
-        item.treatmentAffectedTo &&
-        (item.treatmentAffectedTo.firstAndLastName === user?.firstAndLastName || item.treatmentAffectedTo.id === user?.id),
-      hasSession: item.session && item.session !== "" && !isClosed,
+      // Affectation/session/transmission ne concernent que le traitement actif : cette liste
+      // générale des dénonciations n'a pas à les afficher (seule TraiterDenonciation.js le fait).
+      transmitted: false,
+      isAssignedToMe: false,
+      hasSession: false,
     };
   };
 
@@ -1872,27 +1939,13 @@ const ListeDenonciations = (props) => {
     {
       id: "codeClient", label: "Code client", sortable: true, minWidth: 100,
       render: (item) => {
-        const isClosed = ["SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(item.status);
-        const isAssignedToMe = item.status === "AFFECTED" &&
-          item.treatmentAffectedTo &&
-          (item.treatmentAffectedTo.firstAndLastName === user?.firstAndLastName || item.treatmentAffectedTo.id === user?.id);
-        const hasSession = item.session && item.session !== "" && !isClosed;
-
+        // Affectation/session ne concernent que le traitement actif (voir TraiterDenonciation.js) :
+        // cette liste générale ne doit pas les afficher.
         return (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
-              {item.codeClient || "—"}
+              {item.codeClient || "-"}
             </span>
-            {isAssignedToMe && (
-              <Tooltip title="Vous êtes assigné à cette dénonciation">
-                <AlternateEmailIcon sx={{ fontSize: 15, color: "#DC2626" }} />
-              </Tooltip>
-            )}
-            {hasSession && (
-              <Tooltip title="Session collaborative ouverte">
-                <ForumIcon sx={{ fontSize: 15, color: "#DC2626" }} />
-              </Tooltip>
-            )}
           </Box>
         );
       },
@@ -1902,7 +1955,7 @@ const ListeDenonciations = (props) => {
       render: (item) => (
         <Box>
           <span style={{ display: "block", fontWeight: 600, fontSize: "0.82rem", color: "#0F172A", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {item.objet?.libelle || "—"}
+            {item.objet?.libelle || "-"}
           </span>
           {item.objet?.categorie?.libelle && (
             <span style={{ fontSize: "0.72rem", color: "#94A3B8" }}>{item.objet.categorie.libelle}</span>
@@ -1926,14 +1979,14 @@ const ListeDenonciations = (props) => {
     },
     {
       id: "gravity", label: "Gravité", sortable: true, minWidth: 100,
-      render: (item) => <ClaimGravityBadge gravity={getGravityDen(item)} transmitted={item.transmitted === "true" || item.transmitted === true} />,
+      render: (item) => <ClaimGravityBadge gravity={getGravityDen(item)} transmitted={false} />,
       sortValue: (item) => getGravityDen(item) || "",
     },
     {
       id: "date", label: "Enregistrée le", sortable: true, minWidth: 130,
       render: (item) => (
         <span style={{ fontSize: "0.80rem", color: "#475569", whiteSpace: "nowrap" }}>
-          {item.createdAt ? new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(item.createdAt)) : "—"}
+          {item.createdAt ? new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(item.createdAt)) : "-"}
         </span>
       ),
       sortValue: (item) => item.createdAt || "",
@@ -1941,14 +1994,14 @@ const ListeDenonciations = (props) => {
     {
       id: "alert", label: "Délai", sortable: false, minWidth: 90,
       render: (item) => {
-        if (item.status === "TREAT") return <span style={{ color: "#CBD5E1", fontSize: "0.78rem" }}>—</span>;
+        if (item.status === "TREAT") return <span style={{ color: "#CBD5E1", fontSize: "0.78rem" }}>-</span>;
         if (item.retardDay !== undefined && item.retardDay <= 0) return (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
             <WarningAmberIcon sx={{ fontSize: 14, color: "#EF4444" }} />
             <span style={{ fontSize: "0.75rem", color: "#EF4444", fontWeight: 700 }}>Retard</span>
           </Box>
         );
-        return <span style={{ fontSize: "0.78rem", color: "#475569" }}>{item.declenchedDate || "—"}</span>;
+        return <span style={{ fontSize: "0.78rem", color: "#475569" }}>{item.declenchedDate || "-"}</span>;
       },
     },
   ];
@@ -2575,7 +2628,7 @@ const ListeDenonciations = (props) => {
                   TO_APPROUVED:{ title: "En attente d'approbation", sub: "La solution proposée doit être approuvée", iconColor: "#92400e", iconBg: "#fef3c7", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
                   DESAPPROUVED:{ title: "Solution désapprouvée", sub: "Une nouvelle solution doit être proposée", iconColor: "#991b1b", iconBg: "#fee2e2", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> },
                   TREAT:       { title: "En traitement", sub: "Une solution a été proposée", iconColor: "#166534", iconBg: "#dcfce7", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="20 6 9 17 4 12"/></svg> },
-                  SATISFIED:   { title: "Clôturée — Satisfait", sub: null, iconColor: "#166534", iconBg: "#dcfce7", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+                  SATISFIED:   { title: "Clôturée - Satisfait", sub: null, iconColor: "#166534", iconBg: "#dcfce7", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
                   CLASSED:     { title: "Classée", sub: "Le dossier est définitivement clos", iconColor: "#475569", iconBg: "#f1f5f9", icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> },
                 };
                 const hero = DEN_HERO[props.status] || DEN_HERO["SAVED"];
@@ -2621,10 +2674,10 @@ const ListeDenonciations = (props) => {
                         {props.status === "AFFECTED" && (
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                             {[
-                              { label: "Affecté à", value: props.handled_by || "—", color: "#1d4ed8" },
-                              { label: "Par", value: props.assigned_by || "—", color: "#1e293b" },
-                              { label: "Le", value: props.assigned_at ? formatDate(props.assigned_at) : "—", color: "#1e293b" },
-                              { label: "Délai", value: props.selectedItem?.retardDay != null ? `${props.selectedItem.retardDay} jour(s)` : "—", color: props.selectedItem?.retardDay < 0 ? "#ef4444" : "#1e293b" },
+                              { label: "Affecté à", value: props.handled_by || "-", color: "#1d4ed8" },
+                              { label: "Par", value: props.assigned_by || "-", color: "#1e293b" },
+                              { label: "Le", value: props.assigned_at ? formatDate(props.assigned_at) : "-", color: "#1e293b" },
+                              { label: "Délai", value: props.selectedItem?.retardDay != null ? `${props.selectedItem.retardDay} jour(s)` : "-", color: props.selectedItem?.retardDay < 0 ? "#ef4444" : "#1e293b" },
                             ].map(({ label, value, color }) => (
                               <div key={label} style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 14px" }}>
                                 <div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{label}</div>
@@ -2691,7 +2744,7 @@ const ListeDenonciations = (props) => {
                                     </div>
                                   </div>
                                   <div style={{ padding: "12px 14px", borderLeft: `3px solid ${dotColor}`, margin: "10px 14px 0" }}>
-                                    <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "—"}</div>
+                                    <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "-"}</div>
                                   </div>
                                   {sol.commentaire && <div style={{ padding: "8px 14px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Commentaire</div><div style={{ fontSize: 12.5, color: "#64748b", fontStyle: "italic" }}>{sol.commentaire}</div></div>}
                                   {sol.satisfactionMeasureDto?.commentaire && <div style={{ margin: "0 14px 10px", background: "#e0f2fe", borderRadius: 8, padding: "8px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#0369a1", textTransform: "uppercase" }}>Commentaire du client</div><div style={{ fontSize: 12.5, color: "#0369a1", marginTop: 4 }}>{sol.satisfactionMeasureDto.commentaire}</div></div>}
@@ -2737,6 +2790,8 @@ const ListeDenonciations = (props) => {
                   content={props.content}
                   extras={props.extras}
                   onAddContent={() => { setShowExtraContent(true); setExtraContent(""); }}
+                  onDeleteExtra={handleDeleteExtraContent}
+                  currentUser={user}
                 />
               ),
             },
@@ -2765,7 +2820,7 @@ const ListeDenonciations = (props) => {
                                   <span style={{ fontSize: 12.5, fontWeight: 700, color: dc }}>Solution {idx + 1}</span>
                                   {sol.author?.firstAndLastName && <span style={{ fontSize: 11, color: "#94a3b8" }}>{sol.author.firstAndLastName} · {sol.createdAt ? formatDate(sol.createdAt) : ""}</span>}
                                 </div>
-                                <div style={{ fontSize: 13, color: "#1e293b", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "—"}</div>
+                                <div style={{ fontSize: 13, color: "#1e293b", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "-"}</div>
                                 {sol.satisfactionMeasureDto?.status && <div style={{ marginTop: 6 }}><span style={{ fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 20, background: dc + "18", color: dc }}>{sat === "SATISFIED" ? "Satisfait" : sat === "UNSATISFIED" ? "Non satisfait" : "Partiellement satisfait"}</span></div>}
                               </div>
                             </div>

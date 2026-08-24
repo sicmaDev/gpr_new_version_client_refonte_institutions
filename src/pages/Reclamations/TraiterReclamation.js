@@ -110,6 +110,9 @@ import {
   deleteClaimApi,
   convertClaimApi,
   saveDraftApi,
+  deleteFileApi,
+  deleteAudioApi,
+  deleteExtraContentApi,
 } from "../../apis/Reclamations/ReclamationsApi";
 import {
   addSuggestionApi,
@@ -177,6 +180,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import {
+  DeleteOutline,
   FileDownload,
   History,
   Info,
@@ -212,6 +216,13 @@ import TextField from "@mui/material/TextField";
 import { notify } from "../../Utils/alert";
 import MoveUpIcon from "@mui/icons-material/MoveUp";
 import ForumIcon from "@mui/icons-material/Forum";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import WaCommentBadge from "../../whatgpr/components/WaCommentBadge";
+import WaAudioSection from "../../whatgpr/components/WaAudioSection";
+import AudioGrid from "../../whatgpr/components/AudioGrid";
+import useWaAudioJump from "../../whatgpr/hooks/useWaAudioJump";
+import { splitWaAudios } from "../../whatgpr/utils";
+import SendSolutionWhatsappDialog from "../../whatgpr/components/SendSolutionWhatsappDialog";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import { licenseInfo } from "../../apis/LoginApi";
 import WarningIcon from "@mui/icons-material/Warning";
@@ -287,6 +298,10 @@ const TREAT_CHIPS = [
 ];
 
 const TraiterReclamation = (props) => {
+  const { waAudios, regularAudios } = splitWaAudios(props.selectedItemAudio);
+  const { highlightedAudioId, handleJumpToWhatsappAudioComment } = useWaAudioJump(waAudios);
+  const [showSolutionWaModal, setShowSolutionWaModal] = useState(false);
+  const [waModalSolution, setWaModalSolution] = useState(null);
   const [expanded, setExpanded] = React.useState(false);
   const [checked, setChecked] = React.useState(false);
   const [usersCGR, setUsersCGR] = React.useState([]);
@@ -316,11 +331,11 @@ const TraiterReclamation = (props) => {
   let dimf, crew, emailDisplay;
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-user"))
+      ? loadItemFromSessionStorage("app-user")
       : undefined;
   let users =
     loadItemFromLocalStorage("app-users") !== undefined
-      ? JSON.parse(loadItemFromLocalStorage("app-users"))
+      ? loadItemFromLocalStorage("app-users")
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
@@ -373,7 +388,7 @@ const TraiterReclamation = (props) => {
   const [savedDraft, setSavedDraft] = useState(null);
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
-      ? JSON.parse(loadItemFromLocalStorage("app-mode"))
+      ? loadItemFromLocalStorage("app-mode")
       : undefined;
 
   let compteur = 0;
@@ -1570,7 +1585,12 @@ const TraiterReclamation = (props) => {
                         >
                           <span className="hero">
                             Client {degre} : mesurée
-                            {solution.satisfactionMeasureDto.measurer
+                            {solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp]") ||
+                            solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp-Audio]")
+                              ? (solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp-Audio]")
+                                  ? " via audio WhatsApp 🎙 "
+                                  : " depuis WhatsApp ")
+                              : solution.satisfactionMeasureDto.measurer
                               ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
                               : " depuis le site web "}
                             le{" "}
@@ -1690,6 +1710,20 @@ const TraiterReclamation = (props) => {
                                 <RecordVoiceOverIcon sx={{ mr: 2 }} /> Solution
                               </div>
                               <div>{solution?.content}</div>
+                              {solution?.id && props.phone && (
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  startIcon={<WhatsAppIcon />}
+                                  style={{ marginTop: 8, color: "#25d366", borderColor: "#25d366" }}
+                                  onClick={() => {
+                                    setWaModalSolution(solution);
+                                    setShowSolutionWaModal(true);
+                                  }}
+                                >
+                                  Envoyer par WhatsApp
+                                </Button>
+                              )}
                             </div>
 
                             <div className="col l12 s12 pb-2" id="content">
@@ -1709,10 +1743,11 @@ const TraiterReclamation = (props) => {
                                     Commentaire du client
                                   </div>
                                   <div>
-                                    {
-                                      solution.satisfactionMeasureDto
-                                        .commentaire
-                                    }
+                                    <WaCommentBadge
+                                      commentaire={solution.satisfactionMeasureDto.commentaire}
+                                      measureDateTime={solution.satisfactionMeasureDto.measureDateTime}
+                                      onJumpToAudio={handleJumpToWhatsappAudioComment}
+                                    />
                                   </div>
                                 </div>
                               ) : (
@@ -1917,7 +1952,7 @@ const TraiterReclamation = (props) => {
               <span>
                 Cette réclamation vous a été transmise par
                 <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>
-                  {props.transmittedBy ? props.transmittedBy : "—"}
+                  {props.transmittedBy ? props.transmittedBy : "-"}
                 </strong>.
               </span>
 
@@ -1944,7 +1979,7 @@ const TraiterReclamation = (props) => {
                   alignItems: "center",
                 }}
               >
-                Vous avez transmis cette réclamation à <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>{props.transmittedTo ? props.transmittedTo : "—"}</strong>{" "}. Vous n'avez plus la main sur elle.
+                Vous avez transmis cette réclamation à <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>{props.transmittedTo ? props.transmittedTo : "-"}</strong>{" "}. Vous n'avez plus la main sur elle.
               </div>
             </div>
           </>
@@ -3332,6 +3367,47 @@ const TraiterReclamation = (props) => {
       break;
   }
 
+  const handleDeleteFile = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de ce fichier ?",
+      "confirm",
+      () => {
+        deleteFileApi(id).then((ok) => {
+          if (ok) getFillesApi(props.id, props);
+        });
+      }
+    );
+  };
+
+  const handleDeleteAudio = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de cet audio ?",
+      "confirm",
+      () => {
+        deleteAudioApi(id).then((ok) => {
+          if (ok) getClaimAudioApi(props.id, props);
+        });
+      }
+    );
+  };
+
+  const handleDeleteExtraContent = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de ce contenu ?",
+      "confirm",
+      () => {
+        deleteExtraContentApi(id).then((ok) => {
+          if (ok) {
+            props.extrasChanged(props.extras.filter((e) => e.id !== id));
+          }
+        });
+      }
+    );
+  };
+
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
@@ -3417,6 +3493,21 @@ const TraiterReclamation = (props) => {
               }}
               onClick={() => downloadFillesApi(attachment.id, attachment.name)}
             />
+            {attachment._extra &&
+              attachment.extra?.user?.firstAndLastName === user.firstAndLastName && (
+                <DeleteOutline
+                  sx={{
+                    fontSize: "18px",
+                    color: "error.main",
+                    ml: 1,
+                    "&:hover": {
+                      color: "error.dark",
+                      cursor: "pointer",
+                    },
+                  }}
+                  onClick={() => handleDeleteFile(attachment.id)}
+                />
+              )}
           </Card>
         </Grid>
       );
@@ -3455,95 +3546,25 @@ const TraiterReclamation = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    // console.log("props.selectedItemAudio", props.selectedItemAudio);
-    let audioListChild = props.selectedItemAudio.map((audioItem) => {
-      return (
-        <Grid item xs={12} sm={6} key={audioItem.id}>
-          <Card
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              borderRadius: 2,
-              p: 1.5,
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              height: "100%",
-            }}
-          >
-            <Box
-              sx={{
-                bgcolor: "primary.light",
-                borderRadius: "6px",
-                p: 1.5,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mr: 2,
-                minWidth: "48px",
-                height: "48px",
-              }}
-            >
-              <VolumeUp
-                sx={{ color: "primary.contrastText", fontSize: "28px" }}
-              />
-            </Box>
-
-            <CardContent sx={{ flex: 1, minWidth: 0, p: "8px !important" }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 500,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    mb: 0.5,
-                  }}
-                >
-                  {audioItem.name}
-                </Typography>
-                {audioItem._extra && (
-                  <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName ?? ""} le ${audioItem.extra?.createdAt && isFinite(new Date(audioItem.extra.createdAt)) ? formatDate(audioItem.extra.createdAt) : "date invalide"}`}
-                  >
-                    <Info fontSize="small" sx={{ ml: 1 }} />
-                  </Tooltip>
-                )}
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                {Math.round((audioItem.size / 1024 + Number.EPSILON) * 100) /
-                  100}{" "}
-                {"Ko"} • {audioItem.duration}
-              </Typography>
-            </CardContent>
-
-            <Box sx={{ display: "flex" }}>
-              <IconButton
-                onClick={() => handlePlay(audioItem.id, audioItem.name)}
-                sx={{
-                  color:
-                    currentAudioId === audioItem.id
-                      ? "primary.main"
-                      : "text.secondary",
-                }}
-              >
-                {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
-              </IconButton>
-            </Box>
-          </Card>
-        </Grid>
-      );
-    });
     audioList = (
-      <Grid container spacing={2} size={12}>
-        {audioListChild}
-      </Grid>
+      <>
+        <AudioGrid
+          audios={regularAudios}
+          currentAudioId={currentAudioId}
+          onPlay={handlePlay}
+          highlightedAudioId={highlightedAudioId}
+          formatDate={formatDate}
+          onDelete={handleDeleteAudio}
+          currentUser={user}
+        />
+        <WaAudioSection
+          waAudios={waAudios}
+          currentAudioId={currentAudioId}
+          onPlay={handlePlay}
+          highlightedAudioId={highlightedAudioId}
+          formatDate={formatDate}
+        />
+      </>
     );
   } else {
     audioList = (
@@ -4132,6 +4153,15 @@ const TraiterReclamation = (props) => {
         )}
         <audio ref={audioRef} src={currentAudio} hidden />
 
+        <SendSolutionWhatsappDialog
+          open={showSolutionWaModal}
+          onClose={() => setShowSolutionWaModal(false)}
+          phone={props.phone}
+          claimId={props.id}
+          solutionId={waModalSolution?.id}
+          solutionText={waModalSolution?.content}
+        />
+
         {props.match.params.code === "all" ? (
           <div className="row">
             <div className="col s12">
@@ -4205,7 +4235,7 @@ const TraiterReclamation = (props) => {
             </div>
           </div>
         ) : (
-          /* ── TREATMENT PAGE — TraitementShell ── */
+          /* ── TREATMENT PAGE - TraitementShell ── */
           <TraitementShell
             onBack={() => { sessionStorage.removeItem('gpr_treat_code'); history.push('/reclamations/traitement/all'); }}
             codeClient={props.codeClient || props.code}
@@ -4232,6 +4262,8 @@ const TraiterReclamation = (props) => {
             content={props.content}
             extras={props.extras}
             onAddContent={() => { setShowExtraContent(true); setExtraContent(''); }}
+            onDeleteExtra={handleDeleteExtraContent}
+            currentUser={user}
 
             visibleActions={[
               addR === "PILOTE" && props.status === "SAVED" && 'convertir',

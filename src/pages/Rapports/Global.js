@@ -147,6 +147,11 @@ const styles = {
   menu: (provided) => ({ ...provided, zIndex: 9999 }),
 };
 
+// Retrouve les libellés lisibles correspondant à des valeurs (ids) sélectionnées,
+// à partir d'une liste d'options react-select {label, value}.
+const labelsForOptions = (values, options) =>
+  options.filter((o) => values.includes(o.value)).map((o) => o.label);
+
 const filterSelectStyles = {
   control: (base, state) => ({
     ...base,
@@ -275,7 +280,7 @@ const Global = (props) => {
   //Users option
   let users =
     loadItemFromSessionStorage("app-users") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-users"))
+      ? loadItemFromSessionStorage("app-users")
       : undefined;
   let optionsUsers = [];
   users.map((one) => {
@@ -293,7 +298,7 @@ const Global = (props) => {
 
   let subjects =
     loadItemFromSessionStorage("app-objets") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-objets"))
+      ? loadItemFromSessionStorage("app-objets")
       : undefined;
   let optionsObjet = [];
   if (subjects !== undefined) {
@@ -308,7 +313,7 @@ const Global = (props) => {
   //Unites
   let units =
     loadItemFromSessionStorage("app-ps") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-ps"))
+      ? loadItemFromSessionStorage("app-ps")
       : undefined;
   let optionsUnits = [];
   if (units !== undefined) {
@@ -324,12 +329,12 @@ const Global = (props) => {
   let optionsProducts = [];
   const products =
     loadItemFromSessionStorage("app-produits") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-produits"))
+      ? loadItemFromSessionStorage("app-produits")
       : undefined;
 
   const ps =
     loadItemFromSessionStorage("app-ps") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-ps"))
+      ? loadItemFromSessionStorage("app-ps")
       : undefined;
   // console.log("ps",ps.length)
   if (products !== undefined) {
@@ -340,7 +345,26 @@ const Global = (props) => {
       });
     });
   }
-  const userAuth = JSON.parse(loadItemFromSessionStorage("app-user"));
+  const userAuth = loadItemFromSessionStorage("app-user");
+
+  // Sauf H5/PILOTE/DE (qui voient tout), tout titulaire de H11 (RA ou non) voit
+  // par défaut son agence + celles qui lui sont rattachées (si son agence est
+  // une direction) ; le formulaire de filtre reste actif pour élargir ce périmètre.
+  const userHbt = userAuth?.posteDto?.habilitations
+    ? userAuth.posteDto.habilitations.split(",")
+    : [];
+  const userAddR = userAuth?.additionalRole;
+  const isElevatedUser =
+    userHbt.includes("H5") || userAddR === "PILOTE" || userAddR === "DE";
+
+  let defaultRaServicePoints = [];
+  if (!isElevatedUser && userAuth?.servicePointDto?.id && ps !== undefined) {
+    const myServicePointId = userAuth.servicePointDto.id;
+    defaultRaServicePoints = ps
+      .filter((sp) => sp.direction_id === myServicePointId)
+      .map((sp) => sp.id);
+    defaultRaServicePoints.push(myServicePointId);
+  }
 
   const pageTopRef = useRef(null);
   const reportRef = useRef(null);
@@ -389,10 +413,30 @@ const Global = (props) => {
   const [dataRaport, setDataRaport] = useState(null);
 
   const [dataExcel, setDataExcel] = useState(null);
+  const [appliedFiltresDisplay, setAppliedFiltresDisplay] = useState([]);
   useEffect(() => {
     if (reload) {
       setReload(false);
-      reportApi(props, setDataRaport).then((r) => { });
+      if (defaultRaServicePoints.length !== 0) {
+        setUnit(defaultRaServicePoints);
+        let filtres = {};
+        filtres["year"] = props.year;
+        filtres["objets"] = [];
+        filtres["etats"] = [];
+        filtres["products"] = [];
+        filtres["savedBy"] = [];
+        filtres["servicePoints"] = defaultRaServicePoints;
+        filtres["canals"] = [];
+        setAppliedFiltresDisplay([
+          {
+            label: "Points de service",
+            value: labelsForOptions(defaultRaServicePoints, optionsUnits).join(", "),
+          },
+        ]);
+        reportApiFiltres(props, filtres, setDataRaport).then((r) => { });
+      } else {
+        reportApi(props, setDataRaport).then((r) => { });
+      }
     }
   }, [reload]);
 
@@ -1294,6 +1338,53 @@ const Global = (props) => {
     props.sugReportChanged([]);
   };
 
+  // Construit le payload attendu par l'API à partir d'une sélection de filtre
+  // "brute" (celle qu'on manipule dans le formulaire, ou celle mémorisée dans un template).
+  const buildBackendFiltres = (raw) => ({
+    year: raw.year,
+    objets: raw.objet || [],
+    etats: raw.etatState || [],
+    products: raw.product || [],
+    savedBy: raw.recoredBy || [],
+    receiveStart: raw.startDate ? cleanDate(new Date(raw.startDate)) : null,
+    receiveEnd: raw.endDate ? cleanDate(new Date(raw.endDate)) : null,
+    servicePoints: raw.unit || [],
+    canals: [],
+  });
+
+  // Construit le résumé lisible (chips) affiché au-dessus du rapport.
+  const buildDisplayFiltres = (raw) => {
+    let displayFiltres = [];
+    if (raw.year) {
+      displayFiltres.push({ label: "Année", value: String(raw.year) });
+    }
+    if ((raw.plainteType || []).length !== 0) {
+      displayFiltres.push({ label: "Type de plainte", value: labelsForOptions(raw.plainteType, optionsPlainteType).join(", ") });
+    }
+    if ((raw.objet || []).length !== 0) {
+      displayFiltres.push({ label: "Objets", value: labelsForOptions(raw.objet, optionsObjet).join(", ") });
+    }
+    if ((raw.etatState || []).length !== 0) {
+      displayFiltres.push({ label: "État", value: labelsForOptions(raw.etatState, optionsState).join(", ") });
+    }
+    if ((raw.product || []).length !== 0) {
+      displayFiltres.push({ label: "Produits", value: labelsForOptions(raw.product, optionsProducts).join(", ") });
+    }
+    if ((raw.recoredBy || []).length !== 0) {
+      displayFiltres.push({ label: "Enregistré par", value: labelsForOptions(raw.recoredBy, optionsUsers).join(", ") });
+    }
+    if ((raw.unit || []).length !== 0) {
+      displayFiltres.push({ label: "Points de service", value: labelsForOptions(raw.unit, optionsUnits).join(", ") });
+    }
+    if (raw.startDate) {
+      displayFiltres.push({ label: "Du", value: new Date(raw.startDate).toLocaleDateString("fr-FR") });
+    }
+    if (raw.endDate) {
+      displayFiltres.push({ label: "Au", value: new Date(raw.endDate).toLocaleDateString("fr-FR") });
+    }
+    return displayFiltres;
+  };
+
   const genereReport = (e) => {
     e.preventDefault();
     cleanForm2(e);
@@ -1320,35 +1411,55 @@ const Global = (props) => {
       setActiveTab(0);
     }
 
-    // setFiltres({
-    //   year: props.year,
-    //   objets: objet,
-    //   etats: etatState,
-    //   products: product,
-    //   saved_by: recoredBy,
-    //   receiveStart: cleanDate(startDate),
-    //   receiveEnd: cleanDate(endDate),
-    //   servicePoints: unit,
-    //   canals: [] // Si tu as besoin de cette propriété vide
-    // });
+    // Sélection "brute" du formulaire : sert à la fois à construire l'appel API
+    // et à être mémorisée dans le template courant (pour être réappliquée plus tard).
+    const raw = {
+      year: props.year,
+      plainteType,
+      objet,
+      etatState,
+      product,
+      recoredBy,
+      unit,
+      startDate: startDate ? new Date(startDate).toISOString() : null,
+      endDate: endDate ? new Date(endDate).toISOString() : null,
+    };
 
-    let filtres = {}
-    filtres["year"] = props.year;
-    // filtres["types_plainte"] = plainteType ;
-    filtres["objets"] = objet;
-    filtres["etats"] = etatState;
-    filtres["products"] = product;
-    filtres["savedBy"] = recoredBy;
-    filtres["receiveStart"] = cleanDate(startDate);
-    filtres["receiveEnd"] = cleanDate(endDate);
-    filtres["servicePoints"] = unit;
-    filtres["canals"] = [];
-    // console.log("filtres",filtres);
+    let filtres = buildBackendFiltres(raw);
+    setAppliedFiltresDisplay(buildDisplayFiltres(raw));
+
+    // On mémorise le filtre dans le template en cours d'édition, pour qu'un
+    // "Nouveau"/"Modifier" template sauvegardé juste après reprenne ce filtre.
+    props.setTemplateData({ ...props.templateData, filtres: raw });
+
     handleClose(e);
     // setDataRaport(null);
     reportApiFiltres(props, filtres, setDataRaport).then((r) => { });
     // console.log('Data after API call:', dataRaport);
   };
+
+  // Quand un template sauvegardé (avec un filtre mémorisé) est sélectionné dans
+  // le panneau "Gestion des templates", on réapplique ce filtre au rapport.
+  useEffect(() => {
+    const raw = props.templateData?.filtres;
+    if (raw) {
+      props.yearChanged(raw.year || "");
+      setPlainteType(raw.plainteType || []);
+      setObjet(raw.objet || []);
+      setEtatState(raw.etatState || []);
+      setProduct(raw.product || []);
+      setRecoredBy(raw.recoredBy || []);
+      setUnit(raw.unit || []);
+      setStartDate(raw.startDate ? new Date(raw.startDate) : "");
+      setEndDate(raw.endDate ? new Date(raw.endDate) : "");
+      setAppliedFiltresDisplay(buildDisplayFiltres(raw));
+      props.genreTrendChanged([]);
+      props.claimReportChanged([]);
+      props.denunReportChanged([]);
+      props.sugReportChanged([]);
+      reportApiFiltres(props, buildBackendFiltres(raw), setDataRaport).then((r) => { });
+    }
+  }, [props.tmpState.current_id]);
 
   const claimDashboard = () => {
     const s = props.claimReport?.basicStats?.statusAndValue ?? {};
@@ -3147,10 +3258,10 @@ const Global = (props) => {
   );
 
   const kpiData = [
-    { label: "Réclamations", value: props.claimReport?.basicStats?.total ?? "—", color: "#3B82F6", bg: "#EFF6FF" },
-    { label: "Dénonciations", value: props.denunReport?.basicStats?.total ?? "—", color: "#F59E0B", bg: "#FFFBEB" },
-    { label: "Suggestions", value: props.sugReport?.basicStats?.total ?? "—", color: "#10B981", bg: "#ECFDF5" },
-    { label: "Taux résolution", value: props.global_trend?.tauxResolution != null ? `${(parseFloat(props.global_trend.tauxResolution) * 100).toFixed(1)} %` : "—", color: "#8B5CF6", bg: "#F5F3FF" },
+    { label: "Réclamations", value: props.claimReport?.basicStats?.total ?? "-", color: "#3B82F6", bg: "#EFF6FF" },
+    { label: "Dénonciations", value: props.denunReport?.basicStats?.total ?? "-", color: "#F59E0B", bg: "#FFFBEB" },
+    { label: "Suggestions", value: props.sugReport?.basicStats?.total ?? "-", color: "#10B981", bg: "#ECFDF5" },
+    { label: "Taux résolution", value: props.global_trend?.tauxResolution != null ? `${(parseFloat(props.global_trend.tauxResolution) * 100).toFixed(1)} %` : "-", color: "#8B5CF6", bg: "#F5F3FF" },
   ];
 
   return (
@@ -3546,6 +3657,25 @@ const Global = (props) => {
               <span style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7280", background: "#F1F5F9", border: "1px solid #E2E8F0", borderRadius: 20, padding: "3px 12px" }}>
                 Généré par {userAuth?.firstAndLastName}
               </span>
+            </div>
+
+            {/* Filtres appliqués */}
+            <div id="filtresAppliques" style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 8 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#374151" }}>Filtres appliqués :</span>
+              {appliedFiltresDisplay.length === 0 ? (
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7280", background: "#F1F5F9", border: "1px solid #E2E8F0", borderRadius: 20, padding: "3px 12px" }}>
+                  Aucun filtre, toutes les données
+                </span>
+              ) : (
+                appliedFiltresDisplay.map((f, index) => (
+                  <span
+                    key={index}
+                    style={{ fontSize: 11.5, fontWeight: 600, color: "#0F4C81", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 20, padding: "3px 12px" }}
+                  >
+                    {f.label} : {f.value}
+                  </span>
+                ))
+              )}
             </div>
           </div>
           {/* { <div

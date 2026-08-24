@@ -20,7 +20,7 @@ import BlockButton from "./BlockButton";
  *   title         : string
  *   fields        : [{ key, label, placeholder?, required?, type?, fullWidth?,
  *                      render?: (value, onChange, formIndex) => ReactNode }]
- *   onSubmit      : async (forms: object[]) => void  — toutes les formes valides
+ *   onSubmit      : async (forms: object[]) => void  - toutes les formes valides
  *   loading       : bool
  *   maxWidth      : "xs"|"sm"|"md"|"lg"|"xl"  (défaut "md")
  *   addLabel      : string  (défaut "Ajouter un autre")

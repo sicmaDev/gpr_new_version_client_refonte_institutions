@@ -120,8 +120,8 @@ const Utilisateurs = (props) => {
     const [activeChip, setActiveChip]           = useState("ALL");
 
     let titles = [], units = [];
-    try { titles = JSON.parse(loadItemFromLocalStorage('app-postes')) || []; } catch (e) { titles = []; }
-    try { units = JSON.parse(loadItemFromLocalStorage('app-ps')) || []; } catch (e) { units = []; }
+    try { titles = loadItemFromLocalStorage('app-postes') || []; } catch (e) { titles = []; }
+    try { units = loadItemFromLocalStorage('app-ps') || []; } catch (e) { units = []; }
 
     const titleOptions  = titles.map(t => ({ label: t.libelle, value: t.id }));
     const unitsGrouped  = groupBy(units, "type");
@@ -132,7 +132,7 @@ const Utilisateurs = (props) => {
     ];
     const allUnitOptions = unitOptionsGrouped.flatMap(g => g.options);
 
-    const users = (() => { try { return JSON.parse(loadItemFromLocalStorage("app-users")) || []; } catch (e) { return []; } })();
+    const users = (() => { try { return loadItemFromLocalStorage("app-users") || []; } catch (e) { return []; } })();
     const nba = users.length;
 
     useEffect(() => {

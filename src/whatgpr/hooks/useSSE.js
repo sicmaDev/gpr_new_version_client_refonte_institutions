@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { HOST } from '../../Utils/globals';
 import { loadItemFromSessionStorage } from '../../Utils/utils';
 
-// Connexion SSE via Spring Boot (/api/whatgpr/events) — évite le blocage CORS
+// Connexion SSE via Spring Boot (/api/whatgpr/events) - évite le blocage CORS
 // du navigateur qui empêchait la connexion directe à Node.js (port 3001).
 // fetch() supporte les headers Authorization, contrairement à EventSource.
 const SSE_URL = HOST.replace(/\/$/, '') + '/api/whatgpr/events';
@@ -26,7 +26,7 @@ const useSSE = (handlers) => {
         let inactivityTimer;
         let timedOut = false;
 
-        // Node envoie un ping toutes les 25s (relayé par Spring Boot) — si rien n'arrive
+        // Node envoie un ping toutes les 25s (relayé par Spring Boot) - si rien n'arrive
         // pendant 45s (marge réseau incluse), la connexion est considérée morte même si
         // elle ne s'est jamais fermée proprement (pas de FIN/RST), et on force une reconnexion.
         const INACTIVITY_TIMEOUT_MS = 45000;
@@ -84,7 +84,7 @@ const useSSE = (handlers) => {
                             currentEvent = null;
                             currentData  = null;
                         } else if (line.startsWith(':')) {
-                            // Commentaire SSE (ex: ": ping") — ignoré
+                            // Commentaire SSE (ex: ": ping") - ignoré
                         } else if (line.startsWith('event')) {
                             currentEvent = parseField(line);
                         } else if (line.startsWith('data')) {

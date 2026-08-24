@@ -114,7 +114,7 @@ const PointsServices = (props) => {
     let units = [];
 
     try {
-        const stored = JSON.parse(loadItemFromLocalStorage('app-ps'));
+        const stored = loadItemFromLocalStorage('app-ps');
 
         // on force un tableau
         if (Array.isArray(stored)) {

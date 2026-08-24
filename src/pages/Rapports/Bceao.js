@@ -61,9 +61,9 @@ const Bceao = (props) => {
     cleanForm()
   };
 
-  let userAuth = loadItemFromSessionStorage("app-user") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-user")) : undefined;
-  let users = loadItemFromSessionStorage("app-users") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-users")) : undefined;
-  let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !==0)  ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+  let userAuth = loadItemFromSessionStorage("app-user") !== undefined ? loadItemFromSessionStorage("app-user") : undefined;
+  let users = loadItemFromSessionStorage("app-users") !== undefined ? loadItemFromSessionStorage("app-users") : undefined;
+  let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !==0)  ? loadItemFromLocalStorage("app-institution") : undefined;
 
   //Effacer tout
   const cleanForm = () => {

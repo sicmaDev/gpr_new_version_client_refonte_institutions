@@ -217,7 +217,11 @@ const Postes = (props) => {
         const habs = toHabArray(sp.habilitations);
         return (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                {habs.map(h => <Chip key={h} label={h} size="small" sx={{ backgroundColor: getHabilitationColor(h), color: "#fff", fontWeight: 700, fontSize: "0.7rem" }} />)}
+                {habs.map(h => (
+                    <Tooltip key={h} title={HAB_DESCRIPTIONS[h] || h} arrow>
+                        <Chip label={h} size="small" sx={{ backgroundColor: getHabilitationColor(h), color: "#fff", fontWeight: 700, fontSize: "0.7rem", cursor: "help" }} />
+                    </Tooltip>
+                ))}
             </Box>
         );
     };
@@ -299,14 +303,19 @@ const Postes = (props) => {
                 <ConfigKPIBar items={props.items} kpis={KPI_CONFIG} />
                 <Box sx={{ display: "flex", gap: 1, mb: 2.5, alignItems: "center", flexWrap: "wrap" }}>
                     <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", flex: 1 }}>
-                        {CHIPS_CONFIG.map(chip => (
-                            <Chip key={chip.value} label={chip.label} onClick={() => setActiveChip(chip.value)}
-                                color={activeChip === chip.value ? "primary" : "default"}
-                                variant={activeChip === chip.value ? "filled" : "outlined"} size="small"
-                                sx={{ borderRadius: "8px", fontWeight: activeChip === chip.value ? 700 : 400, fontSize: "0.78rem",
-                                    ...(chip.value !== "ALL" && activeChip !== chip.value ? { borderColor: getHabilitationColor(chip.value), color: getHabilitationColor(chip.value) } : {})
-                                }} />
-                        ))}
+                        {CHIPS_CONFIG.map(chip => {
+                            const chipEl = (
+                                <Chip key={chip.value} label={chip.label} onClick={() => setActiveChip(chip.value)}
+                                    color={activeChip === chip.value ? "primary" : "default"}
+                                    variant={activeChip === chip.value ? "filled" : "outlined"} size="small"
+                                    sx={{ borderRadius: "8px", fontWeight: activeChip === chip.value ? 700 : 400, fontSize: "0.78rem",
+                                        ...(chip.value !== "ALL" && activeChip !== chip.value ? { borderColor: getHabilitationColor(chip.value), color: getHabilitationColor(chip.value) } : {})
+                                    }} />
+                            );
+                            return chip.value === "ALL" ? chipEl : (
+                                <Tooltip key={chip.value} title={HAB_DESCRIPTIONS[chip.value] || chip.value} arrow>{chipEl}</Tooltip>
+                            );
+                        })}
                     </Box>
                     <Box sx={{ display: "flex", gap: 0.5 }}>
                         <ViewModeToggle value={viewMode} onChange={setViewMode} />
@@ -341,7 +350,11 @@ const Postes = (props) => {
                             const habs = toHabArray(sp.habilitations);
                             return (
                                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
-                                    {habs.map(h => <Chip key={h} label={h} size="small" sx={{ backgroundColor: getHabilitationColor(h), color: "#fff", fontWeight: 700, fontSize: "0.7rem" }} />)}
+                                    {habs.map(h => (
+                                        <Tooltip key={h} title={HAB_DESCRIPTIONS[h] || h} arrow>
+                                            <Chip label={h} size="small" sx={{ backgroundColor: getHabilitationColor(h), color: "#fff", fontWeight: 700, fontSize: "0.7rem", cursor: "help" }} />
+                                        </Tooltip>
+                                    ))}
                                 </Box>
                             );
                         }}]}

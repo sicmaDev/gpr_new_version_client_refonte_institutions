@@ -32,7 +32,7 @@ const GRAVITY_CONFIG = {
 
 const ClaimGravityBadge = ({ gravity, transmitted = false, size = "small" }) => {
   const cfg = GRAVITY_CONFIG[gravity] || {
-    label: gravity || "—",
+    label: gravity || "-",
     bg: "#F3F4F6",
     color: "#374151",
     border: "#D1D5DB",

@@ -9,22 +9,22 @@ import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import SaveIcon from "@mui/icons-material/Save";
 
 /**
- * AddSimpleModal — Option C : Formulaire simple + "Enregistrer et ajouter un autre"
+ * AddSimpleModal - Option C : Formulaire simple + "Enregistrer et ajouter un autre"
  * Pour les pages complexes avec beaucoup de champs (Utilisateurs, Postes…)
  *
  * Props :
  *   open          : bool
  *   onClose       : () => void
  *   title         : string
- *   children      : ReactNode  — le contenu du formulaire (champs, selects, etc.)
+ *   children      : ReactNode  - le contenu du formulaire (champs, selects, etc.)
  *                               le parent gère entièrement les champs via Redux ou state local
- *   onSubmit      : async () => void        — enregistrer et fermer
- *   onSubmitAndAdd: async () => void        — enregistrer et vider le formulaire pour un autre ajout
+ *   onSubmit      : async () => void        - enregistrer et fermer
+ *   onSubmitAndAdd: async () => void        - enregistrer et vider le formulaire pour un autre ajout
  *   loading       : bool
- *   loadingAdd    : bool                    — loading spécifique au bouton "et ajouter"
+ *   loadingAdd    : bool                    - loading spécifique au bouton "et ajouter"
  *   maxWidth      : "xs"|"sm"|"md"|"lg"|"xl"  (défaut "md")
  *   submitLabel   : string  (défaut "Enregistrer")
- *   disableSubmit : bool    — désactiver les boutons si formulaire invalide
+ *   disableSubmit : bool    - désactiver les boutons si formulaire invalide
  */
 
 const AddSimpleModal = ({
@@ -75,7 +75,7 @@ const AddSimpleModal = ({
         </IconButton>
       </div>
 
-      {/* Contenu — géré entièrement par le parent */}
+      {/* Contenu - géré entièrement par le parent */}
       <DialogContent sx={{ p: 3 }}>
         {children}
       </DialogContent>

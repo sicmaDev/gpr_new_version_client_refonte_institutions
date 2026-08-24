@@ -176,9 +176,9 @@ const ListeSuggestions = (props) => {
   const [interne, setInterne] = React.useState(false);
   const [changeButtonPrint, setChangeButtonPrint] = useState(false);
   const [impression, setImpression] = React.useState(false);
-  let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
+  let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (loadItemFromLocalStorage("app-mode")) : undefined;
 
-  let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
+  let user = loadItemFromSessionStorage("app-user") !== undefined ? (loadItemFromSessionStorage("app-user")) : undefined;
   let hbt = (user.posteDto.habilitations).split(',');
   let addR = (user.additionalRole);
 
@@ -194,7 +194,7 @@ const ListeSuggestions = (props) => {
   const handleClickOpen = () => { setOpen(true); };
   const history = useHistory();
 
-  // Chargement depuis l'URL ou sessionStorage — un seul useEffect pour éviter la race condition
+  // Chargement depuis l'URL ou sessionStorage - un seul useEffect pour éviter la race condition
   useEffect(() => {
     const urlCode = props.match?.params?.code;
     const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_sug_code');
@@ -589,11 +589,11 @@ const ListeSuggestions = (props) => {
         props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
         props.contentChanged(data.content ? data.content : "");
         props.statusChanged(data.status ? data.status : "");
-        let description = data.languageId ? (JSON.parse(loadItemFromSessionStorage('app-langues'))).filter((e) => { return e.id === data.languageId }) : ""
-        let description1 = data.collectionChannelId ? (JSON.parse(loadItemFromSessionStorage('app-supports'))).filter((e) => { return e.id === data.collectionChannelId }) : ""
-        let description3 = data.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => { return e.id === data.productId }) : ""
-        let description4 = data.servicePointId ? (JSON.parse(loadItemFromSessionStorage('app-ps'))).filter((e) => { return e.id === data.servicePointId }) : ""
-        let description5 = data.collectorId ? (JSON.parse(loadItemFromSessionStorage('app-users'))).filter((e) => { return e.id === data.collectorId }) : ""
+        let description = data.languageId ? (loadItemFromSessionStorage('app-langues')).filter((e) => { return e.id === data.languageId }) : ""
+        let description1 = data.collectionChannelId ? (loadItemFromSessionStorage('app-supports')).filter((e) => { return e.id === data.collectionChannelId }) : ""
+        let description3 = data.productId ? (loadItemFromSessionStorage('app-produits')).filter((e) => { return e.id === data.productId }) : ""
+        let description4 = data.servicePointId ? (loadItemFromSessionStorage('app-ps')).filter((e) => { return e.id === data.servicePointId }) : ""
+        let description5 = data.collectorId ? (loadItemFromSessionStorage('app-users')).filter((e) => { return e.id === data.collectorId }) : ""
 
         props.languageChanged(data.languageId ? description[0].libelle : "");
         props.collectChanged(data.collectionChannelId ? description1[0].libelle : "");
@@ -995,10 +995,10 @@ const ListeSuggestions = (props) => {
 
 
     let description3 = props.selectedItem.productId
-      ? JSON.parse(loadItemFromSessionStorage('app-produits')).filter((e) => e.id === props.selectedItem.productId)
+      ? loadItemFromSessionStorage('app-produits').filter((e) => e.id === props.selectedItem.productId)
       : "";
     let description5 = props.selectedItem.collectorId
-      ? JSON.parse(loadItemFromSessionStorage('app-users')).filter((e) => e.id === props.selectedItem.collectorId)
+      ? loadItemFromSessionStorage('app-users').filter((e) => e.id === props.selectedItem.collectorId)
       : "";
 
     let statusElt;
@@ -1157,7 +1157,7 @@ const ListeSuggestions = (props) => {
   const getCardData = (item) => ({
     code: item.codeClient,
     client: item.clientFirstAndLastName || "Anonyme",
-    title: item.content || "—",
+    title: item.content || "-",
     subtitle: item.langue?.libelle || null,
     status: item.status,
     gravity: null,
@@ -1172,7 +1172,7 @@ const ListeSuggestions = (props) => {
       id: "codeClient", label: "Code client", sortable: true, minWidth: 100,
       render: (item) => (
         <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
-          {item.codeClient || "—"}
+          {item.codeClient || "-"}
         </span>
       ),
     },
@@ -1189,7 +1189,7 @@ const ListeSuggestions = (props) => {
       id: "content", label: "Contenu", sortable: false, minWidth: 200,
       render: (item) => (
         <span style={{ fontSize: "0.82rem", color: "#334155", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", maxWidth: 280 }}>
-          {item.content || "—"}
+          {item.content || "-"}
         </span>
       ),
     },
@@ -1197,7 +1197,7 @@ const ListeSuggestions = (props) => {
       id: "langue", label: "Langue", sortable: true, minWidth: 100,
       render: (item) => (
         <span style={{ fontSize: "0.80rem", color: "#475569" }}>
-          {item.langue?.libelle || "—"}
+          {item.langue?.libelle || "-"}
         </span>
       ),
       sortValue: (item) => item.langue?.libelle || "",
@@ -1211,7 +1211,7 @@ const ListeSuggestions = (props) => {
       id: "date", label: "Enregistrée le", sortable: true, minWidth: 130,
       render: (item) => (
         <span style={{ fontSize: "0.80rem", color: "#475569", whiteSpace: "nowrap" }}>
-          {item.createdAt ? new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(item.createdAt)) : "—"}
+          {item.createdAt ? new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(item.createdAt)) : "-"}
         </span>
       ),
       sortValue: (item) => item.createdAt || "",

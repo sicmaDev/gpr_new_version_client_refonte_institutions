@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { notify } from "../../Utils/alert";
 import { loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { HOST } from "../../Utils/globals";
@@ -32,8 +32,8 @@ export let liste = async (props) => {
             //console.log("reponse", response.data)
             if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
               
-                saveItemToSessionStorage(JSON.stringify(response.data.content), "app-ps")
-                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-ps")
+                saveItemToSessionStorage(response.data.content, "app-ps")
+                saveItemToLocalStorage(response.data.content, "app-ps")
                 props.itemsChanged(response.data.content);
             }
 
@@ -58,8 +58,8 @@ export let all = async (props) => {
             //console.log("reponse", response.data)
             if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
               
-                saveItemToSessionStorage(JSON.stringify(response.data.content), "app-ps")
-                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-ps")
+                saveItemToSessionStorage(response.data.content, "app-ps")
+                saveItemToLocalStorage(response.data.content, "app-ps")
                 props.itemsChanged(response.data.content);
             }
 
@@ -97,8 +97,8 @@ export const ajout = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-ps")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-ps")
+            saveItemToSessionStorage(response.data.content, "app-ps")
+            saveItemToLocalStorage(response.data.content, "app-ps")
 
             props.etatChanged(false)
             notify("Bravo - Point de service ajouté", "success");
@@ -131,8 +131,8 @@ export const modification = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-ps")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-ps")
+            saveItemToSessionStorage(response.data.content, "app-ps")
+            saveItemToLocalStorage(response.data.content, "app-ps")
 
             props.etat2Changed(false)
             notify("Bravo - Point de service modifié", "success");
@@ -166,8 +166,8 @@ export const suppression = async (props, data) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-ps")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-ps")
+            saveItemToSessionStorage(response.data.content, "app-ps")
+            saveItemToLocalStorage(response.data.content, "app-ps")
 
             props.etat3Changed(false)
            

@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { notify } from "../../Utils/alert";
 import { loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { HOST } from "../../Utils/globals";
@@ -27,8 +27,8 @@ export let liste = async (props) => {
         .then(function (response) {
             // console.log("reponseCategories", response.data)
             if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
-                saveItemToSessionStorage(JSON.stringify(response.data.content),"app-categories")
-                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-categories")
+                saveItemToSessionStorage(response.data.content,"app-categories")
+                saveItemToLocalStorage(response.data.content, "app-categories")
                 props.itemsChanged(response.data.content);
             }
 
@@ -53,8 +53,8 @@ export const ajout = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-categories")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-categories")
+            saveItemToSessionStorage(response.data.content, "app-categories")
+            saveItemToLocalStorage(response.data.content, "app-categories")
 
             props.etatChanged(false)
            
@@ -88,8 +88,8 @@ export const modification = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-categories")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-categories")
+            saveItemToSessionStorage(response.data.content, "app-categories")
+            saveItemToLocalStorage(response.data.content, "app-categories")
 
             props.etat2Changed(false)
            
@@ -123,8 +123,8 @@ export const suppression = async (props, data) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-categories")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-categories")
+            saveItemToSessionStorage(response.data.content, "app-categories")
+            saveItemToLocalStorage(response.data.content, "app-categories")
 
             props.etat3Changed(false)
            

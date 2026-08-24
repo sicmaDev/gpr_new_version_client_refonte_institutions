@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { notify } from "../../Utils/alert";
 import { HOST } from "../../Utils/globals";
@@ -473,7 +473,7 @@ export const downloadFillesApi = async (data, filename) => {
 
 //offline
 export const listeByStatutOffline = async (props, state) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))) : [];
+    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (loadItemFromLocalStorage("dens-TS")) : [];
     let densTemp = dens.filter((e) => { return e.status == state })
 
     // console.log(densTemp)
@@ -484,8 +484,9 @@ export const listeByStatutOffline = async (props, state) => {
 }
 
 export const listeTousStatutsOffline = async (props) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))) : [];
+    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (loadItemFromLocalStorage("dens-TS")) : [];
     let densGlobal = dens.filter((e) => { return e.status !== "TEMP_SAVED" })
+    densGlobal.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
     props.itemsChanged(densGlobal)
 
@@ -494,7 +495,7 @@ export const listeTousStatutsOffline = async (props) => {
 }
 
 export const addTempDenunciationApiOffline = async (data, props) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))) : [];
+    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (loadItemFromLocalStorage("dens-TS")) : [];
 
     //date
     let datetmp = new Date();
@@ -512,12 +513,12 @@ export const addTempDenunciationApiOffline = async (data, props) => {
 
     if (data["code"] === "") {
         //code
-        let code = "den" + uuidv4().substring(0, 5) + '-' + (JSON.parse(loadItemFromSessionStorage('app-user'))).servicePointDto.uuid + '-' + (JSON.parse(loadItemFromSessionStorage('app-user')).code)
+        let code = "den" + uuidv4().substring(0, 5) + '-' + (loadItemFromSessionStorage('app-user')).servicePointDto.uuid + '-' + (loadItemFromSessionStorage('app-user').code)
         // console.log("codeeee",code)
         data["code"] = code
 
         dens.push(data);
-        saveItemToLocalStorage(JSON.stringify(dens), "dens-TS")
+        saveItemToLocalStorage(dens, "dens-TS")
     } else {
         let densTemp = dens.filter((e) => { return e.code !== data["code"] })
         let densF = dens.filter((e) => { return e.code === data["code"] })
@@ -528,14 +529,14 @@ export const addTempDenunciationApiOffline = async (data, props) => {
         // console.log("data",data)
         // console.log("densTemp3",dens)
         densTemp.push(data);
-        saveItemToLocalStorage(JSON.stringify(densTemp), "dens-TS")
+        saveItemToLocalStorage(densTemp, "dens-TS")
     }
 
 
 
 
     // dens.push(data);
-    // saveItemToLocalStorage(JSON.stringify(dens),"dens-TS")
+    // saveItemToLocalStorage(dens,"dens-TS")
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etatChanged(false)
 
@@ -544,7 +545,7 @@ export const addTempDenunciationApiOffline = async (data, props) => {
 }
 
 export const addDenunciationApiOffline = async (data, props) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("dens-TS"))) : [];
+    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (loadItemFromLocalStorage("dens-TS")) : [];
 
     //date
     let datetmp = new Date();
@@ -557,7 +558,7 @@ export const addDenunciationApiOffline = async (data, props) => {
     // console.log("datee",created_at)
 
     //code
-    let code = "den" + uuidv4().substring(0, 5) + '-' + (JSON.parse(loadItemFromSessionStorage('app-user'))).servicePointDto.uuid + '-' + (JSON.parse(loadItemFromSessionStorage('app-user')).code)
+    let code = "den" + uuidv4().substring(0, 5) + '-' + (loadItemFromSessionStorage('app-user')).servicePointDto.uuid + '-' + (loadItemFromSessionStorage('app-user').code)
     // console.log("codeeee",code)
 
 
@@ -568,15 +569,17 @@ export const addDenunciationApiOffline = async (data, props) => {
 
     if (data["code"] === "") {
         data["code"] = code
+        data["codeClient"] = "DEN-" + uuidv4().substring(0, 4).toUpperCase()
         // console.log("dataasave",data)
         dens.push(data);
-        saveItemToLocalStorage(JSON.stringify(dens), "dens-TS")
+        saveItemToLocalStorage(dens, "dens-TS")
     } else {
         let densTemp = dens.filter((e) => { return e.code !== data["code"] })
         let densF = dens.filter((e) => { return e.code === data["code"] })
         data["id"] = densF[0].id
+        data["codeClient"] = densF[0].codeClient ? densF[0].codeClient : "DEN-" + uuidv4().substring(0, 4).toUpperCase()
         densTemp.push(data);
-        saveItemToLocalStorage(JSON.stringify(densTemp), "dens-TS")
+        saveItemToLocalStorage(densTemp, "dens-TS")
 
     }
 
@@ -584,7 +587,7 @@ export const addDenunciationApiOffline = async (data, props) => {
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etat2Changed(false)
 
-    notify("Bravo - Dénonciation enregistrée", "success")
+    notify("Bravo - Dénonciation enregistrée (code client : " + data["codeClient"] + ")", "success")
 }
 
 

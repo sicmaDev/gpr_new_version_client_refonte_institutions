@@ -68,7 +68,7 @@ const STATUS_ICON = {
 };
 
 const StatusPill = ({ status }) => {
-  const cfg = STATUS_CONFIG[status] || { label: status || "—", bg: "#F3F4F6", color: "#374151", border: "#D1D5DB" };
+  const cfg = STATUS_CONFIG[status] || { label: status || "-", bg: "#F3F4F6", color: "#374151", border: "#D1D5DB" };
   const icon = STATUS_ICON[status] || <AccessTimeIcon sx={{ fontSize: 13 }} />;
   return (
     <Box sx={{
@@ -86,25 +86,25 @@ const StatusPill = ({ status }) => {
 
 /* ── Date formatter ──────────────────────────────────────────────────────── */
 const fmtDate = (iso) => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   try {
     return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short" })
       .format(new Date(iso)).replace(".", "");
-  } catch { return "—"; }
+  } catch { return "-"; }
 };
 
 /**
- * DossierCardView — vue cartes générique
+ * DossierCardView - vue cartes générique
  *
  * Props :
- *   items             — tableau de dossiers
- *   getCardData(item)  — (item) => { code, client, title, subtitle, status, gravity, date, slaWarning }
- *   onCardClick(item)  — handler au clic sur une carte
- *   filterFn(item, {q, filterStatus, filterGravity}) — filtre externe (activeFilter du parent)
- *   showStatusFilter   — afficher le dropdown statut (défaut: true)
- *   showGravityFilter  — afficher le dropdown gravité (défaut: false)
- *   searchPlaceholder  — texte du champ recherche
- *   emptyText          — texte quand liste vide
+ *   items             - tableau de dossiers
+ *   getCardData(item)  - (item) => { code, client, title, subtitle, status, gravity, date, slaWarning }
+ *   onCardClick(item)  - handler au clic sur une carte
+ *   filterFn(item, {q, filterStatus, filterGravity}) - filtre externe (activeFilter du parent)
+ *   showStatusFilter   - afficher le dropdown statut (défaut: true)
+ *   showGravityFilter  - afficher le dropdown gravité (défaut: false)
+ *   searchPlaceholder  - texte du champ recherche
+ *   emptyText          - texte quand liste vide
  */
 const DossierCardView = ({
   items = [],
@@ -245,7 +245,7 @@ const DossierCardView = ({
                             fontSize: "0.72rem", fontWeight: 700, color: "#005081",
                             fontFamily: "monospace", letterSpacing: "0.03em",
                           }}>
-                            {d.code || "—"}
+                            {d.code || "-"}
                           </Typography>
                           {d.isAssignedToMe && (
                             <Tooltip title="Affecté à vous">
@@ -268,7 +268,7 @@ const DossierCardView = ({
                         display: "-webkit-box", WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical", overflow: "hidden", minHeight: 40,
                       }}>
-                        {d.title || "—"}
+                        {d.title || "-"}
                       </Typography>
 
                       {/* Ligne 3 : client */}

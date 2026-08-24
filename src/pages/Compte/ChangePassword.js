@@ -52,7 +52,7 @@ const ChangePassword = (props) => {
   const primaryDark = darkenColor(primary, 0.18);
 
   const mode = loadItemFromSessionStorage("app-mode") !== undefined
-    ? JSON.parse(loadItemFromSessionStorage("app-mode"))
+    ? loadItemFromSessionStorage("app-mode")
     : undefined;
 
   const [showCurrent, setShowCurrent] = useState(false);
@@ -60,7 +60,7 @@ const ChangePassword = (props) => {
   const [showRepeat, setShowRepeat] = useState(false);
 
   useEffect(() => {
-    const sessionUser = JSON.parse(loadItemFromLocalStorage("app-user"));
+    const sessionUser = loadItemFromLocalStorage("app-user");
     props.idChanged(sessionUser.id);
   }, []);
 

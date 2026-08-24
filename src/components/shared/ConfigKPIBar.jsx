@@ -2,13 +2,13 @@ import React, { useMemo } from "react";
 import { Box, Typography, Tooltip } from "@mui/material";
 
 /**
- * ConfigKPIBar — Barre de métriques générique pour les modules de configuration
+ * ConfigKPIBar - Barre de métriques générique pour les modules de configuration
  *
  * Props :
- *   items  : array  — données du module
- *   kpis   : array  — définitions des KPIs :
+ *   items  : array  - données du module
+ *   kpis   : array  - définitions des KPIs :
  *     { key, label, icon: Component, iconBg, iconColor, borderColor, filter: fn,
- *       value?: any | (items) => any  — surcharge l'affichage (au lieu du compte filtré) }
+ *       value?: any | (items) => any  - surcharge l'affichage (au lieu du compte filtré) }
  */
 const ConfigKPIBar = ({ items = [], kpis = [] }) => {
   const counts = useMemo(() => {

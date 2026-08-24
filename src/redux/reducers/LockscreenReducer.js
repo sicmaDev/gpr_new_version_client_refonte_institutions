@@ -1,6 +1,6 @@
 const initialState = {
-    isLocked:false,
-    user:null,
+    isLocked: localStorage.getItem("isLocked") === "true",
+    user: localStorage.getItem("isLocked") === "true" ? localStorage.getItem("app-user") : null,
     lastActivity:Date.now()
 };
 

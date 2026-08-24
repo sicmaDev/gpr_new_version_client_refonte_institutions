@@ -50,13 +50,10 @@ import SLA from '../pages/Configurations/SLA';
 import ApiKey from '../pages/Configurations/ApiKey';
 import Whatsapp from '../pages/Whatsapp';
 import Corbeille from '../pages/Configurations/Corbeille';
-import WgprDashboard from '../whatgpr/pages/WgprDashboard';
-import WgprMessages from '../whatgpr/pages/WgprMessages';
-import WgprComplaints from '../whatgpr/pages/WgprComplaints';
-import WgprComplaintDetail from '../whatgpr/pages/WgprComplaintDetail';
+import WgprMain from '../whatgpr/pages/WgprMain';
 
 export default function Contenu() {
-    let mode = loadItemFromSessionStorage("app-mode") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-mode")) : undefined;
+    let mode = loadItemFromSessionStorage("app-mode") !== undefined ? loadItemFromSessionStorage("app-mode") : undefined;
     let rendu;
     if (mode === 1) {
         rendu =
@@ -159,10 +156,7 @@ export default function Contenu() {
                     <Route path="/whatsapp/liste" component={Whatsapp} />
 
                     {/* whatgpr */}
-                    <Route path="/whatgpr/complaints/:id" component={WgprComplaintDetail} />
-                    <Route path="/whatgpr/complaints" component={WgprComplaints} />
-                    <Route path="/whatgpr/messages" component={WgprMessages} />
-                    <Route path="/whatgpr" component={WgprDashboard} />
+                    <Route exact path="/whatgpr" component={WgprMain} />
 
                     {/* alertes */}
                     <Route path="/alertes/reclamations" component={ReclamationsAlertes} />

@@ -283,7 +283,7 @@ const SessionChat = ({
         <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', background: 'white', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 8, height: 8, background: '#10b981', borderRadius: '50%', boxShadow: '0 0 0 3px rgba(16,185,129,0.2)' }} />
           <span style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>Discussion</span>
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>— {codeClient}</span>
+          <span style={{ fontSize: 12, color: '#94a3b8' }}>- {codeClient}</span>
           <span style={{ marginLeft: 'auto', fontSize: 11, color: '#64748b', background: '#f1f5f9', borderRadius: 20, padding: '3px 10px' }}>
             {publicChats?.length ?? 0} message{(publicChats?.length ?? 0) > 1 ? 's' : ''}
           </span>

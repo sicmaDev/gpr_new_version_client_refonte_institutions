@@ -30,7 +30,7 @@ const getObjet = (claim, mode, objets) => {
     if (claim.id && claim.collectionChannel) return { libelle: claim.objet?.libelle, categorie: claim.objet?.categorie?.libelle };
     const found = objets?.find((e) => e.id === claim.objetId);
     return { libelle: found?.libelle, categorie: found?.categorie?.libelle };
-  } catch (_) { return { libelle: "—", categorie: "" }; }
+  } catch (_) { return { libelle: "-", categorie: "" }; }
 };
 
 const AVATAR_COLORS = [
@@ -54,13 +54,13 @@ const getInitials = (name) => {
 };
 
 const fmtDate = (iso) => {
-  if (!iso) return "—";
+  if (!iso) return "-";
   try {
     return new Intl.DateTimeFormat("fr-FR", {
       day: "2-digit", month: "long", year: "numeric",
       hour: "2-digit", minute: "2-digit",
     }).format(new Date(iso));
-  } catch { return "—"; }
+  } catch { return "-"; }
 };
 
 const STATUS_OPTIONS = [
@@ -96,7 +96,7 @@ const selectSx = {
 };
 
 /* ─── Main component ─────────────────────────────────────────────────────── */
-const ClaimsCardView = ({ items = [], mode, objets, onCardClick, currentUser }) => {
+const ClaimsCardView = ({ items = [], mode, objets, onCardClick, currentUser, showTransmitted = true, showStatusIcons = true }) => {
   const [search, setSearch]               = useState("");
   const [filterStatus, setFilterStatus]   = useState("");
   const [filterGravity, setFilterGravity] = useState("");
@@ -228,15 +228,15 @@ const ClaimsCardView = ({ items = [], mode, objets, onCardClick, currentUser }) 
                             fontSize: "0.72rem", fontWeight: 700, color: "#005081",
                             fontFamily: "monospace", letterSpacing: "0.04em", lineHeight: 1.3,
                           }}>
-                            {claim.codeClient || "—"}
+                            {claim.codeClient || "-"}
                           </Typography>
-                          {claim.status === "AFFECTED" &&
+                          {showStatusIcons && claim.status === "AFFECTED" &&
                            claim.treatmentAffectedTo?.firstAndLastName === currentUser?.firstAndLastName && (
                             <Tooltip title="Affecté à vous">
                               <AlternateEmailIcon sx={{ fontSize: 14, color: "#DC2626" }} />
                             </Tooltip>
                           )}
-                          {claim.session && claim.session !== "" && !["TREAT","SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION","CLASSED"].includes(claim.status) && (
+                          {showStatusIcons && claim.session && claim.session !== "" && !["TREAT","SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION","CLASSED"].includes(claim.status) && (
                             <Tooltip title="Session ouverte">
                               <ForumIcon sx={{ fontSize: 14, color: "#DC2626" }} />
                             </Tooltip>
@@ -272,7 +272,7 @@ const ClaimsCardView = ({ items = [], mode, objets, onCardClick, currentUser }) 
                       mb: 1.2, display: "-webkit-box", WebkitLineClamp: 2,
                       WebkitBoxOrient: "vertical", overflow: "hidden", minHeight: 38,
                     }}>
-                      {objet.libelle || "—"}
+                      {objet.libelle || "-"}
                     </Typography>
 
                     {/* Séparateur */}
@@ -280,7 +280,7 @@ const ClaimsCardView = ({ items = [], mode, objets, onCardClick, currentUser }) 
 
                     {/* Ligne 4 : gravité + date */}
                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.2 }}>
-                      <ClaimGravityBadge gravity={gravity} transmitted={claim.transmitted} />
+                      <ClaimGravityBadge gravity={gravity} transmitted={showTransmitted && (claim.transmitted === "true" || claim.transmitted === true)} />
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                         <CalendarTodayOutlinedIcon sx={{ fontSize: 12, color: "#9CA3AF" }} />
                         <Typography sx={{ fontSize: "0.72rem", color: "#9CA3AF", whiteSpace: "nowrap" }}>

@@ -131,6 +131,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import {
+  DeleteOutline,
   FileDownload,
   History,
   Info,
@@ -146,6 +147,9 @@ import { addExtraClaimApi, saveDraftApi } from "../../apis/Reclamations/Reclamat
 import {
   getClaimAudioApi,
   convertClaimApi,
+  deleteFileApi,
+  deleteAudioApi,
+  deleteExtraContentApi,
 } from "../../apis/Reclamations/ReclamationsApi";
 import {
   affectDenunciationApi,
@@ -162,7 +166,7 @@ import {
   convertDenunciationApi,
   downloadFillesApi2,
 } from "../../apis/Denonciations/DenonciationsApi";
-// APIs injectées dans useTreatmentHandlers — gardées ici pour la référence du hook
+// APIs injectées dans useTreatmentHandlers - gardées ici pour la référence du hook
 import {
   addSuggestionApi,
   addSuggestionApiOffline,
@@ -227,15 +231,15 @@ const TraiterDenonciation = (props) => {
   let dimf, crew;
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-user"))
+      ? loadItemFromSessionStorage("app-user")
       : undefined;
   let users =
     loadItemFromLocalStorage("app-users") !== undefined
-      ? JSON.parse(loadItemFromLocalStorage("app-users"))
+      ? loadItemFromLocalStorage("app-users")
       : undefined;
   let langues =
     loadItemFromLocalStorage("app-langues") !== undefined
-      ? JSON.parse(loadItemFromLocalStorage("app-langues"))
+      ? loadItemFromLocalStorage("app-langues")
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
@@ -259,7 +263,7 @@ const TraiterDenonciation = (props) => {
   const [savedDraft, setSavedDraft] = useState(null);
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
-      ? JSON.parse(loadItemFromLocalStorage("app-mode"))
+      ? loadItemFromLocalStorage("app-mode")
       : undefined;
 
   //#darrell
@@ -1581,7 +1585,7 @@ const TraiterDenonciation = (props) => {
               <span>
                 Cette dénonciation vous a été transmise par
                 <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>
-                  {props.transmittedBy ? props.transmittedBy : "—"}
+                  {props.transmittedBy ? props.transmittedBy : "-"}
                 </strong>.
               </span>
 
@@ -1608,7 +1612,7 @@ const TraiterDenonciation = (props) => {
                   alignItems: "center",
                 }}
               >
-                Vous avez transmis cette dénonciation à <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>{props.transmittedTo ? props.transmittedTo : "—"}</strong>{" "}. Vous n'avez plus la main sur elle.
+                Vous avez transmis cette dénonciation à <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>{props.transmittedTo ? props.transmittedTo : "-"}</strong>{" "}. Vous n'avez plus la main sur elle.
               </div>
             </div>
           </>
@@ -2461,6 +2465,47 @@ const TraiterDenonciation = (props) => {
       break;
   }
 
+  const handleDeleteFile = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de ce fichier ?",
+      "confirm",
+      () => {
+        deleteFileApi(id).then((ok) => {
+          if (ok) getFillesApi(props.id, props);
+        });
+      }
+    );
+  };
+
+  const handleDeleteAudio = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de cet audio ?",
+      "confirm",
+      () => {
+        deleteAudioApi(id).then((ok) => {
+          if (ok) getClaimAudioApi(props.id, props);
+        });
+      }
+    );
+  };
+
+  const handleDeleteExtraContent = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de ce contenu ?",
+      "confirm",
+      () => {
+        deleteExtraContentApi(id).then((ok) => {
+          if (ok) {
+            props.extrasChanged(props.extras.filter((e) => e.id !== id));
+          }
+        });
+      }
+    );
+  };
+
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
@@ -2547,6 +2592,21 @@ const TraiterDenonciation = (props) => {
               }}
               onClick={() => downloadFillesApi(attachment.id, attachment.name)}
             />
+            {attachment._extra &&
+              attachment.extra?.user?.firstAndLastName === user.firstAndLastName && (
+                <DeleteOutline
+                  sx={{
+                    fontSize: "18px",
+                    color: "error.main",
+                    ml: 1,
+                    "&:hover": {
+                      color: "error.dark",
+                      cursor: "pointer",
+                    },
+                  }}
+                  onClick={() => handleDeleteFile(attachment.id)}
+                />
+              )}
           </Card>
         </Grid>
       );
@@ -2665,6 +2725,15 @@ const TraiterDenonciation = (props) => {
               >
                 {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
               </IconButton>
+              {audioItem._extra &&
+                audioItem.extra?.user?.firstAndLastName === user.firstAndLastName && (
+                  <IconButton
+                    onClick={() => handleDeleteAudio(audioItem.id)}
+                    sx={{ color: "error.main" }}
+                  >
+                    <DeleteOutline fontSize="small" />
+                  </IconButton>
+                )}
             </Box>
           </Card>
         </Grid>
@@ -3188,6 +3257,8 @@ const TraiterDenonciation = (props) => {
           content={props.content}
           extras={props.extras}
           onAddContent={() => { setShowExtraContent(true); setExtraContent(''); }}
+          onDeleteExtra={handleDeleteExtraContent}
+          currentUser={user}
 
           visibleActions={[
             addR === "PILOTE" && props.status === "SAVED" && 'convertir',

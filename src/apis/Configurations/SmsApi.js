@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { notify } from "../../Utils/alert";
 import { loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { HOST } from "../../Utils/globals";
@@ -24,8 +24,8 @@ export const ajout = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-sms")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-sms")
+            saveItemToSessionStorage(response.data.content, "app-sms")
+            saveItemToLocalStorage(response.data.content, "app-sms")
 
             props.etatChanged(false)
            

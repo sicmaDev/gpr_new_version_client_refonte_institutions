@@ -9,6 +9,11 @@ import ClaimsCardView from "./components/ClaimsCardView";
 import TraitementShell from "../../components/treatment/TraitementShell";
 import HistoriqueTimeline from "../../components/treatment/HistoriqueTimeline";
 import FichiersTab from "../../components/treatment/FichiersTab";
+import WaCommentBadge from "../../whatgpr/components/WaCommentBadge";
+import WaAudioSection from "../../whatgpr/components/WaAudioSection";
+import AudioGrid from "../../whatgpr/components/AudioGrid";
+import useWaAudioJump from "../../whatgpr/hooks/useWaAudioJump";
+import { splitWaAudios } from "../../whatgpr/utils";
 import axios from "axios";
 import ReactDatatable from "@ashvin27/react-datatable";
 import Select from "react-select";
@@ -82,7 +87,11 @@ import {
   getFillesApi,
   listeTousStatuts,
   listeTousStatutsOffline,
+  deleteFileApi,
+  deleteAudioApi,
+  deleteExtraContentApi,
 } from "../../apis/Reclamations/ReclamationsApi";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PrintIcon from "@mui/icons-material/Print";
 import EmailIcon from '@mui/icons-material/Email';
 import { connect } from "react-redux";
@@ -209,6 +218,8 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const ListeReclamations = (props) => {
   let dimf, crew, emailDisplay;
+  const { waAudios, regularAudios } = splitWaAudios(props.selectedItemAudio);
+  const { highlightedAudioId, handleJumpToWhatsappAudioComment } = useWaAudioJump(waAudios);
   const [open, setOpen] = React.useState(false);
   const [interne, setInterne] = React.useState(false);
   const [changeButtonPrint, setChangeButtonPrint] = useState(false);
@@ -271,7 +282,7 @@ const ListeReclamations = (props) => {
 
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-user"))
+      ? loadItemFromSessionStorage("app-user")
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
   let addR = user.additionalRole;
@@ -280,12 +291,12 @@ const ListeReclamations = (props) => {
 
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
-      ? JSON.parse(loadItemFromLocalStorage("app-mode"))
+      ? loadItemFromLocalStorage("app-mode")
       : undefined;
 
   let objets =
     loadItemFromLocalStorage("app-objets") !== undefined
-      ? JSON.parse(loadItemFromLocalStorage("app-objets"))
+      ? loadItemFromLocalStorage("app-objets")
       : undefined;
 
   const [currentData, setCurrentData] = useState(null);
@@ -934,45 +945,45 @@ const ListeReclamations = (props) => {
         props.contentChanged(data.content ? data.content : "");
         props.statusChanged(data.status ? data.status : "");
         let description = data.languageId
-          ? JSON.parse(loadItemFromSessionStorage("app-langues")).filter(
+          ? loadItemFromSessionStorage("app-langues").filter(
             (e) => {
               return e.id === data.languageId;
             }
           )
           : "";
         let description1 = data.collectionChannelId
-          ? JSON.parse(loadItemFromSessionStorage("app-supports")).filter(
+          ? loadItemFromSessionStorage("app-supports").filter(
             (e) => {
               return e.id === data.collectionChannelId;
             }
           )
           : "";
         let description2 = data.objetId
-          ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
+          ? loadItemFromSessionStorage("app-objets").filter((e) => {
             return e.id === data.objetId;
           })
           : "";
 
         let description6 = data.objetId
-          ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => {
+          ? loadItemFromSessionStorage("app-objets").filter((e) => {
             return e.id === data.objetId;
           })
           : "";
 
         let description3 = data.productId
-          ? JSON.parse(loadItemFromSessionStorage("app-produits")).filter(
+          ? loadItemFromSessionStorage("app-produits").filter(
             (e) => {
               return e.id === data.productId;
             }
           )
           : "";
         let description4 = data.servicePointId
-          ? JSON.parse(loadItemFromSessionStorage("app-ps")).filter((e) => {
+          ? loadItemFromSessionStorage("app-ps").filter((e) => {
             return e.id === data.servicePointId;
           })
           : "";
         let description5 = data.collectorId
-          ? JSON.parse(loadItemFromSessionStorage("app-users")).filter((e) => {
+          ? loadItemFromSessionStorage("app-users").filter((e) => {
             return e.id === data.collectorId;
           })
           : "";
@@ -1391,7 +1402,12 @@ const ListeReclamations = (props) => {
                           >
                             <span className="hero">
                               Client {degre} : mesurée{" "}
-                              {solution.satisfactionMeasureDto.measurer
+                              {solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp]") ||
+                              solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp-Audio]")
+                                ? (solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp-Audio]")
+                                    ? " via audio WhatsApp 🎙 "
+                                    : " depuis WhatsApp ")
+                                : solution.satisfactionMeasureDto.measurer
                                 ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
                                 : " depuis le site web "}
                               le{" "}
@@ -1534,10 +1550,11 @@ const ListeReclamations = (props) => {
                                       Commentaire du client
                                     </div>
                                     <div>
-                                      {
-                                        solution.satisfactionMeasureDto
-                                          .commentaire
-                                      }
+                                      <WaCommentBadge
+                                        commentaire={solution.satisfactionMeasureDto.commentaire}
+                                        measureDateTime={solution.satisfactionMeasureDto.measureDateTime}
+                                        onJumpToAudio={handleJumpToWhatsappAudioComment}
+                                      />
                                     </div>
                                   </div>
                                 ) : (
@@ -1736,6 +1753,47 @@ const ListeReclamations = (props) => {
     }
   }
 
+  const handleDeleteFile = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de ce fichier ?",
+      "confirm",
+      () => {
+        deleteFileApi(id).then((ok) => {
+          if (ok) getFillesApi(props.id, props);
+        });
+      }
+    );
+  };
+
+  const handleDeleteAudio = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de cet audio ?",
+      "confirm",
+      () => {
+        deleteAudioApi(id).then((ok) => {
+          if (ok) getClaimAudioApi(props.id, props);
+        });
+      }
+    );
+  };
+
+  const handleDeleteExtraContent = (id) => {
+    modalify(
+      "Confirmation",
+      "Confirmez vous la suppression de ce contenu ?",
+      "confirm",
+      () => {
+        deleteExtraContentApi(id).then((ok) => {
+          if (ok) {
+            props.extrasChanged(props.extras.filter((e) => e.id !== id));
+          }
+        });
+      }
+    );
+  };
+
   let attachmentList;
   if (props.selectedItemFiles.length > 0) {
     let attachmentListChild = props.selectedItemFiles.map((attachment) => {
@@ -1810,6 +1868,21 @@ const ListeReclamations = (props) => {
               }}
               onClick={() => downloadFillesApi(attachment.id, attachment.name)}
             />
+            {attachment._extra &&
+              attachment.extra?.user?.firstAndLastName === user.firstAndLastName && (
+                <DeleteOutlineIcon
+                  sx={{
+                    fontSize: "18px",
+                    color: "error.main",
+                    ml: 1,
+                    "&:hover": {
+                      color: "error.dark",
+                      cursor: "pointer",
+                    },
+                  }}
+                  onClick={() => handleDeleteFile(attachment.id)}
+                />
+              )}
           </Card>
         </Grid>
       );
@@ -1848,95 +1921,25 @@ const ListeReclamations = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-
-    let audioListChild = props.selectedItemAudio.map((audioItem) => {
-      return (
-        <Grid item xs={12} sm={6} key={audioItem.id}>
-          <Card
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              borderRadius: 2,
-              p: 1.5,
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              height: "100%",
-            }}
-          >
-            <Box
-              sx={{
-                bgcolor: "primary.light",
-                borderRadius: "6px",
-                p: 1.5,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mr: 2,
-                minWidth: "48px",
-                height: "48px",
-              }}
-            >
-              <VolumeUp
-                sx={{ color: "primary.contrastText", fontSize: "28px" }}
-              />
-            </Box>
-
-            <CardContent sx={{ flex: 1, minWidth: 0, p: "8px !important" }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 500,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    mb: 0.5,
-                  }}
-                >
-                  {audioItem.name}
-                </Typography>
-                {audioItem._extra && (
-                  <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName ?? ""} le ${audioItem.extra?.createdAt && isFinite(new Date(audioItem.extra.createdAt)) ? formatDate(audioItem.extra.createdAt) : "date invalide"}`}
-                  >
-                    <Info fontSize="small" sx={{ ml: 1 }} />
-                  </Tooltip>
-                )}
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                {Math.round((audioItem.size / 1024 + Number.EPSILON) * 100) /
-                  100}{" "}
-                {"Ko"} • {audioItem.duration}
-              </Typography>
-            </CardContent>
-
-            <Box sx={{ display: "flex" }}>
-              <IconButton
-                onClick={() => handlePlay(audioItem.id, audioItem.name)}
-                sx={{
-                  color:
-                    currentAudioId === audioItem.id
-                      ? "primary.main"
-                      : "text.secondary",
-                }}
-              >
-                {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
-              </IconButton>
-            </Box>
-          </Card>
-        </Grid>
-      );
-    });
     audioList = (
-      <Grid spacing={2} container size={12}>
-        {audioListChild}
-      </Grid>
+      <>
+        <AudioGrid
+          audios={regularAudios}
+          currentAudioId={currentAudioId}
+          onPlay={handlePlay}
+          highlightedAudioId={highlightedAudioId}
+          formatDate={formatDate}
+          onDelete={handleDeleteAudio}
+          currentUser={user}
+        />
+        <WaAudioSection
+          waAudios={waAudios}
+          currentAudioId={currentAudioId}
+          onPlay={handlePlay}
+          highlightedAudioId={highlightedAudioId}
+          formatDate={formatDate}
+        />
+      </>
     );
   } else {
     audioList = (
@@ -2007,17 +2010,17 @@ const ListeReclamations = (props) => {
 
     // Calcul des descriptions
     const description2 = props.selectedItem.objetId
-      ? JSON.parse(loadItemFromSessionStorage("app-objets")).find(
+      ? loadItemFromSessionStorage("app-objets").find(
         (e) => e.id === props.selectedItem.objetId
       )
       : {};
     const description3 = props.selectedItem.productId
-      ? JSON.parse(loadItemFromSessionStorage("app-produits")).find(
+      ? loadItemFromSessionStorage("app-produits").find(
         (e) => e.id === props.selectedItem.productId
       )
       : {};
     const description5 = props.selectedItem.collectorId
-      ? JSON.parse(loadItemFromSessionStorage("app-users")).find(
+      ? loadItemFromSessionStorage("app-users").find(
         (e) => e.id === props.selectedItem.collectorId
       )
       : {};
@@ -2540,7 +2543,7 @@ const ListeReclamations = (props) => {
   };
 
   /* ══════════════════════════════════════════════════════
-     VUE DÉTAIL — quand l'URL contient un code réclamation
+     VUE DÉTAIL - quand l'URL contient un code réclamation
      Tout la logique métier existante est préservée :
      details, attachmentList, audioList, recoursList,
      printRecu, printToWord, handleInterne/Externe,
@@ -2749,7 +2752,7 @@ const ListeReclamations = (props) => {
                           </div>
                         </div>
                         <div style={{ padding: "12px 14px", borderLeft: `3px solid ${dotColor}`, margin: "0 14px 0 14px", marginTop: 12 }}>
-                          <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "—"}</div>
+                          <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "-"}</div>
                         </div>
                         {sol.commentaire && <div style={{ padding: "0 14px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4, marginTop: 10 }}>Commentaire</div><div style={{ fontSize: 12.5, color: "#64748b", fontStyle: "italic", lineHeight: 1.6 }}>{sol.commentaire}</div></div>}
                         {clientComment && clientComment.trim() !== "" && <div style={{ padding: "0 14px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Commentaire du client</div><div style={{ fontSize: 12.5, color: "#0369a1", lineHeight: 1.6, background: "#e0f2fe", borderRadius: 6, padding: "6px 10px" }}>{clientComment}</div></div>}
@@ -2813,10 +2816,10 @@ const ListeReclamations = (props) => {
                         {props.status === "AFFECTED" && (
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                             {[
-                              { label: "Affecté à", value: props.handled_by || "—", color: "#1d4ed8" },
-                              { label: "Par", value: props.assigned_by || "—", color: "#1e293b" },
-                              { label: "Le", value: props.assigned_at ? formatDate(props.assigned_at) : "—", color: "#1e293b" },
-                              { label: "Délai", value: props.selectedItem?.retardDay != null ? `${props.selectedItem.retardDay} jour(s)` : "—", color: props.selectedItem?.retardDay < 0 ? "#ef4444" : "#1e293b" },
+                              { label: "Affecté à", value: props.handled_by || "-", color: "#1d4ed8" },
+                              { label: "Par", value: props.assigned_by || "-", color: "#1e293b" },
+                              { label: "Le", value: props.assigned_at ? formatDate(props.assigned_at) : "-", color: "#1e293b" },
+                              { label: "Délai", value: props.selectedItem?.retardDay != null ? `${props.selectedItem.retardDay} jour(s)` : "-", color: props.selectedItem?.retardDay < 0 ? "#ef4444" : "#1e293b" },
                             ].map(({ label, value, color }) => (
                               <div key={label} style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 14px" }}>
                                 <div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{label}</div>
@@ -2831,12 +2834,12 @@ const ListeReclamations = (props) => {
                           <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>Informations du dossier</div>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                             {[
-                              { label: "Enregistrée le", value: props.created_at ? formatDate(props.created_at) : "—" },
-                              { label: "Canal", value: props.collect || "—" },
-                              { label: "Objet", value: props.subject || "—" },
-                              { label: "Catégorie", value: props.underSubject || "—" },
-                              { label: "Produit", value: props.product || "—" },
-                              { label: "Point de service", value: props.unit || "—" },
+                              { label: "Enregistrée le", value: props.created_at ? formatDate(props.created_at) : "-" },
+                              { label: "Canal", value: props.collect || "-" },
+                              { label: "Objet", value: props.subject || "-" },
+                              { label: "Catégorie", value: props.underSubject || "-" },
+                              { label: "Produit", value: props.product || "-" },
+                              { label: "Point de service", value: props.unit || "-" },
                             ].map(({ label, value }) => (
                               <div key={label} style={{ background: "#f8fafc", borderRadius: 10, padding: "10px 12px" }}>
                                 <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{label}</div>
@@ -2921,6 +2924,8 @@ const ListeReclamations = (props) => {
                   content={props.content}
                   extras={props.extras}
                   onAddContent={() => { setShowExtraContent(true); setExtraContent(""); }}
+                  onDeleteExtra={handleDeleteExtraContent}
+                  currentUser={user}
                 />
               ),
             },
@@ -2969,14 +2974,14 @@ const ListeReclamations = (props) => {
                                           </div>
                                         </div>
                                         <div style={{ padding: "10px 14px 0", borderLeft: `3px solid ${dotColor}`, margin: "10px 14px 0" }}>
-                                          <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "—"}</div>
+                                          <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "-"}</div>
                                         </div>
                                         {sol.commentaire && <div style={{ padding: "8px 14px" }}><span style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Commentaire</span><div style={{ fontSize: 12.5, color: "#64748b", fontStyle: "italic", marginTop: 4 }}>{sol.commentaire}</div></div>}
                                         {clientComment && clientComment.trim() !== "" && <div style={{ margin: "0 14px 10px", background: "#e0f2fe", borderRadius: 8, padding: "8px 12px" }}><span style={{ fontSize: 10.5, fontWeight: 700, color: "#0369a1", textTransform: "uppercase" }}>Commentaire du client</span><div style={{ fontSize: 12.5, color: "#0369a1", marginTop: 4 }}>{clientComment}</div></div>}
                                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "0 14px 12px", marginTop: 4 }}>
                                           {satLabel && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: dotColor + "18", color: dotColor }}>{satLabel}</span>}
                                           {!satLabel && sol.status === "APPROVED" && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fef3c7", color: "#92400e" }}>En attente de mesure</span>}
-                                          {sol.status === "UNAPPROVED" && sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fee2e2", color: "#991b1b" }}>Désapprouvée — {sol.motifDesaprobation}</span>}
+                                          {sol.status === "UNAPPROVED" && sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fee2e2", color: "#991b1b" }}>Désapprouvée - {sol.motifDesaprobation}</span>}
                                           {sol.status === "UNAPPROVED" && !sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fef3c7", color: "#92400e" }}>En attente d'approbation</span>}
                                         </div>
                                       </div>
@@ -3556,6 +3561,8 @@ const ListeReclamations = (props) => {
                             mode={mode}
                             objets={objets}
                             onRowClick={(data) => rowClickedHandler(null, data, 0)}
+                            showTransmitted={false}
+                            showStatusIcons={false}
                           />
                         ) : (
                           <ClaimsCardView
@@ -3563,6 +3570,8 @@ const ListeReclamations = (props) => {
                             mode={mode}
                             objets={objets}
                             onCardClick={(data) => rowClickedHandler(null, data, 0)}
+                            showTransmitted={false}
+                            showStatusIcons={false}
                           />
                         )}
                         <div id="tab_exl" style={{ display: "none" }}></div>

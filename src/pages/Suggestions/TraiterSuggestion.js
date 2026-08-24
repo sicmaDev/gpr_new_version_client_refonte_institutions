@@ -143,7 +143,7 @@ const SG_TREAT_CHIPS = [
 const SG_TABLE_COLUMNS = [
   {
     id: "codeClient", label: "Code client", sortable: true, minWidth: 110,
-    render: (item) => <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>{item.codeClient || "—"}</span>,
+    render: (item) => <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>{item.codeClient || "-"}</span>,
   },
   {
     id: "clientFirstAndLastName", label: "Client", sortable: true, minWidth: 140,
@@ -161,7 +161,7 @@ const SG_TABLE_COLUMNS = [
   },
   {
     id: "createdAt", label: "Enregistrée le", sortable: true, minWidth: 130,
-    render: (item) => <span style={{ fontSize:"0.80rem", color:"#475569", whiteSpace:"nowrap" }}>{item.createdAt ? new Intl.DateTimeFormat("fr-FR",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(item.createdAt)) : "—"}</span>,
+    render: (item) => <span style={{ fontSize:"0.80rem", color:"#475569", whiteSpace:"nowrap" }}>{item.createdAt ? new Intl.DateTimeFormat("fr-FR",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(item.createdAt)) : "-"}</span>,
     sortValue: (item) => item.createdAt || "",
   },
 ];
@@ -173,7 +173,7 @@ const TraiterSuggestion = (props) => {
   const [impression, setImpression] = React.useState(false);
   const [viewMode, setViewMode] = useState("list");
   const [activeFilter, setActiveFilter] = useState("ALL");
-  let user = loadItemFromSessionStorage("app-user") !== undefined ? JSON.parse(loadItemFromSessionStorage("app-user")) : undefined;
+  let user = loadItemFromSessionStorage("app-user") !== undefined ? loadItemFromSessionStorage("app-user") : undefined;
   const history = useHistory();
   const location = useLocation();
   const [localConvertedBy, setLocalConvertedBy] = useState("");
@@ -1159,7 +1159,7 @@ const TraiterSuggestion = (props) => {
                         <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0369a1" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                         </div>
-                        <div style={{ fontSize: 13, color: "#475569" }}><span style={{ fontWeight: 600, color: "#1e293b" }}>Enregistrée par : </span>{props.created_by || "—"}<span style={{ color: "#94a3b8" }}> · {creationDate}</span></div>
+                        <div style={{ fontSize: 13, color: "#475569" }}><span style={{ fontWeight: 600, color: "#1e293b" }}>Enregistrée par : </span>{props.created_by || "-"}<span style={{ color: "#94a3b8" }}> · {creationDate}</span></div>
                       </div>
                       {props.status === "TREAT" && props.handled_by && (
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1240,7 +1240,7 @@ const TraiterSuggestion = (props) => {
                       ) : (
                         <DossierCardView
                           items={filteredContent}
-                          getCardData={(item) => ({ code: item.codeClient, client: item.clientFirstAndLastName || "Anonyme", title: item.subject || "—", subtitle: null, status: item.status, gravity: null, date: item.createdAt })}
+                          getCardData={(item) => ({ code: item.codeClient, client: item.clientFirstAndLastName || "Anonyme", title: item.subject || "-", subtitle: null, status: item.status, gravity: null, date: item.createdAt })}
                           onCardClick={(data) => rowClickedHandler(null, data, 0)}
                           filterFn={(item, { q }) => !q || item.codeClient?.toLowerCase().includes(q) || item.clientFirstAndLastName?.toLowerCase().includes(q)}
                           showStatusFilter={false}

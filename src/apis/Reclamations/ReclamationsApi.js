@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import React, { useState } from "react";
 import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { notify } from "../../Utils/alert";
@@ -28,6 +28,9 @@ const FILES_CLAIM_API = HOST + "api/v1/claim/getFilesBy/%s"
 const FILES_DOWNLOAD_API = HOST + "api/v1/media/download/%s"
 const AUDIOS_CLAIM_API = HOST + "api/v1/claim/getAudiosBy/%s"
 const AUDIOS_DOWNLOAD_API = HOST + "api/v1/claimaudio/download/%s"
+const DELETE_MEDIA_API = HOST + "api/v1/media/%s"
+const DELETE_AUDIO_API = HOST + "api/v1/claimaudio/%s"
+const DELETE_EXTRA_API = HOST + "api/v1/extra/%s"
 const START_SESSION_API = HOST + "api/v1/chat/init"
 const CONVERT_CLAIM_API = HOST + "api/v1/claim/convert"
 const DELETE_CLAIM_API = HOST + "api/v1/claim/delete/soft"
@@ -697,6 +700,72 @@ export const getClaimAudioApi = async (data, props) => {
         });
 }
 
+export const deleteFileApi = async (id) => {
+    const config = {
+        method: 'delete',
+        url: DELETE_MEDIA_API.replace("%s", id),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    return axios(config)
+        .then(function (response) {
+            notify("Bravo - Fichier supprimé", "success");
+            return true;
+        })
+        .catch(function (error) {
+            const msg = error.response?.data?.content?.message;
+            notify(msg || "Erreur - Veuillez réessayer!", "error");
+            return false;
+        });
+}
+
+export const deleteAudioApi = async (id) => {
+    const config = {
+        method: 'delete',
+        url: DELETE_AUDIO_API.replace("%s", id),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    return axios(config)
+        .then(function (response) {
+            notify("Bravo - Audio supprimé", "success");
+            return true;
+        })
+        .catch(function (error) {
+            const msg = error.response?.data?.content?.message;
+            notify(msg || "Erreur - Veuillez réessayer!", "error");
+            return false;
+        });
+}
+
+export const deleteExtraContentApi = async (id) => {
+    const config = {
+        method: 'delete',
+        url: DELETE_EXTRA_API.replace("%s", id),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    return axios(config)
+        .then(function (response) {
+            notify("Bravo - Contenu supprimé", "success");
+            return true;
+        })
+        .catch(function (error) {
+            const msg = error.response?.data?.content?.message;
+            notify(msg || "Erreur - Veuillez réessayer!", "error");
+            return false;
+        });
+}
+
 export const downloadAudioApi = async (data, filename) => {
 
     const config = {
@@ -746,7 +815,7 @@ export const downloadAudioApi = async (data, filename) => {
 
 //offline
 export const listeByStatutOffline = async (props, state) => {
-    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("recs-TS"))) : [];
+    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (loadItemFromLocalStorage("recs-TS")) : [];
     let recsTemp = recs.filter((e) => { return e.status == state })
 
     // console.log(recsTemp)
@@ -757,8 +826,9 @@ export const listeByStatutOffline = async (props, state) => {
 }
 
 export const listeTousStatutsOffline = async (props) => {
-    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("recs-TS"))) : [];
+    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (loadItemFromLocalStorage("recs-TS")) : [];
     let recsGlobal = recs.filter((e) => { return e.status !== "TEMP_SAVED" })
+    recsGlobal.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
     props.itemsChanged(recsGlobal)
     // console.log("recsGlobal",recs)
@@ -767,7 +837,7 @@ export const listeTousStatutsOffline = async (props) => {
 }
 
 export const addTempClaimApiOffline = async (data, props) => {
-    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("recs-TS"))) : [];
+    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (loadItemFromLocalStorage("recs-TS")) : [];
 
     //date
     let datetmp = new Date();
@@ -785,12 +855,12 @@ export const addTempClaimApiOffline = async (data, props) => {
 
     if (data["code"] === "") {
         //code
-        let code = "rec" + uuidv4().substring(0, 5) + '-' + (JSON.parse(loadItemFromSessionStorage('app-user'))).servicePointDto.uuid + '-' + (JSON.parse(loadItemFromSessionStorage('app-user')).code)
+        let code = "rec" + uuidv4().substring(0, 5) + '-' + (loadItemFromSessionStorage('app-user')).servicePointDto.uuid + '-' + (loadItemFromSessionStorage('app-user').code)
         // console.log("codeeee",code)
         data["code"] = code
 
         recs.push(data);
-        saveItemToLocalStorage(JSON.stringify(recs), "recs-TS")
+        saveItemToLocalStorage(recs, "recs-TS")
     } else {
         let recsTemp = recs.filter((e) => { return e.code !== data["code"] })
         let recsF = recs.filter((e) => { return e.code === data["code"] })
@@ -800,14 +870,14 @@ export const addTempClaimApiOffline = async (data, props) => {
         // console.log("data",data)
         // console.log("recsTemp3",recs)
         recsTemp.push(data);
-        saveItemToLocalStorage(JSON.stringify(recsTemp), "recs-TS")
+        saveItemToLocalStorage(recsTemp, "recs-TS")
     }
 
 
 
 
     // recs.push(data);
-    // saveItemToLocalStorage(JSON.stringify(recs),"recs-TS")
+    // saveItemToLocalStorage(recs,"recs-TS")
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etatChanged(false)
 
@@ -816,7 +886,7 @@ export const addTempClaimApiOffline = async (data, props) => {
 }
 
 export const addClaimApiOffline = async (data, props) => {
-    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (JSON.parse(loadItemFromLocalStorage("recs-TS"))) : [];
+    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (loadItemFromLocalStorage("recs-TS")) : [];
 
     //date
     let datetmp = new Date();
@@ -829,7 +899,7 @@ export const addClaimApiOffline = async (data, props) => {
     // console.log("datee",created_at)
 
     //code
-    let code = "rec" + uuidv4().substring(0, 5) + '-' + (JSON.parse(loadItemFromSessionStorage('app-user'))).servicePointDto.uuid + '-' + (JSON.parse(loadItemFromSessionStorage('app-user')).code)
+    let code = "rec" + uuidv4().substring(0, 5) + '-' + (loadItemFromSessionStorage('app-user')).servicePointDto.uuid + '-' + (loadItemFromSessionStorage('app-user').code)
     // console.log("codeeee",code)
 
 
@@ -841,24 +911,26 @@ export const addClaimApiOffline = async (data, props) => {
 
         // console.log("codeeee",code)
         data["code"] = code
+        data["codeClient"] = "REC-" + uuidv4().substring(0, 4).toUpperCase()
 
         recs.push(data);
-        saveItemToLocalStorage(JSON.stringify(recs), "recs-TS")
+        saveItemToLocalStorage(recs, "recs-TS")
     } else {
         let recsTemp = recs.filter((e) => { return e.code !== data["code"] })
         let recsF = recs.filter((e) => { return e.code === data["code"] })
         data["id"] = recsF[0].id
+        data["codeClient"] = recsF[0].codeClient ? recsF[0].codeClient : "REC-" + uuidv4().substring(0, 4).toUpperCase()
 
         // console.log("recsTemp11",data)
         recsTemp.push(data);
-        saveItemToLocalStorage(JSON.stringify(recsTemp), "recs-TS")
+        saveItemToLocalStorage(recsTemp, "recs-TS")
     }
 
 
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etat2Changed(false)
 
-    notify("Bravo - Réclamation enregistrée", "success")
+    notify("Bravo - Réclamation enregistrée (code client : " + data["codeClient"] + ")", "success")
 }
 
 
@@ -1009,6 +1081,7 @@ export const checkPhoneCrossAgencyApi = async (phoneValue, props) => {
             }
         })
         .catch(function (error) {
+            console.error("[checkPhoneCrossAgencyApi] Échec de la vérification inter-agences :", error);
             props.setCrossAgencyClaims([]);
         });
 }
@@ -1042,7 +1115,10 @@ export const checkPhoneApi = async (phoneValue, props) => {
             }
         })
         .catch(function (error) {
-
+            console.error("[checkPhoneApi] Échec de la vérification de doublon :", error);
+            props.setExistingClaims(null);
+            props.setModalVisible(false);
+            notify("Impossible de vérifier les doublons pour ce numéro — backend injoignable.", "error");
         });
 }
 

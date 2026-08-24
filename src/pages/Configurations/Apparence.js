@@ -43,7 +43,7 @@ const Apparence = () => {
     const institutionName = (() => {
         try {
             const raw = loadItemFromSessionStorage('app-institution') || loadItemFromLocalStorage('app-institution');
-            if (raw) return JSON.parse(raw)?.denomination || '';
+            if (raw) return raw?.denomination || '';
         } catch {}
         return '';
     })();
@@ -128,8 +128,8 @@ const Apparence = () => {
             await axios.post(SAVE_API, appearancePayload, {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-            saveItemToSessionStorage(JSON.stringify(appearancePayload), 'app-appearance');
-            saveItemToLocalStorage(JSON.stringify(appearancePayload),   'app-appearance');
+            saveItemToSessionStorage(appearancePayload, 'app-appearance');
+            saveItemToLocalStorage(appearancePayload,   'app-appearance');
             savedRef.current = { sidebarColor, topbarColor, logo };
 
             // 2. Appliquer immédiatement dans tout le système
@@ -138,16 +138,16 @@ const Apparence = () => {
             }));
             setColors({ sidebarColor, topbarColor }, logo || null);
 
-            // 3. Propager le logo vers institution (indépendant — n'empêche pas l'application des couleurs)
+            // 3. Propager le logo vers institution (indépendant - n'empêche pas l'application des couleurs)
             try {
                 const rawInst = loadItemFromSessionStorage('app-institution') || loadItemFromLocalStorage('app-institution');
                 if (rawInst && logo) {
-                    const inst        = JSON.parse(rawInst);
+                    const inst        = rawInst;
                     const instPayload = { ...inst, logo };
                     const instRes     = await axios.post(INST_API, instPayload, {
                         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
                     });
-                    const savedInst = instRes.data?.content ? JSON.stringify(instRes.data.content) : JSON.stringify(instPayload);
+                    const savedInst = instRes.data?.content ? instRes.data.content : instPayload;
                     saveItemToSessionStorage(savedInst, 'app-institution');
                     saveItemToLocalStorage(savedInst,   'app-institution');
                 }
@@ -269,7 +269,7 @@ const Apparence = () => {
                                     <Typography sx={{ fontSize: 13, color: '#94a3b8' }}>
                                         Glissez une image ou cliquez pour choisir
                                     </Typography>
-                                    <Typography sx={{ fontSize: 11, color: '#cbd5e1', mt: 0.5 }}>Formats acceptés : JPG, JPEG, PNG — max 2MB</Typography>
+                                    <Typography sx={{ fontSize: 11, color: '#cbd5e1', mt: 0.5 }}>Formats acceptés : JPG, JPEG, PNG - max 2MB</Typography>
                                 </>
                             )}
                         </Box>
@@ -322,7 +322,7 @@ const Apparence = () => {
 
                             {/* Mini contenu */}
                             <Box sx={{ flex: 1, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                {/* KPI cards — fidèles au vrai StatCard */}
+                                {/* KPI cards - fidèles au vrai StatCard */}
                                 <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
                                     {[{ label: 'Réclamations', val: '12' }, { label: 'Traités', val: '8' }].map((kpi) => (
                                         <Box key={kpi.label} sx={{

@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
+import { fetchPendingWAFiles } from "../../whatgpr/pendingWAFiles";
 import Select from "react-select";
 
 import DatePicker, { registerLocale } from "react-datepicker";
@@ -14,7 +15,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
-import { cleanPhoneNumber, cleanPhoneNumber2, cleanPhoneNumber3, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep } from "../../Utils/utils";
+import { cleanPhoneNumber, cleanPhoneNumber2, cleanPhoneNumber3, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep, filesToBase64Dtos } from "../../Utils/utils";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, TextField } from "@mui/material";
@@ -83,9 +84,9 @@ const EnregistrerSuggestion = (props) => {
     const [smsToSend, setSmsToSend] = useState(smsDefault);
 
     let settingComplete = isSettingComplete();
-    let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
-    let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
-    let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? JSON.parse(loadItemFromLocalStorage("app-institution")) : undefined;
+    let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (loadItemFromLocalStorage("app-mode")) : undefined;
+    let user = loadItemFromSessionStorage("app-user") !== undefined ? (loadItemFromSessionStorage("app-user")) : undefined;
+    let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !== 0) ? loadItemFromLocalStorage("app-institution") : undefined;
 
     useEffect(() => {
         if (audio != null && audio !== prevAudioRef.current) {
@@ -137,10 +138,10 @@ const EnregistrerSuggestion = (props) => {
 
     let languages, collects, products, units;
     try {
-        languages = JSON.parse(loadItemFromLocalStorage('app-langues'));
-        collects = JSON.parse(loadItemFromLocalStorage('app-supports'));
-        products = JSON.parse(loadItemFromLocalStorage('app-produits'));
-        units = JSON.parse(loadItemFromLocalStorage('app-ps'));
+        languages = loadItemFromLocalStorage('app-langues');
+        collects = loadItemFromLocalStorage('app-supports');
+        products = loadItemFromLocalStorage('app-produits');
+        units = loadItemFromLocalStorage('app-ps');
     } catch (e) {
         languages = []; collects = []; products = []; units = [];
     }
@@ -251,6 +252,12 @@ const EnregistrerSuggestion = (props) => {
             clearComponentState();
             props.contentChanged(transformConversation(props.whatsappSelectMessage));
             props.phoneChanged(props.whatsappCurrentInbox.phone);
+
+            fetchPendingWAFiles().then(fileObjects => {
+                if (fileObjects.length > 0) {
+                    setFiles(fileObjects);
+                }
+            });
         }
     }, [""]);
 
@@ -300,7 +307,7 @@ const EnregistrerSuggestion = (props) => {
         ) : <></>;
     }
 
-    const handleSubmit = (e, onSuccess = null) => {
+    const handleSubmit = async (e, onSuccess = null) => {
         e.preventDefault();
         setShowSmsBox(false);
         setOpen(false);
@@ -315,7 +322,8 @@ const EnregistrerSuggestion = (props) => {
                 servicePointId: props.unit,
                 fromWhatsapp: (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false,
                 filesWhatsapp: props.whatsappSelectMessage?.filter(({ type }) => type !== "chat"),
-                inboxWhatsapp: props.whatsappCurrentInbox ?? null,
+                // Envoyer null si inbox sans id (WhatGPR) → évite TransientObjectException Hibernate
+                inboxWhatsapp: props.whatsappCurrentInbox?.id ? props.whatsappCurrentInbox : null,
                 productId: props.product,
                 languageId: props.language,
                 folderCode: props.dossierimf,
@@ -339,13 +347,19 @@ const EnregistrerSuggestion = (props) => {
                     if (onSuccess && savedSuggestion) onSuccess(savedSuggestion);
                 });
             } else {
+                // Hors-ligne : File/Blob ne survivent pas à un JSON.stringify en localStorage —
+                // on les convertit donc en base64, décodé côté backend à la synchronisation.
+                claim.files = await filesToBase64Dtos(files);
+                claim.audios = await filesToBase64Dtos(
+                    audioRecordings.map(blob => new File([blob], "suggestion_record_" + uuid() + ".ogg", { type: "audio/ogg; codecs=opus" }))
+                );
                 addSuggestionApiOffline(claim, props).then(() => { clearComponentState(); props.resetWhatsapp(); });
             }
         }
         props.suggestionsRecordErrors(errors);
     };
 
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
         const formData = new FormData();
         let claim = {
@@ -355,7 +369,8 @@ const EnregistrerSuggestion = (props) => {
             phone: cleanPhoneNumber(props.phone),
             fromWhatsapp: (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false,
             filesWhatsapp: props.whatsappSelectMessage?.filter(({ type }) => type !== "chat"),
-            inboxWhatsapp: props.whatsappCurrentInbox ?? null,
+            // Envoyer null si inbox sans id (WhatGPR) → évite TransientObjectException Hibernate
+            inboxWhatsapp: props.whatsappCurrentInbox?.id ? props.whatsappCurrentInbox : null,
             collectionChannelId: props.collect,
             servicePointId: props.unit,
             productId: props.product,
@@ -377,6 +392,12 @@ const EnregistrerSuggestion = (props) => {
         if (mode === 1) {
             addTempSuggestionApi(formData, props).then(() => { clearComponentState(); });
         } else {
+            // Hors-ligne : File/Blob ne survivent pas à un JSON.stringify en localStorage —
+            // on les convertit donc en base64, décodé côté backend à la synchronisation.
+            claim.files = await filesToBase64Dtos(files);
+            claim.audios = await filesToBase64Dtos(
+                audioRecordings.map(blob => new File([blob], "suggestion_record_" + uuid() + ".ogg", { type: "audio/ogg; codecs=opus" }))
+            );
             addTempSuggestionApiOffline(claim, props).then(() => { clearComponentState(); });
         }
         props.suggestionsRecordErrors(errors);
@@ -538,10 +559,10 @@ const EnregistrerSuggestion = (props) => {
                 props.codeChanged(data.code ?? "");
                 props.recordedAtChanged(data.receiptDateTime ?? "");
                 props.contentChanged(data.content ?? "");
-                const description = data.languageId ? JSON.parse(loadItemFromSessionStorage('app-langues')).filter(e => e.id === data.languageId) : [];
-                const description1 = data.collectionChannelId ? JSON.parse(loadItemFromSessionStorage('app-supports')).filter(e => e.id === data.collectionChannelId) : [];
-                const description3 = data.productId ? JSON.parse(loadItemFromSessionStorage('app-produits')).filter(e => e.id === data.productId) : [];
-                const description4 = data.servicePointId ? JSON.parse(loadItemFromSessionStorage('app-ps')).filter(e => e.id === data.servicePointId) : [];
+                const description = data.languageId ? loadItemFromSessionStorage('app-langues').filter(e => e.id === data.languageId) : [];
+                const description1 = data.collectionChannelId ? loadItemFromSessionStorage('app-supports').filter(e => e.id === data.collectionChannelId) : [];
+                const description3 = data.productId ? loadItemFromSessionStorage('app-produits').filter(e => e.id === data.productId) : [];
+                const description4 = data.servicePointId ? loadItemFromSessionStorage('app-ps').filter(e => e.id === data.servicePointId) : [];
                 if (description.length) { props.languageChanged(description[0].id); props.languageLibelleChanged(description[0].libelle); }
                 if (description1.length) { props.collectChanged(description1[0].id); props.collectLibelleChanged(description1[0].libelle); }
                 if (description3.length) { props.productChanged(description3[0].id); props.productLibelleChanged(description3[0].libelle); }
@@ -738,7 +759,7 @@ const EnregistrerSuggestion = (props) => {
                                         </div>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 2 }}>{draft.code || "Brouillon sans code"}</div>
-                                            <div style={{ fontSize: 11, color: "#64748b" }}>{draft.createdAtFormated || "—"}</div>
+                                            <div style={{ fontSize: 11, color: "#64748b" }}>{draft.createdAtFormated || "-"}</div>
                                         </div>
                                         <div style={{ display: "flex", alignItems: "center", gap: 4 }} onClick={e => e.stopPropagation()}>
                                             <Tooltip title="Modifier">
@@ -776,14 +797,14 @@ const EnregistrerSuggestion = (props) => {
                     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                         <input type="hidden" value={JSON.stringify(props.selectedItem)} />
 
-                        {/* Nom et Prenoms — pleine largeur */}
+                        {/* Nom et Prenoms - pleine largeur */}
                         <div className="input-field" style={{ margin: 0 }}>
                             <input id="sg_lastname" type="text" className="validate" value={props.lastname}
                                 onChange={(e) => props.lastnameChanged(e.target.value)} />
                             <label htmlFor="sg_lastname" className="active">Nom et Prenoms</label>
                         </div>
 
-                        {/* Adresse + Telephone — 2 colonnes */}
+                        {/* Adresse + Telephone - 2 colonnes */}
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                             <div className="input-field" style={{ margin: 0 }}>
                                 <input id="sg_address" type="text" className="validate" value={props.address}
@@ -802,14 +823,14 @@ const EnregistrerSuggestion = (props) => {
                             </div>
                         </div>
 
-                        {/* Email — pleine largeur */}
+                        {/* Email - pleine largeur */}
                         <div className="input-field" style={{ margin: 0 }}>
                             <input id="sg_email" type="email" className="validate" value={props.email}
                                 onChange={(e) => props.emailChanged(e.target.value)} />
                             <label htmlFor="sg_email" className="active">Email (facultatif)</label>
                         </div>
 
-                        {/* Genre + Langue + Dossier IMF — pattern identique à EnregistrerReclamation */}
+                        {/* Genre + Langue + Dossier IMF - pattern identique à EnregistrerReclamation */}
                         <div className="row" style={{ margin: 0 }}>
                             <div className="col l6 m12 s12 input-field" ref={genderRef}>
                                 <Select
@@ -1110,11 +1131,11 @@ const EnregistrerSuggestion = (props) => {
                             )}
                             <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
                                 <span style={{ color: "#757575", width: 160, fontSize: 13, flexShrink: 0 }}>Langue</span>
-                                <span style={{ fontWeight: 600, fontSize: 13 }}>{props.languageLibelle || "—"}</span>
+                                <span style={{ fontWeight: 600, fontSize: 13 }}>{props.languageLibelle || "-"}</span>
                             </div>
                             <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
                                 <span style={{ color: "#757575", width: 160, fontSize: 13, flexShrink: 0 }}>Modalite de depot</span>
-                                <span style={{ fontWeight: 600, fontSize: 13 }}>{props.collectLibelle || "—"}</span>
+                                <span style={{ fontWeight: 600, fontSize: 13 }}>{props.collectLibelle || "-"}</span>
                             </div>
                             {props.productLibelle && (
                                 <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
@@ -1131,13 +1152,13 @@ const EnregistrerSuggestion = (props) => {
                             <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
                                 <span style={{ color: "#757575", width: 160, fontSize: 13, flexShrink: 0 }}>Date de reception</span>
                                 <span style={{ fontWeight: 600, fontSize: 13 }}>
-                                    {props.recorded_at ? moment(props.recorded_at, "DD-MM-YYYY HH:mm").format("DD MMMM YYYY [a] HH:mm") : "—"}
+                                    {props.recorded_at ? moment(props.recorded_at, "DD-MM-YYYY HH:mm").format("DD MMMM YYYY [a] HH:mm") : "-"}
                                 </span>
                             </div>
                             <div style={{ display: "flex", padding: "7px 0", borderBottom: "1px solid #f5f5f5" }}>
                                 <span style={{ color: "#757575", width: 160, fontSize: 13, flexShrink: 0 }}>Contenu</span>
                                 <span style={{ fontWeight: 600, fontSize: 13, flex: 1 }}>
-                                    {props.content && props.content !== "#ReclamationAudio" ? props.content : (!props.content && audioRecordings.length === 0 && !props.selectedItemAudio?.length ? "—" : null)}
+                                    {props.content && props.content !== "#ReclamationAudio" ? props.content : (!props.content && audioRecordings.length === 0 && !props.selectedItemAudio?.length ? "-" : null)}
                                 </span>
                             </div>
 

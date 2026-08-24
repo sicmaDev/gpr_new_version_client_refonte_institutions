@@ -41,15 +41,15 @@ const selectSx = {
 };
 
 /**
- * DossierTable — tableau générique configurable
+ * DossierTable - tableau générique configurable
  *
  * Props:
- *   items              — tableau de données
- *   columns            — [{ id, label, sortable?, minWidth?, render(item)?, sortValue?(item) }]
- *   onRowClick(item)   — clic sur une ligne
- *   filterFn(item, { q, filterStatus, filterGravity }) — prédicat de filtre (fourni par l'appelant)
- *   showStatusFilter   — afficher le filtre statut (défaut: true)
- *   showGravityFilter  — afficher le filtre gravité (défaut: false)
+ *   items              - tableau de données
+ *   columns            - [{ id, label, sortable?, minWidth?, render(item)?, sortValue?(item) }]
+ *   onRowClick(item)   - clic sur une ligne
+ *   filterFn(item, { q, filterStatus, filterGravity }) - prédicat de filtre (fourni par l'appelant)
+ *   showStatusFilter   - afficher le filtre statut (défaut: true)
+ *   showGravityFilter  - afficher le filtre gravité (défaut: false)
  *   searchPlaceholder
  *   emptyText
  */
@@ -220,7 +220,7 @@ const DossierTable = ({
                 >
                   {columns.map((col) => (
                     <TableCell key={col.id}>
-                      {col.render ? col.render(item) : (item[col.id] ?? "—")}
+                      {col.render ? col.render(item) : (item[col.id] ?? "-")}
                     </TableCell>
                   ))}
                 </TableRow>

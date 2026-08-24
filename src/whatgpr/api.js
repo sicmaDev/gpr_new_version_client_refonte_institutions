@@ -8,7 +8,7 @@ const authHeader = () => ({
     'Content-Type': 'application/json',
 });
 
-// Vérifie response.ok avant de parser le JSON — sans ça, une erreur HTTP (403 sécurité,
+// Vérifie response.ok avant de parser le JSON - sans ça, une erreur HTTP (403 sécurité,
 // 500 serveur) avec un corps JSON valide passait silencieusement comme un succès avec des
 // données incohérentes. Journalise systématiquement pour rendre les échecs diagnosticables.
 const handleResponse = async (response) => {
@@ -17,7 +17,7 @@ const handleResponse = async (response) => {
         try {
             const body = await response.json();
             message = body?.content?.message || body?.message || message;
-        } catch (_) { /* corps non JSON — on garde le message par défaut */ }
+        } catch (_) { /* corps non JSON - on garde le message par défaut */ }
         console.error(`[WhatGPR] Erreur API (${response.url}) : ${message}`);
         throw new Error(message);
     }

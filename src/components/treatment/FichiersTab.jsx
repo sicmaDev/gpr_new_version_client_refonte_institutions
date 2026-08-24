@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { formatDate } from "../../Utils/utils";
 
 const AccordionSection = ({ sectionKey, color, dotColor, icon, title, count, openMap, onToggle, children }) => {
@@ -40,6 +41,7 @@ const FichiersTab = ({
   attachmentList, audioList,
   inputRef, onFilesChange, onAddAudio,
   content, extras, onAddContent,
+  onDeleteExtra, currentUser,
 }) => {
   const [accordion, setAccordion] = useState({ contents: true, files: true, audios: true });
   const toggle = (key) => setAccordion(prev => ({ ...prev, [key]: !prev[key] }));
@@ -122,7 +124,15 @@ const FichiersTab = ({
             )}
             {extras?.filter(e => e.contenu).map((extra, idx) => (
               <div key={extra.id ?? idx} style={{ background: "#faf5ff", borderRadius: 10, border: "1px solid #ede9fe", padding: "12px 16px" }}>
-                <div style={{ fontSize: 13.5, color: "#1e293b", whiteSpace: "pre-wrap", lineHeight: 1.6, marginBottom: 6 }}>{extra.contenu}</div>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                  <div style={{ fontSize: 13.5, color: "#1e293b", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{extra.contenu}</div>
+                  {onDeleteExtra && extra.user?.firstAndLastName === currentUser?.firstAndLastName && (
+                    <DeleteOutlineIcon
+                      sx={{ fontSize: 18, color: "#dc2626", cursor: "pointer", flexShrink: 0 }}
+                      onClick={() => onDeleteExtra(extra.id)}
+                    />
+                  )}
+                </div>
                 <div style={{ fontSize: 11.5, color: "#94a3b8" }}>
                   {extra.user?.firstAndLastName && <span>User {extra.user.firstAndLastName}</span>}
                   {extra.createdAt && <span> le {formatDate(extra.createdAt)}</span>}

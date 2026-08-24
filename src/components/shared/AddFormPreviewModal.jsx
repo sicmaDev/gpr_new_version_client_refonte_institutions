@@ -11,7 +11,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 
 /**
- * AddFormPreviewModal — Option B : Formulaire + liste de preview
+ * AddFormPreviewModal - Option B : Formulaire + liste de preview
  * Pour les pages avec 4-6 champs (PointsServices, Postes…)
  *
  * Props :
@@ -24,7 +24,7 @@ import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
  *   onSubmit      : async (items: object[]) => void
  *   loading       : bool
  *   maxWidth      : "xs"|"sm"|"md"|"lg"|"xl"  (défaut "sm")
- *   previewLabel  : (item) => string   — texte affiché dans la preview
+ *   previewLabel  : (item) => string   - texte affiché dans la preview
  */
 
 const EMPTY_FORM = (fields) =>
@@ -38,7 +38,7 @@ const AddFormPreviewModal = ({
   onSubmit,
   loading = false,
   maxWidth = "sm",
-  previewLabel = (item) => item[Object.keys(item)[0]] || "—",
+  previewLabel = (item) => item[Object.keys(item)[0]] || "-",
 }) => {
   const [form, setForm] = useState(EMPTY_FORM(fields));
   const [formErrors, setFormErrors] = useState({});

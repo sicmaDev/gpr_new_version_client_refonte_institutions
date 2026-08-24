@@ -67,9 +67,9 @@ const calcSla = (receiptDateTime, processingTime) => {
 };
 
 const fmtDate = (dt) => {
-  if (!dt) return "—";
+  if (!dt) return "-";
   const d = dt instanceof Date ? dt : parseDate(dt);
-  if (!d) return "—";
+  if (!d) return "-";
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 };
 
@@ -286,7 +286,7 @@ const SLA = () => {
                         onMouseEnter={e => e.currentTarget.style.background = "#F8FAFC"}
                         onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                         <td style={{ padding: "11px 14px", fontSize: 12.5, fontWeight: 700, color: "#0F172A", whiteSpace: "nowrap" }}>
-                          {item.codeClient || item.code || "—"}
+                          {item.codeClient || item.code || "-"}
                         </td>
                         <td style={{ padding: "11px 14px", fontSize: 12.5, color: "#334155", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {item.clientFirstAndLastName || "Anonyme"}
@@ -300,16 +300,16 @@ const SLA = () => {
                           </span>
                         </td>
                         <td style={{ padding: "11px 14px", fontSize: 12.5, color: "#475569", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {item.objet?.libelle || "—"}
+                          {item.objet?.libelle || "-"}
                         </td>
                         <td style={{ padding: "11px 14px", fontSize: 12, color: "#64748B", whiteSpace: "nowrap" }}>
                           {fmtDate(item.receiptDateTime)}
                         </td>
                         <td style={{ padding: "11px 14px", fontSize: 13, fontWeight: 600, color: "#334155", textAlign: "center" }}>
-                          {item.objet?.processingTime ?? <span style={{ color: "#CBD5E1" }}>—</span>}
+                          {item.objet?.processingTime ?? <span style={{ color: "#CBD5E1" }}>-</span>}
                         </td>
                         <td style={{ padding: "11px 14px", fontSize: 12, whiteSpace: "nowrap", color: s?.overdue ? "#DC2626" : "#64748B", fontWeight: s?.overdue ? 700 : 400 }}>
-                          {item._deadline ? fmtDate(item._deadline) : "—"}
+                          {item._deadline ? fmtDate(item._deadline) : "-"}
                         </td>
                         <td style={{ padding: "11px 14px", minWidth: 160 }}>
                           {s ? (

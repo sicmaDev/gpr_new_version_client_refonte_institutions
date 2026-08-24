@@ -8,18 +8,18 @@ import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 
 /**
- * ConfigTable — Tableau MUI générique pour les modules de configuration
+ * ConfigTable - Tableau MUI générique pour les modules de configuration
  *
  * Props :
- *   items        : array  — données à afficher
- *   columns      : array  — définitions de colonnes :
+ *   items        : array  - données à afficher
+ *   columns      : array  - définitions de colonnes :
  *     { id, label, sortable?, minWidth?, render: (row) => ReactNode }
- *   searchFields : array  — champs sur lesquels porter la recherche (ex: ["libelle","description"])
- *   filters      : array  — filtres select optionnels :
+ *   searchFields : array  - champs sur lesquels porter la recherche (ex: ["libelle","description"])
+ *   filters      : array  - filtres select optionnels :
  *     { id, label, options: [{value, label}], filterFn: (row, value) => bool }
- *   defaultSort  : string — id de la colonne de tri par défaut
- *   rowsPerPageOptions : array — options de pagination (défaut: [10,15,25,50])
- *   exportClassName : string — classe à poser sur le <table> pour l'export Excel (table2XLSX)
+ *   defaultSort  : string - id de la colonne de tri par défaut
+ *   rowsPerPageOptions : array - options de pagination (défaut: [10,15,25,50])
+ *   exportClassName : string - classe à poser sur le <table> pour l'export Excel (table2XLSX)
  */
 // Supporte les chemins imbriqués type "posteDto.libelle"
 const getFieldValue = (row, field) =>
@@ -225,7 +225,7 @@ const ConfigTable = ({
                 >
                   {columns.map((col) => (
                     <TableCell key={col.id}>
-                      {col.render ? col.render(row) : String(row[col.id] ?? "—")}
+                      {col.render ? col.render(row) : String(row[col.id] ?? "-")}
                     </TableCell>
                   ))}
                 </TableRow>

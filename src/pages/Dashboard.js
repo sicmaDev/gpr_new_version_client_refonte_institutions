@@ -72,7 +72,7 @@ const gravityFromDays = (days) => {
   return             { label: 'Faible',   color: '#059669', bg: '#ecfdf5' };
 };
 
-// ── Performance du système — données simulées en attendant une API serveur ──
+// ── Performance du système - données simulées en attendant une API serveur ──
 
 // Anneau de progression circulaire (style "VUE D'ENSEMBLE")
 const RingGauge = ({ value, color, size = 110, thickness = 5 }) => (
@@ -146,7 +146,7 @@ const SystemPerformanceCard = () => {
         </div>
       </div>
 
-      {/* Vue d'ensemble — anneaux */}
+      {/* Vue d'ensemble - anneaux */}
       <Card style={{ padding: '28px 32px', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 32 }}>
           <DnsIcon style={{ fontSize: 16 }} /> Vue d'ensemble
@@ -236,7 +236,7 @@ const StatCard = ({ value, label, sub, inlineSub, IconComp, iconColor, iconBg, l
     </div>
     <div>
       <div className="text-[34px] font-bold text-slate-900 leading-none">
-        {loading ? <CircularProgress size={24} style={{ color: iconColor }} /> : (value ?? '—')}
+        {loading ? <CircularProgress size={24} style={{ color: iconColor }} /> : (value ?? '-')}
         {!loading && inlineSub && <span className="text-sm font-semibold text-slate-400 ml-1.5">{inlineSub}</span>}
       </div>
       {sub && <div className="text-xs text-slate-400 mt-1.5">{sub}</div>}
@@ -407,7 +407,7 @@ const HorizontalBars = ({ data, loading }) => {
 const ClaimRow = ({ item, showGravity }) => {
   const prefix = item.type === 'CLAIM' ? 'REC' : 'DEN';
   const code   = item.claimCodeClient || `${prefix}-${item.claimCode}`;
-  const st     = STATUS_MAP[item.status] || { label: item.status || '—', color: '#64748b', bg: '#f8fafc' };
+  const st     = STATUS_MAP[item.status] || { label: item.status || '-', color: '#64748b', bg: '#f8fafc' };
   const grav   = gravityFromDays(item.retardDay || 0);
   const date   = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short' }).format(new Date(item.receiptDateTime));
   const desc   = item.content || item.objet || item.subject || item.claimCodeClient || code;
@@ -558,14 +558,14 @@ const Dashboard = (props) => {
 
   // ── User / habilitations ───────────────────────────────────────────────
   const user = loadItemFromSessionStorage('app-user') !== undefined
-    ? JSON.parse(loadItemFromSessionStorage('app-user')) : undefined;
+    ? loadItemFromSessionStorage('app-user') : undefined;
   const hbt     = (user.posteDto.habilitations).split(',');
   const addR    = user.additionalRole;
   const isRA    = user.ra === true;
   const isPilote = addR === 'PILOTE';
   const agenceName = user.servicePointDto?.libelle || 'Mon agence';
 
-  // ── Activité récente (logs système) — vue admin H12 ────────────────────
+  // ── Activité récente (logs système) - vue admin H12 ────────────────────
   const [recentLogs, setRecentLogs] = useState([]);
   const [exportHistory, setExportHistory] = useState([]);
   useEffect(() => {
@@ -580,13 +580,13 @@ const Dashboard = (props) => {
   // ── Config localStorage data (preserved exactly) ───────────────────────
   let ps, postes, langues, objets, utilisateurs, supports, produits;
   try {
-    postes       = JSON.parse(loadItemFromLocalStorage('app-postes'));
-    ps           = JSON.parse(loadItemFromLocalStorage('app-ps'));
-    langues      = JSON.parse(loadItemFromLocalStorage('app-langues'));
-    objets       = JSON.parse(loadItemFromLocalStorage('app-objets'));
-    utilisateurs = JSON.parse(loadItemFromLocalStorage('app-users'));
-    supports     = JSON.parse(loadItemFromLocalStorage('app-supports'));
-    produits     = JSON.parse(loadItemFromLocalStorage('app-produits'));
+    postes       = loadItemFromLocalStorage('app-postes');
+    ps           = loadItemFromLocalStorage('app-ps');
+    langues      = loadItemFromLocalStorage('app-langues');
+    objets       = loadItemFromLocalStorage('app-objets');
+    utilisateurs = loadItemFromLocalStorage('app-users');
+    supports     = loadItemFromLocalStorage('app-supports');
+    produits     = loadItemFromLocalStorage('app-produits');
   } catch {
     postes = []; ps = []; langues = []; objets = [];
     utilisateurs = []; supports = []; produits = [];
@@ -632,7 +632,7 @@ const Dashboard = (props) => {
   // ── Données par agence (RA/DIRECTION uniquement) ──────────────────────
   const agencesStats = props.dashboard?.agencesStats ?? [];
 
-  // ── Derived display values (from props.dashboard.* only — no invention) ─
+  // ── Derived display values (from props.dashboard.* only - no invention) ─
   const loading     = props.etat1 === false;
   const total       = props.dashboard?.plainteSuggest        ?? 0;
   const treated     = props.dashboard?.totalTreat            ?? 0;
@@ -644,7 +644,7 @@ const Dashboard = (props) => {
   const suggestCount= props.dashboard?.suggest               ?? 0;
   const satisfPct   = (props.dashboard?.tauxSatisfaction ?? 0) / 100;
 
-  // Portée (scope) renvoyée par le backend — uniquement pour RA et User simple
+  // Portée (scope) renvoyée par le backend - uniquement pour RA et User simple
   const scopeType        = props.dashboard?.scopeType;
   const scopeLabel       = props.dashboard?.scopeLabel;
   const subAgencesCount  = props.dashboard?.subAgencesCount ?? 0;
@@ -652,7 +652,7 @@ const Dashboard = (props) => {
   // "En traitement" = all active (non-closed) = total - classified
   const inProgress  = Math.max(0, total - treated);
 
-  // Donut segments — dérivés des KPI avec nouveaux statuts demandés
+  // Donut segments - dérivés des KPI avec nouveaux statuts demandés
   const valTraite = props.dashboard?.claimsTreat ?? 0;
   const valAffecte = props.dashboard?.claimsAffected ?? 0;
   const valSatisfait = props.dashboard?.claimsSatisfied ?? 0;
@@ -667,12 +667,12 @@ const Dashboard = (props) => {
     { label: 'Classé',     value: valClasse,     color: '#f59e0b' },
   ];
 
-  // Gravity distribution — mapping Mineur, Moyen, Grave (en retard)
+  // Gravity distribution - mapping Mineur, Moyen, Grave (en retard)
   const gMineur = content.filter(i => i.gravity === 'MINEUR').length;
   const gMoyen  = content.filter(i => i.gravity === 'MOYEN').length;
   const gGrave  = content.filter(i => i.gravity === 'GRAVE').length;
 
-  // Overdue items — sorted by retardDay desc, first 5
+  // Overdue items - sorted by retardDay desc, first 5
   const overdueItems = [...content].sort((a, b) => (b.retardDay || 0) - (a.retardDay || 0)).slice(0, 5);
 
   // ── Gauge section (config preserved exactly, wrapper improved) ─────────
@@ -721,7 +721,7 @@ const Dashboard = (props) => {
     </NavLink>
   );
 
-  // ── Config items (preserved logic) — pour la vue H12 ──────────────────
+  // ── Config items (preserved logic) - pour la vue H12 ──────────────────
   const allConfigItems = [
     { label: 'Langues',               route: '/configurations/langues',          data: langues,       IconComp: LanguageIcon,              color: '#FFC400' },
     { label: 'Points de services',    route: '/configurations/pointsServices',    data: ps,            IconComp: AddBusinessIcon,           color: '#5243AA' },
@@ -885,7 +885,7 @@ const Dashboard = (props) => {
                         <AccessTimeIcon style={{ fontSize: 12 }} />{stat.retard}
                       </span>
                     ) : (
-                      <span style={{ fontSize: 13, color: '#94a3b8' }}>—</span>
+                      <span style={{ fontSize: 13, color: '#94a3b8' }}>-</span>
                     )}
                   </div>
 
@@ -990,13 +990,13 @@ const Dashboard = (props) => {
                                 {item.claimCodeClient}
                               </span>
                               <span style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {item.objetLibelle || item.objet?.libelle || item.content || '—'}
+                                {item.objetLibelle || item.objet?.libelle || item.content || '-'}
                               </span>
                             </div>
                           </div>
                           <div style={{ textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>
-                              {item.servicePointLibelle || '—'}
+                              {item.servicePointLibelle || '-'}
                             </span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
@@ -1034,6 +1034,29 @@ const Dashboard = (props) => {
           <p style={{ margin: 0, color: '#64748b', fontSize: 13.5 }}>Gestion et suivi des configurations système</p>
         </div>
       </div>
+
+      {/* ── Bannière quota de comptes utilisateurs (licence) ── */}
+      {!loading && (props.dashboard?.userQuotaPct ?? 0) >= 80 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '12px 18px', marginBottom: 20,
+          background: '#fffbeb',
+          border: '1px solid #fde68a', borderRadius: 12,
+          borderLeft: '4px solid #d97706',
+        }}>
+          <div style={{ width: 36, height: 36, borderRadius: 8, background: '#d9770620', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <ReportProblemOutlinedIcon style={{ color: '#d97706', fontSize: 20 }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#b45309' }}>
+              Quota de comptes utilisateurs bientôt atteint
+            </div>
+            <div style={{ fontSize: 12.5, color: '#92400e', marginTop: 2 }}>
+              {props.dashboard.userQuotaUsed} / {props.dashboard.userQuotaTotal} comptes créés ({props.dashboard.userQuotaPct}% de votre licence). Contactez SICMA pour augmenter cette limite.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
@@ -1160,7 +1183,7 @@ const Dashboard = (props) => {
       {/* Activité récente & Alertes */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
 
-        {/* Activité récente — derniers logs système */}
+        {/* Activité récente - derniers logs système */}
         <div style={{ flex: '1 1 480px', display: 'flex' }}>
           <Card style={{ flex: 1 }}>
             <CardHeader title="Activité récente" action={seeAll('/configurations/logs')} />
@@ -1185,7 +1208,7 @@ const Dashboard = (props) => {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {log.libelle || log.content || '—'}
+                        {log.libelle || log.content || '-'}
                       </div>
                     </div>
                     <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0, whiteSpace: 'nowrap' }}>
@@ -1211,10 +1234,10 @@ const Dashboard = (props) => {
                 const TYPE_COLORS = { claims: '#3B82F6', denunciations: '#F59E0B', suggestions: '#10B981', configs: '#8B5CF6' };
                 const TYPE_LABELS = { claims: 'Réclamations', denunciations: 'Dénonciations', suggestions: 'Suggestions', configs: 'Configurations' };
                 const bg    = TYPE_COLORS[exp.content] || '#64748B';
-                const label = TYPE_LABELS[exp.content] || exp.content || '—';
+                const label = TYPE_LABELS[exp.content] || exp.content || '-';
                 const date  = exp.createdAt
                   ? new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(exp.createdAt))
-                  : '—';
+                  : '-';
                 return (
                   <div key={i} style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0',
@@ -1224,7 +1247,7 @@ const Dashboard = (props) => {
                       {label}
                     </span>
                     <div style={{ flex: 1, fontSize: 12.5, color: '#334155', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {exp.userIpAddress || '—'}
+                      {exp.userIpAddress || '-'}
                     </div>
                     <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0, whiteSpace: 'nowrap' }}>
                       {date}

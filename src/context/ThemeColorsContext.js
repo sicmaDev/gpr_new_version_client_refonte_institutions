@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+﻿import React, { createContext, useContext, useEffect, useState } from 'react';
 import { loadItemFromSessionStorage, saveItemToSessionStorage } from '../Utils/utils';
 
 const DEFAULT_COLOR = '#005081';
@@ -81,7 +81,7 @@ export const ThemeColorsProvider = ({ children }) => {
         injectCssVars(colors);
     }, [colors.sidebarColor, colors.topbarColor]);
 
-    // Listen for auth data loaded (login / token check) — update colors and logo from DB
+    // Listen for auth data loaded (login / token check) - update colors and logo from DB
     useEffect(() => {
         const handler = (e) => {
             const { sidebarColor, topbarColor, logo: newLogo } = e.detail || {};
@@ -105,10 +105,10 @@ export const ThemeColorsProvider = ({ children }) => {
         try {
             const raw = loadItemFromSessionStorage('app-user');
             if (raw) {
-                const user = JSON.parse(raw);
+                const user = raw;
                 user.sidebarColor = next.sidebarColor;
                 user.topbarColor = next.topbarColor;
-                saveItemToSessionStorage(JSON.stringify(user), 'app-user');
+                saveItemToSessionStorage(user, 'app-user');
             }
         } catch {}
     };

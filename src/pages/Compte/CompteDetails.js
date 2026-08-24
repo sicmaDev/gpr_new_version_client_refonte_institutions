@@ -54,10 +54,10 @@ const CompteDetails = (props) => {
   const primaryDark = darkenColor(primary, 0.18);
 
   const mode = loadItemFromSessionStorage("app-mode") !== undefined
-    ? JSON.parse(loadItemFromSessionStorage("app-mode"))
+    ? loadItemFromSessionStorage("app-mode")
     : undefined;
 
-  const sessionUser = JSON.parse(loadItemFromSessionStorage("app-user")) || {};
+  const sessionUser = loadItemFromSessionStorage("app-user") || {};
   const addR = sessionUser.additionalRole;
   const isRa = sessionUser.isRa || sessionUser.ra;
   const roleLabels = [

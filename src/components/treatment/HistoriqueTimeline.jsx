@@ -17,13 +17,14 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import GroupsIcon from "@mui/icons-material/Groups";
 import ThumbDownOutlinedIcon from "@mui/icons-material/ThumbDownOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 import { getClaimEvents } from "../../apis/Reclamations/ReclamationsApi";
 
 // Types d'actions principales (ouvrent un bloc)
 const MAIN_EVENTS = new Set([
   "SAVED", "AFFECTED", "SOLUTION_PROPOSED", "APPROVED", "REJECTED",
   "SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED",
-  "LITIGATION", "TRANSMITTED", "CONVERTED", "SESSION_STARTED",
+  "LITIGATION", "TRANSMITTED", "CONVERTED", "SESSION_STARTED", "EXTRA_ADDED",
 ]);
 
 // Types de communications (se rattachent au bloc précédent)
@@ -45,6 +46,7 @@ const ACTION_CONFIG = {
   TRANSMITTED:       { label: "Transmise",                      color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", Icon: SendIcon },
   CONVERTED:         { label: "Convertie",                      color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", Icon: SwapHorizIcon },
   SESSION_STARTED:   { label: "Session collaborative",          color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", Icon: GroupsIcon },
+  EXTRA_ADDED:       { label: "Pièce jointe ajoutée",            color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", Icon: AttachFileIcon },
 };
 
 const formatDate = (dt) => {
@@ -202,7 +204,7 @@ const CommGroupLine = ({ eventType, isPilote, list }) => {
       <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", minWidth: 0 }}>
         <span style={{ fontSize: 12, color: "#64748b", whiteSpace: "nowrap" }}>{label}</span>
         <span style={{ fontSize: 12, color: "#64748b" }}>
-          {cleanName(first.name) || "—"}
+          {cleanName(first.name) || "-"}
         </span>
         {first.contact && (
           <span style={{ fontSize: 11.5, color: "#94a3b8" }}>· {first.contact}</span>
@@ -249,7 +251,7 @@ const CommGroupLine = ({ eventType, isPilote, list }) => {
                       <PersonOutlineIcon style={{ fontSize: 14, color: "#94a3b8", flexShrink: 0 }} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 12, color: "#64748b", whiteSpace: "nowrap" }}>
-                          {cleanName(p.name) || "—"}
+                          {cleanName(p.name) || "-"}
                         </div>
                         {p.contact && (
                           <div style={{ fontSize: 11, color: "#64748b", whiteSpace: "nowrap" }}>

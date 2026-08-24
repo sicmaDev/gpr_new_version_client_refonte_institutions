@@ -1,6 +1,11 @@
 ﻿import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { KTApp } from "../../Utils/blockui";
+import WaCommentBadge from "../../whatgpr/components/WaCommentBadge";
+import WaAudioSection from "../../whatgpr/components/WaAudioSection";
+import AudioGrid from "../../whatgpr/components/AudioGrid";
+import useWaAudioJump from "../../whatgpr/hooks/useWaAudioJump";
+import { splitWaAudios } from "../../whatgpr/utils";
 import {
   addressChanged,
   agentsChanged,
@@ -196,9 +201,11 @@ const ASS_STATUS_OPTIONS = [
 ];
 
 const AssuranceReclamation = (props) => {
+  const { waAudios, regularAudios } = splitWaAudios(props.selectedItemAudio);
+  const { highlightedAudioId, handleJumpToWhatsappAudioComment } = useWaAudioJump(waAudios);
   let user =
     loadItemFromSessionStorage("app-user") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-user"))
+      ? loadItemFromSessionStorage("app-user")
       : undefined;
   let hbt = user.posteDto.habilitations.split(",");
 
@@ -326,7 +333,7 @@ const AssuranceReclamation = (props) => {
   let recourOptions;
   recours =
     loadItemFromSessionStorage("app-recours") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-recours"))
+      ? loadItemFromSessionStorage("app-recours")
       : undefined;
   if (recours !== undefined) {
     recourOptions = recours.map((recour) => {
@@ -388,7 +395,7 @@ const AssuranceReclamation = (props) => {
     e.preventDefault();
     let user =
       loadItemFromSessionStorage("app-user") !== undefined
-        ? JSON.parse(loadItemFromSessionStorage("app-user"))
+        ? loadItemFromSessionStorage("app-user")
         : undefined;
 
     let info = {
@@ -894,94 +901,23 @@ const AssuranceReclamation = (props) => {
 
   let audioList;
   if (props.selectedItemAudio != null && props.selectedItemAudio.length > 0) {
-    let audioListChild = props.selectedItemAudio.map((audioItem) => {
-      return (
-        <Grid item xs={12} sm={6} key={audioItem.id}>
-          <Card
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              borderRadius: 2,
-              p: 1.5,
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              height: "100%",
-            }}
-          >
-            <Box
-              sx={{
-                bgcolor: "primary.light",
-                borderRadius: "6px",
-                p: 1.5,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mr: 2,
-                minWidth: "48px",
-                height: "48px",
-              }}
-            >
-              <VolumeUp
-                sx={{ color: "primary.contrastText", fontSize: "28px" }}
-              />
-            </Box>
-
-            <CardContent sx={{ flex: 1, minWidth: 0, p: "8px !important" }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 500,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    mb: 0.5,
-                  }}
-                >
-                  {audioItem.name}
-                </Typography>
-                {audioItem._extra && (
-                  <Tooltip
-                    title={`Ajouté par ${audioItem.extra?.user?.firstAndLastName ?? ""} le ${audioItem.extra?.createdAt && isFinite(new Date(audioItem.extra.createdAt)) ? formatDate(audioItem.extra.createdAt) : "date invalide"}`}
-                  >
-                    <Info fontSize="small" sx={{ ml: 1 }} />
-                  </Tooltip>
-                )}
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                {Math.round((audioItem.size / 1024 + Number.EPSILON) * 100) /
-                  100}{" "}
-                {"Ko"} • {audioItem.duration}
-              </Typography>
-            </CardContent>
-
-            <Box sx={{ display: "flex" }}>
-              <IconButton
-                onClick={() => handlePlay(audioItem.id, audioItem.name)}
-                sx={{
-                  color:
-                    currentAudioId === audioItem.id
-                      ? "primary.main"
-                      : "text.secondary",
-                }}
-              >
-                {currentAudioId === audioItem.id ? <Pause /> : <PlayArrow />}
-              </IconButton>
-            </Box>
-          </Card>
-        </Grid>
-      );
-    });
     audioList = (
-      <Grid container spacing={2} size={12}>
-        {audioListChild}
-      </Grid>
+      <>
+        <AudioGrid
+          audios={regularAudios}
+          currentAudioId={currentAudioId}
+          onPlay={handlePlay}
+          highlightedAudioId={highlightedAudioId}
+          formatDate={formatDate}
+        />
+        <WaAudioSection
+          waAudios={waAudios}
+          currentAudioId={currentAudioId}
+          onPlay={handlePlay}
+          highlightedAudioId={highlightedAudioId}
+          formatDate={formatDate}
+        />
+      </>
     );
   } else {
     audioList = (
@@ -1107,7 +1043,12 @@ const AssuranceReclamation = (props) => {
                         >
                           <span className="hero">
                             Client {degre} : mesurée
-                            {solution.satisfactionMeasureDto.measurer
+                            {solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp]") ||
+                            solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp-Audio]")
+                              ? (solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp-Audio]")
+                                  ? " via audio WhatsApp 🎙 "
+                                  : " depuis WhatsApp ")
+                              : solution.satisfactionMeasureDto.measurer
                               ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
                               : " depuis le site web "}
                             le{" "}
@@ -1242,10 +1183,11 @@ const AssuranceReclamation = (props) => {
                                     Commentaire du client
                                   </div>
                                   <div>
-                                    {
-                                      solution.satisfactionMeasureDto
-                                        .commentaire
-                                    }
+                                    <WaCommentBadge
+                                      commentaire={solution.satisfactionMeasureDto.commentaire}
+                                      measureDateTime={solution.satisfactionMeasureDto.measureDateTime}
+                                      onJumpToAudio={handleJumpToWhatsappAudioComment}
+                                    />
                                   </div>
                                 </div>
                               ) : (
@@ -1374,7 +1316,7 @@ const AssuranceReclamation = (props) => {
 
   if (props.match.params.code !== "all") {
     const solutions = Array.isArray(props.solution) ? props.solution : [];
-    const statusCfg = STATUS_CONFIG[props.status] || { label: props.status || "—", bg: "#f1f5f9", color: "#64748b", border: "#e2e8f0" };
+    const statusCfg = STATUS_CONFIG[props.status] || { label: props.status || "-", bg: "#f1f5f9", color: "#64748b", border: "#e2e8f0" };
 
     return (
       <>
@@ -1429,7 +1371,7 @@ const AssuranceReclamation = (props) => {
                     </div>
                   </div>
 
-                  {/* Solutions proposées — timeline */}
+                  {/* Solutions proposées - timeline */}
                   {solutions.length > 0 && (
                     <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "#1e293b", marginBottom: 20 }}>
@@ -1454,7 +1396,7 @@ const AssuranceReclamation = (props) => {
                                 </div>
                                 <div style={{ padding: "12px 14px" }}>
                                   <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap", borderLeft: `3px solid ${dotColor}`, paddingLeft: 10 }}>
-                                    {sol.content || sol.solution || "—"}
+                                    {sol.content || sol.solution || "-"}
                                   </div>
                                 </div>
                                 {sol.commentaire && (
@@ -1706,6 +1648,8 @@ const AssuranceReclamation = (props) => {
                           objets={[]}
                           onRowClick={(data) => rowClickedHandler(null, data, 0)}
                           statusOptions={ASS_STATUS_OPTIONS}
+                          showTransmitted={false}
+                          showStatusIcons={false}
                         />
                       ) : (
                         <ClaimsCardView
@@ -1713,6 +1657,8 @@ const AssuranceReclamation = (props) => {
                           mode={1}
                           objets={[]}
                           onCardClick={(data) => rowClickedHandler(null, data, 0)}
+                          showTransmitted={false}
+                          showStatusIcons={false}
                         />
                       )}
                     </div>

@@ -4,7 +4,7 @@ import TableRowsIcon from "@mui/icons-material/TableRows";
 import GridViewIcon from "@mui/icons-material/GridView";
 
 /**
- * ViewModeToggle — Sélecteur de vue (tableau / cartes) en forme de pilule
+ * ViewModeToggle - Sélecteur de vue (tableau / cartes) en forme de pilule
  *
  * Props :
  *   value    : "list" | "card"

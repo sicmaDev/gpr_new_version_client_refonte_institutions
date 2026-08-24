@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
+import { fetchPendingWAFiles } from "../../whatgpr/pendingWAFiles";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DatePicker, { registerLocale, setDefaultLocale } from "react-datepicker";
@@ -60,7 +61,7 @@ import {
     unitChanged,
     unitLibelleChanged
 } from "../../redux/actions/Reclamations/EnregistrementReclamationActions";
-import { cleanPhoneNumber, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage } from "../../Utils/utils";
+import { cleanPhoneNumber, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, filesToBase64Dtos } from "../../Utils/utils";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, TextField } from "@mui/material";
@@ -109,8 +110,8 @@ const EnregistrerDenonciation = (props) => {
     let { audio } = recorderState;
 
     let settingComplete = isSettingComplete()
-    let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (JSON.parse(loadItemFromLocalStorage("app-mode"))) : undefined;
-    let user = loadItemFromSessionStorage("app-user") !== undefined ? (JSON.parse(loadItemFromSessionStorage("app-user"))) : undefined;
+    let mode = loadItemFromLocalStorage("app-mode") !== undefined ? (loadItemFromLocalStorage("app-mode")) : undefined;
+    let user = loadItemFromSessionStorage("app-user") !== undefined ? (loadItemFromSessionStorage("app-user")) : undefined;
 
 
     const [actif, setActif] = useState();
@@ -204,6 +205,12 @@ const EnregistrerDenonciation = (props) => {
         if (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) {
             clearComponentState();
             props.contentChanged(transformConversation(props.whatsappSelectMessage))
+
+            fetchPendingWAFiles().then(fileObjects => {
+                if (fileObjects.length > 0) {
+                    setFiles(fileObjects);
+                }
+            });
         }
     }, [""])
 
@@ -295,12 +302,12 @@ const EnregistrerDenonciation = (props) => {
     let units
 
     try {
-        collects = JSON.parse(loadItemFromLocalStorage('app-supports'));
-        subjects = JSON.parse(loadItemFromLocalStorage('app-objets'));
-        subjects = JSON.parse(loadItemFromLocalStorage("app-categories"));
-        underSubjects = JSON.parse(loadItemFromLocalStorage("app-objets"));
-        products = JSON.parse(loadItemFromLocalStorage('app-produits'));
-        units = JSON.parse(loadItemFromLocalStorage('app-ps'));
+        collects = loadItemFromLocalStorage('app-supports');
+        subjects = loadItemFromLocalStorage('app-objets');
+        subjects = loadItemFromLocalStorage("app-categories");
+        underSubjects = loadItemFromLocalStorage("app-objets");
+        products = loadItemFromLocalStorage('app-produits');
+        units = loadItemFromLocalStorage('app-ps');
     } catch (e) {
         collects = []
         subjects = [];
@@ -534,7 +541,7 @@ const EnregistrerDenonciation = (props) => {
         return isValid
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
         if (handleValidation()) {
             const formData = new FormData();
@@ -545,7 +552,8 @@ const EnregistrerDenonciation = (props) => {
             claim["productId"] = props.product;
             claim["fromWhatsapp"] = (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false;
             claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat"))
-            claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null
+            // Envoyer null si inbox sans id (WhatGPR) → évite TransientObjectException Hibernate
+            claim["inboxWhatsapp"] = props.whatsappCurrentInbox?.id ? props.whatsappCurrentInbox : null
             claim["objetId"] = props.underSubject;
             claim["receiptDateTime"] = props.recorded_at;
             claim["collectorId"] = user.id;
@@ -576,6 +584,12 @@ const EnregistrerDenonciation = (props) => {
                     setActiveTab("new")
                 })
             } else {
+                // Hors-ligne : File/Blob ne survivent pas à un JSON.stringify en localStorage —
+                // on les convertit donc en base64, décodé côté backend à la synchronisation.
+                claim["files"] = await filesToBase64Dtos(files);
+                claim["audios"] = await filesToBase64Dtos(
+                    audioRecordings.map(blob => new File([blob], "denonciation_record_" + uuid() + ".ogg", { type: "audio/ogg; codecs=opus" }))
+                );
                 addDenunciationApiOffline(claim, props).then(() => {
                     handleCancel(e)
                     props.resetWhatsapp()
@@ -588,7 +602,7 @@ const EnregistrerDenonciation = (props) => {
         }
         props.claimRecordErrors(errors)
     }
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault()
         const formData = new FormData();
         let claim = {}
@@ -599,7 +613,8 @@ const EnregistrerDenonciation = (props) => {
         claim["objetId"] = props.underSubject;
         claim["fromWhatsapp"] = (props.whatsappCurrentInbox && props.whatsappSelectMessage?.length > 0) ?? false;
         claim["filesWhatsapp"] = props.whatsappSelectMessage?.filter(({ type }) => (type !== "chat"))
-        claim["inboxWhatsapp"] = props.whatsappCurrentInbox ?? null
+        // Envoyer null si inbox sans id (WhatGPR) → évite TransientObjectException Hibernate
+        claim["inboxWhatsapp"] = props.whatsappCurrentInbox?.id ? props.whatsappCurrentInbox : null
         claim["receiptDateTime"] = props.recorded_at;
         claim["collectorId"] = user.id;
         claim["content"] = props.content;
@@ -628,6 +643,12 @@ const EnregistrerDenonciation = (props) => {
                 setActiveTab("new")
             })
         } else {
+            // Hors-ligne : File/Blob ne survivent pas à un JSON.stringify en localStorage —
+            // on les convertit donc en base64, décodé côté backend à la synchronisation.
+            claim["files"] = await filesToBase64Dtos(files);
+            claim["audios"] = await filesToBase64Dtos(
+                audioRecordings.map(blob => new File([blob], "denonciation_record_" + uuid() + ".ogg", { type: "audio/ogg; codecs=opus" }))
+            );
             addTempDenunciationApiOffline(claim, props).then(() => {
                 handleCancel(e)
                 props.resetWhatsapp()
@@ -905,11 +926,11 @@ const EnregistrerDenonciation = (props) => {
                 props.recordedAtChanged(data.receiptDateTime ? data.receiptDateTime : "");
                 props.contentChanged(data.content ? data.content : "");
 
-                let description1 = data.collectionChannelId ? (JSON.parse(loadItemFromSessionStorage('app-supports'))).filter((e) => { return e.id === data.collectionChannelId }) : ""
-                let description2 = data.objetId ? (JSON.parse(loadItemFromSessionStorage('app-objets'))).filter((e) => { return e.id === data.objetId }) : ""
-                let description3 = data.productId ? (JSON.parse(loadItemFromSessionStorage('app-produits'))).filter((e) => { return e.id === data.productId }) : ""
-                let description4 = data.servicePointId ? (JSON.parse(loadItemFromSessionStorage('app-ps'))).filter((e) => { return e.id === data.servicePointId }) : ""
-                let description5 = data.objetId ? JSON.parse(loadItemFromSessionStorage("app-objets")).filter((e) => { return e.id === data.objetId; }) : "";
+                let description1 = data.collectionChannelId ? (loadItemFromSessionStorage('app-supports')).filter((e) => { return e.id === data.collectionChannelId }) : ""
+                let description2 = data.objetId ? (loadItemFromSessionStorage('app-objets')).filter((e) => { return e.id === data.objetId }) : ""
+                let description3 = data.productId ? (loadItemFromSessionStorage('app-produits')).filter((e) => { return e.id === data.productId }) : ""
+                let description4 = data.servicePointId ? (loadItemFromSessionStorage('app-ps')).filter((e) => { return e.id === data.servicePointId }) : ""
+                let description5 = data.objetId ? loadItemFromSessionStorage("app-objets").filter((e) => { return e.id === data.objetId; }) : "";
 
                 props.collectChanged(data.collectionChannelId ? description1[0].id : "");
                 props.collectLibelleChanged(data.collectionChannelId ? description1[0].libelle : "");
@@ -1321,7 +1342,7 @@ const EnregistrerDenonciation = (props) => {
                                                 {draft.code || "Brouillon sans code"}
                                             </div>
                                             <div style={{ fontSize: 11, color: "#64748b" }}>
-                                                {draft.createdAtFormated || "—"}
+                                                {draft.createdAtFormated || "-"}
                                             </div>
                                         </div>
                                         <div style={{ display: "flex", alignItems: "center", gap: 4 }} onClick={e => e.stopPropagation()}>
@@ -1354,7 +1375,7 @@ const EnregistrerDenonciation = (props) => {
                     </div>
                 }
             >
-                {/* ?? Step 0 — Informations ??????????????????????????? */}
+                {/* ?? Step 0 - Informations ??????????????????????????? */}
                 {currentStep === 0 && (
                     <div className="row">
                         <div className="col l12 m12 s12 input-field" ref={recordedAtRef}>
@@ -1434,7 +1455,7 @@ const EnregistrerDenonciation = (props) => {
                             <small className="errorTxt4"><div className="error">{props.errors?.content}</div></small>
                         </div>
 
-                        {/* Audio feedback — visible immédiatement après l'enregistrement */}
+                        {/* Audio feedback - visible immédiatement après l'enregistrement */}
                         {(audioRecordings.length > 0 || props.selectedItemAudio?.length > 0) && (
                             <div className="col l12 m12 s12" style={{ marginTop: 8 }}>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
@@ -1604,13 +1625,13 @@ const EnregistrerDenonciation = (props) => {
                             <div style={{ display: 'flex', padding: '7px 0', borderBottom: '1px solid #f5f5f5' }}>
                                 <span style={{ color: '#757575', width: '160px', fontSize: '13px', flexShrink: 0 }}>Date de réception</span>
                                 <span style={{ fontWeight: '600', fontSize: '13px' }}>
-                                    {props.recorded_at ? moment(props.recorded_at, 'DD-MM-YYYY HH:mm').format('DD MMMM YYYY [à] HH:mm') : '—'}
+                                    {props.recorded_at ? moment(props.recorded_at, 'DD-MM-YYYY HH:mm').format('DD MMMM YYYY [à] HH:mm') : '-'}
                                 </span>
                             </div>
                             <div style={{ display: 'flex', padding: '7px 0', borderBottom: '1px solid #f5f5f5' }}>
                                 <span style={{ color: '#757575', width: '160px', fontSize: '13px', flexShrink: 0 }}>Contenu</span>
                                 <span style={{ fontWeight: '600', fontSize: '13px', flex: 1 }}>
-                                    {props.content && props.content !== '#ReclamationAudio' ? props.content : (!props.content && audioRecordings.length === 0 && !props.selectedItemAudio?.length ? '—' : null)}
+                                    {props.content && props.content !== '#ReclamationAudio' ? props.content : (!props.content && audioRecordings.length === 0 && !props.selectedItemAudio?.length ? '-' : null)}
                                 </span>
                             </div>
 

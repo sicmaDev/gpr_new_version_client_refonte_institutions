@@ -177,7 +177,7 @@ const Global = (props) => {
   //Users option
   let users =
     loadItemFromSessionStorage("app-users") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-users"))
+      ? loadItemFromSessionStorage("app-users")
       : undefined;
   let optionsUsers = [];
   users.map((one) => {
@@ -195,7 +195,7 @@ const Global = (props) => {
 
   let subjects =
     loadItemFromSessionStorage("app-objets") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-objets"))
+      ? loadItemFromSessionStorage("app-objets")
       : undefined;
   let optionsObjet = [];
   if (subjects !== undefined) {
@@ -210,7 +210,7 @@ const Global = (props) => {
   //Unites
   let units =
     loadItemFromSessionStorage("app-ps") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-ps"))
+      ? loadItemFromSessionStorage("app-ps")
       : undefined;
   let optionsUnits = [];
   if (units !== undefined) {
@@ -226,12 +226,12 @@ const Global = (props) => {
   let optionsProducts = [];
   const products =
     loadItemFromSessionStorage("app-produits") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-produits"))
+      ? loadItemFromSessionStorage("app-produits")
       : undefined;
 
   const ps =
     loadItemFromSessionStorage("app-ps") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-ps"))
+      ? loadItemFromSessionStorage("app-ps")
       : undefined;
   // console.log("ps",ps.length)
   if (products !== undefined) {
@@ -242,7 +242,7 @@ const Global = (props) => {
       });
     });
   }
-  const userAuth = JSON.parse(loadItemFromSessionStorage("app-user"));
+  const userAuth = loadItemFromSessionStorage("app-user");
 
   const reportRef = useRef(null);
   const globalPieChartRef = useRef(null);

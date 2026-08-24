@@ -245,8 +245,8 @@ const useTreatmentHandlers = ({
   /**
    * Traite immédiatement sans passer par le formulaire.
    * Utilisé par "Utiliser et traiter" dans PreEnregistreesTab.
-   * @param {string} content  — texte de la solution
-   * @param {string|number} [existingId=''] — id de la solution pré-enregistrée si applicable
+   * @param {string} content  - texte de la solution
+   * @param {string|number} [existingId=''] - id de la solution pré-enregistrée si applicable
    * @param {string} [commentaire='']
    */
   const handleSolveImmediate = (content, existingId = '', commentaire = '') => {

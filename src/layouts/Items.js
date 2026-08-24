@@ -20,7 +20,8 @@ import PublicIcon from '@mui/icons-material/Public';
 import StarBorder from '@mui/icons-material/StarBorder';
 import PieChartIcon from '@mui/icons-material/PieChart';
 import NotificationImportantIcon from '@mui/icons-material/NotificationImportant';
-import { WhatsApp } from '@mui/icons-material';
+import { WhatsApp, Forum } from '@mui/icons-material';
+import { getMessages } from '../whatgpr/api';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
@@ -66,7 +67,7 @@ import { authenticate } from '../redux/actions/LayoutActions';
 import { useHistory } from 'react-router-dom';
 import { useThemeColors, darkenColor } from '../context/ThemeColorsContext';
 
-// luminance helper — determines if the sidebar color is light or dark
+// luminance helper - determines if the sidebar color is light or dark
 const getSidebarLuminance = (hex) => {
   try {
     const h = hex.replace('#', '');
@@ -192,10 +193,10 @@ export const Items = (props) => {
   };
 
   let mode = loadItemFromLocalStorage('app-mode') !== undefined
-    ? JSON.parse(loadItemFromLocalStorage('app-mode'))
+    ? loadItemFromLocalStorage('app-mode')
     : undefined;
   let user = loadItemFromSessionStorage('app-user') !== undefined
-    ? JSON.parse(loadItemFromSessionStorage('app-user'))
+    ? loadItemFromSessionStorage('app-user')
     : undefined;
   let hbt = (user.posteDto.habilitations).split(',');
   let addR = user.additionalRole;
@@ -204,7 +205,7 @@ export const Items = (props) => {
   const isActive = (path) =>
     pathname === path || pathname.startsWith(path + '/');
 
-  // Dynamic colors — adapt to the sidebar color chosen by the user
+  // Dynamic colors - adapt to the sidebar color chosen by the user
   const { colors } = useThemeColors();
   const sidebarLum = getSidebarLuminance(colors.sidebarColor || '#005081');
   const isDark = sidebarLum < 128;
@@ -222,7 +223,7 @@ export const Items = (props) => {
 
   const link = { color: 'inherit', textDecoration: 'none' };
 
-  // Couleur du texte actif sur la pill blanche — assombrie selon luminance du sidebar
+  // Couleur du texte actif sur la pill blanche - assombrie selon luminance du sidebar
   // sidebar sombre → légère darken suffit ; sidebar clair → darken plus fort pour contraste sur blanc
   const activeColor = darkenColor(colors.sidebarColor || '#005081', isDark ? 0.06 : 0.28);
 
@@ -233,7 +234,7 @@ export const Items = (props) => {
     transition: 'color 0.2s',
   });
 
-  // Top-level leaf item — active = floating white pill with soft shadow
+  // Top-level leaf item - active = floating white pill with soft shadow
   const iSx = (path, pl = 2, forceActive = false) => {
     const active = isActive(path) || forceActive;
     return {
@@ -258,7 +259,7 @@ export const Items = (props) => {
     };
   };
 
-  // Collapsible section header — same floating white pill as top-level leaves
+  // Collapsible section header - same floating white pill as top-level leaves
   const hSx = (basePath, pl = 2, forceActive = false) => {
     const active = isActive(basePath) || forceActive;
     return {
@@ -283,7 +284,7 @@ export const Items = (props) => {
     };
   };
 
-  // Sub-item leaf — tinted background to distinguish from parent items
+  // Sub-item leaf - tinted background to distinguish from parent items
   const sSx = (path) => {
     const active = isActive(path);
     return {
@@ -340,6 +341,34 @@ export const Items = (props) => {
   const hasGestion = showReclamations || showDenonciations || showSuggestions;
   const hasAnalyse = showRapports || showAlertes;
   const hasAdmin = showWhatsapp || showConfigs;
+
+  // Nombre de conversations WhatsApp avec au moins un message non lu - affiché en badge
+  // sur "Plaintes WhatsApp" pour signaler qu'il y a des échanges à traiter sans avoir à
+  // ouvrir la page. Seuls PILOTE/DE voient ce menu, donc on n'appelle l'API que pour eux.
+  const [waUnreadCount, setWaUnreadCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!showWhatsapp) return;
+    let cancelled = false;
+    const loadUnreadCount = async () => {
+      try {
+        const data = await getMessages("all");
+        const list = Array.isArray(data) ? data : (data?.content ?? []);
+        const byPhone = {};
+        list.forEach((m) => {
+          if (!byPhone[m.from_number]) byPhone[m.from_number] = 0;
+          if (!m.read && !m.converted && m.status !== "converted") byPhone[m.from_number] += 1;
+        });
+        const unreadConversations = Object.values(byPhone).filter((n) => n > 0).length;
+        if (!cancelled) setWaUnreadCount(unreadConversations);
+      } catch (err) {
+        // Silencieux : un badge qui ne se met pas à jour n'est pas critique.
+      }
+    };
+    loadUnreadCount();
+    const interval = setInterval(loadUnreadCount, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [showWhatsapp]);
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -581,24 +610,35 @@ export const Items = (props) => {
       {/* ══ ADMINISTRATION ═══════════════════════════════════════════════════ */}
       {hasAdmin && <GroupLabel textColor={textLabel} lineColor={lineColor}>Administration</GroupLabel>}
 
-      {/* WhatsApp */}
+      {/* WhatGPR */}
       {showWhatsapp && (
-        <NavLink to="/whatgpr" style={link}>
-          <ListItemButton sx={iSx('/whatsapp')} className="lib">
-            <ListItemIcon><WhatsApp style={col(isActive('/whatsapp'))} /></ListItemIcon>
-            <ListItemText primary="WhatsApp" />
+        <NavLink exact to="/whatgpr" style={link}>
+          <ListItemButton sx={{ ...iSx('/whatgpr'), display: 'flex', alignItems: 'center' }} className="lib">
+            <ListItemIcon><Forum style={col(isActive('/whatgpr'))} /></ListItemIcon>
+            <ListItemText primary="Plaintes WhatsApp" />
+            {waUnreadCount > 0 && (
+              <span
+                style={{
+                  background: '#fff',
+                  color: '#1e2188',
+                  borderRadius: 9,
+                  padding: '2px 8px',
+                  fontSize: 12,
+                  lineHeight: '16px',
+                  fontWeight: 700,
+                  marginLeft: 8,
+                  flexShrink: 0,
+                  alignSelf: 'center',
+                  display: 'inline-block',
+                  height: 'fit-content',
+                }}
+              >
+                {waUnreadCount > 99 ? '99+' : waUnreadCount}
+              </span>
+            )}
           </ListItemButton>
         </NavLink>
       )}
-
-      {/* WhatGPR */}
-      {/* {showWhatsapp && (
-        <NavLink to="/whatgpr" activeClassName="hero" style={link}>
-          <ListItemButton sx={iSx('/whatgpr')} className="lib">
-            <ListItemIcon><WhatsApp style={col(isActive('/whatsapp'))} /></ListItemIcon>
-          </ListItemButton>
-        </NavLink>
-      )} */}
 
       {/* Configurations */}
       {showConfigs && (

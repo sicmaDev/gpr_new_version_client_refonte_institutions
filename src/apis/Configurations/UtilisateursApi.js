@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { notify } from "../../Utils/alert";
 import { loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
 import { HOST } from "../../Utils/globals";
@@ -31,8 +31,8 @@ export let liste = async (props) => {
         .then(function (response) {
             //console.log("reponse", response.data)
             if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
-                saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
-                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
+                saveItemToSessionStorage(response.data.content, "app-users")
+                saveItemToLocalStorage(response.data.content, "app-users")
                 props.itemsChanged(response.data.content);
                 // console.log("reponseuser", response.data.content)
             }
@@ -57,8 +57,8 @@ export let all = async (props) => {
         .then(function (response) {
             //console.log("reponse", response.data)
             if (response.data !== "" || response.data !== undefined || response.data.length > 0) {
-                saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
-                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
+                saveItemToSessionStorage(response.data.content, "app-users")
+                saveItemToLocalStorage(response.data.content, "app-users")
                 props.itemsChanged(response.data.content);
                 console.log("USERS API:", response.data.content);
             }
@@ -100,8 +100,8 @@ export const ajout = async (data, props) => {
         .then(function (response) {
             props.etatChanged(false)
             if (response.data.response.status) {
-                saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
-                saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
+                saveItemToSessionStorage(response.data.content, "app-users")
+                saveItemToLocalStorage(response.data.content, "app-users")
 
                 // console.log("responseadduser",response)
 
@@ -141,8 +141,8 @@ export const modification = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
+            saveItemToSessionStorage(response.data.content, "app-users")
+            saveItemToLocalStorage(response.data.content, "app-users")
 
             props.etatChanged(false)
 
@@ -177,8 +177,8 @@ export const suppression = async (data, props) => {
     await axios(config)
         .then(function (response) {
 
-            saveItemToSessionStorage(JSON.stringify(response.data.content), "app-users")
-            saveItemToLocalStorage(JSON.stringify(response.data.content), "app-users")
+            saveItemToSessionStorage(response.data.content, "app-users")
+            saveItemToLocalStorage(response.data.content, "app-users")
 
             props.etat3Changed(false)
             notify("Bravo - Utilisateur supprimé", "success");

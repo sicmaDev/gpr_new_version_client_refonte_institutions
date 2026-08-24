@@ -79,7 +79,7 @@ const Email = (props) => {
     useEffect(() => {
 
         try {
-            let appMail = loadItemFromLocalStorage("app-mail") !== undefined ? JSON.parse(loadItemFromLocalStorage("app-mail")) : undefined;
+            let appMail = loadItemFromLocalStorage("app-mail") !== undefined ? loadItemFromLocalStorage("app-mail") : undefined;
 
             if (appMail !== undefined || appMail !== "") {
                 props.userChanged(appMail.user)
