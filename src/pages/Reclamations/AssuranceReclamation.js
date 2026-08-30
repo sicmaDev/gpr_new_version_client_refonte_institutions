@@ -883,7 +883,7 @@ const AssuranceReclamation = (props) => {
 
   const handlePlay = (audioId, audioName) => {
     if (currentAudioId === audioId) {
-      audioRef.current.pause();
+      audioRef.current?.pause();
       setCurrentAudioId(null);
     } else {
       setCurrentAudioId(audioId);
@@ -893,7 +893,9 @@ const AssuranceReclamation = (props) => {
         });
 
         setCurrentAudio(window.URL.createObjectURL(blobAudio));
-        setTimeout(() => audioRef.current.play(), 2000);
+        // audioRef.current peut être null si le composant a été démonté (navigation)
+        // pendant les 2s d'attente ci-dessous.
+        setTimeout(() => audioRef.current?.play(), 2000);
         // setAudioPlayer("audio-" + attachment.id);
       });
     }

@@ -375,9 +375,10 @@ const QRPanel = ({ onClose, embedded = false }) => {
     try {
       const d = await getQR();
       if (d?.qr) {
-        // Le service Node renvoie déjà une data URL complète (qrcode.toDataURL) —
-        // la préfixer à nouveau ici produisait une URL invalide (image cassée).
-        setQrSrc(d.qr);
+        // Le backend (WgprController.getQrCode) retire volontairement le préfixe
+        // "data:image/png;base64," avant de renvoyer { qr }, donc on le rajoute ici.
+        // Robuste aux deux cas : si jamais un préfixe est déjà présent, on ne le double pas.
+        setQrSrc(d.qr.startsWith("data:") ? d.qr : "data:image/png;base64," + d.qr);
         setCountdown(0);
       } else setCountdown(POLL_INTERVAL);
     } catch (err) {

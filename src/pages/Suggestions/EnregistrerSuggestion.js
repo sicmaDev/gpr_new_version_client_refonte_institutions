@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
-import { fetchPendingWAFiles } from "../../whatgpr/pendingWAFiles";
+import { fetchPendingWAFiles, isAudioFile } from "../../whatgpr/pendingWAFiles";
 import Select from "react-select";
 
 import DatePicker, { registerLocale } from "react-datepicker";
@@ -15,7 +15,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { connect } from "react-redux";
 import { v4 as uuid } from "uuid";
-import { cleanPhoneNumber, cleanPhoneNumber2, cleanPhoneNumber3, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep, filesToBase64Dtos } from "../../Utils/utils";
+import { cleanPhoneNumber, cleanPhoneNumber2, cleanPhoneNumber3, groupBy, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep, filesToBase64Dtos } from "../../Utils/utils";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, TextField } from "@mui/material";
@@ -34,7 +34,6 @@ import RecorderControls from "../../components/recorder-controls";
 import { Mic } from "@mui/icons-material";
 import { downloadAudioApi } from "../../apis/Reclamations/ReclamationsApi";
 import moment from "moment";
-import { downloadFilesApi } from "../../apis/WhatsappApi";
 import { reset } from "../../redux/actions/WhatsappActions";
 import { CancelOutlined } from "@mui/icons-material";
 import { modalify } from "../../Utils/modal";
@@ -120,6 +119,7 @@ const EnregistrerSuggestion = (props) => {
 
     const languageRef = useRef(null);
     const recordedAtRef = useRef(null);
+    const nextInFlightRef = useRef(false);
     const collectRef = useRef(null);
     const contentRef = useRef(null);
     const lastnameRef = useRef(null);
@@ -208,9 +208,19 @@ const EnregistrerSuggestion = (props) => {
 
     const handleValidation = () => {
         let isValid = true;
-        if (!props.language) { isValid = false; errors["language"] = "Champ incorrect"; }
-        if (!props.recorded_at || !isValidDate(props.recorded_at)) { isValid = false; errors["recorded_at"] = "Champ incorrect"; }
-        if (!props.collect) { isValid = false; errors["collect"] = "Champ incorrect"; }
+        let firstErrorFieldRef = null;
+        if (!props.language) {
+            isValid = false; errors["language"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = languageRef;
+        }
+        if (!props.recorded_at || !isValidDate(props.recorded_at)) {
+            isValid = false; errors["recorded_at"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
+        }
+        if (!props.collect) {
+            isValid = false; errors["collect"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = collectRef;
+        }
         if (
             (!props.content || props.content === "") &&
             audioRecordings.length === 0 &&
@@ -218,18 +228,41 @@ const EnregistrerSuggestion = (props) => {
         ) {
             isValid = false;
             errors["content"] = "Champ incorrect";
+            if (!firstErrorFieldRef) firstErrorFieldRef = contentRef;
         }
+        if (!isValid) scrollToFirstError(firstErrorFieldRef);
         return isValid;
+    };
+
+    const scrollToFirstError = (firstErrorFieldRef) => {
+        if (firstErrorFieldRef && firstErrorFieldRef.current) {
+            setTimeout(() => {
+                firstErrorFieldRef.current.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+            }, 100);
+        }
     };
 
     const handleStepValidation = (step) => {
         let isValid = true;
         let errs = {};
+        let firstErrorFieldRef = null;
         if (step === 0) {
-            if (!props.language) { isValid = false; errs["language"] = "Champ requis"; }
+            if (!props.language) {
+                isValid = false; errs["language"] = "Champ requis";
+                if (!firstErrorFieldRef) firstErrorFieldRef = languageRef;
+            }
         } else if (step === 1) {
-            if (!props.recorded_at || !isValidDate(props.recorded_at)) { isValid = false; errs["recorded_at"] = "Champ requis"; }
-            if (!props.collect) { isValid = false; errs["collect"] = "Champ requis"; }
+            if (!props.recorded_at || !isValidDate(props.recorded_at)) {
+                isValid = false; errs["recorded_at"] = "Champ requis";
+                if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
+            }
+            if (!props.collect) {
+                isValid = false; errs["collect"] = "Champ requis";
+                if (!firstErrorFieldRef) firstErrorFieldRef = collectRef;
+            }
             if (
                 (!props.content || props.content === "") &&
                 audioRecordings.length === 0 &&
@@ -237,14 +270,23 @@ const EnregistrerSuggestion = (props) => {
             ) {
                 isValid = false;
                 errs["content"] = "Champ requis";
+                if (!firstErrorFieldRef) firstErrorFieldRef = contentRef;
             }
         }
         props.suggestionsRecordErrors(errs);
+        if (!isValid) scrollToFirstError(firstErrorFieldRef);
         return isValid;
     };
 
     const handleNext = () => {
-        if (handleStepValidation(currentStep)) setCurrentStep(s => s + 1);
+        // Empêche les clics rapprochés sur "Suivant" de cumuler plusieurs incréments d'étape.
+        if (nextInFlightRef.current) return;
+        nextInFlightRef.current = true;
+        try {
+            if (handleStepValidation(currentStep)) setCurrentStep(s => s + 1);
+        } finally {
+            nextInFlightRef.current = false;
+        }
     };
 
     useEffect(() => {
@@ -253,9 +295,14 @@ const EnregistrerSuggestion = (props) => {
             props.contentChanged(transformConversation(props.whatsappSelectMessage));
             props.phoneChanged(props.whatsappCurrentInbox.phone);
 
+            // Les audios rejoignent directement "Enregistrement vocal" (lecteur intégré),
+            // au lieu d'atterrir dans "Documents joints" comme un fichier générique.
             fetchPendingWAFiles().then(fileObjects => {
                 if (fileObjects.length > 0) {
-                    setFiles(fileObjects);
+                    const audios = fileObjects.filter(isAudioFile);
+                    const others = fileObjects.filter(f => !isAudioFile(f));
+                    if (others.length > 0) setFiles(others);
+                    if (audios.length > 0) setAudioRecordings(prev => [...prev, ...audios]);
                 }
             });
         }
@@ -272,40 +319,9 @@ const EnregistrerSuggestion = (props) => {
         return result;
     };
 
-    let whatsappAttachmentList;
-    if (props.whatsappSelectMessage.length > 0) {
-        const preuves = props.whatsappSelectMessage?.filter(({ type }) => type !== "chat") ?? [];
-        const whatsappAttachmentListChild = preuves.map((msg) => {
-            let icon = guessExtension({ name: msg.type });
-            return (
-                <div className="col xl12 l12 m12 s12" key={msg.id}>
-                    <div className="card box-shadow-none mb-1 app-file-info">
-                        <div className="card-content">
-                            <div className="row">
-                                <div className="col xl1 l1 s1 m1">
-                                    <img className="recent-file" src={icon} height="38" width="30" alt="" />
-                                </div>
-                                <div className="col xl11 l11 s11 m11">
-                                    <div className="app-file-recent-details">
-                                        <div className="app-file-name font-weight-700 truncate">{msg.content}</div>
-                                        <div className="app-file-last-access">
-                                            <span onClick={(e) => { e.preventDefault(); downloadFilesApi(msg.content); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        });
-        whatsappAttachmentList = preuves.length ? (
-            <div className="col s12 app-file-content grey lighten-4">
-                <span className="app-file-label">Pieces joints (Whatsapp)</span>
-                <div className="row app-file-recent-access mb-3">{whatsappAttachmentListChild}</div>
-            </div>
-        ) : <></>;
-    }
+    // Note : la liste "Pieces joints(Whatsapp)" a été retirée — elle dupliquait les mêmes
+    // pièces jointes déjà présentes dans "Documents joints"/"Enregistrement vocal" (voir
+    // le useEffect fetchPendingWAFiles plus haut, qui les injecte directement là-bas).
 
     const handleSubmit = async (e, onSuccess = null) => {
         e.preventDefault();
@@ -1099,7 +1115,6 @@ const EnregistrerSuggestion = (props) => {
                                 </div>
                             )}
                         </div>
-                        {whatsappAttachmentList && <div style={{ marginTop: 12 }}>{whatsappAttachmentList}</div>}
                     </div>
                 )}
 

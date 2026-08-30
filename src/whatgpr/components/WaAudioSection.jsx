@@ -3,7 +3,7 @@ import Mic from "@mui/icons-material/Mic";
 import AudioGrid from "./AudioGrid";
 
 /**
- * Section "Retour du client par WhatsApp" - regroupe visuellement les audios reçus du
+ * Section "Commentaire du client" - regroupe visuellement les audios reçus du
  * client via WhatsApp, avec l'ancre id="whatsapp-audios-section" utilisée par
  * handleJumpToWhatsappAudioComment (défilement + surbrillance).
  */
@@ -23,7 +23,7 @@ export default function WaAudioSection({ waAudios, currentAudioId, onPlay, highl
         }}
       >
         <Mic sx={{ fontSize: 18, color: "#15803d" }} />
-        <span style={{ fontWeight: 700, fontSize: 13, color: "#15803d" }}>Retour du client par WhatsApp</span>
+        <span style={{ fontWeight: 700, fontSize: 13, color: "#15803d" }}>Commentaire du client</span>
         <span
           style={{
             fontSize: 11,

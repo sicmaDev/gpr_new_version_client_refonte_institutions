@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, Component } from "react";
-import { fetchPendingWAFiles } from "../../whatgpr/pendingWAFiles";
+import { fetchPendingWAFiles, isAudioFile } from "../../whatgpr/pendingWAFiles";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DatePicker, { registerLocale, setDefaultLocale } from "react-datepicker";
@@ -118,7 +118,6 @@ import PhoneInput from "react-phone-number-input";
 import { licenseInfo } from "../../apis/LoginApi";
 import { INSTITUTION_PAYS_CODE } from "../../Utils/globals";
 import moment from "moment";
-import { downloadFilesApi } from "../../apis/WhatsappApi";
 import { reset } from "../../redux/actions/WhatsappActions";
 import { CancelOutlined } from "@mui/icons-material";
 import { Tooltip, IconButton, CircularProgress } from "@mui/material";
@@ -312,6 +311,7 @@ const EnregistrerReclamation = (props) => {
       // console.error("Une erreur s'est produite :", error);
     }
   };
+  const nextInFlightRef = useRef(false);
   const lastnameRef = useRef(null);
   const phoneRef = useRef(null);
   const addressRef = useRef(null);
@@ -374,10 +374,15 @@ const EnregistrerReclamation = (props) => {
       props.contentChanged(transformConversation(props.whatsappSelectMessage));
       props.phoneChanged(props.whatsappCurrentInbox.phone);
 
-      // Récupérer les fichiers médias WhatsApp et les injecter dans le formData
+      // Récupérer les fichiers médias WhatsApp et les injecter dans le formData.
+      // Les audios rejoignent directement "Enregistrement vocal" (lecteur intégré, lisible),
+      // au lieu d'atterrir dans "Documents joints" comme un fichier générique téléchargeable.
       fetchPendingWAFiles().then(fileObjects => {
         if (fileObjects.length > 0) {
-          setFiles(fileObjects);
+          const audios = fileObjects.filter(isAudioFile);
+          const others = fileObjects.filter(f => !isAudioFile(f));
+          if (others.length > 0) setFiles(others);
+          if (audios.length > 0) setAudioRecordings(prev => [...prev, ...audios]);
         }
       });
     }
@@ -404,61 +409,9 @@ const EnregistrerReclamation = (props) => {
     return result;
   };
 
-  let whatsappAttachmentList;
-  // console.log("props.selectedItemFiles", props.selectedItemFiles);
-  if (props.whatsappSelectMessage.length > 0) {
-    const preuves =
-      props.whatsappSelectMessage?.filter(({ type }) => type !== "chat") ?? [];
-    let whatsappAttachmentListChild = preuves.map((msg) => {
-      let icon = guessExtension({ name: msg.type });
-      return (
-        <div className="col xl12 l12 m12 s12" key={msg.id}>
-          <div className="card box-shadow-none mb-1 app-file-info">
-            <div className="card-content">
-              <div className="row">
-                <div className="col xl1 l1 s1 m1">
-                  <div className="app-file-content-logo">
-                    <div className="fonticon hide">
-                      <i className="material-icons ">more_vert</i>
-                    </div>
-                    <img
-                      className="recent-file"
-                      src={icon}
-                      height="38"
-                      width="30"
-                      alt=""
-                    />
-                  </div>
-                </div>
-                <div className="col xl11 l11 s11 m11">
-                  <div className="app-file-recent-details">
-                    <div className="app-file-name font-weight-700 truncate">
-                      {msg.content}
-                    </div>
-                    <div className="app-file-size"></div>
-                    <div className="app-file-last-access">
-                      <span onClick={(e) => { e.preventDefault(); downloadFilesApi(msg.content); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    });
-    whatsappAttachmentList = preuves.length ? (
-      <div className="col s12 app-file-content grey lighten-4">
-        <span className="app-file-label">Pieces joints(Whatsapp) </span>
-        <div className="row app-file-recent-access mb-3">
-          {whatsappAttachmentListChild}
-        </div>
-      </div>
-    ) : (
-      <></>
-    );
-  } else {
-  }
+  // Note : la liste "Pieces joints(Whatsapp)" a été retirée — elle dupliquait les mêmes
+  // pièces jointes déjà présentes dans "Documents joints"/"Enregistrement vocal" (voir
+  // le useEffect fetchPendingWAFiles plus haut, qui les injecte directement là-bas).
 
   // //variable to show box of sms
   const [showSmsBox, setShowSmsBox] = useState(false);
@@ -688,6 +641,7 @@ const EnregistrerReclamation = (props) => {
     setAudioRecordings([]);
     prevAudioRef.current = null;
     setFiles([]);
+    setCrossAgencyClaims([]);
   };
 
   const handleCancel = (e) => {
@@ -1729,66 +1683,91 @@ const EnregistrerReclamation = (props) => {
   // Step 0 = Client validation
   const validateStep0 = () => {
     let isValid = true;
+    let firstErrorFieldRef = null;
     errors = {};
     if (!props.lastname) {
       isValid = false; errors["lastname"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = lastnameRef;
     }
     if (!props.address) {
       isValid = false; errors["address"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = addressRef;
     }
     if (!props.phone || !isValidPhone(props.phone)) {
       isValid = false; errors["phone"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = phoneRef;
     }
     if (!props.gender) {
       isValid = false; errors["gender"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = genderRef;
     }
     if (!props.language) {
       isValid = false; errors["language"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = languageRef;
     }
     props.claimRecordErrors(errors);
+    if (!isValid) scrollToFirstError(firstErrorFieldRef);
     return isValid;
   };
 
   // Step 1 = Informations validation
   const validateStep1 = () => {
     let isValid = true;
+    let firstErrorFieldRef = null;
     errors = {};
     if (!props.recorded_at || !isValidDate(props.recorded_at)) {
       isValid = false; errors["recorded_at"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
     }
     if (!props.collect) {
       isValid = false; errors["collect"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = collectRef;
     }
     if (!props.subject) {
       isValid = false; errors["subject"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = subjectRef;
     }
     if (!props.underSubject) {
       isValid = false; errors["underSubject"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = underSubjectRef;
     }
     if (!props.content && audio === null && (!props.selectedItemAudio || props.selectedItemAudio.length === 0)) {
       isValid = false; errors["content"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = contentRef;
     }
     if (!props.product) {
       isValid = false; errors["product"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = productRef;
     }
     if (!props.unit) {
       isValid = false; errors["unit"] = "Champ incorrect";
+      if (!firstErrorFieldRef) firstErrorFieldRef = unitRef;
     }
     props.claimRecordErrors(errors);
+    if (!isValid) scrollToFirstError(firstErrorFieldRef);
     return isValid;
   };
 
   const handleNext = async () => {
-    if (currentStep === 0) {
-      if (!validateStep0()) return;
-      // Attend la vérification de doublon (normalement lancée au blur du champ
-      // téléphone) avant de passer à l'étape suivante — sinon, sur une requête
-      // lente, la modale de doublon apparaît en retard alors que l'agent est
-      // déjà en train de remplir l'étape 2.
-      await handleBlur();
+    // Empêche les clics rapprochés sur "Suivant" de déclencher plusieurs
+    // vérifications de doublon en parallèle (et donc plusieurs incréments
+    // d'étape en cascade une fois les appels résolus).
+    if (nextInFlightRef.current) return;
+    nextInFlightRef.current = true;
+    try {
+      if (currentStep === 0) {
+        if (!validateStep0()) return;
+        // Attend la vérification de doublon (normalement lancée au blur du champ
+        // téléphone) avant de passer à l'étape suivante — sinon, sur une requête
+        // lente, la modale de doublon apparaît en retard alors que l'agent est
+        // déjà en train de remplir l'étape 2.
+        await handleBlur();
+      }
+      if (currentStep === 1 && !validateStep1()) return;
+      setCurrentStep(s => s + 1);
+    } finally {
+      nextInFlightRef.current = false;
     }
-    if (currentStep === 1 && !validateStep1()) return;
-    setCurrentStep(s => s + 1);
   };
 
   const handleFinalSubmit = () => {
@@ -2396,7 +2375,6 @@ const EnregistrerReclamation = (props) => {
                 defaultCountry={navigator.language.split('-')[1] || undefined}
                 value={props.phone}
                 onChange={handlePhoneChange}
-                onBlur={handleBlur}
               />
               <label htmlFor="phone" className="active">
                 Téléphone <span>(<span className="red-text darken-2">*</span>)</span>
@@ -2639,8 +2617,6 @@ const EnregistrerReclamation = (props) => {
                 </div>
               )}
             </div>
-
-            {whatsappAttachmentList && <div>{whatsappAttachmentList}</div>}
           </div>
         )}
 

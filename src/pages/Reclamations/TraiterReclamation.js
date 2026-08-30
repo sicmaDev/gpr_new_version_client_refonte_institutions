@@ -113,6 +113,7 @@ import {
   deleteFileApi,
   deleteAudioApi,
   deleteExtraContentApi,
+  treatClaimApi,
 } from "../../apis/Reclamations/ReclamationsApi";
 import {
   addSuggestionApi,
@@ -189,6 +190,9 @@ import {
   Star,
   VolumeUp,
 } from "@mui/icons-material";
+import MicIcon from "@mui/icons-material/Mic";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RecorderControls from "../../components/recorder-controls";
 import useRecorder from "../../hooks/useRecorder";
 import { LoadingButton } from "@mui/lab";
@@ -302,6 +306,45 @@ const TraiterReclamation = (props) => {
   const { highlightedAudioId, handleJumpToWhatsappAudioComment } = useWaAudioJump(waAudios);
   const [showSolutionWaModal, setShowSolutionWaModal] = useState(false);
   const [waModalSolution, setWaModalSolution] = useState(null);
+
+  // ── Gate WhatsApp automatique à la (re)soumission du traitement : avant d'enregistrer
+  // la solution, si le client a un téléphone, on propose de la lui envoyer par WhatsApp
+  // (texte ou notes vocales) avec le sondage de satisfaction joint. Noms préfixés "resolveWa"
+  // pour ne pas entrer en collision avec showSolutionWaModal/waModalSolution ci-dessus, qui
+  // gèrent le bouton manuel "Envoyer par WhatsApp" d'une solution déjà approuvée.
+  const [showResolveWaModal, setShowResolveWaModal] = useState(false);
+  const [resolveWaSolutionSending, setResolveWaSolutionSending] = useState(false);
+  const [resolveWaMode, setResolveWaMode] = useState("text"); // 'text' | 'audio'
+  const [resolveWaAudio1Blob, setResolveWaAudio1Blob] = useState(null);
+  const [resolveWaAudio1Url, setResolveWaAudio1Url] = useState(null);
+  const [resolveWaAudio2Blob, setResolveWaAudio2Blob] = useState(null);
+  const [resolveWaAudio2Url, setResolveWaAudio2Url] = useState(null);
+  const [resolveWaAudio3Blob, setResolveWaAudio3Blob] = useState(null);
+  const [resolveWaAudio3Url, setResolveWaAudio3Url] = useState(null);
+  const [resolveWaAudio4Blob, setResolveWaAudio4Blob] = useState(null);
+  const [resolveWaAudio4Url, setResolveWaAudio4Url] = useState(null);
+  // Note vocale facultative présentant le sondage au client (accessibilité, langue du client)
+  const [resolveWaSurveyAudioBlob, setResolveWaSurveyAudioBlob] = useState(null);
+  const [resolveWaSurveyAudioUrl, setResolveWaSurveyAudioUrl] = useState(null);
+  const [resolveWaActiveSlot, setResolveWaActiveSlot] = useState(1);
+  // Ref nécessaire car closeAction() dans RecorderControls appelle setResolveWaActiveSlot(0)
+  // de façon synchrone avant que saveRecording() ait fini (async) → le slot serait perdu.
+  const resolveWaSlotRef = useRef(1);
+  const pendingTreatClaimRef = useRef(null);
+  const { recorderState: resolveWaRecorderState, ...resolveWaRecorderHandlers } = useRecorder();
+
+  useEffect(() => {
+    if (!resolveWaRecorderState.audio) return;
+    const url = URL.createObjectURL(resolveWaRecorderState.audio);
+    const slot = resolveWaSlotRef.current; // ref stable même si closeAction a déjà mis resolveWaActiveSlot à 0
+    if (slot === 1) { setResolveWaAudio1Blob(resolveWaRecorderState.audio); setResolveWaAudio1Url(url); }
+    else if (slot === 2) { setResolveWaAudio2Blob(resolveWaRecorderState.audio); setResolveWaAudio2Url(url); }
+    else if (slot === 3) { setResolveWaAudio3Blob(resolveWaRecorderState.audio); setResolveWaAudio3Url(url); }
+    else if (slot === 4) { setResolveWaAudio4Blob(resolveWaRecorderState.audio); setResolveWaAudio4Url(url); }
+    else if (slot === 5) { setResolveWaSurveyAudioBlob(resolveWaRecorderState.audio); setResolveWaSurveyAudioUrl(url); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolveWaRecorderState.audio]);
+
   const [expanded, setExpanded] = React.useState(false);
   const [checked, setChecked] = React.useState(false);
   const [usersCGR, setUsersCGR] = React.useState([]);
@@ -535,6 +578,152 @@ const TraiterReclamation = (props) => {
     ejectGuest, inviteGuest,
   } = useWebSocketSession({ code: props.code, claimId: props.id, session: props.session, user });
 
+  // ── Gate WhatsApp à la (re)soumission du traitement ─────────────────────────
+  // Résout le texte de la solution à envoyer au client, qu'elle soit tapée dans le
+  // formulaire ou choisie parmi les solutions potentielles existantes.
+  const getSolutionTextToSend = (claim) => {
+    if (claim.isExisting) {
+      const existing = props.selectedItem?.objet?.existingSolutions?.find(
+        (s) => s.id === claim.existingId
+      );
+      return existing?.content || "";
+    }
+    return claim.solution || "";
+  };
+
+  // Même format de message que celui utilisé pour l'envoi de la solution
+  // lors de la mesure de satisfaction (MesurerReclamation.js).
+  const getSolutionWhatsappMessage = (claim) =>
+    `✅ Votre réclamation a été traitée.\n\n📋 Solution apportée :\n${getSolutionTextToSend(claim)}`;
+
+  const blobToBase64 = (blob) =>
+    blob
+      ? new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        })
+      : Promise.resolve(null);
+
+  const resetResolveWaState = () => {
+    setResolveWaMode("text");
+    setResolveWaAudio1Blob(null); setResolveWaAudio1Url(null);
+    setResolveWaAudio2Blob(null); setResolveWaAudio2Url(null);
+    setResolveWaAudio3Blob(null); setResolveWaAudio3Url(null);
+    setResolveWaAudio4Blob(null); setResolveWaAudio4Url(null);
+    setResolveWaSurveyAudioBlob(null); setResolveWaSurveyAudioUrl(null);
+    setResolveWaActiveSlot(1);
+  };
+
+  // Envoie la solution + le sondage de satisfaction par WhatsApp, même mécanique
+  // que handleSendWhatsApp dans MesurerReclamation.js, appelée juste après le
+  // traitement de la réclamation (le solutionId vient d'être créé par treatClaimApi).
+  const sendResolveSolutionWhatsapp = async (claim, solutionId) => {
+    if (!props.phone) return;
+    try {
+      const digits = cleanPhoneNumber3(props.phone).replace(/\D/g, "").replace(/^00/, "");
+      const to = digits + "@c.us";
+      const token = loadItemFromSessionStorage("token");
+      const surveyAudioBase64 = await blobToBase64(resolveWaSurveyAudioBlob);
+
+      let resp;
+      if (resolveWaMode === "text") {
+        const message = getSolutionWhatsappMessage(claim);
+        resp = await axios.post(
+          HOST + "api/whatgpr/send-with-survey",
+          {
+            to, message, claimId: props.id, solutionId, measurerId: user.id,
+            ...(surveyAudioBase64 && { surveyAudioBase64, surveyAudioMimeType: "audio/ogg; codecs=opus" }),
+          },
+          { headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" } }
+        );
+      } else {
+        const [audioBase64, audioBase642, audioBase643, audioBase644] = await Promise.all([
+          blobToBase64(resolveWaAudio1Blob),
+          blobToBase64(resolveWaAudio2Blob),
+          blobToBase64(resolveWaAudio3Blob),
+          blobToBase64(resolveWaAudio4Blob),
+        ]);
+        resp = await axios.post(
+          HOST + "api/whatgpr/send-with-survey-audio",
+          {
+            to, audioBase64, mimeType: "audio/ogg; codecs=opus",
+            ...(audioBase642 && { audioBase642 }),
+            ...(audioBase643 && { audioBase643 }),
+            ...(audioBase644 && { audioBase644 }),
+            ...(surveyAudioBase64 && { surveyAudioBase64 }),
+            claimId: props.id, solutionId, measurerId: user.id,
+          },
+          { headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (resp.data?.status) {
+        notify("✅ Solution et enquête de satisfaction envoyées par WhatsApp", "success");
+      } else {
+        notify("Solution enregistrée, mais l'envoi WhatsApp au client a échoué", "error");
+      }
+    } catch (err) {
+      notify("Solution enregistrée, mais l'envoi WhatsApp au client a échoué", "error");
+    }
+  };
+
+  const handleConfirmTreatAndSend = async (e) => {
+    const claim = pendingTreatClaimRef.current;
+    if (!claim) return;
+    if (resolveWaMode === "audio" && !resolveWaAudio1Blob) {
+      notify("Veuillez enregistrer l'audio de la solution (Audio 1) avant d'envoyer", "error");
+      return;
+    }
+    setResolveWaSolutionSending(true);
+    props.etat2Changed(true);
+
+    // Le traitement (enregistrement de la solution) ne dépend jamais de l'envoi WhatsApp.
+    const result = await treatClaimApi(claim, props);
+    const solutionId = result?.content?.solutionDtos?.[0]?.id;
+
+    if (solutionId) {
+      await sendResolveSolutionWhatsapp(claim, solutionId);
+    } else if (props.phone) {
+      notify("Solution enregistrée, mais l'envoi WhatsApp au client a échoué", "error");
+    }
+
+    setResolveWaSolutionSending(false);
+    setShowResolveWaModal(false);
+    pendingTreatClaimRef.current = null;
+    resetResolveWaState();
+    handleCancel(e);
+    handleClose();
+  };
+
+  // L'envoi WhatsApp est facultatif : "Annuler" ne doit pas bloquer l'agent, la
+  // réclamation est quand même traitée (juste sans notifier le client par WhatsApp).
+  const handleTreatWithoutWhatsapp = async (e) => {
+    const claim = pendingTreatClaimRef.current;
+    if (!claim) return;
+    setShowResolveWaModal(false);
+    setResolveWaSolutionSending(true);
+    props.etat2Changed(true);
+
+    await treatClaimApi(claim, props);
+
+    setResolveWaSolutionSending(false);
+    pendingTreatClaimRef.current = null;
+    resetResolveWaState();
+    handleCancel(e);
+    handleClose();
+  };
+
+  // Fermeture de la modal sans action explicite (clic en dehors, Échap, croix) :
+  // n'importe quoi sauf traiter automatiquement, l'agent reste sur le formulaire
+  // et garde la main pour reprendre où il en était.
+  const handleCloseResolveWaModalWithoutAction = () => {
+    setShowResolveWaModal(false);
+    pendingTreatClaimRef.current = null;
+    resetResolveWaState();
+  };
+
   const {
     prepareBeforeAssign,
     handleAssign,
@@ -552,6 +741,22 @@ const TraiterReclamation = (props) => {
     anonymat,
     maxDelai,
     onSuccess: (e) => { handleCancel(e); handleClose(); },
+    onBeforeSolve: (claim, e) => {
+      pendingTreatClaimRef.current = claim;
+      if (props.phone) {
+        setShowResolveWaModal(true);
+        return true; // pris en charge par la modal — le hook ne doit pas traiter directement
+      }
+      return false; // pas de téléphone : comportement normal (le hook traite directement)
+    },
+    onBeforeReSolve: (claim, e) => {
+      pendingTreatClaimRef.current = claim;
+      if (props.phone) {
+        setShowResolveWaModal(true);
+        return true; // pris en charge par la modal — le hook ne doit pas traiter directement
+      }
+      return false; // pas de téléphone : comportement normal (le hook traite directement)
+    },
   });
 
   const handleSaveDraft = async () => {
@@ -4161,6 +4366,248 @@ const TraiterReclamation = (props) => {
           solutionId={waModalSolution?.id}
           solutionText={waModalSolution?.content}
         />
+
+        {/* Gate WhatsApp automatique à la (re)soumission du traitement — même mécanique
+            que MesurerReclamation.js, déclenchée par handleReSolve via onBeforeReSolve. */}
+        <Dialog
+          open={showResolveWaModal}
+          onClose={handleCloseResolveWaModalWithoutAction}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <WhatsAppIcon style={{ color: "#25D366" }} />
+            Envoyer la solution par WhatsApp
+          </DialogTitle>
+          <DialogContent>
+            <div style={{ margin: "0 0 12px", padding: "8px 12px", background: "#f0f4f8", borderRadius: 8 }}>
+              <strong>{props.phone}</strong>
+            </div>
+
+            {/* Toggle Texte / Note vocale */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              <Button
+                variant={resolveWaMode === "text" ? "contained" : "outlined"}
+                size="small"
+                disableElevation
+                onClick={() => setResolveWaMode("text")}
+                style={resolveWaMode === "text" ? { backgroundColor: "#1e2188" } : {}}
+              >
+                Solution texte
+              </Button>
+              <Button
+                variant={resolveWaMode === "audio" ? "contained" : "outlined"}
+                size="small"
+                disableElevation
+                startIcon={<MicIcon fontSize="small" />}
+                onClick={() => setResolveWaMode("audio")}
+                style={resolveWaMode === "audio" ? { backgroundColor: "#1e2188" } : {}}
+              >
+                Notes vocales
+              </Button>
+            </div>
+
+            {/* Note vocale facultative présentant le sondage (accessibilité) */}
+            <div style={{
+              marginBottom: 16, padding: 12,
+              background: "#fafafa", border: "1px solid #e0e0e0", borderRadius: 8,
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <span style={{ fontWeight: 600, color: "#424242", fontSize: 13 }}>
+                  Note vocale présentant le sondage
+                </span>
+                <span style={{ marginLeft: 6, fontSize: 11, color: "#9e9e9e" }}>facultatif</span>
+              </div>
+              <div style={{ fontSize: 11, color: "#757575", marginBottom: 8 }}>
+                Utile si le client ne peut pas lire le texte : présentez-lui le sondage à l'oral, dans sa langue
+                {props.language ? <> ({props.language})</> : ""}.
+              </div>
+              {resolveWaSurveyAudioUrl ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <audio src={resolveWaSurveyAudioUrl} controls style={{ width: "100%", height: 36 }} />
+                  <IconButton size="small" color="error" onClick={() => { setResolveWaSurveyAudioBlob(null); setResolveWaSurveyAudioUrl(null); }}>
+                    <DeleteOutline fontSize="small" />
+                  </IconButton>
+                </div>
+              ) : resolveWaActiveSlot === 5 ? (
+                <div style={{ padding: 8, background: "#fff", borderRadius: 8, border: "1px dashed #ccc" }}>
+                  <RecorderControls recorderState={resolveWaRecorderState} handlers={resolveWaRecorderHandlers} closeAction={() => setResolveWaActiveSlot(0)} />
+                </div>
+              ) : (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<MicIcon fontSize="small" />}
+                  onClick={() => { resolveWaSlotRef.current = 5; setResolveWaActiveSlot(5); }}
+                  style={{ borderColor: "#bdbdbd", color: "#424242", fontSize: 12 }}
+                >
+                  Enregistrer
+                </Button>
+              )}
+            </div>
+
+            {resolveWaMode === "text" ? (
+              <>
+                <div style={{ marginBottom: 6, fontSize: 12, color: "#555", fontWeight: 600 }}>
+                  Message de confirmation
+                </div>
+                <div
+                  style={{
+                    background: "#DCF8C6",
+                    border: "1px solid #a5d6a7",
+                    borderRadius: 8,
+                    padding: "10px 14px",
+                    maxHeight: 150,
+                    overflowY: "auto",
+                    whiteSpace: "pre-wrap",
+                    fontSize: 13,
+                    marginBottom: 12,
+                  }}
+                >
+                  {pendingTreatClaimRef.current ? (
+                    <>
+                      <CheckCircleIcon fontSize="inherit" sx={{ verticalAlign: "text-bottom", mr: 0.5, color: "#2e7d32" }} />
+                      Votre réclamation a été traitée.
+                      <br /><br />
+                      <AssignmentIcon fontSize="inherit" sx={{ verticalAlign: "text-bottom", mr: 0.5 }} />
+                      Solution apportée :
+                      <br />
+                      {getSolutionTextToSend(pendingTreatClaimRef.current)}
+                    </>
+                  ) : ""}
+                </div>
+              </>
+            ) : (
+              <div style={{ marginBottom: 16 }}>
+                {[
+                  {
+                    slot: 1, label: "Audio 1 : Solution", required: true,
+                    blob: resolveWaAudio1Blob, url: resolveWaAudio1Url,
+                    clear: () => { setResolveWaAudio1Blob(null); setResolveWaAudio1Url(null); },
+                    desc: "Communiquer la solution au client (envoyé immédiatement)",
+                  },
+                  {
+                    slot: 2, label: "Audio 2 : Demande de commentaire", required: false,
+                    blob: resolveWaAudio2Blob, url: resolveWaAudio2Url,
+                    clear: () => { setResolveWaAudio2Blob(null); setResolveWaAudio2Url(null); },
+                    desc: "Demander un commentaire si partiellement/non satisfait (après le vote)",
+                  },
+                  {
+                    slot: 3, label: "Audio 3 : Remerciement (satisfait)", required: false,
+                    blob: resolveWaAudio3Blob, url: resolveWaAudio3Url,
+                    clear: () => { setResolveWaAudio3Blob(null); setResolveWaAudio3Url(null); },
+                    desc: "Remercier et rassurer le client satisfait (envoyé si satisfait)",
+                  },
+                  {
+                    slot: 4, label: "Audio 4 : Réponse au commentaire", required: false,
+                    blob: resolveWaAudio4Blob, url: resolveWaAudio4Url,
+                    clear: () => { setResolveWaAudio4Blob(null); setResolveWaAudio4Url(null); },
+                    desc: "Répondre après le commentaire d'insatisfaction (merci, on s'améliore)",
+                  },
+                ].map(({ slot, label, required, blob, url, clear, desc }) => (
+                  <div key={slot} style={{
+                    marginBottom: 12, padding: 12,
+                    background: "#fafafa", border: `1px solid ${required ? "#bdbdbd" : "#e0e0e0"}`,
+                    borderRadius: 8,
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                      <div>
+                        <span style={{ fontWeight: 600, color: "#424242", fontSize: 13 }}>{label}</span>
+                        {required && <span style={{ marginLeft: 6, fontSize: 11, color: "#c62828", fontWeight: 600 }}>obligatoire</span>}
+                        {!required && <span style={{ marginLeft: 6, fontSize: 11, color: "#9e9e9e" }}>facultatif</span>}
+                      </div>
+                      {blob && (
+                        <IconButton size="small" color="error" onClick={clear}>
+                          <DeleteOutline fontSize="small" />
+                        </IconButton>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#757575", marginBottom: 8 }}>{desc}</div>
+                    {url ? (
+                      <audio src={url} controls style={{ width: "100%", height: 36 }} />
+                    ) : resolveWaActiveSlot === slot ? (
+                      <div style={{ padding: 8, background: "#fff", borderRadius: 8, border: "1px dashed #ccc" }}>
+                        <RecorderControls recorderState={resolveWaRecorderState} handlers={resolveWaRecorderHandlers} closeAction={() => setResolveWaActiveSlot(0)} />
+                      </div>
+                    ) : (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<MicIcon fontSize="small" />}
+                        onClick={() => { resolveWaSlotRef.current = slot; setResolveWaActiveSlot(slot); }}
+                        style={{ borderColor: "#bdbdbd", color: "#424242", fontSize: 12 }}
+                      >
+                        Enregistrer
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {pendingTreatClaimRef.current?.commentaire ? (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 6, fontSize: 12, color: "#555", fontWeight: 600 }}>
+                  Commentaire (usage interne, non envoyé au client)
+                </div>
+                <div
+                  style={{
+                    background: "#f5f5f5",
+                    border: "1px solid #ddd",
+                    borderRadius: 8,
+                    padding: "10px 14px",
+                    maxHeight: 100,
+                    overflowY: "auto",
+                    whiteSpace: "pre-wrap",
+                    fontSize: 13,
+                  }}
+                >
+                  {pendingTreatClaimRef.current.commentaire}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Sondage (commun aux deux modes) */}
+            <div style={{ marginBottom: 6, fontSize: 12, color: "#555", fontWeight: 600 }}>
+              Enquête de satisfaction envoyée avec la solution
+            </div>
+            <div style={{
+              background: "#fafafa", border: "1px solid #e0e0e0",
+              borderRadius: 8, padding: "10px 14px", fontSize: 13,
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>
+                Êtes-vous satisfait(e) de cette solution ?
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <SentimentSatisfiedAltIcon fontSize="small" sx={{ color: "#2e7d32" }} /> Satisfait
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <SentimentNeutralIcon fontSize="small" sx={{ color: "#ed6c02" }} /> Partiellement satisfait
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <SentimentDissatisfiedIcon fontSize="small" sx={{ color: "#c62828" }} /> Non satisfait
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12, fontSize: 12, color: "#777" }}>
+              La réclamation sera automatiquement mesurée dès que le client aura voté.
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleTreatWithoutWhatsapp} disabled={resolveWaSolutionSending}>
+              Traiter sans envoyer
+            </Button>
+            <LoadingButton
+              onClick={handleConfirmTreatAndSend}
+              loading={resolveWaSolutionSending}
+              disabled={resolveWaMode === "audio" && !resolveWaAudio1Blob}
+              variant="contained"
+              sx={{ backgroundColor: "#25D366" }}
+            >
+              Oui, envoyer
+            </LoadingButton>
+          </DialogActions>
+        </Dialog>
 
         {props.match.params.code === "all" ? (
           <div className="row">

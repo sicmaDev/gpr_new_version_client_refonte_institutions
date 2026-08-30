@@ -1,7 +1,40 @@
+// Persistance de la conversation WhatsApp en cours de conversion (numéro + messages
+// sélectionnés) dans le sessionStorage — pour qu'un rafraîchissement de page (F5) entre le
+// clic sur "Convertir" et l'arrivée sur le formulaire ne fasse pas perdre la sélection.
+// Seuls currentInbox/selectMessage sont concernés : le reste (inboxs, messages, flags UI...)
+// n'a pas besoin de survivre à un refresh.
+const PERSIST_KEY = 'wgpr_currentConversion';
+
+const loadPersistedConversion = () => {
+    try {
+        const raw = sessionStorage.getItem(PERSIST_KEY);
+        if (!raw) return { currentInbox: null, selectMessage: [] };
+        const parsed = JSON.parse(raw);
+        return {
+            currentInbox: parsed.currentInbox ?? null,
+            selectMessage: parsed.selectMessage ?? [],
+        };
+    } catch {
+        return { currentInbox: null, selectMessage: [] };
+    }
+};
+
+const savePersistedConversion = (currentInbox, selectMessage) => {
+    try {
+        sessionStorage.setItem(PERSIST_KEY, JSON.stringify({ currentInbox, selectMessage }));
+    } catch {
+        // sessionStorage indisponible (navigation privée, quota...) - la persistance est un
+        // confort, pas une garantie : on continue silencieusement sans elle.
+    }
+};
+
+const clearPersistedConversion = () => {
+    try { sessionStorage.removeItem(PERSIST_KEY); } catch { }
+};
+
 const initialState = {
     inboxs: [],
-    currentInbox: null,
-    selectMessage: [],
+    ...loadPersistedConversion(),
     showAside: false,
     isLoading: false,
     startConvert: false,
@@ -16,6 +49,7 @@ const initialState = {
 const WhatsappReducer = (state = initialState, action) => {
     switch (action.type) {
         case 'SET_RESET':
+            clearPersistedConversion();
             return {
                 inboxs: [],
                 currentInbox: null,
@@ -35,6 +69,7 @@ const WhatsappReducer = (state = initialState, action) => {
                 inboxs: action.payload
             };
         case 'SET_CURRENT_INBOX':
+            savePersistedConversion(action.payload, state.selectMessage);
             return {
                 ...state,
                 currentInbox: action.payload,
@@ -42,21 +77,28 @@ const WhatsappReducer = (state = initialState, action) => {
                 messagesIsLoading: false,
             };
         case 'RESET_SELECT_MESSAGE':
+            savePersistedConversion(state.currentInbox, []);
             return {
                 ...state,
                 selectMessage: []
             };
-        case 'ADD_SELECT_MESSAGE':
+        case 'ADD_SELECT_MESSAGE': {
 
+            const selectMessage = [...state.selectMessage, action.payload];
+            savePersistedConversion(state.currentInbox, selectMessage);
             return {
                 ...state,
-                selectMessage: [...state.selectMessage, action.payload]
+                selectMessage
             };
-        case 'REMOVE_SELECT_MESSAGE':
+        }
+        case 'REMOVE_SELECT_MESSAGE': {
+            const selectMessage = state.selectMessage.filter((data) => (data !== action.payload));
+            savePersistedConversion(state.currentInbox, selectMessage);
             return {
                 ...state,
-                selectMessage: state.selectMessage.filter((data) => (data !== action.payload))
+                selectMessage
             };
+        }
         case 'SET_SHOW_ASIDE':
             return {
                 ...state,
@@ -78,6 +120,7 @@ const WhatsappReducer = (state = initialState, action) => {
                 isLoading: !state.isLoading
             };
         case 'SET_START_CONVERT':
+            savePersistedConversion(state.currentInbox, []);
             return {
                 ...state,
                 startConvert: action.payload,
@@ -85,12 +128,14 @@ const WhatsappReducer = (state = initialState, action) => {
 
             };
         case 'START_CONVERT':
+            savePersistedConversion(state.currentInbox, []);
             return {
                 ...state,
                 startConvert: true,
                 selectMessage: []
             };
         case 'END_CONVERT':
+            clearPersistedConversion();
             return {
                 ...state,
                 startConvert: false,

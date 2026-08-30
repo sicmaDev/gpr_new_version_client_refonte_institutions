@@ -226,12 +226,89 @@ const MesurerReclamation = (props) => {
     loadNeedingComment();
   }, []);
 
+  // Recharge les détails d'une réclamation précise (utilisé au montage ET pour rafraîchir
+  // en direct la page détail quand le client répond au sondage pendant qu'elle est ouverte).
+  const loadClaimDetails = async (code) => {
+    let cc = await axios({
+      method: "get",
+      url: HOST + "api/v1/claim/" + code + "/details",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + loadItemFromSessionStorage("token"),
+      },
+    });
+    if (cc.status >= 200 && cc.status <= 299) {
+      let data = cc.data.content;
+
+      clearComponentState();
+
+      props.idChanged(data.id ? data.id : "");
+      props.lastnameChanged(
+        data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
+      );
+      props.firstnameChanged(
+        data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
+      );
+      props.addressChanged(data.address ? data.address : "");
+      props.phoneChanged(data.tel ? data.tel : "");
+      props.genderChanged(data.gender ? data.gender : "");
+      props.languageChanged(
+        data.language.libelle ? data.language.libelle : ""
+      );
+      props.dossierimfChanged(data.folderCode ? data.folderCode : "");
+      props.emailChanged(data.email ? data.email : "");
+      props.codeChanged(data.code ? data.code : "");
+      props.codeClientChanged(data.codeClient ? data.codeClient : "");
+      props.recordedAtChanged(
+        data.receiptDateTime ? data.receiptDateTime : ""
+      );
+      props.collectChanged(
+        data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
+      );
+      props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
+      props.underSubjectChanged(
+        data.objet.categorie.libelle ? data.objet.categorie.libelle : ""
+      );
+      props.productChanged(
+        data.product.libelle ? data.product.libelle : ""
+      );
+      props.unitChanged(
+        data.servicePoint.libelle ? data.servicePoint.libelle : ""
+      );
+      props.contentChanged(data.content ? data.content : "");
+      props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
+      props.solutionIdChanged(
+        data.solutionDtos[0] !== undefined ? data.solutionDtos[0].id : ""
+      );
+      props.createdByChanged(
+        data.collector.firstAndLastName
+          ? data.collector.firstAndLastName
+          : ""
+      );
+      props.commentChanged(data.comment ? data.comment : "");
+      props.statusChanged(data.status ? data.status : "");
+      props.selectedItemChanged(data);
+      setCurrentData(data);
+
+      getFillesApi(data.id, props);
+      getClaimAudioApi(data.id, props);
+    }
+  };
+
   // Rafraîchissement en direct quand un client répond au sondage de satisfaction WhatsApp
   useSSE({
     survey_response: () => {
       if (props.match.params.code === "all") {
         listeByStatut(props, "TREAT").then(() => {}).catch(() => {});
         loadNeedingComment();
+      } else {
+        // Le pilote est sur la page détail de CETTE réclamation : dès que le client
+        // répond (mesure + commentaire), on le redirige vers la liste plutôt que de
+        // recharger le détail sur place.
+        loadNeedingComment();
+        sessionStorage.removeItem('gpr_mes_code');
+        history.push("/reclamations/mesure/all");
       }
     },
   });
@@ -365,93 +442,8 @@ const MesurerReclamation = (props) => {
 
   useEffect(() => {
     const urlCode = props.match?.params?.code;
-    if (!urlCode || urlCode === "all") {
-      const storedCode = sessionStorage.getItem('gpr_mes_code');
-      if (storedCode) {
-        history.replace('/reclamations/mesure/' + storedCode);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const urlCode = props.match?.params?.code;
     const code = (urlCode && urlCode !== "all") ? urlCode : sessionStorage.getItem('gpr_mes_code');
-    if (code) {
-
-      async function details() {
-        let cc = await axios({
-          method: "get",
-          url: HOST + "api/v1/claim/" + code + "/details",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + loadItemFromSessionStorage("token"),
-          },
-        });
-        if (cc.status >= 200 && cc.status <= 299) {
-          // await listeTreat(props);
-          let data = cc.data.content;
-          // console.log("tmp", data);
-
-          clearComponentState();
-
-          props.idChanged(data.id ? data.id : "");
-          props.lastnameChanged(
-            data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
-          );
-          props.firstnameChanged(
-            data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
-          );
-          props.addressChanged(data.address ? data.address : "");
-          props.phoneChanged(data.tel ? data.tel : "");
-          props.genderChanged(data.gender ? data.gender : "");
-          props.languageChanged(
-            data.language.libelle ? data.language.libelle : ""
-          );
-          props.dossierimfChanged(data.folderCode ? data.folderCode : "");
-          props.emailChanged(data.email ? data.email : "");
-          props.codeChanged(data.code ? data.code : "");
-          props.codeClientChanged(data.codeClient ? data.codeClient : "");
-          props.recordedAtChanged(
-            data.receiptDateTime ? data.receiptDateTime : ""
-          );
-          props.collectChanged(
-            data.collectionChannel.libelle ? data.collectionChannel.libelle : ""
-          );
-          props.subjectChanged(data.objet.libelle ? data.objet.libelle : "");
-          props.underSubjectChanged(
-            data.objet.categorie.libelle ? data.objet.categorie.libelle : ""
-          );
-          props.productChanged(
-            data.product.libelle ? data.product.libelle : ""
-          );
-          props.unitChanged(
-            data.servicePoint.libelle ? data.servicePoint.libelle : ""
-          );
-          props.contentChanged(data.content ? data.content : "");
-          props.solutionChanged(data.solutionDtos ? data.solutionDtos : "");
-          props.solutionIdChanged(
-            data.solutionDtos[0] !== undefined ? data.solutionDtos[0].id : ""
-          );
-          props.createdByChanged(
-            data.collector.firstAndLastName
-              ? data.collector.firstAndLastName
-              : ""
-          );
-          props.commentChanged(data.comment ? data.comment : "");
-          props.statusChanged(data.status ? data.status : "");
-          props.selectedItemChanged(data);
-          setCurrentData(data);
-
-          getFillesApi(data.id, props);
-          getClaimAudioApi(data.id, props);
-
-          handleClickOpen();
-        }
-      }
-
-      details();
-    }
+    if (code) loadClaimDetails(code);
   }, []);
 
   useEffect(() => {
@@ -1723,6 +1715,53 @@ const MesurerReclamation = (props) => {
                 const statusCfg = STATUS_CONFIG[props.status] || { label: props.status || "-", bg: "#f1f5f9", color: "#64748b", border: "#e2e8f0" };
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    {/* ── Alerte : mesure WhatsApp sans commentaire, attire l'attention du pilote ── */}
+                    {(() => {
+                      const survey = needingCommentData.find(
+                        (r) => String(r.claim_id) === String(props.id)
+                      );
+                      if (!survey) return null;
+                      const satisfLabel =
+                        survey.satisfaction === "UNSATISFIED"
+                          ? { text: "😕 Non Satisfait", color: "#C62828", bg: "#FFEBEE" }
+                          : survey.satisfaction === "PARTIAL"
+                          ? { text: "😐 Partiellement Satisfait", color: "#E65100", bg: "#FFF3E0" }
+                          : { text: "😊 Satisfait", color: "#2E7D32", bg: "#E8F5E9" };
+                      return (
+                        <div
+                          style={{
+                            padding: "12px 16px",
+                            background: "#FFF8E1",
+                            border: "1.5px solid #FFB300",
+                            borderRadius: 8,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 8,
+                          }}
+                        >
+                          <div style={{ fontWeight: 700, color: "#E65100", fontSize: 13 }}>
+                            ⚠️ Le client a mesuré la satisfaction via WhatsApp mais n'a pas laissé de
+                            commentaire.
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 12, color: "#555" }}>Niveau de satisfaction :</span>
+                            <span
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: satisfLabel.color,
+                                background: satisfLabel.bg,
+                                borderRadius: 6,
+                                padding: "2px 10px",
+                              }}
+                            >
+                              {satisfLabel.text}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {/* ── Solution / Réponse ── */}
                     <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
                       <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
@@ -1784,7 +1823,21 @@ const MesurerReclamation = (props) => {
                               {props.phone}
                             </button>
                           )}
+                          {props.phone && props.solutionId && (
+                            <button onClick={() => setShowSolutionWaModal(true)} style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 16px", borderRadius: 8, border: "1px solid #25d366", background: "#fff", cursor: "pointer", fontSize: 13, color: "#25d366", fontWeight: 500 }}>
+                              <WhatsAppIcon style={{ fontSize: 16 }} />
+                              WhatsApp
+                            </button>
+                          )}
                         </div>
+                        <SendSolutionWhatsappDialog
+                          open={showSolutionWaModal}
+                          onClose={() => setShowSolutionWaModal(false)}
+                          phone={props.phone}
+                          claimId={props.id}
+                          solutionId={props.solutionId}
+                          solutionText={props.solution?.[0]?.content}
+                        />
                       </div>
                     )}
 

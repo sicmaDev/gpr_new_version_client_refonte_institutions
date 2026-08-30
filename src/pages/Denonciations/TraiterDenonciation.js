@@ -1290,7 +1290,12 @@ const TraiterDenonciation = (props) => {
                           >
                             <span className="hero">
                               Client {degre} : mesurée
-                              {solution.satisfactionMeasureDto.measurer
+                              {solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp]") ||
+                              solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp-Audio]")
+                                ? (solution.satisfactionMeasureDto.commentaire?.startsWith("[WhatsApp-Audio]")
+                                    ? " via audio WhatsApp 🎙 "
+                                    : " depuis WhatsApp ")
+                                : solution.satisfactionMeasureDto.measurer
                                 ? ` par ${solution.satisfactionMeasureDto.measurer.firstAndLastName}`
                                 : " depuis le site web "}
                               le{" "}

@@ -17,6 +17,8 @@ import {
  *   anonymat: boolean,
  *   maxDelai: number,
  *   onSuccess: (e: Event) => void,
+ *   onBeforeSolve?: (claim: object, e: Event) => boolean,
+ *   onBeforeReSolve?: (claim: object, e: Event) => boolean,
  *   apis?: {
  *     affectApi?: Function,
  *     treatApi?: Function,
@@ -28,6 +30,10 @@ import {
  *
  * `onSuccess` is called after a successful API call (replaces handleCancel + handleClose).
  * `apis` defaults to Réclamations APIs if omitted.
+ * `onBeforeSolve`/`onBeforeReSolve` (optionnels) sont appelés juste avant l'appel API dans
+ * handleSolve/handleReSolve respectivement, avec le claim déjà construit et l'event ; s'ils
+ * retournent true, l'appel API par défaut est sauté (le consommateur prend la main — ex :
+ * gate WhatsApp qui traite et envoie lui-même).
  */
 const useTreatmentHandlers = ({
   props,
@@ -35,6 +41,8 @@ const useTreatmentHandlers = ({
   anonymat,
   maxDelai,
   onSuccess,
+  onBeforeSolve,
+  onBeforeReSolve,
   apis = {},
 }) => {
   const affectApi   = apis.affectApi   ?? affectClaimApi;
@@ -175,6 +183,10 @@ const useTreatmentHandlers = ({
         existingId: props.solutionExistant,
         isExisting: props.solutionExistant !== "",
       };
+      if (onBeforeSolve && onBeforeSolve(claim, e)) {
+        props.claimHandleErrors(errors);
+        return;
+      }
       props.etat2Changed(true);
       treatApi(claim, props)
         .then(() => onSuccess(e))
@@ -197,6 +209,10 @@ const useTreatmentHandlers = ({
         existingId: props.solutionExistant,
         isExisting: props.solutionExistant !== "",
       };
+      if (onBeforeReSolve && onBeforeReSolve(claim, e)) {
+        props.claimHandleErrors(errors);
+        return;
+      }
       props.etat2Changed(true);
       treatApi(claim, props)
         .then(() => onSuccess(e))

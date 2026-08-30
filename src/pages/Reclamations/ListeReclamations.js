@@ -26,6 +26,7 @@ import WarningIcon from "@mui/icons-material/Warning";
 import DeleteIcon from "@mui/icons-material/Delete";
 import TextField from "@mui/material/TextField";
 import { KTApp } from "../../Utils/blockui";
+import { modalify } from "../../Utils/modal";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
 import {
   addressChanged,
