@@ -14,9 +14,20 @@ import {
   reportTemplateApi,
 } from "../../apis/Rapports/GlobalsApi";
 import { notify } from "../../Utils/alert";
+import FiltreRapportForm from "./FiltreRapportForm";
 
 const ReportTemplate = (props) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Brouillon du filtre associé au template en cours de création/édition.
+  // Réinitialisé à l'ouverture du formulaire : vide pour un nouveau template,
+  // pré-rempli avec le filtre déjà enregistré pour une édition.
+  const [filtreDraft, setFiltreDraft] = useState({});
+
+  useEffect(() => {
+    if (props.tmpState.showForm) {
+      setFiltreDraft(props.tmpState.showCreateForm ? {} : (props.tmpState.current_valeurs?.filtres ?? {}));
+    }
+  }, [props.tmpState.showForm, props.tmpState.showCreateForm]);
 
   const closeForm = () => {
     setConfirmDelete(false);
@@ -65,7 +76,7 @@ const ReportTemplate = (props) => {
     createOrUpdateTemplateApi({
       ...props.tmpState.form,
       id: isCreate ? null : props.tmpState.current_id,
-      valeurs: props.tmpState.current_valeurs,
+      valeurs: { ...props.tmpState.current_valeurs, filtres: filtreDraft },
     })
       .then(() => getTemplates())
       .catch(() => {});
@@ -95,6 +106,17 @@ const ReportTemplate = (props) => {
   const isEditable = props.tmpState.current_id !== 0;
   const isCreate = props.tmpState.showCreateForm;
   const showForm = props.tmpState.showForm;
+
+  // Nombre de catégories de filtre effectivement renseignées sur un template,
+  // pour afficher un court résumé dans la liste de sélection.
+  const countActiveFilters = (filtres) => {
+    if (!filtres) return 0;
+    const keys = ["year", "plainteType", "objet", "etatState", "product", "recoredBy", "unit", "startDate", "endDate"];
+    return keys.filter((k) => {
+      const v = filtres[k];
+      return Array.isArray(v) ? v.length > 0 : !!v;
+    }).length;
+  };
 
   /* ── Mode édition ── */
   if (showForm) {
@@ -230,6 +252,17 @@ const ReportTemplate = (props) => {
             </button>
           </div>
         </div>
+
+        <div style={{
+          background: "#fff", borderRadius: 16,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
+          padding: "14px 20px", marginTop: 10,
+        }}>
+          <details open>
+            <summary className="text-details">Filtre du template</summary>
+            <FiltreRapportForm value={filtreDraft} onChange={setFiltreDraft} />
+          </details>
+        </div>
       </div>
     );
   }
@@ -259,11 +292,29 @@ const ReportTemplate = (props) => {
             "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#CBD5E1" },
           }}
         >
-          {props.tmpState.items.map((item, i) => (
-            <MenuItem key={i} value={item.id} sx={{ fontSize: 13 }}>
-              {item.title}
-            </MenuItem>
-          ))}
+          {props.tmpState.items.map((item, i) => {
+            const filterCount = countActiveFilters(item.valeurs?.filtres);
+            return (
+              <MenuItem key={i} value={item.id} sx={{ fontSize: 13, display: "block" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span>{item.title}</span>
+                  {item.default && (
+                    <span style={{
+                      fontSize: 11, color: "#fff", backgroundColor: "#1976d2",
+                      borderRadius: 10, padding: "1px 8px",
+                    }}>
+                      Par défaut
+                    </span>
+                  )}
+                </div>
+                {filterCount > 0 && (
+                  <div style={{ fontSize: 11, color: "#777" }}>
+                    {filterCount} catégorie(s) de filtre appliquée(s)
+                  </div>
+                )}
+              </MenuItem>
+            );
+          })}
         </Select>
       </div>
 

@@ -68,7 +68,9 @@ import {
   codeClientChanged,
   emailChanged,
   transmittedByChanged,
+  transmissionCommentChanged,
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
+import TransmissionHistory from "../../components/TransmissionHistory";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -399,6 +401,7 @@ const TraiterReclamation = (props) => {
     isTransmittedToUser,
     isAuthor,
     isTransmitter,
+    hasLostHandToTransmission,
     isAffecter,
     isAffectedUser,
     isUserOpenSession,
@@ -415,6 +418,7 @@ const TraiterReclamation = (props) => {
   const [open, setOpen] = React.useState(false);
   const [interne, setInterne] = React.useState(true);
   const [anonymat, setAnonymat] = useState(false);
+  const [transmitComment, setTransmitComment] = useState("");
   const [reafect, setReacfect] = useState(false);
   const [showAudioPlayer, setAudioPlayer] = useState("");
   const [currentAudio, setCurrentAudio] = useState("");
@@ -1676,6 +1680,11 @@ const TraiterReclamation = (props) => {
         ? "" + data.transmittedBy.firstAndLastName + ""
         : ""
     );
+    props.transmissionCommentChanged(
+      data.transmissionComment !== null && data.transmissionComment !== undefined
+        ? data.transmissionComment
+        : ""
+    );
     // console.log("tr",data)
     props.sessionChanged(data.session !== null ? data.session : "");
     props.handledByChanged(
@@ -2159,11 +2168,22 @@ const TraiterReclamation = (props) => {
                 <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>
                   {props.transmittedBy ? props.transmittedBy : "-"}
                 </strong>.
+                {props.transmissionComment ? (
+                  <>
+                    <br />
+                    <em>Commentaire de transmission : {props.transmissionComment}</em>
+                  </>
+                ) : (
+                  ""
+                )}
               </span>
 
             </div>
           </div>
-
+          <details>
+            <summary className="text-details">Historique des transmissions</summary>
+            <TransmissionHistory claimId={props.id} />
+          </details>
         </>
       ) : "";
 
@@ -2185,11 +2205,31 @@ const TraiterReclamation = (props) => {
                 }}
               >
                 Vous avez transmis cette réclamation à <strong style={{ color: "#1976d2", marginLeft: "0.25em" }}>{props.transmittedTo ? props.transmittedTo : "-"}</strong>{" "}. Vous n'avez plus la main sur elle.
+                {props.transmissionComment ? (
+                  <>
+                    <br />
+                    <em>Commentaire de transmission : {props.transmissionComment}</em>
+                  </>
+                ) : (
+                  ""
+                )}
               </div>
             </div>
+            <details>
+              <summary className="text-details">Historique des transmissions</summary>
+              <TransmissionHistory claimId={props.id} />
+            </details>
           </>
         );
-      } else if (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true)) {
+      } else if (
+        hbt.includes("H6") ||
+        addR === "PILOTE" ||
+        (user.ra === true && !hasLostHandToTransmission)
+      ) {
+        // Seul le destinataire courant de la transmission (transmittedTo) a la
+        // main, quel que soit le nombre de sauts (A→B→C→...) — se baser sur
+        // transmittedBy ne protège que le tout dernier expéditeur, pas toute
+        // la chaîne, puisque ces deux champs sont écrasés à chaque transmission.
         affectForm = (
           <>
             {personTransmit}
@@ -2274,12 +2314,26 @@ const TraiterReclamation = (props) => {
         );
       }
 
+      // Qui a le droit de voir le formulaire de résolution (et donc les
+      // boutons "Résoudre"/"Traiter") : il faut le rôle H2/H3/H4, et être
+      // soit le créateur (réclamation non transmise), soit le destinataire
+      // d'une transmission avec le rôle MOLDUE, soit un RA sur une
+      // réclamation non transmise.
+      const hasTreatmentRole =
+        hbt.includes("H2") || hbt.includes("H3") || hbt.includes("H4");
+      const isCreatorNotTransmitted =
+        props.created_by === user.firstAndLastName &&
+        props.transmitted === "false";
+      const isTransmittedToMoldue =
+        props.transmittedTo === user.firstAndLastName &&
+        props.transmitted === "true" &&
+        addR === "MOLDUE";
+      const isRaNotTransmitted =
+        user.ra === true && props.transmitted === "false";
+
       if (
-        (hbt.includes("H2") || hbt.includes("H3") || hbt.includes("H4")) &&
-        ((props.created_by === user.firstAndLastName &&
-          props.transmitted === "false") ||
-          (props.transmittedTo === user.firstAndLastName &&
-            props.transmitted === "true"))
+        hasTreatmentRole &&
+        (isCreatorNotTransmitted || isTransmittedToMoldue || isRaNotTransmitted)
       ) {
         treatForm = (
           <>
@@ -2411,7 +2465,26 @@ const TraiterReclamation = (props) => {
             )}
           </>
         );
-      } else if (props.created_by !== user.firstAndLastName) {
+      } else if (!hasTreatmentRole) {
+        treatForm = (
+          <div className="card-alert card orange lighten-5">
+            <div className="card-content orange-text" style={{ textAlign: "center" }}>
+              <ul>Votre habilitation actuelle ne vous permet pas de traiter cette réclamation.</ul>
+            </div>
+          </div>
+        );
+      } else if (
+        props.transmitted === "true" &&
+        props.transmittedTo === user.firstAndLastName
+      ) {
+        treatForm = (
+          <div className="card-alert card orange lighten-5">
+            <div className="card-content orange-text" style={{ textAlign: "center" }}>
+              <ul>Cette réclamation vous a été transmise, mais votre rôle actuel ne vous permet pas de la traiter.</ul>
+            </div>
+          </div>
+        );
+      } else if (props.created_by !== user.firstAndLastName && user.ra !== true) {
         treatForm = (
           <div className="card-alert card orange lighten-5">
             <div className="card-content orange-text" style={{ textAlign: "center" }}>
@@ -4780,8 +4853,13 @@ const TraiterReclamation = (props) => {
             onConfirmClose={handleConfirmationClose}
             onSubmitConfirmation={(e) => { e.preventDefault(); handleSubmitConfirmation(e); }}
             loadingConversion={loadingConversion}
-            onConfirmTransmettre={handleTransmission}
+            onConfirmTransmettre={(e) => {
+              handleTransmission(e, transmitComment);
+              setTransmitComment("");
+            }}
             loadingTransmettre={props.etat3}
+            transmitComment={transmitComment}
+            onTransmitCommentChange={setTransmitComment}
             motif={props.motif}
             onMotifChange={(val) => props.motifChanged(val)}
             onApprove={handleApprove}
@@ -4852,6 +4930,7 @@ const mapStateToProps = (state) => {
     transmitted: state.claim_handle.transmitted,
     transmittedTo: state.claim_handle.transmittedTo,
     transmittedBy: state.claim_handle.transmittedBy,
+    transmissionComment: state.claim_handle.transmissionComment,
     session: state.claim_handle.session,
     solutionExistant: state.claim_handle.solutionExistant,
     reaffect: state.claim_handle.reaffect,
@@ -5022,6 +5101,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     transmittedByChanged: (transmittedBy) => {
       dispatch(transmittedByChanged(transmittedBy));
+    },
+    transmissionCommentChanged: (transmissionComment) => {
+      dispatch(transmissionCommentChanged(transmissionComment));
     },
     sessionChanged: (session) => {
       dispatch(sessionChanged(session));

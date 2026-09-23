@@ -41,6 +41,7 @@ const CHECK_PHONE_API = HOST + "api/v1/claim/checkPhone/%s"
 const CHECK_PHONE_CROSS_AGENCY_API = HOST + "api/v1/claim/checkPhoneCrossAgency/%s"
 const CLAIM_EVENTS_API = HOST + "api/v1/claim-events/"
 const CLAIM_DRAFT_API = HOST + "api/v1/claim/%s/draft"
+const TRANSMISSION_HISTORY_API = HOST + "api/v1/claim/%s/transmissions"
 
 export const saveDraftApi = (claimId, data) => {
     return axios.put(CLAIM_DRAFT_API.replace('%s', claimId), data, {
@@ -568,6 +569,23 @@ export const transmissionClaimApi = async (data, props) => {
         });
 }
 
+export const getTransmissionHistoryApi = async (claimId) => {
+    const config = {
+        method: 'get',
+        url: TRANSMISSION_HISTORY_API.replace("%s", claimId),
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        },
+    };
+    try {
+        const response = await axios(config);
+        return response.data?.content ?? [];
+    } catch (error) {
+        return [];
+    }
+}
 
 export const startSession = async (data, props) => {
     // console.log("reponsesessionadd2",props)

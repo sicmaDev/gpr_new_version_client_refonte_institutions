@@ -24,6 +24,7 @@
     "chartjs-plugin-labels": "^1.1.0",
     "chartjs-to-image": "^1.2.2",
     "chroma-js": "^2.4.2",
+    "dexie": "^4.4.6",
     "event-emitter": "^0.3.5",
     "firebase": "^7.17.2",
     "fs": "^0.0.1-security",

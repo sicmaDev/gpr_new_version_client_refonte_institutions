@@ -1,11 +1,12 @@
 import React from "react";
-import { Dialog, DialogContent } from "@mui/material";
+import { Dialog, DialogContent, TextField } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import SendIcon from "@mui/icons-material/Send";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 
-const TransmettreModal = ({ open, onClose, onConfirm, loading, description }) => {
+const TransmettreModal = ({ open, onClose, onConfirm, loading, description, comment = "", onCommentChange }) => {
+  const isCommentEmpty = comment.trim() === "";
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
       PaperProps={{ style: { borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" } }}
@@ -38,9 +39,22 @@ const TransmettreModal = ({ open, onClose, onConfirm, loading, description }) =>
           </p>
         </div>
 
-        <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 20, marginTop: 0 }}>
+        <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12, marginTop: 0 }}>
           {description ? `Confirmez-vous cette transmission ?` : "Confirmez-vous la transmission de cette réclamation au pilote ?"}
         </p>
+
+        <TextField
+          fullWidth
+          multiline
+          minRows={3}
+          required
+          size="small"
+          label="Commentaire"
+          value={comment}
+          onChange={(e) => onCommentChange?.(e.target.value)}
+          placeholder="Expliquez la raison de la transmission..."
+          sx={{ mb: 3, background: "white", borderRadius: 1 }}
+        />
 
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid #e5e7eb", background: "white", fontSize: 13.5, fontWeight: 600, color: "#6b7280", cursor: "pointer" }}>
@@ -49,6 +63,7 @@ const TransmettreModal = ({ open, onClose, onConfirm, loading, description }) =>
           <LoadingButton
             onClick={onConfirm}
             loading={loading}
+            disabled={isCommentEmpty}
             loadingPosition="end"
             endIcon={<SendIcon />}
             variant="contained"

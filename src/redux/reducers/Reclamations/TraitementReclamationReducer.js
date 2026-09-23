@@ -49,6 +49,7 @@ const initialState = {
     transmitted: "",
     transmittedTo: "",
     transmittedBy: "",
+    transmissionComment: "",
     session: [],
     solutionExistant: "",
     email: "",
@@ -320,6 +321,12 @@ const TraitementReclamationReducer = (state = initialState, action) => {
             return {
                 ...state,
                 transmittedBy: action.payload,
+            };
+
+        case 'CLAIM_HANDLE_TRANSMISSION_COMMENT_CHANGED':
+            return {
+                ...state,
+                transmissionComment: action.payload,
             };
 
         case 'CLAIM_HANDLE_SESSION_CHANGED':

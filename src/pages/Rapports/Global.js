@@ -92,6 +92,8 @@ import {
   DialogActions,
   DialogContentText,
   Tooltip,
+  Popover,
+  Typography,
 } from "@mui/material";
 import { Chat, NoBackpack } from "@mui/icons-material";
 import ChartDataLabels from "chartjs-plugin-datalabels";
@@ -347,23 +349,61 @@ const Global = (props) => {
   }
   const userAuth = loadItemFromSessionStorage("app-user");
 
-  // Sauf H5/PILOTE/DE (qui voient tout), tout titulaire de H11 (RA ou non) voit
-  // par défaut son agence + celles qui lui sont rattachées (si son agence est
-  // une direction) ; le formulaire de filtre reste actif pour élargir ce périmètre.
+  // Sauf H6/PILOTE/DE (qui voient tout), tout titulaire de H11 (RA ou non) voit
+  // par défaut son agence + TOUTES celles qui lui sont rattachées, fils comme
+  // petits-fils (parcours récursif, comme côté serveur) ; le formulaire de
+  // filtre reste actif pour élargir ce périmètre. (H5 ne concerne que l'écran
+  // Mesure de satisfaction, pas le Rapport Global.)
   const userHbt = userAuth?.posteDto?.habilitations
     ? userAuth.posteDto.habilitations.split(",")
     : [];
   const userAddR = userAuth?.additionalRole;
   const isElevatedUser =
-    userHbt.includes("H5") || userAddR === "PILOTE" || userAddR === "DE";
+    userHbt.includes("H6") || userAddR === "PILOTE" || userAddR === "DE";
+
+  // Remonte toute la chaîne de rattachement sous une agence donnée (fils,
+  // petits-fils, ...) à partir de la liste complète des points de service
+  // (chacun porte son direction_id) déjà en cache côté client.
+  const getAllDescendantServicePointIds = (rootId, allServicePoints) => {
+    const ids = [];
+    const visited = new Set([rootId]);
+    const toVisit = [rootId];
+    while (toVisit.length > 0) {
+      const currentId = toVisit.pop();
+      allServicePoints
+        .filter((sp) => sp.direction_id === currentId)
+        .forEach((sp) => {
+          if (!visited.has(sp.id)) {
+            visited.add(sp.id);
+            ids.push(sp.id);
+            toVisit.push(sp.id);
+          }
+        });
+    }
+    return ids;
+  };
 
   let defaultRaServicePoints = [];
   if (!isElevatedUser && userAuth?.servicePointDto?.id && ps !== undefined) {
     const myServicePointId = userAuth.servicePointDto.id;
-    defaultRaServicePoints = ps
-      .filter((sp) => sp.direction_id === myServicePointId)
-      .map((sp) => sp.id);
+    // Même distinction que côté serveur (ReportController.computeScopedServicePointIds) :
+    // un RA voit son agence + toutes celles rattachées, un agent simple (H11 sans RA)
+    // ne voit que sa propre agence.
+    defaultRaServicePoints = userAuth?.ra === true
+      ? getAllDescendantServicePointIds(myServicePointId, ps)
+      : [];
     defaultRaServicePoints.push(myServicePointId);
+  }
+  // Périmètre effectif pour restreindre les champs du formulaire (Points de
+  // service, Utilisateur) : le calcul ci-dessus, ou "pas de restriction" pour
+  // un utilisateur élevé.
+  const isScopeRestricted = !isElevatedUser && defaultRaServicePoints.length > 0;
+  if (isScopeRestricted) {
+    optionsUsers = optionsUsers.filter((o) => {
+      const u = users.find((one) => one.id === o.value);
+      return defaultRaServicePoints.includes(u?.servicePointDto?.id);
+    });
+    optionsUnits = optionsUnits.filter((o) => defaultRaServicePoints.includes(o.value));
   }
 
   const pageTopRef = useRef(null);
@@ -414,6 +454,10 @@ const Global = (props) => {
 
   const [dataExcel, setDataExcel] = useState(null);
   const [appliedFiltresDisplay, setAppliedFiltresDisplay] = useState([]);
+  // Ancre de la popover affichant le détail complet d'une catégorie de filtre
+  // (ex: la liste des 9 points de service) quand on clique sur sa chip.
+  const [filterDetailAnchor, setFilterDetailAnchor] = useState(null);
+  const [filterDetailContent, setFilterDetailContent] = useState(null);
   useEffect(() => {
     if (reload) {
       setReload(false);
@@ -3667,15 +3711,51 @@ const Global = (props) => {
                   Aucun filtre, toutes les données
                 </span>
               ) : (
-                appliedFiltresDisplay.map((f, index) => (
-                  <span
-                    key={index}
-                    style={{ fontSize: 11.5, fontWeight: 600, color: "#0F4C81", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 20, padding: "3px 12px" }}
-                  >
-                    {f.label} : {f.value}
-                  </span>
-                ))
+                appliedFiltresDisplay.map((f, index) => {
+                  const values = (f.value ?? "").split(", ").filter((v) => v !== "");
+                  const label =
+                    values.length > 1
+                      ? `${f.label} (${values.length})`
+                      : `${f.label} : ${f.value}`;
+                  return (
+                    <span
+                      key={index}
+                      onClick={
+                        values.length > 1
+                          ? (e) => {
+                              setFilterDetailAnchor(e.currentTarget);
+                              setFilterDetailContent({ label: f.label, values });
+                            }
+                          : undefined
+                      }
+                      style={{
+                        fontSize: 11.5, fontWeight: 600, color: "#0F4C81", background: "#EFF6FF",
+                        border: "1px solid #BFDBFE", borderRadius: 20, padding: "3px 12px",
+                        cursor: values.length > 1 ? "pointer" : "default",
+                      }}
+                    >
+                      {label}
+                    </span>
+                  );
+                })
               )}
+              <Popover
+                open={Boolean(filterDetailAnchor)}
+                anchorEl={filterDetailAnchor}
+                onClose={() => setFilterDetailAnchor(null)}
+                anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+              >
+                <div style={{ padding: "10px 14px", maxWidth: "320px" }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                    {filterDetailContent?.label}
+                  </Typography>
+                  {filterDetailContent?.values.map((v, i) => (
+                    <div key={i} style={{ fontSize: "13px", padding: "2px 0" }}>
+                      {v}
+                    </div>
+                  ))}
+                </div>
+              </Popover>
             </div>
           </div>
           {/* { <div

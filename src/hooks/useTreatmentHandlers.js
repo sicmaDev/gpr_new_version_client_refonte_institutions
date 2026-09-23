@@ -251,9 +251,9 @@ const useTreatmentHandlers = ({
     props.claimHandleErrors(errors);
   };
 
-  const handleTransmission = (e) => {
+  const handleTransmission = (e, comment = "") => {
     e.preventDefault();
-    const info = { claimId: props.id };
+    const info = { claimId: props.id, comment };
     props.etat3Changed(true);
     transmitApi(info, props).then(() => onSuccess(e));
   };

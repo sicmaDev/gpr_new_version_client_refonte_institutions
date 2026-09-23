@@ -139,6 +139,7 @@ const TraitementShell = ({
   confirmOpen, convertionType, onSelectType, onConfirmClose,
   onSubmitConfirmation, loadingConversion,
   onConfirmTransmettre, loadingTransmettre,
+  transmitComment, onTransmitCommentChange,
   motif, onMotifChange, onApprove, onDisapprove,
   loadingApprove, loadingDisapprove,
   modalErrors,
@@ -611,6 +612,8 @@ const TraitementShell = ({
         onConfirm={(e) => { setOpenModal(null); onConfirmTransmettre?.(e); }}
         loading={loadingTransmettre}
         description={transmettreDesc}
+        comment={transmitComment}
+        onCommentChange={onTransmitCommentChange}
       />
 
       <ApprouverModal
