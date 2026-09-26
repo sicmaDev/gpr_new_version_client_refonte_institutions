@@ -23,9 +23,10 @@ import closeImg from "../../assets/images/close.svg";
 import successNew from "../../assets/images/success2.jpg";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { NavLink } from "react-router-dom";
-import { Box, Button, Modal, Typography } from "@mui/material";
+import { Avatar, Box, Button, Modal, Typography } from "@mui/material";
 import { notify } from "../../Utils/alert";
 import BlockButton from "../../components/shared/BlockButton";
+import offlineAvatar from "../../assets/images/avatar/2.svg";
 
 // ── SVG Icons ────────────────────────────────────────────────────────────
 const SvgEmail = ({ size = 20, color = "#64748b" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>;
@@ -92,9 +93,12 @@ const Login = (props) => {
   const [rememberMe, setRememberMe] = useState(false);
 
   const [online, setOnline] = React.useState(true);
+  const [offlineUser, setOfflineUser] = React.useState(null);
 
   const handleOnline = () => {
     setOnline(true);
+    setOfflineUser(null);
+    props.emailChanged("");
     notify("Mode online activé ", "success");
   };
 
@@ -114,6 +118,12 @@ const Login = (props) => {
       } else {
         notify("Mode offline activé ", "success");
         setOnline(false);
+        setOfflineUser(user);
+        // Un seul utilisateur est utilisable hors-ligne sur cet appareil (le
+        // dernier connecté en ligne) : autant pré-remplir l'email, ça évite
+        // une erreur de frappe qui bloquerait la connexion sans raison
+        // apparente (LoginApiOffline ne compare que l'email).
+        props.emailChanged(user.email);
       }
     } else {
       notify(
@@ -341,30 +351,62 @@ const Login = (props) => {
                 Entrez vos identifiants pour accéder à la plateforme
               </p>
 
-              {/* Toggle Online / Offline */}
-              <div className="mb-6">
-                <div className="flex gap-2.5">
-                  <button
-                    type="button"
-                    className={`flex-1 py-2.5 sm:py-3 rounded-lg font-semibold text-sm border-0 cursor-pointer transition-colors ${online ? "" : "bg-[#eef2f7] text-[#475569]"}`}
-                    style={online ? { background: `linear-gradient(135deg, ${primaryDark}, ${primaryColor})`, color: heroText } : undefined}
-                    onClick={handleOnline}
-                  >
-                    Online
-                  </button>
-                  <button
-                    type="button"
-                    className={`flex-1 py-2.5 sm:py-3 rounded-lg font-semibold text-sm border-0 cursor-pointer transition-colors ${!online ? "" : "bg-[#eef2f7] text-[#475569]"}`}
-                    style={!online ? { background: `linear-gradient(135deg, ${primaryDark}, ${primaryColor})`, color: heroText } : undefined}
-                    onClick={handleControl}
-                  >
-                    Offline
-                  </button>
+              {/* Toggle Online / Offline — masqué une fois l'identité offline
+                  confirmée : "Ce n'est pas vous ?" (sur la carte profil) est
+                  alors le seul chemin de retour vers ce choix. */}
+              {(online || !offlineUser) && (
+                <div className="mb-6">
+                  <div className="flex gap-2.5">
+                    <button
+                      type="button"
+                      className={`flex-1 py-2.5 sm:py-3 rounded-lg font-semibold text-sm border-0 cursor-pointer transition-colors ${online ? "" : "bg-[#eef2f7] text-[#475569]"}`}
+                      style={online ? { background: `linear-gradient(135deg, ${primaryDark}, ${primaryColor})`, color: heroText } : undefined}
+                      onClick={handleOnline}
+                    >
+                      Online
+                    </button>
+                    <button
+                      type="button"
+                      className={`flex-1 py-2.5 sm:py-3 rounded-lg font-semibold text-sm border-0 cursor-pointer transition-colors ${!online ? "" : "bg-[#eef2f7] text-[#475569]"}`}
+                      style={!online ? { background: `linear-gradient(135deg, ${primaryDark}, ${primaryColor})`, color: heroText } : undefined}
+                      onClick={handleControl}
+                    >
+                      Offline
+                    </button>
+                  </div>
+                  <p className="text-[#64748b] text-[11.5px] mt-1.5 text-center">
+                    {online ? "Connexion avec accès internet" : "Connexion en réseau local / hors ligne"}
+                  </p>
                 </div>
-                <p className="text-[#64748b] text-[11.5px] mt-1.5 text-center">
-                  {online ? "Connexion avec accès internet" : "Connexion en réseau local / hors ligne"}
-                </p>
-              </div>
+              )}
+
+              {/* Profil de la dernière connexion, affiché en mode Offline */}
+              {!online && offlineUser && (
+                <div className="flex items-center gap-3.5 mb-6 p-4 rounded-xl" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                  <Avatar alt="Avatar" src={offlineAvatar} sx={{ width: 48, height: 48, flexShrink: 0 }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[#1a2b3c] font-bold text-[14.5px] leading-tight truncate">{offlineUser.firstAndLastName}</div>
+                    <br />
+                    <div className="text-[#8a9bb0] text-[12.5px] truncate mt-1">({offlineUser.email})</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full whitespace-nowrap"
+                      style={{ background: "#fef3c7", color: "#92400e" }}
+                    >
+                      Mode offline
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleOnline}
+                      className="text-[11.5px] font-semibold border-0 bg-transparent p-0 cursor-pointer hover:underline whitespace-nowrap"
+                      style={{ color: primaryColor }}
+                    >
+                      Ce n'est pas vous ?
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit}>
 
@@ -373,12 +415,17 @@ const Login = (props) => {
                   <label htmlFor="email" className="block text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.6px] mb-1.5">
                     Adresse électronique
                   </label>
-                  <div className="flex items-center gap-2.5 border-2 border-[#e2e8f0] bg-[#f8fafc] rounded-xl px-4 h-[56px] transition-all duration-200 focus-within:border-[#1E88E5] focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(30,136,229,0.1)]">
+                  <div
+                    className="flex items-center gap-2.5 border-2 border-[#e2e8f0] rounded-xl px-4 h-[56px] transition-all duration-200 focus-within:border-[#1E88E5] focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(30,136,229,0.1)]"
+                    style={{ background: !online && offlineUser ? "#eef2f7" : "#f8fafc" }}
+                  >
                     <SvgEmail />
                     <input
                       id="email" type="email"
                       className="validate border-0 outline-none flex-1 h-full text-sm text-[#1a2b3c] bg-transparent placeholder-[#94a3b8]"
                       placeholder="exemple@domaine.com"
+                      value={props.email || ""}
+                      readOnly={!online && !!offlineUser}
                       onChange={(e) => props.emailChanged(e.target.value)}
                     />
                   </div>
@@ -410,7 +457,8 @@ const Login = (props) => {
                   </small>
                 </div>
 
-                {/* Mot de passe oublié */}
+                {/* Mot de passe oublié — nécessite le serveur, sans objet en Offline */}
+                {online && (
                 <div className="flex justify-end mb-1 mt-3">
                   <NavLink
                     to="/forgot-password"
@@ -420,6 +468,7 @@ const Login = (props) => {
                     Mot de passe oublié ?
                   </NavLink>
                 </div>
+                )}
 
                 {/* Bouton Se connecter */}
                 <BlockButton disabled={props.etat} style={{ display: 'block' }}>

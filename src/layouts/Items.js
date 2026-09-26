@@ -19,6 +19,8 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import PublicIcon from '@mui/icons-material/Public';
 import StarBorder from '@mui/icons-material/StarBorder';
 import PieChartIcon from '@mui/icons-material/PieChart';
+import SyncIcon from '@mui/icons-material/Sync';
+import { countPendingOrFailed } from '../offline/syncQueue';
 import NotificationImportantIcon from '@mui/icons-material/NotificationImportant';
 import { WhatsApp, Forum } from '@mui/icons-material';
 import { getMessages } from '../whatgpr/api';
@@ -147,6 +149,20 @@ export const Items = (props) => {
     const handler = (e) => setSlaOverdue(e.detail?.overdue ?? 0);
     window.addEventListener("sla-update", handler);
     return () => window.removeEventListener("sla-update", handler);
+  }, []);
+
+  // ── Badge Synchronisation (éléments offline en attente/échec) ───────────
+  const [pendingSyncCount, setPendingSyncCount] = React.useState(0);
+  React.useEffect(() => {
+    let cancelled = false;
+    const refreshCount = () => {
+      countPendingOrFailed().then((count) => {
+        if (!cancelled) setPendingSyncCount(count);
+      });
+    };
+    refreshCount();
+    const interval = setInterval(refreshCount, 5000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
   // ── Collapse state ───────────────────────────────────────────────────────
@@ -847,6 +863,28 @@ export const Items = (props) => {
             </List>
           </Collapse>
         </>
+      )}
+
+      {/* Synchronisation — visible uniquement en mode Online (on ne peut de
+          toute façon rien synchroniser sans serveur joignable ; masqué en
+          Offline comme le reste des menus qui n'y ont pas leur place). */}
+      {mode === 1 && (
+      <NavLink to="/synchronisation" style={link}>
+        <ListItemButton sx={iSx('/synchronisation')} className="lib">
+          <ListItemIcon>{si(SyncIcon, isActive('/synchronisation'))}</ListItemIcon>
+          <ListItemText primary="Synchronisation" />
+          {pendingSyncCount > 0 && (
+            <span style={{
+              fontSize: 10, fontWeight: 800, color: '#fff',
+              background: '#DC2626', padding: '1px 7px',
+              borderRadius: 99, minWidth: 18, textAlign: 'center',
+              flexShrink: 0, lineHeight: 1.6,
+            }}>
+              {pendingSyncCount > 99 ? "99+" : pendingSyncCount}
+            </span>
+          )}
+        </ListItemButton>
+      </NavLink>
       )}
 
       {/* ══ AIDE ═════════════════════════════════════════════════════════════ */}

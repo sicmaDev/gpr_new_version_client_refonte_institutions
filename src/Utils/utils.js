@@ -23,6 +23,14 @@ export const loadItemFromLocalStorage = (field) => {
         return undefined
     }
 }
+// Lit un tableau stocké en localStorage (ex: "recs-TS"/"dens-TS"/"sugs-TS")
+// et garantit toujours un array, même si la clé est absente ou contient une
+// valeur corrompue/non-array (JSON valide mais pas un tableau) — sans ce
+// garde-fou, un .filter()/.map() en aval plante toute la page (écran blanc).
+export const loadArrayFromLocalStorage = (field) => {
+    const value = loadItemFromLocalStorage(field)
+    return Array.isArray(value) ? value : []
+}
 export const clearLocalstorage = () => {
     try {
         localStorage.clear()
@@ -110,6 +118,16 @@ export const fileToBase64Dto = (file, fallbackName = "fichier") => {
 export const filesToBase64Dtos = async (files, fallbackName = "fichier") => {
     if (!files || files.length === 0) return [];
     return Promise.all(Array.from(files).map((f) => fileToBase64Dto(f, fallbackName)));
+};
+
+// Inverse de fileToBase64Dto — reconstruit un vrai File à partir d'un DTO
+// {name, contentType, base64} stocké en IndexedDB, pour pouvoir le renvoyer
+// en multipart/form-data vers les endpoints /add classiques au moment de la
+// synchronisation (cf. Sync Manager, Phase 5).
+export const base64DtoToFile = async (dto) => {
+    const response = await fetch(dto.base64);
+    const blob = await response.blob();
+    return new File([blob], dto.name, { type: dto.contentType });
 };
 
 export const today = (items) => {

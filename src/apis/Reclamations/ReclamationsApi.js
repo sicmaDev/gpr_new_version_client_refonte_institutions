@@ -1,13 +1,13 @@
 ﻿import axios from "axios";
 import React, { useState } from "react";
-import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
+import { loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage, loadArrayFromLocalStorage } from "../../Utils/utils";
+import { saveDraftRecord, getDraftRecord, listDraftRecordsByStatus, listUnsyncedDraftRecords, generateOfflineCode, offlineTimestamp } from "../../offline/draftRecordsStore";
 import { notify } from "../../Utils/alert";
 import { HOST } from "../../Utils/globals";
-import { v4 as uuidv4 } from "uuid";
 
 //console.log("HOST CLAIM: " + HOST)
-const ADD_TEMP_CLAIM_API = HOST + "api/v1/claim/save_temp"
-const ADD_CLAIM_API = HOST + "api/v1/claim/add"
+export const ADD_TEMP_CLAIM_API = HOST + "api/v1/claim/save_temp"
+export const ADD_CLAIM_API = HOST + "api/v1/claim/add"
 const EXTRA_CLAIM_API = HOST + "api/v1/claim/add/extra"
 const AFFECT_CLAIM_API = HOST + "api/v1/claim/affectTreatment"
 const TREAT_CLAIM_API = HOST + "api/v1/claim/treatClaim"
@@ -63,6 +63,29 @@ export const getClaimEvents = (claimId) => {
     });
 }
 
+// Rafraîchit uniquement le cache "app-recsTS" utilisé par listeTousStatutsOffline
+// (pas de props/redux nécessaire) — appelé après chaque synchronisation
+// réussie (cf. syncManager.js) pour que le mode Offline suivant montre tout
+// de suite les données à jour (codeClient attribués, etc.) sans attendre que
+// l'utilisateur visite la page Liste en ligne.
+export const refreshOfflineSnapshot = async () => {
+    try {
+        const response = await axios({
+            method: 'get',
+            url: LIST_ALL_CLAIM_API,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+            },
+        });
+        saveItemToLocalStorage(response.data.content, 'app-recsTS');
+    } catch (error) {
+        // Rafraîchissement en arrière-plan : un échec ne doit pas remonter
+        // à l'utilisateur, l'ancien instantané reste utilisable.
+    }
+};
+
 export const listeTousStatuts = async (props) => {
 
     const config = {
@@ -75,12 +98,17 @@ export const listeTousStatuts = async (props) => {
         },
     };
     await axios(config)
-        .then(function (response) {
+        .then(async function (response) {
 
             // console.log("response.data.content",response.data.content)
-            props.itemsChanged(response.data.content)
+            // Fusionne avec les réclamations capturées localement (online ou
+            // offline) pas encore synchronisées, pour qu'elles soient visibles
+            // immédiatement sans attendre la prochaine synchro.
+            const localUnsynced = await listUnsyncedDraftRecords("claim", "TEMP_SAVED")
+            const merged = [...response.data.content, ...localUnsynced]
+            props.itemsChanged(merged)
             saveItemToLocalStorage(response.data.content, 'app-recsTS')
-            return response.data.content
+            return merged
         })
         .catch(function (error) {
             // console.log("errorstatutliste",error)
@@ -833,69 +861,38 @@ export const downloadAudioApi = async (data, filename) => {
 
 //offline
 export const listeByStatutOffline = async (props, state) => {
-    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (loadItemFromLocalStorage("recs-TS")) : [];
-    let recsTemp = recs.filter((e) => { return e.status == state })
-
-    // console.log(recsTemp)
+    const recsTemp = await listDraftRecordsByStatus("claim", state)
     props.itemsChanged(recsTemp)
-
     return recsTemp
-
 }
 
 export const listeTousStatutsOffline = async (props) => {
-    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (loadItemFromLocalStorage("recs-TS")) : [];
-    let recsGlobal = recs.filter((e) => { return e.status !== "TEMP_SAVED" })
-    recsGlobal.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-
+    // Dernier instantané serveur connu (rafraîchi à chaque listeTousStatuts en
+    // ligne) + brouillons locaux, pour que le mode Offline montre autant que
+    // possible la même chose que le mode Online, sans appel réseau.
+    const serverSnapshot = loadArrayFromLocalStorage("app-recsTS")
+    // Uniquement les brouillons PAS ENCORE synchronisés : une fois envoyée,
+    // la version locale (sans codeClient, ancienne) ne doit plus s'afficher
+    // à sa place — c'est l'instantané serveur, rafraîchi à la prochaine
+    // connexion en ligne, qui prend le relais avec les données à jour.
+    const localItems = await listUnsyncedDraftRecords("claim", "TEMP_SAVED")
+    const recsGlobal = [...serverSnapshot, ...localItems]
     props.itemsChanged(recsGlobal)
-    // console.log("recsGlobal",recs)
     return recsGlobal;
-
 }
 
 export const addTempClaimApiOffline = async (data, props) => {
-    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (loadItemFromLocalStorage("recs-TS")) : [];
-
-    //date
-    let datetmp = new Date();
-    let jour = (datetmp.getDate()) < 10 ? "0" + (datetmp.getDate()) : datetmp.getDate()
-    let mois = (datetmp.getMonth() + 1) < 10 ? "0" + (datetmp.getMonth() + 1) : datetmp.getMonth() + 1
-    let heures = (datetmp.getHours()) < 10 ? "0" + (datetmp.getHours()) : datetmp.getHours()
-    let minutes = (datetmp.getMinutes()) < 10 ? "0" + (datetmp.getMinutes()) : datetmp.getMinutes()
-    let secondes = (datetmp.getSeconds()) < 10 ? "0" + (datetmp.getSeconds()) : datetmp.getSeconds()
-    let created_at = datetmp.getFullYear() + "-" + mois + "-" + jour + "T" + heures + ":" + minutes + ":" + secondes
-    // console.log("datee",created_at)
-
-    //données
     data["status"] = "TEMP_SAVED"
-    data["createdAt"] = created_at
+    data["createdAt"] = offlineTimestamp()
 
     if (data["code"] === "") {
-        //code
-        let code = "rec" + uuidv4().substring(0, 5) + '-' + (loadItemFromSessionStorage('app-user')).servicePointDto.uuid + '-' + (loadItemFromSessionStorage('app-user').code)
-        // console.log("codeeee",code)
-        data["code"] = code
-
-        recs.push(data);
-        saveItemToLocalStorage(recs, "recs-TS")
+        data["code"] = generateOfflineCode("rec")
     } else {
-        let recsTemp = recs.filter((e) => { return e.code !== data["code"] })
-        let recsF = recs.filter((e) => { return e.code === data["code"] })
-        data["id"] = recsF[0].id
-        // console.log("recsTemp1",data)
-        // recsTemp[0]=data
-        // console.log("data",data)
-        // console.log("recsTemp3",recs)
-        recsTemp.push(data);
-        saveItemToLocalStorage(recsTemp, "recs-TS")
+        const existing = await getDraftRecord(data["code"])
+        if (existing) data["id"] = existing.payload.id
     }
+    await saveDraftRecord("claim", data)
 
-
-
-
-    // recs.push(data);
-    // saveItemToLocalStorage(recs,"recs-TS")
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etatChanged(false)
 
@@ -904,51 +901,24 @@ export const addTempClaimApiOffline = async (data, props) => {
 }
 
 export const addClaimApiOffline = async (data, props) => {
-    let recs = loadItemFromLocalStorage("recs-TS") !== undefined ? (loadItemFromLocalStorage("recs-TS")) : [];
-
-    //date
-    let datetmp = new Date();
-    let jour = (datetmp.getDate()) < 10 ? "0" + (datetmp.getDate()) : datetmp.getDate()
-    let mois = (datetmp.getMonth() + 1) < 10 ? "0" + (datetmp.getMonth() + 1) : datetmp.getMonth() + 1
-    let heures = (datetmp.getHours()) < 10 ? "0" + (datetmp.getHours()) : datetmp.getHours()
-    let minutes = (datetmp.getMinutes()) < 10 ? "0" + (datetmp.getMinutes()) : datetmp.getMinutes()
-    let secondes = (datetmp.getSeconds()) < 10 ? "0" + (datetmp.getSeconds()) : datetmp.getSeconds()
-    let created_at = datetmp.getFullYear() + "-" + mois + "-" + jour + "T" + heures + ":" + minutes + ":" + secondes
-    // console.log("datee",created_at)
-
-    //code
-    let code = "rec" + uuidv4().substring(0, 5) + '-' + (loadItemFromSessionStorage('app-user')).servicePointDto.uuid + '-' + (loadItemFromSessionStorage('app-user').code)
-    // console.log("codeeee",code)
-
-
-    //données
     data["status"] = "SAVED"
-    data["createdAt"] = created_at
+    data["createdAt"] = offlineTimestamp()
 
+    // Le codeClient (REC-XXXX) n'est plus généré côté client hors-ligne : il
+    // est attribué par le serveur au moment de la synchronisation, comme
+    // pour une création en ligne classique.
     if (data["code"] === "") {
-
-        // console.log("codeeee",code)
-        data["code"] = code
-        data["codeClient"] = "REC-" + uuidv4().substring(0, 4).toUpperCase()
-
-        recs.push(data);
-        saveItemToLocalStorage(recs, "recs-TS")
+        data["code"] = generateOfflineCode("rec")
     } else {
-        let recsTemp = recs.filter((e) => { return e.code !== data["code"] })
-        let recsF = recs.filter((e) => { return e.code === data["code"] })
-        data["id"] = recsF[0].id
-        data["codeClient"] = recsF[0].codeClient ? recsF[0].codeClient : "REC-" + uuidv4().substring(0, 4).toUpperCase()
-
-        // console.log("recsTemp11",data)
-        recsTemp.push(data);
-        saveItemToLocalStorage(recsTemp, "recs-TS")
+        const existing = await getDraftRecord(data["code"])
+        if (existing) data["id"] = existing.payload.id
     }
-
+    await saveDraftRecord("claim", data)
 
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etat2Changed(false)
 
-    notify("Bravo - Réclamation enregistrée (code client : " + data["codeClient"] + ")", "success")
+    notify("Bravo - Réclamation enregistrée. Le code client sera attribué à la synchronisation.", "success")
 }
 
 

@@ -1,12 +1,12 @@
 ﻿import axios from "axios";
-import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from "../../Utils/utils";
+import { loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage, loadArrayFromLocalStorage } from "../../Utils/utils";
+import { saveDraftRecord, getDraftRecord, listDraftRecordsByStatus, listUnsyncedDraftRecords, generateOfflineCode, offlineTimestamp } from "../../offline/draftRecordsStore";
 import { notify } from "../../Utils/alert";
 import { HOST } from "../../Utils/globals";
-import { v4 as uuidv4 } from "uuid";
 
 //console.log("HOST DENUNCIATION: " + HOST)
-const ADD_TEMP_DENUNCIATION_API = HOST + "api/v1/denunciation/save_temp"
-const ADD_DENUNCIATION_API = HOST + "api/v1/denunciation/add"
+export const ADD_TEMP_DENUNCIATION_API = HOST + "api/v1/denunciation/save_temp"
+export const ADD_DENUNCIATION_API = HOST + "api/v1/denunciation/add"
 const AFFECT_DENUNCIATION_API = HOST + "api/v1/denunciation/affectTreatment"
 const TREAT_DENUNCIATION_API = HOST + "api/v1/denunciation/treatDenun"
 const APPROVE_DENUNCIATION_SOLUTION_API = HOST + "api/v1/denunciation/approuvedSolution"
@@ -27,6 +27,24 @@ const RESTORE_DENUN_API = HOST + "api/v1/denunciation/restore/%s"
 
 
 
+// Rafraîchit uniquement le cache "app-densTS" — cf. ReclamationsApi.js::refreshOfflineSnapshot.
+export const refreshOfflineSnapshot = async () => {
+    try {
+        const response = await axios({
+            method: 'get',
+            url: LIST_ALL_DENUNCIATION_API,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+            },
+        });
+        saveItemToLocalStorage(response.data.content, 'app-densTS');
+    } catch (error) {
+        // Rafraîchissement en arrière-plan : échec silencieux.
+    }
+};
+
 export const listeTousStatuts = async (props) => {
 
     const config = {
@@ -39,11 +57,17 @@ export const listeTousStatuts = async (props) => {
         },
     };
     await axios(config)
-        .then(function (response) {
+        .then(async function (response) {
 
             // console.log("response.data.content",response.data.content)
-            props.itemsChanged(response.data.content)
-            return response.data.content
+            // Fusionne avec les dénonciations capturées localement (online ou
+            // offline) pas encore synchronisées.
+            const localUnsynced = await listUnsyncedDraftRecords("denunciation", "TEMP_SAVED")
+            const merged = [...response.data.content, ...localUnsynced]
+            props.itemsChanged(merged)
+            // Instantané pour affichage en mode Offline (cf. listeTousStatutsOffline).
+            saveItemToLocalStorage(response.data.content, 'app-densTS')
+            return merged
         })
         .catch(function (error) {
             return error;
@@ -473,70 +497,32 @@ export const downloadFillesApi = async (data, filename) => {
 
 //offline
 export const listeByStatutOffline = async (props, state) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (loadItemFromLocalStorage("dens-TS")) : [];
-    let densTemp = dens.filter((e) => { return e.status == state })
-
-    // console.log(densTemp)
+    const densTemp = await listDraftRecordsByStatus("denunciation", state)
     props.itemsChanged(densTemp)
-
     return densTemp
-
 }
 
 export const listeTousStatutsOffline = async (props) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (loadItemFromLocalStorage("dens-TS")) : [];
-    let densGlobal = dens.filter((e) => { return e.status !== "TEMP_SAVED" })
-    densGlobal.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-
+    const serverSnapshot = loadArrayFromLocalStorage("app-densTS")
+    // Uniquement les brouillons pas encore synchronisés (cf. Reclamations).
+    const localItems = await listUnsyncedDraftRecords("denunciation", "TEMP_SAVED")
+    const densGlobal = [...serverSnapshot, ...localItems]
     props.itemsChanged(densGlobal)
-
     return densGlobal;
-
 }
 
 export const addTempDenunciationApiOffline = async (data, props) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (loadItemFromLocalStorage("dens-TS")) : [];
-
-    //date
-    let datetmp = new Date();
-    let jour = (datetmp.getDate()) < 10 ? "0" + (datetmp.getDate()) : datetmp.getDate()
-    let mois = (datetmp.getMonth() + 1) < 10 ? "0" + (datetmp.getMonth() + 1) : datetmp.getMonth() + 1
-    let heures = (datetmp.getHours()) < 10 ? "0" + (datetmp.getHours()) : datetmp.getHours()
-    let minutes = (datetmp.getMinutes()) < 10 ? "0" + (datetmp.getMinutes()) : datetmp.getMinutes()
-    let secondes = (datetmp.getSeconds()) < 10 ? "0" + (datetmp.getSeconds()) : datetmp.getSeconds()
-    let created_at = datetmp.getFullYear() + "-" + mois + "-" + jour + "T" + heures + ":" + minutes + ":" + secondes
-    // console.log("datee",created_at)
-
-    //données
     data["status"] = "TEMP_SAVED"
-    data["createdAt"] = created_at
+    data["createdAt"] = offlineTimestamp()
 
     if (data["code"] === "") {
-        //code
-        let code = "den" + uuidv4().substring(0, 5) + '-' + (loadItemFromSessionStorage('app-user')).servicePointDto.uuid + '-' + (loadItemFromSessionStorage('app-user').code)
-        // console.log("codeeee",code)
-        data["code"] = code
-
-        dens.push(data);
-        saveItemToLocalStorage(dens, "dens-TS")
+        data["code"] = generateOfflineCode("den")
     } else {
-        let densTemp = dens.filter((e) => { return e.code !== data["code"] })
-        let densF = dens.filter((e) => { return e.code === data["code"] })
-        data["id"] = densF[0].id
-
-        // console.log("densTemp1",densTemp)
-        // densTemp[0]=data
-        // console.log("data",data)
-        // console.log("densTemp3",dens)
-        densTemp.push(data);
-        saveItemToLocalStorage(densTemp, "dens-TS")
+        const existing = await getDraftRecord(data["code"])
+        if (existing) data["id"] = existing.payload.id
     }
+    await saveDraftRecord("denunciation", data)
 
-
-
-
-    // dens.push(data);
-    // saveItemToLocalStorage(dens,"dens-TS")
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etatChanged(false)
 
@@ -545,49 +531,24 @@ export const addTempDenunciationApiOffline = async (data, props) => {
 }
 
 export const addDenunciationApiOffline = async (data, props) => {
-    let dens = loadItemFromLocalStorage("dens-TS") !== undefined ? (loadItemFromLocalStorage("dens-TS")) : [];
-
-    //date
-    let datetmp = new Date();
-    let jour = (datetmp.getDate()) < 10 ? "0" + (datetmp.getDate()) : datetmp.getDate()
-    let mois = (datetmp.getMonth() + 1) < 10 ? "0" + (datetmp.getMonth() + 1) : datetmp.getMonth() + 1
-    let heures = (datetmp.getHours()) < 10 ? "0" + (datetmp.getHours()) : datetmp.getHours()
-    let minutes = (datetmp.getMinutes()) < 10 ? "0" + (datetmp.getMinutes()) : datetmp.getMinutes()
-    let secondes = (datetmp.getSeconds()) < 10 ? "0" + (datetmp.getSeconds()) : datetmp.getSeconds()
-    let created_at = datetmp.getFullYear() + "-" + mois + "-" + jour + "T" + heures + ":" + minutes + ":" + secondes
-    // console.log("datee",created_at)
-
-    //code
-    let code = "den" + uuidv4().substring(0, 5) + '-' + (loadItemFromSessionStorage('app-user')).servicePointDto.uuid + '-' + (loadItemFromSessionStorage('app-user').code)
-    // console.log("codeeee",code)
-
-
-    //données
     data["status"] = "SAVED"
-    data["createdAt"] = created_at
+    data["createdAt"] = offlineTimestamp()
 
-
+    // Le codeClient (DEN-XXXX) n'est plus généré côté client hors-ligne : il
+    // est attribué par le serveur au moment de la synchronisation, comme
+    // pour une création en ligne classique.
     if (data["code"] === "") {
-        data["code"] = code
-        data["codeClient"] = "DEN-" + uuidv4().substring(0, 4).toUpperCase()
-        // console.log("dataasave",data)
-        dens.push(data);
-        saveItemToLocalStorage(dens, "dens-TS")
+        data["code"] = generateOfflineCode("den")
     } else {
-        let densTemp = dens.filter((e) => { return e.code !== data["code"] })
-        let densF = dens.filter((e) => { return e.code === data["code"] })
-        data["id"] = densF[0].id
-        data["codeClient"] = densF[0].codeClient ? densF[0].codeClient : "DEN-" + uuidv4().substring(0, 4).toUpperCase()
-        densTemp.push(data);
-        saveItemToLocalStorage(densTemp, "dens-TS")
-
+        const existing = await getDraftRecord(data["code"])
+        if (existing) data["id"] = existing.payload.id
     }
-
+    await saveDraftRecord("denunciation", data)
 
     listeByStatutOffline(props, "TEMP_SAVED")
     props.etat2Changed(false)
 
-    notify("Bravo - Dénonciation enregistrée (code client : " + data["codeClient"] + ")", "success")
+    notify("Bravo - Dénonciation enregistrée. Le code client sera attribué à la synchronisation.", "success")
 }
 
 

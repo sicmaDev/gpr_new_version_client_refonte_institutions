@@ -30,6 +30,7 @@ import Footer from './Footer';
 import { APP_OWNER, APP_OWNER_WEBSITE } from '../Utils/globals';
 import { licenseInfo } from '../apis/LoginApi';
 import { useThemeColors } from '../context/ThemeColorsContext';
+import useOnlineStatus from '../hooks/useOnlineStatus';
 
 
 const drawerWidth = 250;
@@ -128,6 +129,7 @@ const getSidebarLuminance = (hex) => {
 export const Haut = (props) => {
   // const [actif, setActif] = useState();
   const [message, setMessage] = useState();
+  const isOnline = useOnlineStatus();
   
   const licenseControl = async () => {
     try {
@@ -475,6 +477,14 @@ export const Haut = (props) => {
                 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textAlign: 'center' }}>
                     {contenuMode}
+
+                    {!isOnline && (
+                      <Tooltip title="Connexion internet perdue">
+                        <IconButton color="inherit" sx={{ color: '#f44336' }}>
+                          <WifiOffIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
 
                     <Tooltip title="Mon compte">
                       <IconButton

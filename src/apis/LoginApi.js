@@ -1,6 +1,6 @@
 ﻿import axios from "axios";
 import { notify } from "../Utils/alert"
-import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage, today } from "../Utils/utils";
+import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage, today, loadArrayFromLocalStorage } from "../Utils/utils";
 import { HOST } from "../Utils/globals";
 import { now } from "jquery";
 
@@ -121,10 +121,15 @@ export const LoginApi = (credentials, props, isLocked = false) => {
 
             // console.log(JSON.parse(response.data.data));
             props.etatChanged(false)
-            if (response.data.response.status) {
-                synchronData();
+            if (response.data.response.status && !isLocked) {
+                // La synchro doit se déclencher au moment où l'utilisateur se
+                // CONNECTE en ligne (pas sur un simple événement "online" du
+                // navigateur, ni sur un déverrouillage d'écran) : on l'envoie
+                // directement sur le menu Synchronisation, qui lance runSync()
+                // lui-même. Remplace l'ancien synchronData()/receiveData()
+                // (SynchronerController, laissé inutilisé, cf. décision validée).
+                window.location.hash = "#/synchronisation";
             }
-            // receiveData()
 
         })
         .catch(function (error) {
@@ -255,9 +260,9 @@ export const receiveData = () => {
 
 export const synchronData = () => {
     let data = {};
-    data["claims"] = loadItemFromLocalStorage("recs-TS") !== undefined ? loadItemFromLocalStorage("recs-TS") : []
-    data["denuns"] = loadItemFromLocalStorage("dens-TS") !== undefined ? loadItemFromLocalStorage("dens-TS") : []
-    data["suggestions"] = loadItemFromLocalStorage("sugs-TS") !== undefined ? loadItemFromLocalStorage("sugs-TS") : []
+    data["claims"] = loadArrayFromLocalStorage("recs-TS")
+    data["denuns"] = loadArrayFromLocalStorage("dens-TS")
+    data["suggestions"] = loadArrayFromLocalStorage("sugs-TS")
     // console.log("datasyncitems",data)
     const config = {
         method: 'POST',
