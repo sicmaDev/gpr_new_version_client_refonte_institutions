@@ -64,6 +64,7 @@ import BackupIcon from '@mui/icons-material/Backup';
 import SpeedIcon from '@mui/icons-material/Speed';
 import { NavLink, useLocation } from 'react-router-dom';
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from '../Utils/utils';
+import { slaStatus, slaCount } from '../apis/Sla/SlaApi';
 import { connect } from 'react-redux';
 import { authenticate } from '../redux/actions/LayoutActions';
 import { useHistory } from 'react-router-dom';
@@ -150,6 +151,40 @@ export const Items = (props) => {
     window.addEventListener("sla-update", handler);
     return () => window.removeEventListener("sla-update", handler);
   }, []);
+
+  // Le suivi des délais est-il actif ? Lu une fois par session, relu quand l'administrateur change le paramètre.
+  const [slaEnabled, setSlaEnabled] = React.useState(() => sessionStorage.getItem("sla-enabled") === "1");
+  React.useEffect(() => {
+    let cancelled = false;
+    const read = () => slaStatus()
+      .then((s) => {
+        if (cancelled) return;
+        sessionStorage.setItem("sla-enabled", s?.enabled ? "1" : "0");
+        setSlaEnabled(!!s?.enabled);
+      })
+      .catch(() => {});
+    read();
+    window.addEventListener("sla-status-changed", read);
+    return () => { cancelled = true; window.removeEventListener("sla-status-changed", read); };
+  }, []);
+
+  // Badge du menu : nombre de plaintes en retard dans mon périmètre, lu sur le serveur au chargement puis
+  // toutes les 5 minutes (plus seulement quand la page SLA est ouverte).
+  React.useEffect(() => {
+    if (!slaEnabled) return undefined;
+    let cancelled = false;
+    const refresh = () => slaCount("DEPASSE")
+      .then((r) => {
+        if (cancelled) return;
+        const n = r?.count ?? 0;
+        sessionStorage.setItem("sla-overdue", n);
+        setSlaOverdue(n);
+      })
+      .catch(() => {});
+    refresh();
+    const id = setInterval(refresh, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [slaEnabled]);
 
   // ── Badge Synchronisation (éléments offline en attente/échec) ───────────
   const [pendingSyncCount, setPendingSyncCount] = React.useState(0);
@@ -400,6 +435,26 @@ export const Items = (props) => {
         </NavLink>
       )}
 
+      {/* ── Suivi des délais (SLA) : tous les utilisateurs, dans leur périmètre ── */}
+      {mode === 1 && slaEnabled && (
+        <NavLink to="/sla" style={link}>
+          <ListItemButton sx={iSx('/sla')} className="lib">
+            <ListItemIcon><SpeedIcon style={col(isActive('/sla'))} /></ListItemIcon>
+            <ListItemText primary="Suivi des délais" />
+            {slaOverdue > 0 && (
+              <span style={{
+                fontSize: 10, fontWeight: 800, color: '#fff',
+                background: '#DC2626', padding: '1px 7px',
+                borderRadius: 99, minWidth: 18, textAlign: 'center',
+                flexShrink: 0, lineHeight: 1.6,
+              }}>
+                {slaOverdue > 99 ? "99+" : slaOverdue}
+              </span>
+            )}
+          </ListItemButton>
+        </NavLink>
+      )}
+
       {/* ══ GESTION ══════════════════════════════════════════════════════════ */}
       {hasGestion && <GroupLabel textColor={textLabel} lineColor={lineColor}>Gestion</GroupLabel>}
 
@@ -580,6 +635,15 @@ export const Items = (props) => {
                   <ListItemText primary="Commission Bancaire" />
                 </ListItemButton>
               </NavLink>
+
+              {slaEnabled && (
+                <NavLink to="/rapports/delais" activeClassName="hero" style={link}>
+                  <ListItemButton sx={sSx('/rapports/delais')} className="lib">
+                    <ListItemIcon>{si(SpeedIcon, isActive('/rapports/delais'))}</ListItemIcon>
+                    <ListItemText primary="Respect des délais" />
+                  </ListItemButton>
+                </NavLink>
+              )}
 
               {/* <NavLink to="/rapports/superset" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/rapports/superset')} className="lib">
@@ -846,7 +910,7 @@ export const Items = (props) => {
               <NavLink to="/configurations/sla" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/sla')} className="lib">
                   <ListItemIcon>{si(SpeedIcon, isActive('/configurations/sla'))}</ListItemIcon>
-                  <ListItemText primary="SLA" />
+                  <ListItemText primary="Délais (SLA)" />
                   {slaOverdue > 0 && (
                     <span style={{
                       fontSize: 10, fontWeight: 800, color: '#fff',

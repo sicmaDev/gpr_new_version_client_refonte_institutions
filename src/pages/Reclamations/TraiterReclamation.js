@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
+import { affectationMaxDays } from "../../apis/Sla/SlaApi";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DossierDataTable from "../../components/shared/DossierDataTable";
 import ClaimsKPIBar from "./components/ClaimsKPIBar";
@@ -970,9 +971,7 @@ const TraiterReclamation = (props) => {
             default:
               break;
           }
-          setMaxDelai(
-            data.objet?.processingTime ? data.objet.processingTime : 45
-          );
+          setMaxDelai(affectationMaxDays(data));
           props.idChanged(data.id ? data.id : "");
           props.lastnameChanged(
             data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -1620,7 +1619,7 @@ const TraiterReclamation = (props) => {
       default:
         break;
     }
-    setMaxDelai(data.objet.processingTime ? data.objet.processingTime : 45);
+    setMaxDelai(affectationMaxDays(data));
     props.idChanged(data.id ? data.id : "");
     props.lastnameChanged(
       data.clientFirstAndLastName ? data.clientFirstAndLastName : ""
@@ -4757,6 +4756,7 @@ const TraiterReclamation = (props) => {
         ) : (
           /* ── TREATMENT PAGE - TraitementShell ── */
           <TraitementShell
+          claimType="CLAIM"
             onBack={() => { sessionStorage.removeItem('gpr_treat_code'); history.push('/reclamations/traitement/all'); }}
             codeClient={props.codeClient || props.code}
             status={props.status}

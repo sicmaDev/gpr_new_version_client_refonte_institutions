@@ -13,6 +13,7 @@ import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import ClaimStatusBadge from "./ClaimStatusBadge";
 import ClaimGravityBadge from "./ClaimGravityBadge";
 import { formatDate } from "../../../Utils/utils";
+import SlaBadge from "../../../components/shared/SlaBadge";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tous les statuts" },
@@ -52,7 +53,7 @@ const COLUMNS = [
   { id: "status", label: "Statut", sortable: true, minWidth: 120 },
   { id: "gravity", label: "Gravité", sortable: true, minWidth: 100 },
   { id: "date", label: "Enregistrée le", sortable: true, minWidth: 130 },
-  { id: "alert", label: "Délai", sortable: false, minWidth: 90 },
+  { id: "alert", label: "Délai", sortable: true, minWidth: 90 },
 ];
 
 const getGravity = (claim, mode, objets) => {
@@ -108,6 +109,9 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
         case "code": va = a.code || ""; vb = b.code || ""; break;
         case "client": va = a.clientFirstAndLastName || ""; vb = b.clientFirstAndLastName || ""; break;
         case "status": va = a.status || ""; vb = b.status || ""; break;
+        case "alert":
+          // SLA actif : tri par échéance (le serveur la calcule) ; sans SLA, l'ordre reste celui de la liste
+          va = a.sla?.dueAt || "9999"; vb = b.sla?.dueAt || "9999"; break;
         case "gravity":
           va = getGravity(a, mode, objets) || "";
           vb = getGravity(b, mode, objets) || "";
@@ -351,7 +355,9 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
 
                     {/* Délai */}
                     <TableCell>
-                      {isClosed ? (
+                      {claim.sla ? (
+                        <SlaBadge sla={claim.sla} />
+                      ) : isClosed ? (
                         <span style={{ color: "#CBD5E1", fontSize: "0.78rem" }}>-</span>
                       ) : isOverdue ? (
                         <WarningAmberIcon sx={{ fontSize: 18, color: "#EF4444" }} />

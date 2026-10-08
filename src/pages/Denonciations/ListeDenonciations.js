@@ -2556,6 +2556,7 @@ const ListeDenonciations = (props) => {
         )}
 
         <TraitementShell
+          claimType="DENUNCIACION"
           onBack={() => { sessionStorage.removeItem('gpr_den_code'); setDetailVisible(false); history.push("/denonciations/liste/all"); }}
           hideClientInfo={true}
           codeClient={props.codeClient || props.code}

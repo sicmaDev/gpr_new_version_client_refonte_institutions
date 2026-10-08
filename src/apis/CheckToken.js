@@ -55,6 +55,7 @@ export const saveAuthDataToLocal = (data) => {
     if (data.settings.appearance) {
         saveItemToSessionStorage(data.settings.appearance, 'app-appearance');
     }
+    saveItemToSessionStorage(data.settings.appearanceVisible !== false, 'app-appearance-visible');
 
     //enregistrement dans le local storage
     saveItemToLocalStorage(1, 'logged')
@@ -79,5 +80,6 @@ export const saveAuthDataToLocal = (data) => {
     if (data.settings.appearance) {
         saveItemToLocalStorage(data.settings.appearance, 'app-appearance');
     }
+    saveItemToLocalStorage(data.settings.appearanceVisible !== false, 'app-appearance-visible');
 
 }

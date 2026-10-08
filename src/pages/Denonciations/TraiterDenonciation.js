@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
+import { affectationMaxDays } from "../../apis/Sla/SlaApi";
 import ReactDatatable from "@ashvin27/react-datatable";
 import DossierDataTable from "../../components/shared/DossierDataTable";
 import Select from "react-select";
@@ -696,9 +697,7 @@ const TraiterDenonciation = (props) => {
             default:
               break;
           }
-          setMaxDelai(
-            data.objet.processingTime ? data.objet.processingTime : 45
-          );
+          setMaxDelai(affectationMaxDays(data));
           props.idChanged(data.id ? data.id : "");
           props.codeChanged(data.code ? data.code : "");
           props.codeClientChanged(data.codeClient ? data.codeClient : "");
@@ -3308,6 +3307,7 @@ const TraiterDenonciation = (props) => {
         </div>
       ) : (
         <TraitementShell
+          claimType="DENUNCIACION"
           onBack={handleClose}
           codeClient={props.codeClient}
           status={props.status}

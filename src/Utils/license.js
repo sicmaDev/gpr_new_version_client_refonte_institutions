@@ -11,6 +11,15 @@ export const hasModule = (moduleName) => {
     }
 };
 
+// La personnalisation des couleurs est visible sauf si SICMA l'a masquée (réglage posé côté serveur).
+export const isAppearanceVisible = () => {
+    try {
+        return JSON.parse(sessionStorage.getItem('app-appearance-visible')) !== false;
+    } catch {
+        return true;
+    }
+};
+
 export const isLicenseExpired = () => {
     let appLicenseData = loadItemFromSessionStorage("app-license") !== undefined ? loadItemFromSessionStorage("app-license"): undefined
     // console.log("isLicenseExpired");

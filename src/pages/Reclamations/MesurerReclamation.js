@@ -1655,6 +1655,7 @@ const MesurerReclamation = (props) => {
     return (
       <>
         <TraitementShell
+          claimType="CLAIM"
           onBack={() => { sessionStorage.removeItem('gpr_mes_code'); history.push("/reclamations/mesure/all"); }}
           codeClient={props.codeClient || props.code}
           risqueLevel={props.selectedItem?.objet?.risqueLevel}

@@ -1182,6 +1182,7 @@ const ListeReclamationsClassees = (props) => {
 
     return (
       <TraitementShell
+          claimType="CLAIM"
         onBack={() => { sessionStorage.removeItem('gpr_cls_code'); history.push("/reclamations/classees/all"); }}
         codeClient={props.codeClient || props.code}
         status={props.status}

@@ -18,6 +18,15 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import ThumbDownOutlinedIcon from "@mui/icons-material/ThumbDownOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
+import AlarmIcon from "@mui/icons-material/Alarm";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import MoveUpIcon from "@mui/icons-material/MoveUp";
+import HourglassBottomIcon from "@mui/icons-material/HourglassBottom";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
+import PhoneInTalkIcon from "@mui/icons-material/PhoneInTalk";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
+import NotesIcon from "@mui/icons-material/Notes";
+import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import { getClaimEvents } from "../../apis/Reclamations/ReclamationsApi";
 
 // Types d'actions principales (ouvrent un bloc)
@@ -25,7 +34,49 @@ const MAIN_EVENTS = new Set([
   "SAVED", "AFFECTED", "SOLUTION_PROPOSED", "APPROVED", "REJECTED",
   "SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED",
   "LITIGATION", "TRANSMITTED", "CONVERTED", "SESSION_STARTED", "EXTRA_ADDED",
+  // Suivi des délais (SLA)
+  "SLA_REMINDER", "SLA_BREACH", "AUTO_TRANSMITTED", "SLA_STUCK", "SLA_REGULATORY_WARNING",
+  "SLA_REGULATORY_BREACH", "WAITING_CUSTOMER", "SLA_RESUMED", "SLA_JUSTIFIED", "CONTACT_ATTEMPT",
+  "CLOSED_UNREACHABLE",
 ]);
+
+// Événements écrits par le suivi des délais : leur contenu (metadata) est mis en forme à part.
+const SLA_EVENTS = new Set([
+  "SLA_REMINDER", "SLA_BREACH", "AUTO_TRANSMITTED", "SLA_STUCK", "SLA_REGULATORY_WARNING",
+  "SLA_REGULATORY_BREACH", "WAITING_CUSTOMER", "SLA_RESUMED", "SLA_JUSTIFIED", "CONTACT_ATTEMPT",
+  "CLOSED_UNREACHABLE",
+]);
+
+const LEVELS = { AGENT: "Agent", RA: "Chef d'agence", DIRECTION: "Direction", PILOTE: "Pilote", DE: "Directeur exécutif" };
+
+// Met en forme le contenu d'un événement SLA. Aucun nom de client n'y figure, jamais.
+const slaMeta = (ev) => {
+  const p = (ev.metadata || "").split("|");
+  switch (ev.eventType) {
+    case "SLA_REMINDER": return <span>{p[0]}{p[1] && <> · échéance {p[1]}</>}</span>;
+    case "SLA_BREACH":
+      return p[0] === "PRISE_EN_CHARGE"
+        ? <span>Prise en charge non faite dans le délai · échéance {p[1]}</span>
+        : <span>{p[0]}{p[1] && <> · échéance {p[1]}</>}</span>;
+    case "AUTO_TRANSMITTED":
+      return (
+        <span>
+          De <strong>{p[0]}</strong>{p[1] && <> ({LEVELS[p[1]] || p[1]})</>} vers <strong>{p[2]}</strong>{p[3] && <> ({LEVELS[p[3]] || p[3]})</>}
+          {p[4] && <> · échéance dépassée le {p[4]}</>}
+          {p[5] && <> · {p[5]} alerte(s) restée(s) sans action</>}
+        </span>
+      );
+    case "SLA_STUCK": return <span>Dernier niveau atteint, plus de remontée possible · {p[0]}</span>;
+    case "SLA_REGULATORY_WARNING": return <span>Limite réglementaire : {p[0]}</span>;
+    case "SLA_REGULATORY_BREACH": return <span>Limite réglementaire dépassée le {p[0]}</span>;
+    case "WAITING_CUSTOMER": return <span>{p[0] ? <>Motif : <em>{p[0]}</em></> : "Délai interne en pause"}</span>;
+    case "SLA_RESUMED": return <span>Reprise du délai · pause de {p[0]}</span>;
+    case "SLA_JUSTIFIED": return <span>Motif : <em>{p[0]}</em></span>;
+    case "CONTACT_ATTEMPT": return <span>{p[0]}</span>;
+    case "CLOSED_UNREACHABLE": return <span>Clôturée sans mesure : <em>{p[0]}</em></span>;
+    default: return ev.metadata;
+  }
+};
 
 // Types de communications (se rattachent au bloc précédent)
 const COMM_EVENTS = new Set([
@@ -47,6 +98,18 @@ const ACTION_CONFIG = {
   CONVERTED:         { label: "Convertie",                      color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", Icon: SwapHorizIcon },
   SESSION_STARTED:   { label: "Session collaborative",          color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", Icon: GroupsIcon },
   EXTRA_ADDED:       { label: "Pièce jointe ajoutée",            color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", Icon: AttachFileIcon },
+  // Suivi des délais (SLA)
+  SLA_REMINDER:           { label: "Rappel de délai",              color: "#d97706", bg: "#fffbeb", border: "#fde68a", Icon: AlarmIcon },
+  SLA_BREACH:             { label: "Délai dépassé",                color: "#dc2626", bg: "#fef2f2", border: "#fecaca", Icon: ReportProblemOutlinedIcon },
+  AUTO_TRANSMITTED:       { label: "Remontée automatique",         color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", Icon: MoveUpIcon },
+  SLA_STUCK:              { label: "Bloquée au dernier niveau",    color: "#7f1d1d", bg: "#fee2e2", border: "#fecaca", Icon: ReportProblemOutlinedIcon },
+  SLA_REGULATORY_WARNING: { label: "Limite réglementaire proche",  color: "#b45309", bg: "#fffbeb", border: "#fde68a", Icon: AlarmIcon },
+  SLA_REGULATORY_BREACH:  { label: "Hors délai réglementaire",     color: "#7f1d1d", bg: "#fee2e2", border: "#fecaca", Icon: EventBusyIcon },
+  WAITING_CUSTOMER:       { label: "Mise en attente du client",    color: "#64748b", bg: "#f1f5f9", border: "#e2e8f0", Icon: HourglassBottomIcon },
+  SLA_RESUMED:            { label: "Reprise du traitement",        color: "#059669", bg: "#ecfdf5", border: "#a7f3d0", Icon: PlayCircleOutlineIcon },
+  SLA_JUSTIFIED:          { label: "Retard justifié",              color: "#0369a1", bg: "#e0f2fe", border: "#bae6fd", Icon: NotesIcon },
+  CONTACT_ATTEMPT:        { label: "Tentative de contact du client", color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", Icon: PhoneInTalkIcon },
+  CLOSED_UNREACHABLE:     { label: "Client injoignable",           color: "#475569", bg: "#f8fafc", border: "#e2e8f0", Icon: EventBusyIcon },
 };
 
 const formatDate = (dt) => {
@@ -362,7 +425,9 @@ const HistoriqueTimeline = ({ claimId }) => {
                     <div style={{ fontSize: 13, fontWeight: 700, color: cfg.color }}>{cfg.label}</div>
                     {ev.actorName && (
                       <div style={{ fontSize: 11.5, color: "#64748b", marginTop: 1 }}>
-                        Par : {ev.actorName}
+                        {ev.actorName === "Système GPR"
+                          ? <span><SmartToyOutlinedIcon style={{ fontSize: 14, verticalAlign: "middle", marginRight: 4 }} />Système GPR (automatique)</span>
+                          : <>Par : {ev.actorName}</>}
                         {ev.actorEmail && <span style={{ marginLeft: 5, color: "#94a3b8" }}>· {ev.actorEmail}</span>}
                       </div>
                     )}
@@ -380,7 +445,8 @@ const HistoriqueTimeline = ({ claimId }) => {
                           );
                         })()}
                         {ev.eventType === "REJECTED" && <>Motif : <em>{ev.metadata}</em></>}
-                        {!["AFFECTED","TRANSMITTED","REJECTED"].includes(ev.eventType) && ev.metadata}
+                        {SLA_EVENTS.has(ev.eventType) && slaMeta(ev)}
+                        {!["AFFECTED","TRANSMITTED","REJECTED"].includes(ev.eventType) && !SLA_EVENTS.has(ev.eventType) && ev.metadata}
                       </div>
                     )}
                   </div>

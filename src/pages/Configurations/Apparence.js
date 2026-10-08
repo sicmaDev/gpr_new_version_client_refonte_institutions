@@ -11,6 +11,7 @@ import { KTApp } from '../../Utils/blockui';
 import { HOST } from '../../Utils/globals';
 import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage } from '../../Utils/utils';
 import { useThemeColors, getPagePrimary, darkenColor } from '../../context/ThemeColorsContext';
+import { isAppearanceVisible } from '../../Utils/license';
 
 const SAVE_API = HOST + 'api/v1/config/setting/others/appearance/create';
 const INST_API = HOST + 'api/v1/config/setting/others/institution/create';
@@ -28,6 +29,8 @@ const SectionTitle = ({ icon: Icon, title }) => (
 
 const Apparence = () => {
     const { setColors } = useThemeColors();
+    // option non incluse : la page reste visible mais en lecture seule (le serveur refuse aussi toute sauvegarde)
+    const locked = !isAppearanceVisible();
 
     // Valeurs sauvegardées (référence pour Réinitialiser)
     const savedRef = useRef({ sidebarColor: DEFAULT_COLOR, topbarColor: DEFAULT_COLOR, logo: null });
@@ -89,7 +92,7 @@ const Apparence = () => {
 
     // Upload logo
     const readLogo = (file) => {
-        if (!file) return;
+        if (!file || locked) return;
         const ext = file.name.split('.').pop().toLowerCase();
         if (!['jpg', 'jpeg', 'png'].includes(ext)) {
             notify('Format non accepté. Utilisez JPG, JPEG ou PNG uniquement.', 'error');
@@ -106,11 +109,12 @@ const Apparence = () => {
 
     const handleFileInput   = (e) => { readLogo(e.target.files[0]); e.target.value = ''; };
     const handleDrop        = (e) => { e.preventDefault(); setIsDragging(false); readLogo(e.dataTransfer.files[0]); };
-    const handleZoneClick   = () => fileInputRef.current?.click();
-    const handleDragOver    = (e) => { e.preventDefault(); setIsDragging(true); };
+    const handleZoneClick   = () => { if (!locked) fileInputRef.current?.click(); };
+    const handleDragOver    = (e) => { e.preventDefault(); if (!locked) setIsDragging(true); };
     const handleDragLeave   = () => setIsDragging(false);
 
     const handleReset = () => {
+        if (locked) return;
         setSidebarColor(DEFAULT_COLOR);
         setTopbarColor(DEFAULT_COLOR);
         setLogo(null);
@@ -118,6 +122,7 @@ const Apparence = () => {
     };
 
     const handleSave = async () => {
+        if (locked) return;
         setSaving(true);
         KTApp.blockPage({ overlayColor: '#000000', type: 'v2', state: 'danger', message: 'Sauvegarde en cours...' });
         try {
@@ -175,7 +180,18 @@ const Apparence = () => {
                 </Box>
             </Box>
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+            {locked && (
+                <Box sx={{ mb: 3, p: 2, borderRadius: 2, background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                    <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A' }}>
+                        Option non incluse dans votre abonnement
+                    </Typography>
+                    <Typography sx={{ fontSize: 12.5, color: '#64748B', mt: 0.4 }}>
+                        Cette page vous montre ce que permet la personnalisation de l'apparence. Pour l'activer, contactez SICMA.
+                    </Typography>
+                </Box>
+            )}
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, ...(locked ? { '& input, & button': { cursor: 'not-allowed' } } : {}) }}>
 
                 {/* ── Colonne gauche : configuration ── */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -190,12 +206,14 @@ const Apparence = () => {
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                     <input
                                         type="color"
+                                        disabled={locked}
                                         value={sidebarColor}
                                         onChange={e => setSidebarColor(e.target.value)}
                                         style={{ width: 40, height: 40, border: 'none', cursor: 'pointer', borderRadius: 8, padding: 0 }}
                                     />
                                     <input
                                         type="text"
+                                        disabled={locked}
                                         value={sidebarColor}
                                         onChange={e => { if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value)) setSidebarColor(e.target.value); }}
                                         style={{ flex: 1, border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontFamily: 'monospace', outline: 'none' }}
@@ -207,12 +225,14 @@ const Apparence = () => {
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                     <input
                                         type="color"
+                                        disabled={locked}
                                         value={topbarColor}
                                         onChange={e => setTopbarColor(e.target.value)}
                                         style={{ width: 40, height: 40, border: 'none', cursor: 'pointer', borderRadius: 8, padding: 0 }}
                                     />
                                     <input
                                         type="text"
+                                        disabled={locked}
                                         value={topbarColor}
                                         onChange={e => { if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value)) setTopbarColor(e.target.value); }}
                                         style={{ flex: 1, border: '1.5px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontFamily: 'monospace', outline: 'none' }}
@@ -242,6 +262,7 @@ const Apparence = () => {
                         />
                         <Box
                             onClick={handleZoneClick}
+                            data-locked={locked}
                             onDrop={handleDrop}
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
@@ -258,7 +279,9 @@ const Apparence = () => {
                                 cursor: 'pointer',
                                 transition: 'all 0.2s',
                                 minHeight: 120,
-                                '&:hover': { borderColor: primary, background: primary + '11' }
+                                opacity: locked ? 0.6 : 1,
+                                cursor: locked ? 'not-allowed' : 'pointer',
+                                '&:hover': locked ? {} : { borderColor: primary, background: primary + '11' }
                             }}
                         >
                             {logo ? (
@@ -276,7 +299,7 @@ const Apparence = () => {
 
                         {logo && (
                             <Box sx={{ mt: 1.5, textAlign: 'right' }}>
-                                <Button size="small" color="error" onClick={() => setLogo(null)} sx={{ fontSize: 11 }}>
+                                <Button size="small" color="error" disabled={locked} onClick={() => setLogo(null)} sx={{ fontSize: 11 }}>
                                     Supprimer le logo
                                 </Button>
                             </Box>
@@ -366,23 +389,27 @@ const Apparence = () => {
                     </Box>
 
                     <Typography sx={{ fontSize: 11, color: '#94a3b8', mt: 1.5, textAlign: 'center' }}>
-                        L'aperçu se met à jour en temps réel • Les changements sont appliqués après sauvegarde
+                        {locked ? 'Aperçu de la fonction (lecture seule)' : "L'aperçu se met à jour en temps réel • Les changements sont appliqués après sauvegarde"}
                     </Typography>
 
                     {/* Boutons */}
                     <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
-                        <Button
-                            variant="outlined"
-                            startIcon={<RestartAltIcon />}
-                            onClick={handleReset}
-                            sx={{ flex: 1, borderRadius: 2, textTransform: 'none', fontSize: 13 }}
-                        >
-                            Réinitialiser
-                        </Button>
+                        {!locked && (
+                            <Button
+                                variant="outlined"
+                                startIcon={<RestartAltIcon />}
+                                disabled={locked}
+                                onClick={handleReset}
+                                sx={{ flex: 1, borderRadius: 2, textTransform: 'none', fontSize: 13 }}
+                            >
+                                Réinitialiser
+                            </Button>
+                        )}
                         <LoadingButton
                             variant="contained"
                             startIcon={<SaveIcon />}
                             loading={saving}
+                            disabled={locked}
                             onClick={handleSave}
                             sx={{ flex: 2, borderRadius: 2, textTransform: 'none', fontSize: 13 }}
                         >

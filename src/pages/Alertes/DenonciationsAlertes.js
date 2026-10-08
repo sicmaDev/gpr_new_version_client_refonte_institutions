@@ -4,6 +4,7 @@ import { useHistory } from "react-router-dom";
 import { KTApp } from "../../Utils/blockui";
 import { connect } from "react-redux";
 import { alertDenonciationApi } from "../../apis/Alertes/AlertesApi";
+import { loadSlaAlertRows, SLA_ALERT_KPI, SLA_ALERT_CHIPS, slaTableColumns } from "./slaAlertSupport";
 import { Box, Tooltip, ButtonBase, Typography } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -11,6 +12,7 @@ import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import DossierCardView from "../../components/shared/DossierCardView";
 import DossierTable from "../../components/shared/DossierTable";
 import DossierKPIBar from "../../components/shared/DossierKPIBar";
+import { claimTarget } from "../Sla/slaRoute";
 
 /* ── KPI cards (module-level) ─────────────────────────────────────────── */
 const DEN_ALERT_KPI = [
@@ -45,8 +47,11 @@ const DEN_ALERT_CHIPS = [
 
 const DenonciationsAlertes = (props) => {
     const history = useHistory();
+    const getUrl = (item) => claimTarget({ type: "DENUNCIACION", status: item.status, code: item.claimCode }).url;
     const [viewMode, setViewMode] = useState("list");
     const [activeChip, setActiveChip] = useState("ALL");
+    // Suivi des délais actif : lignes calculées par le serveur ; null = ancien fonctionnement de la page
+    const [slaRows, setSlaRows] = useState(null);
 
     const fmtDt = (iso) => {
         try {
@@ -95,7 +100,7 @@ const DenonciationsAlertes = (props) => {
             id: "action", label: "Action", sortable: false, minWidth: 90,
             render: (item) => (
                 <span
-                    onClick={(e) => { e.stopPropagation(); history.push("/denonciations/traitement/" + item.claimCode); }}
+                    onClick={(e) => { e.stopPropagation(); history.push(getUrl(item)); }}
                     style={{ fontSize: "0.80rem", color: "#005081", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
                 >
                     Traiter
@@ -114,7 +119,7 @@ const DenonciationsAlertes = (props) => {
 
     const getCardData = (item) => ({
         code: item.claimCodeClient,
-        client: item.claimClient || "Anonyme",
+        client: slaRows ? (item.objetLibelle || "-") : (item.claimClient || "Anonyme"),
         title: item.claimSubject || item.claimObjet || item.claimObject || item.objetLibelle || item.objet?.libelle || (typeof item.objet === "string" ? item.objet : null) || "-",
         subtitle: null,
         status: item.status,
@@ -129,16 +134,21 @@ const DenonciationsAlertes = (props) => {
     useEffect(() => {
         KTApp.blockPage({ overlayColor: "#000000", type: "v2", state: "danger", message: "En cours de chargement..." });
         props.itemsChanged([]);
-        alertDenonciationApi(props).then(() => {}).finally(() => { KTApp.unblockPage(); });
+        alertDenonciationApi(props)
+            .then(() => loadSlaAlertRows("DENUNCIACION").then(setSlaRows).catch(() => {}))
+            .finally(() => { KTApp.unblockPage(); });
         return clearComponentState;
     }, []);
 
-    const content = props.items;
+    const content = slaRows ?? props.items;
+    const chips = slaRows ? SLA_ALERT_CHIPS(false) : DEN_ALERT_CHIPS;
+    // dénonciation : jamais d'identité du dénonciateur ; l'ouverture mène au traitement
+    const slaColumns = slaTableColumns((item) => history.push(getUrl(item)), () => "Traiter");
 
     const displayedContent = useMemo(() => {
-        const chip = DEN_ALERT_CHIPS.find((c) => c.value === activeChip);
+        const chip = chips.find((c) => c.value === activeChip);
         return chip ? content.filter(chip.filter) : content;
-    }, [content, activeChip]);
+    }, [content, activeChip, chips]);
 
     return (
         <div id="main">
@@ -149,9 +159,9 @@ const DenonciationsAlertes = (props) => {
                             <div className="row">
                                 <div className="col l12 s12 pb-5">
                                     <div className="card-panel pb-5">
-                                        <DossierKPIBar items={content} kpiCards={DEN_ALERT_KPI} />
+                                        <DossierKPIBar items={content} kpiCards={slaRows ? SLA_ALERT_KPI(false) : DEN_ALERT_KPI} />
                                         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2, pb: 2, borderBottom: "1px solid #F1F5F9" }}>
-                                            {DEN_ALERT_CHIPS.map((chip) => {
+                                            {chips.map((chip) => {
                                                 const count = chip.value === "ALL" ? content.length : content.filter(chip.filter).length;
                                                 const isActive = activeChip === chip.value;
                                                 if (chip.value !== "ALL" && count === 0) return null;
@@ -188,7 +198,7 @@ const DenonciationsAlertes = (props) => {
                                                 <DossierCardView
                                                     items={displayedContent}
                                                     getCardData={getCardData}
-                                                    onCardClick={(item) => history.push("/denonciations/traitement/" + item.claimCode)}
+                                                    onCardClick={(item) => history.push(getUrl(item))}
                                                     filterFn={tableFilterFn}
                                                     showStatusFilter={false}
                                                     showGravityFilter={false}
@@ -198,7 +208,7 @@ const DenonciationsAlertes = (props) => {
                                             ) : (
                                                 <DossierTable
                                                     items={displayedContent}
-                                                    columns={tableColumns}
+                                                    columns={slaRows ? slaColumns : tableColumns}
                                                     filterFn={tableFilterFn}
                                                     showStatusFilter={false}
                                                     showGravityFilter={false}

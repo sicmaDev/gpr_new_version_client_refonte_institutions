@@ -13,6 +13,9 @@ import MoveUpIcon from "@mui/icons-material/MoveUp";
 import SidebarInfosClient from "./SidebarInfosClient";
 import SidebarDetailsDossier from "./SidebarDetailsDossier";
 import ActionsDisponibles from "./ActionsDisponibles";
+import SlaPanel from "./SlaPanel";
+import useClaimSla from "./useClaimSla";
+import SlaBadge from "../shared/SlaBadge";
 import FichiersTab from "./FichiersTab";
 import HistoriqueTimeline from "./HistoriqueTimeline";
 import PreEnregistreesTab from "./PreEnregistreesTab";
@@ -110,6 +113,7 @@ const TraitementShell = ({
 
   // Historique
   claimId,
+  claimType, // CLAIM ou DENUNCIACION : active le suivi des délais (SLA) de ce dossier
   transmitted, transmittedBy, transmittedTo,
   handled_by, assigned_by, assignedAt, solution,
 
@@ -155,6 +159,8 @@ const TraitementShell = ({
   const [openAccordions, setOpenAccordions] = useState({ client: false, details: false, actions: true });
   const [treatSubTab, setTreatSubTab] = useState('classique');
   const [openModal, setOpenModal] = useState(null);
+  // Suivi des délais : lu sur le serveur ; null (rien d'affiché) si le SLA n'est pas actif
+  const { sla, refresh: refreshSla } = useClaimSla(claimType, claimId);
 
   const toggleAccordion = (key) =>
     setOpenAccordions(prev => ({ client: false, details: false, actions: false, [key]: !prev[key] }));
@@ -229,6 +235,7 @@ const TraitementShell = ({
               {lblG}
             </span>
           )}
+          {sla && <SlaBadge sla={sla} />}
           {headerActions && (
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
               {headerActions}
@@ -281,6 +288,10 @@ const TraitementShell = ({
               formatDate3={formatDate3}
               getStatusLabel={(s) => STATUS_MAP[s]?.[2] ?? s}
             />
+
+            {claimType && (
+              <SlaPanel claimType={claimType} claimId={claimId} sla={sla} onChanged={refreshSla} />
+            )}
 
             {visibleActions.length > 0 && (
               <ActionsDisponibles

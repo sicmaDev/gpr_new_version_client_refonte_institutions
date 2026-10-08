@@ -4,6 +4,7 @@ import { useHistory } from "react-router-dom";
 import { KTApp } from "../../Utils/blockui";
 import { connect } from "react-redux";
 import { alertReclamationApi } from "../../apis/Alertes/AlertesApi";
+import { loadSlaAlertRows, SLA_ALERT_KPI, SLA_ALERT_CHIPS, slaTableColumns } from "./slaAlertSupport";
 import { Box, Tooltip, ButtonBase, Typography } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -11,6 +12,7 @@ import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import DossierCardView from "../../components/shared/DossierCardView";
 import DossierTable from "../../components/shared/DossierTable";
 import DossierKPIBar from "../../components/shared/DossierKPIBar";
+import { claimTarget } from "../Sla/slaRoute";
 
 /* ── KPI cards (module-level) ─────────────────────────────────────────── */
 const REC_ALERT_KPI = [
@@ -47,10 +49,13 @@ const ReclamationsAlertes = (props) => {
     const history = useHistory();
     const [viewMode, setViewMode] = useState("list");
     const [activeChip, setActiveChip] = useState("ALL");
+    // Suivi des délais actif : lignes calculées par le serveur ; null = ancien fonctionnement de la page
+    const [slaRows, setSlaRows] = useState(null);
 
-    const getUrl = (item) => {
-        if (item.status === "TREAT") return "/reclamations/mesure/" + item.claimCode;
-        return "/reclamations/traitement/" + item.claimCode;
+    const getUrl = (item) => claimTarget({ type: "CLAIM", status: item.status, code: item.claimCode }).url;
+    const actionLabel = (item) => {
+        const url = getUrl(item);
+        return url.includes("/mesure/") ? "Mesurer" : url.includes("/liste/") ? "Consulter" : "Traiter";
     };
 
     const fmtDt = (iso) => {
@@ -103,7 +108,7 @@ const ReclamationsAlertes = (props) => {
                     onClick={(e) => { e.stopPropagation(); history.push(getUrl(item)); }}
                     style={{ fontSize: "0.80rem", color: "#005081", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
                 >
-                    {item.status === "TREAT" ? "Mesurer" : "Traiter"}
+                    {actionLabel(item)}
                 </span>
             ),
         },
@@ -119,7 +124,7 @@ const ReclamationsAlertes = (props) => {
 
     const getCardData = (item) => ({
         code: item.claimCodeClient,
-        client: item.claimClient || "Anonyme",
+        client: slaRows ? (item.objetLibelle || "-") : (item.claimClient || "Anonyme"),
         title: item.claimSubject || item.claimObjet || item.claimObject || item.objetLibelle || item.objet?.libelle || (typeof item.objet === "string" ? item.objet : null) || "-",
         subtitle: null,
         status: item.status,
@@ -134,16 +139,20 @@ const ReclamationsAlertes = (props) => {
     useEffect(() => {
         KTApp.blockPage({ overlayColor: "#000000", type: "v2", state: "danger", message: "En cours de chargement..." });
         props.itemsChanged([]);
-        alertReclamationApi(props).then(() => {}).finally(() => { KTApp.unblockPage(); });
+        alertReclamationApi(props)
+            .then(() => loadSlaAlertRows("CLAIM").then(setSlaRows).catch(() => {}))
+            .finally(() => { KTApp.unblockPage(); });
         return clearComponentState;
     }, []);
 
-    const content = props.items;
+    const content = slaRows ?? props.items;
+    const chips = slaRows ? SLA_ALERT_CHIPS(true) : REC_ALERT_CHIPS;
+    const slaColumns = slaTableColumns((item) => history.push(getUrl(item)), actionLabel);
 
     const displayedContent = useMemo(() => {
-        const chip = REC_ALERT_CHIPS.find((c) => c.value === activeChip);
+        const chip = chips.find((c) => c.value === activeChip);
         return chip ? content.filter(chip.filter) : content;
-    }, [content, activeChip]);
+    }, [content, activeChip, chips]);
 
     return (
         <div id="main">
@@ -154,9 +163,9 @@ const ReclamationsAlertes = (props) => {
                             <div className="row">
                                 <div className="col l12 s12 pb-5">
                                     <div className="card-panel pb-5">
-                                        <DossierKPIBar items={content} kpiCards={REC_ALERT_KPI} />
+                                        <DossierKPIBar items={content} kpiCards={slaRows ? SLA_ALERT_KPI(true) : REC_ALERT_KPI} />
                                         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2, pb: 2, borderBottom: "1px solid #F1F5F9" }}>
-                                            {REC_ALERT_CHIPS.map((chip) => {
+                                            {chips.map((chip) => {
                                                 const count = chip.value === "ALL" ? content.length : content.filter(chip.filter).length;
                                                 const isActive = activeChip === chip.value;
                                                 if (chip.value !== "ALL" && count === 0) return null;
@@ -203,7 +212,7 @@ const ReclamationsAlertes = (props) => {
                                             ) : (
                                                 <DossierTable
                                                     items={displayedContent}
-                                                    columns={tableColumns}
+                                                    columns={slaRows ? slaColumns : tableColumns}
                                                     filterFn={tableFilterFn}
                                                     showStatusFilter={false}
                                                     showGravityFilter={false}

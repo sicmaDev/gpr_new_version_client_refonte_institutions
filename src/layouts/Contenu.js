@@ -48,6 +48,7 @@ import Bot from '../pages/Configurations/Bot';
 import Log from '../pages/Configurations/Log';
 import Exportation from '../pages/Configurations/Exportation';
 import SLA from '../pages/Configurations/SLA';
+import RapportDelais from "../pages/Sla/RapportDelais";
 import ApiKey from '../pages/Configurations/ApiKey';
 import Whatsapp from '../pages/Whatsapp';
 import Corbeille from '../pages/Configurations/Corbeille';
@@ -126,6 +127,8 @@ export default function Contenu() {
                     <Route path="/configurations/logs" component={Log} />
                     <Route path="/configurations/exportations" component={Exportation} />
                     <Route path="/configurations/sla" component={SLA} />
+                    <Route path="/sla" component={SLA} />
+                    <Route path="/rapports/delais" component={RapportDelais} />
                     <Route path="/ressources/documents" component={Documents} />
                     <Route path="/ressources/faq" component={Faq} />
                     <Route path="/configurations/notifications" component={Notifications} />

@@ -1323,6 +1323,7 @@ const AssuranceReclamation = (props) => {
     return (
       <>
         <TraitementShell
+          claimType="CLAIM"
           onBack={() => { sessionStorage.removeItem('gpr_ass_code'); history.push("/reclamations/assurance/all"); }}
           codeClient={props.codeClient || props.code}
           status={props.status}

@@ -9,6 +9,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import SlaBadge from "../../../components/shared/SlaBadge";
 import ForumIcon from "@mui/icons-material/Forum";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import { STATUS_CONFIG } from "./ClaimStatusBadge";
@@ -289,8 +290,15 @@ const ClaimsCardView = ({ items = [], mode, objets, onCardClick, currentUser, sh
                       </Box>
                     </Box>
 
-                    {/* Alerte retard */}
-                    {claim.retardDay !== undefined && claim.retardDay <= 0 &&
+                    {/* SLA (serveur) */}
+                    {claim.sla && (
+                      <Box sx={{ mt: 1, pt: 0.8, borderTop: "1px solid #F1F5F9" }}>
+                        <SlaBadge sla={claim.sla} bar />
+                      </Box>
+                    )}
+
+                    {/* Alerte retard (ancien calcul, seulement si le SLA n'est pas actif) */}
+                    {!claim.sla && claim.retardDay !== undefined && claim.retardDay <= 0 &&
                      !["SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","CLASSED"].includes(claim.status) && (
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 1, pt: 0.8, borderTop: "1px solid #FEE2E2" }}>
                         <WarningAmberIcon sx={{ fontSize: 13, color: "#EF4444" }} />

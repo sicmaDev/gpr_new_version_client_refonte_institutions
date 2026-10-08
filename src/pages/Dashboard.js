@@ -26,6 +26,7 @@ import RedoIcon from '@mui/icons-material/Redo';
 import MenuIcon from '@mui/icons-material/Menu';
 import CircularProgress from '@mui/material/CircularProgress';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SlaDashboardCards from './Sla/SlaDashboardCards';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -791,6 +792,9 @@ const Dashboard = (props) => {
           </div>
         </div>
       </div>
+
+      {/* ── Suivi des délais (SLA) : affiché seulement quand il est actif ── */}
+      <SlaDashboardCards />
 
       {/* ── Section 3 : Répartition par agence (RA/DIRECTION uniquement) ── */}
       {isRA && scopeType === 'DIRECTION' && agencesStats.length > 0 && (

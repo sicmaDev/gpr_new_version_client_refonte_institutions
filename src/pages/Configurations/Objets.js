@@ -19,6 +19,7 @@ import {
 } from "../../redux/actions/Configurations/ObjetsActions";
 import { loadItemFromLocalStorage, today } from "../../Utils/utils";
 import { MAX_SUBJECT_DURATION } from "../../Utils/globals";
+import { slaStatus } from "../../apis/Sla/SlaApi";
 import { connect } from "react-redux";
 import { ajout, liste, modification, suppression } from "../../apis/Configurations/ObjetsApi";
 import { handlePrint } from "../../Utils/tables";
@@ -56,7 +57,10 @@ const Objets = (props) => {
     const [addLoading, setAddLoading]       = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [editLoading, setEditLoading]     = useState(false);
-    const [editForm, setEditForm]           = useState({ libelle: "", description: "", risqueLevel: "", categorie: "", categorieLibelle: "", processingTime: "" });
+    const [editForm, setEditForm]           = useState({ libelle: "", description: "", risqueLevel: "", categorie: "", categorieLibelle: "", processingTime: "", takeoverHours: "" });
+    // Suivi des délais (SLA) actif : le délai de l'objet devient facultatif (vide = délai de la politique)
+    const [slaOn, setSlaOn] = useState(false);
+    useEffect(() => { slaStatus().then((s) => setSlaOn(!!s?.enabled)).catch(() => {}); }, []);
     const [editErrors, setEditErrors]       = useState({});
     const [deleteConfirm, setDeleteConfirm] = useState({ open: false, item: null, loading: false });
     const [viewMode, setViewMode]           = useState("list");
@@ -135,19 +139,27 @@ const Objets = (props) => {
             ),
         },
         {
-            key: "processingTime", label: `Délai (jours, max ${MAX_SUBJECT_DURATION})`, required: true, fullWidth: false,
+            key: "processingTime", label: slaOn ? `Délai de résolution (jours, max ${MAX_SUBJECT_DURATION}) — vide : délai de la politique` : `Délai (jours, max ${MAX_SUBJECT_DURATION})`, required: !slaOn, fullWidth: false,
             render: (value, onChange) => (
-                <input type="number" min={0} max={MAX_SUBJECT_DURATION} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder="Ex: 10"
+                <input type="number" min={1} max={MAX_SUBJECT_DURATION} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={slaOn ? "Vide = politique" : "Ex: 10"}
                     style={{ width: "100%", boxSizing: "border-box", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 }}
                     onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
             ),
         },
+        ...(slaOn ? [{
+            key: "takeoverHours", label: "Prise en charge (heures) — vide : délai de la politique", required: false, fullWidth: false,
+            render: (value, onChange) => (
+                <input type="number" min={1} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder="Vide = politique"
+                    style={{ width: "100%", boxSizing: "border-box", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 }}
+                    onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+            ),
+        }] : []),
     ];
     const handleModalSubmit = async (items) => {
         setAddLoading(true);
         try {
             for (const item of items) {
-                await ajout({ libelle: item.libelle, description: item.description, risqueLevel: item.risqueLevel, categorie: item.categorie, processingTime: item.processingTime }, props);
+                await ajout({ libelle: item.libelle, description: item.description, risqueLevel: item.risqueLevel, categorie: item.categorie, processingTime: Number(item.processingTime) || 0, takeoverHours: item.takeoverHours ? Number(item.takeoverHours) : null }, props);
             }
         } finally { setAddLoading(false); setAddModalOpen(false); }
     };
@@ -157,7 +169,7 @@ const Objets = (props) => {
         setEditForm({
             libelle: sp.libelle || "", description: sp.description || "",
             risqueLevel: sp.risqueLevel || "", categorie: sp.categorie?.id || "",
-            categorieLibelle: sp.categorie?.libelle || "", processingTime: sp.processingTime || "",
+            categorieLibelle: sp.categorie?.libelle || "", processingTime: sp.processingTime || "", takeoverHours: sp.takeoverHours || "",
         });
         setEditErrors({}); setEditModalOpen(true);
     };
@@ -166,10 +178,17 @@ const Objets = (props) => {
         if (!editForm.libelle.trim()) errs.libelle = "Champ requis";
         if (!editForm.risqueLevel) errs.risqueLevel = "Champ requis";
         if (!editForm.categorie) errs.categorie = "Champ requis";
-        if (!editForm.processingTime || Number(editForm.processingTime) > MAX_SUBJECT_DURATION) errs.processingTime = `Requis (max ${MAX_SUBJECT_DURATION})`;
+        const delai = Number(editForm.processingTime);
+        if (slaOn) {
+            // SLA actif : le délai peut rester vide (= politique) ; s'il est donné, il doit être entre 1 et le maximum
+            if (editForm.processingTime && (delai < 1 || delai > MAX_SUBJECT_DURATION)) errs.processingTime = `Entre 1 et ${MAX_SUBJECT_DURATION}, ou vide`;
+            if (editForm.takeoverHours && Number(editForm.takeoverHours) < 1) errs.takeoverHours = "Au moins 1 heure, ou vide";
+        } else if (!editForm.processingTime || delai > MAX_SUBJECT_DURATION) {
+            errs.processingTime = `Requis (max ${MAX_SUBJECT_DURATION})`;
+        }
         if (Object.keys(errs).length) { setEditErrors(errs); return; }
         setEditLoading(true); props.etat2Changed(true);
-        modification({ id: props.id, libelle: editForm.libelle, description: editForm.description, risqueLevel: editForm.risqueLevel, categorie: editForm.categorie, processingTime: editForm.processingTime }, props)
+        modification({ id: props.id, libelle: editForm.libelle, description: editForm.description, risqueLevel: editForm.risqueLevel, categorie: editForm.categorie, processingTime: Number(editForm.processingTime) || 0, takeoverHours: editForm.takeoverHours ? Number(editForm.takeoverHours) : null }, props)
             .then(() => { setEditModalOpen(false); clearComponentState(); })
             .finally(() => { setEditLoading(false); props.etat2Changed(false); });
     };
@@ -229,10 +248,19 @@ const Objets = (props) => {
                             </div>
                             <div>
                                 <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Délai (jours) <span style={{ color: "#ef4444" }}>*</span></label>
-                                <input type="number" min={0} max={MAX_SUBJECT_DURATION} value={editForm.processingTime} onChange={(e) => { setEditForm(p => ({ ...p, processingTime: e.target.value })); setEditErrors(p => ({ ...p, processingTime: "" })); }} placeholder={`Max ${MAX_SUBJECT_DURATION}`}
+                                <input type="number" min={1} max={MAX_SUBJECT_DURATION} value={editForm.processingTime} onChange={(e) => { setEditForm(p => ({ ...p, processingTime: e.target.value })); setEditErrors(p => ({ ...p, processingTime: "" })); }} placeholder={`Max ${MAX_SUBJECT_DURATION}`}
                                     style={{ ...selectStyle(editErrors.processingTime) }} onFocus={(e) => { if (!editErrors.processingTime) e.target.style.borderColor = "var(--gpr-primary)"; }} onBlur={(e) => { if (!editErrors.processingTime) e.target.style.borderColor = "#e2e8f0"; }} />
                                 {editErrors.processingTime && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.processingTime}</div>}
                             </div>
+                            {slaOn && (
+                                <div>
+                                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Prise en charge (heures)</label>
+                                    <input type="number" min={1} value={editForm.takeoverHours} onChange={(e) => { setEditForm(p => ({ ...p, takeoverHours: e.target.value })); setEditErrors(p => ({ ...p, takeoverHours: "" })); }} placeholder="Vide = politique"
+                                        style={{ ...selectStyle(editErrors.takeoverHours) }} />
+                                    {editErrors.takeoverHours && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{editErrors.takeoverHours}</div>}
+                                    <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 3 }}>Vide : délai de la politique du niveau de risque</div>
+                                </div>
+                            )}
                         </div>
                     </DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>

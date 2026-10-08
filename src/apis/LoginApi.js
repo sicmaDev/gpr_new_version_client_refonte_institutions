@@ -88,6 +88,7 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 if (_s.appearance) {
                     saveItemToSessionStorage(_s.appearance, 'app-appearance');
                 }
+                saveItemToSessionStorage(_s.appearanceVisible !== false, 'app-appearance-visible');
 
                 //enregistrement dans le local storage
                 saveItemToLocalStorage(response.data.response.content.token, 'token')
@@ -113,6 +114,7 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 if (_s.appearance) {
                     saveItemToLocalStorage(_s.appearance, 'app-appearance');
                 }
+                saveItemToLocalStorage(_s.appearanceVisible !== false, 'app-appearance-visible');
 
             } else {
                 const msg = response.data?.response?.content?.message;
