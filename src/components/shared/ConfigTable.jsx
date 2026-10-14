@@ -156,7 +156,7 @@ const ConfigTable = ({
       <TableContainer
         component={Paper}
         elevation={0}
-        sx={{ border: "1px solid #F1F5F9", borderRadius: "14px", overflow: "hidden" }}
+        sx={{ border: "1px solid #F1F5F9", borderRadius: "14px", overflowX: "auto", overflowY: "hidden" }}
       >
         <Table size="small" stickyHeader {...(exportClassName ? { id: "as-react-datatable", className: exportClassName } : {})}>
           <TableHead>
