@@ -119,6 +119,7 @@ const TraitementShell = ({
 
   // Traitement tab
   treatForm,
+  treatActionsVisible = true, // false : le formulaire est remplacé par un message, donc ni « Sauvegarder » ni « Traiter »
   onTreat,         // handler du bouton "Traiter"
   loadingTreat,    // boolean loading state
   onSaveDraft,     // handler du bouton "Sauvegarder"
@@ -193,6 +194,9 @@ const TraitementShell = ({
   const isAssignedToMe = status === "AFFECTED" && handled_by === sessionUser?.firstAndLastName;
   const hasSession = session && (typeof session === "string" ? session !== "" : session.status !== "CLOSED") && !isClosed;
   const isTransmitted = transmitted === "true" || transmitted === true;
+  // Collaboratif et Chat n'ont d'intérêt que s'il existe une session, ou si la personne peut en ouvrir une
+  // (bouton « Ouvrir la session ») : sinon les deux onglets restent vides.
+  const collabAvailable = Boolean(btnS) || Boolean(tchat) || Boolean(session);
 
   const handleActionClick = (key) => {
     if (onActionOverride) { onActionOverride(key); } else { setOpenModal(key); }
@@ -316,7 +320,7 @@ const TraitementShell = ({
                     { key: 'fichiers',   label: 'Contenu & Médias' },
                     { key: 'historique', label: 'Historique' },
                     { key: 'chat',       label: 'Chat' },
-                  ]).map((tab) => (
+                  ].filter((tab) => tab.key !== 'chat' || collabAvailable)).map((tab) => (
                     <button
                       key={tab.key}
                       onClick={() => setActiveTab(tab.key)}
@@ -376,7 +380,7 @@ const TraitementShell = ({
             )}
 
             {/* Tab content */}
-            <div className="flex-1 overflow-y-auto bg-[#f5f5f5]">
+            <div className="flex-1 overflow-y-auto bg-[#f5f5f5]" style={{ paddingBottom: 32 }}>
 
               {/* ── CUSTOM TABS ── */}
               {customTabs && customTabs.map((tab) => (
@@ -395,7 +399,7 @@ const TraitementShell = ({
                       { key: 'classique',        label: 'Classique',                   icon: <BoltIcon style={{ fontSize: 16 }} /> },
                       { key: 'pre_enregistrees', label: 'Solutions pré-enregistrées',  icon: <LightbulbIcon style={{ fontSize: 16 }} /> },
                       { key: 'collaboratif',     label: 'Collaboratif',                icon: <GroupsIcon style={{ fontSize: 16 }} /> },
-                    ].map((sub) => {
+                    ].filter((sub) => (sub.key !== 'collaboratif' || collabAvailable) && (sub.key !== 'pre_enregistrees' || canTreat !== false)).map((sub) => {
                       const active = treatSubTab === sub.key;
                       return (
                         <button
@@ -431,13 +435,13 @@ const TraitementShell = ({
                           <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 1 }}>Solution proposée pour résoudre ce dossier</div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                          {draftSavedAt && (
+                          {treatActionsVisible && draftSavedAt && (
                             <span style={{ fontSize: 11, color: '#64748b', fontStyle: 'italic' }}>
                               Brouillon du {draftSavedAt}
                             </span>
                           )}
                           <div style={{ display: 'flex', gap: 8 }}>
-                            {draftSavedAt && onLoadDraft && (
+                            {treatActionsVisible && draftSavedAt && onLoadDraft && (
                               <button
                                 onClick={onLoadDraft}
                                 style={{
@@ -450,7 +454,7 @@ const TraitementShell = ({
                                 ↩ Charger le brouillon
                               </button>
                             )}
-                            {onSaveDraft && (
+                            {treatActionsVisible && onSaveDraft && (
                               <LoadingButton
                                 onClick={onSaveDraft}
                                 loading={loadingDraft}
@@ -477,7 +481,7 @@ const TraitementShell = ({
                       <div className="treat-form-modern" style={{ padding: '16px 18px' }}>
                         {treatForm}
                       </div>
-                      {onTreat && (
+                      {treatActionsVisible && onTreat && (
                         <div style={{ padding: '12px 18px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
                           <LoadingButton
                             onClick={onTreat}

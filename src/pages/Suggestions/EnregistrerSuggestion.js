@@ -18,7 +18,7 @@ import { v4 as uuid } from "uuid";
 import { cleanPhoneNumber, cleanPhoneNumber2, cleanPhoneNumber3, groupBy, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, sleep, filesToBase64Dtos } from "../../Utils/utils";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, Fab, TextField } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
@@ -30,7 +30,6 @@ import PhoneInput from "react-phone-number-input";
 import { licenseInfo } from "../../apis/LoginApi";
 import { INSTITUTION_PAYS_CODE } from "../../Utils/globals";
 import useRecorder from "../../hooks/useRecorder";
-import RecorderControls from "../../components/recorder-controls";
 import { Mic } from "@mui/icons-material";
 import { downloadAudioApi } from "../../apis/Reclamations/ReclamationsApi";
 import moment from "moment";
@@ -53,6 +52,7 @@ import SmsOutlinedIcon from "@mui/icons-material/SmsOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import WarningIcon from '@mui/icons-material/Warning';
 import MicIcon from "@mui/icons-material/Mic";
+import VoiceRecorderDialog from "../../components/shared/VoiceRecorderDialog";
 moment.locale("fr");
 registerLocale('fr', fr);
 
@@ -706,23 +706,13 @@ const EnregistrerSuggestion = (props) => {
 
             {/* Modal enregistreur vocal */}
             {showAudioBox && (
-                <Dialog open={open2} onClose={handleClose2} fullWidth maxWidth="sm"
-                    PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
-                    <DialogContent>
-                        <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
-                            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
-                            </div>
-                            <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>+ Audio</div>
-                            <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Enregistrez votre message vocal</div>
-                        </div>
-                        <section className="voice-recorder">
-                            <div className="recorder-container">
-                                <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={handleClose2} />
-                            </div>
-                        </section>
-                    </DialogContent>
-                </Dialog>
+                <VoiceRecorderDialog
+                    open={open2}
+                    onClose={handleClose2}
+                    title="Enregistreur vocal suggestions"
+                    recorderState={recorderState}
+                    handlers={handlers}
+                />
             )}
 
             <WizardLayout

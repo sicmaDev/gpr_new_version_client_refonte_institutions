@@ -64,7 +64,7 @@ import {
 import { cleanPhoneNumber, groupBy, guessExtension, handleDatePicker, isEmpty, isSettingComplete, isValidDate, isValidPhone, loadItemFromLocalStorage, loadItemFromSessionStorage, filesToBase64Dtos } from "../../Utils/utils";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Fab, TextField } from "@mui/material";
+import { Button, DialogActions, Fab, TextField } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from '@mui/icons-material/Save';
@@ -73,7 +73,6 @@ import axios from "axios";
 import { addDenunciationApi, addDenunciationApiOffline, addTempDenunciationApi, addTempDenunciationApiOffline, downloadAudioApi, downloadFillesApi, getDenunAudioApi, getFillesApi, listeByStatut, deleteDenunciationApi, listeByStatutOffline } from "../../apis/Denonciations/DenonciationsApi";
 import { licenseInfo } from "../../apis/LoginApi";
 import useRecorder from "../../hooks/useRecorder";
-import RecorderControls from "../../components/recorder-controls";
 import { CancelOutlined, Mic } from "@mui/icons-material";
 import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 // import { licenseControl } from "../../Utils/license";
@@ -82,6 +81,7 @@ import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 //import 'react-intl-tel-input/dist/main.css';
 
 import { reset } from "../../redux/actions/WhatsappActions";
+import VoiceRecorderDialog from "../../components/shared/VoiceRecorderDialog";
 moment.locale("fr");
 
 registerLocale('fr', fr)
@@ -1207,43 +1207,13 @@ const EnregistrerDenonciation = (props) => {
 
 
             {showAudioBox && (
-                <div>
-                    <Dialog
-                        open={open2}
-                        onClose={handleClose2}
-                        style={{ padding: "16px" }}
-                    >
-                        <DialogTitle
-                            align="center"
-                            color={"var(--gpr-primary, #005081)"}
-                            fontSize={"23px"}
-                            fontWeight={"bold"}
-                        >
-                            Enregistreur vocal dénonciations
-                        </DialogTitle>
-                        <DialogContent>
-                            <DialogContentText
-                                align="center"
-                                fontSize={"14px"}
-                                textAlign={"center"}
-                            >
-                                Cliquez sur le bouton ci-dessous et parler dans le micro de
-                                votre téléphone, ou branchez un casque ou des écouteurs
-                            </DialogContentText>
-
-                            <section className="voice-recorder">
-                                <div className="recorder-container">
-                                    <RecorderControls
-                                        recorderState={recorderState}
-                                        handlers={handlers}
-                                        closeAction={handleClose2}
-                                    />
-                                    {/* <RecordingsList audio={audio} /> */}
-                                </div>
-                            </section>
-                        </DialogContent>
-                    </Dialog>
-                </div>
+                <VoiceRecorderDialog
+                    open={open2}
+                    onClose={handleClose2}
+                    title="Enregistreur vocal dénonciations"
+                    recorderState={recorderState}
+                    handlers={handlers}
+                />
             )}
 
             <WizardLayout

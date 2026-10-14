@@ -133,6 +133,7 @@ import {
   DialogActions,
   DialogTitle,
 } from "@mui/material";
+import TreatNotice from "../../components/treatment/TreatNotice";
 import {
   DeleteOutline,
   FileDownload,
@@ -1536,19 +1537,33 @@ const TraiterDenonciation = (props) => {
     );
   };
 
+  // Bannière de transmission : elle dit qui a transmis à qui et affiche le commentaire laissé par l'expéditeur,
+  // aussi bien pour le destinataire que pour les autres personnes qui ouvrent le dossier.
+  const iAmRecipient = user?.firstAndLastName === props.transmittedTo;
   const warningTransmission = props.transmitted === "true" && props.transmittedTo &&
-    user?.firstAndLastName !== props.transmittedTo &&
     !props.convertedBy && (
-    <span style={{ display: 'flex', alignItems: 'center', fontStyle: 'italic' }}>
-      <SendIcon fontSize="small" sx={{ mr: 1, color: '#7c3aed' }} />
-      {`Cette dénonciation a été transmise à `}
-      <strong style={{ marginLeft: 4 }}>{props.transmittedTo}</strong>
+    <span style={{ display: 'flex', alignItems: 'flex-start', fontStyle: 'italic' }}>
+      <SendIcon fontSize="small" sx={{ mr: 1, mt: 0.2, color: '#7c3aed' }} />
+      <span>
+        {iAmRecipient ? (
+          <>Cette dénonciation vous a été transmise par <strong>{props.transmittedBy || "-"}</strong>.</>
+        ) : (
+          <>Cette dénonciation a été transmise à <strong>{props.transmittedTo}</strong>{props.transmittedBy ? <> par <strong>{props.transmittedBy}</strong></> : null}.</>
+        )}
+        {props.transmissionComment ? (
+          <>
+            <br />
+            <span style={{ fontStyle: 'normal', fontWeight: 400 }}>Commentaire : {props.transmissionComment}</span>
+          </>
+        ) : null}
+      </span>
     </span>
   );
 
   let statusElt;
   let affectForm;
   let treatForm;
+  let treatActionsVisible = true;
   let solutionsListe = [];
   switch (props.status) {
     case "SAVED":
@@ -1740,13 +1755,11 @@ const TraiterDenonciation = (props) => {
         props.transmittedTo === user.firstAndLastName &&
         props.transmitted === "true" &&
         addR === "MOLDUE";
-      const isRaNotTransmitted =
-        user.ra === true && props.transmitted === "false";
+      const showTreatForm = hasTreatmentRole && (isCreatorNotTransmitted || isTransmittedToMoldue);
+      // les boutons ne sont affichés que si le vrai formulaire l'est (droit du niveau de risque compris)
+      treatActionsVisible = showTreatForm && Boolean(props.authorize);
 
-      if (
-        hasTreatmentRole &&
-        (isCreatorNotTransmitted || isTransmittedToMoldue || isRaNotTransmitted)
-      ) {
+      if (showTreatForm) {
         treatForm = (
           <>
             {/* {solutionsListe} */}
@@ -1862,14 +1875,7 @@ const TraiterDenonciation = (props) => {
                     <summary className="text-details">
                       Resolution de la dénonciation
                     </summary>
-                    <div className="card-alert card red lighten-5">
-                      <div
-                        className="card-content red-text"
-                        style={{ textAlign: "center" }}
-                      >
-                        <ul>Vous ne pouvez pas traiter cette dénonciation</ul>
-                      </div>
-                    </div>
+                    <TreatNotice tone="danger">Vous ne pouvez pas traiter cette dénonciation</TreatNotice>
                   </details>
                 </div>
               </div>
@@ -1878,30 +1884,18 @@ const TraiterDenonciation = (props) => {
         );
       } else if (!hasTreatmentRole) {
         treatForm = (
-          <div className="card-alert card orange lighten-5">
-            <div className="card-content orange-text" style={{ textAlign: "center" }}>
-              <ul>Votre habilitation actuelle ne vous permet pas de traiter cette dénonciation.</ul>
-            </div>
-          </div>
+          <TreatNotice tone="warn">Votre habilitation actuelle ne vous permet pas de traiter cette dénonciation.</TreatNotice>
         );
       } else if (
         props.transmitted === "true" &&
         props.transmittedTo === user.firstAndLastName
       ) {
         treatForm = (
-          <div className="card-alert card orange lighten-5">
-            <div className="card-content orange-text" style={{ textAlign: "center" }}>
-              <ul>Cette dénonciation vous a été transmise, mais votre rôle actuel ne vous permet pas de la traiter.</ul>
-            </div>
-          </div>
+          <TreatNotice tone="warn">Cette dénonciation vous a été transmise, mais votre rôle actuel ne vous permet pas de la traiter.</TreatNotice>
         );
       } else if (props.created_by !== user.firstAndLastName && user.ra !== true) {
         treatForm = (
-          <div className="card-alert card orange lighten-5">
-            <div className="card-content orange-text" style={{ textAlign: "center" }}>
-              <ul>Seul l'agent qui a enregistré cette dénonciation peut la traiter. Vous pouvez l'affecter à un agent.</ul>
-            </div>
-          </div>
+          <TreatNotice tone="warn">Seul l'agent qui a enregistré cette dénonciation peut la traiter. Vous pouvez l'affecter à un agent.</TreatNotice>
         );
       } else {
         treatForm = "";
@@ -2154,14 +2148,7 @@ const TraiterDenonciation = (props) => {
                     <summary className="text-details">
                       Resolution de la Dénonciation
                     </summary>
-                    <div className="card-alert card red lighten-5">
-                      <div
-                        className="card-content red-text"
-                        style={{ textAlign: "center" }}
-                      >
-                        <ul>Vous ne pouvez pas traiter cette Dénonciation</ul>
-                      </div>
-                    </div>
+                    <TreatNotice tone="danger">Vous ne pouvez pas traiter cette Dénonciation</TreatNotice>
                   </details>
                 </div>
               </div>
@@ -2517,14 +2504,7 @@ const TraiterDenonciation = (props) => {
                     <summary className="text-details">
                       Retraitement de la dénonciation
                     </summary>
-                    <div className="card-alert card red lighten-5">
-                      <div
-                        className="card-content red-text"
-                        style={{ textAlign: "center" }}
-                      >
-                        <ul>Vous ne pouvez pas traiter cette dénonciation</ul>
-                      </div>
-                    </div>
+                    <TreatNotice tone="danger">Vous ne pouvez pas traiter cette dénonciation</TreatNotice>
                   </details>
                 </div>
               </div>
@@ -3367,6 +3347,7 @@ const TraiterDenonciation = (props) => {
           solution={props.solution}
 
           treatForm={treatForm}
+          treatActionsVisible={treatActionsVisible}
           onTreat={handleReSolve}
           loadingTreat={props.etat2}
           onSaveDraft={handleSaveDraft}
@@ -3374,8 +3355,10 @@ const TraiterDenonciation = (props) => {
           draftSavedAt={draftSavedAt}
           onLoadDraft={savedDraft ? handleLoadDraft : undefined}
           canTreat={
+            treatActionsVisible && (
             (props.handled_by === user.firstAndLastName && Boolean(props.authorize)) ||
             (props.created_by === user.firstAndLastName && props.unit && user?.servicePointDto?.libelle && props.unit === user.servicePointDto.libelle)
+            )
           }
           conversionWarning={warningConvert || null}
           transmissionWarning={warningTransmission || null}

@@ -383,6 +383,10 @@ export const Items = (props) => {
   const showDashboard = mode === 1;
   const showReclamations = hbt.some(i => ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'H14'].includes(i));
   const showDenonciations = hbt.some(i => ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'H14'].includes(i));
+  // Synchronisation : seules les personnes qui enregistrent des plaintes créent des éléments hors connexion
+  const showSync = hbt.includes('H1') && mode === 1;
+  // Suivi des délais : ceux qui voient les plaintes, plus Pilote et DE (pas un administrateur sans droit sur les plaintes)
+  const showSla = mode === 1 && slaEnabled && (showReclamations || addR === 'PILOTE' || addR === 'DE');
   const showSuggestions = hbt.some(i => ['H1', 'H7', 'H8', 'H9', 'H10', 'H14'].includes(i));
   const showRapports = hbt.includes('H11') && mode === 1;
   const showAlertes = (hbt.includes('H13') || addR === 'PILOTE' || addR === 'DE') && mode === 1;
@@ -435,8 +439,8 @@ export const Items = (props) => {
         </NavLink>
       )}
 
-      {/* ── Suivi des délais (SLA) : tous les utilisateurs, dans leur périmètre ── */}
-      {mode === 1 && slaEnabled && (
+      {/* ── Suivi des délais (SLA) : ceux qui voient les plaintes, dans leur périmètre ── */}
+      {showSla && (
         <NavLink to="/sla" style={link}>
           <ListItemButton sx={iSx('/sla')} className="lib">
             <ListItemIcon><SpeedIcon style={col(isActive('/sla'))} /></ListItemIcon>
@@ -929,10 +933,10 @@ export const Items = (props) => {
         </>
       )}
 
-      {/* Synchronisation — visible uniquement en mode Online (on ne peut de
+      {/* Synchronisation — visible en mode Online pour ceux qui enregistrent (on ne peut de
           toute façon rien synchroniser sans serveur joignable ; masqué en
           Offline comme le reste des menus qui n'y ont pas leur place). */}
-      {mode === 1 && (
+      {showSync && (
       <NavLink to="/synchronisation" style={link}>
         <ListItemButton sx={iSx('/synchronisation')} className="lib">
           <ListItemIcon>{si(SyncIcon, isActive('/synchronisation'))}</ListItemIcon>

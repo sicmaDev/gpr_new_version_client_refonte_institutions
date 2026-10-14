@@ -96,8 +96,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
-  DialogTitle,
   ListItemText,
   MenuItem,
   TextField,
@@ -107,7 +105,6 @@ import { LoadingButton } from "@mui/lab";
 import SaveIcon from "@mui/icons-material/Save";
 import { notify } from "../../Utils/alert";
 import axios from "axios";
-import RecorderControls from "../../components/recorder-controls";
 import RecordingsList from "../../components/recordings-list";
 import useRecorder from "../../hooks/useRecorder";
 // import DateInput from "../ui/DateInput";
@@ -150,6 +147,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { sendEmail } from "../../apis/Configurations/MailApi";
 import "moment/locale/fr";
 import WizardLayout from "../../components/shared/WizardLayout";
+import VoiceRecorderDialog from "../../components/shared/VoiceRecorderDialog";
 moment.locale("fr");
 registerLocale("fr", fr);
 
@@ -1951,43 +1949,13 @@ const EnregistrerReclamation = (props) => {
         </div>
       )}
       {showAudioBox && (
-        <div>
-          <Dialog
-            open={open2}
-            onClose={handleClose2}
-            style={{ padding: "16px" }}
-          >
-            <DialogTitle
-              align="center"
-              color={"var(--gpr-primary, #005081)"}
-              fontSize={"23px"}
-              fontWeight={"bold"}
-            >
-              Enregistreur vocal Réclamations
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText
-                align="center"
-                fontSize={"14px"}
-                textAlign={"center"}
-              >
-                Cliquez sur le bouton ci-dessous et parler dans le micro de
-                votre téléphone, ou branchez un casque ou des écouteurs
-              </DialogContentText>
-
-              <section className="voice-recorder">
-                <div className="recorder-container">
-                  <RecorderControls
-                    recorderState={recorderState}
-                    handlers={handlers}
-                    closeAction={handleClose2}
-                  />
-                  {/* <RecordingsList audio={audio} /> */}
-                </div>
-              </section>
-            </DialogContent>
-          </Dialog>
-        </div>
+        <VoiceRecorderDialog
+          open={open2}
+          onClose={handleClose2}
+          title="Enregistreur vocal Réclamations"
+          recorderState={recorderState}
+          handlers={handlers}
+        />
       )}
 
       {props.modalVisible && props.existingClaims.length > 0 && (

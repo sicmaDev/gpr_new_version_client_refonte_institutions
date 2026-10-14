@@ -39,13 +39,13 @@ export default function RecorderControls({ recorderState, handlers, closeAction 
         )}
         {initRecording ? (
 
-          <Fab style={{ backgroundColor: "#84cd3e", color: "white" }} disabled={recordingSeconds === 0 && recordingMinutes === 0}
+          <Fab style={{ backgroundColor: "var(--gpr-primary, #005081)", color: "white" }} disabled={recordingSeconds === 0 && recordingMinutes === 0}
             onClick={handleSaveClick}><SaveIcon  />
 
             </Fab>
 
         ) : (
-          <Fab style={{ backgroundColor: "#84cd3e", color: "white" }} onClick={startRecording}><MicIcon /></Fab>
+          <Fab style={{ backgroundColor: "var(--gpr-primary, #005081)", color: "white" }} onClick={startRecording}><MicIcon /></Fab>
 
         )}
       </div>

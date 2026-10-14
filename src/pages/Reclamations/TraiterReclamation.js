@@ -138,6 +138,7 @@ import Slide from "@mui/material/Slide";
 import PersonIcon from "@mui/icons-material/Person";
 import CallIcon from "@mui/icons-material/Call";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import TreatNotice from "../../components/treatment/TreatNotice";
 import WcIcon from "@mui/icons-material/Wc";
 import LanguageIcon from "@mui/icons-material/Language";
 import FolderSharedIcon from "@mui/icons-material/FolderShared";
@@ -2103,19 +2104,33 @@ const TraiterReclamation = (props) => {
     );
   };
 
+  // Bannière de transmission : elle dit qui a transmis à qui et affiche le commentaire laissé par l'expéditeur,
+  // aussi bien pour le destinataire que pour les autres personnes qui ouvrent le dossier.
+  const iAmRecipient = user?.firstAndLastName === props.transmittedTo;
   const warningTransmission = props.transmitted === "true" && props.transmittedTo &&
-    user?.firstAndLastName !== props.transmittedTo &&
     !props.convertedBy && (
-    <span style={{ display: 'flex', alignItems: 'center', fontStyle: 'italic' }}>
-      <SendIcon fontSize="small" sx={{ mr: 1, color: '#7c3aed' }} />
-      {`Cette réclamation a été transmise à `}
-      <strong style={{ marginLeft: 4 }}>{props.transmittedTo}</strong>
+    <span style={{ display: 'flex', alignItems: 'flex-start', fontStyle: 'italic' }}>
+      <SendIcon fontSize="small" sx={{ mr: 1, mt: 0.2, color: '#7c3aed' }} />
+      <span>
+        {iAmRecipient ? (
+          <>Cette réclamation vous a été transmise par <strong>{props.transmittedBy || "-"}</strong>.</>
+        ) : (
+          <>Cette réclamation a été transmise à <strong>{props.transmittedTo}</strong>{props.transmittedBy ? <> par <strong>{props.transmittedBy}</strong></> : null}.</>
+        )}
+        {props.transmissionComment ? (
+          <>
+            <br />
+            <span style={{ fontStyle: 'normal', fontWeight: 400 }}>Commentaire : {props.transmissionComment}</span>
+          </>
+        ) : null}
+      </span>
     </span>
   );
 
   let statusElt;
   let affectForm = "";
   let treatForm;
+  let treatActionsVisible = true;
   let solutionsListe = [];
   switch (props.status) {
     case "SAVED":
@@ -2313,27 +2328,22 @@ const TraiterReclamation = (props) => {
         );
       }
 
-      // Qui a le droit de voir le formulaire de résolution (et donc les
-      // boutons "Résoudre"/"Traiter") : il faut le rôle H2/H3/H4, et être
-      // soit le créateur (réclamation non transmise), soit le destinataire
-      // d'une transmission avec le rôle MOLDUE, soit un RA sur une
-      // réclamation non transmise.
+      // Qui voit le formulaire de résolution (et donc les boutons « Traiter » et « Sauvegarder ») : comme dans
+      // l'ancienne version, il faut un des droits H2, H3 ou H4 ET être soit l'auteur de la réclamation (non
+      // transmise), soit le destinataire d'une transmission.
       const hasTreatmentRole =
         hbt.includes("H2") || hbt.includes("H3") || hbt.includes("H4");
       const isCreatorNotTransmitted =
         props.created_by === user.firstAndLastName &&
         props.transmitted === "false";
-      const isTransmittedToMoldue =
+      const isTransmittedToMe =
         props.transmittedTo === user.firstAndLastName &&
-        props.transmitted === "true" &&
-        addR === "MOLDUE";
-      const isRaNotTransmitted =
-        user.ra === true && props.transmitted === "false";
+        props.transmitted === "true";
+      const showTreatForm = hasTreatmentRole && (isCreatorNotTransmitted || isTransmittedToMe);
+      // les boutons ne sont affichés que si le vrai formulaire l'est (droit du niveau de risque comprise)
+      treatActionsVisible = showTreatForm && Boolean(props.authorize);
 
-      if (
-        hasTreatmentRole &&
-        (isCreatorNotTransmitted || isTransmittedToMoldue || isRaNotTransmitted)
-      ) {
+      if (showTreatForm) {
         treatForm = (
           <>
             {/* {solutionsListe} */}
@@ -2450,14 +2460,7 @@ const TraiterReclamation = (props) => {
                     <summary className="text-details">
                       Resolution de la réclamation
                     </summary>
-                    <div className="card-alert card red lighten-5">
-                      <div
-                        className="card-content red-text"
-                        style={{ textAlign: "center" }}
-                      >
-                        <ul>Vous ne pouvez pas traiter cette réclamation</ul>
-                      </div>
-                    </div>
+                    <TreatNotice tone="danger">Vous ne pouvez pas traiter cette réclamation</TreatNotice>
                   </details>
                 </div>
               </div>
@@ -2466,30 +2469,18 @@ const TraiterReclamation = (props) => {
         );
       } else if (!hasTreatmentRole) {
         treatForm = (
-          <div className="card-alert card orange lighten-5">
-            <div className="card-content orange-text" style={{ textAlign: "center" }}>
-              <ul>Votre habilitation actuelle ne vous permet pas de traiter cette réclamation.</ul>
-            </div>
-          </div>
+          <TreatNotice tone="warn">Votre habilitation actuelle ne vous permet pas de traiter cette réclamation.</TreatNotice>
         );
       } else if (
         props.transmitted === "true" &&
         props.transmittedTo === user.firstAndLastName
       ) {
         treatForm = (
-          <div className="card-alert card orange lighten-5">
-            <div className="card-content orange-text" style={{ textAlign: "center" }}>
-              <ul>Cette réclamation vous a été transmise, mais votre rôle actuel ne vous permet pas de la traiter.</ul>
-            </div>
-          </div>
+          <TreatNotice tone="warn">Cette réclamation vous a été transmise, mais votre rôle actuel ne vous permet pas de la traiter.</TreatNotice>
         );
       } else if (props.created_by !== user.firstAndLastName && user.ra !== true) {
         treatForm = (
-          <div className="card-alert card orange lighten-5">
-            <div className="card-content orange-text" style={{ textAlign: "center" }}>
-              <ul>Seul l'agent qui a enregistré cette réclamation peut la traiter. Vous pouvez l'affecter à un agent.</ul>
-            </div>
-          </div>
+          <TreatNotice tone="warn">Seul l'agent qui a enregistré cette réclamation peut la traiter. Vous pouvez l'affecter à un agent.</TreatNotice>
         );
       } else {
         treatForm = "";
@@ -2755,14 +2746,7 @@ const TraiterReclamation = (props) => {
                       <summary className="text-details">
                         Resolution de la réclamation
                       </summary>
-                      <div className="card-alert card red lighten-5">
-                        <div
-                          className="card-content red-text"
-                          style={{ textAlign: "center" }}
-                        >
-                          <ul>Vous ne pouvez pas traiter cette réclamation</ul>
-                        </div>
-                      </div>
+                      <TreatNotice tone="danger">Vous ne pouvez pas traiter cette réclamation</TreatNotice>
                     </details>
                   </div>
                 </div>
@@ -2960,14 +2944,7 @@ const TraiterReclamation = (props) => {
                       <summary className="text-details">
                         Retraitement de la réclamation
                       </summary>
-                      <div className="card-alert card red lighten-5">
-                        <div
-                          className="card-content red-text"
-                          style={{ textAlign: "center" }}
-                        >
-                          <ul>Vous ne pouvez pas traiter cette réclamation</ul>
-                        </div>
-                      </div>
+                      <TreatNotice tone="danger">Vous ne pouvez pas traiter cette réclamation</TreatNotice>
                     </details>
                   </div>
                 </div>
@@ -3304,14 +3281,7 @@ const TraiterReclamation = (props) => {
                     <summary className="text-details">
                       Retraitement de la réclamation
                     </summary>
-                    <div className="card-alert card red lighten-5">
-                      <div
-                        className="card-content red-text"
-                        style={{ textAlign: "center" }}
-                      >
-                        <ul>Vous ne pouvez pas traiter cette réclamation</ul>
-                      </div>
-                    </div>
+                    <TreatNotice tone="danger">Vous ne pouvez pas traiter cette réclamation</TreatNotice>
                   </details>
                 </div>
               </div>
@@ -4817,6 +4787,7 @@ const TraiterReclamation = (props) => {
             solution={props.solution}
 
             treatForm={treatForm}
+            treatActionsVisible={treatActionsVisible}
             onTreat={handleReSolve}
             loadingTreat={props.etat2}
             onSaveDraft={handleSaveDraft}
@@ -4824,8 +4795,10 @@ const TraiterReclamation = (props) => {
             draftSavedAt={draftSavedAt}
             onLoadDraft={savedDraft ? handleLoadDraft : undefined}
             canTreat={
+              treatActionsVisible && (
               (props.handled_by === user.firstAndLastName && Boolean(props.authorize)) ||
               (props.created_by === user.firstAndLastName && props.unit && user?.servicePointDto?.libelle && props.unit === user.servicePointDto.libelle)
+              )
             }
             existingSolutions={props.selectedItem?.objet?.existingSolutions || []}
             onModifyBeforeSend={(content) => {
