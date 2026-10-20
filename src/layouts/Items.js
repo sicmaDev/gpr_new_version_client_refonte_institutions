@@ -63,6 +63,7 @@ import TerminalIcon from '@mui/icons-material/Terminal';
 import BackupIcon from '@mui/icons-material/Backup';
 import SpeedIcon from '@mui/icons-material/Speed';
 import HistoryIcon from '@mui/icons-material/History';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { NavLink, useLocation } from 'react-router-dom';
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from '../Utils/utils';
 import { slaStatus, slaCount } from '../apis/Sla/SlaApi';
@@ -831,6 +832,13 @@ export const Items = (props) => {
                 <ListItemButton sx={sSx('/configurations/sms-logs')} className="lib">
                   <ListItemIcon>{si(HistoryIcon, isActive('/configurations/sms-logs'))}</ListItemIcon>
                   <ListItemText primary="Archive SMS" />
+                </ListItemButton>
+              </NavLink>
+
+              <NavLink to="/configurations/scheduled-reports" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/configurations/scheduled-reports')} className="lib">
+                  <ListItemIcon>{si(AccessTimeIcon, isActive('/configurations/scheduled-reports'))}</ListItemIcon>
+                  <ListItemText primary="Fréquences alertes" />
                 </ListItemButton>
               </NavLink>
 
