@@ -44,6 +44,7 @@ import Institution from '../pages/Configurations/Institution';
 import Apparence from '../pages/Configurations/Apparence';
 import Email from '../pages/Configurations/Email';
 import Sms from '../pages/Configurations/Sms';
+import SmsLogs from '../pages/Configurations/SmsLogs';
 import Bot from '../pages/Configurations/Bot';
 import Log from '../pages/Configurations/Log';
 import Exportation from '../pages/Configurations/Exportation';
@@ -124,6 +125,7 @@ export default function Contenu() {
                     <Route path="/configurations/sms" component={Sms} />
                     <Route path="/configurations/bot" component={Bot} />
                     <Route path="/configurations/apikey" component={ApiKey} />
+                    <Route path="/configurations/sms-logs" component={SmsLogs} />
                     <Route path="/configurations/logs" component={Log} />
                     <Route path="/configurations/exportations" component={Exportation} />
                     <Route path="/configurations/sla" component={SLA} />

@@ -62,6 +62,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import BackupIcon from '@mui/icons-material/Backup';
 import SpeedIcon from '@mui/icons-material/Speed';
+import HistoryIcon from '@mui/icons-material/History';
 import { NavLink, useLocation } from 'react-router-dom';
 import { loadItemFromLocalStorage, loadItemFromSessionStorage } from '../Utils/utils';
 import { slaStatus, slaCount } from '../apis/Sla/SlaApi';
@@ -823,6 +824,13 @@ export const Items = (props) => {
                 <ListItemButton sx={sSx('/configurations/sms')} className="lib">
                   <ListItemIcon>{si(SmsIcon, isActive('/configurations/sms'))}</ListItemIcon>
                   <ListItemText primary="SMS" />
+                </ListItemButton>
+              </NavLink>
+
+              <NavLink to="/configurations/sms-logs" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/configurations/sms-logs')} className="lib">
+                  <ListItemIcon>{si(HistoryIcon, isActive('/configurations/sms-logs'))}</ListItemIcon>
+                  <ListItemText primary="Archive SMS" />
                 </ListItemButton>
               </NavLink>
 
