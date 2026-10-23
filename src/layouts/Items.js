@@ -831,7 +831,7 @@ export const Items = (props) => {
               <NavLink to="/configurations/sms-logs" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/configurations/sms-logs')} className="lib">
                   <ListItemIcon>{si(HistoryIcon, isActive('/configurations/sms-logs'))}</ListItemIcon>
-                  <ListItemText primary="Archive SMS" />
+                  <ListItemText primary="Archive des envois" />
                 </ListItemButton>
               </NavLink>
 

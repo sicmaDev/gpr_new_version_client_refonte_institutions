@@ -2,7 +2,7 @@ import axios from "axios";
 import { HOST } from "../Utils/globals";
 import { loadItemFromSessionStorage } from "../Utils/utils";
 
-const SMS_LOG_API = HOST + "api/v1/sms-log";
+const SMS_LOG_API = HOST + "api/v1/config/sms-log";
 
 const authConfig = (params = {}) => ({
     params,
