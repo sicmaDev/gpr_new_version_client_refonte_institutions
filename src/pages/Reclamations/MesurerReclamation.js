@@ -298,17 +298,20 @@ const MesurerReclamation = (props) => {
 
   // Rafraîchissement en direct quand un client répond au sondage de satisfaction WhatsApp
   useSSE({
-    survey_response: () => {
+    survey_response: (d) => {
       if (props.match.params.code === "all") {
         listeByStatut(props, "TREAT").then(() => {}).catch(() => {});
         loadNeedingComment();
-      } else {
+      } else if (d?.claimId != null && String(d.claimId) === String(props.id)) {
         // Le pilote est sur la page détail de CETTE réclamation : dès que le client
         // répond (mesure + commentaire), on le redirige vers la liste plutôt que de
         // recharger le détail sur place.
         loadNeedingComment();
         sessionStorage.removeItem('gpr_mes_code');
         history.push("/reclamations/mesure/all");
+      } else {
+        // La réponse d'un AUTRE client ne doit pas faire quitter la fiche en cours : on met seulement la liste à jour.
+        loadNeedingComment();
       }
     },
   });

@@ -10,6 +10,7 @@ import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied
 import SentimentNeutralIcon from "@mui/icons-material/SentimentNeutral";
 import SendIcon from "@mui/icons-material/Send";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import SmsOutlinedIcon from "@mui/icons-material/SmsOutlined";
 import GavelIcon from "@mui/icons-material/Gavel";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
@@ -80,7 +81,7 @@ const slaMeta = (ev) => {
 
 // Types de communications (se rattachent au bloc précédent)
 const COMM_EVENTS = new Set([
-  "MAIL_SENT_AGENT", "SMS_SENT_AGENT", "MAIL_SENT_CLIENT", "SMS_SENT_CLIENT",
+  "MAIL_SENT_AGENT", "SMS_SENT_AGENT", "MAIL_SENT_CLIENT", "SMS_SENT_CLIENT", "WHATSAPP_SENT_CLIENT",
 ]);
 
 const ACTION_CONFIG = {
@@ -145,7 +146,7 @@ const cleanRole = (role) => ROLE_LABELS[role] || role;
 
 // Détermine couleur/label selon le type d'event
 const commType = (eventType, name) => {
-  if (eventType === "MAIL_SENT_CLIENT" || eventType === "SMS_SENT_CLIENT")
+  if (eventType === "MAIL_SENT_CLIENT" || eventType === "SMS_SENT_CLIENT" || eventType === "WHATSAPP_SENT_CLIENT")
     return { label: "client", color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd" };
   if (name && name.startsWith("Pilote Principal"))
     return { label: "pilote", color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe" };
@@ -175,7 +176,7 @@ const groupEvents = (events) => {
 // Regroupe les comms par canal en séparant pilote / agent
 const groupComms = (comms) => {
   const ORDER = [
-    "MAIL_SENT_CLIENT", "SMS_SENT_CLIENT",
+    "MAIL_SENT_CLIENT", "SMS_SENT_CLIENT", "WHATSAPP_SENT_CLIENT",
     "MAIL_PILOTE", "SMS_PILOTE",
     "MAIL_SENT_AGENT", "SMS_SENT_AGENT",
   ];
@@ -237,7 +238,8 @@ const CommGroupLine = ({ eventType, isPilote, list }) => {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const label = eventType === "MAIL_SENT_CLIENT" ? "Mail envoyé au client :"
+  const label = eventType === "WHATSAPP_SENT_CLIENT" ? "WhatsApp envoyé au client :"
+    : eventType === "MAIL_SENT_CLIENT" ? "Mail envoyé au client :"
     : eventType === "SMS_SENT_CLIENT"  ? "SMS envoyé au client :"
     : isPilote && isMail                ? "Mail envoyé au pilote :"
     : isPilote                          ? "SMS envoyé au pilote :"
@@ -257,9 +259,11 @@ const CommGroupLine = ({ eventType, isPilote, list }) => {
         background: type.bg, border: `1px solid ${type.border}`,
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        {isMail
-          ? <EmailOutlinedIcon style={{ fontSize: 13, color: type.color }} />
-          : <SmsOutlinedIcon   style={{ fontSize: 13, color: type.color }} />
+        {eventType === "WHATSAPP_SENT_CLIENT"
+          ? <WhatsAppIcon style={{ fontSize: 13, color: type.color }} />
+          : isMail
+            ? <EmailOutlinedIcon style={{ fontSize: 13, color: type.color }} />
+            : <SmsOutlinedIcon   style={{ fontSize: 13, color: type.color }} />
         }
       </div>
 

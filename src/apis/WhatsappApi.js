@@ -32,6 +32,31 @@ export const getList =  (props) => {
 }
 
 export const downloadFilesApi = async (data) => {
+    if (!data) return;
+
+    // Fichiers WhatGPR : URL déjà absolue (proxy Spring Boot /api/whatgpr/uploads/...)
+    if (data.startsWith('http://') || data.startsWith('https://')) {
+        try {
+            const response = await fetch(data);
+            const blob     = await response.blob();
+            const url      = window.URL.createObjectURL(blob);
+            const link     = document.createElement('a');
+            link.href      = url;
+            const parts    = data.split('/');
+            // Retirer le préfixe timestamp (ex: 1234567890_fichier.ogg → fichier.ogg)
+            let filename   = parts[parts.length - 1].replace(/^\d+_/, '');
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            window.URL.revokeObjectURL(url);
+            notify("Bravo - Téléchargement du fichier effectué", "success");
+        } catch (_) {
+            notify("Erreur - Veuillez réessayer!", "error");
+        }
+        return;
+    }
+
+    // Ancien système WhatsApp : appel via Spring Boot
 
     // let newId= data.replaceAll()
     const config = {
