@@ -21,7 +21,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { KTApp } from "../../Utils/blockui";
 import { notify } from "../../Utils/alert";
-import { Button, Box, Typography, IconButton, Dialog, DialogActions, DialogContent } from "@mui/material";
+import { Button, Box, Typography, IconButton, Dialog, DialogActions, DialogContent, Checkbox, FormControlLabel } from "@mui/material";
 import { ForwardToInboxOutlined } from "@mui/icons-material";
 
 const labelStyle = { display: "block", fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" };
@@ -40,8 +40,25 @@ const FieldCheck = ({ valid }) => valid
     ? <CheckCircleIcon sx={{ fontSize: 14, color: "#16a34a", verticalAlign: "middle", ml: 0.6 }} />
     : null;
 
+// Chiffrement de la connexion au serveur mail : SSL/TLS (dès la connexion), STARTTLS (négocié) ou aucun.
+const SECURITY_PORTS = { SSL: "465", STARTTLS: "587", NONE: "25" };
+
 const Email = (props) => {
     const [showPassword, setShowPassword] = useState(false);
+    const [security, setSecurity] = useState("STARTTLS");
+    // Une ancienne configuration (champ absent) reste acceptée comme avant : certificat accepté, authentification demandée.
+    const [trustCertificate, setTrustCertificate] = useState(true);
+    // Décochée : le serveur n'exige aucune authentification (relais interne) ; aucun mot de passe n'est envoyé.
+    const [authRequired, setAuthRequired] = useState(true);
+
+    const handleSecurityChange = (value) => {
+        setSecurity(value);
+        // Le port se préremplit selon le choix, sans écraser un port personnalisé.
+        const current = props.port === undefined || props.port === null ? "" : String(props.port).trim();
+        if (current === "" || Object.values(SECURITY_PORTS).includes(current)) {
+            props.portChanged(SECURITY_PORTS[value]);
+        }
+    };
 
     const toggleShowPassword = () => {
         setShowPassword(!showPassword);
@@ -86,6 +103,10 @@ const Email = (props) => {
                 props.hostChanged(appMail.host)
                 props.portChanged(appMail.port)
                 props.passwordChanged(appMail.pwd)
+                // Ancienne configuration sans choix enregistré : le chiffrement est déduit du port, comme le fait le serveur.
+                setSecurity(appMail.security || (String(appMail.port).trim() === "465" ? "SSL" : "STARTTLS"))
+                setTrustCertificate(appMail.trustCertificate === undefined || appMail.trustCertificate === null ? true : appMail.trustCertificate)
+                setAuthRequired(appMail.authRequired === undefined || appMail.authRequired === null ? true : appMail.authRequired)
 
             } else {
             }
@@ -167,7 +188,7 @@ const Email = (props) => {
             isValid = false;
             errors["port"] = "Champ incorrect";
         }
-        if ((props.password === "" || props.password === undefined || props.password === null)) {
+        if (authRequired && (props.password === "" || props.password === undefined || props.password === null)) {
             isValid = false;
             errors["password"] = "Champ incorrect";
         }
@@ -185,7 +206,10 @@ const Email = (props) => {
             item["host"] = props.host;
             item["port"] = props.port;
             item["user"] = props.user;
-            item["pwd"] = props.password;
+            item["pwd"] = authRequired ? props.password : "";
+            item["authRequired"] = authRequired;
+            item["security"] = security;
+            item["trustCertificate"] = trustCertificate;
 
             props.etatChanged(true)
             ajout(item, props).then(() => {
@@ -199,7 +223,7 @@ const Email = (props) => {
     const validHost = !!props.host;
     const validUser = !!props.user && /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(props.user);
     const validPort = !!props.port;
-    const validPassword = !!props.password;
+    const validPassword = !authRequired || !!props.password;
 
     return (
         <div className="card-panel pb-5">
@@ -227,6 +251,27 @@ const Email = (props) => {
                             <input value={props.port || ""} onChange={(e) => props.portChanged(e.target.value)} placeholder="Ex: 465"
                                 style={inputStyle(false)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                         </Box>
+                        <Box>
+                            <label style={labelStyle}>Chiffrement de la connexion</label>
+                            <select value={security} onChange={(e) => handleSecurityChange(e.target.value)} className="browser-default"
+                                style={{ ...inputStyle(false), paddingTop: 0, paddingBottom: 0 }}>
+                                <option value="SSL">SSL/TLS (port 465)</option>
+                                <option value="STARTTLS">STARTTLS (port 587)</option>
+                                <option value="NONE">Aucun chiffrement (déconseillé)</option>
+                            </select>
+                            {security === "NONE" && (
+                                <Typography sx={{ fontSize: 12, color: "#dc2626", mt: 0.5 }}>
+                                    Sans chiffrement, le mot de passe et les messages circulent en clair sur le réseau.
+                                </Typography>
+                            )}
+                        </Box>
+                        <Box>
+                            <FormControlLabel
+                                control={<Checkbox size="small" checked={trustCertificate} disabled={security === "NONE"} onChange={(e) => setTrustCertificate(e.target.checked)} />}
+                                label={<Typography sx={{ fontSize: 13, color: "#334155" }}>Accepter un certificat non vérifié (auto-signé ou expiré)</Typography>}
+                            />
+                            <Typography sx={{ fontSize: 11.5, color: "#94a3b8", ml: 4 }}>À cocher uniquement pour un serveur interne ou de test.</Typography>
+                        </Box>
                     </Box>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <SectionTitle icon={LockOutlinedIcon} title="Authentification" subtitle="utilisateur, mot de passe" />
@@ -238,12 +283,24 @@ const Email = (props) => {
                         <Box>
                             <label style={labelStyle}>Mot de Passe (Password) <FieldCheck valid={validPassword} /></label>
                             <Box sx={{ position: "relative" }}>
-                                <input type={showPassword ? "text" : "password"} value={props.password || ""} onChange={(e) => props.passwordChanged(e.target.value)} placeholder="••••••••"
-                                    style={{ ...inputStyle(false), paddingRight: 40 }} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
+                                <input type={showPassword ? "text" : "password"} value={authRequired ? (props.password || "") : ""} onChange={(e) => props.passwordChanged(e.target.value)} placeholder="••••••••"
+                                    disabled={!authRequired}
+                                    style={{ ...inputStyle(false), paddingRight: 40, ...(authRequired ? {} : { background: "#f1f5f9" }) }} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                                 <IconButton onClick={toggleShowPassword} size="small" sx={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)" }}>
                                     {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
                                 </IconButton>
                             </Box>
+                        </Box>
+                        <Box>
+                            <FormControlLabel
+                                control={<Checkbox size="small" checked={authRequired} onChange={(e) => setAuthRequired(e.target.checked)} />}
+                                label={<Typography sx={{ fontSize: 13, color: "#334155" }}>Le serveur demande une authentification (identifiant et mot de passe)</Typography>}
+                            />
+                            <Typography sx={{ fontSize: 11.5, color: "#94a3b8", ml: 4 }}>
+                                {authRequired
+                                    ? "Décochez pour un serveur interne qui n'exige aucun mot de passe."
+                                    : "Aucun mot de passe ne sera envoyé ; l'adresse « Utilisateur mail » sert seulement d'expéditeur."}
+                            </Typography>
                         </Box>
                     </Box>
                 </Box>
