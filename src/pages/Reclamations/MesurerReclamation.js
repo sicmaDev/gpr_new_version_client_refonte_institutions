@@ -564,19 +564,20 @@ const MesurerReclamation = (props) => {
 
 
   const handleShowModalMail = () => {
-    if (!props.solution[0] || props.solution[0].content === "") {
+    if (!props.email) {
+      notify("Aucune adresse e-mail n'est enregistrée pour ce client", "error");
+      return;
+    }
+    if (!props.solution[0] || !props.solution[0].content) {
       notify("Aucune solution à envoyer", "error");
       return;
     }
-    const message = props.solution[0].content;
-    const segments = segmentMessage(message, 150);
-    setSmsSegments(segments);
     setShowMailModal(true);
   };
 
   const handleMail = async () => {
     setShowMailModal(false);
-    if (props.phone) {
+    if (props.email) {
       setLoadingMail(true);
       KTApp.blockPage({
         overlayColor: "#000000",
@@ -590,7 +591,6 @@ const MesurerReclamation = (props) => {
           email: props.email,
           subject: "Solution à votre réclamation ",
           message: props.solution[0].content,
-          commentaire: props.solution[0].commentaire,
           claimId: props.id || null,
           claimCode: props.codeClient || null,
           claimType: "CLAIM",
@@ -605,7 +605,7 @@ const MesurerReclamation = (props) => {
         KTApp.unblockPage();
       }
     } else {
-      notify("Les champs sont obligatoires", "error");
+      notify("Aucune adresse e-mail n'est enregistrée pour ce client", "error");
     }
   };
 
@@ -2178,11 +2178,9 @@ const MesurerReclamation = (props) => {
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Aperçu du contenu</div>
             <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
-              {smsSegments.map((seg, i) => (
-                <div key={i} style={{ padding: "10px 14px", borderRadius: 10, background: "#eff6ff", border: "1px solid #bfdbfe", fontSize: 13, color: "#1e40af", lineHeight: 1.6 }}>
-                  {seg}
-                </div>
-              ))}
+              <div style={{ padding: "10px 14px", borderRadius: 10, background: "#eff6ff", border: "1px solid #bfdbfe", fontSize: 13, color: "#1e40af", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                <strong>Objet :</strong> Solution à votre réclamation{"\n\n"}{props.solution[0]?.content}
+              </div>
             </div>
           </DialogContent>
           <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
@@ -3267,18 +3265,10 @@ const MesurerReclamation = (props) => {
                                 </div>
                                 <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Aperçu du contenu</div>
                                 <div style={{ maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
-                                  {smsSegments.map((seg, index) => (
-                                    <div key={index} style={{ padding: "10px 14px", borderRadius: 10, background: "#eff6ff", border: "1px solid #bfdbfe", fontSize: 13, color: "#1e40af", lineHeight: 1.6 }}>
-                                      {seg}
-                                    </div>
-                                  ))}
-                                </div>
-                                {props.solution[0]?.commentaire && (
-                                  <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: 13, color: "#475569" }}>
-                                    <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Commentaire</div>
-                                    {props.solution[0].commentaire}
+                                  <div style={{ padding: "10px 14px", borderRadius: 10, background: "#eff6ff", border: "1px solid #bfdbfe", fontSize: 13, color: "#1e40af", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                                    <strong>Objet :</strong> Solution à votre réclamation{"\n\n"}{props.solution[0]?.content}
                                   </div>
-                                )}
+                                </div>
                               </DialogContent>
                               <DialogActions style={{ padding: "8px 20px 20px", gap: 8 }}>
                                 <LoadingButton fullWidth onClick={() => setShowMailModal(false)} variant="outlined"
