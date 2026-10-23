@@ -25,6 +25,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import { NavLink } from "react-router-dom";
 import { Avatar, Box, Button, Modal, Typography } from "@mui/material";
 import { notify } from "../../Utils/alert";
+import { setUnlocked } from "../../redux/actions/LockscreenActions";
 import BlockButton from "../../components/shared/BlockButton";
 import offlineAvatar from "../../assets/images/avatar/2.svg";
 
@@ -526,6 +527,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    setUnlocked: () => dispatch(setUnlocked()),
     authenticate: () => dispatch(authenticate()),
     loginErrors: (err) => {
       dispatch(loginErrors(err));

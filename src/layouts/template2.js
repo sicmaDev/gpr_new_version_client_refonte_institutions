@@ -10,6 +10,9 @@ import { LOCKSCREEN_TIMEOUT } from '../Utils/globals';
 // import { IdleTimerProvider } from 'react-idle-timer';
 // import { useReactInactivity } from 'react-inactivity';
 
+// Horodatage de la dernière mise à jour d'activité (hors composant : survit aux re-rendus)
+let lastActivityReset = 0
+
 function Template2(props) {
 
     // const [isLocked, setIsLocked] = useState(() => {
@@ -22,9 +25,14 @@ function Template2(props) {
 
     useEffect(() => {
         const resetTimeout = () => {
-            props.setLastActivity(Date.now())
+            // Toute interaction compte comme une activité ; une mise à jour par seconde au plus.
+            const now = Date.now()
+            if (now - lastActivityReset < 1000) return
+            lastActivityReset = now
+            props.setLastActivity(now)
         }
-        window.addEventListener("mousemove", resetTimeout)
+        const activityEvents = ["mousemove", "mousedown", "keydown", "wheel", "scroll", "touchstart"]
+        activityEvents.forEach((evt) => window.addEventListener(evt, resetTimeout, true))
 
         const interval = setInterval(() => {
             if (Date.now() - props.lastActivity > LOCKSCREEN_TIMEOUT) {
@@ -38,7 +46,7 @@ function Template2(props) {
             }
         }, 10000)
         return () => {
-            window.removeEventListener("mousemove", resetTimeout)
+            activityEvents.forEach((evt) => window.removeEventListener(evt, resetTimeout, true))
             clearInterval(interval)
         }
     }, [props, props.lastActivity])

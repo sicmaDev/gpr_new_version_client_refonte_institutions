@@ -37,6 +37,11 @@ export const LoginApi = (credentials, props, isLocked = false) => {
     axios(config)
         .then(function (response) {
 
+            if (!response.data || !response.data.response) {
+                notify("Réponse inattendue du serveur. Vérifiez que le serveur est le bon.", "error");
+                props.etatChanged(false);
+                return;
+            }
             if (response.data.response.status) {
 
                 props.authenticate()
@@ -47,6 +52,9 @@ export const LoginApi = (credentials, props, isLocked = false) => {
 
 
                 } else {
+                    // Connexion normale : un verrouillage resté enregistré ne doit pas réapparaître juste après.
+                    localStorage.removeItem("isLocked")
+                    if (typeof props.setUnlocked === "function") props.setUnlocked()
                     notify("Bravo - Vous êtes authentifié", "success");
                 }
                 //  console.log("loginresponse",response.data.response.content.settings)
