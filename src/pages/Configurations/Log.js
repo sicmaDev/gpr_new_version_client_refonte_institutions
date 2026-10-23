@@ -23,7 +23,12 @@ const Log = () => {
     const getLogs = async () => {
         KTApp.blockPage({ overlayColor: '#000000', type: 'v1', state: 'danger', message: 'En cours...' });
         logs().then(({ data }) => {
-            setData(data.content);
+            const fmt = new Intl.DateTimeFormat("fr-FR", { year: "numeric", month: "long", day: "2-digit" });
+            // Plus récents d'abord ; la date affichée est ajoutée pour que la recherche ("19 octobre") la trouve
+            const rows = [...(data.content || [])]
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .map(l => ({ ...l, createdAtText: fmt.format(new Date(l.createdAt)) }));
+            setData(rows);
         }).catch(() => {
             setData([]);
         }).finally(() => {
@@ -98,8 +103,9 @@ const Log = () => {
                                 : "-"
                         },
                     ]}
-                    searchFields={["libelle", "content", "target", "type", "userIpAddress"]}
+                    searchFields={["libelle", "content", "target", "type", "userIpAddress", "createdAtText"]}
                     defaultSort="createdAt"
+                    defaultSortDir="desc"
                 />
             ) : (
                 <ConfigCardView
@@ -108,7 +114,7 @@ const Log = () => {
                     subtitleField="content"
                     badgeField="typeLabel"
                     badgeColorMap={{ ERROR: "#EF4444", WARNING: "#F59E0B", INFO: "#10B981" }}
-                    searchFields={["libelle", "content", "target", "type", "userIpAddress"]}
+                    searchFields={["libelle", "content", "target", "type", "userIpAddress", "createdAtText"]}
                     extraFields={[
                         { label: "Target", render: (lo) => lo.target || "-" },
                         { label: "Adresse IP", render: (lo) => lo.userIpAddress || "-" },

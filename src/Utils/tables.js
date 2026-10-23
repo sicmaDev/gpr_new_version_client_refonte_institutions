@@ -578,15 +578,15 @@ export const getExportHtml2 = (columns, records, id = "") => {
         }
         if (column === "Telephone") {
           let telephone = record.id ? record.tel === null ? "-" : record.tel : record.phone;
-          return (tableHtml += "<td>" + telephone + "</td>");
+          return (tableHtml += "<td class='tableexport-string'>" + telephone + "</td>");
         }
         if (column === "Code Client") {
           let codeClient = record.id ? record.codeClient === null ? "-" : record.codeClient : record.codeClient;
-          return (tableHtml += "<td>" + codeClient + "</td>");
+          return (tableHtml += "<td class='tableexport-string'>" + codeClient + "</td>");
         }
 
         if (column === "Code") {
-          return (tableHtml += "<td>" + record.code + "</td>");
+          return (tableHtml += "<td class='tableexport-string'>" + record.code + "</td>");
         }
         if (column === "Traiter par") {
           let name = (record.id && record.collectionChannel) ?
@@ -861,12 +861,12 @@ export const getExportHtml3 = (columns, records, id = "") => {
         }
         if (column === "Telephone") {
           let telephone = record.id ? record.tel === null ? "-" : record.tel : record.phone;
-          return (tableHtml += "<td>" + telephone + "</td>");
+          return (tableHtml += "<td class='tableexport-string'>" + telephone + "</td>");
         }
 
         if (column === "Code Client") {
           let codeClient = record.id ? record.codeClient === null ? "-" : record.codeClient : record.codeClient;
-          return (tableHtml += "<td>" + codeClient + "</td>");
+          return (tableHtml += "<td class='tableexport-string'>" + codeClient + "</td>");
         }
 
         if (column === "Code") {

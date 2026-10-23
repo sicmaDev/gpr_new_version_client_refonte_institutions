@@ -84,7 +84,8 @@ export const isValidMdp = (mdpValue) => {
 }
 export const cleanPhoneNumber = (phoneValue) => {
     if (phoneValue !== "") {
-        return "00" + phoneValue.replace("+", "").replace("-", "").replace("00", "");
+        // Seul le préfixe international "00" initial est retiré (un "00" au milieu du numéro doit être conservé).
+        return "00" + phoneValue.replace("+", "").replace("-", "").replace(/^00/, "");
     } else {
         return phoneValue
     }
@@ -93,7 +94,7 @@ export const cleanPhoneNumber = (phoneValue) => {
 
 export const cleanPhoneNumber2 = (phoneValue) => {
     if (phoneValue !== "") {
-        return phoneValue.replace("00", "+");
+        return phoneValue.replace(/^00/, "+");
     } else {
         return phoneValue
     }

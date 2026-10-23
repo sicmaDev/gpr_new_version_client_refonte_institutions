@@ -2,15 +2,25 @@ import { loadItemFromLocalStorage } from "./utils";
 
 let appInstitution = loadItemFromLocalStorage("app-institution") !== undefined && (loadItemFromLocalStorage("app-institution").length !==0)  ? loadItemFromLocalStorage("app-institution") : undefined;
 
+// L'institution peut avoir été enregistrée sérialisée deux fois : on obtient alors une chaîne JSON, pas un objet.
+// Sans ce décodage, tous les champs (nom, pays, adresse…) valent undefined.
+if (typeof appInstitution === "string") {
+  try { appInstitution = JSON.parse(appInstitution) } catch (e) { appInstitution = undefined }
+}
+
+// Champ de l'institution, "" (ou valeur par défaut) si absent ou nul : évite d'imprimer "undefined" dans les entêtes.
+const institutionField = (field, fallback = "") =>
+  appInstitution !== undefined && appInstitution[field] != null ? appInstitution[field] : fallback
+
 export const MAX_SUBJECT_DURATION = 30
-export const INSTITUTION_LOGO = appInstitution !== undefined ? appInstitution.logo : ""
-export const INSTITUTION_NAME = appInstitution !== undefined ? appInstitution.denomination : ""
-export const INSTITUTION_ADDRESS = appInstitution !== undefined ? appInstitution.adresse : ""
-export const INSTITUTION_TEL = appInstitution !== undefined ? appInstitution.tel : ""
-export const INSTITUTION_AGREMENT = appInstitution !== undefined ? appInstitution.numAgrement : ""
-export const INSTITUTION_EMAIL = appInstitution !== undefined ? appInstitution.email : ""
-export const INSTITUTION_PAYS = appInstitution !== undefined ? appInstitution.pays : "" 
-export const INSTITUTION_PAYS_CODE = appInstitution !== undefined ? appInstitution.paysCode : "BJ"
+export const INSTITUTION_LOGO = institutionField("logo")
+export const INSTITUTION_NAME = institutionField("denomination")
+export const INSTITUTION_ADDRESS = institutionField("adresse")
+export const INSTITUTION_TEL = institutionField("tel")
+export const INSTITUTION_AGREMENT = institutionField("numAgrement")
+export const INSTITUTION_EMAIL = institutionField("email")
+export const INSTITUTION_PAYS = institutionField("pays")
+export const INSTITUTION_PAYS_CODE = institutionField("paysCode", "BJ")
 export const LOGO_SUPPORTED_SIZE = "167x62, 272x204, 256x256"
 export const HOST = hostEval()
 export const REPORT_HOST = reportHost()

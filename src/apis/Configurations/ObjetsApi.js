@@ -127,7 +127,7 @@ export const suppression = async (props, data) => {
             saveItemToLocalStorage(response.data.content, "app-objets")
 
             props.etat3Changed(false)
-            notify("Bravo - Point de service supprimé", "success");
+            notify("Bravo - Objet supprimé", "success");
 
             await liste(props)
 
