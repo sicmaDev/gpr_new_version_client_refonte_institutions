@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import TransmissionHistory from "../TransmissionHistory";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
@@ -475,6 +476,14 @@ const HistoriqueTimeline = ({ claimId }) => {
           );
         })}
       </div>
+
+      {/* Commentaires saisis lors des transmissions de la plainte */}
+      <details style={{ marginTop: 14 }}>
+        <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#475569" }}>
+          Historique des transmissions
+        </summary>
+        <TransmissionHistory claimId={claimId} />
+      </details>
     </>
   );
 };
