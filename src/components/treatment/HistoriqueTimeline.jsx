@@ -35,7 +35,7 @@ import { getClaimEvents } from "../../apis/Reclamations/ReclamationsApi";
 const MAIN_EVENTS = new Set([
   "SAVED", "AFFECTED", "SOLUTION_PROPOSED", "APPROVED", "REJECTED",
   "SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED",
-  "LITIGATION", "TRANSMITTED", "CONVERTED", "SESSION_STARTED", "EXTRA_ADDED",
+  "LITIGATION", "TRANSMITTED", "CONVERTED", "SESSION_STARTED", "EXTRA_ADDED", "DELETED", "RESTORED",
   // Suivi des délais (SLA)
   "SLA_REMINDER", "SLA_BREACH", "AUTO_TRANSMITTED", "SLA_STUCK", "SLA_REGULATORY_WARNING",
   "SLA_REGULATORY_BREACH", "WAITING_CUSTOMER", "SLA_RESUMED", "SLA_JUSTIFIED", "CONTACT_ATTEMPT",
@@ -100,6 +100,8 @@ const ACTION_CONFIG = {
   CONVERTED:         { label: "Convertie",                      color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", Icon: SwapHorizIcon },
   SESSION_STARTED:   { label: "Session collaborative",          color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", Icon: GroupsIcon },
   EXTRA_ADDED:       { label: "Pièce jointe ajoutée",            color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", Icon: AttachFileIcon },
+  DELETED:           { label: "Supprimée (corbeille)",          color: "#dc2626", bg: "#fef2f2", border: "#fecaca", Icon: HighlightOffIcon },
+  RESTORED:          { label: "Restaurée",                      color: "#16a34a", bg: "#dcfce7", border: "#86efac", Icon: CheckCircleOutlineIcon },
   // Suivi des délais (SLA)
   SLA_REMINDER:           { label: "Rappel de délai",              color: "#d97706", bg: "#fffbeb", border: "#fde68a", Icon: AlarmIcon },
   SLA_BREACH:             { label: "Délai dépassé",                color: "#dc2626", bg: "#fef2f2", border: "#fecaca", Icon: ReportProblemOutlinedIcon },
@@ -159,14 +161,18 @@ const groupEvents = (events) => {
   const blocks = [];
   let current = null;
   for (const ev of events) {
-    if (MAIN_EVENTS.has(ev.eventType)) {
-      current = { action: ev, comms: [] };
+    if (ev.eventType === "EXTRA_ADDED" && current && current.action.eventType === "EXTRA_ADDED"
+        && current.action.actorEmail === ev.actorEmail) {
+      // Pièces jointes ajoutées à la suite par la même personne : une seule étape
+      current.extras.push(ev);
+    } else if (MAIN_EVENTS.has(ev.eventType)) {
+      current = { action: ev, comms: [], extras: [] };
       blocks.push(current);
     } else if (COMM_EVENTS.has(ev.eventType)) {
       if (current) {
         current.comms.push(ev);
       } else {
-        current = { action: ev, comms: [] };
+        current = { action: ev, comms: [], extras: [] };
         blocks.push(current);
       }
     }
@@ -427,7 +433,7 @@ const HistoriqueTimeline = ({ claimId }) => {
                     <Icon style={{ fontSize: 15, color: cfg.color }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: cfg.color }}>{cfg.label}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: cfg.color }}>{ev.eventType === "EXTRA_ADDED" && block.extras.length > 0 ? "Pièces jointes ajoutées" : cfg.label}</div>
                     {ev.actorName && (
                       <div style={{ fontSize: 11.5, color: "#64748b", marginTop: 1 }}>
                         {ev.actorName === "Système GPR"
@@ -449,9 +455,12 @@ const HistoriqueTimeline = ({ claimId }) => {
                             </span>
                           );
                         })()}
-                        {ev.eventType === "REJECTED" && <>Motif : <em>{ev.metadata}</em></>}
+                        {(ev.eventType === "REJECTED" || ev.eventType === "DELETED") && <>Motif : <em>{ev.metadata}</em></>}
                         {SLA_EVENTS.has(ev.eventType) && slaMeta(ev)}
-                        {!["AFFECTED","TRANSMITTED","REJECTED"].includes(ev.eventType) && !SLA_EVENTS.has(ev.eventType) && ev.metadata}
+                        {!["AFFECTED","TRANSMITTED","REJECTED","DELETED","EXTRA_ADDED"].includes(ev.eventType) && !SLA_EVENTS.has(ev.eventType) && ev.metadata}
+                        {ev.eventType === "EXTRA_ADDED" && [ev, ...block.extras].map((x, k) => (
+                          <div key={k}>{x.metadata}{block.extras.length > 0 && x.createdAt && <span style={{ color: "#94a3b8" }}> · {formatDate(x.createdAt)}</span>}</div>
+                        ))}
                       </div>
                     )}
                   </div>
