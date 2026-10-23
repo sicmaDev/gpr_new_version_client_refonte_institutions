@@ -6,6 +6,7 @@ import audioIcon from "../assets/images/icon/audio.png";
 import videoIcon from "../assets/images/icon/video.png";
 import unknownIcon from "../assets/images/icon/doc.png";
 import { useHistory } from "react-router-dom";
+import { isPossiblePhoneNumber } from "react-phone-number-input";
 
 export const saveItemToLocalStorage = (item, field) => {
     try {
@@ -65,9 +66,17 @@ export const makeBaseAuth = (credentials) => {
 }
 
 export const isValidPhone = (phoneValue) => {
-    //let phoneno = /^\+?([0-9]{3})\)?[-. ]?([0-9]{8,11})$/;
-    let phoneno = /^(\+|00)?([0-9]{3})\)?[-. ]?([0-9]{8,11})$/;
-    return !!phoneValue.match(phoneno);
+    if (!phoneValue) return false;
+    // Longueur propre à chaque pays selon libphonenumber (Bénin à 10 chiffres, Togo à 8, Islande à 7...).
+    // Le numéro peut arriver sous la forme "+229...", "00229..." ou "229...".
+    const international = phoneValue.startsWith("00")
+        ? "+" + phoneValue.slice(2)
+        : (phoneValue.startsWith("+") ? phoneValue : "+" + phoneValue);
+    try {
+        return isPossiblePhoneNumber(international);
+    } catch (e) {
+        return false;
+    }
 }
 export const isValidMdp = (mdpValue) => {
     let cmp = /^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[@#!_&$()%*-])([a-zA-Z0-9@#!_&$()%*-]+){8}$/;
