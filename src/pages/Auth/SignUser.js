@@ -25,7 +25,7 @@ import { cleanPhoneNumber, isValidMdp, isValidPhone, loadItemFromSessionStorage,
 
 // import {useOnScreen} from "../../utils/custom_hooks";
 import { modalify } from "../../Utils/modal";
-import { createUserPublic } from "../../apis/SignApi";
+import { createUserPublic, getPublicPostes, getPublicServicePoints } from "../../apis/SignApi";
 import { Block, TaskAlt } from "@mui/icons-material";
 import { notify } from "../../Utils/alert";
 import BlockButton from "../../components/shared/BlockButton";
@@ -103,6 +103,15 @@ const SignCompteUser = (props) => {
     useEffect(() => {
         const interval = setInterval(() => setShowGroupB(g => !g), 5000);
         return () => clearInterval(interval);
+    }, []);
+
+    // Listes Poste / Point de service pour un visiteur qui n'a jamais eu de session : le stockage local est vide
+    // sur un poste jamais connecté, on les charge donc par les routes publiques dédiées.
+    const [publicPostes, setPublicPostes] = useState([]);
+    const [publicServicePoints, setPublicServicePoints] = useState([]);
+    useEffect(() => {
+        getPublicPostes().then(setPublicPostes);
+        getPublicServicePoints().then(setPublicServicePoints);
     }, []);
 
     const toggleShowPassword = () => {
@@ -320,16 +329,8 @@ const SignCompteUser = (props) => {
         setShowPassword(true);
     }
 
-    let titles
-    let units
-    try {
-        titles = loadItemFromLocalStorage('app-postes');
-        units = loadItemFromLocalStorage('app-ps');
-    }
-    catch (e) {
-        titles = [];
-        units = [];
-    }
+    let titles = publicPostes;
+    let units = publicServicePoints;
 
     let titleOptions
     let unitOptions
