@@ -194,3 +194,29 @@ export const suppression = async (data, props) => {
         });
 
 }
+
+// Mot de passe temporaire d'un compte (null si la personne l'a déjà remplacé par le sien)
+export const getTemporaryPassword = async (id) => {
+    const response = await axios({
+        method: 'get',
+        url: HOST + "api/v1/config/user/" + id + "/temporary-password",
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    });
+    return response.data?.content?.password ?? null;
+}
+
+// Génère un nouveau mot de passe, l'envoie par mail à la personne et le renvoie
+export const resetUserPassword = async (id) => {
+    const response = await axios({
+        method: 'post',
+        url: HOST + "api/v1/config/user/" + id + "/reset-password",
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+        }
+    });
+    return response.data?.content?.password ?? null;
+}

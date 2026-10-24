@@ -9,6 +9,8 @@ import AddIcon from "@mui/icons-material/Add";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
     Tooltip, IconButton, Box, Typography, Dialog, DialogContent, DialogActions,
     Button, Chip, FormControl, Select as MuiSelect, MenuItem, ListSubheader, InputAdornment, OutlinedInput
@@ -20,9 +22,9 @@ import {
     passwordChanged, itemsChanged, selectedItemChanged, posteLibelleChanged,
     unitLibelleChanged, etat3Changed, etat2Changed, etatChanged
 } from "../../redux/actions/Configurations/UtilisateursActions";
-import { isValidMdp, isValidPhone, today, groupBy, loadItemFromLocalStorage } from "../../Utils/utils";
+import { isValidPhone, today, groupBy, loadItemFromLocalStorage } from "../../Utils/utils";
 import { connect } from "react-redux";
-import { ajout, all, disabled, modification, suppression } from "../../apis/Configurations/UtilisateursApi";
+import { ajout, all, disabled, modification, suppression, getTemporaryPassword, resetUserPassword } from "../../apis/Configurations/UtilisateursApi";
 import { handlePrint } from "../../Utils/tables";
 import { table2XLSX } from "../../Utils/tabletoexcel";
 import { licenseInfo } from "../../apis/LoginApi";
@@ -64,42 +66,102 @@ const CA_OPTIONS = [
     { label: "Oui", value: true },
 ];
 
-const EMPTY_FORM = { name: "", email: "", phone: "", pass: "", pass_again: "", poste: "", posteLibelle: "", unit: "", unitLibelle: "", additionalRole: "", ca: "" };
+const EMPTY_FORM = { name: "", email: "", phone: "", poste: "", posteLibelle: "", unit: "", unitLibelle: "", additionalRole: "", ca: "" };
 
-const passInputStyle = { width: "100%", boxSizing: "border-box", border: "1.5px solid #e2e8f0", borderRadius: 9, padding: "10.5px 14px", paddingRight: 40, fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", height: 40 };
+// Mot de passe temporaire d'un compte : consultation par l'administrateur et réinitialisation.
+// Le mot de passe n'existe ici que tant que la personne ne l'a pas remplacé par le sien.
+const PasswordDialog = ({ user, onClose }) => {
+    const [loading, setLoading]         = useState(false);
+    const [password, setPassword]       = useState(null);
+    const [reveal, setReveal]           = useState(false);
+    const [confirmReset, setConfirmReset] = useState(false);
+    const [resetting, setResetting]     = useState(false);
 
-const PasswordPairInput = ({ value, onChange }) => {
-    const pass = value?.pass || "";
-    const passAgain = value?.passAgain || "";
-    const [showPass, setShowPass] = useState(false);
-    const [showPassAgain, setShowPassAgain] = useState(false);
+    useEffect(() => {
+        if (!user) return;
+        setPassword(null); setReveal(false); setConfirmReset(false); setLoading(true);
+        getTemporaryPassword(user.id)
+            .then(setPassword)
+            .catch(() => notify("Erreur - Impossible de lire le mot de passe", "error"))
+            .finally(() => setLoading(false));
+    }, [user]);
 
-    const generate = () => {
-        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        const number = "0123456789";
-        const speciaux = "@_%+-";
-        let retVal = "";
-        for (let i = 0; i < 8; ++i) retVal += charset.charAt(Math.floor(Math.random() * charset.length));
-        retVal = retVal.slice(0, 6) + number[Math.floor(Math.random() * 8)] + speciaux[Math.floor(Math.random() * 5)];
-        onChange({ pass: retVal, passAgain: retVal });
+    const handleReset = () => {
+        setResetting(true);
+        resetUserPassword(user.id)
+            .then((nouveau) => {
+                setPassword(nouveau); setReveal(true); setConfirmReset(false);
+                notify("Bravo - Nouveau mot de passe généré et envoyé par mail", "success");
+            })
+            .catch(() => notify("Erreur - Réinitialisation échouée", "error"))
+            .finally(() => setResetting(false));
+    };
+
+    const handleCopy = () => {
+        try {
+            navigator.clipboard.writeText(password);
+            notify("Mot de passe copié", "success");
+        } catch (e) {
+            notify("Copie impossible", "error");
+        }
     };
 
     return (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div style={{ position: "relative" }}>
-                <input type={showPass ? "text" : "password"} value={pass} onChange={(e) => onChange({ pass: e.target.value, passAgain })} placeholder="Mot de passe" style={passInputStyle} />
-                <span onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 12, top: 12, cursor: "pointer", color: "#94a3b8" }}>
-                    {showPass ? <VisibilityOffIcon style={{ fontSize: 18 }} /> : <VisibilityIcon style={{ fontSize: 18 }} />}
-                </span>
-                <span onClick={generate} style={{ display: "block", marginTop: 4, fontSize: 12, color: "var(--gpr-primary, #005081)", cursor: "pointer", fontWeight: 600 }}>Générer un mot de passe</span>
+        <Dialog open={!!user} onClose={() => { if (!resetting) onClose(); }} fullWidth maxWidth="xs" PaperProps={{ style: { borderRadius: 16 } }}>
+            <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><VpnKeyIcon style={{ color: "#fff", fontSize: 18 }} /></div>
+                    <div>
+                        <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Mot de passe</div>
+                        <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, marginTop: 2 }}>{user?.firstAndLastName}</div>
+                    </div>
+                </div>
+                <IconButton onClick={onClose} disabled={resetting} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff" }}><CloseIcon style={{ fontSize: 18 }} /></IconButton>
             </div>
-            <div style={{ position: "relative" }}>
-                <input type={showPassAgain ? "text" : "password"} value={passAgain} onChange={(e) => onChange({ pass, passAgain: e.target.value })} placeholder="Confirmer le mot de passe" style={passInputStyle} />
-                <span onClick={() => setShowPassAgain(v => !v)} style={{ position: "absolute", right: 12, top: 12, cursor: "pointer", color: "#94a3b8" }}>
-                    {showPassAgain ? <VisibilityOffIcon style={{ fontSize: 18 }} /> : <VisibilityIcon style={{ fontSize: 18 }} />}
-                </span>
-            </div>
-        </div>
+            <DialogContent sx={{ p: 3 }}>
+                {loading ? (
+                    <div style={{ textAlign: "center", color: "#94a3b8", fontSize: 13 }}>Chargement…</div>
+                ) : password ? (
+                    <>
+                        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Mot de passe temporaire envoyé par mail à <strong>{user?.email}</strong></div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#f0f8ff", border: "1px solid #bfdbfe", borderLeft: "4px solid #004080", borderRadius: 8, padding: "10px 14px" }}>
+                            <span style={{ flex: 1, fontFamily: "monospace", fontSize: 17, letterSpacing: 1, color: "#1e293b", wordBreak: "break-all" }}>
+                                {reveal ? password : "•".repeat(password.length)}
+                            </span>
+                            <Tooltip title={reveal ? "Masquer" : "Afficher"}>
+                                <IconButton size="small" onClick={() => setReveal(v => !v)}>{reveal ? <VisibilityOffIcon style={{ fontSize: 18 }} /> : <VisibilityIcon style={{ fontSize: 18 }} />}</IconButton>
+                            </Tooltip>
+                            <Tooltip title="Copier">
+                                <IconButton size="small" onClick={handleCopy}><ContentCopyIcon style={{ fontSize: 17 }} /></IconButton>
+                            </Tooltip>
+                        </div>
+                        <div style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 10 }}>
+                            Il est conservé (chiffré) jusqu'à ce que la personne choisisse son propre mot de passe.
+                        </div>
+                    </>
+                ) : (
+                    <div style={{ fontSize: 13, color: "#475569", lineHeight: 1.6 }}>
+                        Aucun mot de passe temporaire n'est conservé pour ce compte : la personne a déjà choisi son propre mot de passe.
+                        Vous pouvez en générer un nouveau en cliquant sur « Réinitialiser ».
+                    </div>
+                )}
+                {confirmReset && (
+                    <div style={{ marginTop: 14, background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "10px 14px", fontSize: 12.5, color: "#92400e" }}>
+                        Un nouveau mot de passe va être généré et envoyé par mail à <strong>{user?.email}</strong>. L'ancien ne fonctionnera plus.
+                    </div>
+                )}
+            </DialogContent>
+            <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
+                <Button onClick={onClose} disabled={resetting} variant="outlined" sx={{ textTransform: "none", borderRadius: 2 }}>Fermer</Button>
+                {confirmReset ? (
+                    <Button onClick={handleReset} disabled={resetting} variant="contained" color="warning" sx={{ textTransform: "none", borderRadius: 2 }}>
+                        {resetting ? "Envoi…" : "Confirmer la réinitialisation"}
+                    </Button>
+                ) : (
+                    <Button onClick={() => setConfirmReset(true)} disabled={loading} variant="contained" sx={{ textTransform: "none", borderRadius: 2 }}>Réinitialiser</Button>
+                )}
+            </DialogActions>
+        </Dialog>
     );
 };
 
@@ -112,8 +174,7 @@ const Utilisateurs = (props) => {
     const [editLoading, setEditLoading]         = useState(false);
     const [editForm, setEditForm]               = useState(EMPTY_FORM);
     const [editErrors, setEditErrors]           = useState({});
-    const [showEditPass, setShowEditPass]       = useState(false);
-    const [showEditPass1, setShowEditPass1]     = useState(false);
+    const [pwdUser, setPwdUser]                = useState(null);
     const [deleteConfirm, setDeleteConfirm]     = useState({ open: false, item: null, loading: false });
     const [disableConfirm, setDisableConfirm]   = useState({ open: false, item: null, action: null, loading: false });
     const [viewMode, setViewMode]               = useState("list");
@@ -183,16 +244,6 @@ const Utilisateurs = (props) => {
         props.selectedItemChanged({});
     }
 
-    const generateCode = (setter) => {
-        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        const number = "0123456789";
-        const speciaux = "@_%+-";
-        let retVal = "";
-        for (let i = 0; i < 8; ++i) retVal += charset.charAt(Math.floor(Math.random() * charset.length));
-        retVal = retVal.slice(0, 6) + number[Math.floor(Math.random() * 8)] + speciaux[Math.floor(Math.random() * 5)];
-        setter(p => ({ ...p, pass: retVal, pass_again: retVal }));
-    };
-
     const validateForm = (form, isEdit = false) => {
         const errs = {};
         if (!form.name.trim()) errs.name = "Champ requis";
@@ -200,11 +251,6 @@ const Utilisateurs = (props) => {
         if (!form.unit) errs.unit = "Champ requis";
         if (!form.email || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(form.email)) errs.email = "Email invalide";
         if (!form.phone || !isValidPhone(form.phone)) errs.phone = "Téléphone invalide";
-        if (!isEdit || form.pass) {
-            if (!isEdit && !form.pass) errs.pass = "Champ requis";
-            if (form.pass && !isValidMdp(form.pass)) errs.pass = "Mot de passe faible (chiffre + symbole requis)";
-            if (form.pass !== form.pass_again) { errs.pass = "Les mots de passe ne correspondent pas"; errs.pass_again = "Les mots de passe ne correspondent pas"; }
-        }
         return errs;
     };
 
@@ -252,22 +298,22 @@ const Utilisateurs = (props) => {
             ),
         },
         {
-            key: "pass", label: "Mot de passe", required: true, fullWidth: true,
-            render: (value, onChange) => <PasswordPairInput value={value} onChange={onChange} />,
+            key: "pwdInfo", label: "Mot de passe", required: false, fullWidth: true,
+            render: () => (
+                <div style={{ fontSize: 12.5, color: "#475569", background: "#f0f8ff", border: "1px solid #bfdbfe", borderRadius: 8, padding: "9px 12px" }}>
+                    Un mot de passe est généré automatiquement et envoyé par mail à la personne.
+                </div>
+            ),
         },
     ];
 
     const handleModalSubmit = (items) => {
         for (const it of items) {
-            const pass = it.pass?.pass || "";
-            const passAgain = it.pass?.passAgain || "";
             if (!isValidPhone(it.phone)) { notify(`Erreur - Téléphone invalide pour ${it.name}`, "error"); return; }
-            if (!pass || !isValidMdp(pass)) { notify(`Erreur - Mot de passe faible pour ${it.name} (chiffre + symbole requis)`, "error"); return; }
-            if (pass !== passAgain) { notify(`Erreur - Les mots de passe ne correspondent pas pour ${it.name}`, "error"); return; }
         }
         setAddLoading(true); props.etatChanged(true);
         const chain = items.reduce((p, it) => p.then(() =>
-            ajout({ firstAndLastName: it.name, email: it.email, tel: it.phone, posteId: it.poste, servicePointId: it.unit, additionalRole: it.additionalRole, password: it.pass.pass, ra: it.ca }, props)
+            ajout({ firstAndLastName: it.name, email: it.email, tel: it.phone, posteId: it.poste, servicePointId: it.unit, additionalRole: it.additionalRole, ra: it.ca }, props)
         ), Promise.resolve());
         chain
             .then(() => { setAddModalOpen(false); clearComponentState(); })
@@ -276,15 +322,14 @@ const Utilisateurs = (props) => {
 
     const handleEditClick = (sp) => {
         props.idChanged(sp.id); props.selectedItemChanged(sp);
-        setEditForm({ name: sp.firstAndLastName || "", email: sp.email || "", phone: sp.tel || "", pass: "", pass_again: "", poste: sp.posteDto?.id || "", posteLibelle: sp.posteDto?.libelle || "", unit: sp.servicePointDto?.id || "", unitLibelle: sp.servicePointDto?.libelle || "", additionalRole: sp.additionalRole || "", ca: sp.ra === true ? true : sp.ra === false ? false : "" });
-        setEditErrors({}); setShowEditPass(false); setShowEditPass1(false); setEditModalOpen(true);
+        setEditForm({ name: sp.firstAndLastName || "", email: sp.email || "", phone: sp.tel || "", poste: sp.posteDto?.id || "", posteLibelle: sp.posteDto?.libelle || "", unit: sp.servicePointDto?.id || "", unitLibelle: sp.servicePointDto?.libelle || "", additionalRole: sp.additionalRole || "", ca: sp.ra === true ? true : sp.ra === false ? false : "" });
+        setEditErrors({}); setEditModalOpen(true);
     };
     const handleEditSubmit = () => {
         const errs = validateForm(editForm, true);
         if (Object.keys(errs).length) { setEditErrors(errs); return; }
         setEditLoading(true); props.etat2Changed(true);
         const payload = { id: props.id, firstAndLastName: editForm.name, email: editForm.email, tel: editForm.phone, posteId: editForm.poste, servicePointId: editForm.unit, additionalRole: editForm.additionalRole, ra: editForm.ca };
-        if (editForm.pass) payload.password = editForm.pass;
         modification(payload, props)
             .then(() => { setEditModalOpen(false); setEditForm(EMPTY_FORM); setEditErrors({}); clearComponentState(); })
             .finally(() => { setEditLoading(false); props.etat2Changed(false); });
@@ -358,7 +403,7 @@ const Utilisateurs = (props) => {
         </FormControl>
     );
 
-    const renderUserForm = (form, setter, errors, setErrors, isEdit = false, showPass, setShowPass, showPass1, setShowPass1) => (
+    const renderUserForm = (form, setter, errors, setErrors) => (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
                 <div>
@@ -411,28 +456,6 @@ const Utilisateurs = (props) => {
                     </FormControl>
                 </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
-                <div>
-                    <label style={labelStyle}>
-                        Mot de passe {!isEdit && <span style={{ color: "#ef4444" }}>*</span>}
-                        {isEdit && <span style={{ color: "#94a3b8", fontWeight: 400, fontSize: 11, marginLeft: 4 }}>(laisser vide pour ne pas modifier)</span>}
-                        <span style={{ color: "var(--gpr-primary, #005081)", cursor: "pointer", fontWeight: 500, fontSize: 11, marginLeft: 8, textTransform: "none" }} onClick={() => generateCode(setter)}>Générer</span>
-                    </label>
-                    <div style={{ position: "relative" }}>
-                        <input type={showPass ? "text" : "password"} value={form.pass} onChange={(e) => { setter(p => ({ ...p, pass: e.target.value })); setErrors(p => ({ ...p, pass: "" })); }} placeholder={isEdit ? "Nouveau mot de passe (optionnel)" : "Mot de passe"} style={{ ...inputStyle(errors.pass), paddingRight: 40 }} onFocus={(e) => { if (!errors.pass) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { if (!errors.pass) e.target.style.borderColor = "#e2e8f0"; }} />
-                        <span onClick={() => setShowPass(v => !v)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#94a3b8" }}>{showPass ? <VisibilityOffIcon style={{ fontSize: 18 }} /> : <VisibilityIcon style={{ fontSize: 18 }} />}</span>
-                    </div>
-                    {errors.pass && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{errors.pass}</div>}
-                </div>
-                <div>
-                    <label style={labelStyle}>Confirmer le mot de passe</label>
-                    <div style={{ position: "relative" }}>
-                        <input type={showPass1 ? "text" : "password"} value={form.pass_again} onChange={(e) => { setter(p => ({ ...p, pass_again: e.target.value })); setErrors(p => ({ ...p, pass_again: "" })); }} placeholder="Répéter le mot de passe" style={{ ...inputStyle(errors.pass_again), paddingRight: 40 }} onFocus={(e) => { if (!errors.pass_again) e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { if (!errors.pass_again) e.target.style.borderColor = "#e2e8f0"; }} />
-                        <span onClick={() => setShowPass1(v => !v)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#94a3b8" }}>{showPass1 ? <VisibilityOffIcon style={{ fontSize: 18 }} /> : <VisibilityIcon style={{ fontSize: 18 }} />}</span>
-                    </div>
-                    {errors.pass_again && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{errors.pass_again}</div>}
-                </div>
-            </div>
         </div>
     );
 
@@ -454,6 +477,8 @@ const Utilisateurs = (props) => {
                     addLabel="Ajouter un autre utilisateur"
                 />
 
+                <PasswordDialog user={pwdUser} onClose={() => setPwdUser(null)} />
+
                 {/* EDIT MODAL */}
                 <Dialog open={editModalOpen} onClose={() => { if (!editLoading) { setEditModalOpen(false); setEditForm(EMPTY_FORM); setEditErrors({}); clearComponentState(); } }} fullWidth maxWidth="md" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
                     <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -464,7 +489,7 @@ const Utilisateurs = (props) => {
                         <IconButton onClick={() => { setEditModalOpen(false); setEditForm(EMPTY_FORM); setEditErrors({}); clearComponentState(); }} disabled={editLoading} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}><CloseIcon style={{ fontSize: 16 }} /></IconButton>
                     </div>
                     <DialogContent sx={{ p: 3 }}>
-                        {renderUserForm(editForm, setEditForm, editErrors, setEditErrors, true, showEditPass, setShowEditPass, showEditPass1, setShowEditPass1)}
+                        {renderUserForm(editForm, setEditForm, editErrors, setEditErrors)}
                     </DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
                         <BlockButton disabled={editLoading}><Button onClick={() => { setEditModalOpen(false); setEditForm(EMPTY_FORM); setEditErrors({}); clearComponentState(); }} disabled={editLoading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button></BlockButton>
@@ -560,6 +585,7 @@ const Utilisateurs = (props) => {
                                     </div>
                                 ) : (
                                     <div style={{ display: "flex", gap: "5px" }}>
+                                        <Tooltip title="Mot de passe"><IconButton onClick={(e) => { e.stopPropagation(); setPwdUser(u); }} color="default"><VpnKeyIcon /></IconButton></Tooltip>
                                         <Tooltip title="Activer"><IconButton onClick={(e) => { e.stopPropagation(); setDisableConfirm({ open: true, item: u, action: "activate", loading: false }); }} color="default"><TaskAlt sx={{ color: 'black' }} /></IconButton></Tooltip>
                                         <Tooltip title="Modifier"><IconButton onClick={() => handleEditClick(u)} color="primary"><EditIcon /></IconButton></Tooltip>
                                         <Tooltip title="Supprimer"><IconButton onClick={() => setDeleteConfirm({ open: true, item: u, loading: false })} color="error"><DeleteIcon /></IconButton></Tooltip>
@@ -567,6 +593,7 @@ const Utilisateurs = (props) => {
                                 )
                             ) : (
                                 <div style={{ display: "flex", gap: "5px" }}>
+                                    <Tooltip title="Mot de passe"><IconButton onClick={(e) => { e.stopPropagation(); setPwdUser(u); }} color="default"><VpnKeyIcon /></IconButton></Tooltip>
                                     <Tooltip title="Désactiver"><IconButton onClick={(e) => { e.stopPropagation(); setDisableConfirm({ open: true, item: u, action: "disable", loading: false }); }} color="default"><Block /></IconButton></Tooltip>
                                     <Tooltip title="Modifier"><IconButton onClick={() => handleEditClick(u)} color="primary"><EditIcon /></IconButton></Tooltip>
                                     <Tooltip title="Supprimer"><IconButton onClick={() => setDeleteConfirm({ open: true, item: u, loading: false })} color="error"><DeleteIcon /></IconButton></Tooltip>
@@ -579,6 +606,7 @@ const Utilisateurs = (props) => {
                         searchFields={["firstAndLastName", "email", "code", "tel", "posteDto.libelle", "servicePointDto.libelle"]}
                         onEdit={(u) => handleEditClick(u)}
                         onDelete={(u) => setDeleteConfirm({ open: true, item: u, loading: false })}
+                        extraActions={[{ title: "Mot de passe", icon: <VpnKeyIcon sx={{ fontSize: 17 }} />, onClick: (u) => { if (!(u.deleted && u.rattached)) setPwdUser(u); } }]}
                         extraFields={[
                             { label: "Code",   render: (u) => <span>{u.code}</span> },
                             { label: "Poste",  render: (u) => <span>{u.posteDto?.libelle}</span> },

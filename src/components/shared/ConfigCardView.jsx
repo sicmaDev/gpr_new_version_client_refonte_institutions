@@ -36,6 +36,7 @@ const selectSx = {
  *     { id, label, options: [{value, label}], filterFn: (row, value) => bool }
  *   onEdit         : fn(row) - callback bouton Modifier (null = pas de bouton)
  *   onDelete       : fn(row) - callback bouton Supprimer (null = pas de bouton)
+ *   extraActions   : array - boutons supplémentaires : { title, icon, onClick: fn(row), color? }
  *   avatarField    : string - champ utilisé pour l'avatar (initiales), défaut = titleField
  *   rowsPerPageOptions : array
  */
@@ -74,6 +75,7 @@ const ConfigCardView = ({
   searchFields = [],
   filters = [],
   onEdit = null,
+  extraActions = [],
   onDelete = null,
   avatarField = null,
   rowsPerPageOptions = [12, 24, 48],
@@ -248,10 +250,17 @@ const ConfigCardView = ({
                     ))}
 
                     {/* Séparateur + boutons actions */}
-                    {(onEdit || onDelete) && (
+                    {(onEdit || onDelete || extraActions.length > 0) && (
                       <>
                         <Box sx={{ borderTop: "1px solid #F1F5F9", mt: 1.5, pt: 1,
                           display: "flex", justifyContent: "flex-end", gap: 0.5 }} >
+                          {extraActions.map((a, i) => (
+                            <Tooltip key={i} title={a.title}>
+                              <IconButton size="small" color={a.color || "default"} onClick={() => a.onClick(row)}>
+                                {a.icon}
+                              </IconButton>
+                            </Tooltip>
+                          ))}
                           {onEdit && (
                             <Tooltip title="Modifier">
                               <IconButton size="small" color="primary" onClick={() => onEdit(row)}>
