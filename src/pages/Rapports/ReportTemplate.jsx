@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Checkbox, FormControlLabel, MenuItem, Select } from "@mui/material";
+import { Checkbox, FormControlLabel, MenuItem, Radio, RadioGroup, Select } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -14,9 +14,20 @@ import {
   reportTemplateApi,
 } from "../../apis/Rapports/GlobalsApi";
 import { notify } from "../../Utils/alert";
+import { loadItemFromSessionStorage } from "../../Utils/utils";
 import FiltreRapportForm from "./FiltreRapportForm";
 
+// Message d'erreur renvoyé par le serveur (ex. 403 : modèle d'un autre utilisateur), sinon message générique.
+const serverMessage = (err, fallback) => err?.response?.data?.content?.message || fallback;
+
 const ReportTemplate = (props) => {
+  // Mêmes règles que le serveur (TemplateVisibility) : Pilote, DE et H14 voient et modifient tout ;
+  // un RA choisit si son modèle est visible par ses agents.
+  const user = loadItemFromSessionStorage("app-user") || {};
+  const habilitations = String(user?.posteDto?.habilitations || "").split(",");
+  const seesAll = user.additionalRole === "PILOTE" || user.additionalRole === "DE" || habilitations.includes("H14");
+  const isRa = user.ra === true;
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Brouillon du filtre associé au template en cours de création/édition.
   // Réinitialisé à l'ouverture du formulaire : vide pour un nouveau template,
@@ -33,7 +44,7 @@ const ReportTemplate = (props) => {
     setConfirmDelete(false);
     props.setTmpState({
       showForm: false,
-      form: { id: null, valeurs: {}, title: null, default: false },
+      form: { id: null, valeurs: {}, title: null, default: false, sharedWithAgents: false },
     });
   };
 
@@ -79,7 +90,7 @@ const ReportTemplate = (props) => {
       valeurs: { ...props.tmpState.current_valeurs, filtres: filtreDraft },
     })
       .then(() => getTemplates())
-      .catch(() => {});
+      .catch((err) => notify(serverMessage(err, "Erreur lors de l'enregistrement du template"), "error"));
   };
 
   const deleteSubmit = () => {
@@ -89,7 +100,7 @@ const ReportTemplate = (props) => {
         notify("Template supprimé avec succès", "success");
         getTemplates();
       })
-      .catch(() => notify("Erreur lors de la suppression du template", "error"));
+      .catch((err) => notify(serverMessage(err, "Erreur lors de la suppression du template"), "error"));
   };
 
   const setNewTemplate = (e) => {
@@ -103,9 +114,12 @@ const ReportTemplate = (props) => {
     });
   };
 
-  const isEditable = props.tmpState.current_id !== 0;
+  // Modifier / supprimer : seulement l'auteur, ou Pilote / DE / H14 (canEdit est calculé par le serveur).
+  const isEditable = props.tmpState.current_id !== 0 && props.tmpState.current?.canEdit === true;
   const isCreate = props.tmpState.showCreateForm;
   const showForm = props.tmpState.showForm;
+  // Le choix de partage n'existe que pour un RA, sur ses propres modèles.
+  const showShareChoice = isRa && (isCreate || props.tmpState.current?.authorId === user.id);
 
   // Nombre de catégories de filtre effectivement renseignées sur un template,
   // pour afficher un court résumé dans la liste de sélection.
@@ -164,19 +178,42 @@ const ReportTemplate = (props) => {
             onBlur={e => { e.target.style.borderColor = "#CBD5E1"; e.target.style.boxShadow = "none"; }}
           />
 
-          <FormControlLabel
-            control={
-              <Checkbox
-                size="small"
-                checked={!!props.tmpState.form.default}
+          {/* Un modèle « par défaut » est visible par tous : réservé à Pilote, DE et H14. */}
+          {seesAll && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={!!props.tmpState.form.default}
+                  onChange={(e) =>
+                    props.setTmpState({ form: { ...props.tmpState.form, default: e.target.checked } })
+                  }
+                />
+              }
+              label={<span style={{ fontSize: 12.5, color: "#475569" }}>Par défaut</span>}
+              sx={{ margin: 0 }}
+            />
+          )}
+
+          {showShareChoice && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12.5, color: "#475569" }}>
+                Visible par les agents de mon point de service ?
+              </span>
+              <RadioGroup
+                row
+                value={props.tmpState.form.sharedWithAgents === true ? "oui" : "non"}
                 onChange={(e) =>
-                  props.setTmpState({ form: { ...props.tmpState.form, default: e.target.checked } })
+                  props.setTmpState({ form: { ...props.tmpState.form, sharedWithAgents: e.target.value === "oui" } })
                 }
-              />
-            }
-            label={<span style={{ fontSize: 12.5, color: "#475569" }}>Par défaut</span>}
-            sx={{ margin: 0 }}
-          />
+              >
+                <FormControlLabel value="oui" control={<Radio size="small" />}
+                  label={<span style={{ fontSize: 12.5, color: "#475569" }}>Oui</span>} sx={{ margin: 0 }} />
+                <FormControlLabel value="non" control={<Radio size="small" />}
+                  label={<span style={{ fontSize: 12.5, color: "#475569" }}>Non</span>} sx={{ margin: 0 }} />
+              </RadioGroup>
+            </div>
+          )}
 
           <div style={{ display: "flex", gap: 8, marginLeft: "auto", alignItems: "center" }}>
             {!isCreate && !confirmDelete && (
@@ -306,7 +343,18 @@ const ReportTemplate = (props) => {
                       Par défaut
                     </span>
                   )}
+                  {item.sharedWithAgents === true && (
+                    <span style={{
+                      fontSize: 11, color: "#1D4ED8", backgroundColor: "#EFF6FF",
+                      border: "1px solid #BFDBFE", borderRadius: 10, padding: "0 8px",
+                    }}>
+                      Partagé avec les agents
+                    </span>
+                  )}
                 </div>
+                {item.authorName && item.authorId !== user.id && (
+                  <div style={{ fontSize: 11, color: "#777" }}>Créé par {item.authorName}</div>
+                )}
                 {filterCount > 0 && (
                   <div style={{ fontSize: 11, color: "#777" }}>
                     {filterCount} catégorie(s) de filtre appliquée(s)
@@ -324,7 +372,7 @@ const ReportTemplate = (props) => {
             props.setTmpState({
               showForm: true,
               showCreateForm: true,
-              form: { id: null, title: null, default: false },
+              form: { id: null, title: null, default: false, sharedWithAgents: false },
             })
           }
           style={{
@@ -348,6 +396,7 @@ const ReportTemplate = (props) => {
                   id: props.tmpState.current.id,
                   title: props.tmpState.current.title,
                   default: props.tmpState.current.default,
+                  sharedWithAgents: props.tmpState.current.sharedWithAgents === true,
                 },
               })
             }
