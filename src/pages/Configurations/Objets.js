@@ -18,6 +18,7 @@ import {
     categorieChanged, categorieLibelleChanged
 } from "../../redux/actions/Configurations/ObjetsActions";
 import { loadItemFromLocalStorage, today } from "../../Utils/utils";
+import { notify } from "../../Utils/alert";
 import { MAX_SUBJECT_DURATION } from "../../Utils/globals";
 import { slaStatus } from "../../apis/Sla/SlaApi";
 import { connect } from "react-redux";
@@ -156,6 +157,19 @@ const Objets = (props) => {
         }] : []),
     ];
     const handleModalSubmit = async (items) => {
+        // Même contrôle du délai qu'à la modification : entre 1 et le maximum (vide autorisé seulement si le SLA est actif).
+        for (const item of items) {
+            const delai = Number(item.processingTime);
+            const vide = item.processingTime === undefined || item.processingTime === null || item.processingTime === "";
+            if ((vide && !slaOn) || (!vide && (delai < 1 || delai > MAX_SUBJECT_DURATION))) {
+                notify(`Erreur - Délai de « ${item.libelle || "l'objet"} » : entre 1 et ${MAX_SUBJECT_DURATION} jours${slaOn ? ", ou vide" : ""}`, "error");
+                return;
+            }
+            if (slaOn && item.takeoverHours && Number(item.takeoverHours) < 1) {
+                notify(`Erreur - Prise en charge de « ${item.libelle || "l'objet"} » : au moins 1 heure, ou vide`, "error");
+                return;
+            }
+        }
         setAddLoading(true);
         try {
             for (const item of items) {

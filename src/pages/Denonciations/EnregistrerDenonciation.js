@@ -508,7 +508,8 @@ const EnregistrerDenonciation = (props) => {
 
             formData.append("denun", JSON.stringify(claim));
             for (let index = 0; index < files.length; index++) {
-                formData.append("files", files[index]);
+                // Un fichier audio choisi à la main va dans "audios" (lecteur audio), comme dans l'ancienne version.
+                formData.append(isAudioFile(files[index]) ? "audios" : "files", files[index]);
             }
 
             //console.log("claimenregistrer",formData);
@@ -522,7 +523,8 @@ const EnregistrerDenonciation = (props) => {
             });
             props.etat2Changed(true)
             if (mode === 1) {
-                addDenunciationApi(formData, props).then(() => {
+                addDenunciationApi(formData, props).then((saved) => {
+                    if (!saved) return
                     handleCancel(e)
                     props.resetWhatsapp()
                     setCurrentStep(0)
@@ -568,7 +570,8 @@ const EnregistrerDenonciation = (props) => {
 
         formData.append("denun", JSON.stringify(claim));
         for (let index = 0; index < files.length; index++) {
-            formData.append("files", files[index]);
+            // Un fichier audio choisi à la main va dans "audios" (lecteur audio), comme dans l'ancienne version.
+                formData.append(isAudioFile(files[index]) ? "audios" : "files", files[index]);
         }
         audioRecordings.forEach(audioBlob => {
             const audioFile = new File([audioBlob], "denonciation_record_" + uuid() + ".ogg", {

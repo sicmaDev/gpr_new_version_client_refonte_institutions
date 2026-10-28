@@ -493,7 +493,7 @@ export const Items = (props) => {
                 </NavLink>
               )}
 
-              {(hbt.includes('H5') || addR === 'PILOTE' || addR === 'DE') && mode === 1 && (
+              {(hbt.includes('H5') || addR === 'PILOTE' || addR === 'DE' || user?.ra === true) && mode === 1 && (
                 <NavLink to="/reclamations/mesure/all" activeClassName="hero" style={link}>
                   <ListItemButton sx={sSx('/reclamations/mesure')} className="lib">
                     <ListItemIcon>{si(SentimentSatisfiedAltIcon, isActive('/reclamations/mesure'))}</ListItemIcon>

@@ -204,10 +204,13 @@ export const addDenunciationApi = async (data, props) => {
         },
         data: data
     };
+    // Renvoie true si la dénonciation est enregistrée : en cas d'échec, l'écran garde la saisie.
+    let saved = false;
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
             if (response.data.status) {
+                saved = true;
                 notify("Bravo - Dénonciation ajoutée", "success");
                 listeByStatut(props, "TEMP_SAVED")
             } else {
@@ -220,6 +223,7 @@ export const addDenunciationApi = async (data, props) => {
             notify("Erreur - Veuillez réessayer!", "error");
             // console.log("erreur",error)
         });
+    return saved;
 }
 export const downloadAudioApi = async (data, filename) => {
 
@@ -607,13 +611,20 @@ export const convertDenunciationApi = async (data, props) => {
         },
         data: data
     };
+    // Renvoie null en cas d'échec : côté serveur la conversion est annulée en bloc (la dénonciation reste),
+    // l'appelant ne doit donc pas rediriger comme si elle avait réussi.
     return axios(config)
         .then(function (response) {
+            if (!response.data?.status) {
+                notify("Erreur - La dénonciation n'a pas pu être convertie", "error");
+                return null;
+            }
             notify("Bravo - Dénonciation convertie avec succès", "success");
             return response.data;
         })
         .catch(function (error) {
-            // L'erreur backend (FK constraint) est loggée mais on laisse la redirection se faire
+            const msg = error?.response?.data?.content?.message || "Veuillez réessayer!";
+            notify("Erreur - La dénonciation n'a pas pu être convertie : " + msg, "error");
             return null;
         });
 }

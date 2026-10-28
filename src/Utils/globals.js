@@ -37,12 +37,12 @@ function reportHost(){
     return "https://api.rapport.gprserver.com/"
 }
 
-export const LOCKSCREEN_TIMEOUT = 300000;
-export const WPP_CONNECT_IS_DEV = true;
-export const  WPP_CONNECT_TOKEN = "THISISMYSECURETOKEN"
-export const  WPP_CONNECT_OPTIONS = {waitQrCode:true,webhook:HOST+"api/v1/webhook/save"}
-// export const WPP_CONNECT_LINK =!WPP_CONNECT_IS_DEV?"https://gpr-rapport-excel-python-script.onrender.com/api" :"https://wppsicma.gprserver.com:8081/api"
-export const WPP_CONNECT_LINK =!WPP_CONNECT_IS_DEV?"https://gpr-rapport-excel-python-script.onrender.com/api" :"http://185.170.58.144:21465/api"
+// Le navigateur ne parle plus jamais directement au microservice Node.js WhatsApp :
+// tous les appels (QR, statut, envoi, médias, SSE) passent par le proxy authentifié
+// Spring Boot /api/whatgpr/** (voir src/whatgpr/api.js). Node n'est joignable que
+// depuis le serveur Spring Boot lui-même (whatgpr.node.url dans application.properties).
+
+export const LOCKSCREEN_TIMEOUT = 300000; //5min
 
 
 

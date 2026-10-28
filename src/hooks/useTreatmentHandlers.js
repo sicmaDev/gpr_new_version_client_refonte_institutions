@@ -115,9 +115,10 @@ const useTreatmentHandlers = ({
 
   const handleValidationForDisapproval = () => {
     let isValid = true;
-    if (!props.motif) {
+    if (!props.motif || String(props.motif).trim() === "") {
       isValid = false;
       errors["motif"] = "Champ incorrect";
+      notify("Veuillez renseigner le motif de la désapprobation", "error");
     }
     return isValid;
   };
@@ -274,8 +275,11 @@ const useTreatmentHandlers = ({
       existingId,
       isExisting: existingId !== '',
     };
+    const e = { preventDefault: () => {} };
+    // Même passage que handleSolve : la fenêtre WhatsApp (solution + sondage) est proposée si le client a un téléphone.
+    if (onBeforeSolve && onBeforeSolve(claim, e)) return;
     props.etat2Changed(true);
-    treatApi(claim, props).then(() => onSuccess({ preventDefault: () => {} }));
+    treatApi(claim, props).then(() => onSuccess(e));
   };
 
   return {

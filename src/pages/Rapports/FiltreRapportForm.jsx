@@ -41,37 +41,35 @@ const FiltreRapportForm = ({ value, onChange }) => {
     .map((year) => ({ label: year, value: year }))
     .concat([{ label: "Toutes ", value: 0 }]);
 
-  const users =
-    loadItemFromSessionStorage("app-users") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-users"))
-      : [];
+  // Les listes sont désormais enregistrées sérialisées une seule fois : loadItemFromSessionStorage renvoie
+  // directement le tableau. Une ancienne valeur sérialisée deux fois (chaîne JSON) reste acceptée.
+  const loadList = (key) => {
+    let list = loadItemFromSessionStorage(key);
+    if (typeof list === "string") {
+      try { list = JSON.parse(list); } catch (e) { list = []; }
+    }
+    return Array.isArray(list) ? list : [];
+  };
+
+  const users = loadList("app-users");
   const optionsUsers = users.map((one) => ({
     label: one.firstAndLastName,
     value: one.id,
   }));
 
-  const subjects =
-    loadItemFromSessionStorage("app-objets") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-objets"))
-      : [];
+  const subjects = loadList("app-objets");
   const optionsObjet = subjects.map((subject) => ({
     label: subject.libelle,
     value: subject.id,
   }));
 
-  const ps =
-    loadItemFromSessionStorage("app-ps") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-ps"))
-      : [];
+  const ps = loadList("app-ps");
   const optionsUnits = ps.map((unit) => ({
     label: unit.libelle,
     value: unit.id,
   }));
 
-  const products =
-    loadItemFromSessionStorage("app-produits") !== undefined
-      ? JSON.parse(loadItemFromSessionStorage("app-produits"))
-      : [];
+  const products = loadList("app-produits");
   const optionsProducts = products.map((product) => ({
     label: product.libelle,
     value: product.id,

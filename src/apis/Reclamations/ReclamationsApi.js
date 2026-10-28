@@ -384,10 +384,13 @@ export const treatClaimApi = async (data, props) => {
         },
         data: data
     };
+    // La réponse (plainte avec ses solutions) est renvoyée : l'envoi WhatsApp a besoin de l'id de la solution.
+    let result = null;
     await axios(config)
         .then(function (response) {
             props.etat2Changed(false)
             if (response.data.status) {
+                result = response.data;
                 notify("Bravo - Réclamation traitée", "success");
                 if (data.type) {
                     if (data.type === "assurance") {
@@ -410,6 +413,7 @@ export const treatClaimApi = async (data, props) => {
             notify("Erreur - Veuillez réessayer!", "error");
             // console.log("erreurtraitement",error)
         });
+    return result;
 }
 
 export const approveClaimSolutionApi = async (data, props) => {

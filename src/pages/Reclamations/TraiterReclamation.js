@@ -126,6 +126,8 @@ import {
   addDenunciationApi,
   addDenunciationApiOffline,
 } from "../../apis/Denonciations/DenonciationsApi";
+import { send } from "../../apis/Configurations/SmsApi";
+import { sendEmail } from "../../apis/Configurations/MailApi";
 
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -675,6 +677,51 @@ const TraiterReclamation = (props) => {
     }
   };
 
+  // Envoie la solution par SMS puis par email, en complément de WhatsApp — chaque
+  // canal a son propre try/catch : un échec d'envoi ne doit jamais remettre en
+  // cause le traitement déjà enregistré, juste déclencher un toast d'erreur.
+  const sendResolveSolutionSmsEmail = async (claim) => {
+    if (!props.phone) return;
+    const message = getSolutionWhatsappMessage(claim);
+    try {
+      await send({
+        claimId: props.id,
+        claimCode: props.code,
+        claimType: "CLAIM",
+        senderName: user?.firstAndLastName || null,
+        senderEmail: user?.email || null,
+        clientName: props.lastname || null,
+        phone: cleanPhoneNumber3(props.phone),
+        message,
+      });
+      notify("Super - SMS envoyé", "success");
+    } catch (err) {
+      notify("Oups - SMS non envoyé", "error");
+    }
+    if (props.email && props.email !== "") {
+      try {
+        await sendEmail({
+          claimId: props.id,
+          claimCode: props.code,
+          claimType: "CLAIM",
+          senderName: user?.firstAndLastName || null,
+          senderEmail: user?.email || null,
+          clientName: props.lastname || null,
+          email: props.email,
+          subject: "Votre réclamation a été traitée",
+          message,
+        });
+        notify("Super - Email envoyé au client", "success");
+      } catch (err) {
+        notify("Oups - Email non envoyé", "error");
+      }
+    }
+  };
+
+  // Traite la réclamation puis tente, en best-effort et indépendamment les uns des
+  // autres, l'envoi de la solution par tous les canaux disponibles (WhatsApp, SMS,
+  // email). Un canal qui échoue affiche juste un toast — il ne bloque jamais le
+  // traitement, déjà enregistré, ni les autres canaux.
   const handleConfirmTreatAndSend = async (e) => {
     const claim = pendingTreatClaimRef.current;
     if (!claim) return;
@@ -685,36 +732,20 @@ const TraiterReclamation = (props) => {
     setResolveWaSolutionSending(true);
     props.etat2Changed(true);
 
-    // Le traitement (enregistrement de la solution) ne dépend jamais de l'envoi WhatsApp.
+    // Le traitement (enregistrement de la solution) ne dépend jamais de l'envoi des notifications.
     const result = await treatClaimApi(claim, props);
     const solutionId = result?.content?.solutionDtos?.[0]?.id;
 
     if (solutionId) {
       await sendResolveSolutionWhatsapp(claim, solutionId);
-    } else if (props.phone) {
+    } else if (result && props.phone) {
+      // Traitement réussi mais sans solution renvoyée ; si le traitement a échoué, treatClaimApi l'a déjà signalé.
       notify("Solution enregistrée, mais l'envoi WhatsApp au client a échoué", "error");
     }
+    await sendResolveSolutionSmsEmail(claim);
 
     setResolveWaSolutionSending(false);
     setShowResolveWaModal(false);
-    pendingTreatClaimRef.current = null;
-    resetResolveWaState();
-    handleCancel(e);
-    handleClose();
-  };
-
-  // L'envoi WhatsApp est facultatif : "Annuler" ne doit pas bloquer l'agent, la
-  // réclamation est quand même traitée (juste sans notifier le client par WhatsApp).
-  const handleTreatWithoutWhatsapp = async (e) => {
-    const claim = pendingTreatClaimRef.current;
-    if (!claim) return;
-    setShowResolveWaModal(false);
-    setResolveWaSolutionSending(true);
-    props.etat2Changed(true);
-
-    await treatClaimApi(claim, props);
-
-    setResolveWaSolutionSending(false);
     pendingTreatClaimRef.current = null;
     resetResolveWaState();
     handleCancel(e);
@@ -2330,7 +2361,7 @@ const TraiterReclamation = (props) => {
 
       // Qui voit le formulaire de résolution (et donc les boutons « Traiter » et « Sauvegarder ») : comme dans
       // l'ancienne version, il faut un des droits H2, H3 ou H4 ET être soit l'auteur de la réclamation (non
-      // transmise), soit le destinataire d'une transmission.
+      // transmise), soit le destinataire MOLDUE d'une transmission, soit un RA sur une réclamation non transmise.
       const hasTreatmentRole =
         hbt.includes("H2") || hbt.includes("H3") || hbt.includes("H4");
       const isCreatorNotTransmitted =
@@ -2338,8 +2369,10 @@ const TraiterReclamation = (props) => {
         props.transmitted === "false";
       const isTransmittedToMe =
         props.transmittedTo === user.firstAndLastName &&
-        props.transmitted === "true";
-      const showTreatForm = hasTreatmentRole && (isCreatorNotTransmitted || isTransmittedToMe);
+        props.transmitted === "true" &&
+        addR === "MOLDUE";
+      const isRaNotTransmitted = user.ra === true && props.transmitted === "false";
+      const showTreatForm = hasTreatmentRole && (isCreatorNotTransmitted || isTransmittedToMe || isRaNotTransmitted);
       // les boutons ne sont affichés que si le vrai formulaire l'est (droit du niveau de risque comprise)
       treatActionsVisible = showTreatForm && Boolean(props.authorize);
 
@@ -4042,13 +4075,27 @@ const TraiterReclamation = (props) => {
   let transmettre = "";
   let btnS = "";
 
-  if (
+  // Règles de l'ancienne version : le destinataire doit être MOLDUE ou RA, et un RA sur une réclamation
+  // non transmise doit avoir le droit du niveau de risque (authorize).
+  const canTransmit =
     (addR !== "PILOTE" && (!hbt.includes("H6") || user.ra === true)) &&
     ((user.firstAndLastName === props.created_by && props.transmitted === "false") ||
-      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true") ||
-      (user.ra === true && props.transmitted === "false")) &&
-    props.status === "SAVED"
-  ) {
+      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && (addR === "MOLDUE" || user.ra === true)) ||
+      (user.ra === true && props.transmitted === "false" && Boolean(props.authorize))) &&
+    props.status === "SAVED";
+  // Affecter : H6, Pilote, ou RA si la réclamation n'est pas transmise ou s'il en est le destinataire ;
+  // celui qui a transmis perd la main.
+  const hasTransmittedIt = props.transmitted === "true" && user.firstAndLastName === props.transmittedBy;
+  const canAffect =
+    props.status === "SAVED" && !hasTransmittedIt &&
+    (hbt.includes("H6") || addR === "PILOTE" ||
+      (user.ra === true && (props.transmitted !== "true" || props.transmittedTo === user.firstAndLastName)));
+  // Réaffecter : un RA seulement si la réclamation n'est pas transmise.
+  const canReaffect =
+    (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) &&
+    ["AFFECTED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(props.status);
+
+  if (canTransmit) {
     transmettre = (
       <>
         <LoadingButton
@@ -4636,17 +4683,15 @@ const TraiterReclamation = (props) => {
             </div>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleTreatWithoutWhatsapp} disabled={resolveWaSolutionSending}>
-              Traiter sans envoyer
-            </Button>
             <LoadingButton
               onClick={handleConfirmTreatAndSend}
               loading={resolveWaSolutionSending}
               disabled={resolveWaMode === "audio" && !resolveWaAudio1Blob}
               variant="contained"
+              fullWidth
               sx={{ backgroundColor: "#25D366" }}
             >
-              Oui, envoyer
+              Traiter
             </LoadingButton>
           </DialogActions>
         </Dialog>
@@ -4757,9 +4802,9 @@ const TraiterReclamation = (props) => {
 
             visibleActions={[
               addR === "PILOTE" && props.status === "SAVED" && 'convertir',
-              (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && props.status === "SAVED" && props.transmitted !== "true" && 'affecter',
-              (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && ["AFFECTED","UNSATISFIED","PARTIAL_SATISFIED","CLASSED"].includes(props.status) && 'reaffecter',
-              (addR !== "PILOTE" && (!hbt.includes("H6") || user.ra === true)) && props.status === "SAVED" && ((user.firstAndLastName === props.created_by && props.transmitted === "false") || (user.firstAndLastName === props.transmittedTo && props.transmitted === "true") || (user.ra === true && props.transmitted === "false")) && 'transmettre',
+              canAffect && 'affecter',
+              canReaffect && 'reaffecter',
+              canTransmit && 'transmettre',
               (hbt.includes("H6") || addR === "PILOTE") && props.status === "TO_APPROUVED" && 'approuver',
             ].filter(Boolean)}
             transmettreDesc={

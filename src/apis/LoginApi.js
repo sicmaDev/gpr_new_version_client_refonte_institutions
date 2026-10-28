@@ -131,7 +131,10 @@ export const LoginApi = (credentials, props, isLocked = false) => {
 
             // console.log(JSON.parse(response.data.data));
             props.etatChanged(false)
-            if (response.data.response.status && !isLocked) {
+            // Seuls les profils qui enregistrent (droit H1, comme le menu Synchronisation) ont des saisies hors ligne à envoyer.
+            const loggedUser = response.data?.response?.content?.user;
+            const canSync = String(loggedUser?.posteDto?.habilitations || "").split(",").includes("H1");
+            if (response.data.response.status && !isLocked && canSync) {
                 // La synchro doit se déclencher au moment où l'utilisateur se
                 // CONNECTE en ligne (pas sur un simple événement "online" du
                 // navigateur, ni sur un déverrouillage d'écran) : on l'envoie
@@ -199,14 +202,20 @@ export const LoginApiOffline = (credentials, props) => {
     // JSON.parse() ici plantait systématiquement (JSON.parse d'un objet, pas d'une
     // chaîne), ce qui empêchait toute connexion en mode offline.
     let user = loadItemFromLocalStorage("app-user");
+    // Un poste qui a gardé l'ancien format (utilisateur sérialisé deux fois) donne une chaîne JSON.
+    if (typeof user === "string") {
+        try { user = JSON.parse(user); } catch (e) { user = undefined; }
+    }
     props.etatChanged(false)
 
-    if (!user) {
+    if (!user || !user.email) {
         notify("Erreur - Vous devez vous connecter au moins une fois en ligne avant de pouvoir utiliser le mode offline.", "error");
         return;
     }
 
-    if (user.email === credentials.email) {
+    // Comme dans l'ancienne version : ni les majuscules ni les espaces autour de l'e-mail ne comptent.
+    const sameEmail = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
+    if (sameEmail(user.email, credentials.email)) {
         // if (etatR === true || etatD === true || etatS === true) {
         //     notify("Erreur - Vous devez vous reconnectez en Online pour une mise à jour des données !", "error");
         // } else {

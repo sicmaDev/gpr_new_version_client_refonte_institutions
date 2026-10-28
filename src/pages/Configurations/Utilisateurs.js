@@ -308,7 +308,12 @@ const Utilisateurs = (props) => {
     ];
 
     const handleModalSubmit = (items) => {
+        // Quota de comptes de la licence : comme dans l'ancienne version, pas d'ajout si la licence n'a pas pu être lue,
+        // et l'ajout de plusieurs comptes d'un coup ne doit pas dépasser le maximum.
+        if (max === undefined) { notify("Erreur - Informations de licence indisponibles, ajout impossible", "error"); return; }
+        if (nba + items.length > max) { notify(`Erreur - Nombre maximum de comptes atteint (${max}). Il reste ${Math.max(max - nba, 0)} place(s).`, "error"); return; }
         for (const it of items) {
+            if (!it.email || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(it.email)) { notify(`Erreur - Email invalide pour ${it.name}`, "error"); return; }
             if (!isValidPhone(it.phone)) { notify(`Erreur - Téléphone invalide pour ${it.name}`, "error"); return; }
         }
         setAddLoading(true); props.etatChanged(true);
@@ -459,7 +464,8 @@ const Utilisateurs = (props) => {
         </div>
     );
 
-    const isAtLimit = max !== undefined && nba >= max;
+    // Bouton bloqué tant que la licence n'est pas lue ou que le maximum est atteint (ancienne règle : max !== undefined && nba < max).
+    const isAtLimit = max === undefined || nba >= max;
 
     return (
         <>
@@ -544,7 +550,9 @@ const Utilisateurs = (props) => {
                         <Tooltip title="Exporter en PDF"><IconButton onClick={() => { const pi = props.items.map(u => { let role = ""; if (u.additionalRole === "DE") role = "Directeur"; else if (u.additionalRole === "PILOTE") role = "Pilote"; const ra = u.ra ? "Responsable d'Agence" : ""; const d = u.createdAt ? new Intl.DateTimeFormat("fr-FR", { year: "numeric", month: "long", day: "2-digit" }).format(new Date(u.createdAt)) : ""; return { "Identité": `${u.code||""} ${u.firstAndLastName||""}`, "Poste": [u.posteDto?.libelle||"-", u.servicePointDto?.libelle||"-", role, ra].filter(Boolean).join(" / "), "Contacts": `${u.email||""} / ${u.tel||""}`, "Ajouté le": d }; }); handlePrint(pdfConfig, pdfColumns, pi, 0); }} sx={{ border: "1px solid #e2e8f0", borderRadius: 2, color: "#ef4444", "&:hover": { background: "#fee2e2" } }} size="small"><PictureAsPdf fontSize="small" /></IconButton></Tooltip>
                         <Tooltip title="Exporter en Excel"><IconButton onClick={() => table2XLSX("Liste_des_utilisateurs" + today().replaceAll("/", ""), "app-users")} sx={{ border: "1px solid #e2e8f0", borderRadius: 2, color: "#16a34a", "&:hover": { background: "#dcfce7" } }} size="small"><GridOn fontSize="small" /></IconButton></Tooltip>
                         {isAtLimit ? (
-                            <Tooltip title="Nombre maximum de comptes atteint. Contactez support.gpr@sicmagroup.com pour mettre à niveau.">
+                            <Tooltip title={max === undefined
+                                ? "Informations de licence en cours de chargement ou indisponibles."
+                                : "Nombre maximum de comptes atteint. Contactez support.gpr@sicmagroup.com pour mettre à niveau."}>
                                 <span><LoadingButton disabled variant="contained" startIcon={<AddIcon />} sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, fontSize: "0.82rem", px: 2.5, whiteSpace: "nowrap" }}>Ajouter</LoadingButton></span>
                             </Tooltip>
                         ) : (

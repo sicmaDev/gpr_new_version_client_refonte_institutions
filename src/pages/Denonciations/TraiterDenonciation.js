@@ -174,6 +174,7 @@ import {
 import {
   addSuggestionApi,
   addSuggestionApiOffline,
+  deleteSuggestionApi,
 } from "../../apis/Suggestions/SuggestionsApi";
 import { useHistory, useLocation } from "react-router-dom/cjs/react-router-dom";
 import { modalify } from "../../Utils/modal";
@@ -514,8 +515,13 @@ const TraiterDenonciation = (props) => {
           };
 
           convertDenunciationApi(data, props)
-            .then(() => {
+            .then((converted) => {
               setLoadingConversion(false);
+              if (!converted) {
+                // La dénonciation est restée en place : on retire la suggestion créée juste avant pour éviter un doublon.
+                if (response.id) deleteSuggestionApi(response.id, props);
+                return;
+              }
               sessionStorage.setItem('pendingSuggestionConversion', JSON.stringify({ code: suggestionCode, convertedByName: user?.firstAndLastName || "", convertedAtTime: new Date().toISOString() }));
               history.push("/suggestions/traitement/all", { justConverted: true, convertedCode: suggestionCode });
             })
@@ -770,6 +776,11 @@ const TraiterDenonciation = (props) => {
           );
           props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
           props.convertedAtChanged(data.convertedAt ? data.convertedAt : "");
+          // Sous-catégorie, contenus supplémentaires et session CGR : chargés comme dans l'ancienne version
+          // (sans eux, « Rejoindre la session » et les contenus ajoutés n'apparaissent pas).
+          props.underSubjectChanged(data.objet?.categorie?.libelle ? data.objet.categorie.libelle : "");
+          props.extrasChanged(data.extras ?? []);
+          props.sessionChanged(data.session !== null && data.session !== undefined ? data.session : "");
           //fetch attachments for selected claim
           getFillesApi(data.id, props);
           getClaimAudioApi(data.id, props);
@@ -1755,7 +1766,8 @@ const TraiterDenonciation = (props) => {
         props.transmittedTo === user.firstAndLastName &&
         props.transmitted === "true" &&
         addR === "MOLDUE";
-      const showTreatForm = hasTreatmentRole && (isCreatorNotTransmitted || isTransmittedToMoldue);
+      const isRaNotTransmitted = user.ra === true && props.transmitted === "false";
+      const showTreatForm = hasTreatmentRole && (isCreatorNotTransmitted || isTransmittedToMoldue || isRaNotTransmitted);
       // les boutons ne sont affichés que si le vrai formulaire l'est (droit du niveau de risque compris)
       treatActionsVisible = showTreatForm && Boolean(props.authorize);
 
@@ -2903,13 +2915,26 @@ const TraiterDenonciation = (props) => {
   let transmettre = "";
   let btnS = "";
 
-  if (
-    (addR !== "PILOTE" && (!hbt.includes("H6") || user.ra === true)) &&
+  // Règles de l'ancienne version : ni Pilote ni H6, et le destinataire d'une transmission doit être MOLDUE.
+  const canTransmit =
+    (addR !== "PILOTE" && !hbt.includes("H6")) &&
     ((user.firstAndLastName === props.created_by && props.transmitted === "false") ||
-      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true") ||
+      (user.firstAndLastName === props.transmittedTo && props.transmitted === "true" && addR === "MOLDUE") ||
       (user.ra === true && props.transmitted === "false")) &&
-    props.status === "SAVED"
-  ) {
+    props.status === "SAVED";
+  // Affecter : H6, Pilote, ou RA si la dénonciation n'est pas transmise ou s'il en est le destinataire ;
+  // celui qui a transmis perd la main.
+  const hasTransmittedIt = props.transmitted === "true" && user.firstAndLastName === props.transmittedBy;
+  const canAffect =
+    props.status === "SAVED" && !hasTransmittedIt &&
+    (hbt.includes("H6") || addR === "PILOTE" ||
+      (user.ra === true && (props.transmitted !== "true" || props.transmittedTo === user.firstAndLastName)));
+  // Réaffecter : un RA seulement si la dénonciation n'est pas transmise.
+  const canReaffect =
+    (hbt.includes("H6") || addR === "PILOTE" || (user.ra === true && props.transmitted === "false")) &&
+    ["AFFECTED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(props.status);
+
+  if (canTransmit) {
     transmettre = (
       <>
         <LoadingButton
@@ -3317,9 +3342,9 @@ const TraiterDenonciation = (props) => {
 
           visibleActions={[
             addR === "PILOTE" && props.status === "SAVED" && 'convertir',
-            (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && props.status === "SAVED" && props.transmitted !== "true" && 'affecter',
-            (hbt.includes("H6") || addR === "PILOTE" || user.ra === true) && ["AFFECTED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(props.status) && 'reaffecter',
-            (addR !== "PILOTE" && (!hbt.includes("H6") || user.ra === true)) && props.status === "SAVED" && ((user.firstAndLastName === props.created_by && props.transmitted === "false") || (user.firstAndLastName === props.transmittedTo && props.transmitted === "true") || (user.ra === true && props.transmitted === "false")) && 'transmettre',
+            canAffect && 'affecter',
+            canReaffect && 'reaffecter',
+            canTransmit && 'transmettre',
             (hbt.includes("H6") || addR === "PILOTE") && props.status === "TO_APPROUVED" && 'approuver',
           ].filter(Boolean)}
           transmettreDesc={

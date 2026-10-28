@@ -841,7 +841,8 @@ const EnregistrerReclamation = (props) => {
       formData.append("claim", JSON.stringify(claim));
 
       for (let index = 0; index < files.length; index++) {
-        formData.append("files", files[index]);
+        // Un fichier audio choisi à la main va dans "audios" (lecteur audio), comme dans l'ancienne version.
+        formData.append(isAudioFile(files[index]) ? "audios" : "files", files[index]);
       }
 
       audioRecordings.forEach(audioBlob => {
@@ -853,13 +854,15 @@ const EnregistrerReclamation = (props) => {
 
       props.etat2Changed(true);
       if (mode === 1) {
-        addClaimApi(formData, props).then((savedClaim) => {
-          handleCancel(e);
-          props.resetWhatsapp();
-          setCurrentStep(0);
-          setActiveTab("new");
-          if (onSuccess && savedClaim) onSuccess(savedClaim);
-        });
+        const savedClaim = await addClaimApi(formData, props);
+        // En cas d'échec (addClaimApi l'a déjà signalé), la saisie est conservée pour pouvoir réessayer.
+        if (!savedClaim) return null;
+        handleCancel(e);
+        props.resetWhatsapp();
+        setCurrentStep(0);
+        setActiveTab("new");
+        if (onSuccess) await onSuccess(savedClaim);
+        return savedClaim;
       } else {
         // Hors-ligne : File/Blob ne survivent pas à un JSON.stringify en localStorage —
         // on les convertit donc en base64, décodé côté backend à la synchronisation.
@@ -911,7 +914,8 @@ const EnregistrerReclamation = (props) => {
 
     formData.append("claim", JSON.stringify(claim));
     for (let index = 0; index < files.length; index++) {
-      formData.append("files", files[index]);
+      // Un fichier audio choisi à la main va dans "audios" (lecteur audio), comme dans l'ancienne version.
+        formData.append(isAudioFile(files[index]) ? "audios" : "files", files[index]);
     }
 
     // console.log(formData);
@@ -1050,7 +1054,7 @@ const EnregistrerReclamation = (props) => {
                   setShowSmsBox(true);
                   setOpen(true);
                 } else {
-                  handleSubmit();
+                  handleSubmit(e);
                 }
               }
               props.claimRecordErrors(errors);
@@ -1580,43 +1584,40 @@ const EnregistrerReclamation = (props) => {
     e.preventDefault();
     if (props.phone !== "" && props.phone) {
       KTApp.blockPage({ overlayColor: "#000000", type: "v2", state: "danger", message: "Enregistrement en cours..." });
-      // Sauvegarder d'abord, puis envoyer SMS/mail avec le vrai claimId
+      // Sauvegarder d'abord, puis envoyer SMS/mail avec le vrai claimId. La page est toujours débloquée,
+      // même si la validation ou l'enregistrement échoue.
       handleSubmit(e, async (savedClaim) => {
         const claimId = savedClaim?.id ?? null;
         const claimCode = savedClaim?.code ?? null;
+        const common = {
+          claimId,
+          claimCode,
+          claimType: "CLAIM",
+          senderName: user?.firstAndLastName || null,
+          senderEmail: user?.email || null,
+          clientName: props.lastname || null,
+        };
+        // Comme dans l'ancienne version, le mail part même si le SMS échoue ; chaque échec a son propre message.
         try {
-          await send({
-            phone: cleanPhoneNumber3(props.phone),
-            message: smsToSend,
-            claimId,
-            claimCode,
-            claimType: "CLAIM",
-            senderName: user?.firstAndLastName || null,
-            senderEmail: user?.email || null,
-            clientName: props.lastname || null,
-          });
-          if (props.email && props.email !== "") {
+          await send({ ...common, phone: cleanPhoneNumber3(props.phone), message: smsToSend });
+          notify("Super - SMS envoyé", "success");
+        } catch (err) {
+          notify("Oups - SMS non envoyé", "error");
+        }
+        if (props.email && props.email !== "") {
+          try {
             await sendEmail({
+              ...common,
               email: props.email,
               subject: "Accusé de réception - Votre réclamation a bien été enregistrée",
               message: smsToSend,
-              claimId,
-              claimCode,
-              claimType: "CLAIM",
-              senderName: user?.firstAndLastName || null,
-              senderEmail: user?.email || null,
-              clientName: props.lastname || null,
             });
-            notify("Super - SMS et Email envoyé au client avec succès", "success");
-          } else {
-            notify("Super - SMS envoyé", "success");
+            notify("Super - Email envoyé au client", "success");
+          } catch (err) {
+            notify("Oups - Email non envoyé", "error");
           }
-        } catch (err) {
-          notify("Oups - SMS non envoyé", "error");
-        } finally {
-          KTApp.unblockPage();
         }
-      });
+      }).finally(() => KTApp.unblockPage());
     } else {
       notify("numéros de téléphone incorrecte", "error");
     }
@@ -1915,8 +1916,10 @@ const EnregistrerReclamation = (props) => {
 
             </DialogContent>
 
-            {/* Modern action buttons */}
-            <div style={{ padding: "16px 28px 28px", display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Action button — enregistre toujours, puis tente la notification du client
+                (SMS + email) en best-effort : un échec d'envoi ne bloque jamais
+                l'enregistrement, il déclenche juste un toast d'erreur par canal. */}
+            <div style={{ padding: "16px 28px 28px" }}>
               <button
                 onClick={(e) => { e.preventDefault(); setShowSmsBox(false); sendSms(e); }}
                 style={{
@@ -1928,20 +1931,8 @@ const EnregistrerReclamation = (props) => {
                 }}
               >
                 <SmsOutlinedIcon style={{ fontSize: 18 }} />
-                Enregistrer et notifier
+                Enregistrer
               </button>
-              <form onSubmit={handleSubmit} style={{ margin: 0 }}>
-                <button
-                  type="submit"
-                  style={{
-                    width: "100%", padding: "11px", borderRadius: 12,
-                    border: "1.5px solid #e2e8f0", background: "white",
-                    color: "#374151", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                  }}
-                >
-                  Enregistrer sans notifier
-                </button>
-              </form>
             </div>
 
           </Dialog>

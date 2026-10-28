@@ -1190,8 +1190,11 @@ const MesurerReclamation = (props) => {
     );
   }
 
+  // Qui peut mesurer : H5, Pilote, DE ou RA (ancienne version) — le serveur leur montre ces plaintes.
+  const canMeasure = hbt.includes("H5") || addR === "PILOTE" || addR === "DE" || user?.ra === true;
+
   let mesureForm = "";
-  if (hbt.includes("H5") || addR === "PILOTE") {
+  if (canMeasure) {
     mesureForm = (
       <>
         <form id="claimAppraiseForm">
@@ -1680,7 +1683,7 @@ const MesurerReclamation = (props) => {
           content={props.content}
           extras={props.extras}
           onAddContent={() => { setShowExtraContent(true); setExtraContent(""); }}
-          visibleActions={(hbt.includes("H5") || addR === "PILOTE") ? ["mesurer"] : []}
+          visibleActions={canMeasure ? ["mesurer"] : []}
           onActionOverride={(key) => {
             if (key === "mesurer" && mesureFormRef.current) {
               mesureFormRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1846,7 +1849,7 @@ const MesurerReclamation = (props) => {
                     )}
 
                     {/* ── Formulaire mesure de satisfaction ── */}
-                    {(hbt.includes("H5") || addR === "PILOTE") && (() => {
+                    {canMeasure && (() => {
                       const OPTIONS = [
                         { val: "SATISFIED",   icon: satisfaire_icon,   label: "Satisfait",   accent: "#22c55e", color: "#166534", bg: "#f0fdf4", circleBg: "#dcfce7", dots: 5 },
                         { val: "PARTIAL",     icon: partiel_icon,      label: "Partielle",   accent: "#f59e0b", color: "#92400e", bg: "#fffbeb", circleBg: "#fef3c7", dots: 3 },

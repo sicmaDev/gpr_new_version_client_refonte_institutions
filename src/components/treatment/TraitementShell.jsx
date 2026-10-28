@@ -638,7 +638,11 @@ const TraitementShell = ({
         motif={motif}
         onMotifChange={onMotifChange}
         onApprove={(e) => { setOpenModal(null); onApprove?.(e); }}
-        onDisapprove={(e) => { setOpenModal(null); onDisapprove?.(e); }}
+        onDisapprove={(e) => {
+          // Sans motif, la fenêtre reste ouverte pour que l'erreur reste visible.
+          if (motif && String(motif).trim() !== '') setOpenModal(null);
+          onDisapprove?.(e);
+        }}
         loadingApprove={loadingApprove}
         loadingDisapprove={loadingDisapprove}
         errors={modalErrors}

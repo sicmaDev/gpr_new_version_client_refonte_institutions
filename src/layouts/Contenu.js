@@ -46,7 +46,6 @@ import Email from '../pages/Configurations/Email';
 import Sms from '../pages/Configurations/Sms';
 import SmsLogs from '../pages/Configurations/SmsLogs';
 import ScheduledReports from '../pages/Configurations/ScheduledReports';
-import Bot from '../pages/Configurations/Bot';
 import Log from '../pages/Configurations/Log';
 import Exportation from '../pages/Configurations/Exportation';
 import SLA from '../pages/Configurations/SLA';
@@ -124,7 +123,6 @@ export default function Contenu() {
                     <Route path="/configurations/utilisateurs" component={Utilisateurs} />
                     <Route path="/configurations/email" component={Email} />
                     <Route path="/configurations/sms" component={Sms} />
-                    <Route path="/configurations/bot" component={Bot} />
                     <Route path="/configurations/apikey" component={ApiKey} />
                     <Route path="/configurations/sms-logs" component={SmsLogs} />
                     <Route path="/configurations/scheduled-reports" component={ScheduledReports} />
