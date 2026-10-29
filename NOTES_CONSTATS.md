@@ -11,3 +11,12 @@ Chaque point attend une décision.
 | 3 | L'impression PDF/Word inclut trois graphiques même s'ils ont été retirés du modèle de rapport : évolution annuelle par agence, taux de satisfaction par agence, respect du délai des réclamations par agence (testés sur l'existence du graphique, pas sur la clé du modèle). | `Global.js`, `prepareToPrint()` | Un graphique retiré du modèle réapparaît dans le PDF/Word. |
 | 4 | Pendant un rechargement du rapport, le message « Aucune réclamation (dénonciation, suggestion) ne correspond aux critères de tri » s'affiche brièvement : les données sont remises à `[]` avant l'appel (`cleanForm2`). | `Global.js`, `genereReport()` / `cleanForm2()` | Message trompeur pendant le chargement. |
 | 5 | L'export Excel envoie les chiffres du rapport à un serveur externe (`REPORT_HOST` = `api.rapport.gprserver.com`) qui fabrique le fichier. | `src/apis/Rapports/GlobalsApi.js`, `reportNewVersionExport()` | Les données agrégées sortent vers ce serveur ; à garder en tête pour la sécurité de l'export Power BI. |
+| 6 | « Évolution annuelle des réclamations, dénonciations, suggestions par agence » n'affiche que la **première série** envoyée par le serveur (`datasets[0]`) : le serveur renvoie une série par année, les autres années ne sont pas affichées. La refonte garde ce comportement à l'identique. | `Global.js` (`evolutionObjByYearAndAgence`) ; serveur `ReportServiceImpl.evolutionObjBySpAndYear()` | Si la période couvre plusieurs années, une seule année est visible (laquelle dépend de l'ordre renvoyé par la requête). |
+
+## Décision à respecter avant un déploiement plus large
+
+**Fond de la carte : serveur public OpenStreetMap réservé à la phase pilote.**
+La cartographie du rapport Global utilise le serveur public de tuiles OpenStreetMap (`tile.openstreetmap.org`).
+Sa politique d'usage n'autorise qu'un trafic modéré et impose la mention « © contributeurs OpenStreetMap » (toujours affichée).
+**Avant un déploiement à plusieurs institutions, ce serveur devra être remplacé** par notre propre serveur de tuiles
+(ou un fournisseur sous contrat). L'adresse du fond est un paramètre de configuration : le changement se fait sans redéveloppement.
