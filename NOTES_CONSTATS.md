@@ -20,3 +20,14 @@ La cartographie du rapport Global utilise le serveur public de tuiles OpenStreet
 Sa politique d'usage n'autorise qu'un trafic modéré et impose la mention « © contributeurs OpenStreetMap » (toujours affichée).
 **Avant un déploiement à plusieurs institutions, ce serveur devra être remplacé** par notre propre serveur de tuiles
 (ou un fournisseur sous contrat). L'adresse du fond est un paramètre de configuration : le changement se fait sans redéveloppement.
+
+## Proposition pour plus tard : identité GPR sur toute l'application (option C)
+
+Le rapport Global adopte une identité plus sobre : cartes sur fond blanc avec fine bordure grise et couleur seulement
+en accent, chiffres `#1E293B`, libellés `#64748B`, couleurs de section fixes (dénonciations `#B45309`, suggestions `#0F766E`,
+taux et satisfaction `#5B4B8A`, délais `#2C7A9B`), couleurs de sens adoucies (`#2F855A`, `#C05621`, `#C53030`), et couleur
+principale = couleur choisie par l'institution (`getPagePrimary`, corrigée si elle est trop claire ou trop proche d'une couleur de section).
+**Le reste de l'application n'a pas été modifié** : il garde la palette par défaut de Tailwind (`#3B82F6`, `#F59E0B`, `#10B981`,
+`#8B5CF6`, environ 40 fichiers) et des cartes à fond pastel (Réclamations, Dénonciations, Suggestions, Alertes, SLA…).
+Proposition : appliquer plus tard cette identité à toute l'application, pour que le rapport et les autres écrans se ressemblent.
+À décider et planifier séparément (hors chantier du rapport Global).
