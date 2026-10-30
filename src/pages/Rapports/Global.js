@@ -2587,7 +2587,8 @@ const Global = (props) => {
                   <>
                     <tr key={cle}>
                       <td>{cle}</td>
-                      <td>{valeur}</td>
+                      {/* Pas de valeur (null) sous un filtre par objet : une suggestion n'a pas d'objet. */}
+                      <td>{valeur === null ? <>— <em>non applicable avec un filtre par objet</em></> : valeur}</td>
                     </tr>
                   </>
                 );
