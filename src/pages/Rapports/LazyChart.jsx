@@ -20,7 +20,7 @@ export default function LazyChart({ children, overflow, height = 600, forceRende
       </div>
     </div>
     ) : (
-    <div className="scrollContainer" ref={ref} style={{ flex: "1 auto", height: "600px", overflowY: "auto" }}>
+    <div className="scrollContainer" ref={ref} style={{ flex: "1 auto", height: Math.min(height, 640), overflowY: "auto" }}>
       <div style={{ height: height, width: "100%", position: "relative" }}>
         <div style={{ height: height }}>
           {inView ? children : null}

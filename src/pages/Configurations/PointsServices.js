@@ -39,6 +39,8 @@ import ConfigKPIBar from "../../components/shared/ConfigKPIBar";
 import ConfigTable from "../../components/shared/ConfigTable";
 import ConfigCardView from "../../components/shared/ConfigCardView";
 import AddDuplicateFormModal from "../../components/shared/AddDuplicateFormModal";
+import LocalisationPointService, { localisationDepuis, localisationPourServeur, localisationVide, verifierLocalisation } from "./LocalisationPointService";
+import { enregistrerLocalisationApi, localisationsPointsServiceApi } from "../../apis/Rapports/CarteApi";
 import ViewModeToggle from "../../components/shared/ViewModeToggle";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import BusinessIcon from "@mui/icons-material/Business";
@@ -60,6 +62,9 @@ const PointsServices = (props) => {
     const [editLoading, setEditLoading] = useState(false);
     const [editForm, setEditForm] = useState({ libelle: "", description: "", type: "", direction_id: "" });
     const [editErrors, setEditErrors] = useState({});
+    // Localisation (carte du rapport Global) : chargée à l'ouverture de la modification, enregistrée après elle.
+    const [localisation, setLocalisation] = useState(localisationVide());
+    const [localisationErreur, setLocalisationErreur] = useState("");
 
     // Modals de confirmation
     const [disableConfirm, setDisableConfirm] = useState({ open: false, id: null, isDisabled: true, loading: false });
@@ -403,6 +408,11 @@ const PointsServices = (props) => {
             direction_id: sp.direction_id || "",
         });
         setEditErrors({});
+        setLocalisation(localisationVide());
+        setLocalisationErreur("");
+        localisationsPointsServiceApi()
+            .then((r) => { if (r?.status) setLocalisation(localisationDepuis((r.content || []).find((l) => l.id === sp.id))); })
+            .catch(() => {});
         setEditModalOpen(true);
     }
 
@@ -410,7 +420,9 @@ const PointsServices = (props) => {
         const errs = {};
         if (!editForm.libelle.trim()) errs.libelle = "Champ requis";
         if (!editForm.type.trim()) errs.type = "Champ requis";
-        if (Object.keys(errs).length > 0) { setEditErrors(errs); return; }
+        const errLocalisation = verifierLocalisation(localisation);
+        setLocalisationErreur(errLocalisation || "");
+        if (Object.keys(errs).length > 0 || errLocalisation) { setEditErrors(errs); return; }
 
         const item = {
             id: props.id,
@@ -421,7 +433,11 @@ const PointsServices = (props) => {
         };
         setEditLoading(true);
         props.etat2Changed(true);
+        const idPointService = props.id;
         modification(item, props)
+            .then(() => enregistrerLocalisationApi(idPointService, localisationPourServeur(localisation))
+                .then((r) => { if (!r?.status) notify(typeof r?.content === "string" ? r.content : "La localisation n'a pas pu être enregistrée.", "error"); })
+                .catch(() => notify("La localisation n'a pas pu être enregistrée.", "error")))
             .then(() => {
                 setEditModalOpen(false);
                 clearComponentState();
@@ -648,6 +664,7 @@ const PointsServices = (props) => {
                             </div>
 
                         </div>
+                        <LocalisationPointService valeur={localisation} onChange={(l) => { setLocalisation(l); setLocalisationErreur(""); }} erreur={localisationErreur} />
                     </DialogContent>
 
                     {/* Footer */}
