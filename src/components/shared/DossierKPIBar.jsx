@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Box, Typography, Tooltip } from "@mui/material";
+import { ValeurKpi } from "./ChargementRond";
 
 /**
  * DossierKPIBar - barre de KPI générique
@@ -7,8 +8,9 @@ import { Box, Typography, Tooltip } from "@mui/material";
  * Props:
  *   items    - tableau de données
  *   kpiCards - [{ key, label, icon: Component, iconBg, iconColor, borderColor, filter(item) }]
+ *   chargement - (facultatif) indicateur qui tourne à la place des chiffres ; absent = suit le chargement de la page
  */
-const DossierKPIBar = ({ items = [], kpiCards = [] }) => {
+const DossierKPIBar = ({ items = [], kpiCards = [], chargement }) => {
   const counts = useMemo(() => {
     const result = {};
     kpiCards.forEach((card) => {
@@ -51,7 +53,7 @@ const DossierKPIBar = ({ items = [], kpiCards = [] }) => {
               </Box>
               <Box>
                 <Typography sx={{ fontSize: "1.7rem", fontWeight: 800, lineHeight: 1.1, color: "#0F172A", letterSpacing: "-0.5px" }}>
-                  {count}
+                  <ValeurKpi valeur={count} chargement={chargement} couleur={card.borderColor} />
                 </Typography>
                 <Typography sx={{ fontSize: "0.73rem", color: "#64748B", fontWeight: 500, mt: 0.2, lineHeight: 1.3 }}>
                   {card.label}

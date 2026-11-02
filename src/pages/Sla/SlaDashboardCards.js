@@ -14,13 +14,16 @@ import { SlaKpiBar, kpi, currentRights } from "./slaUi";
 const SlaDashboardCards = () => {
   const history = useHistory();
   const [data, setData] = useState(null);
+  // null : en cours ; false : SLA inactif ou indisponible (rien n'est affiché)
+  const [actif, setActif] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const status = await slaStatus();
-        if (!status?.enabled) return;
+        if (!status?.enabled) { if (!cancelled) setActif(false); return; }
+        if (!cancelled) setActif(true);
         const summary = await slaSummary();
         let rate = summary?.tauxRespect ?? null;
         // le taux du mois vient des indicateurs (Pilote, DE, rapports) ; sinon taux global du périmètre
@@ -35,23 +38,25 @@ const SlaDashboardCards = () => {
         if (!cancelled) setData({ ...summary, rate });
       } catch (e) {
         // un tableau de bord ne doit jamais casser pour une carte secondaire
+        if (!cancelled) setActif(false);
       }
     })();
     return () => { cancelled = true; };
   }, []);
 
-  if (!data) return null;
+  if (actif !== true) return null; // SLA inactif, ou pas encore su : rien n'apparaît puis disparaît
+  const d = data || {}; // indicateurs en cours de calcul : les cartes tournent
 
   const kpis = [
-    kpi("risk", "À risque", WarningAmberIcon, "amber", data.A_RISQUE),
-    kpi("rate", "Respect des délais (mois)", TrendingUpIcon, "green", data.rate != null ? `${data.rate} %` : "-"),
-    kpi("near", "Limite réglementaire proche", ScheduleIcon, "amber", data.PROCHES_REGLEMENTAIRE),
-    kpi("unm", "Traitées non mesurées", AssignmentTurnedInIcon, "purple", data.TRAITEES_NON_MESUREES),
+    kpi("risk", "À risque", WarningAmberIcon, "amber", d.A_RISQUE),
+    kpi("rate", "Respect des délais (mois)", TrendingUpIcon, "green", d.rate != null ? `${d.rate} %` : "-"),
+    kpi("near", "Limite réglementaire proche", ScheduleIcon, "amber", d.PROCHES_REGLEMENTAIRE),
+    kpi("unm", "Traitées non mesurées", AssignmentTurnedInIcon, "purple", d.TRAITEES_NON_MESUREES),
   ];
 
   return (
     <Box onClick={() => history.push("/sla")} sx={{ cursor: "pointer" }}>
-      <SlaKpiBar kpis={kpis} />
+      <SlaKpiBar kpis={kpis} chargement={data === null} />
     </Box>
   );
 };

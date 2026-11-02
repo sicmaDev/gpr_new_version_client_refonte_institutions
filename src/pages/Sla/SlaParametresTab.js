@@ -5,6 +5,7 @@ import { LoadingButton } from "@mui/lab";
 import { slaSettings, slaSaveSettings } from "../../apis/Sla/SlaApi";
 import { Panel, Empty, ErrorNote, Toggle, fieldProps, primarySx } from "./slaUi";
 import { notify } from "../../Utils/alert";
+import { ChargementRond } from "../../components/shared/ChargementRond";
 
 const Field = ({ label, help, children }) => (
   <div style={{ display: "flex", gap: 16, alignItems: "center", padding: "14px 0", borderBottom: "1px solid #F1F5F9", flexWrap: "wrap" }}>
@@ -46,7 +47,7 @@ const SlaParametresTab = () => {
   };
 
   if (error && !values) return <Empty>{error}</Empty>;
-  if (!values) return <Empty>Chargement...</Empty>;
+  if (!values) return <Empty><ChargementRond taille={28} /></Empty>;
 
   const toggle = (key) => (
     <Toggle checked={bool(key)} onChange={(v) => set(key, v ? "true" : "false")} />

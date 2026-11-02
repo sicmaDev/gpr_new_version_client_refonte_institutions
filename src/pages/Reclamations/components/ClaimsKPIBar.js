@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Box, Typography, Tooltip } from "@mui/material";
+import { ValeurKpi } from "../../../components/shared/ChargementRond";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -8,6 +9,7 @@ import PersonPinIcon from "@mui/icons-material/PersonPin";
 
 /**
  * Barre de 4 KPIs calculés dynamiquement depuis la liste des réclamations
+ * (chargement facultatif : indicateur qui tourne ; absent = suit le chargement de la page)
  */
 
 const KPI_CARDS = [
@@ -62,7 +64,7 @@ const KPI_CARDS = [
   },
 ];
 
-const ClaimsKPIBar = ({ items = [] }) => {
+const ClaimsKPIBar = ({ items = [], chargement }) => {
   const counts = useMemo(() => {
     const result = {};
     KPI_CARDS.forEach((card) => {
@@ -139,7 +141,7 @@ const ClaimsKPIBar = ({ items = [] }) => {
                     letterSpacing: "-0.5px",
                   }}
                 >
-                  {count}
+                  <ValeurKpi valeur={count} chargement={chargement} couleur={card.borderColor} />
                 </Typography>
                 <Typography
                   sx={{

@@ -36,6 +36,7 @@ const initialState = {
                 globalByObjetBarChartRef: true,
                 resolutionPieChartRef: true,
                 evolutionByAgenceByAnneeBarChartRef: true,
+                carteRef: true,
             },
             claim: {
                 resolutionClaimDelaiByMonthBarChartRef: true,

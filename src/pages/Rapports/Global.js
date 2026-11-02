@@ -99,7 +99,15 @@ import { Chat, NoBackpack } from "@mui/icons-material";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 // import ChartDataLabels from "chartjs-plugin-labels";
 import html2canvas from "html2canvas";
-import { MyGaugeChart } from "../../Utils/MyGaugeChart";
+import { JaugeRapport } from "./rendu/JaugeRapport";
+import { GraphiqueRapport, hauteurGraphique } from "./rendu/GraphiqueRapport";
+import { CadreCarte, CarteRapport } from "./rendu/CarteRapport";
+import { couleursAffichees, telecharger } from "./rendu/exportPowerBi";
+import { exportPowerBiApi } from "../../apis/Rapports/PowerBiApi";
+import { ValeurKpi } from "../../components/shared/ChargementRond";
+import { couleursDuRapport, TEXTE } from "./rendu/couleursRapport";
+import { useThemeColors } from "../../context/ThemeColorsContext";
+import { INSTITUTION_PAYS_CODE } from "../../Utils/globals";
 import { XAxis } from "recharts";
 import { notify } from "../../Utils/alert";
 import ReportTemplate from "./ReportTemplate";
@@ -107,7 +115,6 @@ import LazyChart from "./LazyChart";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import LazyChartSkeleton from "./LazyChartSkeleton";
-import { LazyChartWrapper } from "./LazyChartWrapper";
 import { data } from "jquery";
 Chart.register(ChartDataLabels);
 Chart.register(...registerables);
@@ -220,6 +227,19 @@ const DateInput = React.forwardRef(({ value, onClick, placeholder }, ref) => (
 ));
 
 const Global = (props) => {
+  // Identité du rapport : couleur principale = couleur choisie par l'institution (corrigée si besoin), sections fixes.
+  const { colors: themeColors } = useThemeColors();
+  const CR = couleursDuRapport(themeColors);
+  const couleurDuType = (label) => (/claim|r[ée]clam/i.test(label || "") ? CR.reclamations : /d[ée]non/i.test(label || "") ? CR.denonciations : /sugg/i.test(label || "") ? CR.suggestions : null);
+  const couleurDeSatisfaction = (label) => { const l = (label || "").toLowerCase(); return l.includes("partiel") ? CR.sens.orange : l.includes("non") || l.includes("insatisf") ? CR.sens.rouge : l.includes("satisf") ? CR.sens.vert : null; };
+  // Carte : même filtre que le dernier rapport généré (null = rapport ouvert sans filtre), rechargée à chaque rapport.
+  const [filtreCarte, setFiltreCarte] = useState(null);
+  const [versionCarte, setVersionCarte] = useState(0);
+  const carteRef = useRef(null);
+  // Carte dans le modèle de rapport (clé global.carteRef) : affichée tant qu'elle n'a pas été retirée,
+  // y compris pour les modèles enregistrés avant son ajout (clé absente).
+  const carteDansLeModele = props.templateData?.global?.carteRef !== false;
+  const chargerCarte = (filtres) => { setFiltreCarte(filtres); setVersionCarte((v) => v + 1); };
 
   const [open, setOpen] = React.useState(false);
   const [showSearch, setshowSearch] = useState(false);
@@ -478,8 +498,10 @@ const Global = (props) => {
           },
         ]);
         reportApiFiltres(props, filtres, setDataRaport).then((r) => { });
+        chargerCarte(filtres);
       } else {
         reportApi(props, setDataRaport).then((r) => { });
+        chargerCarte(null);
       }
     }
   }, [reload]);
@@ -1479,6 +1501,7 @@ const Global = (props) => {
     handleClose(e);
     // setDataRaport(null);
     reportApiFiltres(props, filtres, setDataRaport).then((r) => { });
+    chargerCarte(filtres);
     // console.log('Data after API call:', dataRaport);
   };
 
@@ -1502,6 +1525,7 @@ const Global = (props) => {
       props.denunReportChanged([]);
       props.sugReportChanged([]);
       reportApiFiltres(props, buildBackendFiltres(raw), setDataRaport).then((r) => { });
+      chargerCarte(buildBackendFiltres(raw));
     }
   }, [props.tmpState.current_id]);
 
@@ -1509,27 +1533,27 @@ const Global = (props) => {
     const s = props.claimReport?.basicStats?.statusAndValue ?? {};
     const total = props.claimReport?.basicStats?.total ?? 0;
     const statuses = [
-      { label: "À traiter", value: s.SAVED, color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
-      { label: "Affectée", value: s.AFFECTED, color: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
-      { label: "Désapprouvée", value: s.DESAPPROUVED, color: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
-      { label: "Traitée", value: s.TREAT, color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
-      { label: "Satisfait", value: s.SATISFIED, color: "#059669", bg: "#F0FDF4", border: "#86EFAC" },
-      { label: "Partiellement satisfait", value: s.PARTIAL_SATISFIED, color: "#0891B2", bg: "#ECFEFF", border: "#A5F3FC" },
-      { label: "Non satisfait", value: s.UNSATISFIED, color: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
-      { label: "Contentieux", value: s.LITIGATION, color: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE" },
-      { label: "Classée", value: s.CLASSED, color: "#6B7280", bg: "#F9FAFB", border: "#E5E7EB" },
+      { label: "À traiter", value: s.SAVED, color: CR.denonciations },
+      { label: "Affectée", value: s.AFFECTED, color: CR.delais },
+      { label: "Désapprouvée", value: s.DESAPPROUVED, color: CR.sens.rouge },
+      { label: "Traitée", value: s.TREAT, color: CR.suggestions },
+      { label: "Satisfait", value: s.SATISFIED, color: CR.sens.vert },
+      { label: "Partiellement satisfait", value: s.PARTIAL_SATISFIED, color: CR.sens.orange },
+      { label: "Non satisfait", value: s.UNSATISFIED, color: CR.sens.rouge },
+      { label: "Contentieux", value: s.LITIGATION, color: CR.taux },
+      { label: "Classée", value: s.CLASSED, color: TEXTE.libelle },
     ];
     return (
       <div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
-          <span style={{ fontSize: 28, fontWeight: 800, color: "#3B82F6" }}>{total}</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={total} taille={26} /></span>
           <span style={{ fontSize: 13, color: "#6B7280", fontWeight: 500 }}>réclamation{total > 1 ? "s" : ""} au total</span>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          {statuses.map(({ label, value, color, bg, border }) => (
-            <div key={label} style={{ flex: "1 1 130px", minWidth: 110, background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 22, fontWeight: 800, color }}>{value ?? 0}</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color, opacity: 0.8, lineHeight: 1.3 }}>{label}</span>
+          {statuses.map(({ label, value, color }) => (
+            <div key={label} style={{ flex: "1 1 130px", minWidth: 110, background: "#FFFFFF", border: `1px solid ${TEXTE.bordure}`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={value ?? 0} couleur={color} /></span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: TEXTE.libelle, lineHeight: 1.3 }}>{label}</span>
             </div>
           ))}
         </div>
@@ -1540,21 +1564,21 @@ const Global = (props) => {
     const s = props.sugReport?.basicStats?.statusAndValue ?? {};
     const total = props.sugReport?.basicStats?.total ?? 0;
     const statuses = [
-      { label: "À traiter", value: s.SAVED, color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
-      { label: "Pris en compte", value: s.ACCEPTED, color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
-      { label: "Non pris en compte", value: s.UNACCEPTED, color: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
+      { label: "À traiter", value: s.SAVED, color: CR.denonciations },
+      { label: "Pris en compte", value: s.ACCEPTED, color: CR.sens.vert },
+      { label: "Non pris en compte", value: s.UNACCEPTED, color: CR.sens.rouge },
     ];
     return (
       <div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
-          <span style={{ fontSize: 28, fontWeight: 800, color: "#10B981" }}>{total}</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={total} taille={26} /></span>
           <span style={{ fontSize: 13, color: "#6B7280", fontWeight: 500 }}>suggestion{total > 1 ? "s" : ""} au total</span>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          {statuses.map(({ label, value, color, bg, border }) => (
-            <div key={label} style={{ flex: "1 1 150px", minWidth: 130, background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 22, fontWeight: 800, color }}>{value ?? 0}</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color, opacity: 0.8, lineHeight: 1.3 }}>{label}</span>
+          {statuses.map(({ label, value, color }) => (
+            <div key={label} style={{ flex: "1 1 150px", minWidth: 130, background: "#FFFFFF", border: `1px solid ${TEXTE.bordure}`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={value ?? 0} couleur={color} /></span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: TEXTE.libelle, lineHeight: 1.3 }}>{label}</span>
             </div>
           ))}
         </div>
@@ -1579,21 +1603,21 @@ const Global = (props) => {
     const s = props.denunReport?.basicStats?.statusAndValue ?? {};
     const total = props.denunReport?.basicStats?.total ?? 0;
     const statuses = [
-      { label: "À traiter", value: s.SAVED, color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
-      { label: "Affectée", value: s.AFFECTED, color: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
-      { label: "Traitée", value: s.TREAT, color: "#10B981", bg: "#ECFDF5", border: "#A7F3D0" },
+      { label: "À traiter", value: s.SAVED, color: CR.denonciations },
+      { label: "Affectée", value: s.AFFECTED, color: CR.delais },
+      { label: "Traitée", value: s.TREAT, color: CR.suggestions },
     ];
     return (
       <div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
-          <span style={{ fontSize: 28, fontWeight: 800, color: "#F59E0B" }}>{total}</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={total} taille={26} /></span>
           <span style={{ fontSize: 13, color: "#6B7280", fontWeight: 500 }}>dénonciation{total > 1 ? "s" : ""} au total</span>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          {statuses.map(({ label, value, color, bg, border }) => (
-            <div key={label} style={{ flex: "1 1 150px", minWidth: 130, background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 22, fontWeight: 800, color }}>{value ?? 0}</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color, opacity: 0.8, lineHeight: 1.3 }}>{label}</span>
+          {statuses.map(({ label, value, color }) => (
+            <div key={label} style={{ flex: "1 1 150px", minWidth: 130, background: "#FFFFFF", border: `1px solid ${TEXTE.bordure}`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={value ?? 0} couleur={color} /></span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: TEXTE.libelle, lineHeight: 1.3 }}>{label}</span>
             </div>
           ))}
         </div>
@@ -1603,7 +1627,7 @@ const Global = (props) => {
   // Fin dashboard Affichage
 
   /* ── Power BI Chart Card ── */
-  const PBICard = ({ title, children, accent = "#118DFF", half = false, onClose }) => (
+  const PBICard = ({ title, children, accent = CR.principale, half = false, onClose, centre = false }) => (
     <div style={{
       background: "#fff",
       borderRadius: 8,
@@ -1619,7 +1643,7 @@ const Global = (props) => {
         <span style={{ fontSize: 12.5, fontWeight: 700, color: "#374151", letterSpacing: "0.2px", textTransform: "uppercase" }}>{title}</span>
         {onClose && <span onClick={onClose} style={{ cursor: "pointer", fontSize: 14, color: "#9CA3AF", lineHeight: 1 }}>✕</span>}
       </div>
-      <div style={{ padding: "16px 18px 12px", flex: 1 }}>{children}</div>
+      <div style={{ padding: "16px 18px 12px", flex: 1, ...(centre ? { display: "flex", flexDirection: "column", justifyContent: "center" } : {}) }}>{children}</div>
     </div>
   );
 
@@ -1691,14 +1715,14 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.global.globalPieChartRef ? (
-          <PBICard title="Répartition des réclamations, dénonciations et suggestions (%)" accent="#118DFF" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalPieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard centre={true} title="Répartition des réclamations, dénonciations et suggestions (%)" accent={CR.principale} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalPieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("anneau", rdsPieGlobal, { couleurs: couleurDuType })} forceRender={isPrinting}>
               {rdsPieGlobal ? (
-                <LazyChartWrapper
-                  type="pie"
+                <GraphiqueRapport
+                  rendu="anneau"
                   data={rdsPieGlobal}
                   visible={rdsPieGlobal == null}
-                  options={pbiPieOptions()}
+                  reglages={{ couleurs: couleurDuType }}
                   chartRef={globalPieChartRef}
                 />
               ) : (
@@ -1708,14 +1732,14 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.global.globalLineChartRef ? (
-          <PBICard title="Glissement annuel des RSD" accent="#118DFF" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalLineChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard title="Glissement annuel des RSD" accent={CR.principale} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalLineChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("courbes", rdsBarGlobal, { couleurs: couleurDuType })} forceRender={isPrinting}>
               {rdsBarGlobal ? (
-                <LazyChartWrapper
-                  type="bar"
+                <GraphiqueRapport
+                  rendu="courbes"
                   data={rdsBarGlobal}
                   visible={rdsBarGlobal == null}
-                  options={pbiOptions("")}
+                  reglages={{ couleurs: couleurDuType }}
                   chartRef={globalLineChartRef}
                 />
               ) : (
@@ -1731,16 +1755,16 @@ const Global = (props) => {
   const reportGlobalByCanalChart = (
     <>
       {props.templateData?.global.globalByCanalPieChartRef ? (
-        <PBICard title="Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)" accent="#118DFF" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalPieChartRef: false } }) } : undefined}>
-          <LazyChart height={520} forceRender={isPrinting}>
+        <PBICard title="Répartition des réclamations, dénonciations, suggestions par modalité de dépôt (%)" accent={CR.principale} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalPieChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("progression", rdsPieModaliteGlobal, { pct: true })} forceRender={isPrinting}>
             {rdsPieModaliteGlobal ? (
-              <LazyChartWrapper
-                type="pie"
-                chartRef={globalByCanalPieChartRef}
-                data={rdsPieModaliteGlobal}
-                visible={rdsPieModaliteGlobal == null}
-                options={pbiPieOptions()}
-              />
+              <GraphiqueRapport
+                  rendu="progression"
+                  data={rdsPieModaliteGlobal}
+                  visible={rdsPieModaliteGlobal == null}
+                  reglages={{ pct: true }}
+                  chartRef={globalByCanalPieChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="pie" height={520} />
             )}
@@ -1748,16 +1772,16 @@ const Global = (props) => {
         </PBICard>
       ) : <></>}
       {props.templateData?.global.globalByCanalBarChartRef ? (
-        <PBICard title="Répartition des RSD par modalité de dépôt et par agence (%)" accent="#118DFF" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={chartHeight(rdsBarModaliteGlobal)} forceRender={isPrinting}>
+        <PBICard title="Répartition des RSD par modalité de dépôt et par agence (%)" accent={CR.principale} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByCanalBarChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("empile", rdsBarModaliteGlobal, {})} forceRender={isPrinting}>
             {rdsBarModaliteGlobal ? (
-              <LazyChartWrapper
-                type="bar"
-                chartRef={globalByCanalBarChartRef}
-                data={rdsBarModaliteGlobal}
-                visible={rdsBarModaliteGlobal == null}
-                options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, min: 0, max: 100, offset: false } } })}
-              />
+              <GraphiqueRapport
+                  rendu="empile"
+                  data={rdsBarModaliteGlobal}
+                  visible={rdsBarModaliteGlobal == null}
+                  reglages={{}}
+                  chartRef={globalByCanalBarChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="bar" height={1200} />
             )}
@@ -1770,16 +1794,16 @@ const Global = (props) => {
   const reportGlobalByObjetChart = (
     <>
       {props.templateData?.global.globalByObjetPieChartRef ? (
-        <PBICard title="Répartition des réclamations, dénonciations par objets (%)" accent="#118DFF" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetPieChartRef: false } }) } : undefined}>
-          <LazyChart height={520} forceRender={isPrinting}>
+        <PBICard title="Répartition des réclamations, dénonciations par objets (%)" accent={CR.principale} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetPieChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("progression", rdsPieObjetGlobal, { pct: true })} forceRender={isPrinting}>
             {rdsPieObjetGlobal ? (
-              <LazyChartWrapper
-                type="pie"
-                data={rdsPieObjetGlobal}
-                visible={rdsPieObjetGlobal == null}
-                options={pbiPieOptions()}
-                chartRef={globalByObjetPieChartRef}
-              />
+              <GraphiqueRapport
+                  rendu="progression"
+                  data={rdsPieObjetGlobal}
+                  visible={rdsPieObjetGlobal == null}
+                  reglages={{ pct: true }}
+                  chartRef={globalByObjetPieChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="pie" height={520} />
             )}
@@ -1787,16 +1811,16 @@ const Global = (props) => {
         </PBICard>
       ) : <></>}
       {props.templateData?.global.globalByObjetBarChartRef ? (
-        <PBICard title="Répartition des Réclamations et Dénonciations par objets et par agence (%)" accent="#118DFF" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={chartHeight(rdsBarObjetGlobal)} forceRender={isPrinting}>
+        <PBICard title="Répartition des Réclamations et Dénonciations par objets et par agence (%)" accent={CR.principale} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalByObjetBarChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("chaleur", rdsBarObjetGlobal, { couleur: CR.principale })} forceRender={isPrinting}>
             {rdsBarObjetGlobal ? (
-              <LazyChartWrapper
-                type="bar"
-                data={rdsBarObjetGlobal}
-                visible={rdsBarObjetGlobal == null}
-                options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false } } })}
-                chartRef={globalByObjetBarChartRef}
-              />
+              <GraphiqueRapport
+                  rendu="chaleur"
+                  data={rdsBarObjetGlobal}
+                  visible={rdsBarObjetGlobal == null}
+                  reglages={{ couleur: CR.principale }}
+                  chartRef={globalByObjetBarChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="bar" height={1200} />
             )}
@@ -1809,26 +1833,25 @@ const Global = (props) => {
   const reportMixteChart = (
     <>
       {props.templateData?.global.resolutionPieChartRef ? (
-        <PBICard title="Taux de résolution des plaintes" accent="#118DFF" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, resolutionPieChartRef: false } }) } : undefined}>
-          <MyGaugeChart
+        <PBICard title="Taux de résolution des plaintes" accent={CR.principale} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, resolutionPieChartRef: false } }) } : undefined}>
+          <JaugeRapport
             global_trend={parseFloat(props.global_trend?.tauxResolution)}
-            colors={["#EA4228", "#F5CD19", "#5BE12C"]}
             ref={resolutionPieChartRef}
           />
         </PBICard>
       ) : <></>}
 
       {props.templateData?.global.evolutionByAgenceByAnneeBarChartRef ? (
-        <PBICard title="Evolution annuelle des réclamations, dénonciations, suggestions par agence" accent="#118DFF" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, evolutionByAgenceByAnneeBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"x"} height={chartHeight(rdsBarAgenceGlobal)} forceRender={isPrinting}>
+        <PBICard title="Evolution annuelle des réclamations, dénonciations, suggestions par agence" accent={CR.principale} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, evolutionByAgenceByAnneeBarChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("progression", rdsBarAgenceGlobal, { pct: false, couleur: CR.principale })} forceRender={isPrinting}>
             {rdsBarAgenceGlobal ? (
-              <LazyChartWrapper
-                type="bar"
-                data={rdsBarAgenceGlobal}
-                visible={rdsBarAgenceGlobal == null}
-                options={pbiOptions("", { scales: { x: { grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: function (value) { let text = this.getLabelForValue(value); return text.length > 6 ? text.substring(0, 5) + "..." : text; } } }, y: { grid: { color: "#F3F4F6" } } } })}
-                chartRef={evolutionByAgenceByAnneeBarChartRef}
-              />
+              <GraphiqueRapport
+                  rendu="progression"
+                  data={rdsBarAgenceGlobal}
+                  visible={rdsBarAgenceGlobal == null}
+                  reglages={{ pct: false, couleur: CR.principale }}
+                  chartRef={evolutionByAgenceByAnneeBarChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="bar" height={600} />
             )}
@@ -1842,15 +1865,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.claim.claimByAgencePieChartRef ? (
-          <PBICard title="Répartition des réclamations par agence (%)" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByAgencePieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard title="Répartition des réclamations par agence (%)" accent={CR.reclamations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByAgencePieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("progression", rdsPieAgenceClaim, { pct: true })} forceRender={isPrinting}>
               {rdsPieAgenceClaim ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={claimByAgencePieChartRef}
+                <GraphiqueRapport
+                  rendu="progression"
                   data={rdsPieAgenceClaim}
                   visible={rdsPieAgenceClaim == null}
-                  options={pbiPieOptions()}
+                  reglages={{ pct: true }}
+                  chartRef={claimByAgencePieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -1859,15 +1882,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.claim.claimByAgenceBarChartRef ? (
-          <PBICard title="Nombre de réclamations par Agence" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByAgenceBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"x"} height={chartHeight(rdsBarAgenceClaim)} forceRender={isPrinting}>
+          <PBICard title="Nombre de réclamations par Agence" accent={CR.reclamations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByAgenceBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("progression", rdsBarAgenceClaim, { pct: false })} forceRender={isPrinting}>
               {rdsBarAgenceClaim ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={claimByAgenceBarChartRef}
+                <GraphiqueRapport
+                  rendu="progression"
                   data={rdsBarAgenceClaim}
                   visible={rdsBarAgenceClaim == null}
-                  options={pbiOptions("")}
+                  reglages={{ pct: false }}
+                  chartRef={claimByAgenceBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={520} />
@@ -1882,15 +1905,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.denun.denunByAgencePieChartRef ? (
-          <PBICard title="Répartition des dénonciations par agence (%)" accent="#F59E0B" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByAgencePieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard title="Répartition des dénonciations par agence (%)" accent={CR.denonciations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByAgencePieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("progression", rdsPieAgenceDenun, { pct: true })} forceRender={isPrinting}>
               {rdsPieAgenceDenun ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={denunByAgencePieChartRef}
+                <GraphiqueRapport
+                  rendu="progression"
                   data={rdsPieAgenceDenun}
                   visible={rdsPieAgenceDenun == null}
-                  options={pbiPieOptions()}
+                  reglages={{ pct: true }}
+                  chartRef={denunByAgencePieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -1899,15 +1922,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.denun.denunByAgenceBarChartRef ? (
-          <PBICard title="Nombre de dénonciations par Agence" accent="#F59E0B" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByAgenceBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"x"} height={chartHeight(rdsBarAgenceDenun)} forceRender={isPrinting}>
+          <PBICard title="Nombre de dénonciations par Agence" accent={CR.denonciations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByAgenceBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("progression", rdsBarAgenceDenun, { pct: false })} forceRender={isPrinting}>
               {rdsBarAgenceDenun ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={denunByAgenceBarChartRef}
+                <GraphiqueRapport
+                  rendu="progression"
                   data={rdsBarAgenceDenun}
                   visible={rdsBarAgenceDenun == null}
-                  options={pbiOptions("")}
+                  reglages={{ pct: false }}
+                  chartRef={denunByAgenceBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={520} />
@@ -1922,15 +1945,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.suggest.sugByAgencePieChartRef ? (
-          <PBICard title="Répartition des suggestions par agence (%)" accent="#10B981" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByAgencePieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard title="Répartition des suggestions par agence (%)" accent={CR.suggestions} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByAgencePieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("progression", rdsPieAgenceSugge, { pct: true })} forceRender={isPrinting}>
               {rdsPieAgenceSugge ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={sugByAgencePieChartRef}
+                <GraphiqueRapport
+                  rendu="progression"
                   data={rdsPieAgenceSugge}
                   visible={rdsPieAgenceSugge == null}
-                  options={pbiPieOptions()}
+                  reglages={{ pct: true }}
+                  chartRef={sugByAgencePieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -1939,15 +1962,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.suggest.sugByAgenceBarChartRef ? (
-          <PBICard title="Nombre de suggestions par Agence" accent="#10B981" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByAgenceBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"x"} height={chartHeight(rdsBarAgenceSugge)} forceRender={isPrinting}>
+          <PBICard title="Nombre de suggestions par Agence" accent={CR.suggestions} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByAgenceBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("progression", rdsBarAgenceSugge, { pct: false })} forceRender={isPrinting}>
               {rdsBarAgenceSugge ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={sugByAgenceBarChartRef}
+                <GraphiqueRapport
+                  rendu="progression"
                   data={rdsBarAgenceSugge}
                   visible={rdsBarAgenceSugge == null}
-                  options={pbiOptions("")}
+                  reglages={{ pct: false }}
+                  chartRef={sugByAgenceBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={520} />
@@ -1963,15 +1986,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.claim.claimByCanalPieChartRef ? (
-          <PBICard title="Répartition des réclamations par modalité de dépôt (%)" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByCanalPieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard title="Répartition des réclamations par modalité de dépôt (%)" accent={CR.reclamations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByCanalPieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("progression", rdsPieModaliteClaim, { pct: true })} forceRender={isPrinting}>
               {rdsPieModaliteClaim ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={claimByCanalPieChartRef}
+                <GraphiqueRapport
+                  rendu="progression"
                   data={rdsPieModaliteClaim}
                   visible={rdsPieModaliteClaim == null}
-                  options={pbiPieOptions()}
+                  reglages={{ pct: true }}
+                  chartRef={claimByCanalPieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -1980,15 +2003,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.claim.claimByCanalBarChartRef ? (
-          <PBICard title="Répartition des réclamations par modalité de dépôt et par agence (%)" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByCanalBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={chartHeight(rdsBarModaliteClaim)} forceRender={isPrinting}>
+          <PBICard title="Répartition des réclamations par modalité de dépôt et par agence (%)" accent={CR.reclamations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByCanalBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("empile", rdsBarModaliteClaim, {})} forceRender={isPrinting}>
               {rdsBarModaliteClaim ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={claimByCanalBarChartRef}
+                <GraphiqueRapport
+                  rendu="empile"
                   data={rdsBarModaliteClaim}
                   visible={rdsBarModaliteClaim == null}
-                  options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
+                  reglages={{}}
+                  chartRef={claimByCanalBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={1200} />
@@ -2003,15 +2026,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.denun.denunByCanalPieChartRef ? (
-          <PBICard title="Répartition des modalités de dépôt des dénonciations (%)" accent="#F59E0B" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByCanalPieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard title="Répartition des modalités de dépôt des dénonciations (%)" accent={CR.denonciations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByCanalPieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("progression", rdsPieModaliteDenun, { pct: true })} forceRender={isPrinting}>
               {rdsPieModaliteDenun ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={denunByCanalPieChartRef}
+                <GraphiqueRapport
+                  rendu="progression"
                   data={rdsPieModaliteDenun}
                   visible={rdsPieModaliteDenun == null}
-                  options={pbiPieOptions()}
+                  reglages={{ pct: true }}
+                  chartRef={denunByCanalPieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -2020,15 +2043,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.denun.denunByCanalBarChartRef ? (
-          <PBICard title="Répartition des dénonciations par modalité de dépôt et par agence (%)" accent="#F59E0B" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByCanalBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={chartHeight(rdsBarModaliteDenun)} forceRender={isPrinting}>
+          <PBICard title="Répartition des dénonciations par modalité de dépôt et par agence (%)" accent={CR.denonciations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByCanalBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("empile", rdsBarModaliteDenun, {})} forceRender={isPrinting}>
               {rdsBarModaliteDenun ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={denunByCanalBarChartRef}
+                <GraphiqueRapport
+                  rendu="empile"
                   data={rdsBarModaliteDenun}
                   visible={rdsBarModaliteDenun == null}
-                  options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
+                  reglages={{}}
+                  chartRef={denunByCanalBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={1200} />
@@ -2043,15 +2066,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.suggest.sugByCanalPieChartRef ? (
-          <PBICard title="Répartition des modalités de dépôt des suggestions (%)" accent="#10B981" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalPieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard title="Répartition des modalités de dépôt des suggestions (%)" accent={CR.suggestions} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalPieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("progression", rdsPieModaliteSugge, { pct: true })} forceRender={isPrinting}>
               {rdsPieModaliteSugge ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={sugByCanalPieChartRef}
+                <GraphiqueRapport
+                  rendu="progression"
                   data={rdsPieModaliteSugge}
                   visible={rdsPieModaliteSugge == null}
-                  options={pbiPieOptions()}
+                  reglages={{ pct: true }}
+                  chartRef={sugByCanalPieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -2060,15 +2083,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.suggest.sugByCanalBarChartRef ? (
-          <PBICard title="Répartition des suggestions par modalité de dépôt et par agence (%)" accent="#10B981" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={chartHeight(rdsBarModaliteSugge)} forceRender={isPrinting}>
+          <PBICard title="Répartition des suggestions par modalité de dépôt et par agence (%)" accent={CR.suggestions} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByCanalBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("empile", rdsBarModaliteSugge, {})} forceRender={isPrinting}>
               {rdsBarModaliteSugge ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={sugByCanalBarChartRef}
+                <GraphiqueRapport
+                  rendu="empile"
                   data={rdsBarModaliteSugge}
                   visible={rdsBarModaliteSugge == null}
-                  options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
+                  reglages={{}}
+                  chartRef={sugByCanalBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={1200} />
@@ -2083,16 +2106,16 @@ const Global = (props) => {
   const claimByObjetChart = (
     <>
       {props.templateData?.claim.claimByObjetPieChartRef ? (
-        <PBICard title="Répartition des objets des réclamations (%)" accent="#3B82F6" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetPieChartRef: false } }) } : undefined}>
-          <LazyChart height={520} forceRender={isPrinting}>
+        <PBICard title="Répartition des objets des réclamations (%)" accent={CR.reclamations} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetPieChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("progression", rdsPieObjetClaim, { pct: true })} forceRender={isPrinting}>
             {rdsPieObjetClaim ? (
-              <LazyChartWrapper
-                type="pie"
-                chartRef={claimByObjetPieChartRef}
-                data={rdsPieObjetClaim}
-                visible={rdsPieObjetClaim == null}
-                options={pbiPieOptions()}
-              />
+              <GraphiqueRapport
+                  rendu="progression"
+                  data={rdsPieObjetClaim}
+                  visible={rdsPieObjetClaim == null}
+                  reglages={{ pct: true }}
+                  chartRef={claimByObjetPieChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="pie" height={520} />
             )}
@@ -2100,16 +2123,16 @@ const Global = (props) => {
         </PBICard>
       ) : <></>}
       {props.templateData?.claim.claimByObjetBarChartRef ? (
-        <PBICard title="Répartition des réclamations par objet par agence (%)" accent="#3B82F6" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={chartHeight(rdsBarObjetClaim)} forceRender={isPrinting}>
+        <PBICard title="Répartition des réclamations par objet par agence (%)" accent={CR.reclamations} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByObjetBarChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("chaleur", rdsBarObjetClaim, { couleur: CR.reclamations })} forceRender={isPrinting}>
             {rdsBarObjetClaim ? (
-              <LazyChartWrapper
-                type="bar"
-                chartRef={claimByObjetBarChartRef}
-                data={rdsBarObjetClaim}
-                visible={rdsBarObjetClaim == null}
-                options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false, min: 0 }, y: { stacked: true } } })}
-              />
+              <GraphiqueRapport
+                  rendu="chaleur"
+                  data={rdsBarObjetClaim}
+                  visible={rdsBarObjetClaim == null}
+                  reglages={{ couleur: CR.reclamations }}
+                  chartRef={claimByObjetBarChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="bar" height={1200} />
             )}
@@ -2121,16 +2144,16 @@ const Global = (props) => {
   const denunByObjetChart = (
     <>
       {props.templateData?.denun.denunByObjetPieChartRef ? (
-        <PBICard title="Répartition des objets des dénonciations (%)" accent="#F59E0B" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetPieChartRef: false } }) } : undefined}>
-          <LazyChart height={520} forceRender={isPrinting}>
+        <PBICard title="Répartition des objets des dénonciations (%)" accent={CR.denonciations} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetPieChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("progression", rdsPieObjetDenun, { pct: true })} forceRender={isPrinting}>
             {rdsPieObjetDenun ? (
-              <LazyChartWrapper
-                type="pie"
-                chartRef={denunByObjetPieChartRef}
-                data={rdsPieObjetDenun}
-                visible={rdsPieObjetDenun == null}
-                options={pbiPieOptions()}
-              />
+              <GraphiqueRapport
+                  rendu="progression"
+                  data={rdsPieObjetDenun}
+                  visible={rdsPieObjetDenun == null}
+                  reglages={{ pct: true }}
+                  chartRef={denunByObjetPieChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="pie" height={520} />
             )}
@@ -2138,16 +2161,16 @@ const Global = (props) => {
         </PBICard>
       ) : <></>}
       {props.templateData?.denun.denunByObjetBarChartRef ? (
-        <PBICard title="Répartition des dénonciations par objet par agence (%)" accent="#F59E0B" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={chartHeight(rdsBarObjetDenun)} forceRender={isPrinting}>
+        <PBICard title="Répartition des dénonciations par objet par agence (%)" accent={CR.denonciations} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByObjetBarChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("chaleur", rdsBarObjetDenun, { couleur: CR.denonciations })} forceRender={isPrinting}>
             {rdsBarObjetDenun ? (
-              <LazyChartWrapper
-                type="bar"
-                chartRef={denunByObjetBarChartRef}
-                data={rdsBarObjetDenun}
-                visible={rdsBarObjetDenun == null}
-                options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
-              />
+              <GraphiqueRapport
+                  rendu="chaleur"
+                  data={rdsBarObjetDenun}
+                  visible={rdsBarObjetDenun == null}
+                  reglages={{ couleur: CR.denonciations }}
+                  chartRef={denunByObjetBarChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="bar" height={1200} />
             )}
@@ -2161,15 +2184,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.claim.claimByGenderPieChartRef ? (
-          <PBICard title="Répartition des réclamations par genre (%)" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderPieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard centre={true} title="Répartition des réclamations par genre (%)" accent={CR.reclamations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderPieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("anneau", rdsPieGenreClaim, {})} forceRender={isPrinting}>
               {rdsPieGenreClaim ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={claimByGenderPieChartRef}
+                <GraphiqueRapport
+                  rendu="anneau"
                   data={rdsPieGenreClaim}
                   visible={rdsPieGenreClaim == null}
-                  options={pbiPieOptions()}
+                  reglages={{}}
+                  chartRef={claimByGenderPieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -2178,15 +2201,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.claim.claimByGenderBarChartRef ? (
-          <PBICard title="Répartition des réclamations par genre par agence (%)" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={chartHeight(rdsBarGenreClaim)} forceRender={isPrinting}>
+          <PBICard title="Répartition des réclamations par genre par agence (%)" accent={CR.reclamations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGenderBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("empile", rdsBarGenreClaim, {})} forceRender={isPrinting}>
               {rdsBarGenreClaim ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={claimByGenderBarChartRef}
+                <GraphiqueRapport
+                  rendu="empile"
                   data={rdsBarGenreClaim}
                   visible={rdsBarGenreClaim == null}
-                  options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
+                  reglages={{}}
+                  chartRef={claimByGenderBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={1200} />
@@ -2202,15 +2225,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.suggest.sugByGenderPieChartRef ? (
-          <PBICard title="Répartition des suggestions par genre (%)" accent="#10B981" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderPieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard centre={true} title="Répartition des suggestions par genre (%)" accent={CR.suggestions} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderPieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("anneau", rdsPieGenreSugge, {})} forceRender={isPrinting}>
               {rdsPieGenreSugge ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={sugByGenderPieChartRef}
+                <GraphiqueRapport
+                  rendu="anneau"
                   data={rdsPieGenreSugge}
                   visible={rdsPieGenreSugge == null}
-                  options={pbiPieOptions()}
+                  reglages={{}}
+                  chartRef={sugByGenderPieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -2219,15 +2242,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.suggest.sugByGenderBarChartRef ? (
-          <PBICard title="Répartition des suggestions par genre par agence (%)" accent="#10B981" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={chartHeight(rdsBarGenreSugge)} forceRender={isPrinting}>
+          <PBICard title="Répartition des suggestions par genre par agence (%)" accent={CR.suggestions} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, suggest: { ...props.templateData?.suggest, sugByGenderBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("empile", rdsBarGenreSugge, {})} forceRender={isPrinting}>
               {rdsBarGenreSugge ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={sugByGenderBarChartRef}
+                <GraphiqueRapport
+                  rendu="empile"
                   data={rdsBarGenreSugge}
                   visible={rdsBarGenreSugge == null}
-                  options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
+                  reglages={{}}
+                  chartRef={sugByGenderBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={1200} />
@@ -2243,15 +2266,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.claim.claimByGravitePieChartRef ? (
-          <PBICard title="Répartition des réclamations par niveau de gravité (%)" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGravitePieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard centre={true} title="Répartition des réclamations par niveau de gravité (%)" accent={CR.reclamations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGravitePieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("anneau", rdsPieGravityClaim, {})} forceRender={isPrinting}>
               {rdsPieGravityClaim ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={claimByGravitePieChartRef}
+                <GraphiqueRapport
+                  rendu="anneau"
                   data={rdsPieGravityClaim}
                   visible={rdsPieGravityClaim == null}
-                  options={pbiPieOptions()}
+                  reglages={{}}
+                  chartRef={claimByGravitePieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -2260,15 +2283,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.claim.claimByGraviteBarChartRef ? (
-          <PBICard title="Répartition des réclamations par gravité de dépôt par agence (%)" accent="#3B82F6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGraviteBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={chartHeight(rdsBarGravityClaim)} forceRender={isPrinting}>
+          <PBICard title="Répartition des réclamations par gravité de dépôt par agence (%)" accent={CR.reclamations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimByGraviteBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("empile", rdsBarGravityClaim, {})} forceRender={isPrinting}>
               {rdsBarGravityClaim ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={claimByGraviteBarChartRef}
+                <GraphiqueRapport
+                  rendu="empile"
                   data={rdsBarGravityClaim}
                   visible={rdsBarGravityClaim == null}
-                  options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
+                  reglages={{}}
+                  chartRef={claimByGraviteBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={1200} />
@@ -2283,15 +2306,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.denun.denunByGravitePieChartRef ? (
-          <PBICard title="Répartition des dénonciations par niveau de gravité (%)" accent="#F59E0B" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGravitePieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard centre={true} title="Répartition des dénonciations par niveau de gravité (%)" accent={CR.denonciations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGravitePieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("anneau", rdsPieGravityDenun, {})} forceRender={isPrinting}>
               {rdsPieGravityDenun ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={denunByGravitePieChartRef}
+                <GraphiqueRapport
+                  rendu="anneau"
                   data={rdsPieGravityDenun}
                   visible={rdsPieGravityDenun == null}
-                  options={pbiPieOptions()}
+                  reglages={{}}
+                  chartRef={denunByGravitePieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -2300,15 +2323,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.denun.denunByGraviteBarChartRef ? (
-          <PBICard title="Répartition des dénonciations par gravité de dépôt par agence (%)" accent="#F59E0B" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGraviteBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={chartHeight(rdsBarGravityDenun)} forceRender={isPrinting}>
+          <PBICard title="Répartition des dénonciations par gravité de dépôt par agence (%)" accent={CR.denonciations} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, denunByGraviteBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("empile", rdsBarGravityDenun, {})} forceRender={isPrinting}>
               {rdsBarGravityDenun ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={denunByGraviteBarChartRef}
+                <GraphiqueRapport
+                  rendu="empile"
                   data={rdsBarGravityDenun}
                   visible={rdsBarGravityDenun == null}
-                  options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
+                  reglages={{}}
+                  chartRef={denunByGraviteBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={1200} />
@@ -2324,15 +2347,15 @@ const Global = (props) => {
     <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {props.templateData?.claim.claimBySatisfactionPieChartRef ? (
-          <PBICard title="Répartition de la satisfaction des réclamants (%)" accent="#8B5CF6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimBySatisfactionPieChartRef: false } }) } : undefined}>
-            <LazyChart height={520} forceRender={isPrinting}>
+          <PBICard centre={true} title="Répartition de la satisfaction des réclamants (%)" accent={CR.taux} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, claimBySatisfactionPieChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("anneau", rdsPieStatisClaim, { couleurs: couleurDeSatisfaction })} forceRender={isPrinting}>
               {rdsPieStatisClaim ? (
-                <LazyChartWrapper
-                  type="pie"
-                  chartRef={claimBySatisfactionPieChartRef}
+                <GraphiqueRapport
+                  rendu="anneau"
                   data={rdsPieStatisClaim}
                   visible={rdsPieStatisClaim == null}
-                  options={pbiPieOptions()}
+                  reglages={{ couleurs: couleurDeSatisfaction }}
+                  chartRef={claimBySatisfactionPieChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="pie" height={520} />
@@ -2341,15 +2364,15 @@ const Global = (props) => {
           </PBICard>
         ) : <></>}
         {props.templateData?.claim.tauxMensuelClaimByMonthByAgenceBarChartRef ? (
-          <PBICard title="Taux de satisfaction des Réclamations par agence (%)" accent="#8B5CF6" half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthByAgenceBarChartRef: false } }) } : undefined}>
-            <LazyChart overflow={"y"} height={chartHeight(tauxMensuelClaimByMonthByAgence)} forceRender={isPrinting}>
+          <PBICard title="Taux de satisfaction des Réclamations par agence (%)" accent={CR.taux} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthByAgenceBarChartRef: false } }) } : undefined}>
+            <LazyChart height={hauteurGraphique("progression", tauxMensuelClaimByMonthByAgence, { pct: true, couleur: CR.taux })} forceRender={isPrinting}>
               {tauxMensuelClaimByMonthByAgence ? (
-                <LazyChartWrapper
-                  type="bar"
-                  chartRef={tauxMensuelClaimByMonthByAgenceBarChartRef}
+                <GraphiqueRapport
+                  rendu="progression"
                   data={tauxMensuelClaimByMonthByAgence}
                   visible={tauxMensuelClaimByMonthByAgence == null}
-                  options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
+                  reglages={{ pct: true, couleur: CR.taux }}
+                  chartRef={tauxMensuelClaimByMonthByAgenceBarChartRef}
                 />
               ) : (
                 <LazyChartSkeleton type="bar" height={1200} />
@@ -2359,16 +2382,16 @@ const Global = (props) => {
         ) : <></>}
       </div>
       {props.templateData?.claim.tauxMensuelClaimByMonthBarChartRef ? (
-        <PBICard title="Taux de satisfaction mensuel des Réclamations (%)" accent="#8B5CF6" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthBarChartRef: false } }) } : undefined}>
-          <LazyChart height={520} forceRender={isPrinting}>
+        <PBICard title="Taux de satisfaction mensuel des Réclamations (%)" accent={CR.taux} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, tauxMensuelClaimByMonthBarChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("courbes", tauxMensuelClaimByMonth, { pct: true, couleurs: () => CR.taux })} forceRender={isPrinting}>
             {tauxMensuelClaimByMonth ? (
-              <LazyChartWrapper
-                type="bar"
-                chartRef={tauxMensuelClaimByMonthBarChartRef}
-                data={tauxMensuelClaimByMonth}
-                visible={tauxMensuelClaimByMonth == null}
-                options={pbiOptions("")}
-              />
+              <GraphiqueRapport
+                  rendu="courbes"
+                  data={tauxMensuelClaimByMonth}
+                  visible={tauxMensuelClaimByMonth == null}
+                  reglages={{ pct: true, couleurs: () => CR.taux }}
+                  chartRef={tauxMensuelClaimByMonthBarChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="bar" height={520} />
             )}
@@ -2381,16 +2404,16 @@ const Global = (props) => {
   const claimDelaiResolutionChart = (
     <>
       {props.templateData?.claim.resolutionClaimDelaiByMonthBarChartRef ? (
-        <PBICard title="Respect du délai de résolution des Réclamations par mois (%)" accent="#01B8AA" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthBarChartRef: false } }) } : undefined}>
-          <LazyChart height={520} forceRender={isPrinting}>
+        <PBICard title="Respect du délai de résolution des Réclamations par mois (%)" accent={CR.delais} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthBarChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("colonnes", rdsBarDelaiGlobal, { couleur: CR.delais })} forceRender={isPrinting}>
             {rdsBarDelaiGlobal ? (
-              <LazyChartWrapper
-                type="bar"
-                chartRef={resolutionClaimDelaiByMonthBarChartRef}
-                data={rdsBarDelaiGlobal}
-                visible={rdsBarDelaiGlobal == null}
-                options={pbiOptions("")}
-              />
+              <GraphiqueRapport
+                  rendu="colonnes"
+                  data={rdsBarDelaiGlobal}
+                  visible={rdsBarDelaiGlobal == null}
+                  reglages={{ couleur: CR.delais }}
+                  chartRef={resolutionClaimDelaiByMonthBarChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="bar" height={520} />
             )}
@@ -2398,16 +2421,16 @@ const Global = (props) => {
         </PBICard>
       ) : <></>}
       {props.templateData?.claim.resolutionClaimDelaiByMonthByAgenceBarChartRef ? (
-        <PBICard title="Respect du délai de résolution des Réclamations par agence (%)" accent="#01B8AA" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthByAgenceBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={chartHeight(rdsBarDelaiClaimByMonthByAgence)} forceRender={isPrinting}>
+        <PBICard title="Respect du délai de résolution des Réclamations par agence (%)" accent={CR.delais} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, claim: { ...props.templateData?.claim, resolutionClaimDelaiByMonthByAgenceBarChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("progression", rdsBarDelaiClaimByMonthByAgence, { pct: true, couleur: CR.delais })} forceRender={isPrinting}>
             {rdsBarDelaiClaimByMonthByAgence ? (
-              <LazyChartWrapper
-                type="bar"
-                chartRef={resolutionClaimDelaiByMonthByAgenceBarChartRef}
-                data={rdsBarDelaiClaimByMonthByAgence}
-                visible={rdsBarDelaiClaimByMonthByAgence == null}
-                options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
-              />
+              <GraphiqueRapport
+                  rendu="progression"
+                  data={rdsBarDelaiClaimByMonthByAgence}
+                  visible={rdsBarDelaiClaimByMonthByAgence == null}
+                  reglages={{ pct: true, couleur: CR.delais }}
+                  chartRef={resolutionClaimDelaiByMonthByAgenceBarChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="bar" height={1200} />
             )}
@@ -2420,16 +2443,16 @@ const Global = (props) => {
   const denunDelaiResolutionChart = (
     <>
       {props.templateData?.denun.resolutionDenunDelaiByMonthBarChartRef ? (
-        <PBICard title="Respect du délai de résolution des Dénonciations par mois (%)" accent="#01B8AA" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, resolutionDenunDelaiByMonthBarChartRef: false } }) } : undefined}>
-          <LazyChart height={520} forceRender={isPrinting}>
+        <PBICard title="Respect du délai de résolution des Dénonciations par mois (%)" accent={CR.delais} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, resolutionDenunDelaiByMonthBarChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("colonnes", denunBarDelaiByMonth, { couleur: CR.delais })} forceRender={isPrinting}>
             {denunBarDelaiByMonth ? (
-              <LazyChartWrapper
-                type="bar"
-                chartRef={resolutionDenunDelaiByMonthBarChartRef}
-                data={denunBarDelaiByMonth}
-                visible={denunBarDelaiByMonth == null}
-                options={pbiOptions("")}
-              />
+              <GraphiqueRapport
+                  rendu="colonnes"
+                  data={denunBarDelaiByMonth}
+                  visible={denunBarDelaiByMonth == null}
+                  reglages={{ couleur: CR.delais }}
+                  chartRef={resolutionDenunDelaiByMonthBarChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="bar" height={520} />
             )}
@@ -2437,16 +2460,16 @@ const Global = (props) => {
         </PBICard>
       ) : <></>}
       {props.templateData?.denun.resolutionDenunDelaiByMonthByAgenceBarChartRef ? (
-        <PBICard title="Respect du délai de résolution des Dénonciations par agence (%)" accent="#01B8AA" onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, resolutionDenunDelaiByMonthByAgenceBarChartRef: false } }) } : undefined}>
-          <LazyChart overflow={"y"} height={chartHeight(denunBarDelaiByMonthByAgence)} forceRender={isPrinting}>
+        <PBICard title="Respect du délai de résolution des Dénonciations par agence (%)" accent={CR.delais} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, denun: { ...props.templateData?.denun, resolutionDenunDelaiByMonthByAgenceBarChartRef: false } }) } : undefined}>
+          <LazyChart height={hauteurGraphique("progression", denunBarDelaiByMonthByAgence, { pct: true, couleur: CR.delais })} forceRender={isPrinting}>
             {denunBarDelaiByMonthByAgence ? (
-              <LazyChartWrapper
-                type="bar"
-                chartRef={resolutionDenunDelaiByMonthByAgenceBarChartRef}
-                data={denunBarDelaiByMonthByAgence}
-                visible={denunBarDelaiByMonthByAgence == null}
-                options={pbiOptions("", { indexAxis: "y", scales: { x: { stacked: true, grid: { color: "rgba(0,0,0,0)" }, ticks: { callback: (v) => `${v}%` }, max: 100, offset: false }, y: { stacked: true } } })}
-              />
+              <GraphiqueRapport
+                  rendu="progression"
+                  data={denunBarDelaiByMonthByAgence}
+                  visible={denunBarDelaiByMonthByAgence == null}
+                  reglages={{ pct: true, couleur: CR.delais }}
+                  chartRef={resolutionDenunDelaiByMonthByAgenceBarChartRef}
+                />
             ) : (
               <LazyChartSkeleton type="bar" height={1200} />
             )}
@@ -2587,7 +2610,8 @@ const Global = (props) => {
                   <>
                     <tr key={cle}>
                       <td>{cle}</td>
-                      <td>{valeur}</td>
+                      {/* Pas de valeur (null) sous un filtre par objet : une suggestion n'a pas d'objet. */}
+                      <td>{valeur === null ? <>— <em>non applicable avec un filtre par objet</em></> : valeur}</td>
                     </tr>
                   </>
                 );
@@ -2657,6 +2681,13 @@ const Global = (props) => {
       "<div class=' col s12 m12 l12 ' style='width:100%'><img src='" +
       globalByObjetBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>" : "";
+    // Cartographie des plaintes par agence : image dessinée par la carte (fond, points, légende), ou le classement.
+    const carteImage = globalShow && carteDansLeModele && carteRef.current ? carteRef.current.toBase64Image() : "";
+    const carteRefData = carteImage
+      ? "<div class=' col s12 m12 l12 ' style='width:100%'><center style='margin-bottom:20px!important'>Cartographie des plaintes par agence</center><img src='" +
+      carteImage +
+      "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>"
+      : "";
     const resolutionPieChartRefData = props.templateData?.global.resolutionPieChartRef ?
       "<div class=' col s12 m12 l12 ' style='width:100%'><center style='margin-bottom:60px!important'>Taux de résolution des plaintes</center> <img src='" +
       src +
@@ -2816,7 +2847,8 @@ const Global = (props) => {
       globalByObjetPieChartRefData +
       globalByObjetBarChartRefData +
       resolutionPieChartRefData +
-      evolutionByAgenceByAnneeBarChartRefData;
+      evolutionByAgenceByAnneeBarChartRefData +
+      carteRefData;
 
     if (claimShow) {
       const statClaimTable = document.querySelector("#statClaimTable")?.innerHTML ?? "";
@@ -3233,6 +3265,59 @@ const Global = (props) => {
     }
   };
 
+  // Export Power BI : le serveur recalcule les chiffres avec le même filtre (même rapport, même périmètre) ;
+  // la page envoie les onglets affichés, le modèle actif et les couleurs telles qu'elles sont dessinées.
+  const exporterPowerBi = async () => {
+    setExportLoading("Power BI");
+    try {
+      const couleurs = couleursAffichees([
+        { cle: "globalPieChartRef", rendu: "anneau", data: rdsPieGlobal, reglages: { couleurs: couleurDuType } },
+        { cle: "globalLineChartRef", rendu: "courbes", data: rdsBarGlobal, reglages: { couleurs: couleurDuType } },
+        { cle: "globalByCanalPieChartRef", rendu: "progression", data: rdsPieModaliteGlobal, reglages: { pct: true } },
+        { cle: "globalByCanalBarChartRef", rendu: "empile", data: rdsBarModaliteGlobal },
+        { cle: "globalByObjetPieChartRef", rendu: "progression", data: rdsPieObjetGlobal, reglages: { pct: true } },
+        { cle: "claimByAgencePieChartRef", rendu: "progression", data: rdsPieAgenceClaim, reglages: { pct: true } },
+        { cle: "claimByAgenceBarChartRef", rendu: "progression", data: rdsBarAgenceClaim, reglages: { pct: false } },
+        { cle: "denunByAgencePieChartRef", rendu: "progression", data: rdsPieAgenceDenun, reglages: { pct: true } },
+        { cle: "denunByAgenceBarChartRef", rendu: "progression", data: rdsBarAgenceDenun, reglages: { pct: false } },
+        { cle: "sugByAgencePieChartRef", rendu: "progression", data: rdsPieAgenceSugge, reglages: { pct: true } },
+        { cle: "sugByAgenceBarChartRef", rendu: "progression", data: rdsBarAgenceSugge, reglages: { pct: false } },
+        { cle: "claimByCanalPieChartRef", rendu: "progression", data: rdsPieModaliteClaim, reglages: { pct: true } },
+        { cle: "claimByCanalBarChartRef", rendu: "empile", data: rdsBarModaliteClaim },
+        { cle: "denunByCanalPieChartRef", rendu: "progression", data: rdsPieModaliteDenun, reglages: { pct: true } },
+        { cle: "denunByCanalBarChartRef", rendu: "empile", data: rdsBarModaliteDenun },
+        { cle: "sugByCanalPieChartRef", rendu: "progression", data: rdsPieModaliteSugge, reglages: { pct: true } },
+        { cle: "sugByCanalBarChartRef", rendu: "empile", data: rdsBarModaliteSugge },
+        { cle: "claimByObjetPieChartRef", rendu: "progression", data: rdsPieObjetClaim, reglages: { pct: true } },
+        { cle: "denunByObjetPieChartRef", rendu: "progression", data: rdsPieObjetDenun, reglages: { pct: true } },
+        { cle: "claimByGenderPieChartRef", rendu: "anneau", data: rdsPieGenreClaim },
+        { cle: "claimByGenderBarChartRef", rendu: "empile", data: rdsBarGenreClaim },
+        { cle: "sugByGenderPieChartRef", rendu: "anneau", data: rdsPieGenreSugge },
+        { cle: "sugByGenderBarChartRef", rendu: "empile", data: rdsBarGenreSugge },
+        { cle: "claimByGravitePieChartRef", rendu: "anneau", data: rdsPieGravityClaim },
+        { cle: "claimByGraviteBarChartRef", rendu: "empile", data: rdsBarGravityClaim },
+        { cle: "denunByGravitePieChartRef", rendu: "anneau", data: rdsPieGravityDenun },
+        { cle: "denunByGraviteBarChartRef", rendu: "empile", data: rdsBarGravityDenun },
+        { cle: "claimBySatisfactionPieChartRef", rendu: "anneau", data: rdsPieStatisClaim, reglages: { couleurs: couleurDeSatisfaction } },
+      ]);
+      const blob = await exportPowerBiApi({
+        filtre: filtreCarte,
+        sections: { global: globalShow, claim: claimShow, denun: denunciationShow, suggest: suggestionShow },
+        modele: { global: props.templateData?.global, claim: props.templateData?.claim, denun: props.templateData?.denun, suggest: props.templateData?.suggest },
+        couleurs,
+        couleurPrincipale: CR.principale,
+        filtresAffiches: appliedFiltresDisplay,
+        paysCode: INSTITUTION_PAYS_CODE,
+      });
+      const d = new Date(), deux = (n) => String(n).padStart(2, "0");
+      telecharger(blob, `Rapport_GPR_${d.getFullYear()}${deux(d.getMonth() + 1)}${deux(d.getDate())}_${deux(d.getHours())}${deux(d.getMinutes())}.pbit`);
+    } catch (e) {
+      notify("Erreur, l'export Power BI n'a pas pu être généré", "error");
+    } finally {
+      setExportLoading(null);
+    }
+  };
+
   const printToWord = async () => {
     setExportLoading("Word");
     const logoBase64 = await toBase64(logoInstitution);
@@ -3287,13 +3372,13 @@ const Global = (props) => {
     setIsPrinting(false);
   };
   const TABS = [
-    { label: "Vue d'ensemble", color: "#8B5CF6", bg: "#F5F3FF", enabled: globalShow },
-    { label: "Réclamations", color: "#3B82F6", bg: "#EFF6FF", enabled: claimShow },
-    { label: "Dénonciations", color: "#F59E0B", bg: "#FFFBEB", enabled: denunciationShow },
-    { label: "Suggestions", color: "#10B981", bg: "#ECFDF5", enabled: suggestionShow },
+    { label: "Vue d'ensemble", color: CR.principale, enabled: globalShow },
+    { label: "Réclamations", color: CR.reclamations, enabled: claimShow },
+    { label: "Dénonciations", color: CR.denonciations, enabled: denunciationShow },
+    { label: "Suggestions", color: CR.suggestions, enabled: suggestionShow },
   ];
 
-  const SectionSubtitle = ({ children, id, accent = "#0F4C81" }) => (
+  const SectionSubtitle = ({ children, id, accent = CR.principale }) => (
     <div id={id} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, fontWeight: 700, color: "#374151", padding: "20px 0 8px", textTransform: "uppercase", letterSpacing: "0.4px" }}>
       <div style={{ width: 4, height: 18, background: accent, borderRadius: 2, flexShrink: 0 }} />
       {children}
@@ -3302,10 +3387,10 @@ const Global = (props) => {
   );
 
   const kpiData = [
-    { label: "Réclamations", value: props.claimReport?.basicStats?.total ?? "-", color: "#3B82F6", bg: "#EFF6FF" },
-    { label: "Dénonciations", value: props.denunReport?.basicStats?.total ?? "-", color: "#F59E0B", bg: "#FFFBEB" },
-    { label: "Suggestions", value: props.sugReport?.basicStats?.total ?? "-", color: "#10B981", bg: "#ECFDF5" },
-    { label: "Taux résolution", value: props.global_trend?.tauxResolution != null ? `${(parseFloat(props.global_trend.tauxResolution) * 100).toFixed(1)} %` : "-", color: "#8B5CF6", bg: "#F5F3FF" },
+    { label: "Réclamations", value: props.claimReport?.basicStats?.total ?? "-", color: CR.reclamations },
+    { label: "Dénonciations", value: props.denunReport?.basicStats?.total ?? "-", color: CR.denonciations },
+    { label: "Suggestions", value: props.sugReport?.basicStats?.total ?? "-", color: CR.suggestions },
+    { label: "Taux résolution", value: props.global_trend?.tauxResolution != null ? `${(parseFloat(props.global_trend.tauxResolution) * 100).toFixed(1)} %` : "-", color: CR.taux },
   ];
 
   return (
@@ -3318,10 +3403,10 @@ const Global = (props) => {
         <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.07)", padding: "20px 24px", marginBottom: 16 }}>
           {/* KPI badges */}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-            {kpiData.map(({ label, value, color, bg }) => (
-              <div key={label} style={{ flex: "1 1 0", background: bg, borderRadius: 12, padding: "10px 18px", display: "flex", flexDirection: "column", gap: 2, minWidth: 120 }}>
-                <span style={{ fontSize: 22, fontWeight: 800, color }}>{value}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, color, opacity: 0.75 }}>{label}</span>
+            {kpiData.map(({ label, value, color }) => (
+              <div key={label} style={{ flex: "1 1 0", background: "#FFFFFF", border: `1px solid ${TEXTE.bordure}`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "10px 18px", display: "flex", flexDirection: "column", gap: 2, minWidth: 120 }}>
+                <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={value} couleur={color} /></span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: TEXTE.libelle }}>{label}</span>
               </div>
             ))}
           </div>
@@ -3359,6 +3444,10 @@ const Global = (props) => {
                 label: "Word", color: "#1D4ED8", bg: "#EFF6FF", border: "#93C5FD", action: printToWord,
                 icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 15.25H8.5L9.88 10.58 11.25 15.25H12.75L14.82 8.75H13.31L12 13.41 10.63 8.75H9.12L7.82 13.41 6.5 8.75H5L7 15.25M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38Z" /></svg>
               },
+              {
+                label: "Power BI", color: "#B7791F", bg: "#FFFBEB", border: "#F6E05E", action: exporterPowerBi,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="12" width="4" height="9" rx="1" /><rect x="10" y="7" width="4" height="14" rx="1" /><rect x="17" y="3" width="4" height="18" rx="1" /></svg>
+              },
             ].map(({ label, color, bg, border, action, icon }) => {
               const isLoading = exportLoading === label;
               return (
@@ -3369,8 +3458,8 @@ const Global = (props) => {
                   style={{
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "8px 16px", borderRadius: 10,
-                    border: `1.5px solid ${border}`,
-                    background: isLoading ? bg : bg,
+                    border: `1.5px solid ${TEXTE.bordure}`,
+                    background: "#FFFFFF",
                     color: exportLoading !== null ? "#94A3B8" : color,
                     fontSize: 12.5, fontWeight: 700,
                     cursor: exportLoading !== null ? "not-allowed" : "pointer",
@@ -3636,7 +3725,7 @@ const Global = (props) => {
 
         {/* ── TABS ── */}
         <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.07)", padding: 6, marginBottom: 16, display: "flex", gap: 4, flexWrap: "wrap" }}>
-          {TABS.map(({ label, color, bg, enabled }, i) => (
+          {TABS.map(({ label, color, enabled }, i) => (
             <button
               key={i}
               onClick={() => enabled && setActiveTab(i)}
@@ -3644,8 +3733,9 @@ const Global = (props) => {
                 flex: "1 1 140px",
                 padding: "10px 16px",
                 borderRadius: 12,
-                border: activeTab === i ? `1.5px solid ${color}33` : "1.5px solid transparent",
-                background: activeTab === i ? bg : "transparent",
+                border: activeTab === i ? `1.5px solid ${TEXTE.bordure}` : "1.5px solid transparent",
+                boxShadow: activeTab === i ? `inset 0 -3px 0 ${color}` : "none",
+                background: activeTab === i ? "#FFFFFF" : "transparent",
                 color: activeTab === i ? color : enabled ? "#64748b" : "#CBD5E1",
                 fontSize: 13.5,
                 fontWeight: activeTab === i ? 700 : 500,
@@ -3843,6 +3933,13 @@ const Global = (props) => {
               <canvas id="myChart2"></canvas>
             </>
           )}
+          {globalShow && carteDansLeModele && (
+            <div style={{ display: activeTab === 0 || isPrinting ? "block" : "none" }}>
+              <CadreCarte titre="Cartographie des plaintes par agence" accent={CR.principale} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, carteRef: false } }) } : undefined}>
+                <CarteRapport filtres={filtreCarte} version={versionCarte} paysCode={INSTITUTION_PAYS_CODE} chartRef={carteRef} visible={activeTab === 0 || isPrinting} />
+              </CadreCarte>
+            </div>
+          )}
 
           {(activeTab === 1 || isPrinting) && claimShow && (
             <>
@@ -3850,7 +3947,7 @@ const Global = (props) => {
                 <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={(e) => restoreSection("claim")}>Restaurer les stats des réclamations</div>
               )}
               <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0 16px", borderBottom: "1.5px solid #F1F5F9", marginBottom: 20 }} id="titleClaim">
-                <div style={{ width: 5, height: 28, background: "#3B82F6", borderRadius: 3 }} />
+                <div style={{ width: 5, height: 28, background: CR.reclamations, borderRadius: 3 }} />
                 <span style={{ color: "#0F172A", fontSize: 22, fontWeight: 800 }}>Réclamations</span>
               </div>
               <div style={{ marginBottom: 24 }} id="dashClaimRapport">
@@ -3859,22 +3956,22 @@ const Global = (props) => {
 
               {props.claimReport && props.claimReport.length !== 0 ? (
                 <>
-                  <SectionSubtitle id="toeClaim" accent="#3B82F6">Par agence</SectionSubtitle>
+                  <SectionSubtitle id="toeClaim" accent={CR.reclamations}>Par agence</SectionSubtitle>
                   {claimByAgenceChart}
-                  <SectionSubtitle accent="#3B82F6">Par modalité de dépôt</SectionSubtitle>
+                  <SectionSubtitle accent={CR.reclamations}>Par modalité de dépôt</SectionSubtitle>
                   {claimByCanalChart}
-                  <SectionSubtitle accent="#3B82F6">Par objet</SectionSubtitle>
+                  <SectionSubtitle accent={CR.reclamations}>Par objet</SectionSubtitle>
                   {claimByObjetChart}
-                  <SectionSubtitle accent="#3B82F6">Par genre</SectionSubtitle>
+                  <SectionSubtitle accent={CR.reclamations}>Par genre</SectionSubtitle>
                   {claimByGenreChart}
-                  <SectionSubtitle accent="#3B82F6">Par niveau de gravité</SectionSubtitle>
+                  <SectionSubtitle accent={CR.reclamations}>Par niveau de gravité</SectionSubtitle>
                   {claimByGraviteChart}
-                  <SectionSubtitle accent="#3B82F6">Satisfaction des réclamants</SectionSubtitle>
+                  <SectionSubtitle accent={CR.reclamations}>Satisfaction des réclamants</SectionSubtitle>
                   {claimBySatisfactionChart}
-                  <SectionSubtitle accent="#3B82F6">Délai de résolution</SectionSubtitle>
+                  <SectionSubtitle accent={CR.reclamations}>Délai de résolution</SectionSubtitle>
                   {claimDelaiResolutionChart}
                   <div id="statClaimTable">
-                    <SectionSubtitle accent="#3B82F6">Tableau récapitulatif</SectionSubtitle>
+                    <SectionSubtitle accent={CR.reclamations}>Tableau récapitulatif</SectionSubtitle>
                     {claimTableStat()}
                   </div>
                 </>
@@ -3892,7 +3989,7 @@ const Global = (props) => {
                 <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={() => restoreSection("denun")}>Restaurer les stats des dénonciations</div>
               )}
               <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0 16px", borderBottom: "1.5px solid #F1F5F9", marginBottom: 20 }}>
-                <div style={{ width: 5, height: 28, background: "#F59E0B", borderRadius: 3 }} />
+                <div style={{ width: 5, height: 28, background: CR.denonciations, borderRadius: 3 }} />
                 <span style={{ color: "#0F172A", fontSize: 22, fontWeight: 800 }}>Dénonciations</span>
               </div>
               <div id="dashDenunRapport" style={{ marginBottom: 20 }}>
@@ -3900,18 +3997,18 @@ const Global = (props) => {
               </div>
               {props.denunReport && props.denunReport.length != 0 ? (
                 <>
-                  <SectionSubtitle id="toeDenun" accent="#F59E0B">Par agence</SectionSubtitle>
+                  <SectionSubtitle id="toeDenun" accent={CR.denonciations}>Par agence</SectionSubtitle>
                   {denunByAgenceChart}
-                  <SectionSubtitle accent="#F59E0B">Par modalité de dépôt</SectionSubtitle>
+                  <SectionSubtitle accent={CR.denonciations}>Par modalité de dépôt</SectionSubtitle>
                   {denunByCanalChart}
-                  <SectionSubtitle accent="#F59E0B">Par objet</SectionSubtitle>
+                  <SectionSubtitle accent={CR.denonciations}>Par objet</SectionSubtitle>
                   {denunByObjetChart}
-                  <SectionSubtitle accent="#F59E0B">Délai de résolution</SectionSubtitle>
+                  <SectionSubtitle accent={CR.denonciations}>Délai de résolution</SectionSubtitle>
                   {denunDelaiResolutionChart}
-                  <SectionSubtitle accent="#F59E0B">Par niveau de gravité</SectionSubtitle>
+                  <SectionSubtitle accent={CR.denonciations}>Par niveau de gravité</SectionSubtitle>
                   {denunByGraviteChart}
                   <div id="statDenunTable">
-                    <SectionSubtitle accent="#F59E0B">Tableau récapitulatif</SectionSubtitle>
+                    <SectionSubtitle accent={CR.denonciations}>Tableau récapitulatif</SectionSubtitle>
                     {denunTableStat()}
                   </div>
                 </>
@@ -3929,7 +4026,7 @@ const Global = (props) => {
                 <div style={{ color: "darkred", cursor: "pointer", marginBottom: 8 }} onClick={() => restoreSection("suggest")}>Restaurer les stats des suggestions</div>
               )}
               <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 0 16px", borderBottom: "1.5px solid #F1F5F9", marginBottom: 20 }}>
-                <div style={{ width: 5, height: 28, background: "#10B981", borderRadius: 3 }} />
+                <div style={{ width: 5, height: 28, background: CR.suggestions, borderRadius: 3 }} />
                 <span style={{ color: "#0F172A", fontSize: 22, fontWeight: 800 }}>Suggestions</span>
               </div>
               <div id="dashSuggestRapport" style={{ marginBottom: 20 }}>
@@ -3937,14 +4034,14 @@ const Global = (props) => {
               </div>
               {props.sugReport && props.sugReport.length !== 0 ? (
                 <>
-                  <SectionSubtitle id="tpeSugg" accent="#10B981">Par agence</SectionSubtitle>
+                  <SectionSubtitle id="tpeSugg" accent={CR.suggestions}>Par agence</SectionSubtitle>
                   {sugByAgenceChart}
-                  <SectionSubtitle accent="#10B981">Par modalité de dépôt</SectionSubtitle>
+                  <SectionSubtitle accent={CR.suggestions}>Par modalité de dépôt</SectionSubtitle>
                   {sugByCanalChart}
-                  <SectionSubtitle accent="#10B981">Par genre</SectionSubtitle>
+                  <SectionSubtitle accent={CR.suggestions}>Par genre</SectionSubtitle>
                   {sugByGenderChart}
                   <div id="statSugTable">
-                    <SectionSubtitle accent="#10B981">Tableau récapitulatif</SectionSubtitle>
+                    <SectionSubtitle accent={CR.suggestions}>Tableau récapitulatif</SectionSubtitle>
                     {sugTableStat()}
                   </div>
                 </>

@@ -8,6 +8,7 @@ import {
   tableContainerSx, headCellSx, bodyRowSx,
 } from "./slaUi";
 import { notify } from "../../Utils/alert";
+import { ChargementRond } from "../../components/shared/ChargementRond";
 
 // Une liste de motifs (retard, ou clôture sans mesure de satisfaction).
 const ReasonList = ({ kind, title, help }) => {
@@ -40,7 +41,7 @@ const ReasonList = ({ kind, title, help }) => {
       title={title} subtitle={help}
       right={<PrimaryButton startIcon={<AddIcon />} onClick={() => setDialog({ label: "" })}>Ajouter</PrimaryButton>}
     >
-      {!items ? <Empty>Chargement...</Empty> : items.length === 0 ? <Empty>Aucun motif</Empty> : (
+      {!items ? <Empty><ChargementRond taille={28} /></Empty> : items.length === 0 ? <Empty>Aucun motif</Empty> : (
         <TableContainer sx={tableContainerSx}>
           <Table size="small">
             <TableHead>

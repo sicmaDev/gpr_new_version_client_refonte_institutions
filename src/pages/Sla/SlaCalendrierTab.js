@@ -12,6 +12,7 @@ import {
   tableContainerSx, headCellSx, bodyRowSx,
 } from "./slaUi";
 import { notify } from "../../Utils/alert";
+import { ChargementRond } from "../../components/shared/ChargementRond";
 
 const DAYS = ["", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 
@@ -74,7 +75,7 @@ const SlaCalendrierTab = () => {
   };
 
   if (error && !days) return <Empty>{error}</Empty>;
-  if (!days) return <Empty>Chargement...</Empty>;
+  if (!days) return <Empty><ChargementRond taille={28} /></Empty>;
 
   return (
     <div>

@@ -2,6 +2,7 @@
 "use strict";
 import $ from "jquery"
 import {KTUtil}from "./domUtil"
+import { signalerChargementPage } from "./chargementPage"
 /**
  * @class KApp
  */
@@ -244,10 +245,12 @@ export const KTApp = function() {
         },
 
         blockPage: function(options) {
+            signalerChargementPage(true);
             return KTApp.block('body', options);
         },
 
         unblockPage: function() {
+            signalerChargementPage(false);
             return KTApp.unblock('body');
         },
 
