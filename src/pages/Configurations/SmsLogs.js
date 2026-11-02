@@ -80,7 +80,7 @@ const SmsLogs = () => {
 
     return (
         <div className="card-panel pb-5">
-            <ConfigKPIBar items={logs} kpis={KPI_CONFIG} />
+            <ConfigKPIBar items={logs} kpis={KPI_CONFIG} chargement={loading} />
 
             <Box sx={{ display: "flex", gap: 1, mb: 1.5, flexWrap: "wrap" }}>
                 {CHANNEL_CHIPS.map((chip) => (

@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Box, Typography, Tooltip } from "@mui/material";
+import { ValeurKpi } from "./ChargementRond";
 
 /**
  * ConfigKPIBar - Barre de métriques générique pour les modules de configuration
@@ -9,8 +10,9 @@ import { Box, Typography, Tooltip } from "@mui/material";
  *   kpis   : array  - définitions des KPIs :
  *     { key, label, icon: Component, iconBg, iconColor, borderColor, filter: fn,
  *       value?: any | (items) => any  - surcharge l'affichage (au lieu du compte filtré) }
+ *   chargement : bool (facultatif) - indicateur qui tourne à la place des chiffres ; absent = suit le chargement de la page
  */
-const ConfigKPIBar = ({ items = [], kpis = [] }) => {
+const ConfigKPIBar = ({ items = [], kpis = [], chargement }) => {
   const counts = useMemo(() => {
     const result = {};
     kpis.forEach((k) => {
@@ -84,7 +86,7 @@ const ConfigKPIBar = ({ items = [], kpis = [] }) => {
                     letterSpacing: "-0.5px",
                   }}
                 >
-                  {count}
+                  <ValeurKpi valeur={count} chargement={chargement} couleur={kpi.borderColor} />
                 </Typography>
                 <Typography
                   sx={{

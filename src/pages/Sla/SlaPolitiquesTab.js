@@ -5,6 +5,7 @@ import { LoadingButton } from "@mui/lab";
 import { slaPolicies, slaSavePolicies } from "../../apis/Sla/SlaApi";
 import { Panel, Empty, ErrorNote, Toggle, fieldProps, primarySx, tableContainerSx, headCellSx, bodyRowSx } from "./slaUi";
 import { notify } from "../../Utils/alert";
+import { ChargementRond } from "../../components/shared/ChargementRond";
 
 const TYPES = { CLAIM: "Réclamations", DENUNCIACION: "Dénonciations", SUGGESTION: "Suggestions" };
 const RISKS = { GRAVE: "Grave", MOYEN: "Moyen", MINEUR: "Mineur" };
@@ -60,7 +61,7 @@ const SlaPolitiquesTab = () => {
   };
 
   if (error && !rows) return <Empty>{error}</Empty>;
-  if (!rows) return <Empty>Chargement...</Empty>;
+  if (!rows) return <Empty><ChargementRond taille={28} /></Empty>;
 
   const num = (r, i, field, width = 84) => (
     <TextField

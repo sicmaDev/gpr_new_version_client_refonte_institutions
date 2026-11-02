@@ -45,6 +45,7 @@ const ApiKey = (props) => {
         setShowPassword(!showPassword);
     };
     const [apiKeyList, setApiKeyList] = useState([])
+    const [chargementCles, setChargementCles] = useState(true)
     const [confirmModal, setConfirmModal] = useState({ open: false, id: null, isDeleted: false, loading: false });
     const [viewMode, setViewMode] = useState("list");
     const [addModalOpen, setAddModalOpen] = useState(false);
@@ -197,13 +198,14 @@ const ApiKey = (props) => {
         key: null
     });
     const getApiKeys = () => {
+        setChargementCles(true);
         apiKeyTokens().then(({ data }) => {
             // console.log('data', data.content)
             setApiKeyList(data.content);
 
         }).catch((err) => {
             notify("Une erreur s'est produite", "error")
-        })
+        }).finally(() => setChargementCles(false))
     }
     const createTokenApi = (e) => {
         e.preventDefault();
@@ -325,7 +327,7 @@ const ApiKey = (props) => {
             </Dialog>
 
             <div className="card-panel pb-5">
-                <ConfigKPIBar items={apiKeyList} kpis={[{ key: "total", label: "Total API Keys", icon: VpnKeyIcon, iconBg: "#EDE9FE", iconColor: "#6D28D9", borderColor: "#8B5CF6", filter: () => true }]} />
+                <ConfigKPIBar items={apiKeyList} chargement={chargementCles} kpis={[{ key: "total", label: "Total API Keys", icon: VpnKeyIcon, iconBg: "#EDE9FE", iconColor: "#6D28D9", borderColor: "#8B5CF6", filter: () => true }]} />
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
                     <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Liste des API KEY</Typography>
                     <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>

@@ -9,6 +9,7 @@ import SlaPolitiquesTab from "../Sla/SlaPolitiquesTab";
 import SlaCalendrierTab from "../Sla/SlaCalendrierTab";
 import SlaMotifsTab from "../Sla/SlaMotifsTab";
 import SlaParametresTab from "../Sla/SlaParametresTab";
+import { ChargementRond } from "../../components/shared/ChargementRond";
 
 // Suivi des délais (SLA). Le serveur calcule tout : cette page affiche seulement ce qu'il renvoie, dans le
 // périmètre de la personne connectée. Onglets selon les droits :
@@ -48,7 +49,7 @@ const SLA = () => {
         </Typography>
       </div>
 
-      {enabled === null && <Empty>Chargement...</Empty>}
+      {enabled === null && <Empty><ChargementRond taille={28} /></Empty>}
 
       {enabled === false && (
         <div style={{

@@ -152,7 +152,13 @@ const SlaIndicateursTab = () => {
       </Panel>
 
       {error && <ErrorNote>{error}</ErrorNote>}
-      {loading ? <Empty>Calcul des indicateurs...</Empty> : !stats ? null : (
+      {loading ? (
+        <>
+          <SlaKpiBar kpis={row1} chargement />
+          <SlaKpiBar kpis={row2} chargement />
+          <SlaKpiBar kpis={row3} chargement />
+        </>
+      ) : !stats ? null : (
         <>
           <SlaKpiBar kpis={row1} />
           <SlaKpiBar kpis={row2} />

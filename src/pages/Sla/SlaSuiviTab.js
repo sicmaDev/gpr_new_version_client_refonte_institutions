@@ -13,6 +13,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { slaItems, slaSummary, OWNER_LEVELS, formatDateTime } from "../../apis/Sla/SlaApi";
 import { claimTarget, NOT_CONCERNED } from "./slaRoute";
 import SlaBadge from "../../components/shared/SlaBadge";
+import { ChargementRond } from "../../components/shared/ChargementRond";
 import {
   SlaKpiBar, kpi, Panel, Empty, ErrorNote, SearchField, SelectField,
   tableContainerSx, headCellSx, bodyRowSx, paginationSx,
@@ -95,7 +96,7 @@ const SlaSuiviTab = () => {
 
   return (
     <div>
-      <SlaKpiBar kpis={kpis} />
+      <SlaKpiBar kpis={kpis} chargement={loading} />
 
       <Panel>
         {/* Filtres */}
@@ -108,7 +109,7 @@ const SlaSuiviTab = () => {
         {error && <ErrorNote>{error}</ErrorNote>}
 
         {loading ? (
-          <Empty>Chargement des dossiers...</Empty>
+          <Empty><ChargementRond taille={28} /></Empty>
         ) : data.items.length === 0 ? (
           <Empty>Aucun dossier ne correspond aux critères</Empty>
         ) : (

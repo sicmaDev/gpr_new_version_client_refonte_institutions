@@ -31,7 +31,7 @@ export const kpi = (key, label, Icon, tone, value) => ({
   key, label, icon: Icon, ...TONES[tone], value: value === null || value === undefined ? "-" : value,
 });
 
-export const SlaKpiBar = ({ kpis }) => <ConfigKPIBar items={[]} kpis={kpis} />;
+export const SlaKpiBar = ({ kpis, chargement }) => <ConfigKPIBar items={[]} kpis={kpis} chargement={chargement} />;
 
 // ── Titres et zones vides ───────────────────────────────────────────────────────────────────────
 
