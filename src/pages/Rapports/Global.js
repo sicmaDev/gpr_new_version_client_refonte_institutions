@@ -102,6 +102,9 @@ import html2canvas from "html2canvas";
 import { JaugeRapport } from "./rendu/JaugeRapport";
 import { GraphiqueRapport, hauteurGraphique } from "./rendu/GraphiqueRapport";
 import { CadreCarte, CarteRapport } from "./rendu/CarteRapport";
+import { couleursAffichees, telecharger } from "./rendu/exportPowerBi";
+import { exportPowerBiApi } from "../../apis/Rapports/PowerBiApi";
+import { ValeurKpi } from "../../components/shared/ChargementRond";
 import { couleursDuRapport, TEXTE } from "./rendu/couleursRapport";
 import { useThemeColors } from "../../context/ThemeColorsContext";
 import { INSTITUTION_PAYS_CODE } from "../../Utils/globals";
@@ -233,6 +236,9 @@ const Global = (props) => {
   const [filtreCarte, setFiltreCarte] = useState(null);
   const [versionCarte, setVersionCarte] = useState(0);
   const carteRef = useRef(null);
+  // Carte dans le modèle de rapport (clé global.carteRef) : affichée tant qu'elle n'a pas été retirée,
+  // y compris pour les modèles enregistrés avant son ajout (clé absente).
+  const carteDansLeModele = props.templateData?.global?.carteRef !== false;
   const chargerCarte = (filtres) => { setFiltreCarte(filtres); setVersionCarte((v) => v + 1); };
 
   const [open, setOpen] = React.useState(false);
@@ -1540,13 +1546,13 @@ const Global = (props) => {
     return (
       <div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
-          <span style={{ fontSize: 28, fontWeight: 800, color: TEXTE.chiffre }}>{total}</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={total} taille={26} /></span>
           <span style={{ fontSize: 13, color: "#6B7280", fontWeight: 500 }}>réclamation{total > 1 ? "s" : ""} au total</span>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           {statuses.map(({ label, value, color }) => (
             <div key={label} style={{ flex: "1 1 130px", minWidth: 110, background: "#FFFFFF", border: `1px solid ${TEXTE.bordure}`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}>{value ?? 0}</span>
+              <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={value ?? 0} couleur={color} /></span>
               <span style={{ fontSize: 11, fontWeight: 600, color: TEXTE.libelle, lineHeight: 1.3 }}>{label}</span>
             </div>
           ))}
@@ -1565,13 +1571,13 @@ const Global = (props) => {
     return (
       <div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
-          <span style={{ fontSize: 28, fontWeight: 800, color: TEXTE.chiffre }}>{total}</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={total} taille={26} /></span>
           <span style={{ fontSize: 13, color: "#6B7280", fontWeight: 500 }}>suggestion{total > 1 ? "s" : ""} au total</span>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           {statuses.map(({ label, value, color }) => (
             <div key={label} style={{ flex: "1 1 150px", minWidth: 130, background: "#FFFFFF", border: `1px solid ${TEXTE.bordure}`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}>{value ?? 0}</span>
+              <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={value ?? 0} couleur={color} /></span>
               <span style={{ fontSize: 11, fontWeight: 600, color: TEXTE.libelle, lineHeight: 1.3 }}>{label}</span>
             </div>
           ))}
@@ -1604,13 +1610,13 @@ const Global = (props) => {
     return (
       <div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
-          <span style={{ fontSize: 28, fontWeight: 800, color: TEXTE.chiffre }}>{total}</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={total} taille={26} /></span>
           <span style={{ fontSize: 13, color: "#6B7280", fontWeight: 500 }}>dénonciation{total > 1 ? "s" : ""} au total</span>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           {statuses.map(({ label, value, color }) => (
             <div key={label} style={{ flex: "1 1 150px", minWidth: 130, background: "#FFFFFF", border: `1px solid ${TEXTE.bordure}`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}>{value ?? 0}</span>
+              <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={value ?? 0} couleur={color} /></span>
               <span style={{ fontSize: 11, fontWeight: 600, color: TEXTE.libelle, lineHeight: 1.3 }}>{label}</span>
             </div>
           ))}
@@ -2676,7 +2682,7 @@ const Global = (props) => {
       globalByObjetBarChartRef.current.toBase64Image() +
       "' style='width:90% !important;margin-bottom:75px!important;margin-left:55px!important;margin-right:55px!important' /></div>" : "";
     // Cartographie des plaintes par agence : image dessinée par la carte (fond, points, légende), ou le classement.
-    const carteImage = globalShow && carteRef.current ? carteRef.current.toBase64Image() : "";
+    const carteImage = globalShow && carteDansLeModele && carteRef.current ? carteRef.current.toBase64Image() : "";
     const carteRefData = carteImage
       ? "<div class=' col s12 m12 l12 ' style='width:100%'><center style='margin-bottom:20px!important'>Cartographie des plaintes par agence</center><img src='" +
       carteImage +
@@ -3259,6 +3265,59 @@ const Global = (props) => {
     }
   };
 
+  // Export Power BI : le serveur recalcule les chiffres avec le même filtre (même rapport, même périmètre) ;
+  // la page envoie les onglets affichés, le modèle actif et les couleurs telles qu'elles sont dessinées.
+  const exporterPowerBi = async () => {
+    setExportLoading("Power BI");
+    try {
+      const couleurs = couleursAffichees([
+        { cle: "globalPieChartRef", rendu: "anneau", data: rdsPieGlobal, reglages: { couleurs: couleurDuType } },
+        { cle: "globalLineChartRef", rendu: "courbes", data: rdsBarGlobal, reglages: { couleurs: couleurDuType } },
+        { cle: "globalByCanalPieChartRef", rendu: "progression", data: rdsPieModaliteGlobal, reglages: { pct: true } },
+        { cle: "globalByCanalBarChartRef", rendu: "empile", data: rdsBarModaliteGlobal },
+        { cle: "globalByObjetPieChartRef", rendu: "progression", data: rdsPieObjetGlobal, reglages: { pct: true } },
+        { cle: "claimByAgencePieChartRef", rendu: "progression", data: rdsPieAgenceClaim, reglages: { pct: true } },
+        { cle: "claimByAgenceBarChartRef", rendu: "progression", data: rdsBarAgenceClaim, reglages: { pct: false } },
+        { cle: "denunByAgencePieChartRef", rendu: "progression", data: rdsPieAgenceDenun, reglages: { pct: true } },
+        { cle: "denunByAgenceBarChartRef", rendu: "progression", data: rdsBarAgenceDenun, reglages: { pct: false } },
+        { cle: "sugByAgencePieChartRef", rendu: "progression", data: rdsPieAgenceSugge, reglages: { pct: true } },
+        { cle: "sugByAgenceBarChartRef", rendu: "progression", data: rdsBarAgenceSugge, reglages: { pct: false } },
+        { cle: "claimByCanalPieChartRef", rendu: "progression", data: rdsPieModaliteClaim, reglages: { pct: true } },
+        { cle: "claimByCanalBarChartRef", rendu: "empile", data: rdsBarModaliteClaim },
+        { cle: "denunByCanalPieChartRef", rendu: "progression", data: rdsPieModaliteDenun, reglages: { pct: true } },
+        { cle: "denunByCanalBarChartRef", rendu: "empile", data: rdsBarModaliteDenun },
+        { cle: "sugByCanalPieChartRef", rendu: "progression", data: rdsPieModaliteSugge, reglages: { pct: true } },
+        { cle: "sugByCanalBarChartRef", rendu: "empile", data: rdsBarModaliteSugge },
+        { cle: "claimByObjetPieChartRef", rendu: "progression", data: rdsPieObjetClaim, reglages: { pct: true } },
+        { cle: "denunByObjetPieChartRef", rendu: "progression", data: rdsPieObjetDenun, reglages: { pct: true } },
+        { cle: "claimByGenderPieChartRef", rendu: "anneau", data: rdsPieGenreClaim },
+        { cle: "claimByGenderBarChartRef", rendu: "empile", data: rdsBarGenreClaim },
+        { cle: "sugByGenderPieChartRef", rendu: "anneau", data: rdsPieGenreSugge },
+        { cle: "sugByGenderBarChartRef", rendu: "empile", data: rdsBarGenreSugge },
+        { cle: "claimByGravitePieChartRef", rendu: "anneau", data: rdsPieGravityClaim },
+        { cle: "claimByGraviteBarChartRef", rendu: "empile", data: rdsBarGravityClaim },
+        { cle: "denunByGravitePieChartRef", rendu: "anneau", data: rdsPieGravityDenun },
+        { cle: "denunByGraviteBarChartRef", rendu: "empile", data: rdsBarGravityDenun },
+        { cle: "claimBySatisfactionPieChartRef", rendu: "anneau", data: rdsPieStatisClaim, reglages: { couleurs: couleurDeSatisfaction } },
+      ]);
+      const blob = await exportPowerBiApi({
+        filtre: filtreCarte,
+        sections: { global: globalShow, claim: claimShow, denun: denunciationShow, suggest: suggestionShow },
+        modele: { global: props.templateData?.global, claim: props.templateData?.claim, denun: props.templateData?.denun, suggest: props.templateData?.suggest },
+        couleurs,
+        couleurPrincipale: CR.principale,
+        filtresAffiches: appliedFiltresDisplay,
+        paysCode: INSTITUTION_PAYS_CODE,
+      });
+      const d = new Date(), deux = (n) => String(n).padStart(2, "0");
+      telecharger(blob, `Rapport_GPR_${d.getFullYear()}${deux(d.getMonth() + 1)}${deux(d.getDate())}_${deux(d.getHours())}${deux(d.getMinutes())}.pbit`);
+    } catch (e) {
+      notify("Erreur, l'export Power BI n'a pas pu être généré", "error");
+    } finally {
+      setExportLoading(null);
+    }
+  };
+
   const printToWord = async () => {
     setExportLoading("Word");
     const logoBase64 = await toBase64(logoInstitution);
@@ -3346,7 +3405,7 @@ const Global = (props) => {
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
             {kpiData.map(({ label, value, color }) => (
               <div key={label} style={{ flex: "1 1 0", background: "#FFFFFF", border: `1px solid ${TEXTE.bordure}`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: "10px 18px", display: "flex", flexDirection: "column", gap: 2, minWidth: 120 }}>
-                <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}>{value}</span>
+                <span style={{ fontSize: 22, fontWeight: 800, color: TEXTE.chiffre }}><ValeurKpi valeur={value} couleur={color} /></span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: TEXTE.libelle }}>{label}</span>
               </div>
             ))}
@@ -3384,6 +3443,10 @@ const Global = (props) => {
               {
                 label: "Word", color: "#1D4ED8", bg: "#EFF6FF", border: "#93C5FD", action: printToWord,
                 icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 15.25H8.5L9.88 10.58 11.25 15.25H12.75L14.82 8.75H13.31L12 13.41 10.63 8.75H9.12L7.82 13.41 6.5 8.75H5L7 15.25M20.75 19.5V17H15.13V19.5M20.75 15.75V12.63H15.13V15.75M20.75 11.38V8.25H15.13V11.38M13.88 19.5V17H8.25V19.5M13.88 15.75V12.63H8.25V15.75M13.88 11.38V8.25H8.25V11.38Z" /></svg>
+              },
+              {
+                label: "Power BI", color: "#B7791F", bg: "#FFFBEB", border: "#F6E05E", action: exporterPowerBi,
+                icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="12" width="4" height="9" rx="1" /><rect x="10" y="7" width="4" height="14" rx="1" /><rect x="17" y="3" width="4" height="18" rx="1" /></svg>
               },
             ].map(({ label, color, bg, border, action, icon }) => {
               const isLoading = exportLoading === label;
@@ -3870,9 +3933,9 @@ const Global = (props) => {
               <canvas id="myChart2"></canvas>
             </>
           )}
-          {globalShow && (
+          {globalShow && carteDansLeModele && (
             <div style={{ display: activeTab === 0 || isPrinting ? "block" : "none" }}>
-              <CadreCarte titre="Cartographie des plaintes par agence" accent={CR.principale}>
+              <CadreCarte titre="Cartographie des plaintes par agence" accent={CR.principale} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, carteRef: false } }) } : undefined}>
                 <CarteRapport filtres={filtreCarte} version={versionCarte} paysCode={INSTITUTION_PAYS_CODE} chartRef={carteRef} visible={activeTab === 0 || isPrinting} />
               </CadreCarte>
             </div>

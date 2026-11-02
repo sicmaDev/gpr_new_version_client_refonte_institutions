@@ -3,6 +3,7 @@ import { carteRapportApi } from "../../../apis/Rapports/CarteApi";
 import { SENS } from "./couleursRapport";
 import { alpha, fmt } from "./graphiquesRapport";
 import { FOND_BENIN } from "./fondCarteBenin";
+import { ChargementRond } from "../../../components/shared/ChargementRond";
 
 // Cartographie des plaintes par agence (seul élément nouveau du rapport Global).
 // - Données : /api/v1/report/carte, avec le même filtre que le rapport ; le serveur applique le périmètre du rôle.
@@ -48,11 +49,13 @@ function Bulle({ a, x, y }) {
 
 // Cadre de la carte, même aspect que les cartes de graphique (PBICard) du rapport. Il est défini ici, au niveau du
 // module : PBICard est recréé à chaque rendu de la page, ce qui remonterait la carte (et relancerait son chargement).
-export function CadreCarte({ titre, accent, children }) {
+// onClose : croix ✕ du mode édition du modèle de rapport, comme PBICard.
+export function CadreCarte({ titre, accent, onClose, children }) {
   return (
     <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #E9ECF1", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", overflow: "hidden", marginBottom: 16, width: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", borderBottom: `3px solid ${accent}`, background: "#FAFBFC" }}>
         <span style={{ fontSize: 12.5, fontWeight: 700, color: "#374151", letterSpacing: "0.2px", textTransform: "uppercase" }}>{titre}</span>
+        {onClose && <span onClick={onClose} style={{ cursor: "pointer", fontSize: 14, color: "#9CA3AF", lineHeight: 1 }}>✕</span>}
       </div>
       <div style={{ padding: "16px 18px 12px", flex: 1 }}>{children}</div>
     </div>
@@ -147,7 +150,7 @@ export function CarteRapport({ filtres, version, paysCode, chartRef, visible = t
     },
   }), [echecFond, vue, loc, classement, departements, etat.attribution, ox, oy, W, maxVol]);
 
-  if (etat.chargement && !agences.length) return <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748B", fontSize: 13 }}>Chargement de la carte…</div>;
+  if (etat.chargement && !agences.length) return <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center" }}><ChargementRond taille={36} /></div>;
   if (etat.erreur) return <div style={styles.encadre}><b style={{ color: SENS.orange }}>La carte n'a pas pu être chargée.</b> Les graphiques du rapport ne sont pas concernés.</div>;
   if (!agences.length) return <div style={{ ...styles.encadre, borderLeftColor: "#CBD5E1" }}>Aucune agence ne correspond aux critères du rapport.</div>;
 
