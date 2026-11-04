@@ -133,6 +133,7 @@ const ScheduledReports = () => {
 
     const sendTest = () => {
         if (!testEmail) { notify("Erreur - L'adresse email est obligatoire", "error"); return; }
+        if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(testEmail)) { notify("Erreur - L'adresse email est invalide", "error"); return; }
         setTesting(true);
         testScheduledReport(testReport.id, testEmail)
             .then((response) => { notify(response.data?.message || "Mail de test envoyé", "success"); setTestReport(null); })

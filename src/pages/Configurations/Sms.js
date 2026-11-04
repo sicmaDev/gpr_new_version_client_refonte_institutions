@@ -42,7 +42,7 @@ const FieldCheck = ({ valid }) => valid
     ? <CheckCircleIcon sx={{ fontSize: 14, color: "#16a34a", verticalAlign: "middle", ml: 0.6 }} />
     : null;
 
-const FieldWithHelp = ({ label, tooltip, value, onChange, error, valid, type = "text", showToggle, show, onToggle }) => (
+const FieldWithHelp = ({ label, tooltip, value, onChange, error, valid, type = "text", showToggle, show, onToggle, placeholder }) => (
     <Box>
         <label style={labelStyle}>
             {label}
@@ -50,7 +50,7 @@ const FieldWithHelp = ({ label, tooltip, value, onChange, error, valid, type = "
             {tooltip && <Tooltip title={tooltip}><HelpOutlineIcon sx={{ fontSize: 14, color: "#94a3b8", verticalAlign: "middle" }} /></Tooltip>}
         </label>
         <Box sx={{ position: "relative" }}>
-            <input type={showToggle ? (show ? "text" : "password") : type} value={value || ""} onChange={onChange}
+            <input type={showToggle ? (show ? "text" : "password") : type} value={value || ""} onChange={onChange} placeholder={placeholder}
                 style={{ ...inputStyle(error), paddingRight: showToggle ? 40 : 14 }}
                 onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = error ? "#ef4444" : "#e2e8f0"; }} />
             {showToggle && (
@@ -87,6 +87,7 @@ const Sms = (props) => {
             let appSms = loadItemFromLocalStorage("app-sms") !== undefined && (loadItemFromLocalStorage("app-sms").length !== 0) ? loadItemFromLocalStorage("app-sms") : undefined;
             if (appSms !== undefined || appSms !== "") {
                 props.urlChange(appSms.url)
+                setConfigExistante(!!appSms.url);
                 props.libelleIdChanged(appSms.libId);
                 props.valueIdChanged(appSms.valId);
                 props.libellePwdChanged(appSms.libMdp);
@@ -131,6 +132,8 @@ const Sms = (props) => {
 
     }, []);
 
+    // Configuration déjà enregistrée : son mot de passe n'est jamais renvoyé ici, le laisser vide le conserve
+    const [configExistante, setConfigExistante] = useState(false);
     const [actif, setActif] = useState();
 
     const licenseControl = async () => {
@@ -183,7 +186,7 @@ const Sms = (props) => {
             errors["libelle_pwd"] = "Champ incorrect";
             // console.log("libelle_pwd");
         }
-        if (props.valuePwd === "" || props.valuePwd === undefined || props.valuePwd === null) {
+        if (!configExistante && (props.valuePwd === "" || props.valuePwd === undefined || props.valuePwd === null)) {
             isValid = false;
             errors["value_pwd"] = "Champ incorrect";
             //console.log("value_pwd");
@@ -221,7 +224,13 @@ const Sms = (props) => {
     const handleSubmit = (e) => {
         e.preventDefault()
 
-        if (handleValidation) {
+        if (!handleValidation()) {
+            const manquants = { url: "l'URL", libelle_id: "le libellé id", value_id: "la valeur id", libelle_pwd: "le libellé mot de passe", value_pwd: "la valeur mot de passe", libelle_sender: "le libellé émetteur", value_sender: "la valeur émetteur", libelle_receiver: "le libellé destinataire", libelle_message: "le libellé message" };
+            notify("Erreur - À compléter : " + Object.keys(errors).map(k => manquants[k]).join(", "), "error");
+            props.smsErrors(errors);
+            return;
+        }
+        {
             let item = {}
             item["url"] = props.url;
             item["libId"] = props.libelleId;
@@ -276,7 +285,7 @@ const Sms = (props) => {
     const validLibelleId = !!props.libelleId;
     const validValueId = !!props.valueId;
     const validLibellePwd = !!props.libellePwd;
-    const validValuePwd = !!props.valuePwd;
+    const validValuePwd = !!props.valuePwd || configExistante;
     const validLibelleSender = !!props.libelleSender;
     const validValueSender = !!props.valueSender;
     const validLibelleReceiver = !!props.libelleReceiver;
@@ -319,7 +328,7 @@ const Sms = (props) => {
                                 value={props.libellePwd} onChange={(e) => props.libellePwdChanged(e.target.value)} error={props.smsErrors.libelle_pwd} valid={validLibellePwd}
                                 showToggle show={showPassword1} onToggle={toggleShowPassword1} />
                             <FieldWithHelp label="Valeur mot de passe" tooltip="(Valeur du mot de passe de votre compte SMS Banking.)"
-                                value={props.valuePwd} onChange={(e) => props.valuePwdChanged(e.target.value)} error={props.smsErrors.value_pwd} valid={validValuePwd}
+                                value={props.valuePwd} onChange={(e) => props.valuePwdChanged(e.target.value)} error={props.smsErrors.value_pwd} valid={validValuePwd} placeholder={configExistante ? "Laisser vide pour garder le mot de passe actuel" : undefined}
                                 showToggle show={showPassword} onToggle={toggleShowPassword} />
                         </Box>
                     </Box>

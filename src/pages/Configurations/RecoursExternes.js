@@ -80,8 +80,13 @@ const RecoursExternes = (props) => {
     ];
     const handleModalSubmit = async (items) => {
         setAddLoading(true);
-        try { for (const item of items) { await ajout({ libelle: item.libelle, description: item.description }, props); } }
-        finally { setAddLoading(false); setAddModalOpen(false); }
+        try {
+            for (const item of items) {
+                const ok = await ajout({ libelle: item.libelle, description: item.description }, props);
+                if (!ok) return false;
+            }
+            setAddModalOpen(false);
+        } finally { setAddLoading(false); }
     };
 
     const handleEditClick = (sp) => {
@@ -93,7 +98,7 @@ const RecoursExternes = (props) => {
         if (!editForm.libelle.trim()) { setEditErrors({ libelle: "Champ requis" }); return; }
         setEditLoading(true); props.etat2Changed(true);
         modification({ id: props.id, libelle: editForm.libelle, description: editForm.description }, props)
-            .then(() => { setEditModalOpen(false); clearComponentState(); })
+            .then((ok) => { if (!ok) return; setEditModalOpen(false); clearComponentState(); })
             .finally(() => { setEditLoading(false); props.etat2Changed(false); });
     };
     const handleDelete = () => {

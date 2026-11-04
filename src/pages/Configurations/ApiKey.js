@@ -209,6 +209,7 @@ const ApiKey = (props) => {
     }
     const createTokenApi = (e) => {
         e.preventDefault();
+        if (!keyField.libelle || !keyField.libelle.trim()) { notify("Erreur - Le libellé est obligatoire", "error"); return; }
         apiKeyTokenGenerator(keyField).then(({ data }) => {
             notify("L'API KEY a ete généré", "success")
             setKeyField({ ...keyField, secret: data.content.api_secret, key: data.content.api_key })

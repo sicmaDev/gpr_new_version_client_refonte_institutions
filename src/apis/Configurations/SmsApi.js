@@ -35,7 +35,7 @@ export const ajout = async (data, props) => {
         })
         .catch(function (error) {
             props.etatChanged(false)
-            notify("Erreur - Veuillez réessayer!", "error");
+            notify(error.response?.data?.content?.message || "Erreur - Veuillez réessayer!", "error");
         });
 
 }

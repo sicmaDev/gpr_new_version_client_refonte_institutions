@@ -163,19 +163,21 @@ const Objets = (props) => {
             const vide = item.processingTime === undefined || item.processingTime === null || item.processingTime === "";
             if ((vide && !slaOn) || (!vide && (delai < 1 || delai > MAX_SUBJECT_DURATION))) {
                 notify(`Erreur - Délai de « ${item.libelle || "l'objet"} » : entre 1 et ${MAX_SUBJECT_DURATION} jours${slaOn ? ", ou vide" : ""}`, "error");
-                return;
+                return false;
             }
             if (slaOn && item.takeoverHours && Number(item.takeoverHours) < 1) {
                 notify(`Erreur - Prise en charge de « ${item.libelle || "l'objet"} » : au moins 1 heure, ou vide`, "error");
-                return;
+                return false;
             }
         }
         setAddLoading(true);
         try {
             for (const item of items) {
-                await ajout({ libelle: item.libelle, description: item.description, risqueLevel: item.risqueLevel, categorie: item.categorie, processingTime: Number(item.processingTime) || 0, takeoverHours: item.takeoverHours ? Number(item.takeoverHours) : null }, props);
+                const ok = await ajout({ libelle: item.libelle, description: item.description, risqueLevel: item.risqueLevel, categorie: item.categorie, processingTime: Number(item.processingTime) || 0, takeoverHours: item.takeoverHours ? Number(item.takeoverHours) : null }, props);
+                if (!ok) return false;
             }
-        } finally { setAddLoading(false); setAddModalOpen(false); }
+            setAddModalOpen(false);
+        } finally { setAddLoading(false); }
     };
 
     const handleEditClick = (sp) => {
@@ -203,7 +205,7 @@ const Objets = (props) => {
         if (Object.keys(errs).length) { setEditErrors(errs); return; }
         setEditLoading(true); props.etat2Changed(true);
         modification({ id: props.id, libelle: editForm.libelle, description: editForm.description, risqueLevel: editForm.risqueLevel, categorie: editForm.categorie, processingTime: Number(editForm.processingTime) || 0, takeoverHours: editForm.takeoverHours ? Number(editForm.takeoverHours) : null }, props)
-            .then(() => { setEditModalOpen(false); clearComponentState(); })
+            .then((ok) => { if (!ok) return; setEditModalOpen(false); clearComponentState(); })
             .finally(() => { setEditLoading(false); props.etat2Changed(false); });
     };
     const handleDelete = () => {
