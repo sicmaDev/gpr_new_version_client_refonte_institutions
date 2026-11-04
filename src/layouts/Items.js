@@ -241,8 +241,12 @@ export const Items = (props) => {
   const logOut = (e) => {
     e.preventDefault();
     sessionStorage.clear();
+    // Le jeton gardé dans le navigateur ne doit pas survivre à la déconnexion.
+    localStorage.removeItem("token");
     props.authenticate();
     history.push('/');
+    // Rechargement complet : vide les données gardées en mémoire (sinon le compte suivant voyait un instant celles du précédent).
+    window.location.reload();
   };
 
   let mode = loadItemFromLocalStorage('app-mode') !== undefined

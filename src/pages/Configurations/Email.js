@@ -43,6 +43,14 @@ const FieldCheck = ({ valid }) => valid
 // Chiffrement de la connexion au serveur mail : SSL/TLS (dès la connexion), STARTTLS (négocié) ou aucun.
 const SECURITY_PORTS = { SSL: "465", STARTTLS: "587", NONE: "25" };
 
+// Port et chiffrement qui ne peuvent pas fonctionner ensemble : 465 exige SSL dès la connexion, 587 démarre en clair.
+const incoherencePortChiffrement = (port, security) => {
+    const p = port === undefined || port === null ? "" : String(port).trim();
+    if (p === "465" && security !== "SSL") return "Le port 465 exige le chiffrement SSL/TLS. Choisissez « SSL/TLS (port 465) » ou mettez le port 587 avec STARTTLS.";
+    if (p === "587" && security === "SSL") return "Le port 587 fonctionne avec STARTTLS, pas avec SSL/TLS. Choisissez « STARTTLS (port 587) » ou mettez le port 465 avec SSL/TLS.";
+    return null;
+};
+
 const Email = (props) => {
     const [showPassword, setShowPassword] = useState(false);
     const [security, setSecurity] = useState("STARTTLS");
@@ -50,6 +58,8 @@ const Email = (props) => {
     const [trustCertificate, setTrustCertificate] = useState(true);
     // Décochée : le serveur n'exige aucune authentification (relais interne) ; aucun mot de passe n'est envoyé.
     const [authRequired, setAuthRequired] = useState(true);
+    // Configuration déjà enregistrée : son mot de passe n'est jamais renvoyé ici, le laisser vide le conserve
+    const [configExistante, setConfigExistante] = useState(false);
 
     const handleSecurityChange = (value) => {
         setSecurity(value);
@@ -70,6 +80,7 @@ const Email = (props) => {
 
     const handleTest = async () => {
         if (to !== "" && to && subject !== "" && subject && message !== "" && message) {
+            if (incoherence) { notify(`Attention - ${incoherence}`, "warning"); return; }
             setShowTestModal(false);
             KTApp.blockPage({
                 overlayColor: '#000000',
@@ -107,6 +118,7 @@ const Email = (props) => {
                 setSecurity(appMail.security || (String(appMail.port).trim() === "465" ? "SSL" : "STARTTLS"))
                 setTrustCertificate(appMail.trustCertificate === undefined || appMail.trustCertificate === null ? true : appMail.trustCertificate)
                 setAuthRequired(appMail.authRequired === undefined || appMail.authRequired === null ? true : appMail.authRequired)
+                setConfigExistante(!!appMail.host)
 
             } else {
             }
@@ -188,7 +200,11 @@ const Email = (props) => {
             isValid = false;
             errors["port"] = "Champ incorrect";
         }
-        if (authRequired && (props.password === "" || props.password === undefined || props.password === null)) {
+        if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(String(props.user || "").trim())) {
+            isValid = false;
+            errors["user"] = "Champ incorrect";
+        }
+        if (authRequired && !configExistante && (props.password === "" || props.password === undefined || props.password === null)) {
             isValid = false;
             errors["password"] = "Champ incorrect";
         }
@@ -201,7 +217,14 @@ const Email = (props) => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        if (handleValidation) {
+        // Enregistrement refusé : avec ce couple port / chiffrement, aucun mail ne pourrait partir.
+        if (incoherence) { notify(`Attention - ${incoherence}`, "warning"); return; }
+        if (!handleValidation()) {
+            const manquants = { host: "le serveur", port: "le port", user: "l'utilisateur mail (adresse email valide)", password: "le mot de passe" };
+            notify("Erreur - À compléter : " + Object.keys(errors).map(k => manquants[k]).join(", "), "error");
+            return;
+        }
+        {
             let item = {}
             item["host"] = props.host;
             item["port"] = props.port;
@@ -223,7 +246,8 @@ const Email = (props) => {
     const validHost = !!props.host;
     const validUser = !!props.user && /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(props.user);
     const validPort = !!props.port;
-    const validPassword = !authRequired || !!props.password;
+    const validPassword = !authRequired || !!props.password || configExistante;
+    const incoherence = incoherencePortChiffrement(props.port, security);
 
     return (
         <div className="card-panel pb-5">
@@ -259,6 +283,11 @@ const Email = (props) => {
                                 <option value="STARTTLS">STARTTLS (port 587)</option>
                                 <option value="NONE">Aucun chiffrement (déconseillé)</option>
                             </select>
+                            {incoherence && (
+                                <Typography sx={{ fontSize: 12, color: "#b45309", mt: 0.5 }}>
+                                    {incoherence}
+                                </Typography>
+                            )}
                             {security === "NONE" && (
                                 <Typography sx={{ fontSize: 12, color: "#dc2626", mt: 0.5 }}>
                                     Sans chiffrement, le mot de passe et les messages circulent en clair sur le réseau.
@@ -283,7 +312,7 @@ const Email = (props) => {
                         <Box>
                             <label style={labelStyle}>Mot de Passe (Password) <FieldCheck valid={validPassword} /></label>
                             <Box sx={{ position: "relative" }}>
-                                <input type={showPassword ? "text" : "password"} value={authRequired ? (props.password || "") : ""} onChange={(e) => props.passwordChanged(e.target.value)} placeholder="••••••••"
+                                <input type={showPassword ? "text" : "password"} value={authRequired ? (props.password || "") : ""} onChange={(e) => props.passwordChanged(e.target.value)} placeholder={configExistante ? "Laisser vide pour garder le mot de passe actuel" : "••••••••"}
                                     disabled={!authRequired}
                                     style={{ ...inputStyle(false), paddingRight: 40, ...(authRequired ? {} : { background: "#f1f5f9" }) }} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; }} />
                                 <IconButton onClick={toggleShowPassword} size="small" sx={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)" }}>

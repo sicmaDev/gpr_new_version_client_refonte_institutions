@@ -69,13 +69,13 @@ const Apparence = () => {
                 lg = a.logo         || null;
             }
 
-            // Fallback logo : institution si app-appearance n'en a pas
+            // Logo : celui de l'institution en priorité (comme le menu), sinon celui d'app-appearance
             let inst = rawInst;
             if (typeof inst === 'string') {
                 inst = JSON.parse(inst);
             }
-            if (!lg && inst) {
-                lg = inst.logo || null;
+            if (inst && inst.logo) {
+                lg = inst.logo;
             }
 
             setSidebarColor(sc);

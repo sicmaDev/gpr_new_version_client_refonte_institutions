@@ -30,12 +30,11 @@ export const saveAuthDataToLocal = (data) => {
     // Logo toujours depuis l'institution (source de vérité unique)
     const _institutionLogo = data.settings.institution?.logo || null;
 
-    // Couleurs depuis appearance ; logo depuis institution
-    if (_modules.includes('appearance') && data.settings.appearance?.sidebarColor) {
-        window.dispatchEvent(new CustomEvent('gpr-auth-loaded', {
-            detail: { sidebarColor: data.settings.appearance.sidebarColor, topbarColor: data.settings.appearance.topbarColor, logo: _institutionLogo }
-        }));
-    }
+    // Couleurs depuis appearance (si l'option est incluse) ; logo depuis institution dans tous les cas
+    const _couleurs = data.settings.appearanceVisible !== false && data.settings.appearance?.sidebarColor
+        ? { sidebarColor: data.settings.appearance.sidebarColor, topbarColor: data.settings.appearance.topbarColor }
+        : { couleursParDefaut: data.settings.appearanceVisible === false };
+    window.dispatchEvent(new CustomEvent('gpr-auth-loaded', { detail: { ..._couleurs, logo: _institutionLogo } }));
 
     data.settings.institution ? saveItemToSessionStorage(data.settings.institution, 'app-institution') : saveItemToSessionStorage([], 'app-institution');
     data.settings.mail ? saveItemToSessionStorage(data.settings.mail, 'app-mail') : saveItemToSessionStorage([], 'app-mail');

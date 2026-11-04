@@ -108,7 +108,9 @@ const AddDuplicateFormModal = ({
     const valid = getValidForms();
     if (valid.length === 0) return;
 
-    await onSubmit(valid);
+    // false : la page a refusé l'envoi (email invalide, quota…), on garde la saisie pour la corriger
+    const resultat = await onSubmit(valid);
+    if (resultat === false) return;
     reset();
   };
 

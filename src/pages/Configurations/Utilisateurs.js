@@ -185,16 +185,20 @@ const Utilisateurs = (props) => {
     try { units = loadItemFromLocalStorage('app-ps') || []; } catch (e) { units = []; }
 
     const titleOptions  = titles.map(t => ({ label: t.libelle, value: t.id }));
-    const unitsGrouped  = groupBy(units, "type");
+    // Les points de service désactivés ne sont plus proposés au choix
+    const unitsGrouped  = groupBy(units.filter(u => !u.deleted), "type");
     const unitOptionsGrouped = [
         ...(unitsGrouped["DIRECTION"] ? [{ groupLabel: "Direction", options: (unitsGrouped["DIRECTION"] || []).map(u => ({ label: u.libelle, value: u.id })) }] : []),
         ...(unitsGrouped["AGENCE"]    ? [{ groupLabel: "Agence",    options: (unitsGrouped["AGENCE"]    || []).map(u => ({ label: u.libelle, value: u.id })) }] : []),
         ...(unitsGrouped["GUICHET"]   ? [{ groupLabel: "Guichet",   options: (unitsGrouped["GUICHET"]   || []).map(u => ({ label: u.libelle, value: u.id })) }] : []),
     ];
-    const allUnitOptions = unitOptionsGrouped.flatMap(g => g.options);
+    // Tous les points (même désactivés) pour retrouver le libellé d'un rattachement existant
+    const allUnitOptions = units.map(u => ({ label: u.libelle, value: u.id, deleted: !!u.deleted }));
 
-    const users = (() => { try { return loadItemFromLocalStorage("app-users") || []; } catch (e) { return []; } })();
-    const nba = users.length;
+    // Pendant un enregistrement, la liste mémorisée peut ne pas être encore un tableau : on se rabat sur une liste vide.
+    const users = (() => { try { const l = loadItemFromLocalStorage("app-users"); return Array.isArray(l) ? l : []; } catch (e) { return []; } })();
+    // Quota de la licence : comptes actifs et désactivés, sans les demandes d'inscription en attente (même règle que le serveur).
+    const nba = users.filter((u) => !(u.deleted && u.rattached)).length;
 
     useEffect(() => {
         KTApp.blockPage({ overlayColor: "#000000", type: "v2", state: "danger", message: "En cours de chargement..." });
@@ -273,7 +277,7 @@ const Utilisateurs = (props) => {
                 <MuiSelect value={value || ""} onChange={(e) => onChange(e.target.value)} displayEmpty fullWidth sx={{ borderRadius: 2, fontSize: 14 }}>
                     <MenuItem value="" disabled>Sélectionner l'unité organisationnelle</MenuItem>
                     {unitOptionsGrouped.map(group => [
-                        <ListSubheader key={`hdr-${group.label}`}>{group.label}</ListSubheader>,
+                        <ListSubheader key={`hdr-${group.groupLabel}`}>{group.groupLabel}</ListSubheader>,
                         ...group.options.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>),
                     ])}
                 </MuiSelect>
@@ -310,18 +314,20 @@ const Utilisateurs = (props) => {
     const handleModalSubmit = (items) => {
         // Quota de comptes de la licence : comme dans l'ancienne version, pas d'ajout si la licence n'a pas pu être lue,
         // et l'ajout de plusieurs comptes d'un coup ne doit pas dépasser le maximum.
-        if (max === undefined) { notify("Erreur - Informations de licence indisponibles, ajout impossible", "error"); return; }
-        if (nba + items.length > max) { notify(`Erreur - Nombre maximum de comptes atteint (${max}). Il reste ${Math.max(max - nba, 0)} place(s).`, "error"); return; }
+        // return false : le formulaire garde la saisie pour qu'elle soit corrigée
+        if (max === undefined) { notify("Erreur - Informations de licence indisponibles, ajout impossible", "error"); return false; }
+        if (nba + items.length > max) { notify(`Erreur - Nombre maximum de comptes atteint (${max}). Il reste ${Math.max(max - nba, 0)} place(s).`, "error"); return false; }
         for (const it of items) {
-            if (!it.email || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(it.email)) { notify(`Erreur - Email invalide pour ${it.name}`, "error"); return; }
-            if (!isValidPhone(it.phone)) { notify(`Erreur - Téléphone invalide pour ${it.name}`, "error"); return; }
+            if (!it.email || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(it.email)) { notify(`Erreur - Email invalide pour ${it.name}`, "error"); return false; }
+            if (!isValidPhone(it.phone)) { notify(`Erreur - Téléphone invalide pour ${it.name}`, "error"); return false; }
         }
         setAddLoading(true); props.etatChanged(true);
-        const chain = items.reduce((p, it) => p.then(() =>
+        // Arrêt au premier refus du serveur (email déjà utilisé…) : la fenêtre reste ouverte avec la saisie
+        const chain = items.reduce((p, it) => p.then((ok) => ok &&
             ajout({ firstAndLastName: it.name, email: it.email, tel: it.phone, posteId: it.poste, servicePointId: it.unit, additionalRole: it.additionalRole, ra: it.ca }, props)
-        ), Promise.resolve());
-        chain
-            .then(() => { setAddModalOpen(false); clearComponentState(); })
+        ), Promise.resolve(true));
+        return chain
+            .then((ok) => { if (!ok) return false; setAddModalOpen(false); clearComponentState(); })
             .finally(() => { setAddLoading(false); props.etatChanged(false); });
     };
 
@@ -336,7 +342,7 @@ const Utilisateurs = (props) => {
         setEditLoading(true); props.etat2Changed(true);
         const payload = { id: props.id, firstAndLastName: editForm.name, email: editForm.email, tel: editForm.phone, posteId: editForm.poste, servicePointId: editForm.unit, additionalRole: editForm.additionalRole, ra: editForm.ca };
         modification(payload, props)
-            .then(() => { setEditModalOpen(false); setEditForm(EMPTY_FORM); setEditErrors({}); clearComponentState(); })
+            .then((ok) => { if (!ok) return; setEditModalOpen(false); setEditForm(EMPTY_FORM); setEditErrors({}); clearComponentState(); })
             .finally(() => { setEditLoading(false); props.etat2Changed(false); });
     };
 
@@ -353,7 +359,7 @@ const Utilisateurs = (props) => {
             const isDisabling = action === "disable";
             disabled(props, item.id, isDisabling)
                 .then(() => { notify(`Bravo - Compte ${isDisabling ? "désactivé" : "activé"} avec succès`, "success"); all(props); setDisableConfirm({ open: false, item: null, action: null, loading: false }); clearComponentState(); })
-                .catch(() => { notify(`Erreur - Opération échouée`, "error"); setDisableConfirm(p => ({ ...p, loading: false })); });
+                .catch((err) => { notify(`Erreur - ${err?.response?.data?.content?.message || "Opération échouée"}`, "error"); setDisableConfirm(p => ({ ...p, loading: false })); });
         }
     };
 
@@ -361,7 +367,7 @@ const Utilisateurs = (props) => {
         e.preventDefault(); e.stopPropagation();
         disabled(props, user.id, false)
             .then(() => { notify("Bravo - Compte activé avec succès", "success"); all(props); clearComponentState(); })
-            .catch(() => notify("Erreur - Activation échouée", "error"));
+            .catch((err) => notify(`Erreur - ${err?.response?.data?.content?.message || "Activation échouée"}`, "error"));
     };
 
     const handleDelete = () => {
@@ -404,6 +410,8 @@ const Utilisateurs = (props) => {
                     <ListSubheader key={group.groupLabel} sx={{ fontSize: 11, fontWeight: 800, color: "#64748b", lineHeight: "28px", background: "#f8fafc", textTransform: "uppercase", letterSpacing: "0.5px" }}>{group.groupLabel}</ListSubheader>,
                     ...group.options.map(o => <MenuItem key={o.value} value={o.value} sx={{ pl: 3, fontSize: 14 }}>{o.label}</MenuItem>)
                 ])}
+                {/* Rattachement actuel à un point désactivé : affiché pour ne pas le perdre, mais plus proposé aux autres */}
+                {allUnitOptions.filter(o => o.deleted && o.value === form.unit).map(o => <MenuItem key={o.value} value={o.value} sx={{ pl: 3, fontSize: 14, color: "#94a3b8" }}>{o.label} (désactivé)</MenuItem>)}
             </MuiSelect>
         </FormControl>
     );

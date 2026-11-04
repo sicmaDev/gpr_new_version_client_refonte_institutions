@@ -54,6 +54,7 @@ const Institution = (props) => {
         setValueP(valueP)
         props.paysChanged(valueP.label)
         props.paysCodeChanged(valueP.value)
+        effacerErreur("pays")
         setValueC(valueC)
         //   console.log("payssss",valueP.label)
     }
@@ -112,6 +113,8 @@ const Institution = (props) => {
     let isLicenseControl = licenseControl()
 
     let errors = {};
+    // Retire le message « Champ incorrect » dès que l'utilisateur retouche le champ
+    const effacerErreur = (champ) => { if (props.errors && props.errors[champ]) props.institutionErrors({ ...props.errors, [champ]: undefined }); };
 
     const [imageToCrop, setImageToCrop] = useState(undefined);
     const [croppedImage, setCroppedImage] = useState(undefined);
@@ -126,6 +129,7 @@ const Institution = (props) => {
         reader.readAsDataURL(file);
         reader.onload = (e) => {
             props.logoChanged(e.target.result)
+            effacerErreur("logo")
         }
     }
 
@@ -222,19 +226,19 @@ const Institution = (props) => {
                         <SectionTitle icon={BadgeIcon} title="Identité" subtitle="(dénomination, agrément, logo)" />
                         <Box>
                             <label style={labelStyle}>Raison / Dénomination <FieldCheck valid={validDenomination} /></label>
-                            <input value={props.denomination || ""} onChange={(e) => props.denominationChanged(e.target.value)} placeholder="Ex: SICMA ET ASSOCIES"
+                            <input value={props.denomination || ""} onChange={(e) => { props.denominationChanged(e.target.value); effacerErreur("denomination"); }} placeholder="Ex: SICMA ET ASSOCIES"
                                 style={inputStyle(props.errors.denomination)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.denomination ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.denomination && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.denomination}</div>}
                         </Box>
                         <Box>
                             <label style={labelStyle}>Numéro d'agrément <FieldCheck valid={validReference} /></label>
-                            <input value={props.reference || ""} onChange={(e) => props.referenceChanged(e.target.value)} placeholder="Ex: RCCM RB/ABC/20 B 3215"
+                            <input value={props.reference || ""} onChange={(e) => { props.referenceChanged(e.target.value); effacerErreur("reference"); }} placeholder="Ex: RCCM RB/ABC/20 B 3215"
                                 style={inputStyle(props.errors.reference)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.reference ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.reference && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.reference}</div>}
                         </Box>
                         <Box>
                             <label style={labelStyle}>Adresse <FieldCheck valid={validAddress} /></label>
-                            <input value={props.address || ""} onChange={(e) => props.addressChanged(e.target.value)} placeholder="Ex: Calavi-Kpota, 2ème étage Immeuble Tankaya-Banque Atlantique"
+                            <input value={props.address || ""} onChange={(e) => { props.addressChanged(e.target.value); effacerErreur("address"); }} placeholder="Ex: Calavi-Kpota, 2ème étage Immeuble Tankaya-Banque Atlantique"
                                 style={inputStyle(props.errors.address)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.address ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.address && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.address}</div>}
                         </Box>
@@ -245,7 +249,7 @@ const Institution = (props) => {
                         <SectionTitle icon={ContactMailIcon} title="Coordonnées" subtitle="(email, téléphone, pays)" />
                         <Box>
                             <label style={labelStyle}>Adresse électronique <FieldCheck valid={validEmail} /></label>
-                            <input type="email" value={props.email || ""} onChange={(e) => props.emailChanged(e.target.value)} placeholder="Ex: info@sicmagroup.com"
+                            <input type="email" value={props.email || ""} onChange={(e) => { props.emailChanged(e.target.value); effacerErreur("email"); }} placeholder="Ex: info@sicmagroup.com"
                                 style={inputStyle(props.errors.email)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.email ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.email && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.email}</div>}
                         </Box>
@@ -256,7 +260,7 @@ const Institution = (props) => {
                                     <HelpOutlineIcon sx={{ fontSize: 14, color: "#94a3b8", verticalAlign: "middle" }} />
                                 </Tooltip>
                             </label>
-                            <input type="tel" value={props.phone || ""} onChange={(e) => props.phoneChanged(e.target.value)} placeholder="Ex: 22990909090"
+                            <input type="tel" value={props.phone || ""} onChange={(e) => { props.phoneChanged(e.target.value); effacerErreur("phone"); }} placeholder="Ex: 22990909090"
                                 style={inputStyle(props.errors.phone)} onFocus={(e) => { e.target.style.borderColor = "var(--gpr-primary, #005081)"; }} onBlur={(e) => { e.target.style.borderColor = props.errors.phone ? "#ef4444" : "#e2e8f0"; }} />
                             {props.errors.phone && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 3 }}>{props.errors.phone}</div>}
                         </Box>

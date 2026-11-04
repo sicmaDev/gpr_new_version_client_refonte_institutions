@@ -563,7 +563,8 @@ const Dashboard = (props) => {
   const hbt     = (user.posteDto.habilitations).split(',');
   const addR    = user.additionalRole;
   const isRA    = user.ra === true;
-  const isPilote = addR === 'PILOTE';
+  // Le directeur (DE) a la même vue d'ensemble que le pilote (même règle côté serveur).
+  const isPilote = addR === 'PILOTE' || addR === 'DE';
   const agenceName = user.servicePointDto?.libelle || 'Mon agence';
 
   // ── Activité récente (logs système) - vue admin H12 ────────────────────
@@ -571,9 +572,13 @@ const Dashboard = (props) => {
   const [exportHistory, setExportHistory] = useState([]);
   useEffect(() => {
     if (hbt.includes('H12')) {
-      logs().then(({ data }) => setRecentLogs((data.content || []).slice(0, 6)))
+      // Le serveur renvoie le journal du plus ancien au plus récent : on garde les 6 entrées les plus récentes.
+      const plusRecents = (liste) => [...(liste || [])]
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0) || (b.id || 0) - (a.id || 0))
+        .slice(0, 6);
+      logs().then(({ data }) => setRecentLogs(plusRecents(data.content)))
         .catch(() => setRecentLogs([]));
-      exportLogs().then(({ data }) => setExportHistory((data.content || []).slice(0, 6)))
+      exportLogs().then(({ data }) => setExportHistory(plusRecents(data.content)))
         .catch(() => setExportHistory([]));
     }
   }, []);
@@ -654,11 +659,14 @@ const Dashboard = (props) => {
   const inProgress  = Math.max(0, total - treated);
 
   // Donut segments - dérivés des KPI avec nouveaux statuts demandés
-  const valTraite = props.dashboard?.claimsTreat ?? 0;
-  const valAffecte = props.dashboard?.claimsAffected ?? 0;
-  const valSatisfait = props.dashboard?.claimsSatisfied ?? 0;
-  const valClasse = props.dashboard?.claimsClassed ?? props.dashboard?.claimsClosed ?? 0;
-  const valEnregistre = Math.max(0, total - valTraite - valAffecte - valSatisfait - valClasse);
+  // Un segment par statut, sur tous les dossiers du périmètre (le serveur compte réclamations, dénonciations et suggestions).
+  const parStatut = props.dashboard?.dossiersParStatut ?? {};
+  const nb = (...statuts) => statuts.reduce((s, k) => s + (parStatut[k] || 0), 0);
+  const valTraite = nb('TREAT');
+  const valAffecte = nb('AFFECTED');
+  const valSatisfait = nb('SATISFIED');
+  const valClasse = nb('CLASSED');
+  const valEnregistre = nb('SAVED');
 
   const donutSegments = [
     { label: 'Traité',     value: valTraite,     color: '#3b82f6' },
@@ -666,7 +674,12 @@ const Dashboard = (props) => {
     { label: 'Affecté',    value: valAffecte,    color: '#ef4444' },
     { label: 'Satisfait',  value: valSatisfait,  color: '#10b981' },
     { label: 'Classé',     value: valClasse,     color: '#f59e0b' },
-  ];
+    // Statuts affichés seulement s'il y a des dossiers, pour que la somme corresponde au total
+    { label: 'Partiellement satisfait', value: nb('PARTIAL_SATISFIED'), color: '#84cc16', optionnel: true },
+    { label: 'Insatisfait', value: nb('UNSATISFIED'),                  color: '#f43f5e', optionnel: true },
+    { label: 'Litige',      value: nb('LITIGATION'),                   color: '#7c3aed', optionnel: true },
+    { label: 'Autres',      value: Math.max(0, total - nb('TREAT', 'AFFECTED', 'SATISFIED', 'CLASSED', 'SAVED', 'PARTIAL_SATISFIED', 'UNSATISFIED', 'LITIGATION')), color: '#94a3b8', optionnel: true },
+  ].filter((s) => !s.optionnel || s.value > 0);
 
   // Gravity distribution - mapping Mineur, Moyen, Grave (en retard)
   const gMineur = content.filter(i => i.gravity === 'MINEUR').length;
@@ -691,7 +704,7 @@ const Dashboard = (props) => {
             ref={settingTauxRef}
             nrOfLevels={420}
             arcsLength={[0.3, 0.5, 0.2]}
-            arcWidth="0.2"
+            arcWidth={0.2}
             colors={['#EA4228', '#F5CD19', '#5BE12C']}
             textColor="#000000"
             percent={compte / 7}
@@ -727,7 +740,7 @@ const Dashboard = (props) => {
     { label: 'Langues',               route: '/configurations/langues',          data: langues,       IconComp: LanguageIcon,              color: '#FFC400' },
     { label: 'Points de services',    route: '/configurations/pointsServices',    data: ps,            IconComp: AddBusinessIcon,           color: '#5243AA' },
     { label: 'Postes',                route: '/configurations/postes',            data: postes,        IconComp: WorkIcon,                  color: '#666666' },
-    { label: 'Utilisateurs',          route: '/configurations/utilisateurs',      data: utilisateurs,  IconComp: PersonOutlineOutlinedIcon, color: '#253858' },
+    { label: 'Utilisateurs',          route: '/configurations/utilisateurs',      data: (Array.isArray(utilisateurs) ? utilisateurs : []).filter((u) => !u.deleted),  IconComp: PersonOutlineOutlinedIcon, color: '#253858' },
     { label: 'Supports de collectes', route: '/configurations/supportsCollectes', data: supports,      IconComp: RecyclingIcon,             color: '#059db1' },
     { label: 'Objets de réclamations',route: '/configurations/objets',            data: objets,        IconComp: DataObjectIcon,            color: '#0052CC' },
     { label: 'Produits / Services',   route: '/configurations/produits',          data: produits,      IconComp: CategoryIcon,              color: '#00B8D9' },
@@ -766,6 +779,41 @@ const Dashboard = (props) => {
             </div>
           </div>
           <AgenceChips agencesStats={agencesStats} />
+        </div>
+      )}
+
+      {/* Agent simple : ses dossiers par agence (il peut en avoir enregistré pour une autre agence que la sienne) */}
+      {!isRA && !isPilote && !loading && (props.dashboard?.repartitionAgent || []).length > 0 && (
+        <div style={{
+          padding: '12px 18px', marginBottom: 20, background: '#ffffff',
+          border: '1px solid #e2e8f0', borderRadius: 12, borderLeft: '4px solid var(--gpr-primary, #005081)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <InfoOutlinedIcon style={{ color: 'var(--gpr-primary, #005081)', fontSize: 20 }} />
+            <div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a' }}>Vos dossiers par agence</div>
+              <div style={{ fontSize: 12.5, color: '#64748b', marginTop: 2 }}>
+                Plaintes (réclamations et dénonciations) et suggestions que vous avez enregistrées ou qui vous sont affectées, selon l'agence du dossier.
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {props.dashboard.repartitionAgent.map((a) => {
+              const plaintes = (a.reclamations || 0) + (a.denonciations || 0);
+              return (
+                <div key={a.agence} style={{
+                  padding: '6px 12px', borderRadius: 8, fontSize: 12.5,
+                  background: a.agenceActuelle ? '#eff6ff' : '#f8fafc',
+                  border: `1px solid ${a.agenceActuelle ? '#bfdbfe' : '#e2e8f0'}`, color: '#334155',
+                }}>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{a.agence}</span>
+                  <span style={{ color: '#64748b' }}>{a.agenceActuelle ? ' (votre agence)' : ' (autre agence)'}</span>
+                  {' · '}{plaintes} plainte{plaintes > 1 ? 's' : ''}
+                  {a.suggestions > 0 && ` · ${a.suggestions} suggestion${a.suggestions > 1 ? 's' : ''}`}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -1040,27 +1088,47 @@ const Dashboard = (props) => {
       </div>
 
       {/* ── Bannière quota de comptes utilisateurs (licence) ── */}
-      {!loading && (props.dashboard?.userQuotaPct ?? 0) >= 80 && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          padding: '12px 18px', marginBottom: 20,
-          background: '#fffbeb',
-          border: '1px solid #fde68a', borderRadius: 12,
-          borderLeft: '4px solid #d97706',
-        }}>
-          <div style={{ width: 36, height: 36, borderRadius: 8, background: '#d9770620', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <ReportProblemOutlinedIcon style={{ color: '#d97706', fontSize: 20 }} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#b45309' }}>
-              Quota de comptes utilisateurs bientôt atteint
+      {!loading && (props.dashboard?.userQuotaPct ?? 0) >= 80 && (() => {
+        const { userQuotaUsed: utilises, userQuotaTotal: total, userQuotaPct: pct } = props.dashboard;
+        const atteint = pct >= 100;
+        const couleur = atteint ? '#dc2626' : '#d97706';
+        const restants = Math.max(0, total - utilises);
+        return (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+            padding: '14px 18px', marginBottom: 20,
+            background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12,
+            boxShadow: '0 1px 3px rgba(15,23,42,.06)',
+          }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: atteint ? '#fee2e2' : '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <PersonOutlineOutlinedIcon style={{ color: couleur, fontSize: 22 }} />
             </div>
-            <div style={{ fontSize: 12.5, color: '#92400e', marginTop: 2 }}>
-              {props.dashboard.userQuotaUsed} / {props.dashboard.userQuotaTotal} comptes créés ({props.dashboard.userQuotaPct}% de votre licence). Contactez SICMA pour augmenter cette limite.
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a' }}>
+                  Comptes utilisateurs : quota {atteint ? 'atteint' : 'bientôt atteint'}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: couleur, whiteSpace: 'nowrap' }}>{utilises} / {total}</span>
+              </div>
+              <div style={{ height: 6, background: '#f1f5f9', borderRadius: 4, margin: '8px 0 6px', overflow: 'hidden' }}>
+                <div style={{ width: `${Math.min(pct, 100)}%`, height: '100%', background: couleur, borderRadius: 4 }} />
+              </div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>
+                {pct}% de votre licence utilisés. {atteint ? 'Aucun nouveau compte possible.' : `Il reste ${restants} compte${restants > 1 ? 's' : ''}.`}
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', flexShrink: 0 }}>
+              <a href="mailto:info@sicmagroup.com" style={{
+                display: 'inline-block', padding: '8px 14px', borderRadius: 8, fontSize: 12.5, fontWeight: 600, textDecoration: 'none',
+                ...(atteint ? { background: couleur, color: '#fff', border: `1px solid ${couleur}` } : { color: '#b45309', border: `1px solid ${couleur}` }),
+              }}>
+                Contactez SICMA
+              </a>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>info@sicmagroup.com</div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
@@ -1075,7 +1143,8 @@ const Dashboard = (props) => {
           iconBg={pendingConfigs.length > 0 ? '#fee2e2' : '#d1fae5'}
           loading={false}
         />
-        <StatCard value={utilisateurs.length}              label="Utilisateurs"          sub="comptes créés"  IconComp={PersonOutlineOutlinedIcon} iconColor="#0891b2"  iconBg="#ecfeff" loading={false} />
+        {/* La liste mémorisée contient tous les comptes après un passage sur la page Utilisateurs, seulement les actifs après la connexion : on compte les actifs. */}
+        <StatCard value={(Array.isArray(utilisateurs) ? utilisateurs : []).filter((u) => !u.deleted).length} label="Utilisateurs" sub="comptes actifs" IconComp={PersonOutlineOutlinedIcon} iconColor="#0891b2"  iconBg="#ecfeff" loading={false} />
       </div>
 
       {/* Section : Configuration / Paramètres métier & Performance du système */}
@@ -1228,7 +1297,7 @@ const Dashboard = (props) => {
         {/* Historique des exportations */}
         <div style={{ flex: '2 1 600px', display: 'flex' }}>
           <Card style={{ flex: 1 }}>
-            <CardHeader title="Historique des exportations" action={seeAll('/configurations/exportation')} />
+            <CardHeader title="Historique des exportations" action={seeAll('/configurations/exportations')} />
             {exportHistory.length === 0 ? (
               <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
                 Aucun export effectué

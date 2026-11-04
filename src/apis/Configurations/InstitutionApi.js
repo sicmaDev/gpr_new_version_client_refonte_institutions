@@ -38,7 +38,9 @@ export const ajout = async (data, props) => {
 
             saveItemToSessionStorage(response.data.content, "app-institution")
             saveItemToLocalStorage(response.data.content, "app-institution")
-            
+            // Le logo du menu suit tout de suite celui de l'institution
+            window.dispatchEvent(new CustomEvent('gpr-auth-loaded', { detail: { logo: response.data.content?.logo || data.logo } }));
+
             props.etatChanged(false)
 
            

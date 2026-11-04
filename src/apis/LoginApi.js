@@ -70,12 +70,11 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 const _u = response.data.response.content.user;
                 const _modules = _s.modules || [];
 
-                // Couleurs + logo institution si module appearance actif
-                if (_modules.includes('appearance') && _s.appearance?.sidebarColor) {
-                    window.dispatchEvent(new CustomEvent('gpr-auth-loaded', {
-                        detail: { sidebarColor: _s.appearance.sidebarColor, topbarColor: _s.appearance.topbarColor, logo: _s.appearance.logo || null }
-                    }));
-                }
+                // Couleurs si l'option apparence est incluse ; logo toujours depuis l'institution
+                const _couleurs = _s.appearanceVisible !== false && _s.appearance?.sidebarColor
+                    ? { sidebarColor: _s.appearance.sidebarColor, topbarColor: _s.appearance.topbarColor }
+                    : { couleursParDefaut: _s.appearanceVisible === false };
+                window.dispatchEvent(new CustomEvent('gpr-auth-loaded', { detail: { ..._couleurs, logo: _s.institution?.logo || null } }));
 
                 // sessionStorage
                 _s.institution ? saveItemToSessionStorage(_s.institution, 'app-institution') : saveItemToSessionStorage([], 'app-institution');

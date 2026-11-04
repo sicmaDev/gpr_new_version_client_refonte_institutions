@@ -72,6 +72,9 @@ export const isValidPhone = (phoneValue) => {
     const international = phoneValue.startsWith("00")
         ? "+" + phoneValue.slice(2)
         : (phoneValue.startsWith("+") ? phoneValue : "+" + phoneValue);
+    // Nouveau format béninois (depuis fin 2024) : +229 01 suivi de 8 chiffres. La version installée de libphonenumber-js (1.11.7)
+    // ne le connaît pas encore et refusait tous ces numéros (impossible de créer ou modifier un utilisateur béninois).
+    if (/^\+22901\d{8}$/.test(international.replace(/[\s-]/g, ""))) return true;
     try {
         return isPossiblePhoneNumber(international);
     } catch (e) {

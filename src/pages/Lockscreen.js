@@ -76,9 +76,16 @@ const Lockscreen = (props) => {
     };
 
     const logout = () => {
+        // Vraie déconnexion : sans vider la session, l'application se reconnectait aussitôt (marque « logged » encore présente)
+        // et le bouton « Se déconnecter » déverrouillait l'écran sans mot de passe.
+        sessionStorage.clear();
+        localStorage.removeItem("token");
         localStorage.removeItem("isLocked");
         props.setUnlocked();
         props.isAuth(false);
+        window.location.hash = "#/login";
+        // Rechargement complet : vide les données du compte gardées en mémoire.
+        window.location.reload();
     };
 
     const parseUserInfo = () => {

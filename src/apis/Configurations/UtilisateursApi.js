@@ -96,20 +96,20 @@ export const ajout = async (data, props) => {
         data: data
     };
 
-    await axios(config)
+    // Renvoie true si le compte a été créé, false sinon (la page garde alors la saisie)
+    return await axios(config)
         .then(function (response) {
             props.etatChanged(false)
             if (response.data.response.status) {
-                saveItemToSessionStorage(response.data.content, "app-users")
-                saveItemToLocalStorage(response.data.content, "app-users")
-
-                // console.log("responseadduser",response)
+                // La liste « app-users » est rechargée par all() ci-dessous (la réponse ne contient pas la liste).
 
                 notify("Bravo - Utilisateur ajouté", "success");
 
                 all(props)
+                return true;
             } else {
                 notify(response.data.response.content.message, "error");
+                return false;
             }
 
 
@@ -123,6 +123,7 @@ export const ajout = async (data, props) => {
             } else {
                 notify("Erreur - Veuillez réessayer!", "error");
             }
+            return false;
         });
 }
 
@@ -139,26 +140,28 @@ export const modification = async (data, props) => {
         data: data
     };
 
-    await axios(config)
+    // Renvoie true si la modification est enregistrée, false sinon (la fenêtre reste alors ouverte)
+    return await axios(config)
         .then(function (response) {
-            saveItemToSessionStorage(response.data.content, "app-users")
-            saveItemToLocalStorage(response.data.content, "app-users")
-
+            // La réponse ne contient que l'utilisateur modifié : la liste « app-users » est rechargée par all() ci-dessous
+            // (l'écraser ici avec un seul utilisateur faisait planter la page Utilisateurs).
             props.etatChanged(false)
 
             notify("Bravo - Utilisateur modifié", "success");
 
             all(props)
+            return true;
 
         })
         .catch(function (error) {
 
             props.etatChanged(false)
-            if (error.response.data.content !== "") {
+            if (error?.response?.data?.content?.message) {
                 notify(error.response.data.content.message, "error");
             } else {
                 notify("Erreur - Veuillez réessayer!", "error");
             }
+            return false;
         });
 
 }
@@ -176,10 +179,7 @@ export const suppression = async (data, props) => {
 
     await axios(config)
         .then(function (response) {
-
-            saveItemToSessionStorage(response.data.content, "app-users")
-            saveItemToLocalStorage(response.data.content, "app-users")
-
+            // La réponse vaut « true » : la liste « app-users » est rechargée par all() ci-dessous.
             props.etat3Changed(false)
             notify("Bravo - Utilisateur supprimé", "success");
             all(props)

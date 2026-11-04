@@ -60,6 +60,9 @@ const ThemeColorsContext = createContext({ colors: DEFAULT_COLORS, setColors: ()
 
 const readAppearanceFromStorage = () => {
     try {
+        // Option apparence non incluse : couleurs par défaut, même si d'anciennes couleurs sont gardées
+        const visible = sessionStorage.getItem('app-appearance-visible') || localStorage.getItem('app-appearance-visible');
+        if (visible && JSON.parse(visible) === false) return DEFAULT_COLORS;
         const raw = sessionStorage.getItem('app-appearance') || localStorage.getItem('app-appearance');
         if (raw) {
             let a = JSON.parse(raw);
@@ -84,7 +87,13 @@ export const ThemeColorsProvider = ({ children }) => {
     // Listen for auth data loaded (login / token check) - update colors and logo from DB
     useEffect(() => {
         const handler = (e) => {
-            const { sidebarColor, topbarColor, logo: newLogo } = e.detail || {};
+            const { sidebarColor, topbarColor, logo: newLogo, couleursParDefaut } = e.detail || {};
+            // Option apparence retirée : on revient aux couleurs par défaut
+            if (couleursParDefaut) {
+                setColorsState(DEFAULT_COLORS);
+                injectCssVars(DEFAULT_COLORS);
+                try { localStorage.setItem(LS_KEY, DEFAULT_COLOR); } catch {}
+            }
             if (sidebarColor) {
                 const next = { sidebarColor, topbarColor: topbarColor || sidebarColor };
                 setColorsState(next);
