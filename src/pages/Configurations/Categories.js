@@ -89,9 +89,11 @@ const Categories = (props) => {
         setAddLoading(true);
         try {
             for (const item of items) {
-                await ajout({ libelle: item.libelle, description: item.description }, props);
+                const ok = await ajout({ libelle: item.libelle, description: item.description }, props);
+                if (!ok) return false;
             }
-        } finally { setAddLoading(false); setAddModalOpen(false); }
+            setAddModalOpen(false);
+        } finally { setAddLoading(false); }
     };
 
     const handleEditClick = (sp) => {
@@ -106,7 +108,7 @@ const Categories = (props) => {
         setEditLoading(true);
         props.etat2Changed(true);
         modification({ id: props.id, libelle: editForm.libelle, description: editForm.description }, props)
-            .then(() => { setEditModalOpen(false); clearComponentState(); })
+            .then((ok) => { if (!ok) return; setEditModalOpen(false); clearComponentState(); })
             .finally(() => { setEditLoading(false); props.etat2Changed(false); });
     };
 

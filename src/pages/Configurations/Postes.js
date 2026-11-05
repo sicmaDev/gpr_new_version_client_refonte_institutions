@@ -187,9 +187,11 @@ const Postes = (props) => {
         try {
             for (const item of items) {
                 const habs = Array.isArray(item.habilitations) ? item.habilitations.join(',') : (item.habilitations || "");
-                await ajout({ libelle: item.libelle, description: item.description, habilitations: habs }, props);
+                const ok = await ajout({ libelle: item.libelle, description: item.description, habilitations: habs }, props);
+                if (!ok) return false;
             }
-        } finally { setAddLoading(false); setAddModalOpen(false); }
+            setAddModalOpen(false);
+        } finally { setAddLoading(false); }
     };
 
     const handleEditClick = (sp) => {
@@ -204,7 +206,7 @@ const Postes = (props) => {
         if (Object.keys(errs).length > 0) { setEditErrors(errs); return; }
         setEditLoading(true); props.etat2Changed(true);
         modification({ id: props.id, libelle: editForm.libelle, description: editForm.description, habilitations: editForm.habilitations.join(',') }, props)
-            .then(() => { setEditModalOpen(false); clearComponentState(); })
+            .then((ok) => { if (!ok) return; setEditModalOpen(false); clearComponentState(); })
             .finally(() => { setEditLoading(false); props.etat2Changed(false); });
     };
     const handleDelete = () => {

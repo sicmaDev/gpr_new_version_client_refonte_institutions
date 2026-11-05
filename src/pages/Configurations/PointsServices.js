@@ -391,11 +391,12 @@ const PointsServices = (props) => {
                     description: item.description,
                     direction_id: item.direction_id || "",
                 };
-                await ajout(payload, props);
+                const ok = await ajout(payload, props);
+                if (!ok) return false;
             }
+            setAddModalOpen(false);
         } finally {
             setAddLoading(false);
-            setAddModalOpen(false);
         }
     };
 
@@ -435,10 +436,12 @@ const PointsServices = (props) => {
         props.etat2Changed(true);
         const idPointService = props.id;
         modification(item, props)
-            .then(() => enregistrerLocalisationApi(idPointService, localisationPourServeur(localisation))
+            .then((ok) => !ok ? false : enregistrerLocalisationApi(idPointService, localisationPourServeur(localisation))
                 .then((r) => { if (!r?.status) notify(typeof r?.content === "string" ? r.content : "La localisation n'a pas pu être enregistrée.", "error"); })
-                .catch(() => notify("La localisation n'a pas pu être enregistrée.", "error")))
-            .then(() => {
+                .catch(() => notify("La localisation n'a pas pu être enregistrée.", "error"))
+                .then(() => true))
+            .then((ok) => {
+                if (!ok) return;
                 setEditModalOpen(false);
                 clearComponentState();
             })

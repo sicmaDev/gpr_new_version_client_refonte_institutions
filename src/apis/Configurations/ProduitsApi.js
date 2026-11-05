@@ -51,7 +51,7 @@ export const ajout = async (data, props) => {
         data: data
     };
 
-    await axios(config)
+    return await axios(config)
         .then(function (response) {
             saveItemToSessionStorage(response.data.content, "app-produits")
             saveItemToLocalStorage(response.data.content, "app-produits")
@@ -62,7 +62,7 @@ export const ajout = async (data, props) => {
             notify("Bravo - Produit ajouté", "success");
            
            liste(props)
-
+            return true;
         })
         .catch(function (error) {
             props.etatChanged(false)
@@ -71,6 +71,7 @@ export const ajout = async (data, props) => {
             } else {
                 notify("Erreur - Veuillez réessayer!", "error");
             }
+            return false;
         });
 
 }
@@ -88,7 +89,7 @@ export const modification = async (data, props) => {
         data: data
     };
 
-    await axios(config)
+    return await axios(config)
         .then(function (response) {
             saveItemToSessionStorage(response.data.content, "app-produits")
             saveItemToLocalStorage(response.data.content, "app-produits")
@@ -98,7 +99,7 @@ export const modification = async (data, props) => {
             notify("Bravo - Produit modifié", "success");
            
            liste(props)
-
+            return true;
         })
         .catch(function (error) {
             props.etat2Changed(false)
@@ -107,6 +108,7 @@ export const modification = async (data, props) => {
             } else {
                 notify("Erreur - Veuillez réessayer!", "error");
             }
+            return false;
         });
 
 }

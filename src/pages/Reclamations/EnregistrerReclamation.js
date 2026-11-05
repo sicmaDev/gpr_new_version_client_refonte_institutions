@@ -166,12 +166,36 @@ const styles = {
 const MAX_FILES_COUNT = 5;
 const MAX_AUDIOS_COUNT = 3;
 const MAX_DOC_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo (documents/images)
-const MAX_AV_FILE_SIZE = 20 * 1024 * 1024; // 20 Mo (audio/vidéo)
+const MAX_AV_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo (audio/vidéo)
 const MAX_TOTAL_ATTACHMENTS_SIZE = 100 * 1024 * 1024; // 100 Mo cumulés
 
 const isAudioOrVideoFile = (file) => !!file.type && (file.type.startsWith("audio/") || file.type.startsWith("video/"));
 const sumFilesSize = (arr) => Array.from(arr || []).reduce((s, f) => s + (f.size || 0), 0);
+const EMAIL_VALIDE = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+const messageDateReception = (date) => (date ? "La date de réception ne peut pas dépasser la date du jour" : "Champ incorrect");
+const TYPE_AUTORISE = /^(application\/pdf|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(spreadsheetml\.sheet|wordprocessingml\.document)|image\/(jpeg|png)|audio\/.+|video\/.+)$/i;
+const EXTENSION_AUTORISEE = /\.(pdf|docx?|xlsx?|jpe?g|png|ogg|mp3|wav|m4a|aac|opus|mp4|webm|mov|avi)$/i;
 const toMB = (bytes) => Math.round(bytes / (1024 * 1024));
+
+// Lecteur d'un audio déjà enregistré sur le serveur : le fichier est téléchargé puis lu dans le navigateur.
+const AudioSauvegarde = ({ audio, style }) => {
+  const [url, setUrl] = useState(null);
+  useEffect(() => {
+    let annule = false;
+    let lien = null;
+    downloadAudioApi(audio.id, audio.name).then((blob) => {
+      if (blob && !annule) {
+        lien = URL.createObjectURL(blob);
+        setUrl(lien);
+      }
+    });
+    return () => {
+      annule = true;
+      if (lien) URL.revokeObjectURL(lien);
+    };
+  }, [audio.id]);
+  return url ? <audio controls src={url} style={style} /> : <span style={{ flex: 1, fontSize: 12, color: "#94a3b8" }}>Chargement de l'audio…</span>;
+};
 
 // Valide la liste finale des fichiers (après ajout) + les audios déjà enregistrés.
 // Retourne true si OK, sinon affiche un message et retourne false.
@@ -181,6 +205,10 @@ const checkFilesConstraints = (finalFilesArr, audioRecordingsArr) => {
     return false;
   }
   for (const file of finalFilesArr) {
+    if (!TYPE_AUTORISE.test(file.type || "") && !EXTENSION_AUTORISEE.test(file.name || "")) {
+      window.alert(`Le fichier "${file.name}" n'est pas d'un type autorisé (PDF, Word, Excel, image, audio ou vidéo).`);
+      return false;
+    }
     const maxSize = isAudioOrVideoFile(file) ? MAX_AV_FILE_SIZE : MAX_DOC_FILE_SIZE;
     if (file.size > maxSize) {
       window.alert(`Le fichier "${file.name}" dépasse la taille maximale autorisée (${toMB(maxSize)} Mo).`);
@@ -217,6 +245,8 @@ const EnregistrerReclamation = (props) => {
   const [open2, setOpen2] = React.useState(false);
   const [value, setValue] = React.useState("");
   const [currentStep, setCurrentStep] = useState(0);
+  // Annuler sur la fenêtre de doublon : ne pas passer à l'étape suivante quand la vérification se termine
+  const doublonAnnuleRef = useRef(false);
   const [activeTab, setActiveTab] = useState("new");
   const [isDragging, setIsDragging] = useState(false);
   const history = useHistory();
@@ -698,6 +728,10 @@ const EnregistrerReclamation = (props) => {
       errors["language"] = "Champ incorrect";
       if (!firstErrorFieldRef) firstErrorFieldRef = languageRef;
     }
+    if (props.email && !EMAIL_VALIDE.test(props.email)) {
+      isValid = false;
+      errors["email"] = "Adresse email invalide";
+    }
     // if ((props.code === "" || props.code === undefined || props.code === null)) {
     //     isValid = false;
     //     errors["code"] = "Champ incorrect";
@@ -709,7 +743,7 @@ const EnregistrerReclamation = (props) => {
       !isValidDate(props.recorded_at)
     ) {
       isValid = false;
-      errors["recorded_at"] = "Champ incorrect";
+      errors["recorded_at"] = messageDateReception(props.recorded_at);
       if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
     }
     if (
@@ -1704,6 +1738,9 @@ const EnregistrerReclamation = (props) => {
       isValid = false; errors["language"] = "Champ incorrect";
       if (!firstErrorFieldRef) firstErrorFieldRef = languageRef;
     }
+    if (props.email && !EMAIL_VALIDE.test(props.email)) {
+      isValid = false; errors["email"] = "Adresse email invalide";
+    }
     props.claimRecordErrors(errors);
     if (!isValid) scrollToFirstError(firstErrorFieldRef);
     return isValid;
@@ -1715,7 +1752,7 @@ const EnregistrerReclamation = (props) => {
     let firstErrorFieldRef = null;
     errors = {};
     if (!props.recorded_at || !isValidDate(props.recorded_at)) {
-      isValid = false; errors["recorded_at"] = "Champ incorrect";
+      isValid = false; errors["recorded_at"] = messageDateReception(props.recorded_at);
       if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
     }
     if (!props.collect) {
@@ -1760,7 +1797,9 @@ const EnregistrerReclamation = (props) => {
         // téléphone) avant de passer à l'étape suivante — sinon, sur une requête
         // lente, la modale de doublon apparaît en retard alors que l'agent est
         // déjà en train de remplir l'étape 2.
+        doublonAnnuleRef.current = false;
         await handleBlur();
+        if (doublonAnnuleRef.current) return;
       }
       if (currentStep === 1 && !validateStep1()) return;
       setCurrentStep(s => s + 1);
@@ -2032,7 +2071,7 @@ const EnregistrerReclamation = (props) => {
           {/* Actions */}
           <DialogActions style={{ padding: '12px 20px 20px', gap: 10, borderTop: '1px solid #f1f5f9' }}>
             <Button
-              onClick={() => { props.setModalVisible(false); clearComponentState(); setCurrentStep(0); }}
+              onClick={() => { doublonAnnuleRef.current = true; props.setModalVisible(false); clearComponentState(); setCurrentStep(0); }}
               variant="outlined"
               sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b', fontWeight: 600, px: 3 }}
             >
@@ -2153,6 +2192,7 @@ const EnregistrerReclamation = (props) => {
                 todayButton="Aujourd'hui"
                 selected={props.recorded_at_dp}
                 onChange={(date) => handleDatePicker(date, props)}
+                maxDate={new Date()}
                 dateFormat="dd-MM-yyyy HH:mm"
                 locale="fr"
               />
@@ -2281,9 +2321,7 @@ const EnregistrerReclamation = (props) => {
                 {props.selectedItemAudio?.map((audioItem, i) => (
                   <div key={"saved-" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
                     <MicIcon style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
-                    <audio controls style={{ flex: 1, height: 30 }}>
-                      <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
-                    </audio>
+                    <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
                     <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
                       title="Supprimer" style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
                   </div>
@@ -2565,9 +2603,7 @@ const EnregistrerReclamation = (props) => {
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Sauvegardé {i + 1}</div>
-                        <audio controls style={{ width: "100%", height: 30 }}>
-                          <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
-                        </audio>
+                        <AudioSauvegarde audio={audioItem} style={{ width: "100%", height: 30 }} />
                       </div>
                       <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
                         style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, flexShrink: 0 }}>×</button>
@@ -2654,9 +2690,7 @@ const EnregistrerReclamation = (props) => {
                   {props.selectedItemAudio?.map((audioItem, i) => (
                     <div key={"s" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#f8fafc", borderRadius: 8, marginBottom: 6, border: "1px solid #e2e8f0" }}>
                       <MicIcon style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
-                      <audio controls style={{ flex: 1, height: 30 }}>
-                        <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
-                      </audio>
+                      <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
                     </div>
                   ))}
                 </div>
