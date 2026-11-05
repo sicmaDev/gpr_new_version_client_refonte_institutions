@@ -32,6 +32,8 @@ import { licenseInfo } from '../apis/LoginApi';
 import { useThemeColors } from '../context/ThemeColorsContext';
 import useOnlineStatus from '../hooks/useOnlineStatus';
 
+const LARGEUR_MOBILE = "(max-width: 992.99px)";
+
 
 const drawerWidth = 250;
 
@@ -127,6 +129,15 @@ const getSidebarLuminance = (hex) => {
 };
 
 export const Haut = (props) => {
+  // Une seule version de la page à la fois : les deux montées ensemble chargeaient toutes les données en double
+  const [estMobile, setEstMobile] = useState(() => window.matchMedia(LARGEUR_MOBILE).matches);
+  useEffect(() => {
+    const media = window.matchMedia(LARGEUR_MOBILE);
+    const auChangement = (e) => setEstMobile(e.matches);
+    media.addEventListener("change", auChangement);
+    return () => media.removeEventListener("change", auChangement);
+  }, []);
+
   // const [actif, setActif] = useState();
   const [message, setMessage] = useState();
   const isOnline = useOnlineStatus();
@@ -222,6 +233,7 @@ export const Haut = (props) => {
   
   return (
     <>
+      {estMobile && (
       <div className="show-on-med-and-down hide-on-large-only"> 
         <ThemeProvider theme={defaultTheme} >
         
@@ -433,8 +445,9 @@ export const Haut = (props) => {
       
         </ThemeProvider>
       </div>
-        
+      )}
 
+      {!estMobile && (
       <div className="hide-on-med-and-down show-on-large-only" style={{overflowY: "hidden"}}>
         <ThemeProvider theme={defaultTheme}   >
           
@@ -666,6 +679,7 @@ export const Haut = (props) => {
         </ThemeProvider>
         
       </div>
+      )}
 
     </>
 
