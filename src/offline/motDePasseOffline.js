@@ -25,13 +25,14 @@ const lire = () => {
 };
 
 export const memoriserMotDePasse = async (email, motDePasse) => {
+  // Une ancienne empreinte ne doit pas rester valable, ni pendant le calcul ni s'il échoue.
+  localStorage.removeItem(CLE);
   try {
     const sel = crypto.getRandomValues(new Uint8Array(16));
     const empreinte = await calculer(motDePasse, sel, ITERATIONS);
     localStorage.setItem(CLE, JSON.stringify({ email: normaliser(email), sel: enBase64(sel), iterations: ITERATIONS, empreinte }));
   } catch (e) {
-    // Sans empreinte à jour, le mode Offline reste refusé : une ancienne empreinte ne doit pas rester valable.
-    localStorage.removeItem(CLE);
+    // Sans empreinte, le mode Offline reste refusé jusqu'à la prochaine connexion en ligne.
   }
 };
 

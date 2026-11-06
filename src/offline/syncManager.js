@@ -137,7 +137,24 @@ const syncOneEntry = async (entry, onSyncingStart) => {
 // échec), pour permettre à l'UI d'afficher une progression réelle plutôt que
 // d'attendre la fin de tout le lot (cf. retour utilisateur : "on ne voit pas
 // ce qui se synchronise").
-export const runSync = async (onItemDone) => {
+//
+// La page Synchronisation lance l'envoi à son ouverture et peut s'ouvrir deux fois juste après la
+// connexion : un appel fait pendant un envoi en cours rejoint cet envoi au lieu d'en lancer un second.
+let envoiEnCours = null;
+const suiveurs = new Set();
+
+export const runSync = (onItemDone) => {
+  if (onItemDone) suiveurs.add(onItemDone);
+  if (!envoiEnCours) {
+    envoiEnCours = envoyerLaFile((...etat) => suiveurs.forEach((suivre) => suivre(...etat))).finally(() => {
+      envoiEnCours = null;
+      suiveurs.clear();
+    });
+  }
+  return envoiEnCours;
+};
+
+const envoyerLaFile = async (onItemDone) => {
   const reachable = await isServerReachable();
   if (!reachable) {
     return { ran: false, reason: "OFFLINE" };

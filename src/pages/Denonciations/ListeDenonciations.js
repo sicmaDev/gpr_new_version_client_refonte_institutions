@@ -352,6 +352,7 @@ const ListeDenonciations = (props) => {
           props.assignedAtChanged(data.affectedAt ?? "");
           props.assignedByChanged(data.treatmentAffectedBy?.firstAndLastName ?? "");
           props.handledByChanged(data.treatmentAffectedTo?.firstAndLastName ?? "");
+          props.sessionChanged(data.session ?? "");
           props.selectedItemChanged(data);
           props.extrasChanged(data.extras ?? []);
           props.convertedByChanged(data.convertedBy ? data.convertedBy.firstAndLastName : "");
@@ -2572,6 +2573,19 @@ const ListeDenonciations = (props) => {
                 <button onClick={() => props.showModalHistoriqueChanged(true)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "#475569" }}>
                   <History style={{ fontSize: 15 }} /> Historique
                 </button>
+              )}
+              {props.session !== "" && (addR === "PILOTE" || addR === "DE" || hbt.includes("H6")) && (
+                <LoadingButton
+                  onClick={() => mode === 1 ? printToWord() : notify("Passez en mode Online pour télécharger le PV", "info")}
+                  loading={props.etat3}
+                  loadingPosition="end"
+                  endIcon={<SaveIcon />}
+                  size="small"
+                  variant="outlined"
+                  sx={{ textTransform: "none", borderRadius: 2, fontSize: 12, borderColor: "var(--gpr-primary, #005081)", color: "var(--gpr-primary, #005081)" }}
+                >
+                  <span>PV de session</span>
+                </LoadingButton>
               )}
             </>
           }
