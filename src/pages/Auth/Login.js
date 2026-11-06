@@ -122,8 +122,7 @@ const Login = (props) => {
         setOfflineUser(user);
         // Un seul utilisateur est utilisable hors-ligne sur cet appareil (le
         // dernier connecté en ligne) : autant pré-remplir l'email, ça évite
-        // une erreur de frappe qui bloquerait la connexion sans raison
-        // apparente (LoginApiOffline ne compare que l'email).
+        // une erreur de frappe qui bloquerait la connexion sans raison apparente.
         props.emailChanged(user.email);
       }
     } else {

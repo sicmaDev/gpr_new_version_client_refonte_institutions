@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { LazyChartWrapper } from "../LazyChartWrapper";
-import { anneau, colonnes, courbes, empile100, progression } from "./graphiquesRapport";
+import { anneau, colonnes, colonnesGroupees, courbes, empile100, progression } from "./graphiquesRapport";
 import { CarteChaleur } from "./CarteChaleur";
 
 // Un graphique du rapport Global avec le rendu validé (proposition 1). Les données reçues sont celles que la page
@@ -14,6 +14,7 @@ export const construireRendu = (rendu, data, reglages = {}) => {
     case "empile": return empile100(data);
     case "courbes": return courbes(data, reglages);
     case "colonnes": return colonnes(data, reglages);
+    case "colonnesGroupees": return colonnesGroupees(data, reglages);
     default: return null;
   }
 };

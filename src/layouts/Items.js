@@ -206,6 +206,7 @@ export const Items = (props) => {
   const backupPaths = ['/configurations/exportations', '/configurations/logs', '/configurations/sla'];
   const inBackup = (p) => backupPaths.some(bp => p.startsWith(bp));
 
+  const [openDashboard, setOpenDashboard] = React.useState(true);
   const [open, setOpen] = React.useState(() => pathname.startsWith('/reclamations'));
   const [open1, setOpen1] = React.useState(() => pathname.startsWith('/denonciations'));
   const [open2, setOpen2] = React.useState(() => pathname.startsWith('/suggestions'));
@@ -436,14 +437,38 @@ export const Items = (props) => {
     <React.Fragment>
 
       {/* ── Dashboard ── */}
-      {showDashboard && (
+      {showDashboard && (addR === 'PILOTE' && hbt.includes('H12') ? (
+        <>
+          <ListItemButton onClick={() => setOpenDashboard(!openDashboard)} sx={hSx('/dashboard')}>
+            <ListItemIcon><DashboardIcon style={col(isActive('/dashboard'))} /></ListItemIcon>
+            <ListItemText primary="Dashboard" />
+            <Chevron open={openDashboard} color={chevronColor} />
+          </ListItemButton>
+          <Collapse in={openDashboard} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              <NavLink to="/dashboard" style={link}>
+                <ListItemButton sx={sSx(isActive('/dashboard/informaticien') ? '/aucun' : '/dashboard')} className="lib">
+                  <ListItemIcon>{si(DashboardIcon, !isActive('/dashboard/informaticien') && isActive('/dashboard'))}</ListItemIcon>
+                  <ListItemText primary="Opérationnel" />
+                </ListItemButton>
+              </NavLink>
+              <NavLink to="/dashboard/informaticien" style={link}>
+                <ListItemButton sx={sSx('/dashboard/informaticien')} className="lib">
+                  <ListItemIcon>{si(DashboardIcon, isActive('/dashboard/informaticien'))}</ListItemIcon>
+                  <ListItemText primary="Informaticien" />
+                </ListItemButton>
+              </NavLink>
+            </List>
+          </Collapse>
+        </>
+      ) : (
         <NavLink to="/dashboard" style={link}>
           <ListItemButton sx={iSx('/dashboard')} className="lib">
             <ListItemIcon><DashboardIcon style={col(isActive('/dashboard'))} /></ListItemIcon>
             <ListItemText primary="Dashboard" />
           </ListItemButton>
         </NavLink>
-      )}
+      ))}
 
       {/* ── Suivi des délais (SLA) : ceux qui voient les plaintes, dans leur périmètre ── */}
       {showSla && (

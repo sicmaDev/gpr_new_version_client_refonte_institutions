@@ -189,6 +189,28 @@ export function courbes(data, { pct = false, couleurs = null } = {}) {
   };
 }
 
+// Colonnes côte à côte par année, une couleur par type, valeur au-dessus (glissement annuel).
+export function colonnesGroupees(data, { couleurs = null } = {}) {
+  const series = data?.datasets || [];
+  const couleurDe = (s, i) => (couleurs && couleurs(s.label, i)) || pleine(Array.isArray(s.backgroundColor) ? s.backgroundColor[0] : s.backgroundColor || s.borderColor) || "#64748B";
+  return {
+    type: "bar",
+    hauteur: 380,
+    data: { labels: data?.labels || [], datasets: series.map((s, i) => ({
+      label: s.label, data: (s.data || []).map(nombre), backgroundColor: couleurDe(s, i), borderRadius: 4, borderSkipped: false, maxBarThickness: 48,
+    })) },
+    options: base({
+      layout: { padding: { top: 18 } },
+      plugins: { ...sansEtiquettesParDefaut, legend: legende("bottom"), valeursRapport: { mode: "dessus" },
+        tooltip: { ...infobulle, mode: "index", intersect: false } },
+      scales: {
+        x: { grid: { display: false, drawBorder: false }, ticks: { color: TEXTE.axe } },
+        y: { beginAtZero: true, grid: { color: TEXTE.grille, drawBorder: false }, ticks: { color: TEXTE.axe } },
+      },
+    }),
+  };
+}
+
 // Colonnes 0–100 % sur rail gris (respect du délai par mois), valeur au-dessus, couleur de section.
 export function colonnes(data, { couleur }) {
   const ds = data?.datasets?.[0] || {}, vals = (ds.data || []).map(nombre), labels = data?.labels || [];

@@ -1074,7 +1074,11 @@ const Dashboard = (props) => {
   );
 
   // ══════════════════════════════════════════════════════════════════════════
-  return hbt.includes('H12') ? (
+  // Un pilote qui a H12 a les deux tableaux de bord : l'opérationnel par défaut, l'informaticien dans son sous-menu.
+  const vueInformaticien = hbt.includes('H12')
+    && (addR !== 'PILOTE' || props.location?.pathname === '/dashboard/informaticien');
+
+  return vueInformaticien ? (
 
     /* ════════════════════════════ VUE ADMINISTRATION ════════════════════ */
     <div className={pageClass} style={page}>

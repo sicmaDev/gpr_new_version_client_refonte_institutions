@@ -3574,7 +3574,7 @@ const ListeDenonciations = (props) => {
                               >
                                 Détails du traitement
                                 {props.session !== "" &&
-                                  (addR === "PILOTE" || addR === "DE") ? (
+                                  (addR === "PILOTE" || addR === "DE" || hbt.includes("H6")) ? (
                                   <LoadingButton
                                     onClick={(e) => {
                                       if (mode === 1) {

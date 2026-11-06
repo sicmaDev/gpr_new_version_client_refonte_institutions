@@ -1,4 +1,6 @@
-﻿import axios from "axios";
+﻿import { countPendingOrFailed } from "../offline/syncQueue";
+import { aUneEmpreinte, memoriserMotDePasse, verifierMotDePasse } from "../offline/motDePasseOffline";
+import axios from "axios";
 import { notify } from "../Utils/alert"
 import { loadItemFromLocalStorage, loadItemFromSessionStorage, saveItemToLocalStorage, saveItemToSessionStorage, today, loadArrayFromLocalStorage } from "../Utils/utils";
 import { HOST } from "../Utils/globals";
@@ -43,6 +45,7 @@ export const LoginApi = (credentials, props, isLocked = false) => {
                 return;
             }
             if (response.data.response.status) {
+                memoriserMotDePasse(credentials.email, credentials.password);
 
                 props.authenticate()
                 if (isLocked) {
@@ -133,14 +136,13 @@ export const LoginApi = (credentials, props, isLocked = false) => {
             // Seuls les profils qui enregistrent (droit H1, comme le menu Synchronisation) ont des saisies hors ligne à envoyer.
             const loggedUser = response.data?.response?.content?.user;
             const canSync = String(loggedUser?.posteDto?.habilitations || "").split(",").includes("H1");
-            if (response.data.response.status && !isLocked && canSync) {
-                // La synchro doit se déclencher au moment où l'utilisateur se
-                // CONNECTE en ligne (pas sur un simple événement "online" du
-                // navigateur, ni sur un déverrouillage d'écran) : on l'envoie
-                // directement sur le menu Synchronisation, qui lance runSync()
-                // lui-même. Remplace l'ancien synchronData()/receiveData()
-                // (SynchronerController, laissé inutilisé, cf. décision validée).
-                window.location.hash = "#/synchronisation";
+            if (response.data.response.status && !isLocked) {
+                // Des plaintes saisies hors ligne attendent : page Synchronisation, qui lance
+                // runSync() elle-même. Sinon : le tableau de bord auquel l'utilisateur a droit.
+                const enAttente = canSync ? countPendingOrFailed().catch(() => 0) : Promise.resolve(0);
+                enAttente.then((n) => {
+                    window.location.hash = n > 0 ? "#/synchronisation" : "#/dashboard";
+                });
             }
 
         })
@@ -196,7 +198,7 @@ export const licenseInfo = async () => {
 }
 
 
-export const LoginApiOffline = (credentials, props) => {
+export const LoginApiOffline = async (credentials, props) => {
     // loadItemFromLocalStorage() parse déjà le JSON en interne — le repasser dans
     // JSON.parse() ici plantait systématiquement (JSON.parse d'un objet, pas d'une
     // chaîne), ce qui empêchait toute connexion en mode offline.
@@ -214,7 +216,12 @@ export const LoginApiOffline = (credentials, props) => {
 
     // Comme dans l'ancienne version : ni les majuscules ni les espaces autour de l'e-mail ne comptent.
     const sameEmail = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
-    if (sameEmail(user.email, credentials.email)) {
+    if (sameEmail(user.email, credentials.email) && !aUneEmpreinte(credentials.email)) {
+        notify("Erreur - Connectez-vous une fois en ligne avec ce compte pour pouvoir utiliser le mode offline.", "error");
+        return;
+    }
+
+    if (sameEmail(user.email, credentials.email) && await verifierMotDePasse(credentials.email, credentials.password)) {
         // if (etatR === true || etatD === true || etatS === true) {
         //     notify("Erreur - Vous devez vous reconnectez en Online pour une mise à jour des données !", "error");
         // } else {

@@ -1733,10 +1733,10 @@ const Global = (props) => {
         ) : <></>}
         {props.templateData?.global.globalLineChartRef ? (
           <PBICard title="Glissement annuel des RSD" accent={CR.principale} half={true} onClose={props.tmpState.showForm ? () => { props.setTemplateData({ ...props.templateData, global: { ...props.templateData?.global, globalLineChartRef: false } }) } : undefined}>
-            <LazyChart height={hauteurGraphique("courbes", rdsBarGlobal, { couleurs: couleurDuType })} forceRender={isPrinting}>
+            <LazyChart height={hauteurGraphique("colonnesGroupees", rdsBarGlobal, { couleurs: couleurDuType })} forceRender={isPrinting}>
               {rdsBarGlobal ? (
                 <GraphiqueRapport
-                  rendu="courbes"
+                  rendu="colonnesGroupees"
                   data={rdsBarGlobal}
                   visible={rdsBarGlobal == null}
                   reglages={{ couleurs: couleurDuType }}
@@ -3272,7 +3272,7 @@ const Global = (props) => {
     try {
       const couleurs = couleursAffichees([
         { cle: "globalPieChartRef", rendu: "anneau", data: rdsPieGlobal, reglages: { couleurs: couleurDuType } },
-        { cle: "globalLineChartRef", rendu: "courbes", data: rdsBarGlobal, reglages: { couleurs: couleurDuType } },
+        { cle: "globalLineChartRef", rendu: "colonnesGroupees", data: rdsBarGlobal, reglages: { couleurs: couleurDuType } },
         { cle: "globalByCanalPieChartRef", rendu: "progression", data: rdsPieModaliteGlobal, reglages: { pct: true } },
         { cle: "globalByCanalBarChartRef", rendu: "empile", data: rdsBarModaliteGlobal },
         { cle: "globalByObjetPieChartRef", rendu: "progression", data: rdsPieObjetGlobal, reglages: { pct: true } },

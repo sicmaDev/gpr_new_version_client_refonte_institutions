@@ -366,10 +366,12 @@ const ConvertTypeDialog = ({ open, onClose, onSelect }) => (
 
 // ─── Panneau QR ───────────────────────────────────────────────────────────────
 const POLL_INTERVAL = 5;
+// Durée du décompte affiché en attendant WhatsApp ; il repart de là tant que le QR n'est pas prêt.
+const ATTENTE_QR = 30;
 
 const QRPanel = ({ onClose, embedded = false }) => {
   const [qrSrc, setQrSrc] = React.useState(null);
-  const [countdown, setCountdown] = React.useState(POLL_INTERVAL);
+  const [countdown, setCountdown] = React.useState(ATTENTE_QR);
 
   const fetchQR = React.useCallback(async () => {
     try {
@@ -379,29 +381,20 @@ const QRPanel = ({ onClose, embedded = false }) => {
         // "data:image/png;base64," avant de renvoyer { qr }, donc on le rajoute ici.
         // Robuste aux deux cas : si jamais un préfixe est déjà présent, on ne le double pas.
         setQrSrc(d.qr.startsWith("data:") ? d.qr : "data:image/png;base64," + d.qr);
-        setCountdown(0);
-      } else setCountdown(POLL_INTERVAL);
+      }
     } catch (err) {
       console.error("[WhatGPR] Erreur récupération QR:", err);
-      setCountdown(POLL_INTERVAL);
     }
   }, []);
 
   React.useEffect(() => {
-    let cancelled = false;
     fetchQR();
+    const poll = setInterval(fetchQR, POLL_INTERVAL * 1000);
     const tick = setInterval(() => {
-      if (cancelled) return;
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          fetchQR();
-          return POLL_INTERVAL;
-        }
-        return prev - 1;
-      });
+      setCountdown((prev) => (prev <= 1 ? ATTENTE_QR : prev - 1));
     }, 1000);
     return () => {
-      cancelled = true;
+      clearInterval(poll);
       clearInterval(tick);
     };
   }, [fetchQR]);
@@ -473,7 +466,7 @@ const QRPanel = ({ onClose, embedded = false }) => {
             >
               <CircularProgress
                 variant="determinate"
-                value={(countdown / POLL_INTERVAL) * 100}
+                value={(countdown / ATTENTE_QR) * 100}
                 size={80}
                 thickness={3}
                 sx={{ color: PRIMARY, position: "absolute" }}
@@ -502,7 +495,7 @@ const QRPanel = ({ onClose, embedded = false }) => {
               color="text.secondary"
               textAlign="center"
             >
-              Recherche du QR…
+              Préparation du QR…
             </Typography>
           </Box>
         )}
@@ -808,6 +801,20 @@ const WgprMain = () => {
 
   // ── Réactions statut ──
   const prevStatusRef = useRef(status);
+  const [attenteLongue, setAttenteLongue] = useState(false);
+
+  // Le statut est aussi mis à jour par la vérification régulière : le QR s'affiche même si l'événement est manqué.
+  useEffect(() => {
+    if (status === "qr_pending") {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      setConnectCountdown(0);
+    }
+  }, [status]);
+
+  // Fenêtre fermée : on arrête le décompte.
+  useEffect(() => {
+    if (!showConnectPopup && countdownRef.current) clearInterval(countdownRef.current);
+  }, [showConnectPopup]);
   useEffect(() => {
     const prev = prevStatusRef.current;
     prevStatusRef.current = status;
@@ -943,14 +950,16 @@ const WgprMain = () => {
     },
   });
 
-  const startCountdown = (seconds = 30) => {
+  // Le décompte repart tant que WhatsApp n'est pas prêt : seul le statut qr_pending fait passer au QR.
+  const startCountdown = (seconds = ATTENTE_QR) => {
     if (countdownRef.current) clearInterval(countdownRef.current);
     setConnectCountdown(seconds);
+    setAttenteLongue(false);
     countdownRef.current = setInterval(() => {
       setConnectCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(countdownRef.current);
-          return 0;
+          setAttenteLongue(true);
+          return seconds;
         }
         return prev - 1;
       });
@@ -1293,7 +1302,9 @@ const WgprMain = () => {
                 </Box>
               </Box>
               <Typography sx={{ fontSize: 14, color: "#64748b", mb: 1 }}>
-                Démarrage de Chrome et chargement de WhatsApp Web...
+                {attenteLongue
+                  ? "WhatsApp met plus de temps que prévu, encore un instant..."
+                  : "Démarrage de Chrome et chargement de WhatsApp Web..."}
               </Typography>
               <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
                 Le QR Code apparaîtra automatiquement dès qu'il sera prêt.

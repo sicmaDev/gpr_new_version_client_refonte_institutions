@@ -12,6 +12,13 @@ import { saveAuthDataToLocal, userAuthDetail } from "../apis/CheckToken";
 import Login from "../pages/Auth/Login";
 import Auth from "../pages/Auth/Auth";
 import Modal from "../Utils/modal";
+import { CLE_EMPREINTE_OFFLINE } from "../offline/motDePasseOffline";
+
+const CLES_MODE_OFFLINE = [
+  "lic", "app-user", "app-institution", "app-langues", "app-recours", "app-ps", "app-supports", "app-objets",
+  "app-categories", "app-produits", "app-postes", "app-modules", "help",
+  "app-appearance", "app-appearance-visible", "gpr-primary-color", CLE_EMPREINTE_OFFLINE,
+];
 
 const Layout = (props) => {
   const { colors } = useThemeColors();
@@ -54,7 +61,12 @@ const Layout = (props) => {
           setIsLoading(false);
         });
     } else {
+      // On garde seulement ce qu'il faut au mode Offline : ni le jeton, ni les réglages mail et SMS, ni la liste des comptes.
+      const donneesOffline = CLES_MODE_OFFLINE.map((cle) => [cle, localStorage.getItem(cle)]);
       localStorage.clear();
+      donneesOffline.forEach(([cle, valeur]) => {
+        if (valeur !== null) localStorage.setItem(cle, valeur);
+      });
       sessionStorage.clear();
       setIsSuccess(false);
       setIsLoading(false);

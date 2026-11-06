@@ -2573,7 +2573,7 @@ const ListeReclamations = (props) => {
             Historique
           </button>
         )}
-        {props.session !== "" && (addR === "PILOTE" || addR === "DE") && (
+        {props.session !== "" && (addR === "PILOTE" || addR === "DE" || hbt.includes("H6")) && (
           <LoadingButton
             onClick={() => mode === 1 ? printToWord() : notify("Passez en mode Online pour télécharger le PV", "info")}
             loading={props.etat3}
@@ -4010,7 +4010,7 @@ const ListeReclamations = (props) => {
                               >
                                 Détails du traitement
                                 {props.session !== "" &&
-                                  (addR === "PILOTE" || addR === "DE") ? (
+                                  (addR === "PILOTE" || addR === "DE" || hbt.includes("H6")) ? (
                                   <LoadingButton
                                     onClick={(e) => {
                                       if (mode === 1) {
