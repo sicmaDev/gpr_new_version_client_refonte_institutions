@@ -4047,7 +4047,7 @@ const TraiterReclamation = (props) => {
     infosRec = "";
   }
 
-  if (addR === "PILOTE" && props.status === "SAVED") {
+  if ((addR === "PILOTE" || hbt.includes("H6")) && props.status === "SAVED") {
     btnConversion = (
       <>
         <LoadingButton
@@ -4801,7 +4801,7 @@ const TraiterReclamation = (props) => {
             currentUser={user}
 
             visibleActions={[
-              addR === "PILOTE" && props.status === "SAVED" && 'convertir',
+              (addR === "PILOTE" || hbt.includes("H6")) && props.status === "SAVED" && 'convertir',
               canAffect && 'affecter',
               canReaffect && 'reaffecter',
               canTransmit && 'transmettre',

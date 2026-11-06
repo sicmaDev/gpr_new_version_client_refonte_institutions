@@ -1,4 +1,6 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
+import AudioSauvegarde from "../../components/shared/AudioSauvegarde";
+import { checkFilesConstraints, messageDateReception } from "../../Utils/piecesJointes";
 import { fetchPendingWAFiles, isAudioFile } from "../../whatgpr/pendingWAFiles";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
@@ -441,7 +443,7 @@ const EnregistrerDenonciation = (props) => {
         let firstErrorFieldRef = null;
         if ((props.recorded_at === "" || props.recorded_at === undefined || props.recorded_at === null || !isValidDate(props.recorded_at))) {
             isValid = false;
-            errors["recorded_at"] = "Champ incorrect";
+            errors["recorded_at"] = messageDateReception(props.recorded_at);
             if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
         }
         if ((props.collect === "" || props.collect === undefined || props.collect === null)) {
@@ -927,6 +929,7 @@ const EnregistrerDenonciation = (props) => {
 
     const handleDropzoneFiles = (newFilesInput) => {
         const newArr = Array.from(newFilesInput);
+        if (!checkFilesConstraints([...(files ? Array.from(files) : []), ...newArr], audioRecordings)) return Promise.resolve([]);
         setFiles(prev => {
             const prevArr = prev ? Array.from(prev) : [];
             return [...prevArr, ...newArr];
@@ -1151,7 +1154,7 @@ const EnregistrerDenonciation = (props) => {
         let firstErrorFieldRef = null;
         errors = {};
         if (!props.recorded_at || !isValidDate(props.recorded_at)) {
-            isValid = false; errors["recorded_at"] = "Champ incorrect";
+            isValid = false; errors["recorded_at"] = messageDateReception(props.recorded_at);
             if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
         }
         if (!props.collect) {
@@ -1319,6 +1322,7 @@ const EnregistrerDenonciation = (props) => {
                                 timeInputLabel="Heure :" todayButton="Aujourd'hui"
                                 selected={props.recorded_at_dp}
                                 onChange={(date) => handleDatePicker(date, props)}
+                                maxDate={new Date()}
                                 dateFormat="dd-MM-yyyy HH:mm" locale="fr"
                             />
                             <label htmlFor="recorded_at" className="active">
@@ -1410,9 +1414,7 @@ const EnregistrerDenonciation = (props) => {
                                 {props.selectedItemAudio?.map((audioItem, i) => (
                                     <div key={"s" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
                                         <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
-                                        <audio controls style={{ flex: 1, height: 30 }}>
-                                            <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
-                                        </audio>
+                                        <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
                                         <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
                                             style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
                                     </div>
@@ -1517,9 +1519,7 @@ const EnregistrerDenonciation = (props) => {
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Sauvegardé {i + 1}</div>
-                                                <audio controls style={{ width: "100%", height: 30 }}>
-                                                    <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
-                                                </audio>
+                                                <AudioSauvegarde audio={audioItem} style={{ width: "100%", height: 30 }} />
                                             </div>
                                             <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
                                                 style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, flexShrink: 0 }}>×</button>
@@ -1585,9 +1585,7 @@ const EnregistrerDenonciation = (props) => {
                                     {props.selectedItemAudio?.map((audioItem, i) => (
                                         <div key={'s' + i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, marginBottom: 6, border: '1px solid #e2e8f0' }}>
                                             <Mic style={{ fontSize: 16, color: '#005081', flexShrink: 0 }} />
-                                            <audio controls style={{ flex: 1, height: 30 }}>
-                                                <source src={URL.createObjectURL(new Blob([audioItem], { type: 'audio/ogg' }))} type="audio/ogg" />
-                                            </audio>
+                                            <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
                                         </div>
                                     ))}
                                 </div>

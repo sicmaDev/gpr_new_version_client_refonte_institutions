@@ -1,4 +1,6 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
+import AudioSauvegarde from "../../components/shared/AudioSauvegarde";
+import { EMAIL_VALIDE, checkFilesConstraints, messageDateReception } from "../../Utils/piecesJointes";
 import { fetchPendingWAFiles, isAudioFile } from "../../whatgpr/pendingWAFiles";
 import Select from "react-select";
 
@@ -213,8 +215,11 @@ const EnregistrerSuggestion = (props) => {
             isValid = false; errors["language"] = "Champ incorrect";
             if (!firstErrorFieldRef) firstErrorFieldRef = languageRef;
         }
+        if (props.email && !EMAIL_VALIDE.test(props.email)) {
+            isValid = false; errors["email"] = "Adresse email invalide";
+        }
         if (!props.recorded_at || !isValidDate(props.recorded_at)) {
-            isValid = false; errors["recorded_at"] = "Champ incorrect";
+            isValid = false; errors["recorded_at"] = messageDateReception(props.recorded_at);
             if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
         }
         if (!props.collect) {
@@ -254,9 +259,12 @@ const EnregistrerSuggestion = (props) => {
                 isValid = false; errs["language"] = "Champ requis";
                 if (!firstErrorFieldRef) firstErrorFieldRef = languageRef;
             }
+            if (props.email && !EMAIL_VALIDE.test(props.email)) {
+                isValid = false; errs["email"] = "Adresse email invalide";
+            }
         } else if (step === 1) {
             if (!props.recorded_at || !isValidDate(props.recorded_at)) {
-                isValid = false; errs["recorded_at"] = "Champ requis";
+                isValid = false; errs["recorded_at"] = props.recorded_at ? messageDateReception(props.recorded_at) : "Champ requis";
                 if (!firstErrorFieldRef) firstErrorFieldRef = recordedAtRef;
             }
             if (!props.collect) {
@@ -429,6 +437,7 @@ const EnregistrerSuggestion = (props) => {
     };
 
     const handleDropzoneFiles = (newFiles) => {
+        if (!checkFilesConstraints([...Array.from(files), ...Array.from(newFiles)], audioRecordings)) return;
         setFiles(prev => [...Array.from(prev), ...Array.from(newFiles)]);
     };
 
@@ -485,7 +494,8 @@ const EnregistrerSuggestion = (props) => {
                 }
             });
         } else {
-            notify("Numéro de téléphone incorrect", "error");
+            // Téléphone facultatif sur une suggestion : enregistrement sans SMS
+            handleSubmit(e);
         }
     };
 
@@ -686,20 +696,8 @@ const EnregistrerSuggestion = (props) => {
                             }}
                         >
                             <SmsOutlinedIcon style={{ fontSize: 18 }} />
-                            Enregistrer et notifier
+                            Enregistrer
                         </button>
-                        <form onSubmit={handleSubmit} style={{ margin: 0 }}>
-                            <button
-                                type="submit"
-                                style={{
-                                    width: "100%", padding: "11px", borderRadius: 12,
-                                    border: "1.5px solid #e2e8f0", background: "white",
-                                    color: "#374151", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                                }}
-                            >
-                                Enregistrer sans notifier
-                            </button>
-                        </form>
                     </div>
                 </Dialog>
             )}
@@ -834,6 +832,7 @@ const EnregistrerSuggestion = (props) => {
                             <input id="sg_email" type="email" className="validate" value={props.email}
                                 onChange={(e) => props.emailChanged(e.target.value)} />
                             <label htmlFor="sg_email" className="active">Email (facultatif)</label>
+                            {props.errors?.email && <small style={{ color: "#e53935", fontSize: 11 }}>{props.errors.email}</small>}
                         </div>
 
                         {/* Genre + Langue + Dossier IMF - pattern identique à EnregistrerReclamation */}
@@ -891,6 +890,7 @@ const EnregistrerSuggestion = (props) => {
                                 todayButton="Aujourd'hui"
                                 selected={props.recorded_at_dp}
                                 onChange={(date) => handleDatePicker(date, props)}
+                                maxDate={new Date()}
                                 dateFormat="dd-MM-yyyy HH:mm"
                                 locale="fr"
                             />
@@ -984,9 +984,7 @@ const EnregistrerSuggestion = (props) => {
                                 {props.selectedItemAudio?.map((audioItem, i) => (
                                     <div key={"sa" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
                                         <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
-                                        <audio controls style={{ flex: 1, height: 30 }}>
-                                            <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
-                                        </audio>
+                                        <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
                                         <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
                                     </div>
                                 ))}
@@ -1094,9 +1092,7 @@ const EnregistrerSuggestion = (props) => {
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Sauvegardé {i + 1}</div>
-                                                <audio controls style={{ width: "100%", height: 30 }}>
-                                                    <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
-                                                </audio>
+                                                <AudioSauvegarde audio={audioItem} style={{ width: "100%", height: 30 }} />
                                             </div>
                                             <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
                                                 style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, flexShrink: 0 }}>×</button>
@@ -1183,9 +1179,7 @@ const EnregistrerSuggestion = (props) => {
                                     {props.selectedItemAudio?.map((audioItem, i) => (
                                         <div key={"sr" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#f8fafc", borderRadius: 8, marginBottom: 6, border: "1px solid #e2e8f0" }}>
                                             <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
-                                            <audio controls style={{ flex: 1, height: 30 }}>
-                                                <source src={URL.createObjectURL(new Blob([audioItem], { type: "audio/ogg" }))} type="audio/ogg" />
-                                            </audio>
+                                            <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
                                         </div>
                                     ))}
                                 </div>

@@ -2887,7 +2887,7 @@ const TraiterDenonciation = (props) => {
   });
 
   let btnConversion;
-  if (addR === "PILOTE" && props.status === "SAVED") {
+  if ((addR === "PILOTE" || hbt.includes("H6")) && props.status === "SAVED") {
     btnConversion = (
       <>
         <LoadingButton
@@ -3341,7 +3341,7 @@ const TraiterDenonciation = (props) => {
           currentUser={user}
 
           visibleActions={[
-            addR === "PILOTE" && props.status === "SAVED" && 'convertir',
+            (addR === "PILOTE" || hbt.includes("H6")) && props.status === "SAVED" && 'convertir',
             canAffect && 'affecter',
             canReaffect && 'reaffecter',
             canTransmit && 'transmettre',

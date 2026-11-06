@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState, Component } from "react";
+import AudioSauvegarde from "../../components/shared/AudioSauvegarde";
+import { EMAIL_VALIDE, checkFilesConstraints, checkNewAudioConstraints, messageDateReception } from "../../Utils/piecesJointes";
 import { fetchPendingWAFiles, isAudioFile } from "../../whatgpr/pendingWAFiles";
 import Select from "react-select";
 import ReactDatatable from "@ashvin27/react-datatable";
@@ -160,86 +162,8 @@ const styles = {
   menu: (provided) => ({ ...provided, zIndex: 9999 }),
 };
 
-// Limites d'ajout de pièces jointes à l'enregistrement d'une réclamation
-// (revérifiées côté serveur dans ClaimController.validateAttachments - ces
-// contrôles côté client ne servent qu'à donner un retour immédiat à l'agent).
-const MAX_FILES_COUNT = 5;
-const MAX_AUDIOS_COUNT = 3;
-const MAX_DOC_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo (documents/images)
-const MAX_AV_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo (audio/vidéo)
-const MAX_TOTAL_ATTACHMENTS_SIZE = 100 * 1024 * 1024; // 100 Mo cumulés
 
-const isAudioOrVideoFile = (file) => !!file.type && (file.type.startsWith("audio/") || file.type.startsWith("video/"));
-const sumFilesSize = (arr) => Array.from(arr || []).reduce((s, f) => s + (f.size || 0), 0);
-const EMAIL_VALIDE = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-const messageDateReception = (date) => (date ? "La date de réception ne peut pas dépasser la date du jour" : "Champ incorrect");
-const TYPE_AUTORISE = /^(application\/pdf|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(spreadsheetml\.sheet|wordprocessingml\.document)|image\/(jpeg|png)|audio\/.+|video\/.+)$/i;
-const EXTENSION_AUTORISEE = /\.(pdf|docx?|xlsx?|jpe?g|png|ogg|mp3|wav|m4a|aac|opus|mp4|webm|mov|avi)$/i;
-const toMB = (bytes) => Math.round(bytes / (1024 * 1024));
 
-// Lecteur d'un audio déjà enregistré sur le serveur : le fichier est téléchargé puis lu dans le navigateur.
-const AudioSauvegarde = ({ audio, style }) => {
-  const [url, setUrl] = useState(null);
-  useEffect(() => {
-    let annule = false;
-    let lien = null;
-    downloadAudioApi(audio.id, audio.name).then((blob) => {
-      if (blob && !annule) {
-        lien = URL.createObjectURL(blob);
-        setUrl(lien);
-      }
-    });
-    return () => {
-      annule = true;
-      if (lien) URL.revokeObjectURL(lien);
-    };
-  }, [audio.id]);
-  return url ? <audio controls src={url} style={style} /> : <span style={{ flex: 1, fontSize: 12, color: "#94a3b8" }}>Chargement de l'audio…</span>;
-};
-
-// Valide la liste finale des fichiers (après ajout) + les audios déjà enregistrés.
-// Retourne true si OK, sinon affiche un message et retourne false.
-const checkFilesConstraints = (finalFilesArr, audioRecordingsArr) => {
-  if (finalFilesArr.length > MAX_FILES_COUNT) {
-    window.alert(`Vous ne pouvez pas joindre plus de ${MAX_FILES_COUNT} fichiers.`);
-    return false;
-  }
-  for (const file of finalFilesArr) {
-    if (!TYPE_AUTORISE.test(file.type || "") && !EXTENSION_AUTORISEE.test(file.name || "")) {
-      window.alert(`Le fichier "${file.name}" n'est pas d'un type autorisé (PDF, Word, Excel, image, audio ou vidéo).`);
-      return false;
-    }
-    const maxSize = isAudioOrVideoFile(file) ? MAX_AV_FILE_SIZE : MAX_DOC_FILE_SIZE;
-    if (file.size > maxSize) {
-      window.alert(`Le fichier "${file.name}" dépasse la taille maximale autorisée (${toMB(maxSize)} Mo).`);
-      return false;
-    }
-  }
-  const totalSize = sumFilesSize(finalFilesArr) + sumFilesSize(audioRecordingsArr);
-  if (totalSize > MAX_TOTAL_ATTACHMENTS_SIZE) {
-    window.alert(`La taille totale des pièces jointes dépasse la limite autorisée (${toMB(MAX_TOTAL_ATTACHMENTS_SIZE)} Mo).`);
-    return false;
-  }
-  return true;
-};
-
-// Valide un nouvel enregistrement audio par rapport à ceux déjà présents + aux fichiers.
-const checkNewAudioConstraints = (existingAudioRecordings, newAudioBlob, filesArr) => {
-  if (existingAudioRecordings.length >= MAX_AUDIOS_COUNT) {
-    window.alert(`Vous ne pouvez pas joindre plus de ${MAX_AUDIOS_COUNT} enregistrements audio.`);
-    return false;
-  }
-  if (newAudioBlob.size > MAX_AV_FILE_SIZE) {
-    window.alert(`L'enregistrement audio dépasse la taille maximale autorisée (${toMB(MAX_AV_FILE_SIZE)} Mo).`);
-    return false;
-  }
-  const totalSize = sumFilesSize(filesArr) + sumFilesSize(existingAudioRecordings) + newAudioBlob.size;
-  if (totalSize > MAX_TOTAL_ATTACHMENTS_SIZE) {
-    window.alert(`La taille totale des pièces jointes dépasse la limite autorisée (${toMB(MAX_TOTAL_ATTACHMENTS_SIZE)} Mo).`);
-    return false;
-  }
-  return true;
-};
 const EnregistrerReclamation = (props) => {
   const [open, setOpen] = React.useState(false);
   const [open2, setOpen2] = React.useState(false);
