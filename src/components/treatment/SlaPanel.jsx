@@ -8,6 +8,7 @@ import {
   slaAddContactAttempt, slaContactAttempts, slaCloseUnreachable, slaWaitingMessage,
 } from "../../apis/Sla/SlaApi";
 import { notify } from "../../Utils/alert";
+import { loadItemFromSessionStorage } from "../../Utils/utils";
 
 const CHANNELS = [
   ["APPEL", "Appel"], ["SMS", "SMS"], ["WHATSAPP", "WhatsApp"], ["EMAIL", "E-mail"], ["VISITE", "Visite"],
@@ -32,7 +33,7 @@ const smallButton = (primary, color = "#0f4c81") => ({
  * n'est pas actif.
  */
 const SlaPanel = ({ claimType, claimId, sla, onChanged }) => {
-  const user = JSON.parse(sessionStorage.getItem("app-user") || "{}");
+  const user = loadItemFromSessionStorage("app-user") || {};
   const isPilote = user?.additionalRole === "PILOTE";
 
   const [dialog, setDialog] = useState(null); // "wait" | "justify" | "contact" | null

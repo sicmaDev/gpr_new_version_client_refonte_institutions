@@ -53,8 +53,6 @@ export const slaCloseUnreachable = (id, reasonId) =>
 
 // ── Configuration (administrateur) ───────────────────────────────────────────
 
-export const slaPolicies = () => call("get", "/policies");
-export const slaSavePolicies = (policies) => call("put", "/policies", { data: policies });
 export const slaCalendar = () => call("get", "/calendar");
 export const slaSaveCalendar = (days) => call("put", "/calendar", { data: days });
 export const slaHolidays = () => call("get", "/holidays");

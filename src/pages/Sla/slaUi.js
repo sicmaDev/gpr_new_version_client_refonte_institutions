@@ -229,9 +229,10 @@ export const paginationSx = {
 export const currentRights = (user) => {
   const hbt = (user?.posteDto?.habilitations || "").split(",").map((s) => s.trim());
   const role = user?.additionalRole;
+  const isRa = !!(user?.isRa || user?.ra);
   return {
     isAdmin: hbt.includes("H12"),
-    canStats: hbt.includes("H11") || role === "PILOTE" || role === "DE",
+    canStats: hbt.includes("H11") || hbt.includes("H6") || isRa || role === "PILOTE" || role === "DE",
     isPilote: role === "PILOTE",
     hbt,
     role,

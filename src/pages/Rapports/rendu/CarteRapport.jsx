@@ -4,6 +4,7 @@ import { SENS } from "./couleursRapport";
 import { alpha, fmt } from "./graphiquesRapport";
 import { FOND_BENIN } from "./fondCarteBenin";
 import { ChargementRond } from "../../../components/shared/ChargementRond";
+import { LinearProgress } from "@mui/material";
 
 // Cartographie des plaintes par agence (seul élément nouveau du rapport Global).
 // - Données : /api/v1/report/carte, avec le même filtre que le rapport ; le serveur applique le périmètre du rôle.
@@ -50,13 +51,26 @@ function Bulle({ a, x, y }) {
 // Cadre de la carte, même aspect que les cartes de graphique (PBICard) du rapport. Il est défini ici, au niveau du
 // module : PBICard est recréé à chaque rendu de la page, ce qui remonterait la carte (et relancerait son chargement).
 // onClose : croix ✕ du mode édition du modèle de rapport, comme PBICard.
-export function CadreCarte({ titre, accent, onClose, children }) {
+export function CadreCarte({ titre, accent, onClose, loading = false, children }) {
   return (
     <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #E9ECF1", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", overflow: "hidden", marginBottom: 16, width: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", borderBottom: `3px solid ${accent}`, background: "#FAFBFC" }}>
         <span style={{ fontSize: 12.5, fontWeight: 700, color: "#374151", letterSpacing: "0.2px", textTransform: "uppercase" }}>{titre}</span>
         {onClose && <span onClick={onClose} style={{ cursor: "pointer", fontSize: 14, color: "#9CA3AF", lineHeight: 1 }}>✕</span>}
       </div>
+      {loading ? (
+        <LinearProgress
+          sx={{
+            height: 3,
+            backgroundColor: "#E2E8F0",
+            "& .MuiLinearProgress-bar": {
+              backgroundColor: accent || "#0F4C81",
+            },
+          }}
+        />
+      ) : (
+        <div style={{ height: 3 }} />
+      )}
       <div style={{ padding: "16px 18px 12px", flex: 1 }}>{children}</div>
     </div>
   );

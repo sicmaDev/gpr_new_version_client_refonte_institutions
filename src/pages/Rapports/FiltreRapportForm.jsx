@@ -15,6 +15,26 @@ const optionsPlainteType = [
   { label: "Suggestions", value: "suggestion" },
 ];
 
+// Remonte toute la chaîne de rattachement sous une agence donnée (fils, petits-fils, ...)
+const getAllDescendantServicePointIds = (rootId, allServicePoints) => {
+  const ids = [];
+  const visited = new Set([rootId]);
+  const toVisit = [rootId];
+  while (toVisit.length > 0) {
+    const currentId = toVisit.pop();
+    allServicePoints
+      .filter((sp) => sp.direction_id === currentId)
+      .forEach((sp) => {
+        if (!visited.has(sp.id)) {
+          visited.add(sp.id);
+          ids.push(sp.id);
+          toVisit.push(sp.id);
+        }
+      });
+  }
+  return ids;
+};
+
 // Formulaire de filtre du Rapport Global, factorisé pour être utilisé à la
 // fois dans le panneau "Filtrer" de Global.js et dans le formulaire de
 // création/édition de template (ReportTemplate.jsx) — même comportement,
@@ -52,7 +72,7 @@ const FiltreRapportForm = ({ value, onChange }) => {
   };
 
   const users = loadList("app-users");
-  const optionsUsers = users.map((one) => ({
+  let optionsUsers = users.map((one) => ({
     label: one.firstAndLastName,
     value: one.id,
   }));
@@ -64,10 +84,35 @@ const FiltreRapportForm = ({ value, onChange }) => {
   }));
 
   const ps = loadList("app-ps");
-  const optionsUnits = ps.map((unit) => ({
+  let optionsUnits = ps.map((unit) => ({
     label: unit.libelle,
     value: unit.id,
   }));
+
+  const userAuth = loadItemFromSessionStorage("app-user");
+  const userHbt = userAuth?.posteDto?.habilitations
+    ? userAuth.posteDto.habilitations.split(",")
+    : [];
+  const userAddR = userAuth?.additionalRole;
+  const isElevatedUser =
+    userHbt.includes("H6") || userAddR === "PILOTE" || userAddR === "DE";
+
+  let defaultRaServicePoints = [];
+  if (!isElevatedUser && userAuth?.servicePointDto?.id && ps.length > 0) {
+    const myServicePointId = userAuth.servicePointDto.id;
+    defaultRaServicePoints = userAuth?.ra === true
+      ? getAllDescendantServicePointIds(myServicePointId, ps)
+      : [];
+    defaultRaServicePoints.push(myServicePointId);
+  }
+  const isScopeRestricted = !isElevatedUser && defaultRaServicePoints.length > 0;
+  if (isScopeRestricted) {
+    optionsUsers = optionsUsers.filter((o) => {
+      const u = users.find((one) => one.id === o.value);
+      return defaultRaServicePoints.includes(u?.servicePointDto?.id);
+    });
+    optionsUnits = optionsUnits.filter((o) => defaultRaServicePoints.includes(o.value));
+  }
 
   const products = loadList("app-produits");
   const optionsProducts = products.map((product) => ({

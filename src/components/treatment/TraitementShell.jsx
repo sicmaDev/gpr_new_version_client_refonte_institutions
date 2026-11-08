@@ -26,7 +26,7 @@ import ConvertirModal from "../../pages/Reclamations/modals/ConvertirModal";
 import TransmettreModal from "../../pages/Reclamations/modals/TransmettreModal";
 import ApprouverModal from "../../pages/Reclamations/modals/ApprouverModal";
 
-import { formatDate, formatDate3 } from "../../Utils/utils";
+import { formatDate, formatDate3, loadItemFromSessionStorage } from "../../Utils/utils";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from "@mui/icons-material/Save";
 
@@ -189,7 +189,7 @@ const TraitementShell = ({
   const lblS = statusLabel ?? lblS_;
   const [bgG, colG, lblG] = GRAVITY_MAP[risqueLevel] || [];
 
-  const sessionUser = JSON.parse(sessionStorage.getItem("app-user") || "{}");
+  const sessionUser = loadItemFromSessionStorage("app-user") || {};
   const isClosed = ["SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED", "CLASSED"].includes(status);
   const isAssignedToMe = status === "AFFECTED" && handled_by === sessionUser?.firstAndLastName;
   const hasSession = session && (typeof session === "string" ? session !== "" : session.status !== "CLOSED") && !isClosed;

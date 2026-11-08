@@ -41,7 +41,7 @@ export const reportApi = async (props, setData) => {
             'Authorization': "Bearer " + loadItemFromSessionStorage('token')
         },
     };
-    axios(config)
+    return axios(config)
         .then(function (response) {
         //    console.log("responsealertREPORT",response)
             if (!response.data.status) {
@@ -91,7 +91,7 @@ export const reportApiFiltres = async (props, body, setData) => {
         },
         data: body
     };
-    await axios(config)
+    return await axios(config)
         .then(function (response) {
             // console.log("responsealertREPORTfiltres",response.data)
             if (response.data.status && response.data.status === false) {

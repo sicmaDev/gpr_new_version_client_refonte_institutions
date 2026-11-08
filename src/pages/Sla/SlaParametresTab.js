@@ -71,6 +71,13 @@ const SlaParametresTab = () => {
         help="Désactivé, GPR se comporte exactement comme avant. À l'activation, les plaintes déjà ouvertes sont reprises sans aucune alerte rétroactive (aucun rappel, retard ni remontée pour ce qui est déjà dépassé).">
         {toggle("sla.enabled")}
       </Field>
+      <Field label="Prise en charge par défaut (heures ouvrées)" help="Utilisée quand l'objet n'a pas son propre délai de prise en charge.">{number("sla.takeover_hours", 1)}</Field>
+      <Field label="Clôture (jours ouvrés)" help="Réclamations : de la solution approuvée à la mesure de satisfaction.">{number("sla.closure_days", 1)}</Field>
+      <Field label="Nouveau cycle (jours ouvrés)" help="Après une mesure « non satisfait » ou « partiellement satisfait ».">{number("sla.reopen_days", 1)}</Field>
+      <Field label="Traitement d'une suggestion (jours ouvrés)" help="Une suggestion n'a pas d'objet : ce délai s'applique à toutes.">{number("sla.suggestion_days", 1)}</Field>
+      <Field label="Premier rappel (% du délai)">{number("sla.reminder1_pct", 1)}</Field>
+      <Field label="Second rappel (% du délai)">{number("sla.reminder2_pct", 1)}</Field>
+      <Field label="Délai avant remontée (heures ouvrées)" help="Après le dépassement, temps laissé avant la remontée automatique.">{number("sla.grace_hours", 1)}</Field>
       <Field label="Remontée automatique" help="Un dossier en retard, sans action humaine pendant le délai de grâce, est transmis au niveau supérieur (agent, chef d'agence, direction, Pilote, DE).">
         {toggle("sla.auto_escalation")}
       </Field>

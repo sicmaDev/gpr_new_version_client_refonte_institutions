@@ -3,10 +3,10 @@ import { loadItemFromSessionStorage } from "../../Utils/utils";
 // Où ouvrir une plainte depuis le suivi des délais ou les alertes, et si la personne a le droit de le faire.
 // Mêmes conditions que le menu : traitement, mesure de satisfaction et listes.
 
-const LIST_STATUSES = ["SATISFIED", "LITIGATION"];
-const MEASURE_STATUSES = ["TREAT", "TO_APPROUVED"];
+const LIST_STATUSES = ["SATISFIED", "LITIGATION", "CLASSED"];
+const MEASURE_STATUSES = ["TREAT"];
 // une dénonciation n'a pas de mesure de satisfaction : « traitée » vaut clôture
-const DENUNCIATION_LIST_STATUSES = ["SATISFIED", "LITIGATION", "TREAT"];
+const DENUNCIATION_LIST_STATUSES = ["SATISFIED", "LITIGATION", "TREAT", "CLASSED"];
 
 const hasAny = (hbt, codes) => codes.some((c) => hbt.includes(c));
 
@@ -35,7 +35,10 @@ export const claimTarget = ({ type, status, code, collectorId }, user = loadItem
     return { url: "/reclamations/liste/" + code, allowed: allow(canSeeLists) };
   }
   if (MEASURE_STATUSES.includes(status)) {
-    return { url: "/reclamations/mesure/" + code, allowed: allow(canMeasure) };
+    if (allow(canMeasure)) {
+      return { url: "/reclamations/mesure/" + code, allowed: true };
+    }
+    return { url: "/reclamations/liste/" + code, allowed: allow(canSeeLists) };
   }
   return { url: "/reclamations/traitement/" + code, allowed: allow(canTreat) };
 };
