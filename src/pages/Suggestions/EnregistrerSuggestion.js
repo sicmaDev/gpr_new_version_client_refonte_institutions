@@ -302,6 +302,8 @@ const EnregistrerSuggestion = (props) => {
             clearComponentState();
             props.contentChanged(transformConversation(props.whatsappSelectMessage));
             props.phoneChanged(props.whatsappCurrentInbox.phone);
+            // Nom du profil WhatsApp du client, s'il en a mis un (l'agent peut le corriger)
+            if (props.whatsappCurrentInbox.name) props.lastnameChanged(props.whatsappCurrentInbox.name);
 
             // Les audios rejoignent directement "Enregistrement vocal" (lecteur intégré),
             // au lieu d'atterrir dans "Documents joints" comme un fichier générique.
@@ -662,7 +664,7 @@ const EnregistrerSuggestion = (props) => {
                                 display: "flex", alignItems: "center", gap: 10,
                                 background: "#f8fafc", borderRadius: 10, padding: "10px 14px", marginBottom: 12,
                             }}>
-                                <SmsOutlinedIcon style={{ fontSize: 18, color: "#005081", flexShrink: 0 }} />
+                                <SmsOutlinedIcon style={{ fontSize: 18, color: "var(--gpr-primary, #005081)", flexShrink: 0 }} />
                                 <div style={{ minWidth: 0 }}>
                                     <div style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>{props.lastname}</div>
                                     <div style={{ fontSize: 11, color: "#64748b" }}>{cleanPhoneNumber(props.phone)}</div>
@@ -759,7 +761,7 @@ const EnregistrerSuggestion = (props) => {
                                         onMouseLeave={e => { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)"; }}
                                     >
                                         <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: "#e8f4fc", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                            <AssignmentOutlinedIcon style={{ fontSize: 20, color: "#005081" }} />
+                                            <AssignmentOutlinedIcon style={{ fontSize: 20, color: "var(--gpr-primary, #005081)" }} />
                                         </div>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 2 }}>{draft.code || "Brouillon sans code"}</div>
@@ -770,7 +772,7 @@ const EnregistrerSuggestion = (props) => {
                                                 <IconButton
                                                     size="small"
                                                     onClick={(e) => { e.stopPropagation(); rowClickedHandler(e, draft, null); setCurrentStep(0); setActiveTab("new"); }}
-                                                    sx={{ color: "#005081", "&:hover": { background: "#e8f4fc" } }}
+                                                    sx={{ color: "var(--gpr-primary, #005081)", "&:hover": { background: "#e8f4fc" } }}
                                                 >
                                                     <EditIcon style={{ fontSize: 18 }} />
                                                 </IconButton>
@@ -970,11 +972,11 @@ const EnregistrerSuggestion = (props) => {
                         {(audioRecordings.length > 0 || props.selectedItemAudio?.length > 0) && (
                             <div className="col l12 m12 s12" style={{ marginTop: 8 }}>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                                    <Mic style={{ fontSize: 15, color: "#005081" }} /> Audio enregistré
+                                    <Mic style={{ fontSize: 15, color: "var(--gpr-primary, #005081)" }} /> Audio enregistré
                                 </div>
                                 {audioRecordings.map((audioBlob, i) => (
                                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
-                                        <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                                        <Mic style={{ fontSize: 16, color: "var(--gpr-primary, #005081)", flexShrink: 0 }} />
                                         <audio controls style={{ flex: 1, height: 30 }}>
                                             <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
                                         </audio>
@@ -983,7 +985,7 @@ const EnregistrerSuggestion = (props) => {
                                 ))}
                                 {props.selectedItemAudio?.map((audioItem, i) => (
                                     <div key={"sa" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
-                                        <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                                        <Mic style={{ fontSize: 16, color: "var(--gpr-primary, #005081)", flexShrink: 0 }} />
                                         <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
                                         <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
                                     </div>
@@ -1002,14 +1004,14 @@ const EnregistrerSuggestion = (props) => {
                                 onDragLeave={() => setIsDragging(false)}
                                 onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleDropzoneFiles(e.dataTransfer.files); }}
                                 style={{
-                                    border: isDragging ? "2px dashed #005081" : "2px dashed #b0bec5",
+                                    border: isDragging ? "2px dashed var(--gpr-primary, #005081)" : "2px dashed #b0bec5",
                                     borderRadius: 12, padding: "28px 16px", textAlign: "center",
                                     background: isDragging ? "#e8f4fc" : "#fafafa", cursor: "pointer", marginBottom: 16,
                                     transition: "all 0.2s"
                                 }}
                                 onClick={() => document.getElementById("sg_file_input").click()}
                             >
-                                <CloudUploadOutlinedIcon style={{ fontSize: 36, color: isDragging ? "#005081" : "#90a4ae", marginBottom: 6 }} />
+                                <CloudUploadOutlinedIcon style={{ fontSize: 36, color: isDragging ? "var(--gpr-primary, #005081)" : "#90a4ae", marginBottom: 6 }} />
                                 <div style={{ fontSize: 13, color: "#546e7a", fontWeight: 600 }}>
                                     Glissez vos fichiers ici ou cliquez pour selectionner
                                 </div>
@@ -1050,7 +1052,7 @@ const EnregistrerSuggestion = (props) => {
                                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", marginBottom: 6, background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0" }}>
                                         <InsertDriveFileOutlinedIcon style={{ fontSize: 16, color: "#64748b", flexShrink: 0 }} />
                                         <span style={{ fontSize: 12, color: "#374151", fontWeight: 600, flex: 1 }}>{file.name}</span>
-                                        <a onClick={(e) => { e.preventDefault(); downloadFillesApi(file.id, file.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                                        <a onClick={(e) => { e.preventDefault(); downloadFillesApi(file.id, file.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "var(--gpr-primary, #005081)", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
                                     </div>
                                 ))}
                             </div>
@@ -1059,7 +1061,7 @@ const EnregistrerSuggestion = (props) => {
                         {/* ── Enregistrement audio ── */}
                         <div>
                             <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                                <MicIcon style={{ fontSize: 17, color: "#005081" }} />
+                                <MicIcon style={{ fontSize: 17, color: "var(--gpr-primary, #005081)" }} />
                                 Enregistrement vocal
                             </div>
 
@@ -1073,7 +1075,7 @@ const EnregistrerSuggestion = (props) => {
                                     {audioRecordings.map((audioBlob, i) => (
                                         <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "white", borderRadius: 10, border: "1.5px solid #99cde8" }}>
                                             <div style={{ width: 32, height: 32, borderRadius: 8, background: "#e8f4fc", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                <MicIcon style={{ fontSize: 16, color: "#005081" }} />
+                                                <MicIcon style={{ fontSize: 16, color: "var(--gpr-primary, #005081)" }} />
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Enregistrement {i + 1}</div>
@@ -1088,7 +1090,7 @@ const EnregistrerSuggestion = (props) => {
                                     {props.selectedItemAudio?.map((audioItem, i) => (
                                         <div key={"s" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "white", borderRadius: 10, border: "1.5px solid #e2e8f0" }}>
                                             <div style={{ width: 32, height: 32, borderRadius: 8, background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                <MicIcon style={{ fontSize: 16, color: "#005081" }} />
+                                                <MicIcon style={{ fontSize: 16, color: "var(--gpr-primary, #005081)" }} />
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Sauvegardé {i + 1}</div>
@@ -1170,7 +1172,7 @@ const EnregistrerSuggestion = (props) => {
                                     </span>
                                     {audioRecordings.map((audioBlob, i) => (
                                         <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 8, marginBottom: 6, border: "1px solid #99cde8" }}>
-                                            <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                                            <Mic style={{ fontSize: 16, color: "var(--gpr-primary, #005081)", flexShrink: 0 }} />
                                             <audio controls style={{ flex: 1, height: 30 }}>
                                                 <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
                                             </audio>
@@ -1178,7 +1180,7 @@ const EnregistrerSuggestion = (props) => {
                                     ))}
                                     {props.selectedItemAudio?.map((audioItem, i) => (
                                         <div key={"sr" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#f8fafc", borderRadius: 8, marginBottom: 6, border: "1px solid #e2e8f0" }}>
-                                            <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                                            <Mic style={{ fontSize: 16, color: "var(--gpr-primary, #005081)", flexShrink: 0 }} />
                                             <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
                                         </div>
                                     ))}
@@ -1194,14 +1196,14 @@ const EnregistrerSuggestion = (props) => {
                                         <div key={"saved-" + i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", marginBottom: 4, background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
                                             <InsertDriveFileOutlinedIcon style={{ fontSize: 15, color: "#16a34a", flexShrink: 0 }} />
                                             <span style={{ fontSize: 12, color: "#374151", fontWeight: 600, flex: 1 }}>{file.name}</span>
-                                            <a onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadFillesApi(file.id, file.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                                            <a onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadFillesApi(file.id, file.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "var(--gpr-primary, #005081)", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
                                         </div>
                                     ))}
                                     {Array.from(files || []).map((file, i) => (
                                         <div key={"new-" + i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", marginBottom: 4, background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0" }}>
                                             <InsertDriveFileOutlinedIcon style={{ fontSize: 15, color: "#64748b", flexShrink: 0 }} />
                                             <span style={{ fontSize: 12, color: "#374151", fontWeight: 600, flex: 1 }}>{file.name}</span>
-                                            <a href={URL.createObjectURL(file)} download={file.name} onClick={(e) => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                                            <a href={URL.createObjectURL(file)} download={file.name} onClick={(e) => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "var(--gpr-primary, #005081)", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
                                         </div>
                                     ))}
                                 </div>

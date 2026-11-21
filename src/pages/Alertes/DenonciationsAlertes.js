@@ -66,7 +66,7 @@ const DenonciationsAlertes = (props) => {
         {
             id: "claimCodeClient", label: "Code client", sortable: true, minWidth: 110,
             render: (item) => (
-                <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
+                <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--gpr-primary, #005081)", fontFamily: "monospace" }}>
                     {item.claimCodeClient || "-"}
                 </span>
             ),
@@ -101,7 +101,7 @@ const DenonciationsAlertes = (props) => {
             render: (item) => (
                 <span
                     onClick={(e) => { e.stopPropagation(); history.push(getUrl(item)); }}
-                    style={{ fontSize: "0.80rem", color: "#005081", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
+                    style={{ fontSize: "0.80rem", color: "var(--gpr-primary, #005081)", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
                 >
                     Traiter
                 </span>

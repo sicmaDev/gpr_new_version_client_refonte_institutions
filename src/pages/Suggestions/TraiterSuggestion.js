@@ -143,7 +143,7 @@ const SG_TREAT_CHIPS = [
 const SG_TABLE_COLUMNS = [
   {
     id: "codeClient", label: "Code client", sortable: true, minWidth: 110,
-    render: (item) => <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>{item.codeClient || "-"}</span>,
+    render: (item) => <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--gpr-primary, #005081)", fontFamily: "monospace" }}>{item.codeClient || "-"}</span>,
   },
   {
     id: "clientFirstAndLastName", label: "Client", sortable: true, minWidth: 140,

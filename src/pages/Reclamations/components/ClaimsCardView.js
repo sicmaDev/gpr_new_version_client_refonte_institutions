@@ -92,7 +92,7 @@ const selectSx = {
   backgroundColor: "#fff",
   "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
   "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#CBD5E1" },
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#005081", borderWidth: 1.5 },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
   "& .MuiSelect-select": { py: "7px" },
 };
 
@@ -146,7 +146,7 @@ const ClaimsCardView = ({ items = [], mode, objets, onCardClick, currentUser, sh
               borderRadius: "10px", fontSize: "0.85rem", backgroundColor: "#fff",
               "& fieldset": { borderColor: "#E2E8F0" },
               "&:hover fieldset": { borderColor: "#CBD5E1" },
-              "&.Mui-focused fieldset": { borderColor: "#005081", borderWidth: 1.5 },
+              "&.Mui-focused fieldset": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
             },
             "& input": { borderBottom: "none !important", boxShadow: "none !important" },
           }}
@@ -226,7 +226,7 @@ const ClaimsCardView = ({ items = [], mode, objets, onCardClick, currentUser, sh
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
                           <Typography sx={{
-                            fontSize: "0.72rem", fontWeight: 700, color: "#005081",
+                            fontSize: "0.72rem", fontWeight: 700, color: "var(--gpr-primary, #005081)",
                             fontFamily: "monospace", letterSpacing: "0.04em", lineHeight: 1.3,
                           }}>
                             {claim.codeClient || "-"}
@@ -311,7 +311,7 @@ const ClaimsCardView = ({ items = [], mode, objets, onCardClick, currentUser, sh
                     {/* Ligne 5 : lien Ouvrir */}
                     <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                       <Typography sx={{
-                        fontSize: "0.78rem", fontWeight: 700, color: "#005081",
+                        fontSize: "0.78rem", fontWeight: 700, color: "var(--gpr-primary, #005081)",
                         cursor: "pointer", display: "flex", alignItems: "center", gap: 0.3,
                         "&:hover": { color: "#0369A1" },
                       }}>

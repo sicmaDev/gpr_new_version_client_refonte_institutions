@@ -95,7 +95,7 @@ const PointsServices = (props) => {
     const [activeChip, setActiveChip] = useState("ALL");
 
     const KPI_CONFIG = [
-        { key: "total",      label: "Total",              icon: AssignmentIcon, iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
+        { key: "total",      label: "Total",              icon: AssignmentIcon, iconBg: "var(--gpr-primary-light, #DBEAFE)", iconColor: "var(--gpr-primary, #1D4ED8)", borderColor: "var(--gpr-primary, #3B82F6)", filter: () => true },
         { key: "directions", label: "Directions",         icon: BusinessIcon,   iconBg: "#EDE9FE", iconColor: "#6D28D9", borderColor: "#8B5CF6", filter: (i) => i.type === "DIRECTION" && !i.deleted },
         { key: "agences",    label: "Agences & Guichets", icon: StoreIcon,      iconBg: "#D1FAE5", iconColor: "#065F46", borderColor: "#10B981", filter: (i) => ["AGENCE","GUICHET"].includes(i.type) && !i.deleted },
         { key: "inactifs",   label: "Désactivés",         icon: Block,          iconBg: "#FEE2E2", iconColor: "#B91C1C", borderColor: "#EF4444", filter: (i) => i.deleted },
@@ -382,6 +382,11 @@ const PointsServices = (props) => {
             });
     }
     const handleModalSubmit = async (items) => {
+        // Localisation facultative : contrôlée avant toute création, avec les mêmes règles que la modification.
+        for (const item of items) {
+            const erreur = item.localisation ? verifierLocalisation(item.localisation) : null;
+            if (erreur) { notify(`Erreur - Localisation de « ${item.libelle || "le point de service"} » : ${erreur}`, "error"); return false; }
+        }
         setAddLoading(true);
         try {
             for (const item of items) {
@@ -391,8 +396,13 @@ const PointsServices = (props) => {
                     description: item.description,
                     direction_id: item.direction_id || "",
                 };
-                const ok = await ajout(payload, props);
-                if (!ok) return false;
+                const cree = await ajout(payload, props);
+                if (!cree) return false;
+                const loc = item.localisation;
+                if (cree.id && loc && Object.values(loc).some((v) => String(v ?? "").trim() !== "")) {
+                    const r = await enregistrerLocalisationApi(cree.id, localisationPourServeur(loc)).catch(() => null);
+                    if (!r?.status) notify(typeof r?.content === "string" ? r.content : "La localisation n'a pas pu être enregistrée.", "error");
+                }
             }
             setAddModalOpen(false);
         } finally {
@@ -522,6 +532,12 @@ const PointsServices = (props) => {
                         ))}
                     </MuiSelect>
                 </FormControl>
+            ),
+        },
+        {
+            key: "localisation", label: "", fullWidth: true,
+            render: (value, onChange) => (
+                <LocalisationPointService valeur={value || localisationVide()} onChange={onChange} />
             ),
         },
     ];
@@ -708,8 +724,8 @@ const PointsServices = (props) => {
                 >
                     <div style={{
                         background: disableConfirm.isDisabled
-                            ? "linear-gradient(135deg, #b45309 0%, #f59e0b 100%)"
-                            : "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
+                            ? "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)"
+                            : "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)",
                         padding: "18px 24px",
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                     }}>
@@ -756,8 +772,8 @@ const PointsServices = (props) => {
                             sx={{
                                 textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3,
                                 background: disableConfirm.isDisabled
-                                    ? "linear-gradient(135deg, #b45309, #f59e0b)"
-                                    : "linear-gradient(135deg, #065f46, #10b981)",
+                                    ? "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))"
+                                    : "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))",
                                 "&:hover": { opacity: 0.9 },
                                 "&.Mui-disabled": { opacity: 0.6 },
                             }}
@@ -776,7 +792,7 @@ const PointsServices = (props) => {
                     PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}
                 >
                     <div style={{
-                        background: "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)",
+                        background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)",
                         padding: "18px 24px",
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                     }}>
@@ -823,8 +839,8 @@ const PointsServices = (props) => {
                             color="error"
                             sx={{
                                 textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3,
-                                background: "linear-gradient(135deg, #991b1b, #ef4444)",
-                                "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" },
+                                background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))",
+                                "&:hover": { background: "var(--gpr-primary-dark, #003d62)" },
                                 "&.Mui-disabled": { opacity: 0.6 },
                             }}
                         >

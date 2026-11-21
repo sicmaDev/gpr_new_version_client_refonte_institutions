@@ -16,7 +16,7 @@ const selectSx = {
   backgroundColor: "#fff",
   "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
   "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#CBD5E1" },
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#005081", borderWidth: 1.5 },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
   "& .MuiSelect-select": { py: "7px" },
 };
 
@@ -133,7 +133,7 @@ const ConfigCardView = ({
                   borderRadius: "10px", fontSize: "0.85rem", backgroundColor: "#fff",
                   "& fieldset": { borderColor: "#E2E8F0" },
                   "&:hover fieldset": { borderColor: "#CBD5E1" },
-                  "&.Mui-focused fieldset": { borderColor: "#005081", borderWidth: 1.5 },
+                  "&.Mui-focused fieldset": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
                 },
                 "& input": { borderBottom: "none !important", boxShadow: "none !important" },
               }}
@@ -183,7 +183,7 @@ const ConfigCardView = ({
                   sx={{
                     borderRadius: "16px",
                     border: "1px solid #F0F4F8",
-                    borderTop: "3px solid #005081",
+                    borderTop: "3px solid var(--gpr-primary, #005081)",
                     backgroundColor: "#FFFFFF",
                     boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                     transition: "box-shadow 0.2s",

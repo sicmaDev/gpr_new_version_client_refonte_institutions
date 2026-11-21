@@ -6,7 +6,7 @@ import RecorderControls from "../recorder-controls";
 
 // Fenêtre d'enregistrement vocal commune à l'enregistrement des réclamations, dénonciations et suggestions.
 // Même style que les autres fenêtres de la refonte : bandeau aux couleurs du thème, contenu sobre.
-const VoiceRecorderDialog = ({ open, onClose, title, recorderState, handlers }) => (
+const VoiceRecorderDialog = ({ open, onClose, title, recorderState, handlers, ecouteDirecte = false }) => (
   <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
     <div style={{
       background: "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)",
@@ -31,7 +31,7 @@ const VoiceRecorderDialog = ({ open, onClose, title, recorderState, handlers }) 
       </div>
       <section className="voice-recorder">
         <div className="recorder-container">
-          <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={onClose} />
+          <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={onClose} ecouteDirecte={ecouteDirecte} />
         </div>
       </section>
     </DialogContent>

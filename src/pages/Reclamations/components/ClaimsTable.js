@@ -42,7 +42,7 @@ const selectSx = {
   backgroundColor: "#fff",
   "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
   "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#CBD5E1" },
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#005081", borderWidth: 1.5 },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
   "& .MuiSelect-select": { py: "7px" },
 };
 
@@ -158,7 +158,7 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
               backgroundColor: "#fff",
               "& fieldset": { borderColor: "#E2E8F0" },
               "&:hover fieldset": { borderColor: "#CBD5E1" },
-              "&.Mui-focused fieldset": { borderColor: "#005081", borderWidth: 1.5 },
+              "&.Mui-focused fieldset": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
             },
             "& input": { borderBottom: "none !important", boxShadow: "none !important" },
           }}
@@ -290,7 +290,7 @@ const ClaimsTable = ({ items = [], mode, objets, onRowClick, statusOptions, curr
                     {/* Code client */}
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                        <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
+                        <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--gpr-primary, #005081)", fontFamily: "monospace" }}>
                           {claim.codeClient || "-"}
                         </span>
                         {showStatusIcons && isAssignedToMe && (

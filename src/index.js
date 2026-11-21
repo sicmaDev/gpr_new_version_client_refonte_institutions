@@ -49,21 +49,35 @@ root.render(
 reportWebVitals();
 swDev();
 
-// public/sw.js n'est normalement jamais enregistré par le code actuel
-// (swDev() ci-dessus est un no-op, son corps est commenté) — mais un
-// navigateur peut avoir gardé l'enregistrement d'une ancienne version de
-// l'app où il l'était. Ce service worker bugué (une promesse non résolue
-// dans son handler fetch) intercepte alors TOUTES les requêtes, y compris
-// vers l'API backend (localhost:8080), cassant le login avec des erreurs
-// CORS/500 qui n'ont rien à voir avec le serveur. On le désenregistre
-// proactivement pour ne pas laisser ce piège actif indéfiniment.
+// Copie de l'application sur l'appareil (public/sw-gpr.js) : sans internet, la page de connexion s'ouvre
+// quand même et le mode hors ligne est utilisable (il faut avoir ouvert l'application une fois en ligne).
+// L'ancien public/sw.js, bugué (il interceptait aussi l'API et cassait la connexion), est retiré s'il est
+// encore enregistré dans un navigateur, avec ses anciennes copies. Le service worker des notifications
+// (firebase-messaging-sw.js) est laissé en place.
+const SW_GPR = "sw-gpr.js";
+const estGarde = (url) => url.endsWith("/" + SW_GPR) || url.includes("firebase-messaging-sw");
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.getRegistrations().then((registrations) => {
-    registrations.forEach((registration) => registration.unregister());
+    registrations.forEach((registration) => {
+      const script = (registration.active || registration.waiting || registration.installing)?.scriptURL || "";
+      if (!estGarde(script)) {
+        registration.unregister();
+      }
+    });
   });
+  // Seulement sur l'application construite (npm run build) : en développement, la copie gênerait le rechargement.
+  if (process.env.NODE_ENV === "production") {
+    const enregistrer = () =>
+      navigator.serviceWorker.register("./" + SW_GPR).catch((e) => console.warn("Copie hors ligne indisponible :", e));
+    if (document.readyState === "complete") {
+      enregistrer();
+    } else {
+      window.addEventListener("load", enregistrer);
+    }
+  }
 }
 if ("caches" in window) {
-  caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+  caches.keys().then((names) => names.filter((n) => !n.startsWith("gpr-app-")).forEach((n) => caches.delete(n)));
 }
 
 // Purge ponctuelle des entrées de test écrites par une version antérieure du

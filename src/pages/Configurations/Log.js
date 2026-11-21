@@ -40,7 +40,7 @@ const Log = () => {
     const [viewMode, setViewMode] = useState("list");
 
     const KPI_CONFIG = [
-        { key: "total",   label: "Total logs",      icon: StorageIcon,      iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
+        { key: "total",   label: "Total logs",      icon: StorageIcon,      iconBg: "var(--gpr-primary-light, #DBEAFE)", iconColor: "var(--gpr-primary, #1D4ED8)", borderColor: "var(--gpr-primary, #3B82F6)", filter: () => true },
         { key: "error",   label: "Erreurs",          icon: ErrorOutlineIcon, iconBg: "#FEE2E2", iconColor: "#B91C1C", borderColor: "#EF4444", filter: (i) => (i.type || '').toUpperCase() === "ERROR" },
         { key: "warning", label: "Avertissements",   icon: WarningAmberIcon, iconBg: "#FEF3C7", iconColor: "#B45309", borderColor: "#F59E0B", filter: (i) => (i.type || '').toUpperCase() === "WARNING" },
         { key: "info",    label: "Infos",            icon: InfoOutlinedIcon, iconBg: "#D1FAE5", iconColor: "#065F46", borderColor: "#10B981", filter: (i) => (i.type || '').toUpperCase() === "INFO" },

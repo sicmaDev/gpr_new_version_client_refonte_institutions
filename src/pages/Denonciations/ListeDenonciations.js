@@ -205,7 +205,7 @@ import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 const DEN_KPI_CARDS = [
-  { key: "total",   label: "Total dénonciations",       icon: AssignmentIcon,    iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
+  { key: "total",   label: "Total dénonciations",       icon: AssignmentIcon,    iconBg: "var(--gpr-primary-light, #DBEAFE)", iconColor: "var(--gpr-primary, #1D4ED8)", borderColor: "var(--gpr-primary, #3B82F6)", filter: () => true },
   { key: "pending", label: "En cours de traitement",    icon: HourglassEmptyIcon, iconBg: "#FEF3C7", iconColor: "#92400E", borderColor: "#F59E0B", filter: (c) => ["SAVED","TEMP_SAVED","AFFECTED","TO_APPROUVED","DESAPPROUVED"].includes(c.status) },
   { key: "treated", label: "Traitées",                  icon: CheckCircleIcon,   iconBg: "#D1FAE5", iconColor: "#065F46", borderColor: "#10B981", filter: (c) => ["TREAT","SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","CLASSED"].includes(c.status) },
   { key: "overdue", label: "En retard / Alerte",        icon: WarningAmberIcon,  iconBg: "#FEE2E2", iconColor: "#B91C1C", borderColor: "#EF4444", filter: (c) => c.retardDay !== undefined && c.retardDay <= 0 && !["SATISFIED","UNSATISFIED","PARTIAL_SATISFIED","LITIGATION"].includes(c.status) },
@@ -1949,7 +1949,7 @@ const ListeDenonciations = (props) => {
         // cette liste générale ne doit pas les afficher.
         return (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
+            <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--gpr-primary, #005081)", fontFamily: "monospace" }}>
               {item.codeClient || "-"}
             </span>
           </Box>
@@ -2767,7 +2767,7 @@ const ListeDenonciations = (props) => {
                                     <div style={{ fontSize: 13.5, color: "#1e293b", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{sol.content || sol.solution || "-"}</div>
                                   </div>
                                   {sol.commentaire && <div style={{ padding: "8px 14px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Commentaire</div><div style={{ fontSize: 12.5, color: "#64748b", fontStyle: "italic" }}>{sol.commentaire}</div></div>}
-                                  {sol.satisfactionMeasureDto?.commentaire && <div style={{ margin: "0 14px 10px", background: "#e0f2fe", borderRadius: 8, padding: "8px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#0369a1", textTransform: "uppercase" }}>Commentaire du client</div><div style={{ fontSize: 12.5, color: "#0369a1", marginTop: 4 }}>{sol.satisfactionMeasureDto.commentaire}</div></div>}
+                                  {(() => { const c = (sol.satisfactionMeasureDto?.commentaire || "").replace(/^\[WhatsApp(-Audio)?\]\s*/, ""); const wa = (sol.satisfactionMeasureDto?.commentaire || "").startsWith("[WhatsApp-Audio]") ? "Mesurée via audio WhatsApp 🎙" : (sol.satisfactionMeasureDto?.commentaire || "").startsWith("[WhatsApp]") ? "Mesurée depuis WhatsApp" : ""; return (<>{wa && <div style={{ margin: "0 14px 8px", fontSize: 11.5, fontWeight: 600, color: "#15803d" }}>{wa}</div>}{c.trim() && <div style={{ margin: "0 14px 10px", background: "#e0f2fe", borderRadius: 8, padding: "8px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#0369a1", textTransform: "uppercase" }}>Commentaire du client</div><div style={{ fontSize: 12.5, color: "#0369a1", marginTop: 4 }}>{c}</div></div>}</>); })()}
                                   {satLabel && <div style={{ padding: "0 14px 12px" }}><span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: dotColor + "18", color: dotColor }}>{satLabel}</span></div>}
                                 </div>
                               </div>
@@ -2936,7 +2936,7 @@ const ListeDenonciations = (props) => {
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               </div>
               <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>+ Audio</div>
-              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Enregistrez ou importez un audio</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Enregistrez un audio</div>
             </div>
             <section className="voice-recorder">
               <div className="recorder-container">

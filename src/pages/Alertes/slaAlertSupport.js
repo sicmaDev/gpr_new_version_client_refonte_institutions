@@ -54,7 +54,7 @@ export const SLA_ALERT_CHIPS = (withMeasure) => [
 export const slaTableColumns = (openUrl, actionLabel) => [
   {
     id: "claimCodeClient", label: "Code", sortable: true, minWidth: 110,
-    render: (item) => <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>{item.claimCodeClient || "-"}</span>,
+    render: (item) => <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--gpr-primary, #005081)", fontFamily: "monospace" }}>{item.claimCodeClient || "-"}</span>,
   },
   {
     id: "objetLibelle", label: "Objet", sortable: true, minWidth: 150,
@@ -93,7 +93,7 @@ export const slaTableColumns = (openUrl, actionLabel) => [
     id: "action", label: "Action", sortable: false, minWidth: 90,
     render: (item) => (
       <span onClick={(e) => { e.stopPropagation(); openUrl(item); }}
-        style={{ fontSize: "0.80rem", color: "#005081", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}>
+        style={{ fontSize: "0.80rem", color: "var(--gpr-primary, #005081)", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}>
         {actionLabel(item)}
       </span>
     ),

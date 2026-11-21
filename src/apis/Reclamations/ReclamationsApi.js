@@ -279,12 +279,13 @@ export const addTempClaimApi = async (data, props) => {
         },
         data: data
     };
+    let brouillon = null;
     await axios(config)
         .then(function (response) {
             // console.log("reponseaan", response)
             props.etatChanged(false)
             if (response.data.status) {
-
+                brouillon = response.data.content ?? null;
                 notify("Bravo - Réclamation sauvegardée", "success");
                 listeByStatut(props, "TEMP_SAVED")
             } else {
@@ -296,6 +297,8 @@ export const addTempClaimApi = async (data, props) => {
             notify("Erreur - Veuillez réessayer!", "error");
             // console.log("erreur",error)
         });
+    // Brouillon enregistré (sert à rattacher les transcriptions IA à ses audios)
+    return brouillon;
 }
 
 export const addClaimApi = async (data, props) => {

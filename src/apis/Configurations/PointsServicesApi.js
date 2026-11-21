@@ -104,7 +104,8 @@ export const ajout = async (data, props) => {
             notify("Bravo - Point de service ajouté", "success");
            
            all(props)
-            return true;
+            // le point de service créé (avec son id), pour enregistrer sa localisation
+            return response.data.content || true;
         })
         .catch(function (error) {
             props.etatChanged(false)

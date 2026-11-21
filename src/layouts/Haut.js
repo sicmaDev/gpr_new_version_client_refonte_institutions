@@ -1,5 +1,5 @@
 import React,{useEffect, useState} from 'react';
-import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import MuiDrawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
@@ -116,7 +116,8 @@ const AppBar = styled(MuiAppBar, {
 
 
 // TODO remove, this demo shouldn't need to reset the theme.
-const defaultTheme = createTheme();
+// Plus de thème par défaut ici : il écrasait le thème de l'apparence (App.js, DynamicMuiTheme) et laissait
+// en bleu par défaut les boutons, filtres et onglets de toutes les pages.
 
 const getSidebarLuminance = (hex) => {
   try {
@@ -235,7 +236,7 @@ export const Haut = (props) => {
     <>
       {estMobile && (
       <div className="show-on-med-and-down hide-on-large-only"> 
-        <ThemeProvider theme={defaultTheme} >
+        <>
         
           <CssBaseline />
           <AppBar position="absolute" open={open} sx={{ backgroundColor: colors.topbarColor }}>
@@ -443,13 +444,13 @@ export const Haut = (props) => {
             </footer>
           </Box>
       
-        </ThemeProvider>
+        </>
       </div>
       )}
 
       {!estMobile && (
       <div className="hide-on-med-and-down show-on-large-only" style={{overflowY: "hidden"}}>
-        <ThemeProvider theme={defaultTheme}   >
+        <>
           
           <CssBaseline />
           <AppBar position="absolute" open={open} style={{ minHeight:"70px" }} sx={{ backgroundColor: colors.topbarColor }}>
@@ -676,7 +677,7 @@ export const Haut = (props) => {
             {/* <Footer/> */}
           </Box>
       
-        </ThemeProvider>
+        </>
         
       </div>
       )}

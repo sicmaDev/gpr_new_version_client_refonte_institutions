@@ -2740,7 +2740,9 @@ const ListeReclamations = (props) => {
                   const sat = sol.satisfactionMeasureDto?.status;
                   const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : "var(--gpr-primary, #005081)";
                   const satLabel = sat === "SATISFIED" ? "Satisfait" : sat === "UNSATISFIED" ? "Non satisfait" : sat === "PARTIAL" ? "Partiellement satisfait" : null;
-                  const clientComment = sol.satisfactionMeasureDto?.commentaire;
+                  const brut = sol.satisfactionMeasureDto?.commentaire || "";
+                  const viaWa = brut.startsWith("[WhatsApp-Audio]") ? " via audio WhatsApp 🎙" : brut.startsWith("[WhatsApp]") ? " depuis WhatsApp" : "";
+                  const clientComment = brut.replace(/^\[WhatsApp(-Audio)?\]\s*/, "");
                   const approb = sol.status === "UNAPPROVED";
                   return (
                     <div key={sol.id ?? idx} style={{ position: "relative", marginBottom: isLast ? 0 : 20 }}>
@@ -2759,7 +2761,7 @@ const ListeReclamations = (props) => {
                         {sol.commentaire && <div style={{ padding: "0 14px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4, marginTop: 10 }}>Commentaire</div><div style={{ fontSize: 12.5, color: "#64748b", fontStyle: "italic", lineHeight: 1.6 }}>{sol.commentaire}</div></div>}
                         {clientComment && clientComment.trim() !== "" && <div style={{ padding: "0 14px 12px" }}><div style={{ fontSize: 10.5, fontWeight: 700, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Commentaire du client</div><div style={{ fontSize: 12.5, color: "#0369a1", lineHeight: 1.6, background: "#e0f2fe", borderRadius: 6, padding: "6px 10px" }}>{clientComment}</div></div>}
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: "0 14px 12px" }}>
-                          {satLabel && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: dotColor + "18", color: dotColor }}>{satLabel}</span>}
+                          {satLabel && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: dotColor + "18", color: dotColor }}>{satLabel}{viaWa && <> : mesurée{viaWa}</>}</span>}
                           {approb && !sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fef3c7", color: "#92400e" }}>En attente d'approbation</span>}
                           {approb && sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fee2e2", color: "#991b1b" }}>Désapprouvée</span>}
                         </div>
@@ -2963,7 +2965,9 @@ const ListeReclamations = (props) => {
                                   const sat = sol.satisfactionMeasureDto?.status;
                                   const dotColor = sat === "SATISFIED" ? "#10b981" : sat === "UNSATISFIED" ? "#ef4444" : sat === "PARTIAL" ? "#f59e0b" : sol.status === "UNAPPROVED" ? "#f97316" : "var(--gpr-primary, #005081)";
                                   const satLabel = sat === "SATISFIED" ? "Satisfait" : sat === "UNSATISFIED" ? "Non satisfait" : sat === "PARTIAL" ? "Partiellement satisfait" : null;
-                                  const clientComment = sol.satisfactionMeasureDto?.commentaire;
+                                  const brut = sol.satisfactionMeasureDto?.commentaire || "";
+                  const viaWa = brut.startsWith("[WhatsApp-Audio]") ? " via audio WhatsApp 🎙" : brut.startsWith("[WhatsApp]") ? " depuis WhatsApp" : "";
+                  const clientComment = brut.replace(/^\[WhatsApp(-Audio)?\]\s*/, "");
                                   return (
                                     <div key={sol.id ?? idx} style={{ position: "relative", marginBottom: isLast ? 0 : 18 }}>
                                       <div style={{ position: "absolute", left: -22, top: 12, width: 16, height: 16, borderRadius: "50%", background: dotColor, border: "3px solid #fff", boxShadow: `0 0 0 2px ${dotColor}`, zIndex: 1 }} />
@@ -2981,7 +2985,7 @@ const ListeReclamations = (props) => {
                                         {sol.commentaire && <div style={{ padding: "8px 14px" }}><span style={{ fontSize: 10.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Commentaire</span><div style={{ fontSize: 12.5, color: "#64748b", fontStyle: "italic", marginTop: 4 }}>{sol.commentaire}</div></div>}
                                         {clientComment && clientComment.trim() !== "" && <div style={{ margin: "0 14px 10px", background: "#e0f2fe", borderRadius: 8, padding: "8px 12px" }}><span style={{ fontSize: 10.5, fontWeight: 700, color: "#0369a1", textTransform: "uppercase" }}>Commentaire du client</span><div style={{ fontSize: 12.5, color: "#0369a1", marginTop: 4 }}>{clientComment}</div></div>}
                                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "0 14px 12px", marginTop: 4 }}>
-                                          {satLabel && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: dotColor + "18", color: dotColor }}>{satLabel}</span>}
+                                          {satLabel && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: dotColor + "18", color: dotColor }}>{satLabel}{viaWa && <> : mesurée{viaWa}</>}</span>}
                                           {!satLabel && sol.status === "APPROVED" && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fef3c7", color: "#92400e" }}>En attente de mesure</span>}
                                           {sol.status === "UNAPPROVED" && sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fee2e2", color: "#991b1b" }}>Désapprouvée - {sol.motifDesaprobation}</span>}
                                           {sol.status === "UNAPPROVED" && !sol.motifDesaprobation && <span style={{ fontSize: 11.5, fontWeight: 700, padding: "3px 11px", borderRadius: 20, background: "#fef3c7", color: "#92400e" }}>En attente d'approbation</span>}

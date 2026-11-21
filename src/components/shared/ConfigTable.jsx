@@ -32,7 +32,7 @@ const selectSx = {
   backgroundColor: "#fff",
   "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
   "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#CBD5E1" },
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#005081", borderWidth: 1.5 },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
   "& .MuiSelect-select": { py: "7px" },
 };
 
@@ -120,7 +120,7 @@ const ConfigTable = ({
                 borderRadius: "10px", fontSize: "0.85rem", backgroundColor: "#fff",
                 "& fieldset": { borderColor: "#E2E8F0" },
                 "&:hover fieldset": { borderColor: "#CBD5E1" },
-                "&.Mui-focused fieldset": { borderColor: "#005081", borderWidth: 1.5 },
+                "&.Mui-focused fieldset": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
               },
               "& input": {
                 borderBottom: "none !important",

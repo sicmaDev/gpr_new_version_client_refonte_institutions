@@ -1115,7 +1115,9 @@ const WgprMain = () => {
   const handleConvert = async (type) => {
     const ids = selectedMessages.map((m) => m.id);
     dispatch(resetSelectMessage());
-    const inboxData = { phone: displayNumber(selectedContact) };
+    // Nom du profil WhatsApp du client (celui qu'il a mis lui-même), repris dans « Nom et prénom » du formulaire
+    const nomProfil = contacts.find((c) => c.phone === selectedContact)?.name || null;
+    const inboxData = { phone: displayNumber(selectedContact), name: nomProfil };
     // La persistance sessionStorage est gérée par le reducer lui-même (voir
     // WhatsappReducer.js) - plus besoin de la dupliquer manuellement ici.
     dispatch(setCurrentInbox(inboxData));

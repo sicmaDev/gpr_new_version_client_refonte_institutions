@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { formatDate } from "../../Utils/utils";
+import TranscriptionAudioIa from "../IA/TranscriptionAudioIa";
 
 const AccordionSection = ({ sectionKey, color, dotColor, icon, title, count, openMap, onToggle, children }) => {
   const isOpen = openMap[sectionKey];
@@ -42,6 +43,7 @@ const FichiersTab = ({
   inputRef, onFilesChange, onAddAudio,
   content, extras, onAddContent,
   onDeleteExtra, currentUser,
+  transcriptionIa = false, // réclamations et dénonciations seulement (guide IA)
 }) => {
   const [accordion, setAccordion] = useState({ contents: true, files: true, audios: true });
   const toggle = (key) => setAccordion(prev => ({ ...prev, [key]: !prev[key] }));
@@ -167,6 +169,15 @@ const FichiersTab = ({
         {audiosCount > 0 ? audioList : (
           <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "8px 0" }}>Aucun audio enregistré</div>
         )}
+        {/* Transcription IA de chaque audio : texte déjà enregistré, ou bouton pour le transcrire */}
+        {transcriptionIa && selectedItemAudio?.filter((a) => a && a.id).map((a) => (
+          <div key={"ia-" + a.id} style={{ marginTop: 6 }}>
+            <div style={{ fontSize: 11.5, color: "#64748b", marginTop: 8 }}>{a.name}</div>
+            <TranscriptionAudioIa audioId={a.id} nom={a.name} persister
+              existante={a.transcriptionCorrected || a.transcriptionRaw
+                ? { texte: a.transcriptionCorrected || a.transcriptionRaw, ajoute: a.transcriptionAdded } : null} />
+          </div>
+        ))}
       </AccordionSection>
 
     </div>

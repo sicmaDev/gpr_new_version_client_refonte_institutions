@@ -35,10 +35,10 @@ const Modal = () => {
     const danger = /suppr|supprim|delete/i.test(state.msg);
     const Icon = danger ? DeleteIcon : HelpOutlineIcon;
     const header = danger
-        ? "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)"
+        ? "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)"
         : "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)";
     const action = danger
-        ? { background: "linear-gradient(135deg, #991b1b, #ef4444)" }
+        ? { background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))" }
         : { background: "var(--gpr-primary, #005081)" };
 
     return (

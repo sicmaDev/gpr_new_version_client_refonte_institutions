@@ -196,6 +196,7 @@ import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import { licenseInfo } from "../../apis/LoginApi";
 import SessionChat from "../../components/treatment/SessionChat";
 import TraitementShell from "../../components/treatment/TraitementShell";
+import AssistantIaTraitement from "../../components/IA/AssistantIaTraitement";
 import { Redirect } from "react-router-dom";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import WarningIcon from "@mui/icons-material/Warning";
@@ -2898,11 +2899,11 @@ const TraiterDenonciation = (props) => {
           endIcon={<AutorenewIcon />}
           variant="contained"
           sx={{
-            backgroundColor: "#ef6c00",
+            backgroundColor: "var(--gpr-primary, #005081)",
             textTransform: "initial",
             transition: "background-color 0.3s ease",
             "&:hover": {
-              backgroundColor: "#fda321",
+              backgroundColor: "var(--gpr-primary-dark, #003d62)",
             },
           }}
         >
@@ -3213,7 +3214,7 @@ const TraiterDenonciation = (props) => {
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               </div>
               <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>+ Audio</div>
-              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Enregistrez ou importez un audio</div>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Enregistrez un audio</div>
             </div>
               <section className="voice-recorder">
                 <div className="recorder-container">
@@ -3372,6 +3373,31 @@ const TraiterDenonciation = (props) => {
           solution={props.solution}
 
           treatForm={treatForm}
+          assistantIa={
+            <AssistantIaTraitement
+              key={"ia-" + props.id}
+              claimId={props.id}
+              texte={props.content}
+              nature="DENUNCIATION"
+              categorie={props.subject}
+              motif={props.underSubject}
+              analyse={props.selectedItem ? {
+                resume: props.selectedItem.aiSummary, sentiment: props.selectedItem.aiSentiment,
+                urgence: props.selectedItem.aiUrgency, correlationId: props.selectedItem.correlationId,
+              } : null}
+              peutTraiter={Boolean(props.authorize) && (
+                  // Mêmes règles que le formulaire « Solution » de la page : sans formulaire, pas de solutions IA à appliquer.
+                  props.status === "SAVED" ? Boolean(treatActionsVisible)
+                    : (props.status === "AFFECTED" || props.status === "DESAPPROUVED") && props.handled_by === user.firstAndLastName
+                )}
+              onAppliquer={(solution, commentaire) => {
+                props.solutionChanged(solution);
+                props.newSolutionChanged(solution);
+                props.commentChanged(commentaire || "");
+                props.newCommentChanged(commentaire || "");
+              }}
+            />
+          }
           treatActionsVisible={treatActionsVisible}
           onTreat={handleReSolve}
           loadingTreat={props.etat2}

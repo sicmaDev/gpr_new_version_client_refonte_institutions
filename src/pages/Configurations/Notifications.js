@@ -73,7 +73,7 @@ const Notifications = (props) => {
         return clearComponentState();
     }, []);
 
-    const KPI_CONFIG = [{ key: "total", label: "Destinataires notifs", icon: AssignmentIcon, iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true }];
+    const KPI_CONFIG = [{ key: "total", label: "Destinataires notifs", icon: AssignmentIcon, iconBg: "var(--gpr-primary-light, #DBEAFE)", iconColor: "var(--gpr-primary, #1D4ED8)", borderColor: "var(--gpr-primary, #3B82F6)", filter: () => true }];
     const ROLES_CONFIG = [
         { value: "ALL", label: "Tous", filter: () => true },
         { value: "DE",          label: "Directeur Exécutif",   filter: (i) => i.titre === "DE" || i.titre === "Directeur Exécutif" },
@@ -337,7 +337,7 @@ const Notifications = (props) => {
             </div>
 
             <Dialog open={removeConfirm.open} onClose={() => { if (!removeConfirm.loading) setRemoveConfirm({ open: false, id: null, loading: false }); }} fullWidth maxWidth="xs" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
-                <div style={{ background: "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><PersonRemoveIcon style={{ color: "#fff", fontSize: 20 }} /></div>
                         <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Retirer le destinataire</div>
@@ -353,7 +353,7 @@ const Notifications = (props) => {
                     </BlockButton>
                     <BlockButton disabled={removeConfirm.loading}>
                         <LoadingButton onClick={() => handleDelete(removeConfirm.id)} loading={removeConfirm.loading} loadingPosition="start" startIcon={<PersonRemoveIcon style={{ fontSize: 15 }} />} variant="contained" color="error"
-                            sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #991b1b, #ef4444)", "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
+                            sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))", "&:hover": { background: "var(--gpr-primary-dark, #003d62)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
                             Retirer
                         </LoadingButton>
                     </BlockButton>

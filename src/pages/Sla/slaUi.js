@@ -173,7 +173,7 @@ export const SlaDialog = ({
 }) => (
   <Dialog open={open} onClose={() => { if (!loading) onClose(); }} fullWidth maxWidth={maxWidth} PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
     <div style={{
-      background: danger ? "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)" : "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)",
+      background: danger ? "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)" : "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)",
       padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -196,7 +196,7 @@ export const SlaDialog = ({
         <LoadingButton
           onClick={onSubmit} loading={loading} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained"
           sx={danger
-            ? { ...primarySx, background: "linear-gradient(135deg, #991b1b, #ef4444)", "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" } }
+            ? { ...primarySx, background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))", "&:hover": { background: "var(--gpr-primary-dark, #003d62)" } }
             : primarySx}
         >
           {submitLabel}

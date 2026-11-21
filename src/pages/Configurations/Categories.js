@@ -52,7 +52,7 @@ const Categories = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const KPI_CONFIG   = [{ key: "total", label: "Total catégories", icon: AssignmentIcon, iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true }];
+    const KPI_CONFIG   = [{ key: "total", label: "Total catégories", icon: AssignmentIcon, iconBg: "var(--gpr-primary-light, #DBEAFE)", iconColor: "var(--gpr-primary, #1D4ED8)", borderColor: "var(--gpr-primary, #3B82F6)", filter: () => true }];
     const CHIPS_CONFIG = [{ value: "ALL", label: "Tous", filter: () => true }];
 
     const filteredItems = useMemo(() => {
@@ -171,7 +171,7 @@ const Categories = (props) => {
 
                 {/* ── Modal suppression ── */}
                 <Dialog open={deleteConfirm.open} onClose={() => { if (!deleteConfirm.loading) setDeleteConfirm({ open: false, item: null, loading: false }); }} maxWidth="xs" fullWidth PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
-                    <div style={{ background: "linear-gradient(135deg, #991b1b 0%, #ef4444 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><DeleteIcon style={{ color: "#fff", fontSize: 20 }} /></div>
                             <div>
@@ -188,7 +188,7 @@ const Categories = (props) => {
                     </DialogContent>
                     <DialogActions style={{ padding: "12px 20px 16px", gap: 10 }}>
                         <BlockButton disabled={deleteConfirm.loading}><Button onClick={() => setDeleteConfirm({ open: false, item: null, loading: false })} disabled={deleteConfirm.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button></BlockButton>
-                        <BlockButton disabled={deleteConfirm.loading}><LoadingButton onClick={handleDelete} loading={deleteConfirm.loading} loadingPosition="start" startIcon={<DeleteIcon style={{ fontSize: 15 }} />} variant="contained" color="error" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #991b1b, #ef4444)", "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Supprimer</LoadingButton></BlockButton>
+                        <BlockButton disabled={deleteConfirm.loading}><LoadingButton onClick={handleDelete} loading={deleteConfirm.loading} loadingPosition="start" startIcon={<DeleteIcon style={{ fontSize: 15 }} />} variant="contained" color="error" sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))", "&:hover": { background: "var(--gpr-primary-dark, #003d62)" }, "&.Mui-disabled": { opacity: 0.6 } }}>Supprimer</LoadingButton></BlockButton>
                     </DialogActions>
                 </Dialog>
 

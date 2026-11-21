@@ -1800,7 +1800,7 @@ const Global = (props) => {
                   chartRef={globalPieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="anneau" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -1817,7 +1817,7 @@ const Global = (props) => {
                   chartRef={globalLineChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={520} />
+                <LazyChartSkeleton rendu="colonnesGroupees" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -1840,7 +1840,7 @@ const Global = (props) => {
                   chartRef={globalByCanalPieChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="pie" height={520} />
+              <LazyChartSkeleton rendu="progression" height={520} />
             )}
           </LazyChart>
         </PBICard>
@@ -1857,7 +1857,7 @@ const Global = (props) => {
                   chartRef={globalByCanalBarChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="bar" height={1200} />
+              <LazyChartSkeleton rendu="empile" height={1200} />
             )}
           </LazyChart>
         </PBICard>
@@ -1879,7 +1879,7 @@ const Global = (props) => {
                   chartRef={globalByObjetPieChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="pie" height={520} />
+              <LazyChartSkeleton rendu="progression" height={520} />
             )}
           </LazyChart>
         </PBICard>
@@ -1896,7 +1896,7 @@ const Global = (props) => {
                   chartRef={globalByObjetBarChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="bar" height={1200} />
+              <LazyChartSkeleton rendu="chaleur" height={1200} />
             )}
           </LazyChart>
         </PBICard>
@@ -1914,7 +1914,7 @@ const Global = (props) => {
               ref={resolutionPieChartRef}
             />
           ) : (
-            <LazyChartSkeleton type="pie" height={300} />
+            <LazyChartSkeleton rendu="jauge" height={300} />
           )}
         </PBICard>
       ) : <></>}
@@ -1931,7 +1931,7 @@ const Global = (props) => {
                   chartRef={evolutionByAgenceByAnneeBarChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="bar" height={600} />
+              <LazyChartSkeleton rendu="progression" height={600} />
             )}
           </LazyChart>
         </PBICard>
@@ -1954,7 +1954,7 @@ const Global = (props) => {
                   chartRef={claimByAgencePieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="progression" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -1971,7 +1971,7 @@ const Global = (props) => {
                   chartRef={claimByAgenceBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={520} />
+                <LazyChartSkeleton rendu="progression" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -1994,7 +1994,7 @@ const Global = (props) => {
                   chartRef={denunByAgencePieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="progression" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2011,7 +2011,7 @@ const Global = (props) => {
                   chartRef={denunByAgenceBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={520} />
+                <LazyChartSkeleton rendu="progression" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2034,7 +2034,7 @@ const Global = (props) => {
                   chartRef={sugByAgencePieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="progression" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2051,7 +2051,7 @@ const Global = (props) => {
                   chartRef={sugByAgenceBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={520} />
+                <LazyChartSkeleton rendu="progression" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2075,7 +2075,7 @@ const Global = (props) => {
                   chartRef={claimByCanalPieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="progression" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2092,7 +2092,7 @@ const Global = (props) => {
                   chartRef={claimByCanalBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={1200} />
+                <LazyChartSkeleton rendu="empile" height={1200} />
               )}
             </LazyChart>
           </PBICard>
@@ -2115,7 +2115,7 @@ const Global = (props) => {
                   chartRef={denunByCanalPieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="progression" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2132,7 +2132,7 @@ const Global = (props) => {
                   chartRef={denunByCanalBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={1200} />
+                <LazyChartSkeleton rendu="empile" height={1200} />
               )}
             </LazyChart>
           </PBICard>
@@ -2155,7 +2155,7 @@ const Global = (props) => {
                   chartRef={sugByCanalPieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="progression" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2172,7 +2172,7 @@ const Global = (props) => {
                   chartRef={sugByCanalBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={1200} />
+                <LazyChartSkeleton rendu="empile" height={1200} />
               )}
             </LazyChart>
           </PBICard>
@@ -2195,7 +2195,7 @@ const Global = (props) => {
                   chartRef={claimByObjetPieChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="pie" height={520} />
+              <LazyChartSkeleton rendu="progression" height={520} />
             )}
           </LazyChart>
         </PBICard>
@@ -2212,7 +2212,7 @@ const Global = (props) => {
                   chartRef={claimByObjetBarChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="bar" height={1200} />
+              <LazyChartSkeleton rendu="chaleur" height={1200} />
             )}
           </LazyChart>
         </PBICard>
@@ -2233,7 +2233,7 @@ const Global = (props) => {
                   chartRef={denunByObjetPieChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="pie" height={520} />
+              <LazyChartSkeleton rendu="progression" height={520} />
             )}
           </LazyChart>
         </PBICard>
@@ -2250,7 +2250,7 @@ const Global = (props) => {
                   chartRef={denunByObjetBarChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="bar" height={1200} />
+              <LazyChartSkeleton rendu="chaleur" height={1200} />
             )}
           </LazyChart>
         </PBICard>
@@ -2273,7 +2273,7 @@ const Global = (props) => {
                   chartRef={claimByGenderPieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="anneau" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2290,7 +2290,7 @@ const Global = (props) => {
                   chartRef={claimByGenderBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={1200} />
+                <LazyChartSkeleton rendu="empile" height={1200} />
               )}
             </LazyChart>
           </PBICard>
@@ -2314,7 +2314,7 @@ const Global = (props) => {
                   chartRef={sugByGenderPieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="anneau" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2331,7 +2331,7 @@ const Global = (props) => {
                   chartRef={sugByGenderBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={1200} />
+                <LazyChartSkeleton rendu="empile" height={1200} />
               )}
             </LazyChart>
           </PBICard>
@@ -2355,7 +2355,7 @@ const Global = (props) => {
                   chartRef={claimByGravitePieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="anneau" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2372,7 +2372,7 @@ const Global = (props) => {
                   chartRef={claimByGraviteBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={1200} />
+                <LazyChartSkeleton rendu="empile" height={1200} />
               )}
             </LazyChart>
           </PBICard>
@@ -2395,7 +2395,7 @@ const Global = (props) => {
                   chartRef={denunByGravitePieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="anneau" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2412,7 +2412,7 @@ const Global = (props) => {
                   chartRef={denunByGraviteBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={1200} />
+                <LazyChartSkeleton rendu="empile" height={1200} />
               )}
             </LazyChart>
           </PBICard>
@@ -2436,7 +2436,7 @@ const Global = (props) => {
                   chartRef={claimBySatisfactionPieChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="pie" height={520} />
+                <LazyChartSkeleton rendu="anneau" height={520} />
               )}
             </LazyChart>
           </PBICard>
@@ -2453,7 +2453,7 @@ const Global = (props) => {
                   chartRef={tauxMensuelClaimByMonthByAgenceBarChartRef}
                 />
               ) : (
-                <LazyChartSkeleton type="bar" height={1200} />
+                <LazyChartSkeleton rendu="progression" height={1200} />
               )}
             </LazyChart>
           </PBICard>
@@ -2471,7 +2471,7 @@ const Global = (props) => {
                   chartRef={tauxMensuelClaimByMonthBarChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="bar" height={520} />
+              <LazyChartSkeleton rendu="courbes" height={520} />
             )}
           </LazyChart>
         </PBICard>
@@ -2493,7 +2493,7 @@ const Global = (props) => {
                   chartRef={resolutionClaimDelaiByMonthBarChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="bar" height={520} />
+              <LazyChartSkeleton rendu="colonnes" height={520} />
             )}
           </LazyChart>
         </PBICard>
@@ -2510,7 +2510,7 @@ const Global = (props) => {
                   chartRef={resolutionClaimDelaiByMonthByAgenceBarChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="bar" height={1200} />
+              <LazyChartSkeleton rendu="progression" height={1200} />
             )}
           </LazyChart>
         </PBICard>
@@ -2532,7 +2532,7 @@ const Global = (props) => {
                   chartRef={resolutionDenunDelaiByMonthBarChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="bar" height={520} />
+              <LazyChartSkeleton rendu="colonnes" height={520} />
             )}
           </LazyChart>
         </PBICard>
@@ -2549,7 +2549,7 @@ const Global = (props) => {
                   chartRef={resolutionDenunDelaiByMonthByAgenceBarChartRef}
                 />
             ) : (
-              <LazyChartSkeleton type="bar" height={1200} />
+              <LazyChartSkeleton rendu="progression" height={1200} />
             )}
           </LazyChart>
         </PBICard>

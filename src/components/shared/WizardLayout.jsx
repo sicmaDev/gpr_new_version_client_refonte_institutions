@@ -110,8 +110,8 @@ const WizardLayout = ({
                   display: "flex", alignItems: "center", gap: 7,
                   padding: "12px 18px", border: "none", background: "transparent",
                   cursor: "pointer", fontSize: 13, fontWeight: active ? 600 : 400,
-                  color: active ? "#005081" : "#64748b",
-                  borderBottom: active ? "2px solid #005081" : "2px solid transparent",
+                  color: active ? "var(--gpr-primary, #005081)" : "#64748b",
+                  borderBottom: active ? "2px solid var(--gpr-primary, #005081)" : "2px solid transparent",
                   transition: "all 0.15s",
                 }}
               >
@@ -161,7 +161,7 @@ const WizardLayout = ({
                 </div>
                 <div style={{
                   fontSize: 11, fontWeight: 700,
-                  color: pct === 100 ? "#16a34a" : "#005081",
+                  color: pct === 100 ? "#16a34a" : "var(--gpr-primary, #005081)",
                 }}>
                   {pct}%
                 </div>
@@ -176,7 +176,7 @@ const WizardLayout = ({
                     borderRadius: 4,
                     background: pct >= 100
                       ? "linear-gradient(90deg, #16a34a, #22c55e)"
-                      : "linear-gradient(90deg, #005081, #0073b7)",
+                      : "linear-gradient(90deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))",
                     transition: "background 0.3s",
                   },
                 }}
@@ -202,7 +202,7 @@ const WizardLayout = ({
                       <div style={{
                         width: 32, height: 32, borderRadius: 10, flexShrink: 0,
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        background: done ? "#dcfce7" : active ? "#005081" : "#f1f5f9",
+                        background: done ? "#dcfce7" : active ? "var(--gpr-primary, #005081)" : "#f1f5f9",
                       }}>
                         {done
                           ? <CheckCircleIcon style={{ fontSize: 18, color: "#16a34a" }} />
@@ -226,7 +226,7 @@ const WizardLayout = ({
                         )}
                       </div>
                       {active && (
-                        <ChevronRightIcon style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
+                        <ChevronRightIcon style={{ fontSize: 16, color: "var(--gpr-primary, #005081)", flexShrink: 0 }} />
                       )}
                     </div>
                   );
@@ -274,8 +274,8 @@ const WizardLayout = ({
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
                   {step.icon
-                    ? React.cloneElement(step.icon, { style: { fontSize: 22, color: "#005081" } })
-                    : <AssignmentOutlinedIcon style={{ fontSize: 22, color: "#005081" }} />
+                    ? React.cloneElement(step.icon, { style: { fontSize: 22, color: "var(--gpr-primary, #005081)" } })
+                    : <AssignmentOutlinedIcon style={{ fontSize: 22, color: "var(--gpr-primary, #005081)" }} />
                   }
                 </div>
                 <div style={{ flex: 1 }}>
@@ -357,12 +357,12 @@ const WizardLayout = ({
                   variant="contained"
                   sx={{
                     textTransform: "initial", borderRadius: 2.5, fontSize: 13, fontWeight: 700,
-                    background: "linear-gradient(135deg, #005081, #004068)",
+                    background: "linear-gradient(135deg, var(--gpr-primary, #005081), var(--gpr-primary-dark, #004068))",
                     color: "white !important",
                     "& .MuiLoadingButton-loadingIndicator": { color: "white" },
                     boxShadow: "0 2px 8px rgba(0,80,129,0.3)", px: 3,
                     "&:hover": { background: "linear-gradient(135deg, #004068, #003a5c)", color: "white" },
-                    "&.Mui-disabled": { background: "linear-gradient(135deg, #005081, #004068)", opacity: 0.7, color: "white !important" },
+                    "&.Mui-disabled": { background: "linear-gradient(135deg, var(--gpr-primary, #005081), var(--gpr-primary-dark, #004068))", opacity: 0.7, color: "white !important" },
                   }}
                 >
                   Soumettre le dossier
@@ -373,7 +373,7 @@ const WizardLayout = ({
                   style={{
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "9px 22px", borderRadius: 10, border: "none",
-                    background: "linear-gradient(135deg, #005081, #004068)",
+                    background: "linear-gradient(135deg, var(--gpr-primary, #005081), var(--gpr-primary-dark, #004068))",
                     color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer",
                     boxShadow: "0 2px 8px rgba(0,80,129,0.25)",
                   }}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Dialog,
-  DialogTitle,
+
   DialogContent,
   DialogActions,
   Button,
@@ -14,13 +14,24 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import SentimentNeutralIcon from "@mui/icons-material/SentimentNeutral";
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
+import CloseIcon from "@mui/icons-material/Close";
+import MicIcon from "@mui/icons-material/Mic";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
+import GraphicEqIcon from "@mui/icons-material/GraphicEq";
+import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import RecorderControls from "../../components/recorder-controls";
 import useRecorder from "../../hooks/useRecorder";
 import { HOST } from "../../Utils/globals";
 import { loadItemFromSessionStorage } from "../../Utils/utils";
 import { notify } from "../../Utils/alert";
 
-const WA = { accent: "#25d366", bg: "#dcf8c6" };
+// Couleurs de la refonte (apparence de l'institution), comme les autres fenêtres de GPR.
+const P = "var(--gpr-primary, #005081)";
+const PD = "var(--gpr-primary-dark, #003d62)";
+const PL = "var(--gpr-primary-light, #e8f4fc)";
+const btnPrincipal = { textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: `linear-gradient(135deg, ${PD}, ${P})`, "&:hover": { background: PD } };
 
 const blobToBase64 = (blob) =>
   new Promise((resolve, reject) => {
@@ -177,20 +188,16 @@ export default function SendSolutionWhatsappDialog({
   };
 
   const renderSlot = (label, slotKey, blob, setBlob, recorder, required = false) => (
-    <div style={{ border: "1px solid #e0e0e0", borderRadius: 8, padding: 10, marginBottom: 10 }}>
+    <div style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: "10px 12px", marginBottom: 10, background: "#fff" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>
-          {label} {required && <span style={{ color: "red" }}>*</span>}
+        <span style={{ fontSize: 13, fontWeight: 600, color: "#334155", display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <GraphicEqIcon style={{ fontSize: 16, color: P }} />
+          {label} {required && <span style={{ color: "#dc2626" }}>*</span>}
         </span>
         {blob && (
-          <IconButton
-            size="small"
-            onClick={() => {
-              setBlob(null);
-              recorder.cancelRecording();
-            }}
-          >
-            <DeleteIcon fontSize="small" />
+          <IconButton size="small" aria-label="Supprimer l'enregistrement"
+            onClick={() => { setBlob(null); recorder.cancelRecording(); }}>
+            <DeleteIcon fontSize="small" style={{ color: "#94a3b8" }} />
           </IconButton>
         )}
       </div>
@@ -207,55 +214,70 @@ export default function SendSolutionWhatsappDialog({
           closeAction={() => setActiveSlot(null)}
         />
       ) : (
-        <Button size="small" variant="outlined" onClick={() => setActiveSlot(slotKey)}>
-          🎙 Enregistrer
+        <Button size="small" variant="outlined" startIcon={<MicIcon />} onClick={() => setActiveSlot(slotKey)}
+          sx={{ textTransform: "none", borderRadius: 2, fontWeight: 600, color: P, borderColor: P, "&:hover": { borderColor: PD, background: PL } }}>
+          Enregistrer
         </Button>
       )}
     </div>
   );
 
-  return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <WhatsAppIcon style={{ color: WA.accent }} />
-        Envoyer la solution par WhatsApp
-      </DialogTitle>
-      <DialogContent>
-        <p style={{ fontSize: 13, color: "#555" }}>
-          Client : <b>{phone || "numéro non renseigné"}</b>
-        </p>
+  const Mode = ({ valeur, Icone, children }) => {
+    const actif = waMode === valeur;
+    return (
+      <button type="button" onClick={() => setWaMode(valeur)}
+        style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", margin: 0,
+          borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "inherit",
+          background: actif ? "#fff" : "transparent", color: actif ? P : "#64748b",
+          boxShadow: actif ? "0 1px 3px rgba(15,23,42,.12)" : "none" }}>
+        <Icone style={{ fontSize: 17 }} /> {children}
+      </button>
+    );
+  };
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-          <Button
-            size="small"
-            variant={waMode === "text" ? "contained" : "outlined"}
-            onClick={() => setWaMode("text")}
-          >
-            Solution texte
-          </Button>
-          <Button
-            size="small"
-            variant={waMode === "audio" ? "contained" : "outlined"}
-            onClick={() => setWaMode("audio")}
-          >
-            Notes vocales
-          </Button>
+  return (
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
+      <div style={{ background: `linear-gradient(135deg, ${PD} 0%, ${P} 100%)`, padding: "18px 24px", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <WhatsAppIcon style={{ color: "#fff", fontSize: 20 }} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Envoyer la solution par WhatsApp</div>
+          <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, marginTop: 2 }}>Le client reçoit la solution et un sondage de satisfaction</div>
+        </div>
+        <IconButton onClick={handleClose} disabled={sending} size="small" aria-label="Fermer"
+          style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }}>
+          <CloseIcon style={{ fontSize: 16 }} />
+        </IconButton>
+      </div>
+
+      <DialogContent sx={{ px: 3, pt: 2.5, pb: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569", marginBottom: 14 }}>
+          <PhoneOutlinedIcon style={{ fontSize: 17, color: P }} />
+          Client : <b style={{ color: "#0f172a" }}>{phone || "numéro non renseigné"}</b>
+        </div>
+
+        <div style={{ display: "flex", gap: 4, background: "#f1f5f9", borderRadius: 10, padding: 4, marginBottom: 16 }}>
+          <Mode valeur="text" Icone={ChatOutlinedIcon}>Solution texte</Mode>
+          <Mode valeur="audio" Icone={MicIcon}>Notes vocales</Mode>
         </div>
 
         {renderSlot("Note vocale présentant le sondage (facultatif)", "survey", surveyBlob, setSurveyBlob, surveyRecorder)}
 
         {waMode === "text" ? (
-          <div
-            style={{
-              background: WA.bg,
-              borderRadius: 8,
-              padding: 12,
-              fontSize: 13,
-              whiteSpace: "pre-wrap",
-              marginBottom: 12,
-            }}
-          >
-            {solutionMessage}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>
+              Aperçu du message envoyé au client
+            </div>
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderLeft: `3px solid ${P}`, borderRadius: 10, padding: "12px 14px", fontSize: 13, color: "#1e293b", lineHeight: 1.6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, color: "#0f172a" }}>
+                <CheckCircleOutlineIcon style={{ fontSize: 17, color: P }} /> Votre réclamation a été traitée.
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, color: "#334155", marginTop: 10 }}>
+                <AssignmentOutlinedIcon style={{ fontSize: 16, color: "#64748b" }} /> Solution apportée :
+              </div>
+              <div style={{ whiteSpace: "pre-wrap", marginTop: 4, maxHeight: 160, overflowY: "auto" }}>{solutionText || ""}</div>
+            </div>
           </div>
         ) : (
           <>
@@ -266,28 +288,22 @@ export default function SendSolutionWhatsappDialog({
           </>
         )}
 
-        <div style={{ marginTop: 8 }}>
-          <p style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 6 }}>
-            Sondage de satisfaction envoyé avec le message :
-          </p>
-          <div style={{ display: "flex", gap: 12, fontSize: 12, color: "#555" }}>
-            <span><SentimentSatisfiedAltIcon fontSize="small" sx={{ verticalAlign: "middle" }} /> Satisfait</span>
-            <span><SentimentNeutralIcon fontSize="small" sx={{ verticalAlign: "middle" }} /> Partiellement satisfait</span>
-            <span><SentimentVeryDissatisfiedIcon fontSize="small" sx={{ verticalAlign: "middle" }} /> Non satisfait</span>
+        <div style={{ marginTop: 6, padding: "10px 12px", background: PL, borderRadius: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#334155", marginBottom: 6 }}>Sondage de satisfaction envoyé avec le message</div>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: 12.5, color: "#475569" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><SentimentSatisfiedAltIcon style={{ fontSize: 17, color: "#16a34a" }} /> Satisfait</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><SentimentNeutralIcon style={{ fontSize: 17, color: "#d97706" }} /> Partiellement satisfait</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><SentimentVeryDissatisfiedIcon style={{ fontSize: 17, color: "#dc2626" }} /> Non satisfait</span>
           </div>
         </div>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={sending}>
+      <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
+        <Button onClick={handleClose} disabled={sending} variant="outlined"
+          sx={{ textTransform: "none", borderRadius: 2, fontWeight: 600, px: 3, color: P, borderColor: P }}>
           Annuler
         </Button>
-        <LoadingButton
-          variant="contained"
-          style={{ backgroundColor: WA.accent }}
-          onClick={handleSend}
-          loading={sending}
-          disabled={waMode === "audio" && !solutionBlob}
-        >
+        <LoadingButton variant="contained" onClick={handleSend} loading={sending} loadingPosition="start"
+          startIcon={<WhatsAppIcon />} disabled={waMode === "audio" && !solutionBlob} sx={btnPrincipal}>
           Envoyer
         </LoadingButton>
       </DialogActions>

@@ -165,7 +165,7 @@ const CLS_KPI_CARDS = [
     key: "total",
     label: "Total",
     icon: AssignmentIcon,
-    iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6",
+    iconBg: "var(--gpr-primary-light, #DBEAFE)", iconColor: "var(--gpr-primary, #1D4ED8)", borderColor: "var(--gpr-primary, #3B82F6)",
     filter: () => true,
   },
   {

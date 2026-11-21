@@ -34,7 +34,7 @@ const CHANNEL_CHIPS = [
 ];
 
 const KPI_CONFIG = [
-    { key: "total", label: "Messages archivés", icon: SmsIcon, iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
+    { key: "total", label: "Messages archivés", icon: SmsIcon, iconBg: "var(--gpr-primary-light, #DBEAFE)", iconColor: "var(--gpr-primary, #1D4ED8)", borderColor: "var(--gpr-primary, #3B82F6)", filter: () => true },
     { key: "sent", label: "Envoyés", icon: CheckCircleOutlineIcon, iconBg: "#D1FAE5", iconColor: "#065F46", borderColor: "#10B981", filter: (i) => i.status === "ENVOYE" },
     { key: "failed", label: "Échecs", icon: ErrorOutlineIcon, iconBg: "#FEE2E2", iconColor: "#B91C1C", borderColor: "#EF4444", filter: (i) => i.status === "ECHEC" },
 ];

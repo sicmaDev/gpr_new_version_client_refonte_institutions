@@ -8,8 +8,8 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CloseIcon from "@mui/icons-material/Close";
 
 const ALL_TYPES = [
-  { type: "dénonciation", label: "Dénonciation", desc: "Signalement d'un abus ou d'une infraction", icon: <AnnouncementIcon style={{ fontSize: 22, color: "#dc2626" }} />, bg: "#fef2f2", border: "#fecaca" },
-  { type: "suggestion",   label: "Suggestion",   desc: "Proposition d'amélioration d'un service",  icon: <LightbulbIcon   style={{ fontSize: 22, color: "#d97706" }} />, bg: "#fffbeb", border: "#fde68a" },
+  { type: "dénonciation", label: "Dénonciation", desc: "Signalement d'un abus ou d'une infraction", icon: <AnnouncementIcon style={{ fontSize: 22, color: "var(--gpr-primary, #005081)" }} /> },
+  { type: "suggestion",   label: "Suggestion",   desc: "Proposition d'amélioration d'un service",  icon: <LightbulbIcon   style={{ fontSize: 22, color: "var(--gpr-primary, #005081)" }} /> },
 ];
 
 const ConvertirModal = ({
@@ -28,7 +28,7 @@ const ConvertirModal = ({
       <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
         PaperProps={{ style: { borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" } }}
       >
-        <div style={{ background: "var(--gpr-primary, #005081)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: 10, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <AutorenewIcon style={{ color: "white", fontSize: 20 }} />
@@ -52,11 +52,11 @@ const ConvertirModal = ({
               <button
                 key={opt.type}
                 onClick={() => onSelectType(opt.type)}
-                style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: opt.bg, border: `1.5px solid ${opt.border}`, borderRadius: 12, cursor: "pointer", textAlign: "left", transition: "transform 0.1s" }}
-                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
+                style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 12, cursor: "pointer", textAlign: "left", transition: "transform 0.1s, border-color 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.borderColor = "var(--gpr-primary, #005081)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = "#e2e8f0"; }}
               >
-                <div style={{ width: 42, height: 42, background: "white", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+                <div style={{ width: 42, height: 42, background: "var(--gpr-primary-light, #e8f4fc)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
                   {opt.icon}
                 </div>
                 <div>
@@ -74,19 +74,19 @@ const ConvertirModal = ({
         PaperProps={{ style: { borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" } }}
         sx={{ "& .MuiBackdrop-root": { background: "rgba(0,0,0,0.5) !important" } }}
       >
-        <div style={{ background: "#fff7ed", padding: "20px 24px", borderBottom: "1px solid #fed7aa", display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ background: "#ffedd5", borderRadius: 10, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <WarningAmberIcon style={{ color: "#ea580c", fontSize: 22 }} />
+        <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)", padding: "20px 24px", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: 10, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <WarningAmberIcon style={{ color: "white", fontSize: 22 }} />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: "#9a3412" }}>Action irréversible</div>
-            <div style={{ fontSize: 12, color: "#c2410c", marginTop: 2 }}>Cette action ne peut pas être annulée</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: "white" }}>Action irréversible</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>Cette action ne peut pas être annulée</div>
           </div>
         </div>
 
         <DialogContent style={{ padding: "24px" }}>
           <Typography style={{ fontSize: 13.5, color: "#374151", lineHeight: 1.6 }}>
-            Une fois convertie en <strong style={{ color: "#ea580c" }}>{convertionType}</strong>, cette réclamation
+            Une fois convertie en <strong style={{ color: "var(--gpr-primary, #005081)" }}>{convertionType}</strong>, cette réclamation
             ne pourra plus être modifiée ou restaurée. Souhaitez-vous vraiment continuer ?
           </Typography>
           <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
@@ -102,8 +102,7 @@ const ConvertirModal = ({
               loading={loading}
               loadingPosition="end"
               variant="contained"
-              color="error"
-              style={{ flex: 2, borderRadius: 10, textTransform: "none", fontWeight: 700, fontSize: 13.5 }}
+              sx={{ flex: 2, borderRadius: "10px", textTransform: "none", fontWeight: 700, fontSize: 13.5, background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)", "&:hover": { background: "var(--gpr-primary-dark, #003d62)" } }}
             >
               <span>Oui, convertir</span>
             </LoadingButton>

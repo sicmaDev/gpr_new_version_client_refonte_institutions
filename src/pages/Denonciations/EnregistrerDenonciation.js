@@ -84,6 +84,8 @@ import { Tooltip, IconButton, CircularProgress } from "@mui/material";
 
 import { reset } from "../../redux/actions/WhatsappActions";
 import VoiceRecorderDialog from "../../components/shared/VoiceRecorderDialog";
+import { useAnalyseIa, SuggestionIa, BadgeUrgenceIa, PanneauAnalyseIa, optionPourSuggestion } from "../../components/IA/AnalyseIaSaisie";
+import TranscriptionAudioIa, { nomAudio, enregistrerTranscriptionsApresEnvoi } from "../../components/IA/TranscriptionAudioIa";
 moment.locale("fr");
 
 registerLocale('fr', fr)
@@ -192,6 +194,18 @@ const EnregistrerDenonciation = (props) => {
     const [clearAudio, setClearAudio] = useState(0)
     const [audioRecordings, setAudioRecordings] = useState([]);
     const prevAudioRef = useRef(null);
+
+    // IA : analyse du contenu pendant la saisie, transcriptions des audios (par nom de fichier).
+    const analyseIa = useAnalyseIa({ texte: props.content, nature: "DENUNCIATION" });
+    const transcriptionsIaRef = useRef({});
+    const noterTranscriptionIa = (nom, reponse, ajoute) => {
+        const avant = transcriptionsIaRef.current[nom] || {};
+        transcriptionsIaRef.current = { ...transcriptionsIaRef.current, [nom]: { reponse: reponse ?? avant.reponse, ajoute: ajoute ?? avant.ajoute ?? false } };
+    };
+    const ajouterAuContenuIa = (texte) => {
+        const actuel = (props.content || "").trim();
+        props.contentChanged(actuel ? `${actuel} ${texte}` : texte);
+    };
     // whatsapp
 
     // Accumulate each completed audio recording
@@ -393,6 +407,23 @@ const EnregistrerDenonciation = (props) => {
         props.underSubjectLibelleChanged(e.label);
     };
 
+    // IA : applique la catégorie ou le motif proposés (le motif choisit aussi sa catégorie).
+    const appliquerCategorieIa = () => {
+        const option = optionPourSuggestion(analyseIa.categorie, subjectOptions);
+        if (option) handleChange2(option);
+    };
+    const appliquerMotifIa = () => {
+        const tousLesMotifs = (underSubjects || []).filter((o) => !o.deleted && !o.isDeleted)
+            .map((o) => ({ label: o.libelle, value: o.id, categorie: o.categorie }));
+        const dansLaCategorie = props.subject ? tousLesMotifs.filter((o) => o.categorie && o.categorie.id === props.subject) : [];
+        const option = optionPourSuggestion(analyseIa.motif, dansLaCategorie) || optionPourSuggestion(analyseIa.motif, tousLesMotifs);
+        if (!option) return;
+        if (option.categorie && option.categorie.id !== props.subject) {
+            handleChange2({ value: option.categorie.id, label: option.categorie.libelle });
+        }
+        handleChange5({ value: option.value, label: option.label });
+    };
+
     let errors = {};
     const scrollToFirstError = (firstErrorFieldRef) => {
         if (firstErrorFieldRef && firstErrorFieldRef.current) {
@@ -430,6 +461,8 @@ const EnregistrerDenonciation = (props) => {
         setAudioRecordings([]);
         prevAudioRef.current = null;
         setFiles([]);
+        analyseIa.reinitialiser();
+        transcriptionsIaRef.current = {};
     }
 
     const handleCancel = (e) => {
@@ -507,6 +540,8 @@ const EnregistrerDenonciation = (props) => {
             claim["content"] = props.content;
             claim["code"] = props.code;
             claim["id"] = props.id;
+            // Numéro de l'analyse IA : le serveur y reprend lui-même le résultat de l'IA.
+            if (analyseIa.termine && analyseIa.correlationId) claim["correlationId"] = analyseIa.correlationId;
 
             formData.append("denun", JSON.stringify(claim));
             for (let index = 0; index < files.length; index++) {
@@ -518,15 +553,17 @@ const EnregistrerDenonciation = (props) => {
             //HERE
             // console.log("etattttttttttttt",props.etat2)
             audioRecordings.forEach(audioBlob => {
-                const audioFile = new File([audioBlob], "denonciation_record_" + uuid() + ".ogg", {
+                const audioFile = new File([audioBlob], nomAudio(audioBlob, "denonciation_record_"), {
                     type: "audio/ogg; codecs=opus",
                 });
                 formData.append("audios", audioFile);
             });
             props.etat2Changed(true)
             if (mode === 1) {
-                addDenunciationApi(formData, props).then((saved) => {
+                const transcriptionsIa = transcriptionsIaRef.current
+                addDenunciationApi(formData, props).then(async (saved) => {
                     if (!saved) return
+                    await enregistrerTranscriptionsApresEnvoi(transcriptionsIa, saved?.audios)
                     handleCancel(e)
                     props.resetWhatsapp()
                     setCurrentStep(0)
@@ -537,7 +574,7 @@ const EnregistrerDenonciation = (props) => {
                 // on les convertit donc en base64, décodé côté backend à la synchronisation.
                 claim["files"] = await filesToBase64Dtos(files);
                 claim["audios"] = await filesToBase64Dtos(
-                    audioRecordings.map(blob => new File([blob], "denonciation_record_" + uuid() + ".ogg", { type: "audio/ogg; codecs=opus" }))
+                    audioRecordings.map(blob => new File([blob], nomAudio(blob, "denonciation_record_"), { type: "audio/ogg; codecs=opus" }))
                 );
                 addDenunciationApiOffline(claim, props).then(() => {
                     handleCancel(e)
@@ -569,6 +606,7 @@ const EnregistrerDenonciation = (props) => {
         claim["content"] = props.content;
         claim["code"] = props.code;
         claim["id"] = props.id;
+        if (analyseIa.termine && analyseIa.correlationId) claim["correlationId"] = analyseIa.correlationId;
 
         formData.append("denun", JSON.stringify(claim));
         for (let index = 0; index < files.length; index++) {
@@ -576,7 +614,7 @@ const EnregistrerDenonciation = (props) => {
                 formData.append(isAudioFile(files[index]) ? "audios" : "files", files[index]);
         }
         audioRecordings.forEach(audioBlob => {
-            const audioFile = new File([audioBlob], "denonciation_record_" + uuid() + ".ogg", {
+            const audioFile = new File([audioBlob], nomAudio(audioBlob, "denonciation_record_"), {
                 type: "audio/ogg; codecs=opus",
             });
             formData.append("audios", audioFile);
@@ -586,7 +624,9 @@ const EnregistrerDenonciation = (props) => {
         //HERE
         props.etatChanged(true)
         if (mode === 1) {
-            addTempDenunciationApi(formData, props).then(() => {
+            const transcriptionsIa = transcriptionsIaRef.current
+            addTempDenunciationApi(formData, props).then(async (brouillon) => {
+                await enregistrerTranscriptionsApresEnvoi(transcriptionsIa, brouillon?.audios)
                 handleCancel(e)
                 props.resetWhatsapp()
                 setCurrentStep(0)
@@ -597,7 +637,7 @@ const EnregistrerDenonciation = (props) => {
             // on les convertit donc en base64, décodé côté backend à la synchronisation.
             claim["files"] = await filesToBase64Dtos(files);
             claim["audios"] = await filesToBase64Dtos(
-                audioRecordings.map(blob => new File([blob], "denonciation_record_" + uuid() + ".ogg", { type: "audio/ogg; codecs=opus" }))
+                audioRecordings.map(blob => new File([blob], nomAudio(blob, "denonciation_record_"), { type: "audio/ogg; codecs=opus" }))
             );
             addTempDenunciationApiOffline(claim, props).then(() => {
                 handleCancel(e)
@@ -1003,7 +1043,7 @@ const EnregistrerDenonciation = (props) => {
                                         <div
                                             className="app-file-size">{Math.round(((attachment.size / 1024) + Number.EPSILON) * 100) / 100} Ko
                                         </div>
-                                        <div className="app-file-last-access"><span onClick={(e) => { downloadFillesApi(attachment.id, attachment.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</span></div>
+                                        <div className="app-file-last-access"><span onClick={(e) => { downloadFillesApi(attachment.id, attachment.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "var(--gpr-primary, #005081)", cursor: "pointer", fontWeight: 600 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -1214,6 +1254,7 @@ const EnregistrerDenonciation = (props) => {
 
             {showAudioBox && (
                 <VoiceRecorderDialog
+                    ecouteDirecte
                     open={open2}
                     onClose={handleClose2}
                     title="Enregistreur vocal dénonciations"
@@ -1272,7 +1313,7 @@ const EnregistrerDenonciation = (props) => {
                                             width: 40, height: 40, borderRadius: 10, flexShrink: 0,
                                             background: "#e8f4fc", display: "flex", alignItems: "center", justifyContent: "center",
                                         }}>
-                                            <AssignmentOutlinedIcon style={{ fontSize: 20, color: "#005081" }} />
+                                            <AssignmentOutlinedIcon style={{ fontSize: 20, color: "var(--gpr-primary, #005081)" }} />
                                         </div>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 2 }}>
@@ -1287,7 +1328,7 @@ const EnregistrerDenonciation = (props) => {
                                                 <IconButton
                                                     size="small"
                                                     onClick={(e) => { e.stopPropagation(); rowClickedHandler(e, draft, null); setCurrentStep(0); setActiveTab("new"); }}
-                                                    sx={{ color: "#005081", "&:hover": { background: "#e8f4fc" } }}
+                                                    sx={{ color: "var(--gpr-primary, #005081)", "&:hover": { background: "#e8f4fc" } }}
                                                 >
                                                     <EditIcon style={{ fontSize: 18 }} />
                                                 </IconButton>
@@ -1349,6 +1390,7 @@ const EnregistrerDenonciation = (props) => {
                             />
                             <label className="active">Catégorie d'objet <span>(<span className="red-text darken-2">*</span>)</span></label>
                             <small className="errorTxt4"><div className="error">{props.errors?.subject}</div></small>
+                            <SuggestionIa suggestion={analyseIa.categorie} valeurActuelle={props.subjectLibelle} onAppliquer={appliquerCategorieIa} />
                         </div>
 
                         <div className="col l12 m12 s12 input-field" ref={underSubjectRef}>
@@ -1359,6 +1401,7 @@ const EnregistrerDenonciation = (props) => {
                             />
                             <label className="active">Motif de dénonciation <span>(<span className="red-text darken-2">*</span>)</span></label>
                             <small className="errorTxt4"><div className="error">{props.errors?.underSubject}</div></small>
+                            <SuggestionIa suggestion={analyseIa.motif} valeurActuelle={props.underSubjectLibelle} onAppliquer={appliquerMotifIa} />
                         </div>
 
                         <div className="col l6 m12 s12 input-field" ref={productRef}>
@@ -1383,12 +1426,14 @@ const EnregistrerDenonciation = (props) => {
 
                         <div className="col l12 m12 s12 input-field" ref={contentRef} style={{ position: "relative" }}>
                             {formAudio}
+                            <PanneauAnalyseIa analyse={analyseIa} />
                             <textarea id="content" name="content" placeholder="" rows="3"
                                 className="materialize-textarea" value={props.content}
                                 onChange={(e) => props.contentChanged(e.target.value)}
                             />
                             <label htmlFor="content" className="active">
                                 Contenu <span>(<span className="red-text darken-2">*</span>)</span>
+                                <BadgeUrgenceIa urgence={analyseIa.urgence} />
                             </label>
                             <small className="errorTxt4"><div className="error">{props.errors?.content}</div></small>
                         </div>
@@ -1397,26 +1442,39 @@ const EnregistrerDenonciation = (props) => {
                         {(audioRecordings.length > 0 || props.selectedItemAudio?.length > 0) && (
                             <div className="col l12 m12 s12" style={{ marginTop: 8 }}>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                                    <Mic style={{ fontSize: 15, color: "#005081" }} />
+                                    <Mic style={{ fontSize: 15, color: "var(--gpr-primary, #005081)" }} />
                                     Audio enregistré
                                 </div>
 
                                 {audioRecordings.map((audioBlob, i) => (
-                                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
-                                        <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
-                                        <audio controls style={{ flex: 1, height: 30 }}>
-                                            <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
-                                        </audio>
-                                        <button onClick={() => setAudioRecordings(prev => prev.filter((_, j) => j !== i))}
-                                            style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
+                                    <div key={"ia-" + nomAudio(audioBlob, "denonciation_record_")} style={{ padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                            <Mic style={{ fontSize: 16, color: "var(--gpr-primary, #005081)", flexShrink: 0 }} />
+                                            <audio controls style={{ flex: 1, height: 30 }}>
+                                                <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
+                                            </audio>
+                                            <button onClick={() => setAudioRecordings(prev => prev.filter((_, j) => j !== i))}
+                                                title="Supprimer" style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
+                                        </div>
+                                        <TranscriptionAudioIa audio={audioBlob} nom={nomAudio(audioBlob, "denonciation_record_")} auto
+                                            onResultat={(r) => noterTranscriptionIa(nomAudio(audioBlob, "denonciation_record_"), r)}
+                                            onAjouter={(texte, r) => { noterTranscriptionIa(nomAudio(audioBlob, "denonciation_record_"), r, true); ajouterAuContenuIa(texte); }} />
                                     </div>
                                 ))}
                                 {props.selectedItemAudio?.map((audioItem, i) => (
-                                    <div key={"s" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
-                                        <Mic style={{ fontSize: 16, color: "#005081", flexShrink: 0 }} />
-                                        <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
-                                        <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
-                                            style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
+                                    <div key={"saved-" + i} style={{ padding: "8px 12px", background: "#e8f4fc", borderRadius: 10, border: "1px solid #99cde8", marginBottom: 6 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                            <Mic style={{ fontSize: 16, color: "var(--gpr-primary, #005081)", flexShrink: 0 }} />
+                                            <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
+                                            <button onClick={() => props.selectedItemAudioChanged(props.selectedItemAudio.filter((_, j) => j !== i))}
+                                                title="Supprimer" style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 20, lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
+                                        </div>
+                                        {audioItem && audioItem.id && (
+                                            <TranscriptionAudioIa audioId={audioItem.id} nom={audioItem.name} persister
+                                                existante={audioItem.transcriptionCorrected || audioItem.transcriptionRaw
+                                                    ? { texte: audioItem.transcriptionCorrected || audioItem.transcriptionRaw, ajoute: audioItem.transcriptionAdded } : null}
+                                                onAjouter={(texte) => ajouterAuContenuIa(texte)} />
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -1432,7 +1490,7 @@ const EnregistrerDenonciation = (props) => {
                         {mode === 1 && (
                             <div>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                                    <InsertDriveFileOutlinedIcon style={{ fontSize: 17, color: "#005081" }} />
+                                    <InsertDriveFileOutlinedIcon style={{ fontSize: 17, color: "var(--gpr-primary, #005081)" }} />
                                     Documents joints
                                 </div>
                                 <div
@@ -1441,16 +1499,16 @@ const EnregistrerDenonciation = (props) => {
                                     onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleDropzoneFiles(e.dataTransfer.files); }}
                                     onClick={() => document.getElementById("wz-den-file-input").click()}
                                     style={{
-                                        border: `2px dashed ${isDragging ? "#005081" : "#cbd5e1"}`,
+                                        border: `2px dashed ${isDragging ? "var(--gpr-primary, #005081)" : "#cbd5e1"}`,
                                         borderRadius: 14, padding: "32px 20px", textAlign: "center",
                                         background: isDragging ? "#e8f4fc" : "#f8fafc",
                                         cursor: "pointer", transition: "all 0.2s",
                                     }}
                                 >
-                                    <CloudUploadOutlinedIcon style={{ fontSize: 44, color: isDragging ? "#005081" : "#94a3b8", marginBottom: 10 }} />
+                                    <CloudUploadOutlinedIcon style={{ fontSize: 44, color: isDragging ? "var(--gpr-primary, #005081)" : "#94a3b8", marginBottom: 10 }} />
                                     <div style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>Glissez vos fichiers ici</div>
                                     <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>
-                                        ou <span style={{ color: "#005081", fontWeight: 700 }}>parcourez</span> depuis votre appareil
+                                        ou <span style={{ color: "var(--gpr-primary, #005081)", fontWeight: 700 }}>parcourez</span> depuis votre appareil
                                     </div>
                                     <div style={{ fontSize: 11, color: "#cbd5e1", marginTop: 8 }}>PDF · Word · Excel · Images · Audio · Vidéo</div>
                                     <input id="wz-den-file-input" type="file" multiple style={{ display: "none" }}
@@ -1462,7 +1520,7 @@ const EnregistrerDenonciation = (props) => {
                                     <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
                                         {Array.from(files).map((file, i) => (
                                             <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "white", borderRadius: 10, border: "1.5px solid #e2e8f0" }}>
-                                                <InsertDriveFileOutlinedIcon style={{ fontSize: 18, color: "#005081", flexShrink: 0 }} />
+                                                <InsertDriveFileOutlinedIcon style={{ fontSize: 18, color: "var(--gpr-primary, #005081)", flexShrink: 0 }} />
                                                 <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
                                                 <div style={{ fontSize: 11, color: "#94a3b8", flexShrink: 0, marginRight: 6 }}>{(file.size / 1024).toFixed(0)} Ko</div>
                                                 <button onClick={() => removeFile(i)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: 18, lineHeight: 1, padding: "0 2px", flexShrink: 0 }} title="Retirer">×</button>
@@ -1477,7 +1535,7 @@ const EnregistrerDenonciation = (props) => {
                                             <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0", marginBottom: 4 }}>
                                                 <InsertDriveFileOutlinedIcon style={{ fontSize: 15, color: "#64748b", flexShrink: 0 }} />
                                                 <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: "#64748b" }}>{file.name}</div>
-                                                <a onClick={(e) => { e.preventDefault(); downloadFillesApi(file.id, file.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#005081", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                                                <a onClick={(e) => { e.preventDefault(); downloadFillesApi(file.id, file.name); }} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "var(--gpr-primary, #005081)", cursor: "pointer", fontWeight: 600, textDecoration: "none", flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
                                             </div>
                                         ))}
                                     </div>
@@ -1487,7 +1545,7 @@ const EnregistrerDenonciation = (props) => {
 
                         <div>
                             <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                                <Mic style={{ fontSize: 17, color: "#005081" }} />
+                                <Mic style={{ fontSize: 17, color: "var(--gpr-primary, #005081)" }} />
                                 Enregistrement vocal
                             </div>
                             {audioRecordings.length === 0 && !props.selectedItemAudio?.length ? (
@@ -1500,7 +1558,7 @@ const EnregistrerDenonciation = (props) => {
                                     {audioRecordings.map((audioBlob, i) => (
                                         <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "white", borderRadius: 10, border: "1.5px solid #99cde8" }}>
                                             <div style={{ width: 32, height: 32, borderRadius: 8, background: "#e8f4fc", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                <Mic style={{ fontSize: 16, color: "#005081" }} />
+                                                <Mic style={{ fontSize: 16, color: "var(--gpr-primary, #005081)" }} />
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Enregistrement {i + 1}</div>
@@ -1515,7 +1573,7 @@ const EnregistrerDenonciation = (props) => {
                                     {props.selectedItemAudio?.map((audioItem, i) => (
                                         <div key={"s" + i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "white", borderRadius: 10, border: "1.5px solid #e2e8f0" }}>
                                             <div style={{ width: 32, height: 32, borderRadius: 8, background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                <Mic style={{ fontSize: 16, color: "#005081" }} />
+                                                <Mic style={{ fontSize: 16, color: "var(--gpr-primary, #005081)" }} />
                                             </div>
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Sauvegardé {i + 1}</div>
@@ -1576,7 +1634,7 @@ const EnregistrerDenonciation = (props) => {
                                     </span>
                                     {audioRecordings.map((audioBlob, i) => (
                                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#e8f4fc', borderRadius: 8, marginBottom: 6, border: '1px solid #99cde8' }}>
-                                            <Mic style={{ fontSize: 16, color: '#005081', flexShrink: 0 }} />
+                                            <Mic style={{ fontSize: 16, color: 'var(--gpr-primary, #005081)', flexShrink: 0 }} />
                                             <audio controls style={{ flex: 1, height: 30 }}>
                                                 <source src={URL.createObjectURL(audioBlob)} type="audio/ogg" />
                                             </audio>
@@ -1584,7 +1642,7 @@ const EnregistrerDenonciation = (props) => {
                                     ))}
                                     {props.selectedItemAudio?.map((audioItem, i) => (
                                         <div key={'s' + i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, marginBottom: 6, border: '1px solid #e2e8f0' }}>
-                                            <Mic style={{ fontSize: 16, color: '#005081', flexShrink: 0 }} />
+                                            <Mic style={{ fontSize: 16, color: 'var(--gpr-primary, #005081)', flexShrink: 0 }} />
                                             <AudioSauvegarde audio={audioItem} style={{ flex: 1, height: 30 }} />
                                         </div>
                                     ))}
@@ -1601,14 +1659,14 @@ const EnregistrerDenonciation = (props) => {
                                         <div key={'saved-' + i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 4, background: '#f0fdf4', borderRadius: 8, border: '1px solid #bbf7d0' }}>
                                             <InsertDriveFileOutlinedIcon style={{ fontSize: 15, color: '#16a34a', flexShrink: 0 }} />
                                             <span style={{ fontSize: '12px', color: '#374151', fontWeight: 600, flex: 1 }}>{file.name}</span>
-                                            <a onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadFillesApi(file.id, file.name); }} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#005081', cursor: 'pointer', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                                            <a onClick={(e) => { e.preventDefault(); e.stopPropagation(); downloadFillesApi(file.id, file.name); }} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: 'var(--gpr-primary, #005081)', cursor: 'pointer', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
                                         </div>
                                     ))}
                                     {Array.from(files || []).map((file, i) => (
                                         <div key={'new-' + i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 4, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
                                             <InsertDriveFileOutlinedIcon style={{ fontSize: 15, color: '#64748b', flexShrink: 0 }} />
                                             <span style={{ fontSize: '12px', color: '#374151', fontWeight: 600, flex: 1 }}>{file.name}</span>
-                                            <a href={URL.createObjectURL(file)} download={file.name} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#005081', cursor: 'pointer', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
+                                            <a href={URL.createObjectURL(file)} download={file.name} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: 'var(--gpr-primary, #005081)', cursor: 'pointer', fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}><FileDownloadIcon style={{ fontSize: 14 }} /> Télécharger</a>
                                         </div>
                                     ))}
                                 </div>

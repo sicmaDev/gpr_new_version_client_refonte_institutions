@@ -49,7 +49,7 @@ const selectSx = {
   minWidth: 155,
   "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
   "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#CBD5E1" },
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#005081", borderWidth: 1.5 },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
 };
 
 /* ── Status pill ─────────────────────────────────────────────────────────── */
@@ -168,7 +168,7 @@ const DossierCardView = ({
               backgroundColor: "#fff",
               "& fieldset": { borderColor: "#E2E8F0" },
               "&:hover fieldset": { borderColor: "#CBD5E1" },
-              "&.Mui-focused fieldset": { borderColor: "#005081", borderWidth: 1.5 },
+              "&.Mui-focused fieldset": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
             },
             "& input": { borderBottom: "none !important", boxShadow: "none !important" },
           }}
@@ -242,7 +242,7 @@ const DossierCardView = ({
                       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
                           <Typography sx={{
-                            fontSize: "0.72rem", fontWeight: 700, color: "#005081",
+                            fontSize: "0.72rem", fontWeight: 700, color: "var(--gpr-primary, #005081)",
                             fontFamily: "monospace", letterSpacing: "0.03em",
                           }}>
                             {d.code || "-"}

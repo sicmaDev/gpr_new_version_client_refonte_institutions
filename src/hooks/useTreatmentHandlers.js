@@ -1,3 +1,4 @@
+import { infosSolutionIa } from "../components/IA/memoireIaTraitement";
 import { notify } from "../Utils/alert";
 import {
   affectClaimApi,
@@ -183,6 +184,9 @@ const useTreatmentHandlers = ({
         commentaire: props.comment,
         existingId: props.solutionExistant,
         isExisting: props.solutionExistant !== "",
+        // Solution venue de l'IA (et retour de l'agent sur les propositions de l'IA)
+        ...infosSolutionIa(props.id, typeof props.solution === "string" ? props.solution : "",
+          { categorieFinale: props.subject, motifFinal: props.underSubject }),
       };
       if (onBeforeSolve && onBeforeSolve(claim, e)) {
         props.claimHandleErrors(errors);
@@ -209,6 +213,7 @@ const useTreatmentHandlers = ({
         commentaire: props.new_comment,
         existingId: props.solutionExistant,
         isExisting: props.solutionExistant !== "",
+        ...infosSolutionIa(props.id, props.new_solution, { categorieFinale: props.subject, motifFinal: props.underSubject }),
       };
       if (onBeforeReSolve && onBeforeReSolve(claim, e)) {
         props.claimHandleErrors(errors);

@@ -176,10 +176,12 @@ export const addTempDenunciationApi = async (data, props) => {
         },
         data: data
     };
+    let brouillon = null;
     await axios(config)
         .then(function (response) {
             props.etatChanged(false)
             if (response.data.status) {
+                brouillon = response.data.content ?? null;
                 notify("Bravo - Dénonciation sauvegardée", "success");
                 listeByStatut(props, "TEMP_SAVED")
             } else {
@@ -191,6 +193,8 @@ export const addTempDenunciationApi = async (data, props) => {
             notify("Erreur - Veuillez réessayer!", "error");
             // console.log("erreur",error)
         });
+    // Brouillon enregistré (sert à rattacher les transcriptions IA à ses audios)
+    return brouillon;
 }
 
 export const addDenunciationApi = async (data, props) => {
@@ -210,7 +214,8 @@ export const addDenunciationApi = async (data, props) => {
         .then(function (response) {
             props.etat2Changed(false)
             if (response.data.status) {
-                saved = true;
+                // Dénonciation enregistrée (objet renvoyé par le serveur, « vrai » pour les appelants)
+                saved = response.data.content || true;
                 notify("Bravo - Dénonciation ajoutée", "success");
                 listeByStatut(props, "TEMP_SAVED")
             } else {

@@ -67,7 +67,7 @@ const Corbeille = (props) => {
     }, []);
 
     const KPI_CONFIG = [
-        { key: "total",   label: "Total supprim\u00e9s",   icon: AssignmentIcon,   iconBg: "#DBEAFE", iconColor: "#1D4ED8", borderColor: "#3B82F6", filter: () => true },
+        { key: "total",   label: "Total supprim\u00e9s",   icon: AssignmentIcon,   iconBg: "var(--gpr-primary-light, #DBEAFE)", iconColor: "var(--gpr-primary, #1D4ED8)", borderColor: "var(--gpr-primary, #3B82F6)", filter: () => true },
         { key: "claim",   label: "R\u00e9clamations",      icon: GavelIcon,        iconBg: "#FEE2E2", iconColor: "#B91C1C", borderColor: "#EF4444", filter: (i) => i.type === "CLAIM" },
         { key: "denun",   label: "D\u00e9nonciations",     icon: AnnouncementIcon, iconBg: "#FEF3C7", iconColor: "#B45309", borderColor: "#F59E0B", filter: (i) => i.type === "DENUNCIACION" },
         { key: "suggest", label: "Suggestions",           icon: LightbulbIcon,    iconBg: "#D1FAE5", iconColor: "#065F46", borderColor: "#10B981", filter: (i) => i.type === "SUGGESTION" },
@@ -345,8 +345,8 @@ const Corbeille = (props) => {
                     borderRadius: 2,
                     fontWeight: 700,
                     px: 2.5,
-                    background: "linear-gradient(135deg, #991b1b, #ef4444)",
-                    "&:hover": { background: "linear-gradient(135deg, #7f1d1d, #dc2626)" },
+                    background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))",
+                    "&:hover": { background: "var(--gpr-primary-dark, #003d62)" },
                     "&.Mui-disabled": { opacity: 0.6 },
                 }}
             >
@@ -410,7 +410,7 @@ const Corbeille = (props) => {
             )}
 
             <Dialog open={restoreConfirm.open} onClose={() => { if (!restoreConfirm.loading) setRestoreConfirm({ open: false, claim: null, loading: false }); }} fullWidth maxWidth="xs" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
-                <div style={{ background: "linear-gradient(135deg, #065f46, #10b981)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><SettingsBackupRestoreIcon style={{ color: "#fff", fontSize: 20 }} /></div>
                         <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Restaurer l'élément</div>
@@ -423,7 +423,7 @@ const Corbeille = (props) => {
                 <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
                     <Button onClick={() => setRestoreConfirm({ open: false, claim: null, loading: false })} disabled={restoreConfirm.loading} variant="outlined" sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>Annuler</Button>
                     <LoadingButton onClick={handleConfirmRestore} loading={restoreConfirm.loading} loadingPosition="start" startIcon={<SettingsBackupRestoreIcon style={{ fontSize: 15 }} />} variant="contained"
-                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, #065f46, #10b981)", "&:hover": { background: "linear-gradient(135deg, #064e3b, #059669)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3, background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))", "&:hover": { background: "var(--gpr-primary-dark, #003d62)" }, "&.Mui-disabled": { opacity: 0.6 } }}>
                         Restaurer
                     </LoadingButton>
                 </DialogActions>

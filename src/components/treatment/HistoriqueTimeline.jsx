@@ -405,6 +405,16 @@ const HistoriqueTimeline = ({ claimId }) => {
           const { Icon } = cfg;
           const isLast = idx === blocks.length - 1;
           const commGroups = groupComms(block.comms);
+          // Mesure faite par le client sur WhatsApp : le serveur marque le commentaire « [WhatsApp] » ou
+          // « [WhatsApp-Audio] ». Comme l'ancienne version : « mesurée depuis WhatsApp » / « via audio WhatsApp 🎙 »,
+          // sans le nom de l'agent ni le marqueur.
+          const estMesure = ["SATISFIED", "UNSATISFIED", "PARTIAL_SATISFIED"].includes(ev.eventType);
+          const waAudio = estMesure && (ev.metadata || "").startsWith("[WhatsApp-Audio]");
+          const waTexte = estMesure && !waAudio && (ev.metadata || "").startsWith("[WhatsApp]");
+          // Mesure faite par le client depuis le site web : le serveur note « Client », sans adresse e-mail.
+          const viaSiteWeb = estMesure && !waAudio && !waTexte && ev.actorName === "Client" && !ev.actorEmail;
+          const viaWhatsapp = waAudio || waTexte;
+          const metadata = viaWhatsapp ? (ev.metadata || "").replace(/^\[WhatsApp(-Audio)?\]\s*/, "") : ev.metadata;
 
           // Compte total de destinataires pour l'affichage dans le header
           const totalDest = block.comms.length;
@@ -434,7 +444,12 @@ const HistoriqueTimeline = ({ claimId }) => {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: cfg.color }}>{ev.eventType === "EXTRA_ADDED" && block.extras.length > 0 ? "Pièces jointes ajoutées" : cfg.label}</div>
-                    {ev.actorName && (
+                    {(viaWhatsapp || viaSiteWeb) && (
+                      <div style={{ fontSize: 11.5, color: "#64748b", marginTop: 1 }}>
+                        {viaSiteWeb ? "Mesurée depuis le site web" : waAudio ? "Mesurée via audio WhatsApp 🎙" : "Mesurée depuis WhatsApp"}
+                      </div>
+                    )}
+                    {ev.actorName && !viaWhatsapp && !viaSiteWeb && (
                       <div style={{ fontSize: 11.5, color: "#64748b", marginTop: 1 }}>
                         {ev.actorName === "Système GPR"
                           ? <span><SmartToyOutlinedIcon style={{ fontSize: 14, verticalAlign: "middle", marginRight: 4 }} />Système GPR (automatique)</span>
@@ -442,7 +457,7 @@ const HistoriqueTimeline = ({ claimId }) => {
                         {ev.actorEmail && <span style={{ marginLeft: 5, color: "#94a3b8" }}>· {ev.actorEmail}</span>}
                       </div>
                     )}
-                    {ev.metadata && MAIN_EVENTS.has(ev.eventType) && (
+                    {metadata && MAIN_EVENTS.has(ev.eventType) && (
                       <div style={{ fontSize: 11.5, color: "#475569", marginTop: 2 }}>
                         {ev.eventType === "AFFECTED" && <>Assignée à <strong>{ev.metadata}</strong></>}
                         {ev.eventType === "TRANSMITTED" && (() => {
@@ -457,7 +472,7 @@ const HistoriqueTimeline = ({ claimId }) => {
                         })()}
                         {(ev.eventType === "REJECTED" || ev.eventType === "DELETED") && <>Motif : <em>{ev.metadata}</em></>}
                         {SLA_EVENTS.has(ev.eventType) && slaMeta(ev)}
-                        {!["AFFECTED","TRANSMITTED","REJECTED","DELETED","EXTRA_ADDED"].includes(ev.eventType) && !SLA_EVENTS.has(ev.eventType) && ev.metadata}
+                        {!["AFFECTED","TRANSMITTED","REJECTED","DELETED","EXTRA_ADDED"].includes(ev.eventType) && !SLA_EVENTS.has(ev.eventType) && metadata}
                         {ev.eventType === "EXTRA_ADDED" && [ev, ...block.extras].map((x, k) => (
                           <div key={k}>{x.metadata}{block.extras.length > 0 && x.createdAt && <span style={{ color: "#94a3b8" }}> · {formatDate(x.createdAt)}</span>}</div>
                         ))}

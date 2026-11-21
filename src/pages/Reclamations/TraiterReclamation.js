@@ -254,6 +254,7 @@ import HistoriqueTimeline from "../../components/treatment/HistoriqueTimeline";
 import PreEnregistreesTab from "../../components/treatment/PreEnregistreesTab";
 import SessionChat from "../../components/treatment/SessionChat";
 import TraitementShell from "../../components/treatment/TraitementShell";
+import AssistantIaTraitement from "../../components/IA/AssistantIaTraitement";
 import EmailDialog from "./widgets/EmailDialog";
 import { data } from "jquery";
 import { usePermissions } from "./widgets/usePermissions";
@@ -4058,11 +4059,11 @@ const TraiterReclamation = (props) => {
           endIcon={<AutorenewIcon />}
           variant="contained"
           sx={{
-            backgroundColor: "#ef6c00",
+            backgroundColor: "var(--gpr-primary, #005081)",
             textTransform: "initial",
             transition: "background-color 0.3s ease",
             "&:hover": {
-              backgroundColor: "#fda321",
+              backgroundColor: "var(--gpr-primary-dark, #003d62)",
             },
           }}
         >
@@ -4537,31 +4538,35 @@ const TraiterReclamation = (props) => {
 
             {resolveWaMode === "text" ? (
               <>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "#555", fontWeight: 600 }}>
-                  Message de confirmation
+                <div style={{ marginBottom: 6, fontSize: 11, color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  Aperçu du message envoyé au client
                 </div>
                 <div
                   style={{
-                    background: "#DCF8C6",
-                    border: "1px solid #a5d6a7",
-                    borderRadius: 8,
-                    padding: "10px 14px",
-                    maxHeight: 150,
-                    overflowY: "auto",
-                    whiteSpace: "pre-wrap",
+                    background: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    borderLeft: "3px solid var(--gpr-primary, #005081)",
+                    borderRadius: 10,
+                    padding: "12px 14px",
                     fontSize: 13,
+                    color: "#1e293b",
+                    lineHeight: 1.6,
                     marginBottom: 12,
                   }}
                 >
                   {pendingTreatClaimRef.current ? (
                     <>
-                      <CheckCircleIcon fontSize="inherit" sx={{ verticalAlign: "text-bottom", mr: 0.5, color: "#2e7d32" }} />
-                      Votre réclamation a été traitée.
-                      <br /><br />
-                      <AssignmentIcon fontSize="inherit" sx={{ verticalAlign: "text-bottom", mr: 0.5 }} />
-                      Solution apportée :
-                      <br />
-                      {getSolutionTextToSend(pendingTreatClaimRef.current)}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, color: "#0f172a" }}>
+                        <CheckCircleIcon style={{ fontSize: 17, color: "var(--gpr-primary, #005081)" }} />
+                        Votre réclamation a été traitée.
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, color: "#334155", marginTop: 10 }}>
+                        <AssignmentIcon style={{ fontSize: 16, color: "#64748b" }} />
+                        Solution apportée :
+                      </div>
+                      <div style={{ whiteSpace: "pre-wrap", marginTop: 4, maxHeight: 150, overflowY: "auto" }}>
+                        {getSolutionTextToSend(pendingTreatClaimRef.current)}
+                      </div>
                     </>
                   ) : ""}
                 </div>
@@ -4832,6 +4837,31 @@ const TraiterReclamation = (props) => {
             solution={props.solution}
 
             treatForm={treatForm}
+            assistantIa={
+              <AssistantIaTraitement
+                key={"ia-" + props.id}
+                claimId={props.id}
+                texte={props.content}
+                nature="RECLAMATION"
+                categorie={props.subject}
+                motif={props.underSubject}
+                analyse={props.selectedItem ? {
+                  resume: props.selectedItem.aiSummary, sentiment: props.selectedItem.aiSentiment,
+                  urgence: props.selectedItem.aiUrgency, correlationId: props.selectedItem.correlationId,
+                } : null}
+                peutTraiter={Boolean(props.authorize) && (
+                  // Mêmes règles que le formulaire « Solution » de la page : sans formulaire, pas de solutions IA à appliquer.
+                  props.status === "SAVED" ? Boolean(treatActionsVisible)
+                    : (props.status === "AFFECTED" || props.status === "DESAPPROUVED") && props.handled_by === user.firstAndLastName
+                )}
+                onAppliquer={(solution, commentaire) => {
+                  props.solutionChanged(solution);
+                  props.newSolutionChanged(solution);
+                  props.commentChanged(commentaire || "");
+                  props.newCommentChanged(commentaire || "");
+                }}
+              />
+            }
             treatActionsVisible={treatActionsVisible}
             onTreat={handleReSolve}
             loadingTreat={props.etat2}

@@ -366,7 +366,16 @@ const Bceao = (props) => {
     // console.log( "periode", periode );
 
     document.querySelector("#trSimple").innerHTML = "";
-    return results;
+    return couleursReelles(results);
+  };
+
+  // PDF et Word sont produits dans un document à part, qui ne connaît pas la couleur de l'apparence
+  // (variables --gpr-…) : on y écrit la vraie couleur choisie par l'institution.
+  const couleursReelles = (html) => {
+    const racine = getComputedStyle(document.documentElement);
+    return html
+      .replace(/var\(--(gpr-[a-z-]+)(?:,\s*([^)]+))?\)/g, (tout, nom, defaut) => racine.getPropertyValue("--" + nom).trim() || (defaut || "").trim() || tout)
+      .replace(/#015182/gi, racine.getPropertyValue("--gpr-primary").trim() || "#015182");
   };
   // const printToPDF = async () => {
 
@@ -465,7 +474,7 @@ const Bceao = (props) => {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .bceao-table-wrap table.table-xlsx { width: 100%; border-collapse: collapse; font-size: 13px; }
         .bceao-table-wrap table.table-xlsx td, .bceao-table-wrap table.table-xlsx th { border: 1px solid #E2E8F0; padding: 8px 12px; }
-        .bceao-table-wrap table.table-xlsx thead td { background: #0F4C81; color: #fff; font-weight: 700; }
+        .bceao-table-wrap table.table-xlsx thead td { background: var(--gpr-primary, #0F4C81); color: #fff; font-weight: 700; }
         .bceao-table-wrap table.table-xlsx tbody tr:nth-child(odd) { background: #F8FAFC; }
       `}</style>
       <div id="trSimple" ></div>
@@ -480,7 +489,7 @@ const Bceao = (props) => {
           >
             <DialogTitle style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px 12px", borderBottom: "1px solid #F1F5F9" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <svg width="16" height="16" fill="none" stroke="#0F4C81" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                <svg width="16" height="16" fill="none" style={{ stroke: "var(--gpr-primary, #0F4C81)" }} strokeWidth="2" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
                 <span style={{ fontSize: 15, fontWeight: 700, color: "#0F172A" }}>Définir une période</span>
               </div>
               <button onClick={handleClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 22, lineHeight: 1, padding: 4, borderRadius: 6 }}>✕</button>
@@ -549,8 +558,8 @@ const Bceao = (props) => {
                   <a
                     style={{
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                      padding: "9px 16px", borderRadius: 10, border: "1.5px solid #0F4C81",
-                      background: "#0F4C81", color: "#fff", fontSize: 13, fontWeight: 700,
+                      padding: "9px 16px", borderRadius: 10, border: "1.5px solid var(--gpr-primary, #0F4C81)",
+                      background: "var(--gpr-primary, #0F4C81)", color: "#fff", fontSize: 13, fontWeight: 700,
                       cursor: "pointer", textDecoration: "none",
                     }}
                     onClick={(e) => {
@@ -635,7 +644,7 @@ const Bceao = (props) => {
         {/* ── REPORT CONTENT ── */}
         <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 20px rgba(0,0,0,0.07)", padding: "24px" }} id="rapportBceao">
           <div id="enteteRapport" style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", paddingBottom: 16, borderBottom: "2px solid #0F4C81", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", paddingBottom: 16, borderBottom: "2px solid var(--gpr-primary, #0F4C81)", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 {logoInstitution && <img src={logoInstitution} alt="logo" style={{ height: 64, objectFit: "contain" }} className="report-logo" />}
                 <div>
@@ -656,15 +665,15 @@ const Bceao = (props) => {
           </div>
 
           <div id="titleRapport" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 20 }}>
-            <div style={{ height: 3, flex: 1, background: "linear-gradient(to right, #0F4C81, transparent)" }} />
-            <span style={{ fontSize: 16, fontWeight: 800, color: "#0F4C81", textTransform: "uppercase", letterSpacing: "0.8px", textAlign: "center" }}>
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(to right, var(--gpr-primary, #0F4C81), transparent)" }} />
+            <span style={{ fontSize: 16, fontWeight: 800, color: "var(--gpr-primary, #0F4C81)", textTransform: "uppercase", letterSpacing: "0.8px", textAlign: "center" }}>
               Rapport sous le format de la Commission Bancaire
             </span>
-            <div style={{ height: 3, flex: 1, background: "linear-gradient(to left, #0F4C81, transparent)" }} />
+            <div style={{ height: 3, flex: 1, background: "linear-gradient(to left, var(--gpr-primary, #0F4C81), transparent)" }} />
           </div>
 
           <div id="critereRapport" style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 24 }}>
-            <span style={{ fontSize: 11.5, fontWeight: 600, color: "#0F4C81", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 20, padding: "3px 12px" }}>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--gpr-primary, #0F4C81)", background: "var(--gpr-primary-light, #EFF6FF)", border: "1px solid var(--gpr-primary, #BFDBFE)", borderRadius: 20, padding: "3px 12px" }}>
               Période Concernée : {props.global?.periode}
             </span>
             <span style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7280", background: "#F1F5F9", border: "1px solid #E2E8F0", borderRadius: 20, padding: "3px 12px" }}>
@@ -675,7 +684,7 @@ const Bceao = (props) => {
           <div id="dashRapport">
             <div style={{ marginBottom: 32 }} id="toeClaim">
               <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "#0F172A", marginBottom: 12 }} id="titleObjetsEtats">
-                <div style={{ width: 4, height: 16, borderRadius: 2, background: "#0F4C81" }} />
+                <div style={{ width: 4, height: 16, borderRadius: 2, background: "var(--gpr-primary, #0F4C81)" }} />
                 Statistiques
               </div>
               <div className="bceao-table-wrap">
@@ -685,7 +694,7 @@ const Bceao = (props) => {
 
             <div id="toeClaim">
               <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "#0F172A", marginBottom: 12 }} id="titleObjetsEtats">
-                <div style={{ width: 4, height: 16, borderRadius: 2, background: "#0F4C81" }} />
+                <div style={{ width: 4, height: 16, borderRadius: 2, background: "var(--gpr-primary, #0F4C81)" }} />
                 Details des réclamations ou dénonciations
               </div>
               <div className="bceao-table-wrap">
@@ -709,7 +718,7 @@ const Bceao = (props) => {
           position: "fixed", bottom: 72, right: 32, zIndex: 999,
           display: "flex", alignItems: "center", gap: 8,
           padding: "12px 16px", borderRadius: 50, border: "none",
-          background: "linear-gradient(135deg, #0F4C81 0%, #1E88E5 100%)",
+          background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #0F4C81) 100%)",
           color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
           boxShadow: "0 4px 20px rgba(15,76,129,0.4)",
           transition: "transform 0.15s ease, box-shadow 0.15s ease",

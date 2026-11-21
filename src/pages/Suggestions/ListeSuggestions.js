@@ -1171,7 +1171,7 @@ const ListeSuggestions = (props) => {
     {
       id: "codeClient", label: "Code client", sortable: true, minWidth: 100,
       render: (item) => (
-        <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#005081", fontFamily: "monospace" }}>
+        <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--gpr-primary, #005081)", fontFamily: "monospace" }}>
           {item.codeClient || "-"}
         </span>
       ),

@@ -3,7 +3,8 @@ import { useHistory, useLocation } from "react-router-dom";
 import { loadItemFromSessionStorage } from "../../Utils/utils";
 import { slaStatus } from "../../apis/Sla/SlaApi";
 import { Tabs, Tab, Typography } from "@mui/material";
-import { currentRights, Empty, PrimaryButton } from "../Sla/slaUi";
+import PrintIcon from "@mui/icons-material/Print";
+import { currentRights, Empty, OutlineButton, PrimaryButton } from "../Sla/slaUi";
 import SlaSuiviTab from "../Sla/SlaSuiviTab";
 import SlaIndicateursTab from "../Sla/SlaIndicateursTab";
 import SlaCalendrierTab from "../Sla/SlaCalendrierTab";
@@ -17,7 +18,9 @@ import { ChargementRond } from "../../components/shared/ChargementRond";
 //   menu « Délais (SLA) » : Calendrier et fériés, Motifs, Paramètres (administrateur).
 const SLA = () => {
   const user = loadItemFromSessionStorage("app-user");
-  const { isAdmin, canStats } = currentRights(user);
+  const { isAdmin, canStats, hbt, role } = currentRights(user);
+  // L'onglet Suivi liste des plaintes : seulement pour ceux qui voient les plaintes (même règle que le menu)
+  const voitPlaintes = hbt.some((h) => ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H14"].includes(h)) || role === "PILOTE" || role === "DE";
   const history = useHistory();
   const estConfiguration = useLocation().pathname.startsWith("/configurations/sla");
   const [enabled, setEnabled] = useState(null); // null = en cours de lecture
@@ -37,7 +40,7 @@ const SLA = () => {
       isAdmin && { key: "parametres", label: "Paramètres" },
     ]
     : [
-      enabled && { key: "suivi", label: "Suivi" },
+      enabled && voitPlaintes && { key: "suivi", label: "Suivi" },
       enabled && canStats && { key: "indicateurs", label: "Indicateurs" },
     ]).filter(Boolean);
 
@@ -46,7 +49,8 @@ const SLA = () => {
 
   return (
     <div style={{ padding: "28px clamp(16px, 4vw, 48px)", maxWidth: 1300, margin: "0 auto" }}>
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+        <div>
         <Typography sx={{ fontSize: 22, fontWeight: 700, color: "#0F172A" }}>
           {estConfiguration ? "Configuration des délais (SLA)" : "Suivi des délais (SLA)"}
         </Typography>
@@ -55,6 +59,11 @@ const SLA = () => {
             ? "La durée de résolution se règle sur chaque objet ; ici, le calendrier, les motifs et les autres durées"
             : "Échéances, alertes et remontées calculées par le serveur, dans votre périmètre"}
         </Typography>
+        </div>
+        {/* Indicateurs : impression ou PDF par le navigateur (chaque tableau s'exporte aussi en CSV) */}
+        {!estConfiguration && active === "indicateurs" && (
+          <OutlineButton startIcon={<PrintIcon />} onClick={() => window.print()}>Imprimer / PDF</OutlineButton>
+        )}
       </div>
 
       {enabled === null && <Empty><ChargementRond taille={28} /></Empty>}

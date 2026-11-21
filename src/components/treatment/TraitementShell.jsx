@@ -60,6 +60,7 @@ import SaveIcon from "@mui/icons-material/Save";
  *
  *   Traitement tab - sub-tabs:
  *     treatForm           - JSX for the "Classique" sub-tab form
+ *     assistantIa         - JSX : aide de l'IA (solutions proposées), affichée au-dessus du formulaire « Classique »
  *     existingSolutions   - array for PreEnregistreesTab
  *     onModifyBeforeSend  - (content) => void
  *     onUseAndTreat       - (content) => void
@@ -119,6 +120,7 @@ const TraitementShell = ({
 
   // Traitement tab
   treatForm,
+  assistantIa,
   treatActionsVisible = true, // false : le formulaire est remplacé par un message, donc ni « Sauvegarder » ni « Traiter »
   onTreat,         // handler du bouton "Traiter"
   loadingTreat,    // boolean loading state
@@ -326,7 +328,7 @@ const TraitementShell = ({
                       onClick={() => setActiveTab(tab.key)}
                       className={`px-[18px] py-[13px] bg-transparent border-0 cursor-pointer text-[13px] transition-colors -mb-px ${
                         activeTab === tab.key
-                          ? 'font-semibold text-[#005081] border-b-2 border-[#005081]'
+                          ? 'font-semibold text-[var(--gpr-primary, #005081)] border-b-2 border-[var(--gpr-primary, #005081)]'
                           : 'font-normal text-slate-500 border-b-2 border-transparent'
                       }`}
                     >
@@ -422,6 +424,9 @@ const TraitementShell = ({
                       );
                     })}
                   </div>
+
+                  {/* Aide de l'IA (au-dessus du formulaire Classique) */}
+                  {treatSubTab === 'classique' && assistantIa}
 
                   {/* Classique */}
                   {treatSubTab === 'classique' && treatForm && (
@@ -561,6 +566,7 @@ const TraitementShell = ({
                   onAddContent={onAddContent}
                   onDeleteExtra={onDeleteExtra}
                   currentUser={currentUser}
+                  transcriptionIa={claimType === "CLAIM" || claimType === "DENUNCIACION"}
                 />
               )}
 

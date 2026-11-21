@@ -31,6 +31,7 @@ import ReclamationsAlertes from '../pages/Alertes/ReclamationsAlertes';
 import DenonciationsAlertes from '../pages/Alertes/DenonciationsAlertes';
 import Global from '../pages/Rapports/Global';
 import Bceao from '../pages/Rapports/Bceao';
+import ReportingIA from '../pages/Rapports/ReportingIA';
 import Synchronisation from '../pages/Synchronisation/Synchronisation';
 import Superset from '../pages/Rapports/Superset';
 import Compte from '../pages/Compte/Compte';
@@ -49,7 +50,6 @@ import ScheduledReports from '../pages/Configurations/ScheduledReports';
 import Log from '../pages/Configurations/Log';
 import Exportation from '../pages/Configurations/Exportation';
 import SLA from '../pages/Configurations/SLA';
-import RapportDelais from "../pages/Sla/RapportDelais";
 import ApiKey from '../pages/Configurations/ApiKey';
 import Whatsapp from '../pages/Whatsapp';
 import Corbeille from '../pages/Configurations/Corbeille';
@@ -130,7 +130,6 @@ export default function Contenu() {
                     <Route path="/configurations/exportations" component={Exportation} />
                     <Route path="/configurations/sla" component={SLA} />
                     <Route path="/sla" component={SLA} />
-                    <Route path="/rapports/delais" component={RapportDelais} />
                     <Route path="/ressources/documents" component={Documents} />
                     <Route path="/ressources/faq" component={Faq} />
                     <Route path="/configurations/notifications" component={Notifications} />
@@ -171,6 +170,7 @@ export default function Contenu() {
                     {/* rapports */}
                     <Route path="/rapports/global" component={Global} />
                     <Route path="/rapports/bceao" component={Bceao} />
+                    <Route path="/rapports/ia" component={ReportingIA} />
                     <Route path="/rapports/superset" component={Superset} />
 
                     {/* synchronisation offline */}

@@ -36,7 +36,7 @@ const selectSx = {
   backgroundColor: "#fff",
   "& .MuiOutlinedInput-notchedOutline": { borderColor: "#E2E8F0" },
   "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#CBD5E1" },
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#005081", borderWidth: 1.5 },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
   "& .MuiSelect-select": { py: "7px" },
 };
 
@@ -120,7 +120,7 @@ const DossierTable = ({
               borderRadius: "10px", fontSize: "0.85rem", backgroundColor: "#fff",
               "& fieldset": { borderColor: "#E2E8F0" },
               "&:hover fieldset": { borderColor: "#CBD5E1" },
-              "&.Mui-focused fieldset": { borderColor: "#005081", borderWidth: 1.5 },
+              "&.Mui-focused fieldset": { borderColor: "var(--gpr-primary, #005081)", borderWidth: 1.5 },
             },
             "& input": { borderBottom: "none !important", boxShadow: "none !important" },
           }}
@@ -184,7 +184,7 @@ const DossierTable = ({
                       active={orderBy === col.id}
                       direction={orderBy === col.id ? order : "asc"}
                       onClick={() => handleSort(col.id)}
-                      sx={{ "&.Mui-active": { color: "#005081" }, "& .MuiTableSortLabel-icon": { fontSize: 14 } }}
+                      sx={{ "&.Mui-active": { color: "var(--gpr-primary, #005081)" }, "& .MuiTableSortLabel-icon": { fontSize: 14 } }}
                     >
                       {col.label}
                     </TableSortLabel>

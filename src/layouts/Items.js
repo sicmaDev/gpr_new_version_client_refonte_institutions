@@ -51,6 +51,7 @@ import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import MultilineChartIcon from '@mui/icons-material/MultilineChart';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import UploadIcon from '@mui/icons-material/Upload';
@@ -392,8 +393,9 @@ export const Items = (props) => {
   const showDenonciations = hbt.some(i => ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9', 'H10', 'H14'].includes(i));
   // Synchronisation : seules les personnes qui enregistrent des plaintes créent des éléments hors connexion
   const showSync = hbt.includes('H1') && mode === 1;
-  // Suivi des délais : ceux qui voient les plaintes, plus Pilote et DE (pas un administrateur sans droit sur les plaintes)
-  const showSla = mode === 1 && slaEnabled && (showReclamations || addR === 'PILOTE' || addR === 'DE');
+  // Suivi des délais : ceux qui voient les plaintes, plus Pilote et DE (pas un administrateur sans droit sur les plaintes),
+  // plus les profils Rapports (H11) qui y trouvent l'onglet Indicateurs
+  const showSla = mode === 1 && slaEnabled && (showReclamations || addR === 'PILOTE' || addR === 'DE' || hbt.includes('H11'));
   const showSuggestions = hbt.some(i => ['H1', 'H7', 'H8', 'H9', 'H10', 'H14'].includes(i));
   const showRapports = hbt.includes('H11') && mode === 1;
   const showAlertes = (hbt.includes('H13') || addR === 'PILOTE' || addR === 'DE') && mode === 1;
@@ -671,14 +673,12 @@ export const Items = (props) => {
                 </ListItemButton>
               </NavLink>
 
-              {slaEnabled && (
-                <NavLink to="/rapports/delais" activeClassName="hero" style={link}>
-                  <ListItemButton sx={sSx('/rapports/delais')} className="lib">
-                    <ListItemIcon>{si(SpeedIcon, isActive('/rapports/delais'))}</ListItemIcon>
-                    <ListItemText primary="Respect des délais" />
-                  </ListItemButton>
-                </NavLink>
-              )}
+              <NavLink to="/rapports/ia" activeClassName="hero" style={link}>
+                <ListItemButton sx={sSx('/rapports/ia')} className="lib">
+                  <ListItemIcon>{si(AutoAwesomeIcon, isActive('/rapports/ia'))}</ListItemIcon>
+                  <ListItemText primary="Reporting IA" />
+                </ListItemButton>
+              </NavLink>
 
               {/* <NavLink to="/rapports/superset" activeClassName="hero" style={link}>
                 <ListItemButton sx={sSx('/rapports/superset')} className="lib">
