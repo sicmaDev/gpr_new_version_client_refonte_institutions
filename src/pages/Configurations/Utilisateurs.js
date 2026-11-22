@@ -185,6 +185,13 @@ const Utilisateurs = (props) => {
     try { units = loadItemFromLocalStorage('app-ps') || []; } catch (e) { units = []; }
 
     const titleOptions  = titles.map(t => ({ label: t.libelle, value: t.id }));
+    // Un poste qui a l'habilitation H6 (affecter les plaintes) ne peut pas être RA (gérant), comme sur le serveur
+    const posteAH6 = (posteId) => {
+        const p = titles.find(t => String(t.id) === String(posteId));
+        return String(p?.habilitations || "").split(",").map(h => h.trim()).includes("H6");
+    };
+    const estGerant = (ca) => ca === true || ca === "true";
+    const MSG_RA_H6 = "Un utilisateur dont le poste a l'habilitation H6 ne peut pas être RA (gérant).";
     // Les points de service désactivés ne sont plus proposés au choix
     const unitsGrouped  = groupBy(units.filter(u => !u.deleted), "type");
     const unitOptionsGrouped = [
@@ -231,7 +238,7 @@ const Utilisateurs = (props) => {
     const filteredUsers = useMemo(() => {
         const c = CHIPS_CONFIG.find(x => x.value === activeChip);
         const base = c ? props.items.filter(c.filter) : props.items;
-        return [...base].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        return [...base].sort((a, b) => (new Date(b.createdAt || 0) - new Date(a.createdAt || 0)) || ((b.id || 0) - (a.id || 0)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeChip]);
 
@@ -255,6 +262,7 @@ const Utilisateurs = (props) => {
         if (!form.unit) errs.unit = "Champ requis";
         if (!form.email || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(form.email)) errs.email = "Email invalide";
         if (!form.phone || !isValidPhone(form.phone)) errs.phone = "Téléphone invalide";
+        if (estGerant(form.ca) && posteAH6(form.poste)) errs.ca = MSG_RA_H6;
         return errs;
     };
 
@@ -311,7 +319,7 @@ const Utilisateurs = (props) => {
         },
     ];
 
-    const handleModalSubmit = (items) => {
+    const handleModalSubmit = (items, { resteDesDoublons } = {}) => {
         // Quota de comptes de la licence : comme dans l'ancienne version, pas d'ajout si la licence n'a pas pu être lue,
         // et l'ajout de plusieurs comptes d'un coup ne doit pas dépasser le maximum.
         // return false : le formulaire garde la saisie pour qu'elle soit corrigée
@@ -320,14 +328,16 @@ const Utilisateurs = (props) => {
         for (const it of items) {
             if (!it.email || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(it.email)) { notify(`Erreur - Email invalide pour ${it.name}`, "error"); return false; }
             if (!isValidPhone(it.phone)) { notify(`Erreur - Téléphone invalide pour ${it.name}`, "error"); return false; }
+            if (estGerant(it.ca) && posteAH6(it.poste)) { notify(`Erreur - ${it.name} : ${MSG_RA_H6}`, "error"); return false; }
         }
         setAddLoading(true); props.etatChanged(true);
-        // Arrêt au premier refus du serveur (email déjà utilisé…) : la fenêtre reste ouverte avec la saisie
-        const chain = items.reduce((p, it) => p.then((ok) => ok &&
-            ajout({ firstAndLastName: it.name, email: it.email, tel: it.phone, posteId: it.poste, servicePointId: it.unit, additionalRole: it.additionalRole, ra: it.ca }, props)
-        ), Promise.resolve(true));
+        // Un résultat par compte : la fenêtre vide ceux créés et garde ceux refusés (email déjà utilisé…)
+        const resultats = [];
+        const chain = items.reduce((p, it) => p.then(async () => {
+            resultats.push(Boolean(await ajout({ firstAndLastName: it.name, email: it.email, tel: it.phone, posteId: it.poste, servicePointId: it.unit, additionalRole: it.additionalRole, ra: it.ca }, props)));
+        }), Promise.resolve());
         return chain
-            .then((ok) => { if (!ok) return false; setAddModalOpen(false); clearComponentState(); })
+            .then(() => { if (!resteDesDoublons && resultats.every(Boolean)) { setAddModalOpen(false); clearComponentState(); } return resultats; })
             .finally(() => { setAddLoading(false); props.etatChanged(false); });
     };
 
@@ -338,7 +348,7 @@ const Utilisateurs = (props) => {
     };
     const handleEditSubmit = () => {
         const errs = validateForm(editForm, true);
-        if (Object.keys(errs).length) { setEditErrors(errs); return; }
+        if (Object.keys(errs).length) { setEditErrors(errs); if (errs.ca) notify("Erreur - " + errs.ca, "error"); return; }
         setEditLoading(true); props.etat2Changed(true);
         const payload = { id: props.id, firstAndLastName: editForm.name, email: editForm.email, tel: editForm.phone, posteId: editForm.poste, servicePointId: editForm.unit, additionalRole: editForm.additionalRole, ra: editForm.ca };
         modification(payload, props)
@@ -616,7 +626,7 @@ const Utilisateurs = (props) => {
                                 </div>
                             )
                         )},
-                    ]} searchFields={["firstAndLastName", "email", "code", "tel", "posteDto.libelle", "servicePointDto.libelle"]} defaultSort="firstAndLastName" />
+                    ]} searchFields={["firstAndLastName", "email", "code", "tel", "posteDto.libelle", "servicePointDto.libelle"]} defaultSort={null} />
                 ) : (
                     <ConfigCardView items={filteredUsers} titleField="firstAndLastName" subtitleField="email"
                         searchFields={["firstAndLastName", "email", "code", "tel", "posteDto.libelle", "servicePointDto.libelle"]}

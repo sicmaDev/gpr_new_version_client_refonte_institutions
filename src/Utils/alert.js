@@ -56,6 +56,7 @@ const CustomToast = ({ t, msg, type }) => {
   const c = config[type] ?? config.info;
   return (
     <div
+      role={type === "error" ? "alert" : "status"}
       style={{
         background: "#fff",
         borderRadius: 16,
@@ -64,7 +65,10 @@ const CustomToast = ({ t, msg, type }) => {
         alignItems: "center",
         gap: 12,
         padding: "10px 10px 10px 12px",
-        width: 240,
+        // Largeur qui s'adapte au message (sans dépasser l'écran) : avant, 240 px fixes et le texte débordait
+        boxSizing: "border-box",
+        minWidth: 240,
+        maxWidth: "min(380px, calc(100vw - 40px))",
         borderLeft: `3px solid ${c.accent}`,
         opacity: t.visible ? 1 : 0,
         transform: t.visible ? "translateX(0)" : "translateX(20px)",
@@ -86,10 +90,15 @@ const CustomToast = ({ t, msg, type }) => {
       {/* message */}
       <span style={{
         flex: 1,
+        minWidth: 0,
         fontSize: 12,
         fontWeight: 600,
         color: "#1E293B",
         lineHeight: 1.4,
+        // Les mots très longs (email, code, lien) passent à la ligne au lieu de sortir du cadre
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
+        whiteSpace: "pre-line",
       }}>
         {msg}
       </span>
@@ -116,7 +125,8 @@ export const notify = (msg, type = "info") => {
   // même type + même message = remplace le toast existant (pas d'empilement)
   toast.custom((t) => <CustomToast t={t} msg={msg} type={type} />, {
     id: `${type}::${msg}`,
-    duration: 4000,
+    // Un message long reste affiché plus longtemps, pour avoir le temps de le lire (10 s au plus)
+    duration: Math.min(10000, 4000 + Math.max(0, String(msg ?? "").length - 80) * 40),
   });
 };
 

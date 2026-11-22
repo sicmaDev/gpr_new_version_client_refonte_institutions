@@ -4,7 +4,9 @@ import {
   markSyncing,
   markSuccess,
   markFailed,
+  markDoublon,
 } from "./syncQueue";
+import { HOST } from "../Utils/globals";
 import { getDraftRecord, markDraftRecordSynced } from "./draftRecordsStore";
 import db from "./db";
 import { loadItemFromSessionStorage, saveItemToLocalStorage, base64DtoToFile } from "../Utils/utils";
@@ -76,6 +78,32 @@ const buildFormData = async (formKey, payload) => {
   return formData;
 };
 
+// Doublons d'une réclamation saisie hors ligne : mêmes vérifications que l'écran d'enregistrement en ligne
+// (réclamations en cours pour ce téléphone dans l'agence, puis dans les autres agences).
+// Lève une erreur si le serveur ne répond pas : la réclamation n'est alors pas envoyée sans vérification.
+const chercherDoublons = async (telephone) => {
+  const entetes = { headers: { Accept: "application/json", Authorization: "Bearer " + loadItemFromSessionStorage("token") } };
+  const tel = encodeURIComponent(telephone);
+  const [agence, autres] = await Promise.all([
+    axios.get(HOST + "api/v1/claim/checkPhone/" + tel, entetes),
+    axios.get(HOST + "api/v1/claim/checkPhoneCrossAgency/" + tel, entetes),
+  ]);
+  const vus = new Set();
+  const resume = (c, autreAgence) => ({
+    codeClient: c.codeClient || c.code,
+    client: c.clientFirstAndLastName || null,
+    date: c.receiptDateTime || null,
+    objet: c.objet?.libelle || null,
+    agence: c.servicePoint?.libelle || null,
+    statut: c.status || null,
+    autreAgence,
+  });
+  return [
+    ...(agence.data?.content?.exists ? agence.data.content.claims : []).map((c) => resume(c, false)),
+    ...(autres.data?.content?.exists ? autres.data.content.claims : []).map((c) => resume(c, true)),
+  ].filter((d) => (vus.has(d.codeClient) ? false : vus.add(d.codeClient)));
+};
+
 const classifyError = (error) => {
   if (!error.response) return "Erreur réseau — serveur inaccessible.";
   if (error.response.status >= 500) return "Le serveur a rencontré une erreur (" + error.response.status + ").";
@@ -109,6 +137,22 @@ const syncOneEntry = async (entry, onSyncingStart) => {
 
   const isTemp = record.payload.status === "TEMP_SAVED";
   const url = isTemp ? domain.addTempUrl : domain.addUrl;
+
+  // Réclamation saisie hors ligne : la vérification de doublon, impossible sans le serveur, est faite ici.
+  // S'il existe déjà des réclamations pour ce téléphone, rien n'est envoyé : l'utilisateur décide dans la
+  // page Synchronisation (sauf s'il a déjà choisi « Envoyer quand même »).
+  if (record.type === "claim" && !isTemp && !entry.forcer && record.payload.phone) {
+    try {
+      const doublons = await chercherDoublons(record.payload.phone);
+      if (doublons.length > 0) {
+        await markDoublon(entry.queueId, doublons);
+        return { success: false, doublon: true };
+      }
+    } catch (error) {
+      await markFailed(entry.queueId, "Vérification des doublons impossible : " + classifyError(error));
+      return { success: false };
+    }
+  }
 
   try {
     const formData = await buildFormData(domain.formKey, record.payload);
@@ -168,9 +212,11 @@ const envoyerLaFile = async (onItemDone) => {
   const entries = await listPendingQueueEntries();
   let success = 0;
   let failed = 0;
+  let doublons = 0;
   for (let i = 0; i < entries.length; i += 1) {
     const result = await syncOneEntry(entries[i], onItemDone);
     if (result.success) success += 1;
+    else if (result.doublon) doublons += 1;
     else failed += 1;
     if (onItemDone) onItemDone(i + 1, entries.length);
   }
@@ -180,10 +226,12 @@ const envoyerLaFile = async (onItemDone) => {
     // Visible même quand c'est le déclenchement automatique (retour online,
     // ou chargement de l'app) qui a lancé la synchro — sinon elle se produit
     // en silence et l'utilisateur ne sait jamais ce qui vient d'être envoyé.
-    if (failed === 0) {
+    if (failed === 0 && doublons === 0) {
       notify(success + " élément(s) synchronisé(s) avec succès.", "success");
+    } else if (failed === 0) {
+      notify(success + " synchronisé(s), " + doublons + " réclamation(s) à vérifier : doublon possible (page Synchronisation).", "warning");
     } else {
-      notify(success + " synchronisé(s), " + failed + " en échec.", "error");
+      notify(success + " synchronisé(s), " + failed + " en échec" + (doublons ? ", " + doublons + " doublon(s) possible(s) à vérifier" : "") + ".", "error");
     }
   }
 
@@ -198,7 +246,7 @@ const envoyerLaFile = async (onItemDone) => {
     refreshSuggestionsSnapshot(),
   ]);
 
-  return { ran: true, total: entries.length, success, failed };
+  return { ran: true, total: entries.length, success, failed, doublons };
 };
 
 // Réessaie une seule entrée en échec (bouton [Réessayer], Phase 8).

@@ -183,6 +183,7 @@ import {
   VolumeUp,
 } from "@mui/icons-material";
 import RecorderControls from "../../components/recorder-controls";
+import { FenetreContenu, FenetreFichiers, FenetreAudio } from "../../components/treatment/FenetresAjoutPieces";
 import useRecorder from "../../hooks/useRecorder";
 import GavelIcon from "@mui/icons-material/Gavel";
 import StopIcon from "@mui/icons-material/Stop";
@@ -2597,64 +2598,25 @@ const ListeReclamations = (props) => {
 
         {/* Dialog ajout contenu */}
         {showExtraContent && (
-          <Dialog open={showExtraContent} fullWidth maxWidth="md" onClose={() => setShowExtraContent(false)} id="dialog-contenu">
-            <DialogTitle>Ajouter un contenu</DialogTitle>
-            <DialogContent sx={{ overflowX: "hidden" }}>
-              <TextField fullWidth multiline minRows={4} value={extraContent}
-                onChange={(e) => { e.stopPropagation(); setExtraContent(e.target.value); }}
-                placeholder="Saisissez le contenu..." />
-            </DialogContent>
-            {extraContent?.trim() && (
-              <DialogActions>
-                <LoadingButton onClick={() => { setExtraContent(""); setShowExtraContent(false); }} endIcon={<CloseIcon />} variant="contained" sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary">Annuler</LoadingButton>
-                <LoadingButton onClick={(e) => handleContentSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}>Enregistrer</LoadingButton>
-              </DialogActions>
-            )}
-          </Dialog>
+          <FenetreContenu open={showExtraContent} valeur={extraContent} onChange={setExtraContent} chargement={extraFileLoading}
+          onClose={() => setShowExtraContent(false)}
+          onAnnuler={() => { setExtraContent(""); setShowExtraContent(false); }}
+          onEnregistrer={(e) => handleContentSubmit(e)} />
         )}
 
         {/* Dialog upload fichiers */}
-        {filesForm.length > 0 && (
-          <Dialog open fullWidth maxWidth="sm" onClose={clearFiles} id="dialog-addFile">
-            <DialogTitle>Ajouter des fichiers</DialogTitle>
-            <DialogContent>
-              {filesForm.map((f, i) => <div key={i} style={{ padding: "4px 0", fontSize: 13 }}>{f.name}</div>)}
-            </DialogContent>
-            <DialogActions>
-              <LoadingButton onClick={clearFiles} endIcon={<CloseIcon />} variant="contained" sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary">Annuler</LoadingButton>
-              <LoadingButton onClick={(e) => handleFileSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}>Enregistrer</LoadingButton>
-            </DialogActions>
-          </Dialog>
-        )}
+        <FenetreFichiers fichiers={filesForm} chargement={extraFileLoading}
+          onAnnuler={clearFiles} onEnregistrer={(e) => handleFileSubmit(e)} />
 
         {/* Dialog enregistrement audio */}
         {open2 && (
-          <Dialog open={open2} fullWidth maxWidth="sm" onClose={() => { setOpen2(false); setAudioBox(false); }} id="dialog-audio">
-            <DialogTitle>Ajouter un audio</DialogTitle>
-            <DialogContent>
-              <section className="voice-recorder">
-                <div className="recorder-container">
-                  {audioListUrlForm.map((url, i) => (
-                    <Box key={i} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 2, pt: 2 }}>
-                      <audio src={url} controls />
-                      <CloseIcon sx={{ cursor: "pointer" }} onClick={() => {
-                        setAudioListForm(audioListForm.filter((_, idx) => idx !== i));
-                        setAudioListUrlForm(audioListUrlForm.filter((_, idx) => idx !== i));
-                      }} />
-                    </Box>
-                  ))}
-                  <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={() => {}} />
-                </div>
-              </section>
-            </DialogContent>
-            {audioListUrlForm.length > 0 && (
-              <DialogActions>
-                <LoadingButton onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} endIcon={<CloseIcon />} variant="contained" sx={{ backgroundColor: "#000", textTransform: "initial" }} color="secondary">Annuler</LoadingButton>
-                <LoadingButton onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}>Enregistrer</LoadingButton>
-              </DialogActions>
-            )}
-          </Dialog>
-        )}
+        <FenetreAudio open={open2} audios={audioListUrlForm} chargement={extraFileLoading}
+          recorderState={recorderState} handlers={handlers}
+          onRetirer={(i) => { setAudioListForm(audioListForm.filter((_, idx) => idx !== i)); setAudioListUrlForm(audioListUrlForm.filter((_, idx) => idx !== i)); }}
+          onClose={() => { setOpen2(false); setAudioBox(false); }}
+          onAnnuler={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }}
+          onEnregistrer={(e) => handleFileSubmit(e, false)} />
+      )}
 
         <TraitementShell
           claimType="CLAIM"
@@ -3033,277 +2995,20 @@ const ListeReclamations = (props) => {
       {/* {props.showSelectPrintItem && ( */}
       <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} claimStatus={props.status} />
       {showExtraContent && (
-        <div>
-          <Dialog
-            open={showExtraContent}
-            fullWidth={true}
-            maxWidth="md"
-            onClose={(e) => {
-              setShowExtraContent(false);
-            }}
-            overflowX="hidden"
-            id="dialog-contenu"
-          >
-            <DialogTitle>Ajouter un contenu</DialogTitle>
-            <DialogContent sx={{ overflowX: "hidden" }}>
-              <TextField
-                fullWidth
-                multiline
-                minRows={4}
-                value={extraContent}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setExtraContent(e.target.value);
-                }}
-                placeholder="Saisissez le contenu..."
-              />
-            </DialogContent>
-            {extraContent && extraContent?.trim() !== "" ? (
-              <DialogActions sx={{ overflowX: "hidden" }}>
-                <LoadingButton
-                  onClick={(e) => {
-                    setExtraContent("");
-                    setShowExtraContent(false);
-                  }}
-                  className="waves-effect waves-effect-b waves-light btn-small"
-                  loadingPosition="end"
-                  // loading={extraFileLoading}
-                  endIcon={<CloseIcon />}
-                  variant="contained"
-                  sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  color="secondary"
-                >
-                  Annuler
-                </LoadingButton>
-                <LoadingButton
-                  onClick={(e) => {
-                    handleContentSubmit(e);
-                  }}
-                  className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                  loading={extraFileLoading}
-                  loadingPosition="end"
-                  endIcon={<SaveIcon />}
-                  variant="contained"
-                  sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
-                  color="primary"
-                >
-                  Enregistrer
-                </LoadingButton>
-              </DialogActions>
-            ) : (
-              <></>
-            )}
-          </Dialog>
-        </div>
-      )}
-      {filesForm.length ? (
-        <div>
-          <Dialog
-            open={filesForm.length ? true : false}
-            fullWidth={true}
-            maxWidth="sm"
-            onClose={(e) => {
-              setFiles([]);
-            }}
-            id="dialog-addFile"
-          >
-            <DialogContent>
-              <DialogContentText>
-                <div className="col l12 s12 pb-2" id="content">
-                  <div className="df sb pb-2">
-                    <b>Ajout de fichier</b>
-                    <CloseIcon
-                      style={{ cursor: "pointer" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    />
-                  </div>
-                </div>
-              </DialogContentText>
-
-              <div className="col l12 m12 s12 file-field input-field">
-                <List component="div" role="group">
-                  {filesForm.map((file, i) => {
-                    return (
-                      <ListItemButton key={i} divider>
-                        <ListItemText
-                          primary={file.name}
-                          secondary={
-                            Math.round((file.size / 1024) * 100) / 100 +
-                            " " +
-                            "Ko"
-                          }
-                        />
-                      </ListItemButton>
-                    );
-                  })}
-                </List>
-                <div
-                  style={{ display: "flex", alignItems: "center" }}
-                  htmlFor="ile">
-                  <LoadingButton
-                    onClick={(e) => {
-                      handleFileSubmit(e);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                    loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<SaveIcon />}
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "var(--gpr-primary, #005081)",
-                      textTransform: "initial",
-                    }}
-                  >
-                    <span>Enregistrer</span>
-                  </LoadingButton>
-
-                  <LoadingButton
-                    onClick={(e) => {
-                      setFiles([]);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small"
-                    // loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<CloseIcon />}
-                    variant="contained"
-                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  >
-                    <span>Annuler</span>
-                  </LoadingButton>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      ) : (
-        <></>
-      )}
+          <FenetreContenu open={showExtraContent} valeur={extraContent} onChange={setExtraContent} chargement={extraFileLoading}
+          onClose={() => setShowExtraContent(false)}
+          onAnnuler={() => { setExtraContent(""); setShowExtraContent(false); }}
+          onEnregistrer={(e) => handleContentSubmit(e)} />
+        )}
+      <FenetreFichiers fichiers={filesForm} chargement={extraFileLoading}
+          onAnnuler={() => setFiles([])} onEnregistrer={(e) => handleFileSubmit(e)} />
       {showAudioBox && (
-        <div>
-          <Dialog
-            open={open2}
-            onClose={() => {
-              setOpen2(false);
-            }}
-            style={{ padding: "16px" }}
-            id="dialog-audio"
-          >
-            <DialogTitle
-              align="center"
-              color={"var(--gpr-primary, #005081)"}
-              fontSize={"23px"}
-              fontWeight={"bold"}
-            >
-              {"Enregistreur vocal Réclamations"}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText
-                align="center"
-                fontSize={"14px"}
-                textAlign={"center"}
-              >
-                {
-                  "Cliquez sur le bouton ci-dessous et parler dans le micro de votre téléphone, ou branchez un casque ou des écouteurs"
-                }
-              </DialogContentText>
-
-              <section className="voice-recorder">
-                <div className="recorder-container">
-                  {audioListUrlForm.map((url, i) => {
-                    return (
-                      <Box
-                        key={i}
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          pb: 2,
-                          pt: 2,
-                        }}
-                      >
-                        <audio
-                          src={url}
-                          controls
-                          sx={{ flex: "1", mr: 2, width: "100%" }}
-                        />
-                        <CloseIcon
-                          color="red"
-                          onClick={() => {
-                            setAudioListForm(() => {
-                              return audioListForm.filter(
-                                (va, ind) => ind !== i
-                              );
-                            });
-                            setAudioListUrlForm(() => {
-                              return audioListUrlForm.filter(
-                                (va, inde) => inde !== i
-                              );
-                            });
-                          }}
-                        />
-                      </Box>
-                    );
-                  })}
-                  <RecorderControls
-                    recorderState={recorderState}
-                    handlers={handlers}
-                    closeAction={() => { }}
-                  />
-                </div>
-              </section>
-            </DialogContent>
-            {audioListUrlForm.length ? (
-              <DialogActions>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "end",
-                    alignItems: "center",
-                  }}
-                >
-                  <LoadingButton
-                    onClick={(e) => {
-                      handleFileSubmit(e, false);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small mr-2"
-                    loading={extraFileLoading}
-                    loadingPosition="end"
-                    endIcon={<SaveIcon />}
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "var(--gpr-primary, #005081)",
-                      textTransform: "initial",
-                    }}
-                  >
-                    <span>Enregistrer</span>
-                  </LoadingButton>
-
-                  <LoadingButton
-                    onClick={(e) => {
-                      setAudioListForm([]);
-                      setAudioListUrlForm([]);
-                      setAudioBox(false);
-                      setOpen2(false);
-                    }}
-                    className="waves-effect waves-effect-b waves-light btn-small"
-                    loadingPosition="end"
-                    // loading={extraFileLoading}
-                    endIcon={<CloseIcon />}
-                    variant="contained"
-                    sx={{ backgroundColor: "#000", textTransform: "initial" }}
-                  >
-                    <span>Annuler</span>
-                  </LoadingButton>
-                </Box>
-              </DialogActions>
-            ) : (
-              <></>
-            )}
-          </Dialog>
-        </div>
+        <FenetreAudio open={open2} audios={audioListUrlForm} chargement={extraFileLoading}
+          recorderState={recorderState} handlers={handlers}
+          onRetirer={(i) => { setAudioListForm(audioListForm.filter((_, idx) => idx !== i)); setAudioListUrlForm(audioListUrlForm.filter((_, idx) => idx !== i)); }}
+          onClose={() => { setOpen2(false); setAudioBox(false); }}
+          onAnnuler={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }}
+          onEnregistrer={(e) => handleFileSubmit(e, false)} />
       )}
       <audio ref={audioRef} src={currentAudio} hidden />
 

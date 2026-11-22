@@ -1287,6 +1287,7 @@ const ListeSuggestions = (props) => {
       <>
         <audio ref={audioRef} src={currentAudio} hidden />
         <TraitementShell
+        avecTransmissions={false}
           onBack={() => { sessionStorage.removeItem('gpr_sug_code'); setDetailVisible(false); history.push("/suggestions/liste/all"); }}
           codeClient={props.codeClient || props.code}
           status={props.status}
@@ -1440,7 +1441,7 @@ const ListeSuggestions = (props) => {
               label: "Historique",
               content: (
                 <div style={{ padding: "8px 4px" }}>
-                  <HistoriqueTimeline claimId={claim_id} />
+                  <HistoriqueTimeline claimId={claim_id} avecTransmissions={false} />
                 </div>
               ),
             },

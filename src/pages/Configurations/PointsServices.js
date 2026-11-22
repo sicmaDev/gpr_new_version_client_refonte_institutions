@@ -43,6 +43,7 @@ import LocalisationPointService, { localisationDepuis, localisationPourServeur, 
 import { enregistrerLocalisationApi, localisationsPointsServiceApi } from "../../apis/Rapports/CarteApi";
 import ViewModeToggle from "../../components/shared/ViewModeToggle";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import PlaceIcon from "@mui/icons-material/Place";
 import BusinessIcon from "@mui/icons-material/Business";
 import StoreIcon from "@mui/icons-material/Store";
 import AddIcon from "@mui/icons-material/Add";
@@ -65,6 +66,12 @@ const PointsServices = (props) => {
     // Localisation (carte du rapport Global) : chargée à l'ouverture de la modification, enregistrée après elle.
     const [localisation, setLocalisation] = useState(localisationVide());
     const [localisationErreur, setLocalisationErreur] = useState("");
+    // Localisations de tous les points de service, pour les afficher dans la liste (par identifiant)
+    const [localisations, setLocalisations] = useState({});
+    const chargerLocalisations = () =>
+        localisationsPointsServiceApi()
+            .then((r) => { if (r?.status) setLocalisations(Object.fromEntries((r.content || []).map((l) => [l.id, l]))); })
+            .catch(() => {});
 
     // Modals de confirmation
     const [disableConfirm, setDisableConfirm] = useState({ open: false, id: null, isDisabled: true, loading: false });
@@ -82,6 +89,7 @@ const PointsServices = (props) => {
             setIsLoading(false);
             KTApp.unblockPage();
         });
+        chargerLocalisations();
 
         window.$('.tooltipped').tooltip();
         //cleanup
@@ -109,10 +117,30 @@ const PointsServices = (props) => {
         { value: "DISABLED",  label: "Désactivés", filter: (i) => i.deleted },
     ];
 
+    // Ville · quartier, et lien vers la position GPS si elle est renseignée
+    const afficherLocalisation = (sp) => {
+        const l = localisations[sp.id];
+        const lieu = [l?.ville, l?.quartier].filter(Boolean).join(" · ");
+        const gps = l?.latitude != null && l?.longitude != null && l?.latitude !== "" && l?.longitude !== "";
+        if (!lieu && !gps) return <span style={{ color: "#94a3b8", fontSize: 12.5 }}>Non renseignée</span>;
+        return (
+            <div style={{ lineHeight: 1.4, opacity: sp.deleted ? 0.5 : 1 }}>
+                {lieu && <div style={{ fontSize: 13, color: "#1e293b" }}>{lieu}</div>}
+                {gps && (
+                    <a href={`https://www.google.com/maps?q=${l.latitude},${l.longitude}`} target="_blank" rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()} title={`${l.latitude}, ${l.longitude}`}
+                        style={{ fontSize: 12, color: "var(--gpr-primary, #005081)", display: "inline-flex", alignItems: "center", gap: 3, textDecoration: "none", fontWeight: 600 }}>
+                        <PlaceIcon style={{ fontSize: 14 }} /> Voir sur la carte
+                    </a>
+                )}
+            </div>
+        );
+    };
+
     const filteredItems = useMemo(() => {
         const chip = CHIPS_CONFIG.find(c => c.value === activeChip);
         const base = chip ? props.items.filter(chip.filter) : props.items;
-        return [...base].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        return [...base].sort((a, b) => (new Date(b.createdAt || 0) - new Date(a.createdAt || 0)) || ((b.id || 0) - (a.id || 0)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeChip]);
 
@@ -381,7 +409,7 @@ const PointsServices = (props) => {
                 setDisableConfirm(p => ({ ...p, loading: false }));
             });
     }
-    const handleModalSubmit = async (items) => {
+    const handleModalSubmit = async (items, { resteDesDoublons } = {}) => {
         // Localisation facultative : contrôlée avant toute création, avec les mêmes règles que la modification.
         for (const item of items) {
             const erreur = item.localisation ? verifierLocalisation(item.localisation) : null;
@@ -389,6 +417,8 @@ const PointsServices = (props) => {
         }
         setAddLoading(true);
         try {
+            // Un résultat par point de service : la fenêtre vide ceux enregistrés et garde le doublon / l'échec
+            const resultats = [];
             for (const item of items) {
                 const payload = {
                     type: item.type,
@@ -397,14 +427,17 @@ const PointsServices = (props) => {
                     direction_id: item.direction_id || "",
                 };
                 const cree = await ajout(payload, props);
-                if (!cree) return false;
+                resultats.push(Boolean(cree));
+                if (!cree) continue;
                 const loc = item.localisation;
                 if (cree.id && loc && Object.values(loc).some((v) => String(v ?? "").trim() !== "")) {
                     const r = await enregistrerLocalisationApi(cree.id, localisationPourServeur(loc)).catch(() => null);
                     if (!r?.status) notify(typeof r?.content === "string" ? r.content : "La localisation n'a pas pu être enregistrée.", "error");
                 }
             }
-            setAddModalOpen(false);
+            if (resultats.some(Boolean)) chargerLocalisations();
+            if (!resteDesDoublons && resultats.every(Boolean)) setAddModalOpen(false);
+            return resultats;
         } finally {
             setAddLoading(false);
         }
@@ -452,6 +485,7 @@ const PointsServices = (props) => {
                 .then(() => true))
             .then((ok) => {
                 if (!ok) return;
+                chargerLocalisations();
                 setEditModalOpen(false);
                 clearComponentState();
             })
@@ -551,7 +585,7 @@ const PointsServices = (props) => {
                     open={editModalOpen}
                     onClose={() => { if (!editLoading) { setEditModalOpen(false); clearComponentState(); } }}
                     fullWidth
-                    maxWidth="sm"
+                    maxWidth="md"
                     PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}
                 >
                     {/* Header */}
@@ -855,7 +889,7 @@ const PointsServices = (props) => {
                     onClose={() => setAddModalOpen(false)}
                     title="Ajouter des points de service"
                     fields={addFields}
-                    onSubmit={handleModalSubmit}
+                    onSubmit={handleModalSubmit} champUnique="libelle" existants={(props.items || []).map((x) => x.libelle)}
                     loading={addLoading}
                     maxWidth="md"
                     addLabel="Ajouter un autre point de service"
@@ -935,6 +969,7 @@ const PointsServices = (props) => {
                             { id: "description",  label: "Description", sortable: true,  minWidth: 180, render: (sp) => sp.deleted ? <i style={{ color: "lightgray" }}>{sp.description}</i> : sp.description },
                             { id: "type",         label: "Type",        sortable: true,  minWidth: 110, render: (sp) => sp.deleted ? <i style={{ color: "lightgray" }}>{sp.type}</i> : sp.type },
                             { id: "direction_id", label: "Lié à",       sortable: false, minWidth: 140, render: (sp) => { const lib = directionsMap[sp.direction_id] ?? "-"; return sp.deleted ? <i style={{ color: "lightgray" }}>{lib}</i> : lib; } },
+                            { id: "localisation", label: "Localisation", sortable: false, minWidth: 160, render: (sp) => afficherLocalisation(sp) },
                             { id: "actions",      label: "Actions",     sortable: false, minWidth: 130, render: (sp) => sp.deleted ? (
                                 <div style={{ display: "flex", gap: "5px" }}>
                                     <Tooltip title="Activer"><IconButton onClick={(e) => { e.stopPropagation(); handleDisabledModal(e, sp.id, false); }} color="default"><TaskAlt sx={{ color: 'black' }} /></IconButton></Tooltip>
@@ -951,7 +986,7 @@ const PointsServices = (props) => {
                         ]}
                         searchFields={["libelle", "description", "type"]}
                         filters={[{ id: "type", label: "Tous les types", options: [{ value: "DIRECTION", label: "Direction" }, { value: "AGENCE", label: "Agence" }, { value: "GUICHET", label: "Guichet" }], filterFn: (row, val) => row.type === val }]}
-                        defaultSort="libelle"
+                        defaultSort={null}
                     />
                 ) : (
                     <ConfigCardView
@@ -964,7 +999,7 @@ const PointsServices = (props) => {
                         filters={[{ id: "type", label: "Tous les types", options: [{ value: "DIRECTION", label: "Direction" }, { value: "AGENCE", label: "Agence" }, { value: "GUICHET", label: "Guichet" }], filterFn: (row, val) => row.type === val }]}
                         onEdit={(sp) => handleEditClick(sp)({ preventDefault: () => {} })}
                         onDelete={(sp) => handleModal({ preventDefault: () => {} }, sp)}
-                        extraFields={[{ label: "Lié à", render: (sp) => directionsMap[sp.direction_id] ?? "-" }]}
+                        extraFields={[{ label: "Lié à", render: (sp) => directionsMap[sp.direction_id] ?? "-" }, { label: "Localisation", render: (sp) => afficherLocalisation(sp) }]}
                     />
                 )}
 

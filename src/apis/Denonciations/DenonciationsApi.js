@@ -624,7 +624,7 @@ export const convertDenunciationApi = async (data, props) => {
                 notify("Erreur - La dénonciation n'a pas pu être convertie", "error");
                 return null;
             }
-            notify("Bravo - Dénonciation convertie avec succès", "success");
+            notify("Bravo - Dénonciation convertie en suggestion", "success");
             return response.data;
         })
         .catch(function (error) {

@@ -65,7 +65,6 @@ import {
   transmittedByChanged,
   transmissionCommentChanged,
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
-import TransmissionHistory from "../../components/TransmissionHistory";
 import { v4 as uuid } from "uuid";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -74,6 +73,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import http from "../../apis/http-common";
 import { KTApp } from "../../Utils/blockui";
 import { notify } from "../../Utils/alert";
+import { listerBrouillonsApi, ajouterBrouillonApi, supprimerBrouillonApi } from "../../apis/Reclamations/ReclamationsApi";
 import SaveIcon from "@mui/icons-material/Save";
 import { useParams } from "react-router-dom";
 import { HOST } from "../../Utils/globals";
@@ -268,6 +268,11 @@ const TraiterDenonciation = (props) => {
   const [loadingDraft, setLoadingDraft] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState(null);
   const [savedDraft, setSavedDraft] = useState(null);
+  const [brouillons, setBrouillons] = useState([]);
+  const chargerBrouillons = (id) => {
+    if (!id) return;
+    listerBrouillonsApi(id).then(setBrouillons).catch(() => setBrouillons([]));
+  };
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
       ? loadItemFromLocalStorage("app-mode")
@@ -342,6 +347,9 @@ const TraiterDenonciation = (props) => {
 
   //vérification if user is in guest
   let showJoinBtn = false;
+  // Après « Ouvrir une session » / « Rejoindre la session » : on bascule sur l'onglet Chat
+  const [demandeOnglet, setDemandeOnglet] = useState(null);
+  const allerAuChat = () => setDemandeOnglet({ onglet: "chat", n: Date.now() });
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
   let potentialMember = props.session?.members?.filter((e) => e.id === user.id);
   if (
@@ -503,7 +511,7 @@ const TraiterDenonciation = (props) => {
     formData.append("suggestion", JSON.stringify(claim));
 
     if (mode === 1) {
-      addSuggestionApi(formData, props)
+      addSuggestionApi(formData, props, { silencieux: true })
         .then((response) => {
           if (!response) {
             setLoadingConversion(false);
@@ -611,7 +619,7 @@ const TraiterDenonciation = (props) => {
                 if (userConnected.ra === true) {
                   if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
                     let hab = user.posteDto.habilitations.split(",");
-                    if (hab.includes("H1", "H2", "H3")) {
+                    if (hab.includes("H2") /* risque mineur : droit H2, comme le contrôle du serveur */) {
                       agentMailOptions.push({
                         label: user.firstAndLastName + " < " + user.email + " >",
                         value: user.id,
@@ -621,7 +629,7 @@ const TraiterDenonciation = (props) => {
                   }
                 } else if (user.deleted === false) {
                   let hab = user.posteDto.habilitations.split(",");
-                  if (hab.includes("H1", "H2", "H3")) {
+                  if (hab.includes("H2") /* risque mineur : droit H2, comme le contrôle du serveur */) {
                     agentMailOptions.push({
                       label: user.firstAndLastName + " < " + user.email + " >",
                       value: user.id,
@@ -748,13 +756,8 @@ const TraiterDenonciation = (props) => {
           props.selectedItemChanged(data);
 
           // Store draft if it belongs to the current user (user loads it manually)
-          if (data.draftSolution && data.draftUserId === user.id) {
-            setSavedDraft({ solution: data.draftSolution, commentaire: data.draftCommentaire });
-            if (data.draftSavedAt) setDraftSavedAt(data.draftSavedAt);
-          } else {
-            setSavedDraft(null);
-            setDraftSavedAt(null);
-          }
+          // Solutions sauvegardées de la personne connectée (versions)
+          chargerBrouillons(data.id);
 
           setCurrentData(data);
           props.transmittedChanged(
@@ -863,7 +866,7 @@ const TraiterDenonciation = (props) => {
   const registerUser = (e) => {
     let info = { claimId: props.id, creatorId: user.id };
     props.etat4Changed(true);
-    startSession(info, props).then(() => { connect(); });
+    startSession(info, props).then(() => { connect(); allerAuChat(); });
   };
 
   const handleShowVoteField = () => {
@@ -936,32 +939,34 @@ const TraiterDenonciation = (props) => {
   });
 
 
+  // Solutions sauvegardées : chaque « Sauvegarder » ajoute une version (10 au plus), visible par son seul auteur
   const handleSaveDraft = async () => {
     if (!props.id) return;
     setLoadingDraft(true);
     try {
-      const res = await saveDraftApi(props.id, {
+      await ajouterBrouillonApi(props.id, {
         draftSolution: props.new_solution || '',
         draftCommentaire: props.new_comment || '',
-        userId: user.id,
       });
-      if (res.data?.content) {
-        const saved = res.data.content;
-        if (saved.draftSavedAt) setDraftSavedAt(saved.draftSavedAt);
-        setSavedDraft({ solution: saved.draftSolution, commentaire: saved.draftCommentaire });
-      }
+      notify("Solution sauvegardée", "success");
+      chargerBrouillons(props.id);
     } catch (e) {
-      // silently fail
+      notify(e?.response?.data?.content?.message || "Erreur - La solution n'a pas pu être sauvegardée", "error");
     } finally {
       setLoadingDraft(false);
     }
   };
 
-  const handleLoadDraft = () => {
-    if (!savedDraft) return;
-    if (savedDraft.solution) props.newSolutionChanged(savedDraft.solution);
-    if (savedDraft.commentaire) props.newCommentChanged(savedDraft.commentaire);
+  const reprendreBrouillon = (b) => {
+    props.newSolutionChanged(b.contenu || '');
+    props.newCommentChanged(b.commentaire || '');
+    notify("Solution reprise dans le formulaire", "info");
   };
+
+  const supprimerBrouillon = (b) =>
+    supprimerBrouillonApi(b.id)
+      .then(() => { notify("Solution sauvegardée supprimée", "success"); chargerBrouillons(props.id); })
+      .catch((e) => notify(e?.response?.data?.content?.message || "Erreur - Suppression impossible", "error"));
 
   //Handling the List
   let columns = [
@@ -1639,10 +1644,6 @@ const TraiterDenonciation = (props) => {
 
             </div>
           </div>
-          <details>
-            <summary className="text-details">Historique des transmissions</summary>
-            <TransmissionHistory claimId={props.id} />
-          </details>
         </>
       ) : "";
 
@@ -1674,10 +1675,6 @@ const TraiterDenonciation = (props) => {
                 )}
               </div>
             </div>
-            <details>
-              <summary className="text-details">Historique des transmissions</summary>
-              <TransmissionHistory claimId={props.id} />
-            </details>
           </>
         );
       } else if (
@@ -1908,7 +1905,14 @@ const TraiterDenonciation = (props) => {
         );
       } else if (props.created_by !== user.firstAndLastName && user.ra !== true) {
         treatForm = (
-          <TreatNotice tone="warn">Seul l'agent qui a enregistré cette dénonciation peut la traiter. Vous pouvez l'affecter à un agent.</TreatNotice>
+          <TreatNotice tone="warn">
+            {/* « Vous pouvez l'affecter » seulement pour qui peut affecter ; invité à une session : on le lui dit */}
+            Seul l'agent qui a enregistré cette dénonciation peut la traiter.
+            {(hbt.includes("H6") || addR === "PILOTE") ? " Vous pouvez l'affecter à un agent." : ""}
+            {showJoinBtn && props.session?.status === "OPEN" ? (
+              <><br />Vous êtes invité(e) à une session sur ce dossier : ouvrez l'onglet « Collaboratif » pour la rejoindre.</>
+            ) : null}
+          </TreatNotice>
         );
       } else {
         treatForm = "";
@@ -2979,7 +2983,7 @@ const TraiterDenonciation = (props) => {
     // Bouton "Rejoindre la session" si l'utilisateur est invité/membre
     btnS = (
       <LoadingButton
-        onClick={connect}
+        onClick={() => { if (!userData.connected) connect(); allerAuChat(); }}
         className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
         loading={props.etat4}
         loadingPosition="end"
@@ -2987,7 +2991,7 @@ const TraiterDenonciation = (props) => {
         variant="contained"
         sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
       >
-        <span>Rejoindre la session</span>
+        <span>{userData.connected ? "Voir la discussion" : "Rejoindre la session"}</span>
       </LoadingButton>
     );
 
@@ -2995,7 +2999,7 @@ const TraiterDenonciation = (props) => {
     // Bouton "Voir la discussion"
     btnS = (
       <LoadingButton
-        onClick={connect}
+        onClick={() => { if (!userData.connected) connect(); allerAuChat(); }}
         className="waves-effect waves-effect-b waves-light btn-small"
         loading={props.etat4}
         loadingPosition="end"
@@ -3349,12 +3353,15 @@ const TraiterDenonciation = (props) => {
             (hbt.includes("H6") || addR === "PILOTE") && props.status === "TO_APPROUVED" && 'approuver',
           ].filter(Boolean)}
           transmettreDesc={
-            user?.servicePointDto?.directionLibelle
-              ? `Transmission au responsable de l'agence ${user.servicePointDto.directionLibelle}`
-              : (user?.servicePointDto?.direction_id || user?.servicePointDto?.directionId)
-                ? "Transmission au responsable d'agence de l'autorité supérieure"
-                : "Transmission au pilote"
-          }
+              // Même règle que le serveur (comme l'ancienne version) : on part de l'agence de celui qui transmet.
+              user?.ra === true
+                ? (user?.servicePointDto?.directionLibelle
+                  ? `Transmission au responsable de ${user.servicePointDto.directionLibelle} (au pilote s'il n'y en a pas)`
+                  : (user?.servicePointDto?.direction_id || user?.servicePointDto?.directionId)
+                    ? "Transmission au responsable de la direction (au pilote s'il n'y en a pas)"
+                    : "Transmission au pilote")
+                : "Transmission au responsable de votre agence (au pilote s'il n'y en a pas)"
+            }
 
           selectedItemFiles={props.selectedItemFiles}
           selectedItemAudio={props.selectedItemAudio}
@@ -3398,13 +3405,17 @@ const TraiterDenonciation = (props) => {
               }}
             />
           }
-          treatActionsVisible={treatActionsVisible}
+          // « Sauvegarder » et « Traiter » : seulement pour qui peut traiter. Dossier affecté (ou désapprouvé) :
+          // la personne à qui il est affecté, avec le droit du niveau de risque ; autres états : boutons propres à l'état.
+          treatActionsVisible={props.status === "SAVED" ? treatActionsVisible
+            : (["AFFECTED", "DESAPPROUVED"].includes(props.status) && props.handled_by === user.firstAndLastName && Boolean(props.authorize))}
           onTreat={handleReSolve}
           loadingTreat={props.etat2}
           onSaveDraft={handleSaveDraft}
           loadingDraft={loadingDraft}
-          draftSavedAt={draftSavedAt}
-          onLoadDraft={savedDraft ? handleLoadDraft : undefined}
+          brouillons={brouillons}
+          onReprendreBrouillon={reprendreBrouillon}
+          onSupprimerBrouillon={supprimerBrouillon}
           canTreat={
             treatActionsVisible && (
             (props.handled_by === user.firstAndLastName && Boolean(props.authorize)) ||
@@ -3422,6 +3433,8 @@ const TraiterDenonciation = (props) => {
           }}
           onUseAndTreat={(content, id) => handleSolveImmediate(content, id)}
           btnS={btnS}
+          demandeOnglet={demandeOnglet}
+          estInviteSession={showJoinBtn}
           transmettre={transmettre}
           session={props.session}
 

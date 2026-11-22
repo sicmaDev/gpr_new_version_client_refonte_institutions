@@ -72,6 +72,7 @@ import { connect } from 'react-redux';
 import { authenticate } from '../redux/actions/LayoutActions';
 import { useHistory } from 'react-router-dom';
 import { useThemeColors, darkenColor } from '../context/ThemeColorsContext';
+import { rechargerSur } from "../Utils/deconnexion";
 
 // luminance helper - determines if the sidebar color is light or dark
 const getSidebarLuminance = (hex) => {
@@ -245,10 +246,9 @@ export const Items = (props) => {
     sessionStorage.clear();
     // Le jeton gardé dans le navigateur ne doit pas survivre à la déconnexion.
     localStorage.removeItem("token");
-    props.authenticate();
-    history.push('/');
-    // Rechargement complet : vide les données gardées en mémoire (sinon le compte suivant voyait un instant celles du précédent).
-    window.location.reload();
+    // Rechargement complet sur la connexion : vide les données gardées en mémoire (sinon le compte suivant voyait
+    // un instant celles du précédent), sans afficher le formulaire avant le rechargement (il se vidait pendant la saisie).
+    rechargerSur("/login");
   };
 
   let mode = loadItemFromLocalStorage('app-mode') !== undefined

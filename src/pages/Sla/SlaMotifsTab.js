@@ -4,7 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 import LabelIcon from "@mui/icons-material/Label";
 import { slaReasons, slaAddReason, slaUpdateReason, slaDeleteReason } from "../../apis/Sla/SlaApi";
 import {
-  Panel, Empty, PrimaryButton, RowActions, SlaDialog, FieldLabel, fieldProps,
+  Panel, Empty, PrimaryButton, RowActions, SlaDialog, ConfirmSuppression, FieldLabel, fieldProps,
   tableContainerSx, headCellSx, bodyRowSx,
 } from "./slaUi";
 import { notify } from "../../Utils/alert";
@@ -15,6 +15,8 @@ const ReasonList = ({ kind, title, help }) => {
   const [items, setItems] = useState(null);
   const [dialog, setDialog] = useState(null); // { id?, label }
   const [saving, setSaving] = useState(false);
+  const [aSupprimer, setASupprimer] = useState(null); // { id, libelle }
+  const [suppression, setSuppression] = useState(false);
 
   const load = () => slaReasons(kind).then(setItems).catch((e) => notify(e.message, "error"));
   useEffect(() => { load(); }, [kind]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -32,8 +34,10 @@ const ReasonList = ({ kind, title, help }) => {
     finally { setSaving(false); }
   };
 
-  const remove = async (id) => {
-    try { await slaDeleteReason(id); load(); } catch (e) { notify(e.message, "error"); }
+  const remove = async () => {
+    setSuppression(true);
+    try { await slaDeleteReason(aSupprimer.id); setASupprimer(null); load(); } catch (e) { notify(e.message, "error"); }
+    finally { setSuppression(false); }
   };
 
   return (
@@ -57,7 +61,7 @@ const ReasonList = ({ kind, title, help }) => {
                   <TableCell>
                     <RowActions
                       onEdit={() => setDialog({ id: r.id, label: r.libelle })}
-                      onDelete={() => remove(r.id)}
+                      onDelete={() => setASupprimer({ id: r.id, libelle: r.libelle })}
                       deleteTitle="Désactiver (le motif reste lié aux anciennes plaintes)"
                     />
                   </TableCell>
@@ -67,6 +71,12 @@ const ReasonList = ({ kind, title, help }) => {
           </Table>
         </TableContainer>
       )}
+
+      <ConfirmSuppression
+        open={!!aSupprimer} onClose={() => setASupprimer(null)} onConfirm={remove} loading={suppression}
+        title="Supprimer le motif" nom={aSupprimer?.libelle}
+        message={<>Confirmez-vous la suppression du motif <strong style={{ color: "#0f172a" }}>{aSupprimer?.libelle}</strong> ? Il ne sera plus proposé, mais reste affiché sur les plaintes qui l'utilisent déjà.</>}
+      />
 
       <SlaDialog
         open={!!dialog} onClose={() => setDialog(null)} icon={LabelIcon} loading={saving} onSubmit={save}

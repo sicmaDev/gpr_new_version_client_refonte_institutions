@@ -1487,7 +1487,7 @@ const EnregistrerDenonciation = (props) => {
                 {currentStep === 1 && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-                        {mode === 1 && (
+                        {/* aussi hors ligne : gardés sur l'appareil, envoyés à la synchronisation */ (
                             <div>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
                                     <InsertDriveFileOutlinedIcon style={{ fontSize: 17, color: "var(--gpr-primary, #005081)" }} />

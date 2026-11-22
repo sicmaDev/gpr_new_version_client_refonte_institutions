@@ -115,7 +115,9 @@ export const addTempSuggestionApi = async (data, props) => {
         });
 }
 
-export const addSuggestionApi = async (data, props) => {
+// silencieux : pas de message « Suggestion ajoutée » (conversion d'une réclamation ou d'une dénonciation :
+// seul le message de conversion s'affiche)
+export const addSuggestionApi = async (data, props, { silencieux = false } = {}) => {
     const config = {
         method: 'post',
         url: ADD_SUGGESTION_API,
@@ -153,7 +155,7 @@ export const addSuggestionApi = async (data, props) => {
 
         if (response.data.status) {
             savedSuggestion = response.data.content ?? null;
-            notify("Bravo - Suggestion ajoutée", "success");
+            if (!silencieux) notify("Bravo - Suggestion ajoutée", "success");
             listeByStatut(props, "TEMP_SAVED");
         } else {
             notify("Erreur - Veuillez réessayer!", "error");

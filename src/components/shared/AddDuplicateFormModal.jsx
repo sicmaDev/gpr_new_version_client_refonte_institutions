@@ -8,6 +8,8 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SaveIcon from "@mui/icons-material/Save";
 import BlockButton from "./BlockButton";
+import { notify } from "../../Utils/alert";
+import { normaliserLibelle } from "../../Utils/libelle";
 
 /**
  * AddDuplicateFormModal
@@ -24,6 +26,10 @@ import BlockButton from "./BlockButton";
  *   loading       : bool
  *   maxWidth      : "xs"|"sm"|"md"|"lg"|"xl"  (défaut "md")
  *   addLabel      : string  (défaut "Ajouter un autre")
+ *   champUnique   : clé du champ qui ne doit pas être en double (ex. "libelle"), facultatif
+ *   existants     : valeurs déjà enregistrées pour ce champ (comparées sans casse, accents ni espaces)
+ *   onSubmit peut renvoyer false (tout garder) ou un tableau vrai/faux (un par formulaire envoyé) ;
+ *   2e argument reçu : { resteDesDoublons } — vrai si des doublons restent affichés (ne pas fermer).
  */
 
 const EMPTY_FORM = (fields) =>
@@ -41,6 +47,8 @@ const AddDuplicateFormModal = ({
   loading = false,
   maxWidth = "md",
   addLabel = "Ajouter un autre",
+  champUnique = null,
+  existants = [],
 }) => {
   const [forms, setForms] = useState([EMPTY_FORM(fields)]);
   const [errors, setErrors] = useState([EMPTY_ERRORS(fields)]);
@@ -99,19 +107,55 @@ const AddDuplicateFormModal = ({
         : true;
     });
 
+  const estRempli = (form) => {
+    const requiredField = fields.find((f) => f.required);
+    return requiredField ? String(form[requiredField.key] ?? "").trim() !== "" : true;
+  };
+
   const handleSubmit = async () => {
     // Valider toutes les instances non vides
     const newErrors = forms.map(validateForm);
     const hasError = newErrors.some((e) => Object.values(e).some(Boolean));
     if (hasError) { setErrors(newErrors); return; }
 
-    const valid = getValidForms();
-    if (valid.length === 0) return;
+    const indexValides = forms.map((_, i) => i).filter((i) => estRempli(forms[i]));
+    if (indexValides.length === 0) return;
 
-    // false : la page a refusé l'envoi (email invalide, quota…), on garde la saisie pour la corriger
-    const resultat = await onSubmit(valid);
-    if (resultat === false) return;
-    reset();
+    // Doublons (si la page donne champUnique) : libellé déjà enregistré, ou saisi deux fois ici
+    const doublons = new Map();
+    if (champUnique) {
+      const deja = new Set((existants || []).map(normaliserLibelle));
+      const vus = new Set();
+      for (const i of indexValides) {
+        const k = normaliserLibelle(forms[i][champUnique]);
+        if (deja.has(k)) doublons.set(i, "Existe déjà");
+        else if (vus.has(k)) doublons.set(i, "Saisi deux fois");
+        else vus.add(k);
+      }
+    }
+
+    // On enregistre ceux qui ne sont pas en doublon
+    const aEnvoyer = indexValides.filter((i) => !doublons.has(i));
+    let reussis = [];
+    if (aEnvoyer.length > 0) {
+      // false : la page a refusé l'envoi (email invalide, quota…), on garde la saisie pour la corriger.
+      // Tableau de vrai/faux : un résultat par formulaire, seuls les échecs restent affichés.
+      const resultat = await onSubmit(aEnvoyer.map((i) => forms[i]), { resteDesDoublons: doublons.size > 0 });
+      if (resultat === false) return;
+      reussis = Array.isArray(resultat) ? aEnvoyer.filter((_, j) => resultat[j]) : aEnvoyer;
+    }
+
+    // On vide les formulaires enregistrés, on garde les doublons et les échecs
+    const gardes = indexValides.filter((i) => !reussis.includes(i));
+    if (gardes.length === 0) { reset(); return; }
+    setForms(gardes.map((i) => forms[i]));
+    setErrors(gardes.map((i) => ({ ...EMPTY_ERRORS(fields), ...(doublons.has(i) ? { [champUnique]: doublons.get(i) } : {}) })));
+
+    if (doublons.size > 0) {
+      const noms = [...doublons.keys()].map((i) => `« ${String(forms[i][champUnique]).trim()} »`).join(", ");
+      const debut = reussis.length > 0 ? `${reussis.length} ajouté${reussis.length > 1 ? "s" : ""}. ` : "";
+      notify(`${debut}${noms} ${doublons.size > 1 ? "sont des doublons" : "est un doublon"} : changez le libellé ou retirez ${doublons.size > 1 ? "ces formulaires" : "ce formulaire"}.`, "warning");
+    }
   };
 
   const validCount = getValidForms().length;

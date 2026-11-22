@@ -808,8 +808,8 @@ const Dashboard = (props) => {
                 }}>
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>{a.agence}</span>
                   <span style={{ color: '#64748b' }}>{a.agenceActuelle ? ' (votre agence)' : ' (autre agence)'}</span>
-                  {' · '}{plaintes} plainte{plaintes > 1 ? 's' : ''}
-                  {a.suggestions > 0 && ` · ${a.suggestions} suggestion${a.suggestions > 1 ? 's' : ''}`}
+                  {' : '}{plaintes} plainte{plaintes > 1 ? 's' : ''}
+                  {a.suggestions > 0 && `, ${a.suggestions} suggestion${a.suggestions > 1 ? 's' : ''}`}
                 </div>
               );
             })}
@@ -822,7 +822,7 @@ const Dashboard = (props) => {
         <div className="col l12 m12 s12" style={{ marginBottom: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
 
-            <StatCard value={total}          label="RSD enregistrées" sub={`${claimsCount} réc. · ${denUnsCount} dén. · ${suggestCount} sug.`} IconComp={SummarizeIcon} iconColor="var(--gpr-primary, #005081)" loading={loading} />
+            <StatCard value={total}          label="RSD enregistrées" sub={`${claimsCount} réc., ${denUnsCount} dén., ${suggestCount} sug.`} IconComp={SummarizeIcon} iconColor="var(--gpr-primary, #005081)" loading={loading} />
             <StatCard value={affected}        label="Affectés"                                   IconComp={RedoIcon}                  iconColor="#8b5cf6" loading={loading} />
             <StatCard value={overdue}         label="En retard de traitement"                    IconComp={AssignmentLateIcon}        iconColor="#f43f5e" loading={loading} />
             <StatCard value={treated}         label="Traités"                                    IconComp={RecyclingIcon}             iconColor="#10b981" loading={loading} />
@@ -856,7 +856,7 @@ const Dashboard = (props) => {
                     Répartition par agence
                   </span>
                 }
-                subtitle="Réclamations · Dénonciations · Suggestions par point de service"
+                subtitle="Réclamations, dénonciations et suggestions par point de service"
               />
 
               {/* En-tête des colonnes */}

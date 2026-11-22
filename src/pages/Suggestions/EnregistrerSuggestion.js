@@ -957,7 +957,7 @@ const EnregistrerSuggestion = (props) => {
                             />
                             <label htmlFor="sg_content" className="active">Contenu <span style={{ color: "#e53935" }}>*</span></label>
                             {props.errors?.content && <small style={{ color: "#e53935", fontSize: 11 }}>{props.errors.content}</small>}
-                            {mode === 1 && (
+                            {/* enregistrement vocal aussi hors ligne */ (
                                 <div style={{ position: "absolute", right: 0, top: -16 }}>
                                     <Fab color="primary" size="small"
                                         style={{ backgroundColor: "var(--gpr-primary, #005081)" }}
@@ -998,7 +998,7 @@ const EnregistrerSuggestion = (props) => {
                 {/* ── Etape 2 – Pieces jointes ─────────────────── */}
                 {currentStep === 2 && (
                     <div>
-                        {mode === 1 && (
+                        {/* aussi hors ligne : gardés sur l'appareil, envoyés à la synchronisation */ (
                             <div
                                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                                 onDragLeave={() => setIsDragging(false)}

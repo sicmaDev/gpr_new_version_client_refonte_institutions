@@ -71,7 +71,6 @@ import {
   transmittedByChanged,
   transmissionCommentChanged,
 } from "../../redux/actions/Reclamations/TraitementReclamationActions";
-import TransmissionHistory from "../../components/TransmissionHistory";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -224,6 +223,7 @@ import Chip from "@mui/material/Chip";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { notify } from "../../Utils/alert";
+import { listerBrouillonsApi, ajouterBrouillonApi, supprimerBrouillonApi } from "../../apis/Reclamations/ReclamationsApi";
 import MoveUpIcon from "@mui/icons-material/MoveUp";
 import ForumIcon from "@mui/icons-material/Forum";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
@@ -392,6 +392,9 @@ const TraiterReclamation = (props) => {
 
   //vérification if user is in guest
   let showJoinBtn = false;
+  // Après « Ouvrir une session » / « Rejoindre la session » : on bascule sur l'onglet Chat
+  const [demandeOnglet, setDemandeOnglet] = useState(null);
+  const allerAuChat = () => setDemandeOnglet({ onglet: "chat", n: Date.now() });
   let potentialGuest = props.session?.guests?.filter((e) => e.id === user.id);
   let potentialMember = props.session?.members?.filter((e) => e.id === user.id);
   if (
@@ -438,6 +441,11 @@ const TraiterReclamation = (props) => {
   const [loadingDraft, setLoadingDraft] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState(null);
   const [savedDraft, setSavedDraft] = useState(null);
+  const [brouillons, setBrouillons] = useState([]);
+  const chargerBrouillons = (id) => {
+    if (!id) return;
+    listerBrouillonsApi(id).then(setBrouillons).catch(() => setBrouillons([]));
+  };
   let mode =
     loadItemFromLocalStorage("app-mode") !== undefined
       ? loadItemFromLocalStorage("app-mode")
@@ -519,7 +527,7 @@ const TraiterReclamation = (props) => {
       formData.append("suggestion", JSON.stringify(claim));
 
       if (mode === 1) {
-        addSuggestionApi(formData, props).then((response) => {
+        addSuggestionApi(formData, props, { silencieux: true }).then((response) => {
           if (!response) {
             setLoadingConversion(false);
             return;
@@ -797,32 +805,34 @@ const TraiterReclamation = (props) => {
     },
   });
 
+  // Solutions sauvegardées : chaque « Sauvegarder » ajoute une version (10 au plus), visible par son seul auteur
   const handleSaveDraft = async () => {
     if (!props.id) return;
     setLoadingDraft(true);
     try {
-      const res = await saveDraftApi(props.id, {
+      await ajouterBrouillonApi(props.id, {
         draftSolution: props.new_solution || '',
         draftCommentaire: props.new_comment || '',
-        userId: user.id,
       });
-      if (res.data?.content) {
-        const saved = res.data.content;
-        if (saved.draftSavedAt) setDraftSavedAt(saved.draftSavedAt);
-        setSavedDraft({ solution: saved.draftSolution, commentaire: saved.draftCommentaire });
-      }
+      notify("Solution sauvegardée", "success");
+      chargerBrouillons(props.id);
     } catch (e) {
-      // silently fail
+      notify(e?.response?.data?.content?.message || "Erreur - La solution n'a pas pu être sauvegardée", "error");
     } finally {
       setLoadingDraft(false);
     }
   };
 
-  const handleLoadDraft = () => {
-    if (!savedDraft) return;
-    if (savedDraft.solution) props.newSolutionChanged(savedDraft.solution);
-    if (savedDraft.commentaire) props.newCommentChanged(savedDraft.commentaire);
+  const reprendreBrouillon = (b) => {
+    props.newSolutionChanged(b.contenu || '');
+    props.newCommentChanged(b.commentaire || '');
+    notify("Solution reprise dans le formulaire", "info");
   };
+
+  const supprimerBrouillon = (b) =>
+    supprimerBrouillonApi(b.id)
+      .then(() => { notify("Solution sauvegardée supprimée", "success"); chargerBrouillons(props.id); })
+      .catch((e) => notify(e?.response?.data?.content?.message || "Erreur - Suppression impossible", "error"));
 
   const [privateChats, setPrivateChats] = useState(new Map());
   const [tab, setTab] = useState("CHATROOM");
@@ -910,7 +920,7 @@ const TraiterReclamation = (props) => {
                 if (userConnected.ra === true) {
                   if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
                     let hab = user.posteDto.habilitations.split(",");
-                    if (hab.includes("H1", "H2", "H3")) {
+                    if (hab.includes("H2") /* risque mineur : droit H2, comme le contrôle du serveur */) {
                       agentMailOptions.push({
                         label: user.firstAndLastName + " < " + user.email + " >",
                         value: user.id,
@@ -920,7 +930,7 @@ const TraiterReclamation = (props) => {
                   }
                 } else if (user.deleted === false) {
                   let hab = user.posteDto.habilitations.split(",");
-                  if (hab.includes("H1", "H2", "H3")) {
+                  if (hab.includes("H2") /* risque mineur : droit H2, comme le contrôle du serveur */) {
                     agentMailOptions.push({
                       label: user.firstAndLastName + " < " + user.email + " >",
                       value: user.id,
@@ -1071,13 +1081,8 @@ const TraiterReclamation = (props) => {
           props.selectedItemChanged(data);
 
           // Store draft if it belongs to the current user (user loads it manually)
-          if (data.draftSolution && data.draftUserId === user.id) {
-            setSavedDraft({ solution: data.draftSolution, commentaire: data.draftCommentaire });
-            if (data.draftSavedAt) setDraftSavedAt(data.draftSavedAt);
-          } else {
-            setSavedDraft(null);
-            setDraftSavedAt(null);
-          }
+          // Solutions sauvegardées de la personne connectée (versions)
+          chargerBrouillons(data.id);
 
           setCurrentData(data);
 
@@ -1205,7 +1210,7 @@ const TraiterReclamation = (props) => {
   const registerUser = (e) => {
     let info = { claimId: props.id, creatorId: user.id };
     props.etat4Changed(true);
-    startSession(info, props).then(() => { connect(); });
+    startSession(info, props).then(() => { connect(); allerAuChat(); });
   };
 
   const handleShowVoteField = () => {
@@ -1560,7 +1565,7 @@ const TraiterReclamation = (props) => {
           if (userConnected.ra === true) {
             if (userConnected.servicePointDto.libelle === user.servicePointDto.libelle && user.deleted === false) {
               let hab = user.posteDto.habilitations.split(",");
-              if (hab.includes("H1", "H2", "H3")) {
+              if (hab.includes("H2") /* risque mineur : droit H2, comme le contrôle du serveur */) {
                 agentMailOptions.push({
                   label: user.firstAndLastName + " < " + user.email + " >",
                   value: user.id,
@@ -1570,7 +1575,7 @@ const TraiterReclamation = (props) => {
             }
           } else if (user.deleted === false) {
             let hab = user.posteDto.habilitations.split(",");
-            if (hab.includes("H1", "H2", "H3")) {
+            if (hab.includes("H2") /* risque mineur : droit H2, comme le contrôle du serveur */) {
               agentMailOptions.push({
                 label: user.firstAndLastName + " < " + user.email + " >",
                 value: user.id,
@@ -2226,10 +2231,6 @@ const TraiterReclamation = (props) => {
 
             </div>
           </div>
-          <details>
-            <summary className="text-details">Historique des transmissions</summary>
-            <TransmissionHistory claimId={props.id} />
-          </details>
         </>
       ) : "";
 
@@ -2261,10 +2262,6 @@ const TraiterReclamation = (props) => {
                 )}
               </div>
             </div>
-            <details>
-              <summary className="text-details">Historique des transmissions</summary>
-              <TransmissionHistory claimId={props.id} />
-            </details>
           </>
         );
       } else if (
@@ -2514,7 +2511,14 @@ const TraiterReclamation = (props) => {
         );
       } else if (props.created_by !== user.firstAndLastName && user.ra !== true) {
         treatForm = (
-          <TreatNotice tone="warn">Seul l'agent qui a enregistré cette réclamation peut la traiter. Vous pouvez l'affecter à un agent.</TreatNotice>
+          <TreatNotice tone="warn">
+            {/* « Vous pouvez l'affecter » seulement pour qui peut affecter ; invité à une session : on le lui dit */}
+            Seul l'agent qui a enregistré cette réclamation peut la traiter.
+            {(hbt.includes("H6") || addR === "PILOTE") ? " Vous pouvez l'affecter à un agent." : ""}
+            {showJoinBtn && props.session?.status === "OPEN" ? (
+              <><br />Vous êtes invité(e) à une session sur ce dossier : ouvrez l'onglet « Collaboratif » pour la rejoindre.</>
+            ) : null}
+          </TreatNotice>
         );
       } else {
         treatForm = "";
@@ -4142,7 +4146,7 @@ const TraiterReclamation = (props) => {
     // Bouton "Rejoindre la session" si l'utilisateur est invité/membre
     btnS = (
       <LoadingButton
-        onClick={connect}
+        onClick={() => { if (!userData.connected) connect(); allerAuChat(); }}
         className="waves-effect waves-effect-b waves-light btn-small ml-2 mb-1 mt-1"
         loading={props.etat4}
         loadingPosition="end"
@@ -4150,7 +4154,7 @@ const TraiterReclamation = (props) => {
         variant="contained"
         sx={{ backgroundColor: "var(--gpr-primary, #005081)", textTransform: "initial" }}
       >
-        <span>Rejoindre la session</span>
+        <span>{userData.connected ? "Voir la discussion" : "Rejoindre la session"}</span>
       </LoadingButton>
     );
 
@@ -4158,7 +4162,7 @@ const TraiterReclamation = (props) => {
     // Bouton "Voir la discussion"
     btnS = (
       <LoadingButton
-        onClick={connect}
+        onClick={() => { if (!userData.connected) connect(); allerAuChat(); }}
         className="waves-effect waves-effect-b waves-light btn-small"
         loading={props.etat4}
         loadingPosition="end"
@@ -4464,73 +4468,67 @@ const TraiterReclamation = (props) => {
           onClose={handleCloseResolveWaModalWithoutAction}
           maxWidth="sm"
           fullWidth
+          PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}
         >
-          <DialogTitle style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <WhatsAppIcon style={{ color: "#25D366" }} />
-            Envoyer la solution par WhatsApp
-          </DialogTitle>
-          <DialogContent>
-            <div style={{ margin: "0 0 12px", padding: "8px 12px", background: "#f0f4f8", borderRadius: 8 }}>
-              <strong>{props.phone}</strong>
+          {/* En-tête dans le style de la refonte (couleur d'apparence) */}
+          <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)", padding: "16px 22px", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <WhatsAppIcon style={{ color: "#fff", fontSize: 20 }} />
             </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Envoyer la solution par WhatsApp</div>
+              <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginTop: 2 }}>{props.phone}</div>
+            </div>
+            <IconButton onClick={handleCloseResolveWaModalWithoutAction} size="small" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: 8 }} aria-label="Fermer">
+              <CloseIcon style={{ fontSize: 16 }} />
+            </IconButton>
+          </div>
 
-            {/* Toggle Texte / Note vocale */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-              <Button
-                variant={resolveWaMode === "text" ? "contained" : "outlined"}
-                size="small"
-                disableElevation
-                onClick={() => setResolveWaMode("text")}
-                style={resolveWaMode === "text" ? { backgroundColor: "#1e2188" } : {}}
-              >
-                Solution texte
-              </Button>
-              <Button
-                variant={resolveWaMode === "audio" ? "contained" : "outlined"}
-                size="small"
-                disableElevation
-                startIcon={<MicIcon fontSize="small" />}
-                onClick={() => setResolveWaMode("audio")}
-                style={resolveWaMode === "audio" ? { backgroundColor: "#1e2188" } : {}}
-              >
-                Notes vocales
-              </Button>
+          <DialogContent sx={{ px: 3, pb: 1 }} style={{ paddingTop: 28 }}>
+            {/* Mode : solution écrite ou notes vocales */}
+            <div style={{ display: "inline-flex", gap: 4, padding: 4, background: "#f1f5f9", borderRadius: 10, marginBottom: 16 }}>
+              {[
+                { valeur: "text", libelle: "Solution texte", icone: <AssignmentIcon style={{ fontSize: 16 }} /> },
+                { valeur: "audio", libelle: "Notes vocales", icone: <MicIcon style={{ fontSize: 16 }} /> },
+              ].map(({ valeur, libelle, icone }) => {
+                const actif = resolveWaMode === valeur;
+                return (
+                  <button key={valeur} type="button" onClick={() => setResolveWaMode(valeur)}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 34, padding: "0 14px", border: "none", borderRadius: 8, cursor: "pointer",
+                      fontFamily: "inherit", fontSize: 13, fontWeight: actif ? 700 : 500,
+                      background: actif ? "#fff" : "transparent", color: actif ? "var(--gpr-primary, #005081)" : "#64748b",
+                      boxShadow: actif ? "0 1px 3px rgba(15,23,42,0.12)" : "none" }}>
+                    {icone}{libelle}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Note vocale facultative présentant le sondage (accessibilité) */}
-            <div style={{
-              marginBottom: 16, padding: 12,
-              background: "#fafafa", border: "1px solid #e0e0e0", borderRadius: 8,
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontWeight: 600, color: "#424242", fontSize: 13 }}>
-                  Note vocale présentant le sondage
-                </span>
-                <span style={{ marginLeft: 6, fontSize: 11, color: "#9e9e9e" }}>facultatif</span>
+            <div style={{ marginBottom: 16, padding: "12px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <span style={{ fontWeight: 600, color: "#1e293b", fontSize: 13 }}>Note vocale présentant le sondage</span>
+                <span style={{ fontSize: 11, color: "#94a3b8" }}>facultatif</span>
               </div>
-              <div style={{ fontSize: 11, color: "#757575", marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10, lineHeight: 1.5 }}>
                 Utile si le client ne peut pas lire le texte : présentez-lui le sondage à l'oral, dans sa langue
                 {props.language ? <> ({props.language})</> : ""}.
               </div>
               {resolveWaSurveyAudioUrl ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <audio src={resolveWaSurveyAudioUrl} controls style={{ width: "100%", height: 36 }} />
-                  <IconButton size="small" color="error" onClick={() => { setResolveWaSurveyAudioBlob(null); setResolveWaSurveyAudioUrl(null); }}>
-                    <DeleteOutline fontSize="small" />
+                  <IconButton size="small" onClick={() => { setResolveWaSurveyAudioBlob(null); setResolveWaSurveyAudioUrl(null); }} aria-label="Supprimer l'audio">
+                    <DeleteOutline fontSize="small" style={{ color: "#94a3b8" }} />
                   </IconButton>
                 </div>
               ) : resolveWaActiveSlot === 5 ? (
-                <div style={{ padding: 8, background: "#fff", borderRadius: 8, border: "1px dashed #ccc" }}>
+                <div style={{ padding: 8, background: "#fff", borderRadius: 8, border: "1px dashed #cbd5e1" }}>
                   <RecorderControls recorderState={resolveWaRecorderState} handlers={resolveWaRecorderHandlers} closeAction={() => setResolveWaActiveSlot(0)} />
                 </div>
               ) : (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<MicIcon fontSize="small" />}
+                <Button size="small" variant="outlined" startIcon={<MicIcon fontSize="small" />}
                   onClick={() => { resolveWaSlotRef.current = 5; setResolveWaActiveSlot(5); }}
-                  style={{ borderColor: "#bdbdbd", color: "#424242", fontSize: 12 }}
-                >
+                  sx={{ textTransform: "none", borderRadius: 2, fontWeight: 600, fontSize: 12.5, color: "var(--gpr-primary, #005081)", borderColor: "var(--gpr-primary, #005081)" }}>
                   Enregistrer
                 </Button>
               )}
@@ -4541,19 +4539,7 @@ const TraiterReclamation = (props) => {
                 <div style={{ marginBottom: 6, fontSize: 11, color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Aperçu du message envoyé au client
                 </div>
-                <div
-                  style={{
-                    background: "#f8fafc",
-                    border: "1px solid #e2e8f0",
-                    borderLeft: "3px solid var(--gpr-primary, #005081)",
-                    borderRadius: 10,
-                    padding: "12px 14px",
-                    fontSize: 13,
-                    color: "#1e293b",
-                    lineHeight: 1.6,
-                    marginBottom: 12,
-                  }}
-                >
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderLeft: "3px solid var(--gpr-primary, #005081)", borderRadius: 10, padding: "12px 14px", fontSize: 13, color: "#1e293b", lineHeight: 1.6, marginBottom: 16 }}>
                   {pendingTreatClaimRef.current ? (
                     <>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, color: "#0f172a" }}>
@@ -4572,7 +4558,7 @@ const TraiterReclamation = (props) => {
                 </div>
               </>
             ) : (
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
                   {
                     slot: 1, label: "Audio 1 : Solution", required: true,
@@ -4599,38 +4585,30 @@ const TraiterReclamation = (props) => {
                     desc: "Répondre après le commentaire d'insatisfaction (merci, on s'améliore)",
                   },
                 ].map(({ slot, label, required, blob, url, clear, desc }) => (
-                  <div key={slot} style={{
-                    marginBottom: 12, padding: 12,
-                    background: "#fafafa", border: `1px solid ${required ? "#bdbdbd" : "#e0e0e0"}`,
-                    borderRadius: 8,
-                  }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div key={slot} style={{ padding: "12px 14px", background: "#f8fafc", border: `1px solid ${required ? "#cbd5e1" : "#e2e8f0"}`, borderRadius: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                       <div>
-                        <span style={{ fontWeight: 600, color: "#424242", fontSize: 13 }}>{label}</span>
-                        {required && <span style={{ marginLeft: 6, fontSize: 11, color: "#c62828", fontWeight: 600 }}>obligatoire</span>}
-                        {!required && <span style={{ marginLeft: 6, fontSize: 11, color: "#9e9e9e" }}>facultatif</span>}
+                        <span style={{ fontWeight: 600, color: "#1e293b", fontSize: 13 }}>{label}</span>
+                        {required && <span style={{ marginLeft: 6, fontSize: 11, color: "#b91c1c", fontWeight: 600 }}>obligatoire</span>}
+                        {!required && <span style={{ marginLeft: 6, fontSize: 11, color: "#94a3b8" }}>facultatif</span>}
                       </div>
                       {blob && (
-                        <IconButton size="small" color="error" onClick={clear}>
-                          <DeleteOutline fontSize="small" />
+                        <IconButton size="small" onClick={clear} aria-label="Supprimer l'audio">
+                          <DeleteOutline fontSize="small" style={{ color: "#94a3b8" }} />
                         </IconButton>
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: "#757575", marginBottom: 8 }}>{desc}</div>
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>{desc}</div>
                     {url ? (
                       <audio src={url} controls style={{ width: "100%", height: 36 }} />
                     ) : resolveWaActiveSlot === slot ? (
-                      <div style={{ padding: 8, background: "#fff", borderRadius: 8, border: "1px dashed #ccc" }}>
+                      <div style={{ padding: 8, background: "#fff", borderRadius: 8, border: "1px dashed #cbd5e1" }}>
                         <RecorderControls recorderState={resolveWaRecorderState} handlers={resolveWaRecorderHandlers} closeAction={() => setResolveWaActiveSlot(0)} />
                       </div>
                     ) : (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<MicIcon fontSize="small" />}
+                      <Button size="small" variant="outlined" startIcon={<MicIcon fontSize="small" />}
                         onClick={() => { resolveWaSlotRef.current = slot; setResolveWaActiveSlot(slot); }}
-                        style={{ borderColor: "#bdbdbd", color: "#424242", fontSize: 12 }}
-                      >
+                        sx={{ textTransform: "none", borderRadius: 2, fontWeight: 600, fontSize: 12.5, color: "var(--gpr-primary, #005081)", borderColor: "var(--gpr-primary, #005081)" }}>
                         Enregistrer
                       </Button>
                     )}
@@ -4641,62 +4619,53 @@ const TraiterReclamation = (props) => {
 
             {pendingTreatClaimRef.current?.commentaire ? (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "#555", fontWeight: 600 }}>
+                <div style={{ marginBottom: 6, fontSize: 12.5, color: "#334155", fontWeight: 600 }}>
                   Commentaire (usage interne, non envoyé au client)
                 </div>
-                <div
-                  style={{
-                    background: "#f5f5f5",
-                    border: "1px solid #ddd",
-                    borderRadius: 8,
-                    padding: "10px 14px",
-                    maxHeight: 100,
-                    overflowY: "auto",
-                    whiteSpace: "pre-wrap",
-                    fontSize: 13,
-                  }}
-                >
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "10px 14px", maxHeight: 100, overflowY: "auto", whiteSpace: "pre-wrap", fontSize: 13, color: "#334155" }}>
                   {pendingTreatClaimRef.current.commentaire}
                 </div>
               </div>
             ) : null}
 
             {/* Sondage (commun aux deux modes) */}
-            <div style={{ marginBottom: 6, fontSize: 12, color: "#555", fontWeight: 600 }}>
+            <div style={{ marginBottom: 6, fontSize: 12.5, color: "#334155", fontWeight: 600 }}>
               Enquête de satisfaction envoyée avec la solution
             </div>
-            <div style={{
-              background: "#fafafa", border: "1px solid #e0e0e0",
-              borderRadius: 8, padding: "10px 14px", fontSize: 13,
-            }}>
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>
-                Êtes-vous satisfait(e) de cette solution ?
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 14px", fontSize: 13, color: "#1e293b" }}>
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>Êtes-vous satisfait(e) de cette solution ?</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <SentimentSatisfiedAltIcon fontSize="small" sx={{ color: "#15803d" }} /> Satisfait
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <SentimentSatisfiedAltIcon fontSize="small" sx={{ color: "#2e7d32" }} /> Satisfait
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <SentimentNeutralIcon fontSize="small" sx={{ color: "#ed6c02" }} /> Partiellement satisfait
+                <SentimentNeutralIcon fontSize="small" sx={{ color: "#b45309" }} /> Partiellement satisfait
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <SentimentDissatisfiedIcon fontSize="small" sx={{ color: "#c62828" }} /> Non satisfait
+                <SentimentDissatisfiedIcon fontSize="small" sx={{ color: "#b91c1c" }} /> Non satisfait
               </div>
             </div>
 
-            <div style={{ marginTop: 12, fontSize: 12, color: "#777" }}>
+            <div style={{ marginTop: 12, fontSize: 12, color: "#64748b" }}>
               La réclamation sera automatiquement mesurée dès que le client aura voté.
             </div>
           </DialogContent>
-          <DialogActions>
+          <DialogActions style={{ padding: "12px 20px 16px", borderTop: "1px solid #f1f5f9", gap: 10 }}>
+            <Button onClick={handleCloseResolveWaModalWithoutAction} variant="outlined"
+              sx={{ textTransform: "none", borderRadius: 2, borderColor: "#e2e8f0", color: "#64748b", fontWeight: 600, px: 3 }}>
+              Annuler
+            </Button>
             <LoadingButton
               onClick={handleConfirmTreatAndSend}
               loading={resolveWaSolutionSending}
               disabled={resolveWaMode === "audio" && !resolveWaAudio1Blob}
+              loadingPosition="start"
+              startIcon={<WhatsAppIcon />}
               variant="contained"
-              fullWidth
-              sx={{ backgroundColor: "#25D366" }}
+              sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700, px: 3,
+                background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))",
+                "&:hover": { background: "var(--gpr-primary-dark, #003d62)" }, "&.Mui-disabled": { opacity: 0.5, color: "#fff" } }}
             >
-              Traiter
+              Traiter et envoyer
             </LoadingButton>
           </DialogActions>
         </Dialog>
@@ -4813,11 +4782,14 @@ const TraiterReclamation = (props) => {
               (hbt.includes("H6") || addR === "PILOTE") && props.status === "TO_APPROUVED" && 'approuver',
             ].filter(Boolean)}
             transmettreDesc={
-              user?.servicePointDto?.directionLibelle
-                ? `Transmission au responsable de l'agence ${user.servicePointDto.directionLibelle}`
-                : (user?.servicePointDto?.direction_id || user?.servicePointDto?.directionId)
-                  ? "Transmission au responsable d'agence de l'autorité supérieure"
-                  : "Transmission au pilote"
+              // Même règle que le serveur (comme l'ancienne version) : on part de l'agence de celui qui transmet.
+              user?.ra === true
+                ? (user?.servicePointDto?.directionLibelle
+                  ? `Transmission au responsable de ${user.servicePointDto.directionLibelle} (au pilote s'il n'y en a pas)`
+                  : (user?.servicePointDto?.direction_id || user?.servicePointDto?.directionId)
+                    ? "Transmission au responsable de la direction (au pilote s'il n'y en a pas)"
+                    : "Transmission au pilote")
+                : "Transmission au responsable de votre agence (au pilote s'il n'y en a pas)"
             }
 
             selectedItemFiles={props.selectedItemFiles}
@@ -4862,13 +4834,17 @@ const TraiterReclamation = (props) => {
                 }}
               />
             }
-            treatActionsVisible={treatActionsVisible}
+            // « Sauvegarder » et « Traiter » : seulement pour qui peut traiter. Dossier affecté (ou désapprouvé) :
+            // la personne à qui il est affecté, avec le droit du niveau de risque ; autres états : boutons propres à l'état.
+            treatActionsVisible={props.status === "SAVED" ? treatActionsVisible
+              : (["AFFECTED", "DESAPPROUVED"].includes(props.status) && props.handled_by === user.firstAndLastName && Boolean(props.authorize))}
             onTreat={handleReSolve}
             loadingTreat={props.etat2}
             onSaveDraft={handleSaveDraft}
             loadingDraft={loadingDraft}
-            draftSavedAt={draftSavedAt}
-            onLoadDraft={savedDraft ? handleLoadDraft : undefined}
+            brouillons={brouillons}
+            onReprendreBrouillon={reprendreBrouillon}
+            onSupprimerBrouillon={supprimerBrouillon}
             canTreat={
               treatActionsVisible && (
               (props.handled_by === user.firstAndLastName && Boolean(props.authorize)) ||
@@ -4885,6 +4861,8 @@ const TraiterReclamation = (props) => {
             }}
             onUseAndTreat={(content, id) => handleSolveImmediate(content, id)}
             btnS={btnS}
+          demandeOnglet={demandeOnglet}
+          estInviteSession={showJoinBtn}
             transmettre={transmettre}
             session={props.session}
 

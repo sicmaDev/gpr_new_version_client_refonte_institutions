@@ -38,11 +38,30 @@ export const listFailedQueueEntries = async () => {
   return rows.filter((r) => r.status === "FAILED").sort((a, b) => a.queueId - b.queueId);
 };
 
-// Compte utilisé pour le badge du menu Synchronisation (Phase 6).
+// Compte utilisé pour le badge du menu Synchronisation (Phase 6). Les doublons à vérifier en font partie :
+// l'utilisateur doit décider avant qu'ils partent.
 export const countPendingOrFailed = async () => {
   const rows = await db.sync_queue.toArray();
-  return rows.filter((r) => r.status === "PENDING" || r.status === "FAILED").length;
+  return rows.filter((r) => r.status === "PENDING" || r.status === "FAILED" || r.status === "DOUBLON").length;
 };
+
+// Réclamation saisie hors ligne dont le téléphone correspond déjà à des réclamations sur le serveur :
+// elle n'est pas envoyée, l'utilisateur décide (envoyer quand même / ne pas envoyer).
+export const markDoublon = (queueId, doublons) =>
+  db.sync_queue.update(queueId, {
+    status: "DOUBLON",
+    doublons,
+    lastError: doublons.length + " réclamation(s) existante(s) pour ce téléphone",
+    lastAttemptAt: Date.now(),
+  });
+
+// « Envoyer quand même » : la réclamation repart dans la file, sans nouvelle vérification de doublon.
+export const accepterDoublon = (queueId) =>
+  db.sync_queue.update(queueId, { status: "PENDING", forcer: true, lastError: null });
+
+// « Ne pas envoyer » : elle reste sur l'appareil, dans la liste « Non envoyées », pour ne pas être perdue.
+export const ecarterDoublon = (queueId) =>
+  db.sync_queue.update(queueId, { status: "ECARTE", lastError: "Non envoyée (doublon possible)" });
 
 export const markSyncing = (queueId) => db.sync_queue.update(queueId, { status: "SYNCING" });
 
@@ -103,7 +122,13 @@ export const getQueueEntriesForDisplay = async () => {
       // n'en affiche que les 6 derniers caractères pour ne pas déborder.
       const code = record?.payload?.code || entry.localId;
       const ref = record?.payload?.codeClient || "#" + String(code).slice(-6);
-      return { ...entry, type: record?.type, label: typeLabel + " " + ref };
+      return {
+        ...entry, type: record?.type, label: typeLabel + " " + ref,
+        // Pour l'aide à la décision sur un doublon possible
+        client: record?.payload?.clientFirstAndLastName || null,
+        telephone: record?.payload?.phone || null,
+        contenu: record?.payload?.content || null,
+      };
     });
 };
 

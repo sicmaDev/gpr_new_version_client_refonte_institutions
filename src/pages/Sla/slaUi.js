@@ -169,7 +169,7 @@ export const RowActions = ({ onEdit, onDelete, deleteTitle = "Supprimer" }) => (
 
 export const SlaDialog = ({
   open, onClose, title, subtitle, icon: Icon, children, onSubmit, submitLabel = "Enregistrer",
-  loading = false, danger = false, maxWidth = "sm", hideSubmit = false,
+  loading = false, danger = false, maxWidth = "sm", hideSubmit = false, submitIcon: SubmitIcon = SaveIcon,
 }) => (
   <Dialog open={open} onClose={() => { if (!loading) onClose(); }} fullWidth maxWidth={maxWidth} PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
     <div style={{
@@ -194,7 +194,7 @@ export const SlaDialog = ({
       <OutlineButton onClick={onClose} disabled={loading}>Annuler</OutlineButton>
       {!hideSubmit && (
         <LoadingButton
-          onClick={onSubmit} loading={loading} loadingPosition="start" startIcon={<SaveIcon style={{ fontSize: 15 }} />} variant="contained"
+          onClick={onSubmit} loading={loading} loadingPosition="start" startIcon={<SubmitIcon style={{ fontSize: 15 }} />} variant="contained"
           sx={danger
             ? { ...primarySx, background: "linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))", "&:hover": { background: "var(--gpr-primary-dark, #003d62)" } }
             : primarySx}
@@ -204,6 +204,18 @@ export const SlaDialog = ({
       )}
     </DialogActions>
   </Dialog>
+);
+
+/** Confirmation avant suppression, comme dans les autres réglages. */
+export const ConfirmSuppression = ({ open, onClose, onConfirm, loading = false, title, nom, message }) => (
+  <SlaDialog
+    open={open} onClose={onClose} onSubmit={onConfirm} loading={loading} danger maxWidth="xs"
+    icon={DeleteIcon} submitIcon={DeleteIcon} submitLabel="Supprimer" title={title} subtitle={nom}
+  >
+    <p style={{ margin: 0, fontSize: 14, color: "#334155", lineHeight: 1.6 }}>
+      {message || <>Confirmez-vous la suppression de <strong style={{ color: "#0f172a" }}>{nom}</strong> ?</>}
+    </p>
+  </SlaDialog>
 );
 
 // ── Tableaux : styles repris des tableaux de la refonte ─────────────────────────────────────────────

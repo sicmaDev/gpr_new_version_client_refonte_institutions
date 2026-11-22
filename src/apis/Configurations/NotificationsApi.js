@@ -76,7 +76,7 @@ export const ajout = async (data, props) => {
         data: data
     };
 
-    await axios(config)
+    return await axios(config)
         .then(async function (response) {
             // saveItemToSessionStorage(response.data.content, "app-recours")
             // saveItemToLocalStorage(response.data.content, "app-recours")
@@ -87,11 +87,12 @@ export const ajout = async (data, props) => {
 
            await liste(props)
            await listeU(props)
-
+            return true;
         })
         .catch(function (error) {
             props.etatChanged(false)
-            notify("Erreur - "+error.response.data.content.message+"!", "error");
+            notify("Erreur - "+(error?.response?.data?.content?.message || "Veuillez réessayer")+"!", "error");
+            return false;
             // console.log("notiferror",error.response.data.content.message)
         });
 

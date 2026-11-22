@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import TransmissionHistory from "../TransmissionHistory";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
@@ -29,7 +28,7 @@ import PhoneInTalkIcon from "@mui/icons-material/PhoneInTalk";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import NotesIcon from "@mui/icons-material/Notes";
 import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
-import { getClaimEvents } from "../../apis/Reclamations/ReclamationsApi";
+import { getClaimEvents, getTransmissionHistoryApi } from "../../apis/Reclamations/ReclamationsApi";
 
 // Types d'actions principales (ouvrent un bloc)
 const MAIN_EVENTS = new Set([
@@ -98,7 +97,7 @@ const ACTION_CONFIG = {
   LITIGATION:        { label: "Contentieux",                    color: "#9f1239", bg: "#fff1f2", border: "#fecdd3", Icon: GavelIcon },
   TRANSMITTED:       { label: "Transmise",                      color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", Icon: SendIcon },
   CONVERTED:         { label: "Convertie",                      color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", Icon: SwapHorizIcon },
-  SESSION_STARTED:   { label: "Session collaborative",          color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", Icon: GroupsIcon },
+  SESSION_STARTED:   { label: "Session collaborative ouverte",  color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", Icon: GroupsIcon },
   EXTRA_ADDED:       { label: "Pièce jointe ajoutée",            color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", Icon: AttachFileIcon },
   DELETED:           { label: "Supprimée (corbeille)",          color: "#dc2626", bg: "#fef2f2", border: "#fecaca", Icon: HighlightOffIcon },
   RESTORED:          { label: "Restaurée",                      color: "#16a34a", bg: "#dcfce7", border: "#86efac", Icon: CheckCircleOutlineIcon },
@@ -346,9 +345,47 @@ const CommGroupLine = ({ eventType, isPilote, list }) => {
   );
 };
 
-const HistoriqueTimeline = ({ claimId }) => {
+// Transmissions (avec leur commentaire) rangées dans l'historique : chacune est rattachée à l'étape « Transmise »
+// la plus proche dans le temps (5 min au plus) ; celles sans étape correspondante sont ajoutées à leur date.
+const fusionnerTransmissions = (events, transmissions) => {
+  const commentaires = {};
+  if (!transmissions.length) return { liste: events, commentaires };
+  const temps = (d) => (d ? new Date(d).getTime() : NaN);
+  const utilises = new Set();
+  const ajouts = [];
+  for (const t of transmissions) {
+    const tt = temps(t.dateTransmission);
+    let meilleur = null;
+    events.forEach((ev, i) => {
+      if (ev.eventType !== "TRANSMITTED" || utilises.has(i)) return;
+      const ecart = Math.abs(temps(ev.createdAt) - tt);
+      if (Number.isFinite(ecart) && ecart <= 5 * 60 * 1000 && (!meilleur || ecart < meilleur.ecart)) meilleur = { i, ecart };
+    });
+    if (meilleur) {
+      utilises.add(meilleur.i);
+      commentaires[meilleur.i] = t.commentaire;
+    } else {
+      ajouts.push({ id: `transmission-${t.id}`, eventType: "TRANSMITTED", createdAt: t.dateTransmission, actorName: t.transmisParNom, metadata: t.transmisANom || "—", _commentaire: t.commentaire });
+    }
+  }
+  if (!ajouts.length) return { liste: events, commentaires: Object.fromEntries(Object.entries(commentaires).map(([i, c]) => [events[i].id ?? `i${i}`, c])) };
+  // même ordre que l'historique (du plus ancien au plus récent, ou l'inverse)
+  const croissant = events.length < 2 || temps(events[0].createdAt) <= temps(events[events.length - 1].createdAt);
+  const parCle = Object.fromEntries(Object.entries(commentaires).map(([i, c]) => [events[i].id ?? `i${i}`, c]));
+  const liste = [...events, ...ajouts].sort((a, b) => (croissant ? 1 : -1) * ((temps(a.createdAt) || 0) - (temps(b.createdAt) || 0)));
+  return { liste, commentaires: parCle };
+};
+
+const HistoriqueTimeline = ({ claimId, avecTransmissions = true }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [transmissions, setTransmissions] = useState([]);
+
+  // Les suggestions n'ont pas de transmission : rien à charger pour elles.
+  useEffect(() => {
+    if (!claimId || !avecTransmissions) { setTransmissions([]); return; }
+    getTransmissionHistoryApi(claimId).then((d) => setTransmissions(Array.isArray(d) ? d : [])).catch(() => setTransmissions([]));
+  }, [claimId, avecTransmissions]);
 
   useEffect(() => {
     if (!claimId) return;
@@ -382,7 +419,8 @@ const HistoriqueTimeline = ({ claimId }) => {
     </div>
   );
 
-  const blocks = groupEvents(events);
+  const { liste: eventsFusionnes, commentaires } = fusionnerTransmissions(events, transmissions);
+  const blocks = groupEvents(eventsFusionnes);
 
   return (
     <>
@@ -467,6 +505,14 @@ const HistoriqueTimeline = ({ claimId }) => {
                               Transmise à <strong>{t.name}</strong>
                               {t.role   && <span style={{ color: "#94a3b8" }}> · {cleanRole(t.role)}</span>}
                               {t.agence && <span style={{ color: "#94a3b8" }}> · {t.agence}</span>}
+                              {(() => {
+                                const commentaire = ev._commentaire ?? commentaires[ev.id];
+                                return commentaire ? (
+                                  <span style={{ display: "block", marginTop: 4, padding: "6px 10px", background: "#f8fafc", borderLeft: `3px solid ${cfg.color}`, borderRadius: 6, color: "#334155", fontStyle: "italic", whiteSpace: "pre-wrap" }}>
+                                    « {commentaire} »
+                                  </span>
+                                ) : null;
+                              })()}
                             </span>
                           );
                         })()}
@@ -501,13 +547,6 @@ const HistoriqueTimeline = ({ claimId }) => {
         })}
       </div>
 
-      {/* Commentaires saisis lors des transmissions de la plainte */}
-      <details style={{ marginTop: 14 }}>
-        <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#475569" }}>
-          Historique des transmissions
-        </summary>
-        <TransmissionHistory claimId={claimId} />
-      </details>
     </>
   );
 };

@@ -49,7 +49,7 @@ export const ajout = async (data, props) => {
         data: data
     };
 
-    await axios(config)
+    return await axios(config)
         .then(function (response) {
             // saveItemToSessionStorage(response.data.content, "app-recours")
             // saveItemToLocalStorage(response.data.content, "app-recours")
@@ -59,11 +59,12 @@ export const ajout = async (data, props) => {
             notify("Bravo - Question ajoutée à la FAQ", "success");
            
            liste(props)
-
+            return true;
         })
         .catch(function (error) {
             props.etatChanged(false)
-            notify("Erreur - Veuillez réessayer!", "error");
+            notify(error?.response?.data?.content?.message || "Erreur - Veuillez réessayer!", "error");
+            return false;
         });
 
 }

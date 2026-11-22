@@ -15,6 +15,7 @@ import {
 import { today } from "../../Utils/utils";
 import { connect } from "react-redux";
 import { ajout, liste, modification, suppression } from "../../apis/Configurations/RecoursExternesApi";
+import { libelleExisteDeja, normaliserLibelle } from "../../Utils/libelle";
 import { handlePrint } from "../../Utils/tables";
 import { table2XLSX } from "../../Utils/tabletoexcel";
 import { LoadingButton } from "@mui/lab";
@@ -56,7 +57,7 @@ const RecoursExternes = (props) => {
     const filteredItems = useMemo(() => {
         const chip = CHIPS_CONFIG.find(c => c.value === activeChip);
         const base = chip ? props.items.filter(chip.filter) : props.items;
-        return [...base].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        return [...base].sort((a, b) => (new Date(b.createdAt || 0) - new Date(a.createdAt || 0)) || ((b.id || 0) - (a.id || 0)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeChip]);
 
@@ -78,14 +79,16 @@ const RecoursExternes = (props) => {
         { key: "libelle", label: "Intitulé", required: true, fullWidth: false, placeholder: "Ex: Tribunal, Médiateur..." },
         { key: "description", label: "Description", type: "textarea", fullWidth: true, placeholder: "Description du recours" },
     ];
-    const handleModalSubmit = async (items) => {
+    // Un résultat par recours : la fenêtre vide ceux enregistrés et garde les doublons / échecs
+    const handleModalSubmit = async (items, { resteDesDoublons } = {}) => {
         setAddLoading(true);
         try {
+            const resultats = [];
             for (const item of items) {
-                const ok = await ajout({ libelle: item.libelle, description: item.description }, props);
-                if (!ok) return false;
+                resultats.push(await ajout({ libelle: item.libelle.trim(), description: item.description }, props));
             }
-            setAddModalOpen(false);
+            if (!resteDesDoublons && resultats.every(Boolean)) setAddModalOpen(false);
+            return resultats;
         } finally { setAddLoading(false); }
     };
 
@@ -96,6 +99,8 @@ const RecoursExternes = (props) => {
     };
     const handleEditFormSubmit = () => {
         if (!editForm.libelle.trim()) { setEditErrors({ libelle: "Champ requis" }); return; }
+        // Contrôle seulement si le libellé change (modifier la description d'un ancien doublon reste possible)
+        if (normaliserLibelle(editForm.libelle) !== normaliserLibelle(props.selectedItem?.libelle) && libelleExisteDeja(editForm.libelle, props.items, props.id)) { setEditErrors({ libelle: "Un recours externe porte déjà ce libellé" }); return; }
         setEditLoading(true); props.etat2Changed(true);
         modification({ id: props.id, libelle: editForm.libelle, description: editForm.description }, props)
             .then((ok) => { if (!ok) return; setEditModalOpen(false); clearComponentState(); })
@@ -110,9 +115,9 @@ const RecoursExternes = (props) => {
     return (
         <>
             <div className="card-panel">
-                <AddDuplicateFormModal open={addModalOpen} onClose={() => setAddModalOpen(false)} title="Ajouter des recours externes" fields={addFields} onSubmit={handleModalSubmit} loading={addLoading} maxWidth="md" addLabel="Ajouter un autre recours" />
+                <AddDuplicateFormModal open={addModalOpen} onClose={() => setAddModalOpen(false)} title="Ajouter des recours externes" fields={addFields} onSubmit={handleModalSubmit} loading={addLoading} maxWidth="md" addLabel="Ajouter un autre recours" champUnique="libelle" existants={(props.items || []).map(r => r.libelle)} />
 
-                <Dialog open={editModalOpen} onClose={() => { if (!editLoading) { setEditModalOpen(false); clearComponentState(); } }} fullWidth maxWidth="sm" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
+                <Dialog open={editModalOpen} onClose={() => { if (!editLoading) { setEditModalOpen(false); clearComponentState(); } }} fullWidth maxWidth="md" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
                     <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><EditIcon style={{ color: "#fff", fontSize: 20 }} /></div>
@@ -174,7 +179,7 @@ const RecoursExternes = (props) => {
                         { id: "libelle", label: "Intitulé", sortable: true, minWidth: 180 },
                         { id: "description", label: "Description", sortable: true, minWidth: 220 },
                         { id: "actions", label: "Actions", sortable: false, minWidth: 110, render: (sp) => (<div style={{ display: "flex", gap: "5px" }}><Tooltip title="Modifier"><IconButton onClick={() => handleEditClick(sp)} color="primary"><EditIcon /></IconButton></Tooltip><Tooltip title="Supprimer"><IconButton onClick={() => setDeleteConfirm({ open: true, item: sp, loading: false })} color="error"><DeleteIcon /></IconButton></Tooltip></div>) },
-                    ]} searchFields={["libelle", "description"]} defaultSort="libelle" />
+                    ]} searchFields={["libelle", "description"]} defaultSort={null} />
                 ) : (
                     <ConfigCardView items={filteredItems} titleField="libelle" subtitleField="description" searchFields={["libelle", "description"]} onEdit={(sp) => handleEditClick(sp)} onDelete={(sp) => setDeleteConfirm({ open: true, item: sp, loading: false })} />
                 )}

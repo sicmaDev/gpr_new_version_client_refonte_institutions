@@ -11,7 +11,7 @@ import { STATUS_CONFIG } from "../../pages/Reclamations/components/ClaimStatusBa
  *   onFilterChange - callback(value)
  *   filterButtons  - [{ value, label }]  (value="ALL" pour "Tous")
  */
-const DossierFilterChips = ({ items = [], activeFilter, onFilterChange, filterButtons = [] }) => {
+const DossierFilterChips = ({ items = [], activeFilter, onFilterChange, filterButtons = [], statusConfig = STATUS_CONFIG }) => {
   const counts = useMemo(() => {
     const result = { ALL: items.length };
     items.forEach((item) => {
@@ -25,10 +25,11 @@ const DossierFilterChips = ({ items = [], activeFilter, onFilterChange, filterBu
       {filterButtons.map((btn) => {
         const isActive = activeFilter === btn.value;
         const count = counts[btn.value] || 0;
-        const statusCfg = STATUS_CONFIG[btn.value];
-        const activeBg     = statusCfg ? statusCfg.bg     : "#EFF6FF";
-        const activeColor  = statusCfg ? statusCfg.color  : "#1D4ED8";
-        const activeBorder = statusCfg ? statusCfg.border : "#93C5FD";
+        const statusCfg = statusConfig[btn.value];
+        // « Tous » (ou statut sans couleur propre) : couleur d'apparence
+        const activeBg     = statusCfg ? statusCfg.bg     : "var(--gpr-primary-light, #EFF6FF)";
+        const activeColor  = statusCfg ? statusCfg.color  : "var(--gpr-primary, #005081)";
+        const activeBorder = statusCfg ? statusCfg.border : "var(--gpr-primary, #005081)";
 
         if (btn.value !== "ALL" && count === 0) return null;
 

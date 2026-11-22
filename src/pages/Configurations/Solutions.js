@@ -65,7 +65,7 @@ const Solutions = (props) => {
     const filteredItems = useMemo(() => {
         const chip = CHIPS_CONFIG.find(c => c.value === activeChip);
         const base = chip ? props.items.filter(chip.filter) : props.items;
-        const sorted = [...base].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        const sorted = [...base].sort((a, b) => (new Date(b.createdAt || 0) - new Date(a.createdAt || 0)) || ((b.id || 0) - (a.id || 0)));
         return sorted.map(it => ({ ...it, objetLibelle: it.objetDto?.libelle ?? "-" }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeChip]);
@@ -106,10 +106,16 @@ const Solutions = (props) => {
             ),
         },
     ];
-    const handleModalSubmit = async (items) => {
+    const handleModalSubmit = async (items, { resteDesDoublons } = {}) => {
         setAddLoading(true);
-        try { for (const item of items) { await ajout({ objet: item.objet, content: item.content }, props); } }
-        finally { setAddLoading(false); setAddModalOpen(false); }
+        try {
+            // Un résultat par solution : la fenêtre vide celles enregistrées et garde le doublon / l'échec
+            const resultats = [];
+            for (const item of items) { resultats.push(Boolean(await ajout({ objet: item.objet, content: item.content }, props))); }
+            if (!resteDesDoublons && resultats.every(Boolean)) setAddModalOpen(false);
+            return resultats;
+        }
+        finally { setAddLoading(false); }
     };
 
     const handleEditClick = (sp) => {
@@ -138,7 +144,7 @@ const Solutions = (props) => {
             <div className="card-panel">
                 <AddDuplicateFormModal open={addModalOpen} onClose={() => setAddModalOpen(false)} title="Ajouter des solutions" fields={addFields} onSubmit={handleModalSubmit} loading={addLoading} maxWidth="md" addLabel="Ajouter une autre solution" />
 
-                <Dialog open={editModalOpen} onClose={() => { if (!editLoading) { setEditModalOpen(false); clearComponentState(); } }} fullWidth maxWidth="sm" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
+                <Dialog open={editModalOpen} onClose={() => { if (!editLoading) { setEditModalOpen(false); clearComponentState(); } }} fullWidth maxWidth="md" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
                     <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><EditIcon style={{ color: "#fff", fontSize: 20 }} /></div>
@@ -213,7 +219,7 @@ const Solutions = (props) => {
                                 <Tooltip title="Supprimer"><IconButton onClick={() => setDeleteConfirm({ open: true, item: sp, loading: false })} color="error"><DeleteIcon /></IconButton></Tooltip>
                             </div>
                         )},
-                    ]} searchFields={["content", "objetLibelle"]} defaultSort="content" />
+                    ]} searchFields={["content", "objetLibelle"]} defaultSort={null} />
                 ) : (
                     <ConfigCardView items={filteredItems}
                         titleField="objetLibelle"

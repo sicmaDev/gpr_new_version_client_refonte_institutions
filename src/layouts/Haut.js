@@ -31,6 +31,7 @@ import { APP_OWNER, APP_OWNER_WEBSITE } from '../Utils/globals';
 import { licenseInfo } from '../apis/LoginApi';
 import { useThemeColors } from '../context/ThemeColorsContext';
 import useOnlineStatus from '../hooks/useOnlineStatus';
+import { rechargerSur } from "../Utils/deconnexion";
 
 const LARGEUR_MOBILE = "(max-width: 992.99px)";
 
@@ -210,10 +211,9 @@ export const Haut = (props) => {
     sessionStorage.clear();
     // Le jeton gardé dans le navigateur ne doit pas survivre à la déconnexion.
     localStorage.removeItem("token");
-    props.authenticate();
-    history.push("/login");
-    // Rechargement complet : vide les données gardées en mémoire (sinon le compte suivant voyait un instant celles du précédent).
-    window.location.reload();
+    // Rechargement complet sur la connexion : vide les données gardées en mémoire (sinon le compte suivant voyait
+    // un instant celles du précédent), sans afficher le formulaire avant le rechargement (il se vidait pendant la saisie).
+    rechargerSur("/login");
   };
 
 

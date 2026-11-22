@@ -47,10 +47,22 @@ const styles = {
     }),
     valueContainer: base => ({ ...base, padding: "2px 14px" }),
     placeholder: base => ({ ...base, fontSize: 14, color: "#94a3b8" }),
-    singleValue: base => ({ ...base, fontSize: 14, color: "#1e293b" }),
+    // Choix long (nom + email) : il passe à la ligne au lieu d'être coupé
+    singleValue: base => ({ ...base, fontSize: 14, color: "#1e293b", whiteSpace: "normal", overflow: "visible", textOverflow: "clip", position: "static", transform: "none", maxWidth: "100%", padding: "6px 0" }),
     input: base => ({ ...base, margin: 0, padding: 0 }),
     indicatorSeparator: () => ({ display: "none" }),
     menu: provided => ({ ...provided, zIndex: 9999 }),
+    // La liste s'ouvre au-dessus de la fenêtre : elle n'est plus coupée par le bas de la fenêtre d'ajout
+    menuPortal: provided => ({ ...provided, zIndex: 9999 }),
+    menuList: provided => ({ ...provided, maxHeight: 260 }),
+    option: (provided, state) => ({
+        ...provided,
+        fontSize: 13.5,
+        whiteSpace: "normal",
+        background: state.isSelected ? "var(--gpr-primary, #005081)" : state.isFocused ? "var(--gpr-primary-light, #e6f0f6)" : "#fff",
+        color: state.isSelected ? "#fff" : "#1e293b",
+        "&:active": { background: "var(--gpr-primary-light, #e6f0f6)" },
+    }),
 };
 const Notifications = (props) => {
     const [isLoading, setIsLoading] = useState(false);
@@ -100,7 +112,7 @@ const Notifications = (props) => {
     const filteredItems = useMemo(() => {
         const r = ROLES_CONFIG.find(c => c.value === activeRole);
         const base = r ? props.items.filter(r.filter) : props.items;
-        return [...base].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        return [...base].sort((a, b) => (new Date(b.createdAt || 0) - new Date(a.createdAt || 0)) || ((b.id || 0) - (a.id || 0)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeRole]);
 
@@ -184,7 +196,7 @@ const Notifications = (props) => {
     usersH.map((user) => {
 
         agentMailOptions.push({
-            label: user.firstAndLastName + "         < " + user.email + " >",
+            label: user.firstAndLastName + " <" + user.email + ">",
             value: user.id,
         });
     });
@@ -223,6 +235,8 @@ const Notifications = (props) => {
                     className="react-select-container"
                     classNamePrefix="react-select"
                     styles={styles}
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
                     placeholder="Qui sont ceux qui doivent recevoir des notifications ?"
                     options={agentMailOptions}
                     value={agentMailOptions.find(o => o.value === value) || null}
@@ -237,6 +251,8 @@ const Notifications = (props) => {
                     className="react-select-container"
                     classNamePrefix="react-select"
                     styles={styles}
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
                     placeholder="Sélectionnez le rôle"
                     options={roleOptions || []}
                     value={(roleOptions || []).find(o => o.value === value) || null}
@@ -245,17 +261,19 @@ const Notifications = (props) => {
             ),
         },
     ];
-    const handleModalSubmit = async (items) => {
+    const handleModalSubmit = async (items, { resteDesDoublons } = {}) => {
         setAddLoading(true);
         try {
+            // Un résultat par ligne : la fenêtre vide celles enregistrées et garde le doublon / l'échec
+            const resultats = [];
             for (const item of items) {
                 props.etatChanged(true);
-                await ajout({ ids: item.emails, poste: item.role }, props);
+                resultats.push(Boolean(await ajout({ ids: item.emails, poste: item.role }, props)));
             }
+            if (!resteDesDoublons && resultats.every(Boolean)) { setAddModalOpen(false); clearComponentState(); }
+            return resultats;
         } finally {
             setAddLoading(false);
-            setAddModalOpen(false);
-            clearComponentState();
         }
     };
 
@@ -327,7 +345,7 @@ const Notifications = (props) => {
                             { id: "titre",            label: "Titre",          sortable: true,  minWidth: 130 },
                             { id: "actions",          label: "Action",         sortable: false, minWidth: 80,  render: (user) => (<Tooltip title="Retirer"><IconButton onClick={(e) => handleModal(e, user.id)} color="error"><PersonRemoveIcon /></IconButton></Tooltip>) },
                         ]}
-                        searchFields={["firstAndLastName", "email", "titre"]} defaultSort="firstAndLastName" />
+                        searchFields={["firstAndLastName", "email", "titre"]} defaultSort={null} />
                 ) : (
                     <ConfigCardView items={filteredItems} titleField="firstAndLastName" subtitleField="email" badgeField="titre"
                         searchFields={["firstAndLastName", "email", "titre"]}

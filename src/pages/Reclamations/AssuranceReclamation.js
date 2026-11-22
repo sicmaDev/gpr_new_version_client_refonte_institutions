@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useRef, useState, useMemo } from "react";
+import { sansDoublonDeLibelle } from "../../Utils/libelle";
 import { Link, NavLink } from "react-router-dom";
 import { KTApp } from "../../Utils/blockui";
 import WaCommentBadge from "../../whatgpr/components/WaCommentBadge";
@@ -336,8 +337,9 @@ const AssuranceReclamation = (props) => {
       ? loadItemFromSessionStorage("app-recours")
       : undefined;
   if (recours !== undefined) {
-    recourOptions = recours.map((recour) => {
-      return { label: recour.libelle, value: recour };
+    // Un seul choix par libellé ; la valeur est l'identifiant (le recours déjà choisi n'est plus proposé)
+    recourOptions = sansDoublonDeLibelle(recours).map((recour) => {
+      return { label: recour.libelle, value: String(recour.id), recour };
     });
   } else {
     recourOptions = [];
@@ -1346,7 +1348,7 @@ const AssuranceReclamation = (props) => {
           visibleActions={props.authorize ? ['classer', 'contentieux'] : ['contentieux']}
           onActionOverride={(key) => {
             if (key === 'classer') handleModal({ preventDefault: () => {} });
-            if (key === 'contentieux') setShowContentieuxModal(true);
+            if (key === 'contentieux') { setRecours([]); setShowContentieuxModal(true); }
           }}
           selectedItemFiles={props.selectedItemFiles}
           selectedItemAudio={props.selectedItemAudio}
@@ -1568,7 +1570,8 @@ const AssuranceReclamation = (props) => {
                     multiValueLabel: (base) => ({ ...base, color: "#1d4ed8", fontWeight: 600 }),
                   }}
                   placeholder="Sélectionner les recours externes..."
-                  onChange={(val) => setRecours(val ? val.map(v => v.value) : [])}
+                  value={recourOptions.filter((o) => recour.some((r) => String(r.id) === o.value))}
+                  onChange={(val) => setRecours(val ? val.map(v => v.recour) : [])}
                 />
                 {props.errors?.external_remedies && (
                   <div style={{ color: "#ef4444", fontSize: 12, marginTop: 6 }}>{props.errors.external_remedies}</div>
@@ -2190,14 +2193,8 @@ const AssuranceReclamation = (props) => {
                                         style={styles}
                                         placeholder="Le client a t-il fait recours a des entités externes ?"
                                         options={recourOptions}
-                                        onChange={(e) => {
-                                          let recs = [];
-
-                                          for (let i = 0; i < e.length; i++) {
-                                            recs.push(e[i].value);
-                                          }
-                                          setRecours(recs);
-                                        }}
+                                        value={recourOptions.filter((o) => recour.some((r) => String(r.id) === o.value))}
+                                        onChange={(e) => setRecours(e ? e.map((v) => v.recour) : [])}
                                       />
                                       <label
                                         htmlFor="idObjet"

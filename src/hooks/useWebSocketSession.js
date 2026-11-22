@@ -3,6 +3,7 @@ import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import { HOST } from "../Utils/globals";
 import { notify } from "../Utils/alert";
+import { retourListeTraitement } from "../Utils/deconnexion";
 
 /**
  * Manages a STOMP/SockJS WebSocket session for collaborative claim treatment.
@@ -84,16 +85,7 @@ const useWebSocketSession = ({ code, claimId, session, user }) => {
       }
       case "CONFIRME_SOLUTION":
         notify("Bravo - Réclamation traitée", "success");
-        setTimeout(() => {
-          const path = window.location.pathname;
-          if (path.includes('/reclamations/traitement')) {
-            window.location.href = '/reclamations/traitement/all';
-          } else if (path.includes('/denonciations/traitement')) {
-            window.location.href = '/denonciations/traitement/all';
-          } else {
-            window.location.reload();
-          }
-        }, 3000);
+        setTimeout(retourListeTraitement, 3000);
         break;
       default:
         break;

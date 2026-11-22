@@ -13,6 +13,7 @@ ChatTwoTone,
 import { notify } from '../../Utils/alert';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { HOST } from '../../Utils/globals';
+import { retourListeTraitement } from '../../Utils/deconnexion';
 
 
 const Chat = ({ guestsP, claimCode, oldMessages, members, users, user, showJoinBtn}) => {
@@ -250,9 +251,8 @@ const Chat = ({ guestsP, claimCode, oldMessages, members, users, user, showJoinB
       break;
       case "CONFIRME_SOLUTION":
         notify("Bravo - Réclamation traitée", "success");
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
+        // retour à la liste de traitement (avant : rechargement de la page du dossier, restée vide)
+        setTimeout(retourListeTraitement, 3000);
         break;
     }
   };

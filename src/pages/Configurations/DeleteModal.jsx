@@ -54,7 +54,7 @@ const DeleteModal = ({ open, loading = false, onClose, onConfirm }) => {
       PaperProps={{ style: { borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', overflow: 'hidden' } }}
     >
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #b91c1c 0%, #dc2626 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: 'linear-gradient(135deg, var(--gpr-primary-dark, #003d62) 0%, var(--gpr-primary, #005081) 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Delete style={{ color: '#fff', fontSize: 20 }} />
@@ -125,7 +125,7 @@ const DeleteModal = ({ open, loading = false, onClose, onConfirm }) => {
             color="error"
             startIcon={<Delete />}
             onClick={handleDeleteClick}
-            sx={{ textTransform: 'none', borderRadius: 2, background: confirmStep ? '#b91c1c' : '#dc2626', fontWeight: 700, '&:hover': { background: '#991b1b' } }}
+            sx={{ textTransform: 'none', borderRadius: 2, background: 'linear-gradient(135deg, var(--gpr-primary-dark, #003d62), var(--gpr-primary, #005081))', fontWeight: 700, '&:hover': { background: 'var(--gpr-primary-dark, #003d62)' }, '&.Mui-disabled': { opacity: 0.45, color: '#fff' } }}
           >
             <span>{confirmStep ? 'Confirmer la suppression' : 'Supprimer'}</span>
           </LoadingButton>

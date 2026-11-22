@@ -777,7 +777,9 @@ const EnregistrerReclamation = (props) => {
   // onBlur plus bas) et réutilisée par handleNext comme filet de sécurité
   // avant de changer d'étape.
   const handleBlur = async () => {
-    if (props.phone) {
+    // Hors ligne : le serveur est injoignable, la vérification de doublon ne répondrait jamais et
+    // bloquait l'étape 1. Elle n'est faite qu'en ligne.
+    if (props.phone && mode === 1) {
       const phone = cleanPhoneNumber(props.phone);
       await Promise.all([
         checkPhoneApi(phone, props),
@@ -2477,7 +2479,7 @@ const EnregistrerReclamation = (props) => {
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
             {/* ── Dropzone fichiers ── */}
-            {mode === 1 && (
+            {/* aussi hors ligne : gardés sur l'appareil, envoyés à la synchronisation */ (
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
                   <InsertDriveFileOutlinedIcon style={{ fontSize: 17, color: "var(--gpr-primary, #005081)" }} />

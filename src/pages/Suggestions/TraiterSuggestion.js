@@ -999,6 +999,7 @@ const TraiterSuggestion = (props) => {
       <>
         <audio ref={audioRef} src={currentAudio} hidden />
         <TraitementShell
+        avecTransmissions={false}
           onBack={() => { sessionStorage.removeItem('gpr_sug_treat_code'); history.push("/suggestions/traitement/all"); }}
           codeClient={props.codeClient || props.code}
           status={props.status}

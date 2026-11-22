@@ -51,7 +51,8 @@ const ConfigTable = ({
   const [filterValues, setFilterValues] = useState(
     Object.fromEntries(filters.map((f) => [f.id, ""]))
   );
-  const [orderBy, setOrderBy]     = useState(defaultSort || (columns[0]?.id ?? ""));
+  // defaultSort={null} : on garde l'ordre donné par la page (ex. du plus récent au plus ancien)
+  const [orderBy, setOrderBy]     = useState(defaultSort === null ? "" : (defaultSort || (columns[0]?.id ?? "")));
   const [order, setOrder]         = useState(defaultSortDir);
   const [page, setPage]           = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[1] ?? 15);

@@ -12,6 +12,7 @@ import { LoginApi } from '../apis/LoginApi';
 import { authenticate, isAuth } from "../redux/actions/LayoutActions";
 import { etatChanged } from "../redux/actions/LoginActions";
 import { useThemeColors, darkenColor, getPagePrimary, getContrastText } from "../context/ThemeColorsContext";
+import { rechargerSur } from "../Utils/deconnexion";
 
 // ── SVG Icons ────────────────────────────────────────────────────────────
 const SvgLock = ({ size = 20, color = "#64748b" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>;
@@ -81,11 +82,9 @@ const Lockscreen = (props) => {
         sessionStorage.clear();
         localStorage.removeItem("token");
         localStorage.removeItem("isLocked");
-        props.setUnlocked();
-        props.isAuth(false);
-        window.location.hash = "#/login";
-        // Rechargement complet : vide les données du compte gardées en mémoire.
-        window.location.reload();
+        // Rechargement complet sur la connexion : vide les données du compte gardées en mémoire,
+        // sans afficher le formulaire avant le rechargement (il se vidait pendant la saisie).
+        rechargerSur("/login");
     };
 
     const parseUserInfo = () => {

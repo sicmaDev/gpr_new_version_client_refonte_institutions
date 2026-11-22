@@ -43,6 +43,23 @@ const CLAIM_EVENTS_API = HOST + "api/v1/claim-events/"
 const CLAIM_DRAFT_API = HOST + "api/v1/claim/%s/draft"
 const TRANSMISSION_HISTORY_API = HOST + "api/v1/claim/%s/transmissions"
 
+// Solutions sauvegardées : plusieurs versions par dossier, réservées à leur auteur (serveur : personne connectée)
+const BROUILLONS_API = HOST + "api/v1/claim/%s/brouillons"
+const BROUILLON_API = HOST + "api/v1/claim/brouillons/%s"
+const entetesBrouillons = () => ({
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': "Bearer " + loadItemFromSessionStorage('token')
+    }
+});
+export const listerBrouillonsApi = (claimId) =>
+    axios.get(BROUILLONS_API.replace('%s', claimId), entetesBrouillons()).then((r) => (Array.isArray(r.data?.content) ? r.data.content : []));
+export const ajouterBrouillonApi = (claimId, data) =>
+    axios.post(BROUILLONS_API.replace('%s', claimId), data, entetesBrouillons());
+export const supprimerBrouillonApi = (brouillonId) =>
+    axios.delete(BROUILLON_API.replace('%s', brouillonId), entetesBrouillons());
+
 export const saveDraftApi = (claimId, data) => {
     return axios.put(CLAIM_DRAFT_API.replace('%s', claimId), data, {
         headers: {

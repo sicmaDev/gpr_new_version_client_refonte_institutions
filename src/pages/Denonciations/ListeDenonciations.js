@@ -153,6 +153,7 @@ import {
   VolumeUp,
 } from "@mui/icons-material";
 import RecorderControls from "../../components/recorder-controls";
+import { FenetreContenu, FenetreFichiers, FenetreAudio } from "../../components/treatment/FenetresAjoutPieces";
 import useRecorder from "../../hooks/useRecorder";
 import GavelIcon from "@mui/icons-material/Gavel";
 import StopIcon from "@mui/icons-material/Stop";
@@ -2478,83 +2479,23 @@ const ListeDenonciations = (props) => {
         <HistoriqueAffectation claimId={claim_id} codeClient={props.codeClient} claimStatus={props.status} />
 
         {showExtraContent && (
-          <Dialog open={showExtraContent} fullWidth maxWidth="sm" onClose={() => setShowExtraContent(false)}
-            PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
-            <DialogContent>
-              <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
-                <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                </div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Ajouter un contenu</div>
-              </div>
-              <TextField fullWidth multiline minRows={4} value={extraContent}
-                onChange={(e) => { e.stopPropagation(); setExtraContent(e.target.value); }}
-                placeholder="Saisissez le contenu..." sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }} />
-            </DialogContent>
-            {extraContent?.trim() && (
-              <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
-                <LoadingButton onClick={() => { setExtraContent(""); setShowExtraContent(false); }} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
-                <LoadingButton onClick={(e) => handleContentSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#7c3aed' }}><span>Enregistrer</span></LoadingButton>
-              </DialogActions>
-            )}
-          </Dialog>
+          <FenetreContenu open={showExtraContent} valeur={extraContent} onChange={setExtraContent} chargement={extraFileLoading}
+          onClose={() => setShowExtraContent(false)}
+          onAnnuler={() => { setExtraContent(""); setShowExtraContent(false); }}
+          onEnregistrer={(e) => handleContentSubmit(e)} />
         )}
 
-        {filesForm.length > 0 && (
-          <Dialog open fullWidth maxWidth="sm" onClose={() => setFiles([])}
-            PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
-            <DialogContent>
-              <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
-                <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                </div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Ajouter des fichiers</div>
-              </div>
-              {filesForm.map((f, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', marginBottom: 6 }}>
-                  <span style={{ flex: 1, fontSize: 13, color: '#1e293b' }}>{f.name}</span>
-                  <span style={{ fontSize: 11.5, color: '#94a3b8' }}>{Math.round((f.size / 1024) * 100) / 100} Ko</span>
-                </div>
-              ))}
-            </DialogContent>
-            <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
-              <LoadingButton onClick={() => setFiles([])} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
-              <LoadingButton onClick={(e) => handleFileSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#1d4ed8' }}><span>Enregistrer</span></LoadingButton>
-            </DialogActions>
-          </Dialog>
-        )}
+        <FenetreFichiers fichiers={filesForm} chargement={extraFileLoading}
+          onAnnuler={() => setFiles([])} onEnregistrer={(e) => handleFileSubmit(e)} />
 
         {showAudioBox && (
-          <Dialog open={open2} onClose={() => { setOpen2(false); setAudioBox(false); }} fullWidth maxWidth="sm"
-            PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
-            <DialogContent>
-              <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
-                <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                </div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>+ Audio</div>
-              </div>
-              <section className="voice-recorder"><div className="recorder-container">
-                {audioListUrlForm.map((url, i) => (
-                  <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, pt: 2 }}>
-                    <audio src={url} controls style={{ flex: 1, marginRight: 8 }} />
-                    <CloseIcon sx={{ cursor: 'pointer', color: '#ef4444' }} onClick={() => {
-                      setAudioListForm(audioListForm.filter((_, ind) => ind !== i));
-                      setAudioListUrlForm(audioListUrlForm.filter((_, ind) => ind !== i));
-                    }} />
-                  </Box>
-                ))}
-                <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={() => {}} />
-              </div></section>
-            </DialogContent>
-            {audioListUrlForm.length > 0 && (
-              <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
-                <LoadingButton onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
-                <LoadingButton onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#166534' }}><span>Enregistrer</span></LoadingButton>
-              </DialogActions>
-            )}
-          </Dialog>
-        )}
+        <FenetreAudio open={open2} audios={audioListUrlForm} chargement={extraFileLoading}
+          recorderState={recorderState} handlers={handlers}
+          onRetirer={(i) => { setAudioListForm(audioListForm.filter((_, idx) => idx !== i)); setAudioListUrlForm(audioListUrlForm.filter((_, idx) => idx !== i)); }}
+          onClose={() => { setOpen2(false); setAudioBox(false); }}
+          onAnnuler={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }}
+          onEnregistrer={(e) => handleFileSubmit(e, false)} />
+      )}
 
         <TraitementShell
           claimType="DENUNCIACION"
@@ -2874,92 +2815,24 @@ const ListeDenonciations = (props) => {
 
       {/* ── Modal Contenu ── */}
       {showExtraContent && (
-        <Dialog open={showExtraContent} fullWidth maxWidth="sm" onClose={() => setShowExtraContent(false)} id="dialog-contenu"
-          PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
-          <DialogContent>
-            <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Ajouter un contenu</div>
-              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 20 }}>Ce contenu sera joint à la dénonciation</div>
-            </div>
-            <TextField fullWidth multiline minRows={4} value={extraContent}
-              onChange={(e) => { e.stopPropagation(); e.preventDefault(); setExtraContent(e.target.value); }}
-              placeholder="Saisissez le contenu..." sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5 } }} />
-          </DialogContent>
-          {extraContent?.trim() !== "" && (
-            <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
-              <LoadingButton onClick={() => { setExtraContent(""); setShowExtraContent(false); }} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
-              <LoadingButton onClick={(e) => handleContentSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#7c3aed', '&:hover': { background: '#6d28d9' } }}><span>Enregistrer</span></LoadingButton>
-            </DialogActions>
-          )}
-        </Dialog>
-      )}
+          <FenetreContenu open={showExtraContent} valeur={extraContent} onChange={setExtraContent} chargement={extraFileLoading}
+          onClose={() => setShowExtraContent(false)}
+          onAnnuler={() => { setExtraContent(""); setShowExtraContent(false); }}
+          onEnregistrer={(e) => handleContentSubmit(e)} />
+        )}
 
       {/* ── Modal Fichiers ── */}
-      {filesForm.length > 0 && (
-        <Dialog open fullWidth maxWidth="sm" onClose={() => setFiles([])} id="dialog-addFile"
-          PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
-          <DialogContent>
-            <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Ajouter des fichiers</div>
-              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>{filesForm.length} fichier(s) sélectionné(s)</div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {filesForm.map((file, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
-                  <span style={{ flex: 1, fontSize: 13, color: '#1e293b' }}>{file.name}</span>
-                  <span style={{ fontSize: 11.5, color: '#94a3b8' }}>{Math.round((file.size / 1024) * 100) / 100} Ko</span>
-                </div>
-              ))}
-            </div>
-          </DialogContent>
-          <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
-            <LoadingButton onClick={() => setFiles([])} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
-            <LoadingButton onClick={(e) => handleFileSubmit(e)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#1d4ed8' }}><span>Enregistrer</span></LoadingButton>
-          </DialogActions>
-        </Dialog>
-      )}
+      <FenetreFichiers fichiers={filesForm} chargement={extraFileLoading}
+          onAnnuler={() => setFiles([])} onEnregistrer={(e) => handleFileSubmit(e)} />
 
       {/* ── Modal Audio ── */}
       {showAudioBox && (
-        <Dialog open={open2} onClose={() => { setOpen2(false); setAudioBox(false); }} fullWidth maxWidth="sm" id="dialog-audio"
-          PaperProps={{ style: { borderRadius: 16, padding: 8, overflow: 'hidden' } }}>
-          <DialogContent>
-            <div style={{ textAlign: 'center', padding: '16px 8px 8px' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>+ Audio</div>
-              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Enregistrez un audio</div>
-            </div>
-            <section className="voice-recorder">
-              <div className="recorder-container">
-                {audioListUrlForm.map((url, i) => (
-                  <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, pt: 2 }}>
-                    <audio src={url} controls style={{ flex: 1, marginRight: 8 }} />
-                    <CloseIcon sx={{ cursor: 'pointer', color: '#ef4444' }} onClick={() => {
-                      setAudioListForm(audioListForm.filter((_, ind) => ind !== i));
-                      setAudioListUrlForm(audioListUrlForm.filter((_, ind) => ind !== i));
-                    }} />
-                  </Box>
-                ))}
-                <RecorderControls recorderState={recorderState} handlers={handlers} closeAction={() => { }} />
-              </div>
-            </section>
-          </DialogContent>
-          {audioListUrlForm.length > 0 && (
-            <DialogActions style={{ padding: '8px 20px 20px', gap: 8 }}>
-              <LoadingButton onClick={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2, borderColor: '#e2e8f0', color: '#64748b' }}>Annuler</LoadingButton>
-              <LoadingButton onClick={(e) => handleFileSubmit(e, false)} loading={extraFileLoading} loadingPosition="end" endIcon={<SaveIcon />} variant="contained" sx={{ textTransform: 'none', borderRadius: 2, background: '#166534' }}><span>Enregistrer</span></LoadingButton>
-            </DialogActions>
-          )}
-        </Dialog>
+        <FenetreAudio open={open2} audios={audioListUrlForm} chargement={extraFileLoading}
+          recorderState={recorderState} handlers={handlers}
+          onRetirer={(i) => { setAudioListForm(audioListForm.filter((_, idx) => idx !== i)); setAudioListUrlForm(audioListUrlForm.filter((_, idx) => idx !== i)); }}
+          onClose={() => { setOpen2(false); setAudioBox(false); }}
+          onAnnuler={() => { setAudioListForm([]); setAudioListUrlForm([]); setAudioBox(false); setOpen2(false); }}
+          onEnregistrer={(e) => handleFileSubmit(e, false)} />
       )}
       <audio ref={audioRef} src={currentAudio} hidden />
 

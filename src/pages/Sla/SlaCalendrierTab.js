@@ -8,7 +8,7 @@ import EventIcon from "@mui/icons-material/Event";
 import { LoadingButton } from "@mui/lab";
 import { slaCalendar, slaSaveCalendar, slaHolidays, slaAddHoliday, slaUpdateHoliday, slaDeleteHoliday } from "../../apis/Sla/SlaApi";
 import {
-  Panel, Empty, ErrorNote, Toggle, PrimaryButton, RowActions, SlaDialog, FieldLabel, fieldProps, primarySx,
+  Panel, Empty, ErrorNote, Toggle, PrimaryButton, RowActions, SlaDialog, ConfirmSuppression, FieldLabel, fieldProps, primarySx,
   tableContainerSx, headCellSx, bodyRowSx,
 } from "./slaUi";
 import { notify } from "../../Utils/alert";
@@ -28,6 +28,8 @@ const SlaCalendrierTab = () => {
   const [dialog, setDialog] = useState(null); // { id?, date, label, recurring }
   const [saving, setSaving] = useState(false);
   const [savingHoliday, setSavingHoliday] = useState(false);
+  const [aSupprimer, setASupprimer] = useState(null); // jour férié à supprimer
+  const [suppression, setSuppression] = useState(false);
   const [error, setError] = useState("");
 
   const loadHolidays = () => slaHolidays().then(setHolidays).catch((e) => setError(e.message));
@@ -70,8 +72,10 @@ const SlaCalendrierTab = () => {
     finally { setSavingHoliday(false); }
   };
 
-  const removeHoliday = async (id) => {
-    try { await slaDeleteHoliday(id); loadHolidays(); } catch (e) { notify(e.message, "error"); }
+  const removeHoliday = async () => {
+    setSuppression(true);
+    try { await slaDeleteHoliday(aSupprimer.id); setASupprimer(null); loadHolidays(); } catch (e) { notify(e.message, "error"); }
+    finally { setSuppression(false); }
   };
 
   if (error && !days) return <Empty>{error}</Empty>;
@@ -147,12 +151,12 @@ const SlaCalendrierTab = () => {
                     <TableCell>{h.label || "-"}</TableCell>
                     <TableCell>
                       <Chip size="small" label={h.recurring ? "Chaque année" : "Une fois"}
-                        sx={{ fontWeight: 600, fontSize: "0.72rem", background: h.recurring ? "#EFF6FF" : "#F1F5F9", color: h.recurring ? "#1D4ED8" : "#475569" }} />
+                        sx={{ fontWeight: 600, fontSize: "0.72rem", background: h.recurring ? "var(--gpr-primary-light, #EFF6FF)" : "#F1F5F9", color: h.recurring ? "var(--gpr-primary, #1D4ED8)" : "#475569" }} />
                     </TableCell>
                     <TableCell>
                       <RowActions
                         onEdit={() => setDialog({ id: h.id, date: h.date, label: h.label || "", recurring: !!h.recurring })}
-                        onDelete={() => removeHoliday(h.id)}
+                        onDelete={() => setASupprimer(h)}
                       />
                     </TableCell>
                   </TableRow>
@@ -162,6 +166,11 @@ const SlaCalendrierTab = () => {
           </TableContainer>
         )}
       </Panel>
+
+      <ConfirmSuppression
+        open={!!aSupprimer} onClose={() => setASupprimer(null)} onConfirm={removeHoliday} loading={suppression}
+        title="Supprimer le jour férié" nom={aSupprimer ? [aSupprimer.date, aSupprimer.label].filter(Boolean).join(" · ") : ""}
+      />
 
       <SlaDialog
         open={!!dialog} onClose={() => setDialog(null)} icon={EventIcon} loading={savingHoliday} onSubmit={saveHoliday}

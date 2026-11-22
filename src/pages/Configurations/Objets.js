@@ -91,7 +91,7 @@ const Objets = (props) => {
     const filteredItems = useMemo(() => {
         const chip = CHIPS_CONFIG.find(c => c.value === activeChip);
         const base = chip ? props.items.filter(chip.filter) : props.items;
-        return [...base].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        return [...base].sort((a, b) => (new Date(b.createdAt || 0) - new Date(a.createdAt || 0)) || ((b.id || 0) - (a.id || 0)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.items, activeChip]);
 
@@ -156,7 +156,8 @@ const Objets = (props) => {
             ),
         }] : []),
     ];
-    const handleModalSubmit = async (items) => {
+    const handleModalSubmit = async (items, { resteDesDoublons } = {}) => {
+        // Un résultat par élément : la fenêtre vide ceux enregistrés et garde le doublon / l'échec
         // Même contrôle du délai qu'à la modification : entre 1 et le maximum (vide autorisé seulement si le SLA est actif).
         for (const item of items) {
             const delai = Number(item.processingTime);
@@ -172,11 +173,12 @@ const Objets = (props) => {
         }
         setAddLoading(true);
         try {
+            const resultats = [];
             for (const item of items) {
-                const ok = await ajout({ libelle: item.libelle, description: item.description, risqueLevel: item.risqueLevel, categorie: item.categorie, processingTime: Number(item.processingTime) || 0, takeoverHours: item.takeoverHours ? Number(item.takeoverHours) : null }, props);
-                if (!ok) return false;
+                resultats.push(Boolean(await ajout({ libelle: item.libelle, description: item.description, risqueLevel: item.risqueLevel, categorie: item.categorie, processingTime: Number(item.processingTime) || 0, takeoverHours: item.takeoverHours ? Number(item.takeoverHours) : null }, props)));
             }
-            setAddModalOpen(false);
+            if (!resteDesDoublons && resultats.every(Boolean)) setAddModalOpen(false);
+            return resultats;
         } finally { setAddLoading(false); }
     };
 
@@ -216,9 +218,9 @@ const Objets = (props) => {
     return (
         <>
             <div className="card-panel">
-                <AddDuplicateFormModal open={addModalOpen} onClose={() => setAddModalOpen(false)} title="Ajouter des objets de réclamation" fields={addFields} onSubmit={handleModalSubmit} loading={addLoading} maxWidth="md" addLabel="Ajouter un autre objet" />
+                <AddDuplicateFormModal open={addModalOpen} onClose={() => setAddModalOpen(false)} title="Ajouter des objets de réclamation" fields={addFields} onSubmit={handleModalSubmit} champUnique="libelle" existants={(props.items || []).map((x) => x.libelle)} loading={addLoading} maxWidth="md" addLabel="Ajouter un autre objet" />
 
-                <Dialog open={editModalOpen} onClose={() => { if (!editLoading) { setEditModalOpen(false); clearComponentState(); } }} fullWidth maxWidth="sm" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
+                <Dialog open={editModalOpen} onClose={() => { if (!editLoading) { setEditModalOpen(false); clearComponentState(); } }} fullWidth maxWidth="md" PaperProps={{ style: { borderRadius: 16, overflow: "hidden" } }}>
                     <div style={{ background: "linear-gradient(135deg, var(--gpr-primary-dark) 0%, var(--gpr-primary) 100%)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 36, height: 36, borderRadius: 9, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><EditIcon style={{ color: "#fff", fontSize: 20 }} /></div>
@@ -330,7 +332,7 @@ const Objets = (props) => {
                         )},
                     ]} searchFields={["libelle", "description", "categorie.libelle", "risqueLevel"]}
                     filters={[{ id: "risqueLevel", label: "Tous les niveaux", options: [{ value: "GRAVE", label: "Grave" }, { value: "MOYEN", label: "Moyen" }, { value: "MINEUR", label: "Mineur" }], filterFn: (row, val) => row.risqueLevel === val }]}
-                    defaultSort="libelle" />
+                    defaultSort={null} />
                 ) : (
                     <ConfigCardView items={filteredItems} titleField="libelle" subtitleField="description"
                         badgeField="risqueLevel" badgeColorMap={{ GRAVE: "#EF4444", MOYEN: "#F59E0B", MINEUR: "#10B981" }}

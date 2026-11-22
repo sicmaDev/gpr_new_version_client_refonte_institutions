@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -19,6 +19,7 @@ import SlaBadge from "../shared/SlaBadge";
 import FichiersTab from "./FichiersTab";
 import HistoriqueTimeline from "./HistoriqueTimeline";
 import PreEnregistreesTab from "./PreEnregistreesTab";
+import SolutionsSauvegardees from "./SolutionsSauvegardees";
 import SessionChat from "./SessionChat";
 
 import AffecterModal from "../../pages/Reclamations/modals/AffecterModal";
@@ -87,6 +88,18 @@ import SaveIcon from "@mui/icons-material/Save";
 const TraitementShell = ({
   // Navigation
   onBack,
+
+  // false pour les suggestions (pas de transmission)
+  avecTransmissions = true,
+
+  // Sessions : onglet à ouvrir sur demande ({ onglet, n }) ; vrai si la personne est invitée ou membre
+  demandeOnglet,
+  estInviteSession,
+
+  // Solutions sauvegardées (versions de la personne connectée)
+  brouillons = [],
+  onReprendreBrouillon,
+  onSupprimerBrouillon,
 
   // Identity
   codeClient, status, statusLabel, risqueLevel,
@@ -165,6 +178,17 @@ const TraitementShell = ({
   // Suivi des délais : lu sur le serveur ; null (rien d'affiché) si le SLA n'est pas actif
   const { sla, refresh: refreshSla } = useClaimSla(claimType, claimId);
 
+  // Ouverture d'un onglet demandée par la page (ex. après « Rejoindre la session » : onglet Chat)
+  useEffect(() => {
+    if (demandeOnglet?.onglet) setActiveTab(demandeOnglet.onglet);
+  }, [demandeOnglet?.n]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pas de section « Actions disponibles » : la section « Détails du dossier » est ouverte d'office
+  const aucuneAction = visibleActions.length === 0;
+  useEffect(() => {
+    if (aucuneAction) setOpenAccordions((p) => (p.client || p.details ? p : { ...p, details: true }));
+  }, [aucuneAction]);
+
   const toggleAccordion = (key) =>
     setOpenAccordions(prev => ({ client: false, details: false, actions: false, [key]: !prev[key] }));
 
@@ -199,6 +223,20 @@ const TraitementShell = ({
   // Collaboratif et Chat n'ont d'intérêt que s'il existe une session, ou si la personne peut en ouvrir une
   // (bouton « Ouvrir la session ») : sinon les deux onglets restent vides.
   const collabAvailable = Boolean(btnS) || Boolean(tchat) || Boolean(session);
+  // Session en cours à laquelle la personne n'est pas invitée : message au lieu d'un chat vide
+  const nonInviteSession = Boolean(hasSession) && session?.status === 'OPEN' && estInviteSession === false && !tchat;
+  const MessageNonInvite = () => (
+    <div className="bg-white rounded-xl border border-gray-200 py-8 px-5 text-center">
+      <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--gpr-primary-light, #e6f0f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+        <GroupsIcon style={{ fontSize: 26, color: 'var(--gpr-primary, #005081)' }} />
+      </div>
+      <div className="text-sm font-semibold text-slate-900 mb-1.5">Une session est en cours sur ce dossier</div>
+      <div style={{ fontSize: 12.5, color: '#64748b', maxWidth: 380, margin: '0 auto', lineHeight: 1.55 }}>
+        Vous n'êtes pas invité(e) à cette session : seuls les participants voient la discussion.
+        Pour y participer, demandez à la personne qui l'a ouverte de vous inviter.
+      </div>
+    </div>
+  );
 
   const handleActionClick = (key) => {
     if (onActionOverride) { onActionOverride(key); } else { setOpenModal(key); }
@@ -326,11 +364,11 @@ const TraitementShell = ({
                     <button
                       key={tab.key}
                       onClick={() => setActiveTab(tab.key)}
-                      className={`px-[18px] py-[13px] bg-transparent border-0 cursor-pointer text-[13px] transition-colors -mb-px ${
-                        activeTab === tab.key
-                          ? 'font-semibold text-[var(--gpr-primary, #005081)] border-b-2 border-[var(--gpr-primary, #005081)]'
-                          : 'font-normal text-slate-500 border-b-2 border-transparent'
-                      }`}
+                      className="px-[18px] py-[13px] bg-transparent border-0 cursor-pointer text-[13px] transition-colors -mb-px"
+                      // couleur en style direct : l'ancienne classe n'était pas comprise et le nom de l'onglet actif disparaissait
+                      style={activeTab === tab.key
+                        ? { fontWeight: 600, color: 'var(--gpr-primary, #005081)', borderBottom: '2px solid var(--gpr-primary, #005081)' }
+                        : { fontWeight: 400, color: '#64748b', borderBottom: '2px solid transparent' }}
                     >
                       {tab.label}
                     </button>
@@ -410,11 +448,11 @@ const TraitementShell = ({
                           style={{
                             display: 'flex', alignItems: 'center', gap: 7,
                             padding: '9px 16px', borderRadius: 10, cursor: 'pointer',
-                            border: active ? '1.5px solid #3b82f6' : '1.5px solid #e5e7eb',
+                            border: active ? '1.5px solid var(--gpr-primary, #005081)' : '1.5px solid #e5e7eb',
                             background: active ? 'white' : '#f8fafc',
                             fontSize: 13, fontWeight: active ? 700 : 500,
-                            color: active ? '#1d4ed8' : '#6b7280',
-                            boxShadow: active ? '0 1px 6px rgba(59,130,246,0.12)' : 'none',
+                            color: active ? 'var(--gpr-primary, #005081)' : '#6b7280',
+                            boxShadow: active ? '0 1px 6px var(--gpr-primary-light, rgba(0,80,129,0.12))' : 'none',
                             transition: 'all 0.15s', whiteSpace: 'nowrap',
                           }}
                         >
@@ -483,6 +521,11 @@ const TraitementShell = ({
                           </div>
                         </div>
                       </div>
+                      {treatActionsVisible && brouillons.length > 0 && (
+                        <div style={{ paddingTop: 14 }}>
+                          <SolutionsSauvegardees versions={brouillons} onReprendre={onReprendreBrouillon} onSupprimer={onSupprimerBrouillon} />
+                        </div>
+                      )}
                       <div className="treat-form-modern" style={{ padding: '16px 18px' }}>
                         {treatForm}
                       </div>
@@ -526,7 +569,8 @@ const TraitementShell = ({
                   )}
 
                   {/* Collaboratif */}
-                  {treatSubTab === 'collaboratif' && (
+                  {treatSubTab === 'collaboratif' && nonInviteSession && <MessageNonInvite />}
+                  {treatSubTab === 'collaboratif' && !nonInviteSession && (
                     <div className="flex flex-col gap-3.5">
                       <div className="bg-white rounded-xl border border-gray-200 py-9 px-5 text-center">
                         <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3.5 text-[26px]">💬</div>
@@ -573,7 +617,7 @@ const TraitementShell = ({
               {/* ── HISTORIQUE ── */}
               {!customTabs && activeTab === 'historique' && (
                 <div className="p-3">
-                  <HistoriqueTimeline claimId={claimId} />
+                  <HistoriqueTimeline claimId={claimId} avecTransmissions={avecTransmissions} />
                 </div>
               )}
 
@@ -583,6 +627,8 @@ const TraitementShell = ({
                   <div className="bg-white rounded-xl border border-gray-200 flex-1 overflow-hidden">
                     {tchat}
                   </div>
+                ) : nonInviteSession ? (
+                  <MessageNonInvite />
                 ) : (
                   <div className="bg-white rounded-xl border border-gray-200 flex-1 flex flex-col items-center justify-center p-10 min-h-[300px]">
                     <div className="text-[36px] mb-3.5">💬</div>
